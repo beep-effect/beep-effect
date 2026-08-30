@@ -1,0 +1,27 @@
+id: "dh:reporun:012"
+observation_refs:
+  - "so:sha256:f71b168a6c2ae3db3894064c6c52de3f29b7464bb4e6d6d6194a7b6ad5e99155"
+  - "so:sha256:8e80633e942a2d17018c25156dff9f4303f22db8437f15e2c754abb1a9e6bcfe"
+  - "so:sha256:37851d4f6047fadde7a2d9f4ce8e6112fe87fbbbd2ac7545e896a44d16ec85e6"
+  - "so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46"
+cq_warrants: []
+proposed_referent:
+  label: "repository-plan phase ordering scheme"
+  description: "The implementation vocabulary and comparator order used to arrange repository plan steps."
+representation_status: unresolved
+alternatives:
+  - label: "Operational phases of a repository verification procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Internal sorting keys for command presentation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show literal phase codes and a total ordering used by a comparator, but no supplied CQ asks for these phases and no observation establishes their identity beyond this planner. The implementation-only null remains viable."
+epistemic_status: proposed
+confidence:
+  value: 0.58
+  use_for_acceptance: false
+

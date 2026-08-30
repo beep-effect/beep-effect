@@ -1,0 +1,18 @@
+id: fa:alt4:006
+hypothesis_ref: dh:sched-core:008
+identity_card_ref: ic:alt4:006
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: weighted-admission policy specification"
+    still_viable: true
+  - label: a particular deployed admission policy individual (observationally equivalent on current evidence)
+    still_viable: true
+  - label: configuration object with no normative interpretation
+    still_viable: false
+strongest_counterexample: effectivePriorityRank and isTicketSkippable consult publish aging and review-fix class cap, so the knobs change queue behavior rather than merely deserialize.
+verdict: analyzed
+needed_evidence: Two machines running different AdmissionConfig values at the same time, or one config object unused by rank/skip, would discriminate a reusable spec from a deployed policy individual.

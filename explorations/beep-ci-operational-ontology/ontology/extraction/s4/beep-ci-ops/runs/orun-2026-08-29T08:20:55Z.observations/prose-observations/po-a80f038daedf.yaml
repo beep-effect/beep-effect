@@ -1,0 +1,10 @@
+id: po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 602
+  end_line: 609
+quote: 'return CallerControlledTurboCache.make({ reason: "ci" });'
+epistemic_status: quoted_prose

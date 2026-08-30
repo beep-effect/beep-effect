@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:028"
+observation_refs:
+  - "so:sha256:91ce079d4dea5a5907e9630b019b217c08b415b18fe7a879438c08ee78a6224a"
+  - "so:sha256:bad56663a003aa7051c44ac97314da969e4902eaf2f08dad9c0bbbded61d7be4"
+cq_warrants: []
+proposed_referent:
+  label: "Internal secret-environment-name subset"
+  description: "A derived software vocabulary formed by omitting TURBO_CACHE from the broader cache environment-name vocabulary."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A vocabulary of secret-bearing configuration inputs"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A lexical alias set for secret environment variables"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation shows only a derived vocabulary construction and its alias; it does not observe secret values, secret-bearing inputs, or their use."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

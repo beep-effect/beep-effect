@@ -1,0 +1,23 @@
+id: so:sha256:2e3e81e835f2ea841bac3ef7b4255235beaaf5b2cc8002c38934bfbb52946467
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 800
+  end_line: 800
+  content_sha256: 864e315cc3f40c34334632e9393a442af36e73915ce17c73bf138c5018f66a55
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::FALLOW_BLOCKING_LANES
+  lexical_name: FALLOW_BLOCKING_LANES
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
+epistemic_status: parser_derived

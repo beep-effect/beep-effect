@@ -1,0 +1,28 @@
+id: "dh:sched-core:023"
+observation_refs:
+  - "so:sha256:d2b4a5bf30882ca8d4461695fdad5bf0d338847d2996011bb75358e374c71ec1"
+  - "po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a"
+  - "po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a"
+  - "po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe"
+  - "po:sha256:67896e490e18f6b629d0f7e95275f3bcf6a24af73eed3a479f3bfb6bb7636f01"
+  - "po:sha256:c317ad442968f0cbbbcc25cc491452db0fffc71620b820dd71dec5165f7e6618"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+cq_warrants: ["CQ-008", "CQ-009"]
+proposed_referent:
+  label: "admission-grant lifecycle state"
+  description: "The time-dependent condition in which a grant is active while its lease is present and charging work, followed by cessation when that lease is removed."
+representation_status: domain_referent
+alternatives:
+  - label: "lease-presence assertion in a state snapshot"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "filesystem presence convention only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "Heartbeat, capacity charging, liveness-based reaping, completion cleanup, and pre-work overshoot rollback together establish the operational condition under which a grant is active. The evidence does not establish a surviving ReleasedGrant phase or bearer continuity after lease deletion, so those stronger lifecycle claims remain deferred to foundational analysis."
+  discriminator: "A granted lease is heartbeated while it charges capacity and leaves the live set through liveness reaping, completion cleanup, or pre-work overshoot rollback."
+epistemic_status: proposed
+confidence: {value: 0.84, use_for_acceptance: false}

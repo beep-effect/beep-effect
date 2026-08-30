@@ -1,0 +1,23 @@
+id: so:sha256:81ddcd13d33f3d785dad3cb3357654deb98101cd0a5a0a20d7edfb38d0e5ba09
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 753
+  end_line: 769
+  content_sha256: 7af5edf356be576b96dd6b6c07c90802fbd185a983204c860403d7b807aaba4f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::doctestStepForTesting
+  lexical_name: doctestStepForTesting
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: doctestStepForTesting
+source_excerpt: 'export const doctestStepForTesting: {'
+epistemic_status: parser_derived

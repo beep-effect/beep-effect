@@ -1,0 +1,24 @@
+id: so:sha256:8bdc9536bf3ac56ba4f0459a1abb53760473e163fa4c62d4eeaebd08ade5d4ae
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 272
+  end_line: 287
+  content_sha256: 08ff7fc762d52edd4c7d726dd239177378b23cd6c338456f5749581002c03210
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::collectPackageVerifyChangedFiles
+  lexical_name: collectPackageVerifyChangedFiles
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const collectPackageVerifyChangedFiles = Effect.fn("PackageVerify.collectPackageVerifyChangedFiles")(function*
+  (
+epistemic_status: parser_derived

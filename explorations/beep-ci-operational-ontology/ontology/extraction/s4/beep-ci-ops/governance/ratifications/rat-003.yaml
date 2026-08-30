@@ -1,0 +1,10 @@
+id: rat:3
+proposal_ref: otp:machine-proof-lock:001
+proposal_sha256: b075d75f871046de37e8993511b07ee8ea4e7b0568df0842d3a62a73ede02464
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept ContendedResource — the generalization stands; the proof lock becomes its named individual
+  at S5 with the bounce history attached.

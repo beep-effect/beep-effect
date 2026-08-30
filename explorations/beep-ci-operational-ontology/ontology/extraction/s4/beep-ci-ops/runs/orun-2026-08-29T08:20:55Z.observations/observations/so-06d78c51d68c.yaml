@@ -1,0 +1,23 @@
+id: so:sha256:06d78c51d68c7bd2b74826d41ef718f88bf0b787bd56113374260cc58149bbe0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 39
+  end_line: 39
+  content_sha256: df9e781f254306e23a845df1417320259404f046964df7dc236af2c81ca78319
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/github/JobShape.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("internal/github/JobShape");
+epistemic_status: parser_derived

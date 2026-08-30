@@ -1,0 +1,23 @@
+id: so:sha256:b1edf8e2059bb94ee70ec9c63e11a9511f3abff52a3889bc3d0ceb7e558c0750
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 609
+  end_line: 621
+  content_sha256: 38ea91f2b2558d8b1108397c3d7c65737f67ceeb422fbcc204912c3e65043627
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::statusRemoteStep
+  lexical_name: statusRemoteStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const statusRemoteStep = (context: RepoRunContext): RepoPlanStep =>'
+epistemic_status: parser_derived

@@ -1,0 +1,24 @@
+id: "dh:yeet-planner:010"
+observation_refs:
+  - "so:sha256:4c9b0f2144a18fd434148b352528c9afd321113b35de3a3ae4e8133fa0982b25"
+  - "so:sha256:d12dc130b2977839a2e5a415082b18c0bbf54dbbee29dfe99ac0872f1cd00260"
+cq_warrants: []
+proposed_referent:
+  label: "Gate artifact-kind source vocabulary"
+  description: "A controlled source vocabulary containing baseline, inventory, manifest, snapshot, and tsbuildinfo labels."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Kinds of persisted gate information artifacts"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "Lexical aliases for file formats or roles"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Literal membership, export, and a derived source alias establish a controlled implementation vocabulary but do not observe the identity, lifecycle, or operational role of any gate artifact."
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

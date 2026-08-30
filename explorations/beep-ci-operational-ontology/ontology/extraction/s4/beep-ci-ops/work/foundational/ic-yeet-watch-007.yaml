@@ -1,0 +1,54 @@
+id: "ic:yeet-watch:007"
+hypothesis_ref: "dh:yeet-watch:028"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Membership check against the Yeet monitor failure-signature specification
+    domain in ic:yeet-watch:005: two occurrences represent the same setup-5xx
+    specification only when they preserve the same job-level failure
+    prerequisite, normalized setup-step-name predicate, failed-setup-step
+    condition, classifier priority, applicability context, and version lineage.
+    The current predicate observes no HTTP status, so the setup-5xx spelling is
+    supporting policy vocabulary rather than an identity criterion.
+  reidentification_key:
+    - "job conclusion must be failure"
+    - "normalized Set up job or Set up runner step-name predicate"
+    - "setup step conclusion must be failure"
+    - "classifier priority, applicability context, and version lineage"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One job-shape recognition prescription joins the job-failure prerequisite
+    to a failed implicit setup-step predicate. It does not include a matching
+    job, a causal control-plane incident, a detector execution, or a rerun.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "subkind: failed hosted jobs whose implicit setup step concluded failure"
+    - "role: a matching failed job currently eligible for a bounded rerun"
+    - "event: an actual GitHub control-plane 5xx setup failure"
+    - "process: one execution of shape detection or the rerun procedure"
+    - "none: the setup-5xx token as only a lexical selector"
+  existential_dependencies:
+    - "At least one faithful bearer of the setup-shape recognition prescription, generically rather than this token"
+    - "The GitHub job-record vocabulary and normalization context in which setup steps are recognized"
+    - "A Yeet policy revision for its current rerun-authorized role, but no particular matching job or 5xx event"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as a historical specification"
+    - "withdrawn from the current rerun policy"
+    - "ceased when no faithful bearer of the specification remains"
+counterexamples:
+  - description: >-
+      A workflow that names a nonexistent action version deterministically
+      fails its setup step and matches setup-5xx even though no GitHub 5xx
+      occurred, so the predicate cannot identify a causal 5xx failure class.
+  - description: >-
+      Multiple failed jobs can satisfy the same setup-step shape while
+      remaining distinct jobs, incidents, detector calls, and rerun attempts.
+status: proposed

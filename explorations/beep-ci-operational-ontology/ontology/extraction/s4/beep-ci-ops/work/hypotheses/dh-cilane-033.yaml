@@ -1,0 +1,24 @@
+id: "dh:cilane:033"
+observation_refs:
+  - "so:sha256:73b58d1ec4a24fdfca38252a7a69941ddb96a6b5b6ca68fa0b64de1bb4d8b462"
+  - "so:sha256:8c556f5ef4d289d44bd8c9eb7978e457af741ef84f6783137601a7552bec4f3b"
+cq_warrants: []
+proposed_referent:
+  label: "CI lane module identity and environment typing"
+  description: "The module annotation identifier binding and compile-time environment union used by the implementation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "runtime service requirement description"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "operational execution environment"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A repository-local annotation binding and a type-level service union are conventional module plumbing. Neither observation identifies an actual execution environment, service instance, or resource state."
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false

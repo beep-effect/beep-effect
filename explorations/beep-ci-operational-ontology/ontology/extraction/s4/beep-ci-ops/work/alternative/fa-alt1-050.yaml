@@ -1,0 +1,20 @@
+id: "fa:alt1:050"
+hypothesis_ref: "dh:turbo-cache:014"
+identity_card_ref: "ic:alt1:050"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "a transit work procedure specification with richer content than ordering"
+    still_viable: true
+  - label: "a verification lane"
+    still_viable: false
+strongest_counterexample: "A package-local transit run is not a second transit specification.
+  The entry does not, on the cited quotation, reveal a verification purpose, so treating transit
+  as a verification lane overreaches the observation."
+verdict: "analyzed"
+needed_evidence: "Task-purpose content for transit (script, outputs, or a quoted operational
+  role). Until that is observed, transit as 'ordering-only task spec' and 'work procedure spec'
+  are observationally equivalent; verification-lane is not viable."

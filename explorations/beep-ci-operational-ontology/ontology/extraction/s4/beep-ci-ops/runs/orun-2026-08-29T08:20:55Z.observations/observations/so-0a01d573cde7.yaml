@@ -1,0 +1,23 @@
+id: so:sha256:0a01d573cde7e8cf52a9fe8d17a5cd42eb05d8f9d1a9f07251e0b1d7fc68dbae
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 620
+  end_line: 620
+  content_sha256: 05a790395dcf0740d99d824857cffa720bd7ee5e29801dcf87498c682e821cb3
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CI_LANE_TURBO_CONCURRENCY_ARG
+  lexical_name: CI_LANE_TURBO_CONCURRENCY_ARG
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
+epistemic_status: parser_derived

@@ -1,0 +1,33 @@
+id: "ic:alt1:050"
+hypothesis_ref: "dh:turbo-cache:014"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Turbo task specifications named transit are the same iff they are the
+    same named task prescription in this repository's Turbo configuration document at the
+    observed corpus commit, carrying the observed upstream transit-task dependency selector
+    (^transit). The task key spelling is reidentification evidence, never the sameness
+    criterion."
+  reidentification_key:
+    - "transit"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one named task specification transit as a single information object inside the Turbo
+    document; a run of the task is not a part of the specification"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies:
+    - "Turbo configuration document at the observed commit"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A package-local transit run is not a second transit specification. The entry does
+      not, on the cited quotation, reveal a verification purpose, so treating transit as a
+      verification lane overreaches the observation."
+status: "proposed"

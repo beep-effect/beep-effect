@@ -1,0 +1,48 @@
+target: "otp:hard-floor-engaged-situation:001"
+target_sha256: "f640a9312a3bda8f614975c8dd2c3f3e572eca4f262f547679e4f12da815f3a4"
+chain_sha256: "ce89da22120a64638c0cc02c91cb68c687d11fc6b8dabf736c036b8b56a22946"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: deferred-continuous-situation-identity
+    counterexample: >-
+      Snapshots at 10:00 and 10:02 can both report the hard floor while memory
+      recovered at 10:01, creating two situations rather than one. The rigid
+      class and card use uninterrupted below-floor continuity and explicitly
+      defer reidentification because the snapshots cannot establish that interval.
+    outcome: survived
+  - surface: warrant
+    rule: support-warrant-self-contradiction
+    counterexample: >-
+      CQ-023 derives HardFloorException from the snapshot-global
+      hardFloorEngaged assertion and can link the request directly to
+      AdmissionPolicy. The revised definition and open issue concede that the
+      continuous situation class is unnecessary, while operational_warrant
+      still claims necessary support for AdmissionPolicy.
+    outcome: landed
+  - surface: null_discriminator
+    rule: deployed-machine-condition-discriminator
+    counterexample: >-
+      A Boolean DTO alone cannot preserve the cited machine-side fact that
+      measured available memory below the governed floor forces live admission
+      capacity to zero. The world-side control situation survives the null test,
+      although its continuity across observations remains deferred.
+    outcome: survived
+rival_models_still_viable:
+  - "Use only a time-indexed hardFloorEngaged assertion without reifying a continuous situation."
+evidence:
+  - "so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451"
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301"
+  - "CQ-023"

@@ -1,0 +1,26 @@
+id: ic:alt4:006
+hypothesis_ref: dh:sched-core:008
+identity:
+  supplies_identity: true
+  identity_criterion: Two weighted-admission policy specifications are the same when they assign the same capacity, hard-floor, heartbeat, aging, progress, and class-cap parameters that govern rank and skip; default numeric literals are evidence of the chartered assignment, never the criterion.
+  reidentification_key:
+    - AdmissionConfig
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The parameter set composes one policy; changing class cap or aging while leaving other knobs fixed is a different policy, not a part of the old one.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: A configuration object whose values are never read by rank or skip would be implementation convenience, not this policy.
+  - description: A particular night's deployed process holding these numbers is a bearer of the policy, not a second specification.
+status: proposed

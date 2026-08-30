@@ -1,0 +1,55 @@
+target: "otp:seat-grant:001"
+target_sha256: "2b49c69278f1e614e931768eb86ad692dc07ecae53dcc227ecc7425faf0a79c7"
+chain_sha256: "71ece90510652ffc370f95a0ef2bc7fe7e3e9de6cc275ef803ad047864c69707"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: lease-lineage-identity
+    counterexample: >-
+      The same process can receive two grants with identical encoded fields
+      before and after cleanup, while heartbeat rewrites change one live
+      grant's bytes. The card separates the repeated lease-creation lineages
+      and preserves the one lineage through heartbeat updates; path and field
+      values remain evidence rather than identity.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-active-grant
+    counterexample: >-
+      CQ-008, CQ-009, and CQ-010 require the active admission entity that owns
+      capacity, can be reaped, and exposes the pre-grant accounting context.
+      A request or bare status value cannot answer those questions, so
+      SeatGrant is directly warranted rather than a support-chain convenience.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-lease-lifecycle-discriminator
+    counterexample: >-
+      A lease-shaped DTO could serialize owner and charge fields without
+      governing capacity. The deployed scheduler stages this lease, charges
+      it, heartbeats it, reaps it on owner failure, and rolls it back after an
+      overshoot; those transitions are false in the serialization-only twin.
+    outcome: survived
+rival_models_still_viable:
+  - "The active lease artifact may record a distinct world-side grant relator."
+evidence:
+  - "so:sha256:4ca539a7a3ef2f6716f98022b42a4b54032476fd6ca39745d1a1b2aa2e9cd150"
+  - "so:sha256:9d883e58d7914e411e29305aba63d9b50f0b29af985e462558a90e0b881c8bbd"
+  - "po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a"
+  - "po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:67896e490e18f6b629d0f7e95275f3bcf6a24af73eed3a479f3bfb6bb7636f01"
+  - "po:sha256:c317ad442968f0cbbbcc25cc491452db0fffc71620b820dd71dec5165f7e6618"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "CQ-008"
+  - "CQ-009"
+  - "CQ-010"

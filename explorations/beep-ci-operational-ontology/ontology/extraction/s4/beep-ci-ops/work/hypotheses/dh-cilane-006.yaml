@@ -1,0 +1,24 @@
+id: "dh:cilane:006"
+observation_refs:
+  - "po:sha256:b86081ae1b40f0eb1519f9e593239d0b62cb1012b148d0de889651ca935087b2"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "desktop IPC verification lane"
+  description: "A possible operational verification lane named by the quoted desktop-ipc token; the token-to-work relation is unobserved."
+representation_status: lexical_alias
+alternatives:
+  - label: "desktop-ipc command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "desktop IPC integration-verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The hyphenated token is semantically suggestive, but the observation records only its literal occurrence. It gives no canonical execution, scope, participant, or result that would distinguish a lane from dispatch syntax."
+epistemic_status: proposed
+confidence:
+  value: 0.42
+  use_for_acceptance: false

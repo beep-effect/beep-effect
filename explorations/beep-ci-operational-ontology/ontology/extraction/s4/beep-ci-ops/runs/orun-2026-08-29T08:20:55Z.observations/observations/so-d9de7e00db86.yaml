@@ -1,0 +1,24 @@
+id: so:sha256:d9de7e00db8617bb6d54778072d70e4f7a4131d11866b35ee63a2a78e3441c43
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 140
+  end_line: 143
+  content_sha256: 754fb0d5059c338d70d1168bac0410b03f55c8c9e92bfdf32cd4a7744c9c0593
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::MemoryStatsLive
+  lexical_name: MemoryStatsLive
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: MemoryStatsLive
+source_excerpt: 'export const MemoryStatsLive: Layer.Layer<MemoryStats, never, FileSystem.FileSystem>
+  = Layer.effect('
+epistemic_status: parser_derived

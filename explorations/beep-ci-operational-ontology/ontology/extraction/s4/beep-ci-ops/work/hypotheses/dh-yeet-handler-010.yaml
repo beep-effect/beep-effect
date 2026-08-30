@@ -1,0 +1,28 @@
+id: "dh:yeet-handler:010"
+observation_refs:
+  - "so:sha256:12f0283e6bc462f502a24b5cbc92676be9a56923385013744f7ca9c210e0856c"
+  - "so:sha256:46e955599f132e8f4d74d3d0ae45556e7ca9d122ed657c07b3b7a97ce9b4449c"
+  - "so:sha256:559894ea743432ee2425956d8fab59a94f1c385317f35dcbb9aa224dbcfc64fb"
+  - "so:sha256:5af53110178b84d3f7e449f95ff932a2258a178228e23e945b61afaffd7c7e4d"
+  - "so:sha256:b91abc4c6e1b32da5838513750e19706ff3f7386e5babd0d55cdc00d4cce1b81"
+  - "so:sha256:bbf11e05be5bbb32dbea42d76d1adecd684351d921f22d33bf670b9dfb61a403"
+  - "po:sha256:3d30eb80b619e2b7cf5c9261718d56c4a20637d162845611a655b025482e6325"
+cq_warrants: ["CQ-022", "CQ-025"]
+proposed_referent:
+  label: "Yeet verdict record"
+  description: "A serialized information artifact carrying the result of a Yeet run; it is distinct from the run or verification attempt it records."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification-attempt terminal outcome occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "transient verdict DTO with no governed artifact identity"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A transient result DTO can have a builder, codec, writer, elapsed field, and multiple serialization locations without any custody rule that individuates a governed verdict artifact; every cited declaration remains true in that model."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.77, use_for_acceptance: false}

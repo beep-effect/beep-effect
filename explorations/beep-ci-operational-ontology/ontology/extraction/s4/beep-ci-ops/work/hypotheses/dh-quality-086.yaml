@@ -1,0 +1,21 @@
+id: "dh:quality:086"
+observation_refs:
+  - "so:sha256:afe765dad4317eea97a365ba4d79738dddb5943e47862ad5659c76c0fcc8665c"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration renderTurboConfigProofReportJson in TurboConfigProof.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by renderTurboConfigProofReportJson"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only source export or declaration structure for renderTurboConfigProofReportJson. Export visibility and lexical suggestiveness are compatible with implementation plumbing and provide no observed operational bearer, occurrence, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

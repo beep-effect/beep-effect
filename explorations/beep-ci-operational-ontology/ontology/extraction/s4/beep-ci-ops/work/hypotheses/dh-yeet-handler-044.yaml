@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:044"
+observation_refs:
+  - "so:sha256:8956ee3f8be6c406049ff5e141bae061c7ee6b4205df9642253c21236de23bf7"
+cq_warrants: []
+proposed_referent:
+  label: "runWithOriginLockOnly helper"
+  description: "No domain-ontology referent is proposed for the runWithOriginLockOnly helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "origin-lock coordination procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

@@ -1,0 +1,24 @@
+id: so:sha256:eb23c2d6c96b151cb306fd2014aff8e987d558064528a73b49bd6662363fd05c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 304
+  end_line: 308
+  content_sha256: d96fb63e9973004163de46f4081e30b3f8cecbb3d67327774cf1512bc71ad126
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::feedbackRunArgs
+  lexical_name: feedbackRunArgs
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const feedbackRunArgs = (feedbackTask: YeetFeedbackTask, filters: ReadonlyArray<string>):
+  ReadonlyArray<string> =>'
+epistemic_status: parser_derived

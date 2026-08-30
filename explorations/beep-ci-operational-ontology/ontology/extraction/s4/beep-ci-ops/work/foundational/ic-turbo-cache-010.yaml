@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:010"
+hypothesis_ref: "dh:turbo-cache:011"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same audit task specification only when they are the same authored repeatable audit instruction in the same versioned configuration lineage with the same complete inherited dependency, input, environment, cache, output, and logging prescriptions; the audit key alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key audit"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The task declarations jointly prescribe one repeatable audit instruction, regardless of any particular audit run or result."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "An audit verification lane realized by the specification"
+    - "A root template for package-specific audit specifications"
+  existential_dependencies:
+    - "The versioned configuration and package graph that resolve the upstream audit selector"
+    - "At least one bearer of the audit instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "Different package audit scripts can inherit the same upstream selector, and an audit run can produce no trustworthy evidence, so ordering content alone cannot individuate the full lane or result."
+status: proposed

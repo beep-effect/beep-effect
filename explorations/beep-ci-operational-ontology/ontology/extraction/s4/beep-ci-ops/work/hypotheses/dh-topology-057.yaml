@@ -1,0 +1,24 @@
+id: "dh:topology:057"
+observation_refs:
+  - "po:sha256:bccb81c9b140088b2bc1b3a1ae28e72376ae95593448b027640e0ff0630a21fb"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/gov-legal-mcp workspace package"
+  description: "The workspace software package information artifact identified by @beep/gov-legal-mcp in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "lexical_alias"
+alternatives:
+  - label: "@beep/gov-legal-mcp as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort row containing @beep/gov-legal-mcp can feed the affected-package query while remaining serialized implementation data, so the cited observation establishes only the package-name token."
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

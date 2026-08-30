@@ -1,0 +1,64 @@
+id: otp:admission-priority-class:001
+hypothesis_ref: dh:sched-core:006
+identity_card_ref: ic:sched-core:006
+foundational_status: explicitly_deferred
+term:
+  local_name: AdmissionPriorityClass
+  preferred_label: admission priority class
+  proposed_iri: https://oip.law/ontology/ci-ops#AdmissionPriorityClass
+  owl_entity_kind: class
+definition:
+  text: A governed closed-vocabulary specification whose publish and verify values classify the priority recorded
+    on a queued SeatRequest for CQ-021. The elapsed-time effective-rank procedure is a separate specification candidate,
+    so changing its aging threshold does not silently change the identity of this vocabulary.
+  source:
+  - CQ-021
+  - so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf
+  - so:sha256:5e87f57f7f30cab771a4bc15b4510264f4a086fed36480da3266357386f66124
+  - so:sha256:6e399c3569812e74daffcb4563c47f47164fae6163546e154e5b8f1d966c3e04
+  - so:sha256:cc210ff6b14ef1eb8550f22d4a3c3447b3062cc78e49cede4ed5f2a349c289bf
+  - po:sha256:91f1ef683802bbf4e9c429116ffd8272c8ba4c597f563223da81c9e74c1600a6
+  - po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3
+  - po:sha256:aa6a7b217122be466e63cfd890c480ef082f6f9d5b24c97731d889dd3a80886b
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: relational
+revision_log:
+- from_sha256: 5c95bc1f9b49667e02901bc9d4b25959c27355cab11d3d4766741f06871d1089
+  addressed:
+  - unresolved-core-sortal-identity
+  - discriminator-true-of-implementation
+- from_sha256: c41db1b5fa9b87c094ffb9e944c20852c521e22df75ba9ccf0f9448a203f655a
+  addressed:
+  - discriminator-true-of-implementation
+- from_sha256: 89a4ef489f3de77e61bf0c72180b11364d25bde1256423327f4cff99036479a9
+  addressed:
+  - unresolved-core-sortal-identity
+- from_sha256: 897d43fd4843ede8267269293ede43fc2cedefeed25bdb23dfdc8ae49fb3dae8
+  addressed:
+  - unresolved-core-sortal-identity
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-021
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The observed rank expression promotes an aged
+  verify ticket to the same rank as publish priority, so recorded priority and elapsed queue time govern which request
+  is considered first.'
+- 'Rejected weak alternative: sorting codes and comparator implementation only.'
+open_issues:
+- 'Steward choice remains open: A governance or versioning artifact must show whether the priority domain and ranking-plus-aging
+  rule are one specification or two independently revised information objects.'
+- 'Steward must choose whether to adopt the still-viable rival model: AdmissionPriority is one controlled vocabulary,
+  while effectivePriorityRank is a separately versioned procedure.'
+- 'Steward must choose whether to adopt the still-viable rival model: Effective queue priority is an anti-rigid
+  role or phase of a queued request under elapsed-time context.'
+status: proposed
+revision_requests: []

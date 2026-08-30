@@ -1,0 +1,23 @@
+id: so:sha256:86499b783c43c133332cf4bfe40ef5b5fdafb8b08b5be971b2f0d32e2d3e8373
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 43
+  end_line: 47
+  content_sha256: 3b8d7a787e8980834e1ef28c4b5d1d4e4277f9316ddf86c4a62857c39b4d4853
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::TurboConfigProofTaskName
+  lexical_name: TurboConfigProofTaskName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: TurboConfigProofTaskName
+source_excerpt: export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe(
+epistemic_status: parser_derived

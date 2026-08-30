@@ -1,0 +1,26 @@
+id: "dh:sched-core:018"
+observation_refs:
+  - "so:sha256:aae98d5927e0b5760e2cd21c7eb757857be3c4a618f5c59c83191a9311cff21b"
+  - "po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807"
+  - "po:sha256:2d8b36c6bb7afb7cda727640a5656328452253def711c0a1cfdb43848de709a9"
+  - "po:sha256:452b4ed8ff3e6ac37d200a6c3d8a5737000078258fbde7864a0186d709407c89"
+  - "po:sha256:7a38addfdaf431d72a7cb4dec84da8da890034f021e7c3aa0e0d9a1885b27ee0"
+cq_warrants: ["CQ-023"]
+proposed_referent:
+  label: "observed seat-request queue wait"
+  description: "The elapsed duration between the beginning of an admission wait and a later observation instant while the request remains queued."
+representation_status: domain_referent
+alternatives:
+  - label: "computed duration reported by the progress logger"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "temporary local arithmetic value"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The deployed queue uses elapsed waiting to change effective priority after its configured aging window, so the duration is a time-indexed quality of the queued request with operational consequences. Persistence in a snapshot or KPI record is an information-layer choice rather than a denotation condition."
+  discriminator: "The deployed queue promotes a waiting verify request to publish priority after the configured aging window, so elapsed queue time changes admission ordering."
+epistemic_status: proposed
+confidence: {value: 0.89, use_for_acceptance: false}

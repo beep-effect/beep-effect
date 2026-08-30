@@ -1,0 +1,23 @@
+id: so:sha256:dfc1fb676ba2773a33fc82292705d2ba8fa532807c5af902850d4a8b651f65dd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 318
+  end_line: 318
+  content_sha256: 2a341928c04171500524167164e1f8e3cb392f9c94a0a6d52725e740f5e64065
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::TURBO_SHAPE_FLAGS
+  lexical_name: TURBO_SHAPE_FLAGS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const TURBO_SHAPE_FLAGS = ["--affected", "--base", "--summarize"] as const;
+epistemic_status: parser_derived

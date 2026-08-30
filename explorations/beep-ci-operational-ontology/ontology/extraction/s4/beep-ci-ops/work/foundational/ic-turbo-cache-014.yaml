@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:014"
+hypothesis_ref: "dh:turbo-cache:015"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same documentation-generation task specification only when they are the same authored repeatable instruction in the same versioned configuration lineage with the same complete inherited dependency, cache, input, and output prescriptions; the docgen key or transit dependency alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key docgen"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The dependency and generation declarations form one reusable documentation-generation instruction, distinct from its outputs and runs."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A documentation-generation procedure specification"
+    - "A documentation verification lane"
+  existential_dependencies:
+    - "The transit specification, package scripts, and versioned configuration that complete the generation instruction"
+    - "At least one bearer of the instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A docgen task may faithfully generate stale or invalid documentation, so generation behavior and a transit dependency do not establish a verification function or evidence outcome."
+status: proposed

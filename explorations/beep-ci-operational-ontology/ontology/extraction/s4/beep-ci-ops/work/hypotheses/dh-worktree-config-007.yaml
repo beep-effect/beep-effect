@@ -1,0 +1,19 @@
+id: "dh:worktree-config:007"
+observation_refs:
+  - "po:sha256:8cafaac3a50cef6edc6b80ad03c63f9d29cec0ba4942ec59d5574dbe9b0a97e0"
+cq_warrants: []
+proposed_referent:
+  label: "unresolved pull-request review thread"
+  description: "A review-thread information artifact in an unresolved state whose resolution is required before merge."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "review-thread resolution obligation"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A pull-request DTO can carry an unresolved Boolean and merge control flow can block on it while no separately individuated unresolved-thread phase or governed thread artifact is established; the policy quotation is true of that state-field model."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

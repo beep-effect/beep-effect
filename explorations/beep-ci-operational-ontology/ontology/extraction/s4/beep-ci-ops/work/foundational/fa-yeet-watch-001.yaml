@@ -1,0 +1,23 @@
+id: "fa:yeet-watch:001"
+hypothesis_ref: "dh:yeet-watch:013"
+identity_card_ref: "ic:yeet-watch:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Successful terminal phase of the check execution rather than recorded classification content"
+    still_viable: true
+  - label: "Snapshot-bound outcome-assignment information object rather than one reusable pass value"
+    still_viable: true
+  - label: "Pass literal as a selector with no denoted classification content"
+    still_viable: false
+strongest_counterexample: >-
+  The same pass content can occur in records for distinct checks and snapshots,
+  while one continuing check can move from pending to pass. Therefore the
+  classification value is neither the check bearer nor one execution; the
+  source still does not decide whether repeated pass assignments are tokens of
+  one reusable information object or distinct snapshot-bound information
+  objects with equal content.
+verdict: analyzed

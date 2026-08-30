@@ -1,0 +1,54 @@
+id: otp:enqueued-at:001
+hypothesis_ref: dh:sched-core:017
+identity_card_ref: ic:sched-core:016
+foundational_status: analyzed
+term:
+  local_name: enqueuedAt
+  preferred_label: enqueued at
+  proposed_iri: https://oip.law/ontology/ci-ops#enqueuedAt
+  owl_entity_kind: data_property
+definition:
+  text: A data relation from a SeatRequest to the instant at which its durable admission ticket enters the shared queue and
+    from which elapsed waiting and priority aging are measured. CQ-021 requires this enqueue instant for every queued request;
+    equal millisecond values do not identify enqueue events or request individuals.
+  source:
+  - CQ-021
+  - so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf
+  - so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98
+  - po:sha256:9c431dec2cde95c190b0b7d6cdbcbda162b9cf587a8906a6fe1a4d2286a01d58
+  - po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3
+foundational:
+  ufo_category: none
+  gufo_alignment: not applicable to an OWL property
+ontoclean:
+  rigidity: unresolved
+  identity: none
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-021
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The admission bracket stamps a newly created durable ticket
+  with the current time, and effective rank later compares that instant with the current time to represent elapsed waiting.'
+- 'Rejected weak alternative: sorting field only.'
+open_issues:
+- 'Steward must choose whether to adopt the still-viable rival model: Additionally reify each enqueue occurrence for repeated-enqueue
+  provenance.'
+revision_requests: []
+revision_log:
+- from_sha256: 4ade3c9a294939800f1cbe7c0d3cbdeb7b0634d6f87cd17416c7f230a6042e42
+  addressed:
+  - identity-card-entity-kind-mismatch
+  - discriminator-true-of-ticket-dto
+- from_sha256: 2b6de0c2d8e73d8b6044d4718bf5803f29f54e4cab5ad3731ae8fa169889c7de
+  addressed:
+  - identity-card-entity-kind-mismatch
+  - discriminator-true-of-ticket-dto
+- from_sha256: a7d8f89b77bb4a930561b419c7e073d990a2e51ae97d01f1e59e4033aeb469db
+  addressed:
+  - prior-landed-attack-not-retired
+status: proposed

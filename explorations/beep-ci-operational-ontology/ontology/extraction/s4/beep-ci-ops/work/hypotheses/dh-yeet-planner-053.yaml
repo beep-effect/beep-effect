@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:053"
+observation_refs:
+  - "so:sha256:780c70471e3ce1d335a5e6744b99a98b06d33fec73423c0446f1c5a34151d7cd"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for buildYeetRunPlanWithMode in Planner.ts"
+  description: "No separate domain referent is established for the source declaration buildYeetRunPlanWithMode."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::buildYeetRunPlanWithMode"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records an exported source declaration but no fact about its behavior, represented subject, persistence, or domain identity; export visibility alone cannot reject the implementation-only null."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

@@ -1,0 +1,18 @@
+id: "dh:sched-core:038"
+observation_refs:
+  - "so:sha256:edb012b38094de5a54c096ee0e38af428f6d3a7147f18cc4bc1368c302cec206"
+cq_warrants: []
+proposed_referent:
+  label: "PromotionTickInfo bookkeeping bundle"
+  description: "An internal bundle of available memory, capacity, current time, and scanned live state used within one promotion iteration."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "promotion-decision context snapshot"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The declared fields form a convenient call-local context, but no observation shows an independently retained snapshot or a CQ need for this exact grouping."
+epistemic_status: proposed
+confidence: {value: 0.96, use_for_acceptance: false}

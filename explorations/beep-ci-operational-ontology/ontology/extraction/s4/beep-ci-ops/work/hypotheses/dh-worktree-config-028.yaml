@@ -1,0 +1,18 @@
+id: "dh:worktree-config:028"
+observation_refs:
+  - "so:sha256:0fd42b807afe55e3f186db0cc97f31eb3c28a11c6dd375a73d37797ee0cf942b"
+cq_warrants: []
+proposed_referent:
+  label: "refs-heads parser prefix constant"
+  description: "An internal string constant used by worktree parsing code."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Git branch-reference namespace"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is an unrepresentable variable declaration; the excerpted string does not establish an ontology-relevant branch-reference referent."
+epistemic_status: proposed
+confidence: {value: 0.96, use_for_acceptance: false}

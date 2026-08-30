@@ -1,0 +1,18 @@
+id: "dh:sched-core:037"
+observation_refs:
+  - "so:sha256:a758d7586f756394f084665ae8e1708658b53accffcf96ab257558a9547b2652"
+cq_warrants: []
+proposed_referent:
+  label: "PromotionTick bookkeeping result"
+  description: "An internal result bundle carrying promotion outcome, tick information, and origin-busy status."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "record of one queue-promotion evaluation"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Only local result fields are observed, with no evidence that promotion ticks are persisted, reidentified, or required by a competency question."
+epistemic_status: proposed
+confidence: {value: 0.98, use_for_acceptance: false}

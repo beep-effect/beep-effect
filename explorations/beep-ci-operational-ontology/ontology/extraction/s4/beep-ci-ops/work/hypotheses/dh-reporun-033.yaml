@@ -1,0 +1,21 @@
+id: "dh:reporun:033"
+observation_refs:
+  - "so:sha256:2e15d06dcdb2e9d453bbe2c22a60752b3c62e62db475cf333f2590ac4ca41185"
+cq_warrants: []
+proposed_referent:
+  label: "repository-run output-bound constant"
+  description: "The implementation configuration value used to cap repository-run captured output."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Evidence-retention policy for repository-run logs"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation exposes construction of an OutputBound value but no CQ, obligation, or external policy record. A configured buffer cap alone does not warrant a domain referent."
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false
+

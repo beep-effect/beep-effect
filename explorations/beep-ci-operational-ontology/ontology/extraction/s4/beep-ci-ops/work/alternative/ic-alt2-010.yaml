@@ -1,0 +1,38 @@
+id: ic:alt2:010
+hypothesis_ref: dh:sched-core:023
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two admission-grant lifecycle states are the same iff they are the active-then-released condition of the same grant, beginning
+    while its lease is present and charging and ending when that lease is removed; the lease-file path is evidence rather
+    than the criterion.
+  reidentification_key:
+  - admitted.leasePath
+  - YeetAdmissionLease presence in LiveAdmissionState
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: One active-grant phase per grant, held while the lease is present and dropped on release.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: phase
+  alternatives:
+  - relator
+  - role
+  - process
+  existential_dependencies:
+  - admission grant / lease
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - lease removed by runAdmitted finalizer
+counterexamples:
+- description: >-
+    Filesystem presence of an empty or quarantined file is not this phase: the quotations identify a present lease as heavy
+    work currently charged, and the finalizer removes that lease when guarded work ends.
+- description: >-
+    Heartbeat refresh mutates heartbeatAtMillis while the grant remains active, so treating each heartbeat snapshot as a new
+    lifecycle state would over-count one phase.
+status: proposed

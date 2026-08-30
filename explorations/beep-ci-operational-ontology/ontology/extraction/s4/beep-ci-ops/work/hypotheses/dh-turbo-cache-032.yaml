@@ -1,0 +1,26 @@
+id: "dh:turbo-cache:032"
+observation_refs:
+  - "so:sha256:4d9292a3359de9c6beeeebc378e698b7672496b54f8b5743e943bce8857b33d8"
+  - "po:sha256:1ffc862ba7eec6d7ee7eed682dfb86f65db7fa7e01fb60878af8add3eea3e6be"
+  - "po:sha256:72dda28d4621e5ab4bf1a1f2d85ef9ae34b2393bde139ab0360ca629281cbebd"
+cq_warrants: []
+proposed_referent:
+  label: "Cache-plan resolver procedure implementation"
+  description: "An exported implementation procedure described as resolving a cache plan for one invocation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain-level cache-plan resolution procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A reusable procedure specification information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The export and imperative description show implementation intent. No observation identifies a procedure occurrence, prescription, or record beyond the function itself."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false

@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:026"
+observation_refs:
+  - "so:sha256:4b36270dc46660ab53e6bc00bed7816d4c842683b86eaabc60e20d54ef968d78"
+cq_warrants: []
+proposed_referent:
+  label: "buildYeetRunPlanForTesting helper"
+  description: "No domain-ontology referent is proposed for the buildYeetRunPlanForTesting helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "schedule-plan specification"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only export visibility and a declaration header. Exported implementation access does not distinguish a domain referent from code plumbing."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

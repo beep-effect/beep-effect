@@ -1,0 +1,45 @@
+id: dh:turbo-cache:021
+observation_refs:
+- so:sha256:0952b7b2035197b1af67acb93f317c9c4423d512ef37c1901ef400ebc0582d5d
+- so:sha256:5d0e6acd290b5196f60564db2ff96d372e58be87e73858be2e1509acd8ec9120
+- so:sha256:851e5258ae9f3445d2fb705147e3436235ae76d5f67e2077f865f5f4ebafcd09
+- so:sha256:fda192fc3bca2db51e31f137d0a04b20e2767c62fc68bec4e1154294ecda4319
+- po:sha256:0c1451cdc80d47a798ce0094c28a4bdb1bab2f1618bbcac3fdba9ab8d605328b
+- po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c
+- po:sha256:1ffc862ba7eec6d7ee7eed682dfb86f65db7fa7e01fb60878af8add3eea3e6be
+- po:sha256:441c069829b93c9562a294dce2ca9c5757b16db3b6dd1af5dc6ee070360ead3d
+- po:sha256:72dda28d4621e5ab4bf1a1f2d85ef9ae34b2393bde139ab0360ca629281cbebd
+- po:sha256:796a368eab4715c8836bd1377c8315816c521bd1e74c85c89948d33d2216e7a0
+- po:sha256:8719ca78bfb189d92f0013582af164aaa9206f715bad8caee214eabaad8cd954
+- po:sha256:a3f91e775ab382cb51a66901aaa9aa972fc7a4759a43a8680846173d9301a919
+- po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5
+- po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a
+- po:sha256:131f28814f662c6670d13b95d747ffc27e4b96c052785076cd1fcb43dbc64600
+- po:sha256:7ef9a21226fac9427a379db3d1c4eab2bb3d3c629f8c3425a58a13073f2047da
+cq_warrants:
+- CQ-024
+proposed_referent:
+  label: Resolved cache-plan decision for one Turbo invocation
+  description: An invocation-specific information artifact whose observed alternatives are caller-controlled, local-only,
+    and remote-read.
+representation_status: information_artifact
+alternatives:
+- label: A cache posture borne by a WorkUnit execution rather than a decision information artifact
+  representation_status: domain_referent
+  plausibility: viable
+- label: Only the tagged-union representation used by the CLI
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The resolver produces one exhaustive invocation decision and the argument formatter turns that result
+    into Turbo cache arguments or deliberately injects nothing. LocalOnly and CallerControlled already survived
+    as member terms, so leaving CachePosture non-denoting would orphan live members; conversely, a live domain with
+    either member treated as non-denoting would contradict the resolver's exhaustive operational branches.
+  discriminator: For each Turbo invocation, the resolved plan injects local-only cache arguments, carries the selected
+    remote-read mode, or leaves CI and explicit cache arguments caller-controlled.
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

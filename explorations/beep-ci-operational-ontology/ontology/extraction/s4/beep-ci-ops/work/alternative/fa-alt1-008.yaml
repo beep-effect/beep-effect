@@ -1,0 +1,21 @@
+id: "fa:alt1:008"
+hypothesis_ref: "dh:sched-core:014"
+identity_card_ref: "ic:alt1:008"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "snapshot field containing a computed sum"
+    still_viable: true
+  - label: "array-reduction result with no independent meaning"
+    still_viable: false
+strongest_counterexample: "The same reduction is the consumed side of the capacity test during
+  promotion, not only a field on the status snapshot, so it is not exhausted by being printed on
+  AdmissionSnapshot. It is still exhausted by being a time-indexed aggregate of leases."
+verdict: "analyzed"
+needed_evidence: "Whether any question asks for consumed capacity without going through
+  activeTokenTotal or AdmissionSnapshot.activeTokens. If every use is that computation, the
+  snapshot-field model and the quality model are observationally equivalent on current
+  evidence."

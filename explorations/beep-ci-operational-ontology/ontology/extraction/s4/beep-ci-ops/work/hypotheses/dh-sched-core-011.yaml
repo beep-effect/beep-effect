@@ -1,0 +1,29 @@
+id: "dh:sched-core:011"
+observation_refs:
+  - "so:sha256:1f88eded672916b2f37ae5c8ecb0f4b3d540f5e93d95d1969228a46aa808fa01"
+  - "so:sha256:66be3a449fb8fe1b9f79c3ca1dbc3f7cea3532c24af04ae583c39bf92d8326a1"
+  - "so:sha256:87d449ff888d29a0136c794f9ff08fd794d8bfabb19775a22e4a01ce036c20a6"
+  - "so:sha256:ac3c3d6e7add7894ad7f1cb48d58371ace7c4eba6eb6b953ef36537683b2d87e"
+  - "so:sha256:cea16e8238317f44186125aac803b000aec6f4192c1b0fed13beb7125be7ed61"
+  - "so:sha256:d9de7e00db8617bb6d54778072d70e4f7a4131d11866b35ee63a2a78e3441c43"
+  - "so:sha256:f1a03bb449eac818eebe7d56427328233426d2cf8878fcb6a51778ef65fc86fe"
+  - "po:sha256:7ac375710c80682c25f8e9effab735affd8a22a5d27df4ba806992d64c780f03"
+cq_warrants: []
+proposed_referent:
+  label: "live machine-memory observation"
+  description: "An information artifact reporting currently available and total physical memory in GiB for an admission decision."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "the machine's memory-availability quality"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "operating-system adapter service only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A live operating-system adapter can read MemAvailable and MemTotal, convert them to GiB, and copy availableGib into a snapshot DTO without creating an atomic, provenance-bearing memory observation; every cited fact survives that implementation-only model."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

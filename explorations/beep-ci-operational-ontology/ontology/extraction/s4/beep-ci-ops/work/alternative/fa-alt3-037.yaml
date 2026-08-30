@@ -1,0 +1,24 @@
+id: fa:alt3:037
+hypothesis_ref: dh:topology:104
+identity_card_ref: ic:alt3:037
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: 'kind: @beep/qa-capture as an identity-providing workspace package unit'
+  still_viable: true
+- label: 'information_object: @beep/qa-capture as a software information artifact'
+  still_viable: true
+- label: 'role: being a member of this workspace, borne by a package named @beep/qa-capture'
+  still_viable: true
+strongest_counterexample: The cited observation is only the capture line naming @beep/qa-capture
+  plus a rank. File contents of @beep/qa-capture can change while the workspace still treats
+  it as the same affected-closure participant, which the kind reading uses; a content-addressed
+  tarball with another name would favor the information-object reading.
+verdict: analyzed
+needed_evidence: Whether CI reidentifies @beep/qa-capture across content change via the workspace
+  name (kind) or treats a content-identical artifact as the same information object independently
+  of the name; and whether @beep/qa-capture outside this workspace is still the same entity
+  (role versus kind). The models are observationally equivalent on the topo-sort line alone.

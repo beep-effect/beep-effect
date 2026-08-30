@@ -1,0 +1,18 @@
+id: fa:alt4:050
+hypothesis_ref: dh:turbo-cache:018
+identity_card_ref: ic:alt4:050
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: Turbo task specification named storybook:build"
+    still_viable: true
+  - label: a Storybook-build procedure specification at a finer grain
+    still_viable: true
+  - label: a verification lane
+    still_viable: false
+strongest_counterexample: The storybook:build entry prescribes an upstream build dependency, which is repeatable work-ordering content, without establishing that the task is a proof surface.
+verdict: analyzed
+needed_evidence: An outputs declaration or QA gate bound to storybook:build, or a build occurrence not driven by this turbo entry, would discriminate pipeline slot from procedure spec.

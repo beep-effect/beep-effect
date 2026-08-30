@@ -1,0 +1,39 @@
+id: ic:alt2:005
+hypothesis_ref: dh:sched-core:002
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two active admission-lease records are the same iff they are the same currently-charging grant recording for one owner
+    process against machine capacity; pid plus procStart are evidence of owner reidentification rather than the criterion
+    of the record.
+  reidentification_key:
+  - YeetAdmissionLease.pid
+  - YeetAdmissionLease.procStart
+  - lease file path
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One record per live charging grant encoded as a YeetAdmissionLease value.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - relator
+  existential_dependencies:
+  - owner process
+  - admission capacity pool
+  - origin
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - lease file removed
+  - owner pid dead or procStart mismatch
+counterexamples:
+- description: >-
+    The owner process is not the lease: a process can exist before admission and after release while this record exists only
+    while heavy work is charged.
+- description: A second lease JSON for the same pid after procStart reuse is a different record; the pid alone never settles
+    sameness.
+status: proposed

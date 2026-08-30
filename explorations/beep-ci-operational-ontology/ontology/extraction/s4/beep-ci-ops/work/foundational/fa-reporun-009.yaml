@@ -1,0 +1,24 @@
+id: "fa:reporun:009"
+hypothesis_ref: "dh:reporun:018"
+identity_card_ref: "ic:reporun:009"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "controlled-vocabulary member encoding a resume policy"
+    still_viable: true
+  - label: "prohibition mode borne by a planned-step specification"
+    still_viable: true
+  - label: "implementation-only planner control value"
+    still_viable: true
+  - label: "WorkUnitExecution that was not resumed"
+    still_viable: false
+  - label: "uninterpreted planner enum member"
+    still_viable: false
+strongest_counterexample: >-
+  A never-designated step can disappear with a cancelled plan and never run at
+  all; the value prohibits one skipping mechanism but neither specifies the
+  command procedure nor records the outcome of a WorkUnitExecution.
+verdict: analyzed

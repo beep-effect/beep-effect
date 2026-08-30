@@ -1,0 +1,10 @@
+id: po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 165
+  end_line: 174
+quote: if (availableGib < config.hardFloorGib) { return 0; }
+epistemic_status: quoted_prose

@@ -1,0 +1,46 @@
+id: "ic:reporun:004"
+hypothesis_ref: "dh:reporun:007"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    For the shared RepoProofSurface procedure-specification domain, two
+    specification individuals are the same when they preserve the same
+    authoritative prescription, intended proof obligation, ordered command
+    semantics, applicability context, and revision lineage across
+    realizations. The cheap-gates member additionally requires the
+    cheap-gates operation and collect-all behavior; its literal and step
+    identifier alone do not jointly establish sameness.
+  reidentification_key:
+    - "proof-surface designation and step-definition identifier"
+    - "repository policy revision and ordered executable arguments"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One information object is unified by a single authoritative prescription
+    connecting a named proof obligation to one ordered command definition.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "controlled-vocabulary individual for a proof-surface domain"
+    - "cheap-gates verification lane or execution family"
+    - "lexical CLI selector with no independent prescription"
+  existential_dependencies:
+    - "at least one digital realization of the prescription"
+    - "the repository policy and revision that give the prescription authority"
+    - "the proof obligation the prescription is intended to discharge"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      A later repository revision can retain both cheap-gates and its step
+      identifier while changing the argument sequence or removing
+      --collect-all; that is not the same versioned prescription merely
+      because its technical names survived.
+status: proposed

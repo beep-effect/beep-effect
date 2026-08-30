@@ -1,0 +1,20 @@
+id: "fa:alt1:006"
+hypothesis_ref: "dh:sched-core:005"
+identity_card_ref: "ic:alt1:006"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "intrinsic resource cost quality of each work kind"
+    still_viable: false
+  - label: "hard-coded switch used only by this implementation"
+    still_viable: true
+strongest_counterexample: "A full-proof request on a small machine is charged fewer tokens than
+  3; the mapping is therefore not the consumed quality of admitted work and not an intrinsic
+  cost."
+verdict: "analyzed"
+needed_evidence: "A second admission implementation or a configuration override that still
+  assigns per-kind nominal charges. If only this switch exists, the implementation-only rival
+  stays viable; a second realization of the same mapping would kill it."

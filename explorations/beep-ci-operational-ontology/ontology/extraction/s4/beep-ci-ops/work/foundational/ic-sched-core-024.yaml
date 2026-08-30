@@ -1,0 +1,31 @@
+id: "ic:sched-core:024"
+hypothesis_ref: "dh:sched-core:025"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two admission-owner liveness criteria are the same specification only when they preserve one governed decision-rule lineage for process existence, start-time continuity, unreadable-state fallback, and platform scope; equal probe outcomes do not suffice."
+  reidentification_key:
+    - "criterion version"
+    - "process and start-time semantics"
+    - "fallback and platform scope"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One decision rule jointly specifying pid existence, process-start continuity, and the fallback used when current start time cannot be read."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "the process's time-varying alive or dead condition"
+    - "platform-specific process probing implementation"
+  existential_dependencies:
+    - "a process model and platform observation capabilities"
+    - "the scheduler's ownership and reaping policy"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a revised liveness or fallback rule"
+counterexamples:
+  - description: "When the current process start time is unreadable, the rule degrades to pid-only liveness, so a positive result need not establish process-start continuity or owner persistence."
+status: "proposed"

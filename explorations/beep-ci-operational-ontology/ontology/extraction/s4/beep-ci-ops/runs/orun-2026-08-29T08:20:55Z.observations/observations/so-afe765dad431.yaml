@@ -1,0 +1,23 @@
+id: so:sha256:afe765dad4317eea97a365ba4d79738dddb5943e47862ad5659c76c0fcc8665c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 504
+  end_line: 509
+  content_sha256: db00a05abd507ff00f887ed5cd474e5a0fb5691e7872d625e398d939df599722
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::renderTurboConfigProofReportJson
+  lexical_name: renderTurboConfigProofReportJson
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: renderTurboConfigProofReportJson
+source_excerpt: export const renderTurboConfigProofReportJson = (
+epistemic_status: parser_derived

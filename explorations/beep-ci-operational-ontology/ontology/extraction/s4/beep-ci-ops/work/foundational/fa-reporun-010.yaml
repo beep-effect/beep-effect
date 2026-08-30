@@ -1,0 +1,26 @@
+id: "fa:reporun:010"
+hypothesis_ref: "dh:reporun:020"
+identity_card_ref: "ic:reporun:010"
+tests:
+  spec_vs_execution: unresolved
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "WorkUnitSpecification represented by the entry"
+    still_viable: true
+  - label: "execution-telemetry record about a WorkUnitExecution"
+    still_viable: true
+  - label: "transient DTO used only for lookup"
+    still_viable: true
+strongest_counterexample: >-
+  Identical task entries in a Turbo dry-run snapshot and a later run summary
+  would be distinct records and could record different ontological targets,
+  yet the present shape carries no source-kind, capture-time, or provenance
+  field that discriminates those cases.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A source-kind discriminator for dry-run versus execution summary, snapshot
+  acquisition provenance and time, and call-site evidence showing whether the
+  entry is retained as an operational record would decide the target and
+  record-token identity.

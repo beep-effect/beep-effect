@@ -1,0 +1,23 @@
+id: so:sha256:fabc73b14fe99cf58f58f01e9235b784ce2f0f644407e4cbf0ecd200267a24b7
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 802
+  end_line: 802
+  content_sha256: cb4d01c5622e7c8b04e23d228caa2d1760cc37094a5ab6632619fdb6c2db8238
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::FALLOW_ENVELOPE_REQUIRED_FIELDS
+  lexical_name: FALLOW_ENVELOPE_REQUIRED_FIELDS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
+epistemic_status: parser_derived

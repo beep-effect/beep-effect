@@ -1,0 +1,30 @@
+id: "dh:reporun:026"
+observation_refs:
+  - "so:sha256:b1addafaac37d8ae5ba61d331e1478b13bf74addcbb005c427cb6cd00da76fc3"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46"
+cq_warrants: ["CQ-020"]
+proposed_referent:
+  label: "ordered repository-run plan specification"
+  description: "An information artifact composing a repository-run context with an ordered collection of planned command specifications."
+representation_status: information_artifact
+alternatives:
+  - label: "ScheduleProposal corresponding to the repository-run plan"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "VerificationEpisode execution"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Planner DTO with no retained domain role"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The proposed referent is a repeatable prescription whose steps may be executed more than once; it is not the dated run that follows the prescription."
+  discriminator: "The cited plan composes a run context with an array of planned command specifications, and the cited comparator gives those specifications a deterministic phase-then-identifier ordering used by the plan."
+epistemic_status: proposed
+confidence:
+  value: 0.73
+  use_for_acceptance: false
+

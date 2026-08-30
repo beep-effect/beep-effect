@@ -1,0 +1,43 @@
+id: "ic:worktree-config:012"
+hypothesis_ref: "dh:worktree-config:016"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two origin-main new-only Fallow audit work-unit specifications are the same
+    when they preserve the same Fallow audit procedure, symbolic origin/main
+    base selector, new-only finding-gate rule, completion semantics, and
+    governing revision; the concrete commit reached by origin/main in one run
+    does not supply specification identity.
+  reidentification_key:
+    - "Fallow audit procedure-specification identity"
+    - "symbolic origin/main base selector"
+    - "new-only finding-gate semantics"
+    - "completion rules and governing policy revision"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One coherent work prescription binding the audit procedure to the
+    origin/main selector and new-only finding gate.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: an execution-bound audit plan with origin/main resolved to a concrete commit"
+    - "process: one origin-main new-only Fallow audit execution"
+  existential_dependencies:
+    - "At least one faithful realization of the bound work prescription"
+    - "The repository policy defining origin/main and new-only audit use"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by changed base-selector, gate, or audit semantics"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      origin/main can advance between two invocations of the same command, so
+      the specification remains symbolically identical while its concrete
+      comparison base, changed files, findings, and execution outcomes differ.
+status: proposed

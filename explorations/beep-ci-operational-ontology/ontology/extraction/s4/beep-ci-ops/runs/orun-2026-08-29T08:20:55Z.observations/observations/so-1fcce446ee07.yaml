@@ -1,0 +1,23 @@
+id: so:sha256:1fcce446ee07c7db25111f92ed5be31f70a2501c90a9058efa5fe825b219693e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 514
+  end_line: 514
+  content_sha256: be5547055dccca1914cdd84238a71728dd9c86682b437a56bc0dff9167047a69
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::isGoalsPacketInput
+  lexical_name: isGoalsPacketInput
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const isGoalsPacketInput = (repoRelativePath: string): boolean => Str.startsWith("goals/")(repoRelativePath);'
+epistemic_status: parser_derived

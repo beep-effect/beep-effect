@@ -1,0 +1,25 @@
+id: "dh:quality:011"
+observation_refs:
+  - "so:sha256:1145d485f40fdf8cb62c8be4071026c16d8edc02376a5eb9c7187eef0f446f87"
+  - "so:sha256:a2c3e34dce1fc715196ee3b921feb4fe26539535e44f16ca87208965be6a294f"
+  - "so:sha256:d680aaebbd3bd162ccea13dc2d5e321a5e05b9a3ffe4851f184f14d074bd393c"
+  - "po:sha256:4573aff219ad22a4b8f14f24b908361c22f4bcbff875384356be23bd7e2c43d9"
+  - "po:sha256:50d39fd3d13d1c53b832893fbd1863733c110b3bec54afbff346e2a9cf49976e"
+cq_warrants: []
+proposed_referent:
+  label: "\"affected\" label in TurboConfigProofSelectorMode"
+  description: "The observed token is retained only as a lexical member of the TurboConfigProofSelectorMode source vocabulary. The harvested claim that it denotes an operational scope-selection rule remains possible but is not established by these records."
+representation_status: lexical_alias
+alternatives:
+  - label: "A scope-selection rule denoted by \"affected\""
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied observations establish \"affected\" only as a literal or backing-array member of TurboConfigProofSelectorMode. They do not observe an operational bearer, stable specification identity, execution occurrence, or lifecycle corresponding to that token, so the implementation-only null stands."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

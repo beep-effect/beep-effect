@@ -1,0 +1,29 @@
+id: ic:alt3:050
+hypothesis_ref: dh:turbo-cache:016
+identity:
+  supplies_identity: true
+  identity_criterion: Two dev task specifications are the same iff they prescribe the same
+    repeatable Turbo task named dev with persistence declared and an upstream build dependency.
+    Persistence is part of the prescription, not a report about one completed run.
+  reidentification_key:
+  - dev
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one persistent Turbo task prescription for dev
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: A finite work-unit execution that starts and exits cannot be this specification;
+    persistent true is exactly the claim that the task is not a completed run.
+status: proposed

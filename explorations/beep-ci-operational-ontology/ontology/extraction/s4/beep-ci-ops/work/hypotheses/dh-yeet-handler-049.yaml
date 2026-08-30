@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:049"
+observation_refs:
+  - "so:sha256:a331779d1d7f4d3723abd1480c55307d07916de5b2ea2ce232f2d8730f1f4c38"
+  - "so:sha256:c12cfaa682b168d86c474e77677e6ebc8de866f0b44ff9eead52dbe2e365e142"
+cq_warrants: []
+proposed_referent:
+  label: "runPublishMonitorAndResult implementation and test alias"
+  description: "No domain-ontology referent is proposed for the runPublishMonitorAndResult implementation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "publish monitoring and result procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show an implementation declaration and a test-facing alias. Aliasing executable code for tests does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

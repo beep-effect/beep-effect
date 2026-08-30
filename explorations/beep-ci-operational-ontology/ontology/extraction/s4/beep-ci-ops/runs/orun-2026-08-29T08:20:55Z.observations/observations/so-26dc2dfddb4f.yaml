@@ -1,0 +1,25 @@
+id: so:sha256:26dc2dfddb4f36a5cfc4bd75a83a43cd1d08cccd60728f4f6c009321582eefaa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 147
+  end_line: 174
+  content_sha256: 3a06c9a60130e64a4bbe5b744bb7f9aaa9a2cc4e97d389df095dcaf4dadab8c7
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::YeetRunPlanModeOptions
+  lexical_name: YeetRunPlanModeOptions
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetRunPlanModeOptions
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetRunPlanModeOptions extends S.Class<YeetRunPlanModeOptions>($I`YeetRunPlanModeOptions`)(
+epistemic_status: parser_derived

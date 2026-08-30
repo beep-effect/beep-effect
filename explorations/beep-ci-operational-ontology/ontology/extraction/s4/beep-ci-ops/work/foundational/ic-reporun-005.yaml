@@ -1,0 +1,43 @@
+id: "ic:reporun:005"
+hypothesis_ref: "dh:reporun:008"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Applying the shared proof-surface domain criterion in ic:reporun:004, two
+    quality procedure specifications are the same when they preserve the same
+    authoritative quality-check prescription, applicability context, and
+    revision lineage, including the ordered github-checks quality arguments;
+    the word quality or a step identifier is not an identity criterion.
+  reidentification_key:
+    - "quality proof-surface designation and step-definition identifier"
+    - "repository policy revision and ordered executable arguments"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One information object is unified by one authoritative prescription for
+    running the repository's quality proof surface.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "controlled-vocabulary individual for a proof-surface domain"
+    - "quality verification lane or execution family"
+    - "general software quality attribute"
+  existential_dependencies:
+    - "at least one digital realization of the prescription"
+    - "the repository policy and revision that define the quality checks"
+    - "the proof obligation the prescription is intended to discharge"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      Two repositories can both call a surface quality while prescribing
+      different checks and acceptance policies, so lexical equality does not
+      make their versioned procedure specifications identical.
+status: proposed

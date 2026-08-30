@@ -1,0 +1,23 @@
+id: fa:alt2:012
+hypothesis_ref: dh:topology:003
+identity_card_ref: ic:alt2:012
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'relator: derived reachability relating two workspace packages'
+  still_viable: true
+- label: 'information_object: materialized dependency-closure assertion set'
+  still_viable: true
+- label: 'implementation_artifact_only: query predicate spelling only'
+  still_viable: false
+strongest_counterexample: >-
+  The CQ uses dependsOnTransitive to connect returned and touched packages, which a mere predicate spelling cannot explain,
+  but the observations never show a stored closure table, so relator versus materialized assertion set remain observationally
+  equivalent.
+verdict: analyzed
+needed_evidence: >-
+  A compiled assertion store of transitive pairs, or a runtime fixpoint with no stored pairs, would split the relator from
+  a materialized information graph.

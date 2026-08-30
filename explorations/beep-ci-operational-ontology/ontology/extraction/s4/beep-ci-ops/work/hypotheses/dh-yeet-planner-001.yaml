@@ -1,0 +1,25 @@
+id: "dh:yeet-planner:001"
+observation_refs:
+  - "so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f"
+  - "po:sha256:86e624235b616a7cec93d1021d31f6e3b7de441af825fd16034e8e7cde6621b0"
+cq_warrants:
+  - "CQ-022"
+proposed_referent:
+  label: "Committed verification failure occurrence"
+  description: "A failure occurrence that becomes the terminal stopping signal for a verification attempt."
+representation_status: unresolved
+alternatives:
+  - label: "Terminal attempt-verdict information artifact"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Finished-event schema field only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied records establish a finished-event declaration and a verdict-valued field, but they do not observe a failed-step signal, commitment behavior, or any fact distinguishing a failure occurrence from its serialized record."
+epistemic_status: proposed
+confidence:
+  value: 0.34
+  use_for_acceptance: false

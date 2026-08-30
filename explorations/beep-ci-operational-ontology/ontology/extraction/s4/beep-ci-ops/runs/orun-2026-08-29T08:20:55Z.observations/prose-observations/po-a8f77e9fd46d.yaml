@@ -1,0 +1,10 @@
+id: po:sha256:a8f77e9fd46db38914d5da73cc3454b202963dce718dee81db604c137fd92b28
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 179
+  end_line: 180
+quote: "\"nix\",\n  \"property\","
+epistemic_status: quoted_prose

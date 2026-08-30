@@ -1,0 +1,23 @@
+id: so:sha256:19012ca4ecf9359ead8eb5c320cd6d02b5cb0c5ece97c73fe6f6f82206d0bfe6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 447
+  end_line: 447
+  content_sha256: 54a168faa4393718e5d63bc2db9073724c89fa4f6af1f4eab97f90ddbbbedb72
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::CACHE_ARG_PREFIX
+  lexical_name: CACHE_ARG_PREFIX
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const CACHE_ARG_PREFIX = "--cache=";
+epistemic_status: parser_derived

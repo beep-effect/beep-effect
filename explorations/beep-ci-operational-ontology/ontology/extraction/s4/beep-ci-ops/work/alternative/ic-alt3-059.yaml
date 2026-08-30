@@ -1,0 +1,30 @@
+id: ic:alt3:059
+hypothesis_ref: dh:yeet-watch:030
+identity:
+  supplies_identity: true
+  identity_criterion: Two such signature specifications are the same iff they are the same
+    repeatable hosted-job-shape criterion that classifyJob attaches as a flake class and that
+    the merge loop may convert into a bounded rerun. The install-failure token is reidentification
+    evidence rather than the criterion, and a particular installation crash is not the signature.
+  reidentification_key:
+  - install-failure
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one job-shape criterion reused as a monitor rerun signature
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - situation
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: detectYeetMonitorFlakeClass never returns install-failure from a log; that
+    class is attached only when detectGithubJobShapeClass matches the job record. A log-only
+    timeout is a different signature.
+status: proposed

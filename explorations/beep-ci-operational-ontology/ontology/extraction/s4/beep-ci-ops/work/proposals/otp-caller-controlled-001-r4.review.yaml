@@ -1,0 +1,45 @@
+target: "otp:caller-controlled:001"
+target_sha256: "6fb3a0cc7a1cb3bc9e0a5debbf76ea14d8e0be45ce247606dc8074d54e736286"
+chain_sha256: "116775a3ec887e2d44ae3bbe978923f4a58a5c201cae6940f5ccb3a51a335c0a"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: content-identity-not-resolver-record-identity
+    counterexample: >-
+      A CI resolution and an explicit-cache-argument resolution have different
+      record tokens and reasons, but both preserve the same governed rule that
+      the CLI injects no override and leaves cache authority with the caller.
+      The card identifies that content rather than the tag or either record.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-domain-member
+    counterexample: >-
+      Removing CallerControlled leaves CQ-024 unable to classify CI and
+      explicit-cache-argument executions in its required three-arm CachePosture
+      domain. Neither LocalOnly nor LocalWriteRemoteRead covers those executions.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-cache-authority-discriminator
+    counterexample: >-
+      A lexical tag can be implementation-only, but it cannot preserve the
+      deployed invocation behavior in which CI and explicit cache arguments
+      prevent CLI rewriting and leave the effective Turbo arguments under
+      caller authority. That runtime posture is not merely the tagged DTO.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:5455a88353a08e19104c4f4ed27714d39b682fb71f40c78b8067c3133c293860"
+  - "po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5"
+  - "po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a"
+  - "CQ-024"

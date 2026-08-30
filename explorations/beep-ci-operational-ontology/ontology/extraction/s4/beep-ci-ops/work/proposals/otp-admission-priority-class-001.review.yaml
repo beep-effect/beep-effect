@@ -1,0 +1,48 @@
+target: "otp:admission-priority-class:001"
+target_sha256: "5c95bc1f9b49667e02901bc9d4b25959c27355cab11d3d4766741f06871d1089"
+chain_sha256: "58f12dc0e2ad601437c44b6c8f8510519a9d46eba3767eeb8c0dba835cbd6a1e"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; no subsumption relation is proposed, so no valid subsumption relation is available to test."
+attacks:
+  - surface: identity
+    rule: unresolved-core-sortal-identity
+    counterexample: "Keep the publish and verify vocabulary fixed but revise publishAgingSeconds so verify requests acquire publish rank at a different age; the ranking specification changes while the vocabulary does not, so one unified identity criterion and rigidity assignment cannot reidentify both as the same AdmissionPriorityClass specification."
+    outcome: landed
+  - surface: identity
+    rule: identity-card-consistency
+    counterexample: "Treating the term as identity-carrying or identity-supplying would resolve the card's unresolved provider booleans by fiat; the proposal also says unresolved, so that polarity inconsistency does not occur."
+    outcome: survived
+  - surface: identity
+    rule: foundational-status-mismatch
+    counterexample: "An analyzed status would conceal the foundational record's request for a governance or versioning artifact; both records instead say explicitly_deferred."
+    outcome: survived
+  - surface: identity
+    rule: rival-model-hidden
+    counterexample: "A separate controlled vocabulary plus ranking procedure, or a temporary effective-priority role, changes both individuation and category; both rivals are named in open_issues rather than silently merged."
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-term
+    counterexample: "CQ-021 explicitly projects each queued request's priority and declares AdmissionPriorityClass required, so removing the priority-class term would leave the requested priority binding untyped."
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-implementation
+    counterexample: "A queue implementation can store publish or verify strings and compute an aged numeric sort rank exactly as observed while those values remain only comparator codes; the rank expression is therefore true in the implementation-only null world and does not establish the proposed unified information object."
+    outcome: landed
+rival_models_still_viable:
+  - "AdmissionPriority is one controlled vocabulary, while effectivePriorityRank is a separately versioned procedure."
+  - "Effective queue priority is an anti-rigid role or phase of a queued request under elapsed-time context."
+evidence:
+  - "so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf"
+  - "so:sha256:5e87f57f7f30cab771a4bc15b4510264f4a086fed36480da3266357386f66124"
+  - "so:sha256:6e399c3569812e74daffcb4563c47f47164fae6163546e154e5b8f1d966c3e04"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "po:sha256:aa6a7b217122be466e63cfd890c480ef082f6f9d5b24c97731d889dd3a80886b"
+  - "CQ-021"

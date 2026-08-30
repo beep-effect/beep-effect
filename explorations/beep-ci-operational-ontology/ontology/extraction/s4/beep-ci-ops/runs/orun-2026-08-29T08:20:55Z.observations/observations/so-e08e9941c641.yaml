@@ -1,0 +1,25 @@
+id: so:sha256:e08e9941c6416af670e72e47099dcf2f6afc7403df4e34cfc9187ade20831f8e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 106
+  end_line: 114
+  content_sha256: 30dcf02d933c079efd3772e28f01879b4069665bab157202cd4ab2786890a930
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::BoundedOutput
+  lexical_name: BoundedOutput
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: BoundedOutput
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class BoundedOutput extends S.Class<BoundedOutput>($I`BoundedOutput`)(
+epistemic_status: parser_derived

@@ -1,0 +1,33 @@
+id: "ic:sched-core:003"
+hypothesis_ref: "dh:sched-core:003"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two admission-owner role tokens are the same only when the same causally continuous operating-system process bears ownership of the same live admission record throughout one uninterrupted ownership interval; pid and start-time fields are evidence, not the criterion."
+  reidentification_key:
+    - "pid"
+    - "procStart"
+    - "checkoutRoot as attribution context"
+    - "owned ticket or lease context"
+ontoclean:
+  rigidity: "anti_rigid"
+  carries_identity: true
+  supplies_identity: false
+  unity: "One process bearer participating continuously in one ownership relation to one live ticket or lease."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "role"
+  alternatives:
+    - "the operating-system process that bears the owner role"
+    - "serialized owner-coordinate information object"
+  existential_dependencies:
+    - "an operating-system process occurrence"
+    - "a live admission record and its ownership relation"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "ownership ends when the admission record is removed"
+    - "ownership ends when the process dies or fails the start-time continuity test"
+counterexamples:
+  - description: "One process can survive deletion of a ticket and later own another ticket, so admission ownership is not essential to the process and the two role tokens are distinct."
+status: "proposed"

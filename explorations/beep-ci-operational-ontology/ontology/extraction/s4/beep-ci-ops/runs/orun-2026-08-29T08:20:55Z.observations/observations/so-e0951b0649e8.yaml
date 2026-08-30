@@ -1,0 +1,24 @@
+id: so:sha256:e0951b0649e8688650f9272c2b54cb788c0613c5e9d82927166a78d5702da7e1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 512
+  end_line: 523
+  content_sha256: dc3103b114c41aca5e1cb5c45890806e59af358e772149e6c0ec27969f3eab99
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::prCreateStep
+  lexical_name: prCreateStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const prCreateStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "publish"):
+  RepoPlanStep =>'
+epistemic_status: parser_derived

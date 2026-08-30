@@ -1,0 +1,24 @@
+id: fa:alt3:011
+hypothesis_ref: dh:sched-core:028
+identity_card_ref: ic:alt3:011
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'event: the staging occurrence that makes a lease a candidate grant'
+  still_viable: true
+- label: 'quality: admittedAtMillis inhering in the lease'
+  still_viable: true
+- label: 'information_object: the millisecond field recorded on the lease'
+  still_viable: true
+strongest_counterexample: admissionInstantOrder sorts by admittedAtMillis, then pid, then
+  startedAt, and isOvershootLoser uses that order so the newest admission rolls back. The
+  comment forbids using heartbeat. A tie-breaker-only field that never decided rollback would
+  not be this instant.
+verdict: analyzed
+needed_evidence: Whether sameness tracks the staging occurrence (event) or the numeric stamp
+  as a quality of the lease. Two leases staged in the same millisecond already split on pid
+  and startedAt, which slightly favors the occurrence reading but does not close the quality
+  reading.

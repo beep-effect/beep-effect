@@ -1,0 +1,51 @@
+id: "ic:worktree-config:004"
+hypothesis_ref: "dh:worktree-config:008"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: record-token identity follows one generation and custody
+    history, whereas information-content identity follows the same result
+    assertion, producing execution, tree state, cache epoch, procedure version,
+    and applicability context across faithful copies; byte equality alone
+    settles neither account.
+  reidentification_key:
+    - "generation or issuance provenance"
+    - "producing verification execution"
+    - "represented result assertion"
+    - "tree state, cache epoch, and procedure version"
+    - "content digest or storage key as technical evidence only"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One verification-result assertion together with the provenance and
+    applicability context needed to interpret its evidentiary claim.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "role: an information object contingently playing evidence for a claim or obligation"
+    - "situation: the verification execution outcome represented by the record"
+    - "information_object: one content object realized by multiple record tokens"
+  existential_dependencies:
+    - >-
+      As information it requires some faithful bearer, but the evidence does
+      not decide generic content dependence versus identity of a concrete
+      record token.
+    - >-
+      Its evidentiary role depends on a represented tree, epoch, procedure,
+      claim, and provenance context, none of which is identical to the record.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "invalidated for the relevant tree or cache context"
+    - "superseded while remaining a historical record"
+    - "no faithful bearer remains"
+counterexamples:
+  - description: >-
+      Two distinct executions can emit byte-equal output, while one issued
+      record can be copied to two stores; content equality wrongly merges the
+      former and storage-location identity wrongly splits the latter.
+status: proposed

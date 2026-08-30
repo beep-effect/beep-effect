@@ -1,0 +1,16 @@
+id: fa:alt4:053
+hypothesis_ref: dh:worktree-config:010
+identity_card_ref: ic:alt4:053
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "relator: directed workspace package dependency"
+    still_viable: true
+  - label: "information object: package-manifest dependency declaration (observationally equivalent on current evidence)"
+    still_viable: true
+strongest_counterexample: Architecture prose fixes arrows from importing to imported package while the hubspot manifest supplies two workspace targets; flattening those to independent binary facts would drop the directed pair that CQ-004's closure needs.
+verdict: analyzed
+needed_evidence: An import graph edge that holds without a matching manifest declaration, or a leftover manifest line with no remaining import, would discriminate the operational relator from the declaration record.

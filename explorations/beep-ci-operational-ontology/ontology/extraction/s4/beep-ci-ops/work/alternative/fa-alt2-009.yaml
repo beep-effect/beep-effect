@@ -1,0 +1,22 @@
+id: fa:alt2:009
+hypothesis_ref: dh:sched-core:019
+identity_card_ref: ic:alt2:009
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: origin-exclusion token carried on tickets and leases'
+  still_viable: true
+- label: 'kind: the repository origin itself'
+  still_viable: false
+- label: 'implementation_artifact_only: arbitrary string used by one conditional'
+  still_viable: true
+strongest_counterexample: >-
+  isTicketSkippable treats any nonempty matching originKey as already-proving, which is more than a one-off conditional and
+  less than an observation of the origin entity; token versus opaque string remain observationally close.
+verdict: analyzed
+needed_evidence: >-
+  An observation that originKey is derived from a named origin entity (remote URL, repo id) and that two different strings
+  can co-refer, or that the field is a free nonce, would split token-for-origin from arbitrary bookkeeping string.

@@ -1,0 +1,10 @@
+id: rat:17
+proposal_ref: otp:admission-policy:001
+proposal_sha256: 31b6cfc9bb65b0c624917ebfa7e57b889a741026bb477137255b94045ef45d30
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept AdmissionPolicy — policy-as-individual with immutable parameter facts; changes are new
+  individuals.

@@ -1,0 +1,22 @@
+id: "dh:quality:065"
+observation_refs:
+  - "so:sha256:854719e7d6c8efd2c8c2723010bb0747e8e562fd6948059aee426ecb6de2c249"
+  - "so:sha256:d4e8e7e9b8d7a2920a26942a0567c2efa606ba45e08e7d665731e4f1ca7866f3"
+cq_warrants: []
+proposed_referent:
+  label: "QualityHardwareProfile source vocabulary"
+  description: "A source-controlled lexical vocabulary containing \"ci\", \"current\", \"workstation\". The record supports those spellings, not independently existing domain individuals or kinds."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational classification corresponding to QualityHardwareProfile"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only literal membership, aliasing, or export facts for QualityHardwareProfile. Those facts are fully compatible with a code-only vocabulary and do not observe policies, states, events, or other domain instances carrying the labels."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

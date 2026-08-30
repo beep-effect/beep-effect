@@ -1,0 +1,10 @@
+id: po:sha256:2d8b36c6bb7afb7cda727640a5656328452253def711c0a1cfdb43848de709a9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 55
+  end_line: 55
+quote: publish priority after the configured aging window so nothing starves.
+epistemic_status: quoted_prose

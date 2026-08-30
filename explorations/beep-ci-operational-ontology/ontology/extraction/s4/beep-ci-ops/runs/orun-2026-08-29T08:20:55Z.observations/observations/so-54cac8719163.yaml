@@ -1,0 +1,23 @@
+id: so:sha256:54cac8719163cd47b18af0597c8b7659b89430d06a0bc6a210a092b93a8ae1ab
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 527
+  end_line: 566
+  content_sha256: 9954dabb098c8934331d1e6797fb97a351a796d7a377a17111b85b24abe03543
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::collectAdmissionEntries
+  lexical_name: collectAdmissionEntries
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>(
+epistemic_status: parser_derived

@@ -1,0 +1,18 @@
+id: "dh:sched-core:047"
+observation_refs:
+  - "so:sha256:0db42e2daa10b4690f2ff0dabd21e4bab1adbc4dd0b33850c6fbb119e547cd9f"
+cq_warrants: []
+proposed_referent:
+  label: "overshoot-predicate test adapter"
+  description: "An exported curried adapter exposing the internal overshoot predicate to tests."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "capacity-overshoot decision procedure"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only a testing export shape; the substantive rollback procedure is analyzed separately and this adapter adds no domain referent."
+epistemic_status: proposed
+confidence: {value: 0.99, use_for_acceptance: false}

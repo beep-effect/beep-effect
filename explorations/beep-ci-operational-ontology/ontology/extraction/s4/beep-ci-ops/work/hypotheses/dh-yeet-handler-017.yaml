@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:017"
+observation_refs:
+  - "so:sha256:3145bf69ff0885794e69fe0243087275b2cd336044e8572173246a69a2be5f40"
+cq_warrants: []
+proposed_referent:
+  label: "hydrateYeetReadOnlyContext helper"
+  description: "No domain-ontology referent is proposed for the hydrateYeetReadOnlyContext helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "read-only run-context assembly procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only export visibility and a declaration header. Exported implementation access does not distinguish a domain referent from code plumbing."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

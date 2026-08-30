@@ -1,0 +1,77 @@
+target: "otp:seat-request:001"
+target_sha256: "d178fc0127cdf61cdc1efcfc4e14c3d5d23bdb5bcba3549f397dd2e22f759e76"
+chain_sha256: "2628f1a25220168f920ea9e1ba6198aae0a4967f99313e7cb81e2b30d00146aa"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edges, so it proposes no is-a relation
+    whose rigidity, identity inheritance, dependence, unity, or absence can be tested.
+attacks:
+  - surface: identity
+    rule: identity-criterion-counterexample
+    counterexample: >-
+      Ticket files T1 and T2 can contain byte-identical owner, kind, charge, and time
+      values while being created by two enqueue acts on separate carriers. The card
+      separates them through creation provenance and carrier lineage rather than
+      wrongly identifying them by value.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Copying T1 under a second path with the same nonce and process coordinates does
+      not make the copy the original record token. The card explicitly treats nonce
+      and process coordinates as supporting evidence and requires continuous carrier
+      provenance.
+    outcome: survived
+  - surface: identity
+    rule: ontoclean-identity-agreement
+    counterexample: >-
+      If SeatRequest merely carried the Agent's identity, two requests by one Agent
+      would collapse. The proposal and card instead agree that each rigid ticket
+      information object supplies its own enqueue-and-carrier criterion.
+    outcome: survived
+  - surface: identity
+    rule: ticket-lease-split
+    counterexample: >-
+      Admission deletes queued ticket T and stages a distinct lease/grant G; the two
+      never coexist in one atomic store snapshot and G lacks T's full fields. The
+      proposal confines SeatRequest to T and does not merge the mandated ticket and
+      lease individuals.
+    outcome: survived
+  - surface: identity
+    rule: foundational-status-and-rival-disclosure
+    counterexample: >-
+      Treating the operational request as distinct from its record remains a viable
+      reading. The analyzed status matches the FA and the proposal's open issue
+      exposes that choice.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-necessity
+    counterexample: >-
+      CQ-021 explicitly types queued records as SeatRequest and CQ-023 quantifies
+      waiting SeatRequest instances governed by policy. Removing the class makes
+      both decision queries inexpressible as written, so the warrant survives.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-persistence-dto
+    counterexample: >-
+      A queue persistence DTO can be documented as "a contender waiting for
+      admission," stored while queued, and deleted when a lease is staged without
+      acquiring independently modeled information-object identity. The quoted
+      description is true of that pure DTO twin and does not reject the null.
+    outcome: landed
+rival_models_still_viable:
+  - "The queued operational request as distinct from its ticket record"
+  - "The ticket information object as the deployed SeatRequest"
+evidence:
+  - "so:sha256:3e8c52e70d0dfe96bccb840e61a4691e1d3f08801b3892ea976c3123f93d1f61"
+  - "po:sha256:07350ed24a5ad10ca9a6a0af85ae646487c62e7c63e760eeb8305d395e223b25"
+  - "CQ-021"
+  - "CQ-023"

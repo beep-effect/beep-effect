@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:071"
+observation_refs:
+  - "so:sha256:cdd2c369cd6d3ee50efbf06759d40b2e0daefe2243a5fb7db57427263f0518d6"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for YEET_GATE_ARTIFACT_DESCRIPTORS in GateStaleness.ts"
+  description: "No separate domain referent is established for the source declaration YEET_GATE_ARTIFACT_DESCRIPTORS."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::YEET_GATE_ARTIFACT_DESCRIPTORS"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records an exported source declaration but no fact about its behavior, represented subject, persistence, or domain identity; export visibility alone cannot reject the implementation-only null."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

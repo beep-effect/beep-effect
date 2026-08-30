@@ -1,0 +1,34 @@
+id: ic:alt3:009
+hypothesis_ref: dh:sched-core:020
+identity:
+  supplies_identity: true
+  identity_criterion: Two origin-busy observations are the same iff they are the same timestamped
+    record that a queued request found its origin-scoped gate busy, remaining operative while
+    now minus the stamp is at most three heartbeat intervals. The millisecond field is evidence
+    rather than the criterion.
+  reidentification_key:
+  - blockedOnOriginAtMillis
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one timestamped origin-busy observation on one ticket
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - phase
+  - quality
+  existential_dependencies:
+  - the ticket
+  - the origin gate
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - stamp older than 3 * heartbeatSeconds
+  - originBusy false leaves the prior stamp
+counterexamples:
+- description: A ticket whose origin is busy right now but whose blockedOnOriginAtMillis is
+    zero or stale is not carrying this observation; skippability requires a fresh stamp.
+status: proposed

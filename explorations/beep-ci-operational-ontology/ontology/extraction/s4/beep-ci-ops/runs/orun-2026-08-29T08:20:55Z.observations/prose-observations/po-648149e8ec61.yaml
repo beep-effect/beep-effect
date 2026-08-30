@@ -1,0 +1,10 @@
+id: po:sha256:648149e8ec61b86770c1c8511b659226c3e8605ab43ac3a0c03439f40b6002fa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/drivers/hubspot/package.json
+source_span:
+  start_line: 68
+  end_line: 68
+quote: '"@beep/test-utils": "workspace:^",'
+epistemic_status: quoted_prose

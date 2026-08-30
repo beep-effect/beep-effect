@@ -1,0 +1,23 @@
+id: so:sha256:8283793e4d780a8e09da065a259293d4c2af002a7b9205ce59c1a3b910002a66
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 40
+  end_line: 40
+  content_sha256: 03bd8a2e1612ce0f858983f6dc3c45816a8cd1323a10fd274cbb6caafe8540de
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::JSDOC_CI_INVENTORY_MARKDOWN_PATH
+  lexical_name: JSDOC_CI_INVENTORY_MARKDOWN_PATH
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
+epistemic_status: parser_derived

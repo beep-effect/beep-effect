@@ -1,0 +1,35 @@
+id: so:sha256:d52cdafcf1e13098ab47dbfbb1eb7f87f6b815fbeab0d55384e901ede10ac30b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 90
+  end_line: 101
+  content_sha256: 6bdb08d24b94874b253f12b9f622c621c859329bcedeb0e5a6ebb6e60da70a78
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::QualityTaskBypassArgName
+  lexical_name: QualityTaskBypassArgName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: --completions
+- predicate: declares_literal_member
+  object: --help
+- predicate: declares_literal_member
+  object: --log-level
+- predicate: declares_literal_member
+  object: --version
+- predicate: declares_literal_member
+  object: -h
+- predicate: declares_literal_member
+  object: -v
+- predicate: exports_symbol
+  object: QualityTaskBypassArgName
+source_excerpt: export const QualityTaskBypassArgName = LiteralKit([
+epistemic_status: parser_derived

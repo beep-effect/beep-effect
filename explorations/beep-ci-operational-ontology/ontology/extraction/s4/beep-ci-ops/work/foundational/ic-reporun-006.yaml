@@ -1,0 +1,43 @@
+id: "ic:reporun:006"
+hypothesis_ref: "dh:reporun:009"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Applying the shared proof-surface domain criterion in ic:reporun:004, two
+    review-fix procedure specifications are the same when they preserve the
+    same authoritative post-review verification prescription, applicability
+    context, ordered arguments, and revision lineage; the review-fix literal
+    and rendered step identifier do not supply identity.
+  reidentification_key:
+    - "review-fix proof-surface designation and step-definition identifier"
+    - "repository policy revision and ordered executable arguments"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One information object is unified by one prescription for the verification
+    operation required after review-driven repairs.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "controlled-vocabulary individual for a proof-surface domain"
+    - "review-fix verification lane or execution family"
+    - "particular repair execution performed after review"
+  existential_dependencies:
+    - "at least one digital realization of the prescription"
+    - "the repository policy and revision defining review-fix verification"
+    - "the proof obligation the prescription is intended to discharge"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      One review-fix prescription can be executed repeatedly after different
+      reviews, producing distinct repair and verification occurrences without
+      multiplying the specification itself.
+status: proposed

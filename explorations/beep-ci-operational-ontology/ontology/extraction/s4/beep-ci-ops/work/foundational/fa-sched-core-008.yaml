@@ -1,0 +1,15 @@
+id: "fa:sched-core:008"
+hypothesis_ref: "dh:sched-core:008"
+identity_card_ref: "ic:sched-core:008"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "A deployed policy regime is a domain situation or normative mode distinct from the specification that describes it."
+    still_viable: true
+  - label: "AdmissionConfig is only a value object whose fields affect behavior without constituting a governed policy artifact."
+    still_viable: true
+strongest_counterexample: "The same specification can be instantiated by many configuration values and executions, while two equal value objects can belong to different deployments; value equality cannot settle policy identity."
+verdict: "analyzed"

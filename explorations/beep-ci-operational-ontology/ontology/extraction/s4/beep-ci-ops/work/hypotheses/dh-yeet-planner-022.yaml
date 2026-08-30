@@ -1,0 +1,23 @@
+id: "dh:yeet-planner:022"
+observation_refs:
+  - "so:sha256:1b632257febcbb643a3ab96bf64a1196964c1bf6edc0376b50cabea2bac2098d"
+cq_warrants: []
+proposed_referent:
+  label: "Unresolved referent for GateUnproven in GateStaleness.ts"
+  description: "A possible referent suggested by the GateUnproven schema declaration in GateStaleness.ts."
+representation_status: unresolved
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::GateUnproven"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "Source schema or helper only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Export and syntactic inheritance facts are equally true of a pure schema or data-transfer declaration; no supplied observation establishes an independently existing subject or information object."
+epistemic_status: proposed
+confidence:
+  value: 0.53
+  use_for_acceptance: false

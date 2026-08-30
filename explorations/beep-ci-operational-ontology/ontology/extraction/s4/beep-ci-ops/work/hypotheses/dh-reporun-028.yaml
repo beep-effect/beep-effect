@@ -1,0 +1,23 @@
+id: "dh:reporun:028"
+observation_refs:
+  - "so:sha256:7b23a67d57875d5ab2450b6c9b4b9c92245814d6141ed561944a4bfdd53587bb"
+  - "so:sha256:8a9cf32d4b1ef1adfac54f4b90c6b11c5c238c95ee312a1d8ddfd6345f38ae43"
+  - "so:sha256:f512e52528210addcd044c704edcbe9892d11d066d1936499a22d289a1eab30f"
+cq_warrants: []
+proposed_referent:
+  label: "repository-step command-text formatting mechanism"
+  description: "The regex, quoting helper, and renderer used to serialize a planned command for display."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Serialization of a WorkUnitSpecification"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "These observations describe string formatting over command and argument fields. They neither create a plan referent nor identify an execution, so their ontology contribution is implementation plumbing only."
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false
+

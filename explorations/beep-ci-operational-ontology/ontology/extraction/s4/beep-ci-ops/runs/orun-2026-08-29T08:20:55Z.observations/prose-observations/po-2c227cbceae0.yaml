@@ -1,0 +1,10 @@
+id: po:sha256:2c227cbceae0143018a7fc38f9991187fa3ac7184b0bf3bb450fa911e74ffd56
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 111
+  end_line: 120
+quote: 'weightTokens: S.Finite'
+epistemic_status: quoted_prose

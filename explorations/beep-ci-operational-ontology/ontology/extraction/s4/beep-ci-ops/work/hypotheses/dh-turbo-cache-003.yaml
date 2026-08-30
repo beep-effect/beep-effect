@@ -1,0 +1,26 @@
+id: "dh:turbo-cache:003"
+observation_refs:
+  - "so:sha256:18ab22ffb184d127ac05577f06bbd95c804e82db90dd8e247e9a1f3997d74d11"
+  - "po:sha256:1550f92bf5d6a0d1c0df07f887b25668fd7b2c3b53a0e4c2521b8478f65ccce3"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named lint"
+  description: "A repeatable task specification with an observed dependency selector and cache declaration."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A lint verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A source-only configuration key"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The adversary's Turbo-configuration counterexample wins: an implementation-only lint entry can declare cache behavior and an upstream dependency selector, while the observations provide no package-resolved script, retained specification identity, or governed lane."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.79
+  use_for_acceptance: false

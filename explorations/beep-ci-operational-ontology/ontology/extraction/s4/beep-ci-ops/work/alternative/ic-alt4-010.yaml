@@ -1,0 +1,28 @@
+id: ic:alt4:010
+hypothesis_ref: dh:sched-core:025
+identity:
+  supplies_identity: true
+  identity_criterion: Two admission-owner liveness criteria are the same when they require process existence together with process-start continuity, degrading to pid-only when the current start time is unreadable; proc-stat parsing is a mechanism, never the criterion.
+  reidentification_key:
+    - pid
+    - procStart
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: Pid existence and start-time continuity compose one liveness criterion; either clause alone is a fragment.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - quality
+  existential_dependencies:
+    - recorded admission owner
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: isProcessPidAlive alone would treat a reused pid as the same owner, which this criterion is written to reject.
+  - description: A live process that is not recorded as an admission owner is outside this criterion.
+status: proposed

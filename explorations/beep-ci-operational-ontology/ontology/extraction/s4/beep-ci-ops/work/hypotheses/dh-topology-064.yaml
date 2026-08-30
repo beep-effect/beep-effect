@@ -1,0 +1,25 @@
+id: "dh:topology:064"
+observation_refs:
+  - "po:sha256:76aeef860e3770ef135859397d5444609f781c5d87ec688ef4b0ff6258c82be5"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/langextract workspace package"
+  description: "The workspace software package information artifact identified by @beep/langextract in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/langextract as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The topology-row DTO counterexample wins: @beep/langextract 61 can be parsed and consumed by CQ-004 without establishing a governed package-reference artifact or software-package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

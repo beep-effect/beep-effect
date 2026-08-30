@@ -1,0 +1,15 @@
+id: fa:alt4:054
+hypothesis_ref: dh:worktree-config:014
+identity_card_ref: ic:alt4:054
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: full-repository docgen work-unit specification"
+    still_viable: true
+  - label: a full-repository docgen execution
+    still_viable: false
+strongest_counterexample: The quotation reserves the full docgen command for repository-wide proof and contrasts it with the local edit-loop command, which is a repeatable scope prescription rather than a dated run.
+verdict: analyzed
