@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "data-sync-report/v1",
+  "mode": "check",
+  "targets": [
+    {
+      "id": "courts-db",
+      "changed": false,
+      "changedFiles": [],
+      "recordCount": 2809,
+      "summary": "2809 assembled court records from courts-db 0.10.27",
+      "sources": [
+        {
+          "id": "courts-db-archive",
+          "url": "https://github.com/freelawproject/courts-db/archive/f353e51400a55cc8942b230b3e12540ad364fd23.tar.gz",
+          "sha256": "6c0e4fc800a8ebdb7d539960fd08b8373b219623694723af36378df229f369fa",
+          "version": "0.10.27"
+        }
+      ],
+      "canonicalPath": "packages/law-practice/domain/src/internal/generated/free-law-project/courts-db.data.json",
+      "canonicalPatch": []
+    }
+  ]
+}

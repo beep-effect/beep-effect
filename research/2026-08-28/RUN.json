@@ -37,12 +37,31 @@
     "note": "ODP, drizzle, Instant, SEP-2640 hold. SchemaBinary holds and moved (overnight #7506/#7507/#7508)."
   },
   "frictions": [
-    { "id": "x-client-not-enrolled", "severity": "source-gap", "detail": "user-X MCP is connected but X API v2 search/news returns client-not-enrolled / Client Forbidden (developer App not attached to a Project). No x.com posts in this packet. Do not treat silence as absence of X traffic." },
-    { "id": "no-cross-provider-verify", "severity": "process-gap", "detail": "SPEC verify seats (Sol/Luna) are not available here. Writer used structured records only; no second-provider refutation pass." },
-    { "id": "github-mcp-dcr", "severity": "auth", "detail": "GitHub MCP not usable in this harness. Publisher uses gh + cloud agent instead." },
-    { "id": "prior-packet-closed-unmerged", "severity": "process-gap", "detail": "research/2026-08-27 PR #862 was closed unmerged (commitlint type-enum on subject `research:`). Its 12 claims are committed at research/ledger/excluded-packets/2026-08-27.jsonl so later digests do not depend on the closed PR. This commit uses docs(research):." }
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "user-X MCP is connected but X API v2 search/news returns client-not-enrolled / Client Forbidden (developer App not attached to a Project). No x.com posts in this packet. Do not treat silence as absence of X traffic."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "SPEC verify seats (Sol/Luna) are not available here. Writer used structured records only; no second-provider refutation pass."
+    },
+    {
+      "id": "github-mcp-dcr",
+      "severity": "auth",
+      "detail": "GitHub MCP not usable in this harness. Publisher uses gh + cloud agent instead."
+    },
+    {
+      "id": "prior-packet-closed-unmerged",
+      "severity": "process-gap",
+      "detail": "research/2026-08-27 PR #862 was closed unmerged (commitlint type-enum on subject `research:`). Its 12 claims are committed at research/ledger/excluded-packets/2026-08-27.jsonl so later digests do not depend on the closed PR. This commit uses docs(research):."
+    }
   ],
-  "resume": { "retry": ["x-search"], "cursor": "enroll X developer App in a Project, then re-search window 2026-08-26T22:22-05:00/2026-08-28T08:27-05:00" },
+  "resume": {
+    "retry": ["x-search"],
+    "cursor": "enroll X developer App in a Project, then re-search window 2026-08-26T22:22-05:00/2026-08-28T08:27-05:00"
+  },
   "repoReplay": {
     "merged": [870, 868, 866, 864, 863, 858, 857, 856, 855, 854, 853, 852],
     "open": [874, 873, 872, 871, 869, 867, 865],

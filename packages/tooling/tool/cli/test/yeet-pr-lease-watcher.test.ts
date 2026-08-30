@@ -109,8 +109,8 @@ describe("Yeet PR lease watcher", () => {
             yield* fs.writeFileString(
               resumePath,
               `#!/usr/bin/env bash
-printf "%s" "$2" >"$1/.beep/inbox/resume-marker"
 jq -r '.status + ":" + .generationId' "$1/.beep/inbox/pr-lease.json" >"$1/.beep/inbox/claim-marker"
+printf "%s" "$2" >"$1/.beep/inbox/resume-marker"
 sleep 2
 `
             );
