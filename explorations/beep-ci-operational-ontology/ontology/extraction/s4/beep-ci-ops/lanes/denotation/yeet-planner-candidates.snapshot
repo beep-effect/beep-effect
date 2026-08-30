@@ -1,0 +1,171 @@
+- candidate: CommittedFailure
+  kind: class
+  definition: A failed verification-step result whose identifier is present in the terminal verdict embedded
+    by an attempt-finished journal event.
+  admission_kind: decision
+  cq_justification:
+  - CQ-022
+  decision_relevance: Identifies the same-attempt stopping signal that makes still-running executions
+    obsolete.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failedStepId: S.optionalKey(S.String),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failureKind: YeetFailureKind.pipe(S.optionalKey),'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: VerificationAttempt
+  kind: class
+  definition: A verification process occurrence whose start and terminal journal records share one UUID
+    attempt identifier.
+  admission_kind: decision
+  cq_justification:
+  - CQ-022
+  decision_relevance: Provides the attempt-scoped identity required to stop only executions made obsolete
+    by a committed failure in the same attempt.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:42-53 — ''attemptId: UUID,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:100-105 — 'export const YeetAttemptJournalEvent
+    = S.Union([YeetAttemptStarted, YeetAttemptFinished]).pipe('
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: actualWallMs
+  kind: property
+  definition: The measured wall duration in milliseconds of a completed work-unit execution, carried by
+    lane durationMs or by attempt elapsedMs only when the execution is the whole attempt.
+  domain: WorkUnitExecution
+  range: xsd:integer
+  admission_kind: decision
+  cq_justification:
+  - CQ-025
+  decision_relevance: Supplies the observed side of the actual-versus-estimated cost calibration pair.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''durationMs: S.optionalKey(S.Finite),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: inAttempt
+  kind: property
+  definition: Relates a committed failure or work-unit execution carried by a terminal verdict to the
+    UUID-identified verification attempt containing it.
+  domain: CommittedFailure | WorkUnitExecution
+  range: VerificationAttempt
+  admission_kind: decision
+  cq_justification:
+  - CQ-022
+  decision_relevance: Supplies the same-attempt join that prevents an earlier failure from cancelling
+    executions in a later retry.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''attemptId: UUID,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:491-506 — ''failedStepId: S.optionalKey(S.String),'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: goals-packets
+  kind: literal-domain-member
+  source_domain: GateInputScope
+  definition: The goals-packets changed-input family that may invalidate a cached gate artifact.
+  admission_kind: semantic-support
+  supports:
+  - HashSurface
+  - InvalidationEvent
+  decision_relevance: Constrains the changed-input family used to derive verification-evidence invalidation
+    blast radius.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — 'LiteralKit(["repo-code",
+    "goals-packets"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: repo-code
+  kind: literal-domain-member
+  source_domain: GateInputScope
+  definition: The repo-code changed-input family that may invalidate a cached gate artifact.
+  admission_kind: semantic-support
+  supports:
+  - HashSurface
+  - InvalidationEvent
+  decision_relevance: Constrains the changed-input family used to derive verification-evidence invalidation
+    blast radius.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — 'LiteralKit(["repo-code",
+    "goals-packets"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: cheap-gates
+  kind: literal-domain-member
+  source_domain: YeetProofTier
+  definition: A YeetProofTier member that selects the cheap-gates proof surface and its cheap-gate lane
+    set.
+  admission_kind: semantic-support
+  supports:
+  - AssuranceTier
+  - VerificationLane
+  decision_relevance: Constrains which low-cost local proof surface can contribute toward an assurance-tier
+    decision.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier
+    = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe('
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — ''"cheap-gates": () =>
+    repoProofStepDefinition("cheap-gates"),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:402-413 — ''"cheap-gates": () =>
+    [...changesetStatusLanesForProof(context), ...githubCheckCheapGateLanes(context.repoRoot)],'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: full
+  kind: literal-domain-member
+  source_domain: YeetProofTier
+  definition: A YeetProofTier member that selects the pre-push proof surface and, in full-mode planning,
+    follows a cheap-gates step.
+  admission_kind: semantic-support
+  supports:
+  - AssuranceTier
+  - VerificationLane
+  decision_relevance: Constrains the ratified mapping from Yeet's local planner tiers to assurance-tier
+    obligations without conflating the domains.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier
+    = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe('
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — ''full: () => repoProofStepDefinition("pre-push"),'''
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:428-431 — 'proofStep(context, "cheap-gates",
+    true),'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: review-fix
+  kind: literal-domain-member
+  source_domain: YeetProofTier
+  definition: A YeetProofTier member that selects the review-fix proof surface, binds the base and head,
+    and plans no GitHub-check lanes.
+  admission_kind: semantic-support
+  supports:
+  - AssuranceTier
+  - VerificationLane
+  decision_relevance: Constrains the distinct repair-loop proof posture used when mapping operational
+    evidence to assurance obligations.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier
+    = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe('
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:393-397 — ''"review-fix": () => [...args,
+    "--base", context.base, "--head", context.head],'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:402-413 — ''"review-fix": A.empty<GithubCheckLaneSpec>,'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals

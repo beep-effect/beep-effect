@@ -1,0 +1,24 @@
+id: "dh:cilane:001"
+observation_refs:
+  - "po:sha256:6b80aec99930cb6f59c239eedb9cb2a7b9aacc3dae5f01770fba11e1e78417e3"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "build verification lane"
+  description: "A possible operational verification lane named by the quoted build token; its existence is not established by this record."
+representation_status: lexical_alias
+alternatives:
+  - label: "build command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "build task-family label"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation quotes build only as one string in a source list. It records no lane identity, execution, scope, obligation, or externally observable outcome, so a routing-token interpretation remains sufficient."
+epistemic_status: proposed
+confidence:
+  value: 0.43
+  use_for_acceptance: false

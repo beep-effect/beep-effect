@@ -101,7 +101,7 @@ export const ontologyTreeItemsFor: {
       )
     );
     return O.some(
-      childItems.length === 0
+      A.isReadonlyArrayEmpty(childItems)
         ? { id: resource.iri, label: resource.label }
         : { id: resource.iri, label: resource.label, children: childItems }
     );

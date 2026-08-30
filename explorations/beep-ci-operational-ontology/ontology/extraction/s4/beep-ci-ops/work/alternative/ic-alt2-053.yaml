@@ -1,0 +1,36 @@
+id: ic:alt2:053
+hypothesis_ref: dh:worktree-config:008
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two verification evidence records are the same iff they are the same persisted result of one record-extract-judge (or
+    analogous) chain used as proof of a verification activity; sharing a pass/fail label never makes two evidence records
+    the same.
+  reidentification_key:
+  - beep qa record/extract/judge artifacts
+  - repo-wide proof outputs
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One evidence record per persisted verification result used as proof.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - event
+  existential_dependencies:
+  - verification execution
+  - verification lane
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    The lane or work specification that produced the evidence is not the evidence: AGENTS.md requires recorded evidence via
+    record, extract, and judge, distinct from the command.
+- description: >-
+    A green result is not automatically a true verification outcome; the record is evidence rather than the worldly correctness
+    of the software.
+status: proposed

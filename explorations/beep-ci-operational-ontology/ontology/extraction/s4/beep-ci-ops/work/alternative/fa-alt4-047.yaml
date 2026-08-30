@@ -1,0 +1,18 @@
+id: fa:alt4:047
+hypothesis_ref: dh:turbo-cache:004
+identity_card_ref: ic:alt4:047
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: Turbo task specification named check"
+    still_viable: true
+  - label: "kind: check verification lane as an operational procedure (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: a check execution result
+    still_viable: false
+strongest_counterexample: The check entry prescribes an upstream build dependency and explicitly declares empty outputs, which configure a repeatable work specification rather than report a run.
+verdict: analyzed
+needed_evidence: A check-lane occurrence that is not an execution of this turbo.json entry, or this entry invoked without functioning as a verification lane, would discriminate spec from lane Kind.

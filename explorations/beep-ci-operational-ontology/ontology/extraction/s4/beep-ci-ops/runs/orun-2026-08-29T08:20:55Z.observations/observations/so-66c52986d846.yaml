@@ -1,0 +1,25 @@
+id: so:sha256:66c52986d846fa3cb6dc033216560f1ef067ca2f29feb2f7b718c790aa2dc871
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 532
+  end_line: 532
+  content_sha256: c6ddd514364c3c5497463c68d496d093116f9bd405079cf660348cb9a84ed306
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetConflictStatus
+  lexical_name: FleetConflictStatus
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: FleetConflictStatus
+- predicate: exports_symbol
+  object: FleetConflictStatus
+source_excerpt: export type FleetConflictStatus = typeof FleetConflictStatus.Type;
+epistemic_status: parser_derived

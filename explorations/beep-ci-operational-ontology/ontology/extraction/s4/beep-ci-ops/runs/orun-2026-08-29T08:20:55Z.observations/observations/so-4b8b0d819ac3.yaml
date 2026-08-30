@@ -1,0 +1,23 @@
+id: so:sha256:4b8b0d819ac38ec765f4a5340ec35296b74b4715df824af18831d41ad8546f6a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 433
+  end_line: 441
+  content_sha256: 4e3032e1c66746754e2db387e232ce02e947baad2a715c98a4987aab8bee8e5f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::repairCheapGateStep
+  lexical_name: repairCheapGateStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const repairCheapGateStep = (context: RepoRunContext): RepoPlanStep => {'
+epistemic_status: parser_derived

@@ -1,0 +1,10 @@
+id: po:sha256:66b498b7936a6660059bce1a422eca9ee74fc389c280fb583d2e1fd592f10221
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 8
+  end_line: 8
+quote: '@beep/rdf-canonize 7'
+epistemic_status: quoted_prose

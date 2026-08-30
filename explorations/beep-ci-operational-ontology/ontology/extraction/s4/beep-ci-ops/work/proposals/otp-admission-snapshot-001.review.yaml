@@ -1,0 +1,34 @@
+target: "otp:admission-snapshot:001"
+target_sha256: "fe69ce88032b349d642ffff81eb377df2a0bfb12358981923753b21e56cbf454"
+chain_sha256: "876ccebfb98e02905afd0a3c28ba33cdd2b5fc86c02f88b02b8bcb8e46839221"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a relation to test."
+attacks:
+  - surface: identity
+    rule: "unresolved-takes-precedence"
+    counterexample: "One captured payload copied into two files and two independent status reads returning byte-identical payloads expose opposite identity answers. Because no capture event, instant, or provenance is recorded, the card and proposal correctly leave identity unresolved rather than treating field equality as identity."
+    outcome: survived
+  - surface: warrant
+    rule: "support-term-not-necessary"
+    counterexample: "CQ-010 reads admissionChargeTokens and capacityAtAdmissionTokens from a SeatGrant and never ranges over AdmissionSnapshot. A grant-level pre-admission remainder can be materialized without admitting a snapshot class, so the proposed class is not necessary for the cited decision term."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-true-of-dto"
+    counterexample: "An API status DTO can be documented as a point-in-time view and materialize capacity, memory, lease, and ticket fields while denoting no independently reidentifiable snapshot token. That pure-DTO twin makes every cited discriminator fact true, exactly as the FA's extensional-response rival predicts."
+    outcome: landed
+rival_models_still_viable:
+  - "The live admission-state situation with AdmissionSnapshot only its projection"
+  - "An extensional response value without independently reidentifiable token identity"
+evidence:
+  - "so:sha256:5b05efc61c2fd7de3c28414678dfa7302018d4fafd6f02a307ac897623489193"
+  - "so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e"
+  - "po:sha256:724441d2f5fe074205349c704ecc6b1f3aff79210f923d414f6e326a60b59ef1"
+  - "CQ-010"

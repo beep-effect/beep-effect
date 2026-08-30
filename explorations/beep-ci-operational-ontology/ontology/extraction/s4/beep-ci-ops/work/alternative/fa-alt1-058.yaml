@@ -1,0 +1,24 @@
+id: "fa:alt1:058"
+hypothesis_ref: "dh:yeet-watch:015"
+identity_card_ref: "ic:alt1:058"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "running or queued check execution phase"
+    still_viable: false
+  - label: "phase of the watched check (pending as anti-rigid state of one check continuant)"
+    still_viable: true
+  - label: "pending string token"
+    still_viable: false
+strongest_counterexample: "PENDING_BUCKETS and PENDING_STATES span several raw states, and
+  unknown evidence also becomes pending. That already falsifies 'pending = the running phase'. A
+  check continuant that remains the same individual while its classified outcome changes is
+  still a viable phase reading of the outcome-on-a-check, not of the classification value."
+verdict: "analyzed"
+needed_evidence: "Whether YeetWatchCheck.outcome is modeled as a phase of a stable check bearer
+  or as an assigned classification value. A check name that persists across snapshots while
+  outcome changes pending to pass would favor phase-of-check plus this classification value as
+  information; current evidence already separates the value from any one raw execution phase."

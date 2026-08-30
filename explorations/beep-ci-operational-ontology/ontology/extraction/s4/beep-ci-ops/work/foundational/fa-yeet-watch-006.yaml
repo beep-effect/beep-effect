@@ -1,0 +1,24 @@
+id: "fa:yeet-watch:006"
+hypothesis_ref: "dh:yeet-watch:027"
+identity_card_ref: "ic:yeet-watch:006"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Subkind of timeout failure occurrences defined by matching one configured log pattern"
+    still_viable: true
+  - label: "Anti-rigid rerun-authorized role borne by a timeout pattern under the current Yeet policy"
+    still_viable: true
+  - label: "Particular timeout failure or execution of the detector"
+    still_viable: false
+  - label: "CI-timeout literal with no denoted recognition prescription"
+    still_viable: false
+strongest_counterexample: >-
+  The configured text patterns also match deterministic deadlocks and
+  consistently under-budgeted suites. Thus a ci-timeout match records
+  satisfaction of a repeatable recognition rule; it does not establish one
+  transient cause, one occurrence, or even flakiness. An extensional
+  occurrence-subkind model and a policy-role model nevertheless remain viable.
+verdict: analyzed

@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:008"
+observation_refs:
+  - "so:sha256:0fff43aa73c2ae6e061b5d1ca6823220cb31626d53f96fbf66439289d79c2fde"
+  - "so:sha256:e884bbe42442e949ef93c7303bcc3dcb55bff89ba074062b8ebd1b78b0ddbe77"
+cq_warrants: []
+proposed_referent:
+  label: "shouldSkipCommitForReusablePublish implementation and test alias"
+  description: "No domain-ontology referent is proposed for the shouldSkipCommitForReusablePublish implementation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "reusable-publish commit-skipping policy"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show an implementation declaration and a test-facing alias. Aliasing executable code for tests does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

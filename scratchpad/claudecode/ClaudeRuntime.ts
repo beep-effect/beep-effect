@@ -1,27 +1,26 @@
 /**
  * Prewired ManagedRuntime for effect-claudecode programs.
  *
+ * **Details**
+ *
  * `ClaudeRuntime` bundles the platform services most library consumers
  * otherwise have to wire manually (`FileSystem`, `Path`, and logger
  * configuration) into a reusable `ManagedRuntime`. Callers may replace the
  * platform layer for tests and merge in additional services for their own
  * programs.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem";
 import * as NodePath from "@effect/platform-node-shared/NodePath";
+import { Layer, Logger, ManagedRuntime, Match, References } from "effect";
 import type * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
-import * as Logger from "effect/Logger";
-import * as ManagedRuntime from "effect/ManagedRuntime";
-import * as Match from "effect/Match";
 import type * as Path from "effect/Path";
-import * as References from "effect/References";
-
 import * as ClaudeProject from "./ClaudeProject.ts";
 
 const $I = $ScratchpadId.create("claudecode/ClaudeRuntime");
@@ -86,6 +85,8 @@ export type LoggerKind = typeof LoggerKind.Type;
 /**
  * Runtime construction options.
  *
+ * **Details**
+ *
  * `platformLayer` replaces the default Node-backed `FileSystem` / `Path`
  * layer, which is useful in tests. `layer` merges in additional services.
  *
@@ -111,6 +112,8 @@ export interface RuntimeOptions<R = never, E = never, EP = never> {
 /**
  * Runtime construction options for `ClaudeRuntime.project(...)`.
  *
+ * **Details**
+ *
  * Adds the cached `ClaudeProject` service for one concrete project root while
  * preserving the same platform / logger overrides as `ClaudeRuntime.make(...)`.
  *
@@ -133,6 +136,8 @@ export interface ProjectRuntimeOptions<R = never, E = never, EP = never> extends
 
 /**
  * Runtime construction options for `ClaudeRuntime.plugin(...)`.
+ *
+ * **Details**
  *
  * Like `ClaudeRuntime.project(...)`, but requires an explicit plugin root so
  * plugin scans and named component lookups resolve against the plugin
@@ -249,31 +254,28 @@ const mergeExtraLayer = <R = never, E = never, EP = never>(options: {
 
 const projectRuntimeLayer = <R = never, E = never, EP = never>(
   options: ProjectRuntimeOptions<R, E, EP>
-): Layer.Layer<BaseServices | ClaudeProject.Service | R, E | EP, never> =>
-  (() => {
-    const platformLayer = options.platformLayer ?? baseLayer;
-    const projectOptions: ClaudeProject.ClaudeProjectOptions = {
-      cwd: options.cwd,
-      ...(options.pluginRoot === undefined ? {} : { pluginRoot: options.pluginRoot }),
-      ...(options.mcpPath === undefined ? {} : { mcpPath: options.mcpPath }),
-    };
-    const runtimeOptions: RuntimeOptions<ClaudeProject.Service | R, E | EP, EP> = {
-      platformLayer,
-      layer: mergeExtraLayer({
-        projectLayer: ClaudeProject.layer(projectOptions).pipe(Layer.provide(platformLayer)),
-        ...(options.layer === undefined ? {} : { extraLayer: options.layer }),
-      }),
-      ...(options.logger === undefined ? {} : { logger: options.logger }),
-      ...(options.mergeWithExistingLoggers === undefined
-        ? {}
-        : {
-            mergeWithExistingLoggers: options.mergeWithExistingLoggers,
-          }),
-    };
-    return layer({
-      ...runtimeOptions,
-    });
-  })();
+): Layer.Layer<BaseServices | ClaudeProject.Service | R, E | EP, never> => {
+  const platformLayer = options.platformLayer ?? baseLayer;
+  const projectOptions: ClaudeProject.ClaudeProjectOptions = {
+    cwd: options.cwd,
+    ...O.getSomesStruct({
+      pluginRoot: O.fromUndefinedOr(options.pluginRoot),
+      mcpPath: O.fromUndefinedOr(options.mcpPath),
+    }),
+  };
+  const runtimeOptions: RuntimeOptions<ClaudeProject.Service | R, E | EP, EP> = {
+    platformLayer,
+    layer: mergeExtraLayer({
+      projectLayer: ClaudeProject.layer(projectOptions).pipe(Layer.provide(platformLayer)),
+      ...O.getSomesStruct({ extraLayer: O.fromUndefinedOr(options.layer) }),
+    }),
+    ...O.getSomesStruct({
+      logger: O.fromUndefinedOr(options.logger),
+      mergeWithExistingLoggers: O.fromUndefinedOr(options.mergeWithExistingLoggers),
+    }),
+  };
+  return layer(runtimeOptions);
+};
 
 // ---------------------------------------------------------------------------
 // Managed runtime constructors
@@ -333,6 +335,8 @@ export const defaultRuntime = <R = never, E = never, EP = never>(
  * Create a prewired runtime that also includes the cached `ClaudeProject`
  * service for one project root.
  *
+ * **Details**
+ *
  * This is the recommended entry point for project-aware scripts that need
  * settings, `.mcp.json`, or plugin component lookups in addition to the base
  * platform services.
@@ -356,6 +360,8 @@ export const project = <R = never, E = never, EP = never>(
 
 /**
  * Create a prewired runtime for plugin-aware scripts.
+ *
+ * **Details**
  *
  * Compared with `ClaudeRuntime.project(...)`, this preset requires an explicit
  * `pluginRoot` so `ClaudeProject.plugin` and named component lookups read from

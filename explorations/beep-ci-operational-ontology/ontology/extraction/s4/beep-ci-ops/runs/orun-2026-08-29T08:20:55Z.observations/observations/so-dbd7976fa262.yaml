@@ -1,0 +1,23 @@
+id: so:sha256:dbd7976fa262aa03531c4daed80c2d8220c324134630cd0b831fb62756e78706
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 136
+  end_line: 151
+  content_sha256: cc961d52ed811007bc948e80900e794e741a8c3a1357fb0f37d62d298327208b
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::test:integration:parallel
+  lexical_name: test:integration:parallel
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^build
+source_excerpt: '"test:integration:parallel": {'
+epistemic_status: parser_derived

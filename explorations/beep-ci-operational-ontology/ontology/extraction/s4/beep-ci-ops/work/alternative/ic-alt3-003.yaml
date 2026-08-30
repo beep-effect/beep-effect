@@ -1,0 +1,30 @@
+id: ic:alt3:003
+hypothesis_ref: dh:reporun:025
+identity:
+  supplies_identity: true
+  identity_criterion: Two planned-command specifications are the same iff they prescribe the
+    same command, arguments, working directory, phase, scope, mutability, and resume policy.
+    The plan-step id is reidentification evidence rather than the criterion.
+  reidentification_key:
+  - RepoPlanStep.id
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one planned step as a command prescription with its phase and resume policy
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - resume rewritten to never
+counterexamples:
+- description: enforceConservativeResume rewrites an unsafe resume request on a copy of the
+    step; that rewrite is a new prescription value, not an execution, and a subprocess that
+    later runs the command text is a different individual.
+status: proposed

@@ -1,0 +1,21 @@
+id: "dh:quality:018"
+observation_refs:
+  - "so:sha256:176893b9f639e96f29ab55dfcd612e22e5a9466edb2d1a96308165a4fe56b519"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration jsonPayloadFromOutput in TurboConfigProof.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by jsonPayloadFromOutput"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is unrepresentable_construct for the source declaration. By contract that fact cannot ground a surviving referent, and it supplies no observed domain behavior, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

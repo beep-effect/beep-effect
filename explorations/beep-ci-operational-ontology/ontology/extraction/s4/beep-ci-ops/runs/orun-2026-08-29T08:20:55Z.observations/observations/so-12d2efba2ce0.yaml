@@ -1,0 +1,23 @@
+id: so:sha256:12d2efba2ce0a9f13d62a37d0a3f3929edecfeac1493ae26835ade5c451a57e9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1083
+  end_line: 1100
+  content_sha256: 6e4d018096357ef16bb3ebc3168c3caca4f6a562ca80b5462acde9dac2cab822
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::runLaneProcess
+  lexical_name: runLaneProcess
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
+epistemic_status: parser_derived

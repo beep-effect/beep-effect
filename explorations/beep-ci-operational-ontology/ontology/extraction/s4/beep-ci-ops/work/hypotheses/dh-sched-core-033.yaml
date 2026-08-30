@@ -1,0 +1,27 @@
+id: "dh:sched-core:033"
+observation_refs:
+  - "so:sha256:1ae2ece7b47920c2d583e24e3e0e2e7962ab14a433a27c85ff5bb664150b166a"
+  - "so:sha256:2cf3ee055aa243dab2a450beb1552810240c46b7614eea520e6fde1cc7932dda"
+  - "so:sha256:7d15d7918a7759e4496307bde229138b14fe3113ea136c150376e03b11bf439a"
+  - "so:sha256:d1ad1a19157489bb13d07d761f1c75e0341a9db09845456e94b71cd2dbe4a369"
+  - "so:sha256:df03d94c1ac24abd4ed051438346ff33a2e073e4e10b1e2e3368f328c5f4983b"
+  - "so:sha256:e813593d96c82a65e2f668518434b6752941484765265c69b64f7d3657ad21b5"
+  - "so:sha256:e90453d3e397cf365d5cd3452190942a0772911e79cc4e9b833cbc7a85d062ed"
+  - "so:sha256:e95d06ba0a53f1a7c2c1eabd5a877e50b0cf497837011ec2c701cb05b5cce822"
+  - "so:sha256:ea726c3d65a55de339b916dc4f3307b4cc084811095e661073c154b6b41f4878"
+  - "so:sha256:f424c89e23195bbb2a5585b1f929401fd6c2178769830c1eed1366f9215c89d1"
+cq_warrants: []
+proposed_referent:
+  label: "filesystem-backed admission coordination-store implementation"
+  description: "Directory layout, ownership and mode validation, temporary staging, atomic publication, and exclusive creation used to persist scheduler state."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "durable admission-state store"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish a specific private-directory and atomic-file mechanism. The CQs concern requests, grants, capacity, and policy, not this storage topology or its helper interfaces."
+epistemic_status: proposed
+confidence: {value: 0.95, use_for_acceptance: false}

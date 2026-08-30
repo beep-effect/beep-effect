@@ -1,0 +1,33 @@
+id: "dh:yeet-watch:015"
+observation_refs:
+  - "so:sha256:1c2ec820c112ce5ea53f65bba4befef2d10f6cce9a598c3c9206542d2328c6a1"
+  - "so:sha256:7f7a8c8336d864c351c0af447fd1b8527bdcf64e32abbbf3d9b37fe478205d2e"
+  - "so:sha256:66c7b3c26155bec06360ef44886cb47f52ca047c429de21cded6f76b5b05b2bc"
+  - "so:sha256:8fa08b8622f1a3ae8f96a2ac04f21c2a8934111606b363b5a6d28c136c0e0d2f"
+  - "so:sha256:61a425b9f63374fbfe9bfb75c710ff47c308297ca246b3fb007f9d263a4f65a8"
+  - "so:sha256:a7c6ae0d10535713f109acc2252a5ec84ab4500696ac752d7782c3625caa5747"
+  - "so:sha256:b870d15f88a575353b6b0228cd405f21da494b88735fc82c49042a272e0095ab"
+  - "so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c"
+  - "so:sha256:53871c1d8d3f62889042f3a5d4388e6e993dc3ef0478c837fbe383b75b912edd"
+  - "po:sha256:831ad2bef49180653d697083dba976e11d7fc153e0605eb92d7998adb9fc2214"
+cq_warrants: []
+proposed_referent:
+  label: "pending check-outcome classification"
+  description: "An information value assigned to a watched PR check when its raw evidence is pending or not yet safely terminal."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "running or queued check execution phase"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "pending string token"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A watch DTO can map queued, running, waiting, and unknown states to pending, persist the enum value, and suppress terminal output without a separately governed classification artifact."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

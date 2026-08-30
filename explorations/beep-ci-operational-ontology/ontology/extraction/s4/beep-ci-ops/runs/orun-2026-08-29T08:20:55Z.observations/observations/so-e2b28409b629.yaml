@@ -1,0 +1,23 @@
+id: so:sha256:e2b28409b629953de98ae2a85f103f3880531c22716a1fa9c0fdf54a1aaabac8
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 750
+  end_line: 776
+  content_sha256: 64874e848b91c3d41224119decdf2a48aa729242164d65075d97198bdfc990d2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runPrePushHookMode
+  lexical_name: runPrePushHookMode
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runPrePushHookMode = Effect.fn("Yeet.runPrePushHookMode")(function* (
+epistemic_status: parser_derived

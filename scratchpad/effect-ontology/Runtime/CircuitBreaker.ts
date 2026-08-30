@@ -28,23 +28,6 @@ const NonNegativeCounter = S.Finite.check(
 );
 
 /**
- * Circuit breaker state
- *
- *
- * **Example** (Use the CircuitState contract)
- *
- * ```ts
- * import type { CircuitState } from "@effect-ontology/Runtime/CircuitBreaker"
- *
- * const acceptsCircuitState = (_value: CircuitState): void => undefined
- *
- * console.log(acceptsCircuitState)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-/**
  * Runtime state of a circuit breaker.
  *
  * **Example** (Inspect circuit states)
@@ -82,20 +65,24 @@ export const CircuitState = LiteralKit(["closed", "open", "half_open"]).pipe(
 export type CircuitState = typeof CircuitState.Type;
 
 /**
- * Circuit breaker configuration
+ * Failure, recovery-delay, and recovery-success thresholds for {@link makeCircuitBreaker}.
  *
- *
- * **Example** (Use the CircuitBreakerConfig contract)
+ * **Example** (Construct a fail-fast circuit config)
  *
  * ```ts
- * import type { CircuitBreakerConfig } from "@effect-ontology/Runtime/CircuitBreaker"
+ * import { Duration } from "effect"
+ * import { PosInt } from "@beep/schema/Int"
+ * import { CircuitBreakerConfig } from "@effect-ontology/Runtime/CircuitBreaker"
  *
- * const acceptsCircuitBreakerConfig = (_value: CircuitBreakerConfig): void => undefined
- *
- * console.log(acceptsCircuitBreakerConfig)
+ * const config = CircuitBreakerConfig.make({
+ *   maxFailures: PosInt.make(1),
+ *   resetTimeout: Duration.minutes(2),
+ *   successThreshold: PosInt.make(1)
+ * })
+ * console.log(config.maxFailures) // 1
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class CircuitBreakerConfig extends S.Class<CircuitBreakerConfig>($I`CircuitBreakerConfig`)(
@@ -112,15 +99,7 @@ export class CircuitBreakerConfig extends S.Class<CircuitBreakerConfig>($I`Circu
 /**
  * Constructor input accepted by {@link CircuitBreakerConfig}.
  *
- * **Example** (Configure a circuit breaker)
- *
- * ```ts
- * import type { CircuitBreakerConfigInput } from "@effect-ontology/Runtime/CircuitBreaker"
- *
- * const config: CircuitBreakerConfigInput = {}
- * console.log(config)
- * ```
- *
+ * @see {@link CircuitBreakerConfig} for the runtime class and {@link makeCircuitBreaker} for applying it.
  * @category type-level
  * @since 0.0.0
  */
@@ -129,12 +108,12 @@ export type CircuitBreakerConfigInput = (typeof CircuitBreakerConfig)["~type.mak
 /**
  * Default circuit breaker configuration
  *
- * **Example** (Inspect default circuit config)
+ * **Example** (Read the default failure threshold)
  *
  * ```ts
  * import { DEFAULT_CIRCUIT_CONFIG } from "@effect-ontology/Runtime/CircuitBreaker"
  *
- * console.log(DEFAULT_CIRCUIT_CONFIG)
+ * console.log(DEFAULT_CIRCUIT_CONFIG.maxFailures) // 5
  * ```
  *
  * @category constants
@@ -160,12 +139,25 @@ class CircuitBreakerState extends S.Class<CircuitBreakerState>($I`CircuitBreaker
 /**
  * Create a circuit breaker
  *
- * **Example** (Inspect make circuit breaker)
+ * **Example** (Open the circuit after one failure)
  *
  * ```ts
+ * import { Duration, Effect } from "effect"
+ * import { PosInt } from "@beep/schema/Int"
  * import { makeCircuitBreaker } from "@effect-ontology/Runtime/CircuitBreaker"
  *
- * console.log(makeCircuitBreaker)
+ * const state = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const breaker = yield* makeCircuitBreaker({
+ *       maxFailures: PosInt.make(1),
+ *       resetTimeout: Duration.minutes(2),
+ *       successThreshold: PosInt.make(1)
+ *     })
+ *     yield* Effect.ignore(breaker.protect(Effect.fail("llm-down")))
+ *     return yield* breaker.getState()
+ *   })
+ * )
+ * console.log(state)
  * ```
  *
  * @param config - Circuit breaker configuration
@@ -312,19 +304,9 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
 });
 
 /**
- * Type for the circuit breaker service
+ * Service returned by {@link makeCircuitBreaker}, including `protect`, `getState`, and `reset`.
  *
- *
- * **Example** (Use the CircuitBreaker contract)
- *
- * ```ts
- * import type { CircuitBreaker } from "@effect-ontology/Runtime/CircuitBreaker"
- *
- * const acceptsCircuitBreaker = (_value: CircuitBreaker): void => undefined
- *
- * console.log(acceptsCircuitBreaker)
- * ```
- *
+ * @see {@link makeCircuitBreaker} for constructing a breaker and observing open/closed transitions.
  * @category type-level
  * @since 0.0.0
  */

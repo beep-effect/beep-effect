@@ -1,0 +1,36 @@
+id: so:sha256:5cd70a27e717b031265de56647d70eee204c245864c4f66e220e25e323233b1e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 53
+  end_line: 57
+  content_sha256: 61711a5c200c332c2374871ec556ae74c1e8c9c2deb8afe1f9def5a59bb34577
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::QualityTaskName
+  lexical_name: QualityTaskName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: audit
+- predicate: declares_literal_member
+  object: build
+- predicate: declares_literal_member
+  object: check
+- predicate: declares_literal_member
+  object: coverage
+- predicate: declares_literal_member
+  object: lint
+- predicate: declares_literal_member
+  object: test
+- predicate: exports_symbol
+  object: QualityTaskName
+source_excerpt: export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "audit",
+  "coverage"]).pipe(
+epistemic_status: parser_derived

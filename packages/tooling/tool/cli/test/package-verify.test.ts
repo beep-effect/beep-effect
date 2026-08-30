@@ -4,9 +4,15 @@ import {
   PackageVerifyStepResult,
   PackageVerifyWorkspace,
   packageVerifyStepSpecsForTesting,
+  recordPackageVerifyInboxForTesting,
   renderPackageVerifyReportForTesting,
+  runPackageVerify,
+  runPackageVerifyCli,
   selectPackageVerifyTargetForTesting,
 } from "@beep/repo-cli/test/Quality";
+import { loadYeetInboxView } from "@beep/repo-cli/test/Yeet";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -19,8 +25,10 @@ import { describe, expect, it } from "vitest";
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
+  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
+  FsUtilsLive.pipe(Layer.provideMerge(FileSystemLayer))
 );
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const demoWorkspace = PackageVerifyWorkspace.make({
   name: "@beep/demo",
@@ -71,8 +79,66 @@ const withTempDirectory = <Result, Error, Requirements>(
 describe("package verify", () => {
   it("builds quick and default step specs", () => {
     expect(A.map(packageVerifyStepSpecsForTesting(true), (spec) => spec.step)).toEqual(["lint", "check"]);
-    expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["lint", "check", "test"]);
+    expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["audit", "docgen"]);
   });
+
+  it("runs quick verification and records the repository head", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.acquireUseRelease(
+          Effect.sync(() => {
+            const previous = process.cwd();
+            process.chdir(tmpDir);
+            return previous;
+          }),
+          () =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const packageDir = path.join(tmpDir, "packages/demo");
+              yield* fs.makeDirectory(packageDir, { recursive: true });
+              yield* fs.writeFileString(
+                path.join(tmpDir, "package.json"),
+                yield* encodeJson({ name: "verify-root", private: true, workspaces: ["packages/*"] })
+              );
+              yield* fs.writeFileString(
+                path.join(packageDir, "package.json"),
+                yield* encodeJson({
+                  name: "@beep/demo",
+                  private: true,
+                  scripts: { "beep:lint": "true", "beep:check": "true" },
+                })
+              );
+              yield* runGit(tmpDir, ["init", "--quiet"]);
+              yield* runGit(tmpDir, ["config", "user.email", "codex@example.invalid"]);
+              yield* runGit(tmpDir, ["config", "user.name", "Codex"]);
+              yield* runGit(tmpDir, ["add", "."]);
+              yield* runGit(tmpDir, ["commit", "--quiet", "-m", "initial"]);
+
+              const report = yield* runPackageVerify({ packageName: O.some("@beep/demo"), quick: true });
+
+              expect(report.packageName).toBe("@beep/demo");
+              expect(report.headSha).toMatch(/^[0-9a-f]{40}$/u);
+              expect(A.map(report.results, (result) => result.ok)).toEqual([true, true]);
+
+              yield* fs.writeFileString(path.join(tmpDir, ".beep"), "block inbox creation");
+              yield* runPackageVerifyCli({ packageArgs: ["@beep/demo"], quick: true });
+            }),
+          (previous) => Effect.sync(() => process.chdir(previous))
+        )
+      )
+    ));
+
+  it("rejects more than one package argument before discovery", () =>
+    Effect.runPromise(
+      runPackageVerifyCli({ packageArgs: ["@beep/a", "@beep/b"], quick: true }).pipe(
+        Effect.flip,
+        Effect.map((error) => {
+          expect(error.message).toContain("expected at most one package argument");
+        }),
+        provideScopedLayer(PlatformLayer)
+      )
+    ));
 
   it("selects an explicit workspace package", () =>
     Effect.runPromise(
@@ -137,9 +203,11 @@ describe("package verify", () => {
   it("renders compact summaries and failed step output", () => {
     const lines = renderPackageVerifyReportForTesting(
       PackageVerifyReport.make({
+        headSha: "abc123",
         packageName: "@beep/demo",
         packageDir: "/repo/packages/demo",
         quick: true,
+        repoRoot: "/repo",
         results: [
           PackageVerifyStepResult.make({
             step: "lint",
@@ -170,4 +238,96 @@ describe("package verify", () => {
     expect(rendered).toContain("-------- check (failed) --------");
     expect(Str.endsWith("type error\n")(rendered)).toBe(true);
   });
+
+  it("writes package failures to the shared inbox and clears them on success", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const result = (ok: boolean) =>
+            PackageVerifyStepResult.make({
+              step: "check",
+              script: "beep:check",
+              skipped: false,
+              ok,
+              durationMillis: 20,
+              exitCode: O.some(ok ? 0 : 1),
+              output: ok ? "" : "type error",
+            });
+          const report = (ok: boolean) =>
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/demo",
+              packageDir: `${tmpDir}/packages/demo`,
+              quick: true,
+              repoRoot: tmpDir,
+              results: [result(ok)],
+            });
+
+          yield* recordPackageVerifyInboxForTesting(report(false));
+          const failed = yield* loadYeetInboxView(tmpDir);
+          expect(failed.entries).toHaveLength(1);
+          expect(failed.entries[0]?.row.kind).toBe("local-shard-failed");
+          expect(failed.entries[0]?.ack.acked).toBe(false);
+
+          yield* recordPackageVerifyInboxForTesting(report(true));
+          const repaired = yield* loadYeetInboxView(tmpDir);
+          expect(repaired.entries[0]?.ack.acked).toBe(true);
+
+          const withoutExit = (step: "lint" | "check", ok: boolean) =>
+            PackageVerifyStepResult.make({
+              step,
+              script: `beep:${step}`,
+              skipped: false,
+              ok,
+              durationMillis: 1,
+              exitCode: O.none(),
+              output: "",
+            });
+          yield* recordPackageVerifyInboxForTesting(
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/no-exit",
+              packageDir: `${tmpDir}/packages/no-exit`,
+              quick: true,
+              repoRoot: tmpDir,
+              results: [withoutExit("lint", true), withoutExit("check", false)],
+            })
+          );
+        })
+      )
+    ));
+
+  it("clears quick lint and check poison after a successful full audit", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const step = (name: "lint" | "check" | "audit", ok: boolean) =>
+            PackageVerifyStepResult.make({
+              step: name,
+              script: `beep:${name}`,
+              skipped: false,
+              ok,
+              durationMillis: 20,
+              exitCode: O.some(ok ? 0 : 1),
+              output: ok ? "" : `${name} failed`,
+            });
+          const report = (quick: boolean, results: ReadonlyArray<PackageVerifyStepResult>) =>
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/demo",
+              packageDir: `${tmpDir}/packages/demo`,
+              quick,
+              repoRoot: tmpDir,
+              results,
+            });
+
+          yield* recordPackageVerifyInboxForTesting(report(true, [step("lint", false), step("check", false)]));
+          yield* recordPackageVerifyInboxForTesting(report(false, [step("audit", true)]));
+
+          const repaired = yield* loadYeetInboxView(tmpDir);
+          expect(repaired.entries).toHaveLength(2);
+          expect(repaired.entries.every((entry) => entry.ack.acked)).toBe(true);
+        })
+      )
+    ));
 });

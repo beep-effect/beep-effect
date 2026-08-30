@@ -1,0 +1,49 @@
+target: "otp:full-verification-plan-specification:001"
+target_sha256: "9b241779d74062449ac37a7ed81c5c8451f375d1500b97680be2b59f52b8e757"
+chain_sha256: "ead93221381c5881c6b0337f090b53f9c38eed13e1208e8831426492b039f7d7"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: deferred-component-composite-identity
+    counterexample: >-
+      A pre-push-only member prescription and a cheap-gates-plus-pre-push
+      composite have different parts and unity. The proposal and card expose
+      that choice, remain explicitly deferred, and do not identify the two by
+      the full selector alone.
+    outcome: survived
+  - surface: warrant
+    rule: support-term-not-necessary
+    counterexample: >-
+      CQ-005 can determine proof validity from tree and epoch, and CQ-006 can
+      determine obligation discharge from the producing lane and applicability
+      context. Both remain answerable with correctly scoped VerificationEvidence
+      even when no FullVerificationPlanSpecification class is admitted.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A pure dispatcher can map the full string to a freshly constructed
+      pre-push step DTO exactly as quoted, while retaining no member-level or
+      composite plan artifact. The observed mapping is therefore true in the
+      implementation-only null world.
+    outcome: landed
+rival_models_still_viable:
+  - "A composite cheap-gates-plus-pre-push plan specification."
+  - "A member-level pre-push prescription."
+  - "A family of context-bound plan-step specifications."
+evidence:
+  - "so:sha256:1adbba90ffeca74bb7274f9ac7af8f6887553ab1344981fdce3e7ab86aaa9f4f"
+  - "po:sha256:b565b1f59f1de2fb2810a5cbba36c6c707705f294baf25d0b54bc812b7104d91"
+  - "CQ-005"
+  - "CQ-006"

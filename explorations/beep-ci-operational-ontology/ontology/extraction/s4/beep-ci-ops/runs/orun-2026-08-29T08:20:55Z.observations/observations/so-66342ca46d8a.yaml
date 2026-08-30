@@ -1,0 +1,24 @@
+id: so:sha256:66342ca46d8a670d353da0f19b94d0fcf756595f31b5a8b1cb59d06e0d77bd88
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 678
+  end_line: 684
+  content_sha256: 1a92cdcaca7661abd29a41f0ef546ee38a45dce16ec4cfa6a5c789711f2acee7
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::bunRunStep
+  lexical_name: bunRunStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep
+  =>'
+epistemic_status: parser_derived

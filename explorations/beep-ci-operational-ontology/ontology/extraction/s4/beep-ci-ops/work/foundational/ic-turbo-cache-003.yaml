@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:003"
+hypothesis_ref: "dh:turbo-cache:003"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same lint task specification only when they are the same authored normative instruction in one versioned configuration lineage with the same complete inherited lint prescriptions; a matching lint key, dependency selector, or cache flag is evidence but not identity."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key lint"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The dependency, cache, and input prescriptions compose one repeatable lint instruction within its configuration context."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A lint verification lane realized by the specification"
+    - "A family-level template for package lint tasks"
+  existential_dependencies:
+    - "The enclosing Turbo configuration and task-resolution context"
+    - "At least one bearer of the lint instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "Two package lint executions may inherit this entry but invoke different package scripts, so the observed dependency and cache declarations do not by themselves individuate their full specifications."
+status: proposed

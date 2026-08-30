@@ -1,0 +1,10 @@
+id: po:sha256:8dddff995d4175e482cb81b4ecb5bbeac10bb64ef9b504432cddbd7c9e3ed5b1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 673
+  end_line: 686
+quote: lock) underneath machine-wide admission.
+epistemic_status: quoted_prose

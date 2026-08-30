@@ -1,0 +1,41 @@
+id: "ic:reporun:002"
+hypothesis_ref: "dh:reporun:003"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two runner-reporting-loss situations are the same only when they are the
+    same continuous all-unconcluded state of the same failed GitHub job
+    execution over the same nonempty set of step occurrences; matching field
+    values or the runner-loss label alone do not establish sameness.
+  reidentification_key:
+    - "GitHub job database identifier together with its run attempt"
+    - "observation snapshot and the nonempty set of job-step occurrences"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One situation is unified by one failed job execution and the simultaneous
+    absence of conclusions across that job's observed nonempty step set.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+    - "anti-rigid classification of a GitHub job bearer"
+    - "runner-stoppage event that causes the situation"
+    - "information record assigning the runner-loss label"
+  existential_dependencies:
+    - "the particular GitHub job execution"
+    - "the job-step occurrences and their reporting states"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "a step acquires a conclusion"
+    - "the job observation is corrected or superseded"
+counterexamples:
+  - description: >-
+      A stale or incomplete GitHub API payload can contain a failed job and a
+      nonempty step list whose conclusions are all null even though the runner
+      continued reporting elsewhere.
+status: proposed

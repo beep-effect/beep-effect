@@ -10,6 +10,7 @@ import {
   staleGateVerdicts,
   unprovenGateVerdicts,
   YEET_GATE_ARTIFACT_DESCRIPTORS,
+  YEET_GATE_AUXILIARY_ARTIFACT_PATHS,
 } from "@beep/repo-cli/test/Yeet";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -148,7 +149,7 @@ describe("gate staleness reporting", () => {
   it("preserves an absent artifact as unproven in operator output", () => {
     const verdict = GateUnproven.make({
       gateId: "jsdoc-documentation-inventory",
-      detail: ".beep/ci/jsdoc-documentation.inventory.jsonc does not exist",
+      detail: "standards/jsdoc-documentation.inventory.jsonc does not exist",
     });
 
     expect(unprovenGateVerdicts([verdict])).toStrictEqual([verdict]);
@@ -186,14 +187,24 @@ describe("gate staleness reporting", () => {
       _tag: "Some",
       value: { scope: "goals-packets" },
     });
+    expect(
+      A.findFirst(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.gateId === "jsdoc-documentation-inventory")
+    ).toMatchObject({
+      _tag: "Some",
+      value: {
+        artifactPath: "standards/jsdoc-documentation.inventory.jsonc",
+        regenerateCommand: "bun run beep quality jsdoc-inventory",
+      },
+    });
     expect(A.every(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand.length > 0)).toBe(true);
+    expect(YEET_GATE_AUXILIARY_ARTIFACT_PATHS).toStrictEqual(["standards/jsdoc-documentation.inventory.md"]);
     expect(A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand)).toStrictEqual([
       "bun run coverage:baseline:write",
       "bun run beep quality jsdoc-inventory && bun run beep quality jsdoc-ratchet --write-baseline",
       "bun run beep quality knip --write-baseline",
       "bun run beep lint package-test-typecheck --write-baseline",
       "bun run beep goals doctor --write-baseline",
-      "bun run beep ci lane jsdoc-inventory",
+      "bun run beep quality jsdoc-inventory",
     ]);
   });
 });

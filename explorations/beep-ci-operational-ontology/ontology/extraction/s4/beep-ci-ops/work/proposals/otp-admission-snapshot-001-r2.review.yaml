@@ -1,0 +1,40 @@
+target: "otp:admission-snapshot:001"
+target_sha256: "d7dc3298c3a6d243e693cc08ded02d907815724cd2dbe58480059dc4f8e7361e"
+chain_sha256: "c7456585d17d2d2a13be7aca7444e534b6de319e4bd519f8460c750eb3b4c54b"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: "A capture event or timestamp, machine and policy scope, and ETL provenance showing whether capacityAtAdmissionTokens retains or refers to a distinct pre-grant snapshot token would settle both individuation and support necessity."
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; there is no candidate subsumption to test, and no valid subsumption relation is presumed."
+attacks:
+  - surface: identity
+    rule: "unresolved-takes-precedence"
+    counterexample: "One captured payload copied into two files and two independent status reads returning byte-identical payloads demand opposite token-identity answers. The revised card correctly leaves identity unresolved because no capture act, instant, or provenance distinguishes those cases."
+    outcome: survived
+  - surface: warrant
+    rule: "support-necessity-underdetermined"
+    counterexample: "CQ-010 can be answered when the ETL writes the pre-grant remainder directly on SeatGrant and retains no AdmissionSnapshot, but a provenance-preserving ETL may require a snapshot reference to distinguish pre-grant from post-grant state. The supplied closure does not show which pipeline exists."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-true-of-dto"
+    counterexample: "An API response DTO can be documented as a point-in-time view and materialize capacity, charges, leases, tickets, and memory while possessing no independently reidentifiable snapshot token. That null-world twin preserves all cited facts."
+    outcome: landed
+rival_models_still_viable:
+  - "The referent is the live admission-state situation, and AdmissionSnapshot is only its information projection."
+  - "AdmissionSnapshot is an extensional response value rather than an independently reidentifiable information-object token."
+evidence:
+  - "so:sha256:54af3bae065ad2e6cfb6f8068a3bbe178407105b5576a6e9e8231e9cebd579f5"
+  - "so:sha256:5b05efc61c2fd7de3c28414678dfa7302018d4fafd6f02a307ac897623489193"
+  - "so:sha256:63ba4aaa9693ba692dbd1089e69855e4c4e78f7b3d6005e529431e9a96163c70"
+  - "so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e"
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:724441d2f5fe074205349c704ecc6b1f3aff79210f923d414f6e326a60b59ef1"
+  - "po:sha256:7ac375710c80682c25f8e9effab735affd8a22a5d27df4ba806992d64c780f03"
+  - "po:sha256:afa600fec9889222d94fb5a29bc4aa8e748edd9baaa22ceb1f64db174a9be2a6"
+  - "po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16"
+  - "CQ-010"

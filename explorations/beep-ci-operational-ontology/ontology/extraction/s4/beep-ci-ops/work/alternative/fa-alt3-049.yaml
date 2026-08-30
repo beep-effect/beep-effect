@@ -1,0 +1,22 @@
+id: fa:alt3:049
+hypothesis_ref: dh:turbo-cache:012
+identity_card_ref: ic:alt3:049
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Turbo task specification named lint:fix'
+  still_viable: true
+- label: 'information_object: a mutating lint-repair procedure specification'
+  still_viable: true
+- label: 'kind: a lint verification lane'
+  still_viable: false
+strongest_counterexample: The cited span asserts dependsOn ^lint:fix and cache false. No supplied
+  observation says the task produces verification evidence, so a verification-lane reading
+  is not supported.
+verdict: analyzed
+needed_evidence: An observation that lint:fix writes files or is excluded from proof surfaces
+  would confirm the mutating-repair reading; an observation that a tier remainder includes
+  lint:fix would revive the lane reading.

@@ -1,0 +1,29 @@
+id: so:sha256:34b48a9193cc6492f7d9dc29870607f32b095b278c89c94ca42778403c80271d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 76
+  end_line: 81
+  content_sha256: be4d8880be49e9c1fab9ef9e57a1b43ab5b9ae1af89f1292b9a19b529cadcd5b
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/github/JobShape.ts::GithubJobShapeClass
+  lexical_name: GithubJobShapeClass
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: install-failure
+- predicate: declares_literal_member
+  object: runner-loss
+- predicate: declares_literal_member
+  object: setup-5xx
+- predicate: exports_symbol
+  object: GithubJobShapeClass
+source_excerpt: export const GithubJobShapeClass = LiteralKit(["setup-5xx", "runner-loss", "install-failure"]).pipe(
+epistemic_status: parser_derived

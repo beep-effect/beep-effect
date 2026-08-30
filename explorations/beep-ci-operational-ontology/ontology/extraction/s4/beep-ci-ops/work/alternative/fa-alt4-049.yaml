@@ -1,0 +1,18 @@
+id: fa:alt4:049
+hypothesis_ref: dh:turbo-cache:013
+identity_card_ref: ic:alt4:049
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: Turbo task specification named codegen"
+    still_viable: true
+  - label: a code-generation procedure specification at a finer grain
+    still_viable: true
+  - label: a verification lane
+    still_viable: false
+strongest_counterexample: The codegen entry asserts an upstream codegen-task dependency selector, which is repeatable task ordering, but nothing in the cited span shows a validation surface.
+verdict: analyzed
+needed_evidence: A documented check or gate that treats codegen as a proof surface, or generated-file outputs bound to this task, would discriminate a mere pipeline slot from a generation procedure.

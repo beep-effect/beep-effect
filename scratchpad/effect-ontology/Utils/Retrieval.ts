@@ -43,9 +43,7 @@ const byRrfScoreDescending = Order.mapInput(
  * console.log(rrfScore([1, 2], 60) > 0) // true
  * ```
  *
- * @param ranks - Array of 1-indexed ranks
- * @param k - Constant to smooth rank differences (default: 60)
- * @returns RRF score (higher is better)
+ * @param k - Smoothing constant; must be supplied (typically 60).
  * @category utilities
  * @since 0.0.0
  */
@@ -70,9 +68,8 @@ export const rrfScore = dual2((ranks: ReadonlyArray<number>, k: number): number 
  * console.log(fused[0]?.id) // "a"
  * ```
  *
- * @param rankedLists - Array of ranked lists, each sorted by relevance
- * @param k - RRF smoothing constant (default: 60)
- * @returns Combined list sorted by descending RRF score
+ * @param k - Smoothing constant forwarded to {@link rrfScore}; must be supplied.
+ * @see {@link rrfScore} for the per-item rank fusion formula.
  * @category utilities
  * @since 0.0.0
  */
@@ -199,13 +196,7 @@ export const ExpandedTerm = ExpandedTermSource.mapMembers(
 /**
  * Runtime value decoded by {@link ExpandedTerm}.
  *
- * **Example** (Select the expansion source)
- * ```ts
- * import type { ExpandedTerm } from "@effect-ontology/Utils/Retrieval"
- * const field: keyof ExpandedTerm = "source"
- * console.log(field) // "source"
- * ```
- *
+ * @see {@link ExpandedTerm} for the tagged-union schema and source cases.
  * @category type-level
  * @since 0.0.0
  */
@@ -436,9 +427,8 @@ export const expandQueryWithOntology = dual3(
  * console.log(buildExpandedQuery(terms, true)) // "player^1 athlete^0.8"
  * ```
  *
- * @param terms - Array of expanded terms with weights
- * @param useBoosting - Include weight as Lucene boost (^0.8) - default: false
- * @returns Combined query string
+ * @param useBoosting - When true, append Lucene `^weight` suffixes; must be supplied.
+ * @see {@link ExpandedTerm} for the weighted terms this joins.
  * @category factories
  * @since 0.0.0
  */

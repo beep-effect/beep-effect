@@ -1,0 +1,23 @@
+id: "dh:yeet-planner:063"
+observation_refs:
+  - "so:sha256:ab9b40285e051d72072bcdf5cbda763df48c9df2f6d8bf3f0d1660078dc956a9"
+cq_warrants: []
+proposed_referent:
+  label: "Unresolved referent for GateStale in GateStaleness.ts"
+  description: "A possible referent suggested by the GateStale schema declaration in GateStaleness.ts."
+representation_status: unresolved
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::GateStale"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "Source schema or helper only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Export and syntactic inheritance facts are equally true of a pure schema or data-transfer declaration; no supplied observation establishes an independently existing subject or information object."
+epistemic_status: proposed
+confidence:
+  value: 0.53
+  use_for_acceptance: false

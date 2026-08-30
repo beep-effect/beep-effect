@@ -1,0 +1,25 @@
+id: so:sha256:1cb8d4e2b4635df071ce9f58a6465718c1536825bf45fc3927bce758959976a1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 114
+  end_line: 122
+  content_sha256: a1a00d77afa3f75507185b70d144ecb749475b7ce917f118579a89cba21d7b60
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::PackageVerifyStepSpec
+  lexical_name: PackageVerifyStepSpec
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: PackageVerifyStepSpec
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class PackageVerifyStepSpec extends S.Class<PackageVerifyStepSpec>($I`PackageVerifyStepSpec`)(
+epistemic_status: parser_derived

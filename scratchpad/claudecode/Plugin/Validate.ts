@@ -1,28 +1,26 @@
 /**
  * Cross-file plugin validation, linting, and on-disk diagnostics.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect, Order } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import type * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import type { PluginLoadError } from "../Errors.ts";
 import { McpJsonFile } from "../Mcp.ts";
 import { HooksSection } from "../Settings/HooksSection.ts";
 import type { PluginAgentEntry, PluginCommandEntry, PluginDefinition, PluginOutputStyleEntry } from "./Define.ts";
-
 import { isMarkdownFilePath, isSkillFilePath, pathSpecs } from "./Layout.ts";
-import type { LoadedPlugin, PluginScan } from "./Load.ts";
-import { load, scan } from "./Load.ts";
+import { LoadedPlugin, load, PluginScan, scan } from "./Load.ts";
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Validate");
 
@@ -216,13 +214,27 @@ export declare namespace PluginLintReport {
 /**
  * Structured on-disk diagnostic report for a plugin root.
  *
+ * **Example** (Name a doctor report)
+ *
+ * ```ts
+ * import type { Plugin } from "effect-claudecode"
+ *
+ * type Report = Plugin.PluginDoctorReport
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface PluginDoctorReport extends PluginLintReport {
-  readonly scanned: PluginScan;
-  readonly loaded: LoadedPlugin;
-}
+export class PluginDoctorReport extends S.Class<PluginDoctorReport>($I`PluginDoctorReport`)(
+  {
+    ...PluginLintReport.fields,
+    scanned: PluginScan,
+    loaded: LoadedPlugin,
+  },
+  $I.annote("PluginDoctorReport", {
+    description: "Validated plugin scan and loaded definition paired with the complete lint partition.",
+  })
+) {}
 
 type FlatEntry = PluginCommandEntry | PluginAgentEntry | PluginOutputStyleEntry;
 
@@ -290,9 +302,7 @@ const inlineHooksFromManifest = (definition: PluginDefinition | LoadedPlugin): O
 
 const inlineMcpFromManifest = (definition: PluginDefinition | LoadedPlugin): O.Option<McpJsonFile> =>
   O.flatMap(definition.manifest.mcpServers, (mcpServers) =>
-    typeof mcpServers === "string" || A.isArray(mcpServers)
-      ? O.none()
-      : S.decodeUnknownOption(McpJsonFile)({ mcpServers })
+    P.isString(mcpServers) || A.isArray(mcpServers) ? O.none() : S.decodeUnknownOption(McpJsonFile)({ mcpServers })
   );
 
 const validateFlatEntries = (options: {
@@ -577,15 +587,26 @@ export const lint = (definition: PluginDefinition | LoadedPlugin): PluginLintRep
 /**
  * Validate a plugin definition and fail when any error-severity issue is found.
  *
- * **Example** (Inspect validate)
+ * **Example** (Fail validation on duplicate command names)
  *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Exit from "effect/Exit"
  *
- * const program = Plugin.validate(
- *   Plugin.define({ manifest: { name: "example-plugin" } })
+ * const exit = Effect.runSyncExit(
+ *   Plugin.validate(
+ *     Plugin.define({
+ *       manifest: { name: "review-tools" },
+ *       commands: [
+ *         Plugin.command({ name: "hi", body: "# /hi\n" }),
+ *         Plugin.command({ name: "hi", body: "# /hi again\n" })
+ *       ]
+ *     })
+ *   )
  * )
- * console.log(program)
+ *
+ * console.log(Exit.isFailure(exit)) // true
  * ```
  *
  * @category diagnostics
@@ -603,15 +624,24 @@ export const validate = (
 /**
  * Load a plugin directory from disk and return a structured diagnostic report.
  *
- * **Example** (Inspect a plugin doctor Effect)
+ * **Example** (Doctor a plugin written in memory)
  *
  * ```ts
- * import { Plugin } from "effect-claudecode"
+ * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const program = Plugin.doctor("./my-plugin")
+ * const definition = Plugin.define({
+ *   manifest: { name: "review-tools" },
+ *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
+ * })
+ * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
+ * const report = await Effect.runPromise(
+ *   Effect.provide(Plugin.doctor("/plugin"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(report.loaded.manifest.name) // "review-tools"
+ * console.log(report.errors) // []
+ * console.log(report.warnings) // []
  * ```
  *
  * @effects Reads and decodes the plugin tree through `FileSystem.FileSystem` and `Path.Path`, failing with `PluginLoadError` on invalid sources.
@@ -624,9 +654,9 @@ export const doctor = Effect.fn("Plugin.doctor")(function* (
   const scanned = yield* scan(rootDir);
   const loaded = yield* load(rootDir);
   const report = lint(loaded);
-  return {
+  return PluginDoctorReport.make({
     scanned,
     loaded,
     ...report,
-  };
+  });
 });

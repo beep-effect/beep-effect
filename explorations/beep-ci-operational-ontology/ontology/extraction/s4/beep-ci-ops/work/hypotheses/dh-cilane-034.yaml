@@ -1,0 +1,33 @@
+id: "dh:cilane:034"
+observation_refs:
+  - "so:sha256:249b7cd4161e3ec8e62596c2cb8528e536b1b4f17f0f792b19ee266a83204351"
+  - "so:sha256:3f115845d8663db7b6964d8538ed059ae10eff036071d9479fa5591a5cbf3b44"
+  - "so:sha256:662653920aaeadac48506c6f6d55b829243f1515569b6acb5890644e8f24aead"
+  - "so:sha256:94eb151968fd029b4c85259b90f63e7256530f2f16116af0b6a6e3af4959282c"
+  - "so:sha256:b83a5c77df68127408cd50e0b41e75b221b5fa4498cd29bbd23683bb20528aeb"
+  - "so:sha256:c5ed5f2e3a10a84c5ed761565108f691377268b8b1ad27edf7207c76fc6ee0f1"
+  - "so:sha256:d887872bac821986ad9cdcfcd74f72d02fa3ee15a6ae94b61de4b9d11076ac80"
+  - "so:sha256:de5d963a38687a0fb774118d5c56507e2b1ef507d73f281d91acb494f586b721"
+  - "so:sha256:e3aab5738775cdfc071a3c8ca2d4582f53c30462968a556356e51d099daecb26"
+  - "so:sha256:eb4d709190649a0db12de6477b0b7ff5b89269a90779140ca2a897008e3c5275"
+  - "so:sha256:f5dbd8e9a24e99ef10073dea2eaaef6f53f6b5027ef1b8752ddbe4ffd1c4ab22"
+cq_warrants: []
+proposed_referent:
+  label: "local CI battery orchestration implementation"
+  description: "The defaults, fast-skip list, option and plan shapes, selection logic, dispatch builders, runner, and CLI declaration for local replay."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "repeatable local verification-battery procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "ordered local verification schedule specification"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The records establish code declarations and list constants but no battery identity, episode association, persisted schedule, execution occurrence, or assurance obligation. A convenience orchestration layer over existing selectors remains sufficient."
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

@@ -1,0 +1,33 @@
+id: "ic:sched-core:004"
+hypothesis_ref: "dh:sched-core:004"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two work-kind vocabularies are the same information object only when they share one governed vocabulary lineage, member meanings, and versioned authority; reusing the same literal strings under another policy does not make the vocabularies identical."
+  reidentification_key:
+    - "governing schema lineage"
+    - "vocabulary version"
+    - "closed member set with stipulated meanings"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One closed, jointly governed set of admission-work classifiers with a common interpretation and revision history."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "lexical aliases for operational work categories"
+    - "a taxonomy of work-process kinds"
+    - "a compile-time string union only"
+  existential_dependencies:
+    - "a governance or schema authority"
+    - "at least one inscription or implementation carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a semantically revised vocabulary version"
+    - "withdrawn from the admission policy"
+counterexamples:
+  - description: "Two schedulers can expose the same four strings but assign different operational meanings or charges, so lexical member equality does not establish vocabulary identity."
+status: "proposed"

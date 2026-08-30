@@ -1,0 +1,24 @@
+id: so:sha256:54af3bae065ad2e6cfb6f8068a3bbe178407105b5576a6e9e8231e9cebd579f5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1246
+  end_line: 1252
+  content_sha256: f42e850bd646e16677fe0adde0e0b287574fbea6210f0c3a41afa90fb7731ab0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::admissionStatus
+  lexical_name: admissionStatus
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: admissionStatus
+source_excerpt: export const admissionStatus = Effect.fn("QualityScheduler.admissionStatus")(function*
+  (
+epistemic_status: parser_derived

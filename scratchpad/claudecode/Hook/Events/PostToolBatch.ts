@@ -1,10 +1,10 @@
 /**
- * PostToolBatch hook event.
- *
  * Fires after a full batch of parallel tool calls resolves, before the
- * next model call. Does not support a matcher.
- * See https://code.claude.com/docs/en/hooks#posttoolbatch.
+ * next model call. A handler can `block` the batch result, inject
+ * `addContext`, or `passthrough`. Does not support a matcher. See
+ * https://code.claude.com/docs/en/hooks#posttoolbatch.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -19,18 +19,25 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/PostToolBatch");
 
 /**
- * Schema for `ToolCall`.
+ * One completed tool call inside a parallel batch.
  *
- * **Example** (Inspect the ToolCall schema)
+ * **Example** (Decode a completed tool call)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PostToolBatch.ToolCall)
+ * const call = S.decodeUnknownSync(Hook.PostToolBatch.ToolCall)({
+ *   tool_name: "Read",
+ *   tool_input: { file_path: "/repo/README.md" },
+ *   tool_response: { content: "# beep" },
+ * })
+ *
+ * console.log(call.tool_name) // "Read"
  * ```
  *
+ * @see {@link Input} for the batch that contains these calls.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class ToolCall extends S.Class<ToolCall>($I`PostToolBatchToolCall`)(
@@ -46,18 +53,34 @@ export class ToolCall extends S.Class<ToolCall>($I`PostToolBatchToolCall`)(
 ) {}
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a PostToolBatch hook, listing every completed call
+ * in the parallel batch.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a completed batch)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PostToolBatch.Input)
+ * const input = S.decodeUnknownSync(Hook.PostToolBatch.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolBatch",
+ *   tool_calls: [
+ *     {
+ *       tool_name: "Read",
+ *       tool_input: { file_path: "/repo/README.md" },
+ *       tool_response: { content: "# beep" },
+ *     },
+ *   ],
+ * })
+ *
+ * console.log(input.tool_calls[0]?.tool_name) // "Read"
  * ```
  *
+ * @see {@link ToolCall} for one entry in `tool_calls`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`PostToolBatchInput`)(
@@ -72,18 +95,25 @@ export class Input extends S.Class<Input>($I`PostToolBatchInput`)(
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that injects `additionalContext` after the
+ * batch.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect additional context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolBatch.HookSpecificOutput)
+ * const specific = Hook.PostToolBatch.HookSpecificOutput.make({
+ *   hookEventName: "PostToolBatch",
+ *   additionalContext: O.some("All reads succeeded"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.additionalContext)) // "All reads succeeded"
  * ```
  *
+ * @see {@link addContext} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PostToolBatchHookSpecificOutput`)(
@@ -97,18 +127,23 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PostToolB
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a PostToolBatch handler returns. `decision: "block"`
+ * rejects the batch; `hookSpecificOutput` injects extra context.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolBatch.Output)
+ * const output = Hook.PostToolBatch.Output.make()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link passthrough} for letting the batch stand.
+ * @see {@link block} for rejecting the batch.
+ * @see {@link addContext} for injecting extra context.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`PostToolBatchOutput`)(
@@ -128,52 +163,64 @@ export class Output extends S.Class<Output>($I`PostToolBatchOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Let the completed batch stand. Equivalent to empty `Output.make()`.
  *
- * **Example** (Use passthrough)
+ * **Example** (Accept the batch)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolBatch.passthrough)
+ * const output = Hook.PostToolBatch.passthrough()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link block} for rejecting the batch.
+ * @see {@link addContext} for injecting extra context without blocking.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `block`.
+ * Reject the completed batch and feed `reason` back to Claude.
  *
- * **Example** (Use block)
+ * **Example** (Block a batch)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolBatch.block)
+ * const output = Hook.PostToolBatch.block("parallel writes are not allowed")
+ * console.log(O.getOrUndefined(output.decision)) // "block"
+ * console.log(O.getOrUndefined(output.reason)) // "parallel writes are not allowed"
  * ```
  *
+ * @see {@link passthrough} for letting the batch stand.
+ * @see {@link addContext} for injecting extra context without blocking.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
 
 /**
- * Constructor for `addContext`.
+ * Inject additional context into the transcript without blocking the
+ * batch.
  *
- * **Example** (Use addContext)
+ * **Example** (Add batch summary context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PostToolBatch.addContext)
+ * const output = Hook.PostToolBatch.addContext("All reads succeeded")
+ * const context = O.flatMap(output.hookSpecificOutput, (specific) => specific.additionalContext)
+ * console.log(O.getOrUndefined(context)) // "All reads succeeded"
  * ```
  *
+ * @see {@link passthrough} for leaving the transcript unchanged.
+ * @see {@link block} for rejecting the batch instead.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
@@ -187,18 +234,23 @@ export const addContext = (additionalContext: string): Output =>
   });
 
 /**
- * Constructor for `define`.
+ * Build a runnable PostToolBatch hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a PostToolBatch hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PostToolBatch.define)
+ * const hook = Hook.PostToolBatch.define({
+ *   handler: () => Effect.succeed(Hook.PostToolBatch.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PostToolBatch"
  * ```
  *
+ * @see {@link passthrough} for the typical handler result.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {

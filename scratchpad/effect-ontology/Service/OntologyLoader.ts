@@ -24,17 +24,23 @@ const makeOntologyLoader = Effect.gen(function* () {
 });
 
 /**
- * Provides the ontology loader service capability.
+ * Compatibility adapter exposing `searchClasses` from {@link OntologyService}.
  *
- * **Example** (Inspect ontology loader)
+ * **Example** (Search classes through the loader)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { OntologyLoader } from "@effect-ontology/Service/OntologyLoader"
  *
- * console.log(OntologyLoader)
+ * const program = Effect.gen(function* () {
+ *   const loader = yield* OntologyLoader
+ *   return yield* loader.searchClasses("Person")
+ * }).pipe(Effect.provide(OntologyLoader.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class OntologyLoader extends Context.Service<OntologyLoader>()($I`OntologyLoader`, {

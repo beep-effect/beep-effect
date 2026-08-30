@@ -1,0 +1,23 @@
+id: fa:alt3:010
+hypothesis_ref: dh:sched-core:024
+identity_card_ref: ic:alt3:010
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: the undecodable admission file held for inspection'
+  still_viable: true
+- label: 'phase: an admission record while quarantined rather than live'
+  still_viable: true
+- label: 'event: the failed decoding occurrence'
+  still_viable: true
+strongest_counterexample: classifyAdmissionEntry returns malformed when decode yields none;
+  repairAdmissionEntries then calls quarantineEntry, which renames the file into the quarantine
+  directory. The decode failure is instantaneous; the quarantined file persists until removed
+  by hand.
+verdict: analyzed
+needed_evidence: Whether identity follows the payload across the rename (same information
+  object changing phase) or the live file and the quarantine destination are distinct objects.
+  A hash of the bytes before and after the move would discriminate.

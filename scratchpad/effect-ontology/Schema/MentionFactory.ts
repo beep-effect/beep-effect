@@ -59,13 +59,17 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
 /**
  * Schema for mention extraction (entity detection without typing)
  *
- * **Example** (Validate mention graph schema)
+ * **Example** (Decode a mention graph)
  *
  * ```ts
- * import { MentionGraph } from "@effect-ontology/Schema/MentionFactory"
+ * import { Mention, MentionGraph } from "@effect-ontology/Schema/MentionFactory"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(MentionGraph)({}))
+ * const decoded = S.decodeUnknownOption(MentionGraph)({
+ *   mentions: [Mention.make({ id: "ada_lovelace", mention: "Ada Lovelace" })]
+ * })
+ * console.log(O.map(decoded, (graph) => graph.mentions[0]?.id))
  * ```
  *
  * @category schemas
@@ -75,10 +79,11 @@ export const MentionGraph = S.Struct({
   mentions: S.Array(Mention).annotate({
     description: "Array of entity mentions - extract all named entities from the text",
   }),
-}).annotate({
-  identifier: "MentionGraph",
-  title: "Entity Mention Extraction",
-  description: `Extract all named entity mentions from the text WITHOUT assigning types.
+})
+  .annotate({
+    identifier: "MentionGraph",
+    title: "Entity Mention Extraction",
+    description: `Extract all named entity mentions from the text WITHOUT assigning types.
 
 CRITICAL RULES:
 - Use complete, human-readable names for mentions (e.g., "Stanford University" not "Stanford")
@@ -86,23 +91,17 @@ CRITICAL RULES:
 - Reuse the exact same ID when referring to the same entity
 - Include brief context about each entity to help with classification
 - Extract as many entity mentions as possible`,
-});
+  })
+  .pipe(
+    $I.annoteSchema("MentionGraph", {
+      description: "Pre-stage-1 mention graph of snake_case entity mentions extracted before ontology typing.",
+    })
+  );
 
 /**
- * Type helpers
+ * Decoded mention graph produced by {@link MentionGraph}.
  *
- * **Example** (Decode MentionGraph)
- *
- * ```ts
- * import { MentionGraph } from "@effect-ontology/Schema/MentionFactory"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeMentionGraph = (_value: MentionGraph): string => "valid mention graph"
- *
- * console.log(O.map(S.decodeUnknownOption(MentionGraph)({}), summarizeMentionGraph))
- * ```
- *
+ * @see {@link MentionGraph} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */

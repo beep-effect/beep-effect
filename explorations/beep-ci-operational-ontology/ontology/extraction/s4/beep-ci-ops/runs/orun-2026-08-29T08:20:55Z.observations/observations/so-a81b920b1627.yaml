@@ -1,0 +1,23 @@
+id: so:sha256:a81b920b162796225e7f643793fd030bc327f4b94ab65c6772ca7ccaeea1f061
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 759
+  end_line: 765
+  content_sha256: 927998257fc70ce81a56356d8c50b4ca44b259c30dc2d18692cfc37bb177b89c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::encodeTicketText
+  lexical_name: encodeTicketText
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const encodeTicketText = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

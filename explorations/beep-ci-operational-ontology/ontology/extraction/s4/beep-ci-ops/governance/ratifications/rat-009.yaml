@@ -1,0 +1,10 @@
+id: rat:9
+proposal_ref: otp:admission-priority-class:001
+proposal_sha256: cb66ccde925f2aa4005807ef3f01c1cda6cd1ade9860418e57ace3529ecf9c7d
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept AdmissionPriorityClass — the closed enumeration the scheduler dispatches on; aging stays
+  a policy fact.

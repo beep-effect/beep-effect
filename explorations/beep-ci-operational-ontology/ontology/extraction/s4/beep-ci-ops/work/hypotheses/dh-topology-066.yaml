@@ -1,0 +1,25 @@
+id: "dh:topology:066"
+observation_refs:
+  - "po:sha256:41dc78a8fe207f29be71b868a24099ece631176356a49edb13d80d559e58c39a"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/law-practice-server workspace package"
+  description: "The workspace software package information artifact identified by @beep/law-practice-server in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/law-practice-server as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The adversary's serialization-only DTO wins: the sole cited evidence is one generated topology row containing a package-looking token and ordinal, with no manifest, dependency edge, lineage, or independently governed package reference."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

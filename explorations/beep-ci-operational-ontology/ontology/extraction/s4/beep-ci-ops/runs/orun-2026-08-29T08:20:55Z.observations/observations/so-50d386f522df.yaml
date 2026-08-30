@@ -1,0 +1,23 @@
+id: so:sha256:50d386f522dff1616f5188264d726fa727b596c228f00ffa6be4a6c9dae99ccb
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 285
+  end_line: 285
+  content_sha256: 7e569a94ced7208549df4cdd78c368553ceb345661b9fb4831b22cfd87d8babc
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::isQualitySchedulerError
+  lexical_name: isQualitySchedulerError
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const isQualitySchedulerError = S.is(QualitySchedulerError);
+epistemic_status: parser_derived

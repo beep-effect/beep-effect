@@ -9,7 +9,7 @@
   "packetPath": "goals/dedup-clone-engine",
   "lifecycle": "completed-retained",
   "executionCapable": false,
-  "reflectionRequired": false,
+  "reflectionRequired": true,
   "statusNote": "backfilled from README evidence: V1 complete",
   "completionGate": {
     "operator": "yeet",

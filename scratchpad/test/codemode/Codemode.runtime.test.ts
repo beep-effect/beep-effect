@@ -155,10 +155,7 @@ describe("CodeMode runtime", () => {
 
       assert.strictEqual(result.ok, true);
       if (result.ok === true) {
-        assert.deepEqual(
-          result.value,
-          A.make(A.make("a", "c"), A.make(1, 3), A.make("a", "c"))
-        );
+        assert.deepEqual(result.value, A.make(A.make("a", "c"), A.make(1, 3), A.make("a", "c")));
       }
     })
   );
@@ -199,11 +196,7 @@ describe("CodeMode runtime", () => {
       if (result.ok === true) {
         assert.deepEqual(
           result.value,
-          A.make(
-            "TypeError",
-            "String.includes expects argument 1 to be a data value.",
-            "'++' requires a data value."
-          )
+          A.make("TypeError", "String.includes expects argument 1 to be a data value.", "'++' requires a data value.")
         );
       }
     })
@@ -366,14 +359,17 @@ describe("CodeMode runtime", () => {
   it.effect(
     "keeps hostile proxy defects inside guest catch",
     Effect.fnUntraced(function* () {
-      const hostile = new Proxy({}, {
-        get: () => {
-          throw new Error("blocked property read");
-        },
-        getPrototypeOf: () => {
-          throw new Error("blocked prototype read");
-        },
-      });
+      const hostile = new Proxy(
+        {},
+        {
+          get: () => {
+            throw new Error("blocked property read");
+          },
+          getPrototypeOf: () => {
+            throw new Error("blocked prototype read");
+          },
+        }
+      );
       const result = yield* CodeMode.execute({
         code: `
           try {

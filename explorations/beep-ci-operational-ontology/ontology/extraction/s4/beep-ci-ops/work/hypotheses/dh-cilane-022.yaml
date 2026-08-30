@@ -1,0 +1,24 @@
+id: "dh:cilane:022"
+observation_refs:
+  - "po:sha256:dfe799972b1b1aefe6c25c761e9d0723d7bf7028676ecc04a8ad7bf5b9c57e04"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "integration-test verification lane"
+  description: "A possible integration-test verification lane named by the quoted test-integration token."
+representation_status: lexical_alias
+alternatives:
+  - label: "test-integration command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "integration-test execution procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The token's morphology suggests a testing procedure, but the observation records only the literal. There is no canonical test scope, work specification, execution, or verdict to reject the implementation null."
+epistemic_status: proposed
+confidence:
+  value: 0.41
+  use_for_acceptance: false

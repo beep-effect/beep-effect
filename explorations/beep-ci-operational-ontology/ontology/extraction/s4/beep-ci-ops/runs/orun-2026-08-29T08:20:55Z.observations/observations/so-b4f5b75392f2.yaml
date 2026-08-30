@@ -1,0 +1,23 @@
+id: so:sha256:b4f5b75392f29f2e7b41a869f0f685ed4eadd7fedc00d48ccf83f1613d07282f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 458
+  end_line: 469
+  content_sha256: 05af9bd85ff02f2c3e65bfb392a76c781fdbf05395836e4fa2ef05782fc2256b
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::quarantineEntry
+  lexical_name: quarantineEntry
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const quarantineEntry = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

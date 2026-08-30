@@ -58,22 +58,24 @@ const toHex = (buffer: ArrayBuffer): string => {
 };
 
 /**
- * Compute SHA-256 hash of a string using WebCrypto API
+ * Computes a full SHA-256 hex digest of a string through WebCrypto.
  *
  * **Details**
  *
- * Works in both Node.js and browser environments.
+ * Works in Node.js and browsers. The returned hex is 64 characters.
  *
- * **Example** (Inspect sha256)
+ * **Example** (Hash a string through WebCrypto)
  *
  * ```ts
- * import { sha256 } from "@effect-ontology/Utils/Hash"
+ * import { sha256, sha256SyncFull } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * console.log(sha256)
+ * const hex = await Effect.runPromise(sha256("ada lovelace"))
+ * console.log(hex.length) // 64
+ * console.log(hex === sha256SyncFull("ada lovelace")) // true
  * ```
  *
- * @param input - String to hash
- * @returns Hex-encoded SHA-256 hash
+ * @see {@link sha256SyncFull} for the Node-only synchronous full digest.
  * @category utilities
  * @since 0.0.0
  */
@@ -84,24 +86,25 @@ export const sha256 = (input: string): Effect.Effect<string, HashingError> =>
   });
 
 /**
- * Generate a cache key for embedding lookups
+ * Builds an embedding cache key as SHA-256(`text::taskType`).
  *
  * **Details**
  *
- * Creates a deterministic SHA-256 hash from text and task type.
- * Uses "::" separator to prevent collision between similar inputs.
+ * The `::` separator keeps `"ab" + "cd"` from colliding with `"a" + "bcd"`.
  *
- * **Example** (Inspect hash embedding key)
+ * **Example** (Hash an embedding lookup key)
  *
  * ```ts
- * import { hashEmbeddingKey } from "@effect-ontology/Utils/Hash"
+ * import { hashEmbeddingKey, hashEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * console.log(hashEmbeddingKey)
+ * const hex = await Effect.runPromise(hashEmbeddingKey("Ada Lovelace", "search_document"))
+ * console.log(hex === hashEmbeddingKeySync("Ada Lovelace", "search_document")) // true
+ * console.log(hex.length) // 64
  * ```
  *
- * @param text - Text to embed
- * @param taskType - Embedding task type (e.g., "search_document", "search_query")
- * @returns SHA-256 hash for cache lookup
+ * @see {@link hashEmbeddingKeySync} for the Node-only synchronous twin.
+ * @see {@link hashVersionedEmbeddingKey} when provider, model, and dimension must enter the key.
  * @category utilities
  * @since 0.0.0
  */
@@ -110,65 +113,70 @@ export const hashEmbeddingKey = dual2(
 );
 
 /**
- * Synchronous SHA-256 hash of a string (full length)
+ * Computes a full SHA-256 hex digest of a string through Node `crypto`.
  *
- * **Details**
+ * **Gotchas**
  *
- * For server-side use only. Uses Node.js crypto module.
- * Falls back to a simple hash in browser (should not be called in browser).
+ * Node `crypto` only. Do not call this from a browser; use {@link sha256}.
  *
- * **Example** (Inspect sha256 sync full)
+ * **Example** (Hash a string on the server)
  *
  * ```ts
- * import { sha256SyncFull } from "@effect-ontology/Utils/Hash"
+ * import { sha256Sync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
  *
- * console.log(sha256SyncFull)
+ * const full = sha256SyncFull("ada lovelace")
+ * console.log(full.length) // 64
+ * console.log(sha256Sync("ada lovelace") === full.slice(0, 16)) // true
  * ```
  *
- * @param input - String to hash
- * @returns Hex-encoded SHA-256 hash (full 64 chars)
+ * @returns Hex-encoded SHA-256 digest (64 characters).
+ * @see {@link sha256} for the WebCrypto Effect twin.
+ * @see {@link sha256Sync} for the truncated 16-character digest.
  * @category utilities
  * @since 0.0.0
  */
 export const sha256SyncFull = (input: string): string => createHash("sha256").update(input).digest("hex");
 
 /**
- * Synchronous SHA-256 hash of a string (truncated to 16 chars)
+ * Computes a truncated SHA-256 hex digest of a string through Node `crypto`.
  *
- * **Details**
+ * **Gotchas**
  *
- * For server-side use only. Uses Node.js crypto module.
- * Falls back to a simple hash in browser (should not be called in browser).
+ * Node `crypto` only. Do not call this from a browser; use {@link sha256}.
+ * Truncation is the first 16 hex characters of {@link sha256SyncFull}.
  *
- * **Example** (Inspect sha256 sync)
+ * **Example** (Take the 16-character digest)
  *
  * ```ts
- * import { sha256Sync } from "@effect-ontology/Utils/Hash"
+ * import { sha256Sync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
  *
- * console.log(sha256Sync)
+ * const truncated = sha256Sync("ada lovelace")
+ * console.log(truncated.length) // 16
+ * console.log(truncated === sha256SyncFull("ada lovelace").slice(0, 16)) // true
  * ```
  *
- * @param input - String to hash
- * @returns Hex-encoded SHA-256 hash (first 16 chars for brevity)
+ * @returns First 16 hex characters of the SHA-256 digest.
+ * @see {@link sha256SyncFull} for the untruncated 64-character digest.
+ * @see {@link sha256} for the WebCrypto Effect twin.
  * @category utilities
  * @since 0.0.0
  */
 export const sha256Sync = (input: string): string => sha256SyncFull(input).slice(0, 16);
 
 /**
- * Synchronous version of hashEmbeddingKey for pure contexts
+ * Synchronous Node twin of {@link hashEmbeddingKey}.
  *
- * **Example** (Inspect hash embedding key sync)
+ * **Example** (Hash an embedding key on the server)
  *
  * ```ts
- * import { hashEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
+ * import { hashEmbeddingKeySync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
  *
- * console.log(hashEmbeddingKeySync)
+ * const hex = hashEmbeddingKeySync("Ada Lovelace", "search_query")
+ * console.log(hex === sha256SyncFull("Ada Lovelace::search_query")) // true
  * ```
  *
- * @param text - Text to embed
- * @param taskType - Embedding task type
- * @returns SHA-256 hash for cache lookup
+ * @see {@link hashEmbeddingKey} for the WebCrypto Effect twin.
+ * @see {@link hashVersionedEmbeddingKeySync} when provider metadata must enter the key.
  * @category utilities
  * @since 0.0.0
  */
@@ -177,18 +185,9 @@ export const hashEmbeddingKeySync = dual2((text: string, taskType: string): stri
 );
 
 /**
- * Provider metadata for versioned cache keys
+ * Provider, model, and dimension that version an embedding cache key.
  *
- * **Example** (Reference EmbeddingKeyMetadata fields)
- *
- * ```ts
- * import type { EmbeddingKeyMetadata } from "@effect-ontology/Utils/Hash"
- *
- * const embeddingKeyMetadataFields: ReadonlyArray<keyof EmbeddingKeyMetadata> = ["providerId", "modelId", "dimension"]
- *
- * console.log(embeddingKeyMetadataFields)
- * ```
- *
+ * @see {@link hashVersionedEmbeddingKey} for the Effect constructor that consumes this metadata.
  * @category type-level
  * @since 0.0.0
  */
@@ -199,29 +198,29 @@ export interface EmbeddingKeyMetadata {
 }
 
 /**
- * Generate versioned cache key for embeddings
+ * Builds a versioned embedding cache key as
+ * SHA-256(`providerId::modelId::dimension::taskType::text`).
  *
  * **Details**
  *
- * Includes provider, model, and dimension to prevent collisions when:
- * - Switching providers (nomic -> voyage)
- * - Changing models (voyage-3 -> voyage-3.5-lite)
- * - Using different dimensions (768 vs 1024)
+ * Provider, model, and dimension keep nomic/voyage, 768/1024, and model
+ * upgrades from sharing cache entries.
  *
- * Format: SHA-256(providerId::modelId::dimension::taskType::text)
- *
- * **Example** (Inspect hash versioned embedding key)
+ * **Example** (Hash a versioned embedding key)
  *
  * ```ts
- * import { hashVersionedEmbeddingKey } from "@effect-ontology/Utils/Hash"
+ * import { hashVersionedEmbeddingKey, hashVersionedEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * console.log(hashVersionedEmbeddingKey)
+ * const metadata = { providerId: "nomic", modelId: "nomic-embed-text-v1.5", dimension: 768 }
+ * const hex = await Effect.runPromise(
+ *   hashVersionedEmbeddingKey("Ada Lovelace", "search_document", metadata)
+ * )
+ * console.log(hex === hashVersionedEmbeddingKeySync("Ada Lovelace", "search_document", metadata)) // true
  * ```
  *
- * @param text - Text to embed
- * @param taskType - Embedding task type
- * @param metadata - Provider metadata (providerId, modelId, dimension)
- * @returns Effect yielding SHA-256 hash for cache lookup
+ * @see {@link hashVersionedEmbeddingKeySync} for the Node-only synchronous twin.
+ * @see {@link hashEmbeddingKey} when provider metadata is not part of the collision domain.
  * @category utilities
  * @since 0.0.0
  */
@@ -231,20 +230,19 @@ export const hashVersionedEmbeddingKey = dual3(
 );
 
 /**
- * Synchronous version of hashVersionedEmbeddingKey for pure contexts
+ * Synchronous Node twin of {@link hashVersionedEmbeddingKey}.
  *
- * **Example** (Inspect hash versioned embedding key sync)
+ * **Example** (Hash a versioned key on the server)
  *
  * ```ts
- * import { hashVersionedEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
+ * import { hashVersionedEmbeddingKeySync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
  *
- * console.log(hashVersionedEmbeddingKeySync)
+ * const metadata = { providerId: "voyage", modelId: "voyage-3", dimension: 1024 }
+ * const hex = hashVersionedEmbeddingKeySync("Ada Lovelace", "search_query", metadata)
+ * console.log(hex === sha256SyncFull("voyage::voyage-3::1024::search_query::Ada Lovelace")) // true
  * ```
  *
- * @param text - Text to embed
- * @param taskType - Embedding task type
- * @param metadata - Provider metadata (providerId, modelId, dimension)
- * @returns SHA-256 hash for cache lookup
+ * @see {@link hashVersionedEmbeddingKey} for the WebCrypto Effect twin.
  * @category utilities
  * @since 0.0.0
  */
@@ -254,22 +252,21 @@ export const hashVersionedEmbeddingKeySync = dual3(
 );
 
 /**
- * Compute SHA-256 hash of bytes using WebCrypto API
+ * Computes a full SHA-256 hex digest of bytes through WebCrypto.
  *
- * **Details**
- *
- * Works in both Node.js and browser environments.
- *
- * **Example** (Inspect sha256 bytes)
+ * **Example** (Hash bytes through WebCrypto)
  *
  * ```ts
- * import { sha256Bytes } from "@effect-ontology/Utils/Hash"
+ * import { sha256Bytes, sha256BytesSync } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * console.log(sha256Bytes)
+ * const bytes = new TextEncoder().encode("ada")
+ * const hex = await Effect.runPromise(sha256Bytes(bytes))
+ * console.log(hex.length) // 64
+ * console.log(hex === sha256BytesSync(bytes)) // true
  * ```
  *
- * @param bytes - Uint8Array to hash
- * @returns Hex-encoded SHA-256 hash
+ * @see {@link sha256BytesSync} for the Node-only synchronous twin.
  * @category utilities
  * @since 0.0.0
  */
@@ -280,22 +277,22 @@ export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string, HashingE
   });
 
 /**
- * Synchronous SHA-256 hash of bytes
+ * Computes a full SHA-256 hex digest of bytes through Node `crypto`.
  *
- * **Details**
+ * **Gotchas**
  *
- * For server-side use only. Uses Node.js crypto module.
+ * Node `crypto` only. Do not call this from a browser; use {@link sha256Bytes}.
  *
- * **Example** (Inspect sha256 bytes sync)
+ * **Example** (Hash bytes on the server)
  *
  * ```ts
  * import { sha256BytesSync } from "@effect-ontology/Utils/Hash"
  *
- * console.log(sha256BytesSync)
+ * const hex = sha256BytesSync(new TextEncoder().encode("ada"))
+ * console.log(hex.length) // 64
  * ```
  *
- * @param bytes - Uint8Array to hash
- * @returns Hex-encoded SHA-256 hash
+ * @see {@link sha256Bytes} for the WebCrypto Effect twin.
  * @category utilities
  * @since 0.0.0
  */

@@ -1,0 +1,71 @@
+- id: so:sha256:24346d24c2f421ed3c03fe8bf1f31278bf7d492bda90de42ed51b00c90797d9f
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc
+  source_span:
+    start_line: 8
+    end_line: 12
+    content_sha256: c72ba356f70a9ff6583838068c9fdf0d2cb46c2299a532507b1e3a2f36967671
+  extractor:
+    id: adapter-config
+    version: 1.0.0
+    parser: python-json+positioned-scanner
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc::build
+    lexical_name: build
+    syntactic_kind: config_task
+  observed_facts:
+  - predicate: task_depends_on_syntactically
+    object: ^build
+  - predicate: task_depends_on_syntactically
+    object: codegen
+  source_excerpt: '"build": {'
+  epistemic_status: parser_derived
+- id: so:sha256:565648953d72b9a2d1f0ffe2abc041677281aff10a70a38fe067f8463abf0db3
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc
+  source_span:
+    start_line: 13
+    end_line: 16
+    content_sha256: 28b877c0d87168fdd5e4931f9a636b94885c310d7a2d6137fa56ac20f9b73ff9
+  extractor:
+    id: adapter-config
+    version: 1.0.0
+    parser: python-json+positioned-scanner
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc::codegen
+    lexical_name: codegen
+    syntactic_kind: config_task
+  observed_facts:
+  - predicate: unrepresentable_construct
+    object: config_task
+  source_excerpt: '"codegen": {'
+  epistemic_status: parser_derived
+- id: so:sha256:497bbbd47ec13ca8c01826b3849ec6c498321d8101cedec7ac06d7315d1dae6b
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc
+  source_span:
+    start_line: 1
+    end_line: 18
+    content_sha256: 1e8868041971052f6cacb7a86c0bd0473d445611a712f76400541e51f9dc4846
+  extractor:
+    id: adapter-config
+    version: 1.0.0
+    parser: python-json+positioned-scanner
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc::tasks
+    lexical_name: tasks
+    syntactic_kind: config_document
+  observed_facts:
+  - predicate: unrepresentable_construct
+    object: config_document
+  source_excerpt: '{'
+  epistemic_status: parser_derived

@@ -1,0 +1,29 @@
+id: so:sha256:c9b6e361705aac39be3e4fe44148cee5933dbb239facc1db9c9db7894dd312bc
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 104
+  end_line: 145
+  content_sha256: 1caeec0485591ba340dbfd499799ed4ff0f997198d90bf5efa2d4879d1621d67
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::TurboConfigProofError
+  lexical_name: TurboConfigProofError
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: declares_member
+  object: mapError
+- predicate: declares_member
+  object: new
+- predicate: exports_symbol
+  object: TurboConfigProofError
+- predicate: extends_syntactically
+  object: S.TaggedError
+source_excerpt: export class TurboConfigProofError extends S.TaggedError<TurboConfigProofError>($I`TurboConfigProofError`)(
+epistemic_status: parser_derived

@@ -2,7 +2,12 @@
 
 ## Status
 
-**Implementation active**
+Lifecycle: `completed-retained`
+
+**Complete — merged in PR #165**
+
+On-demand reflection:
+[`history/reflections/2026-08-29-codex.md`](./history/reflections/2026-08-29-codex.md).
 
 ## Mission
 

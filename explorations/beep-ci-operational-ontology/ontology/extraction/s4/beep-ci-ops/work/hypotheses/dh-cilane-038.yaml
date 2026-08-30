@@ -1,0 +1,28 @@
+id: "dh:cilane:038"
+observation_refs:
+  - "so:sha256:0a01d573cde7e8cf52a9fe8d17a5cd42eb05d8f9d1a9f07251e0b1d7fc68dbae"
+  - "so:sha256:5bf0cacc7e014029e7e22e08a80a56a3ba6ac025b4fe881a15a85dab677a80c5"
+  - "so:sha256:e0238e53ed693415af50bace72f097001308fea95393ae9ea5023ea10dc7253e"
+  - "so:sha256:e26ed59bfdca5a82a1a69bf985e855b29cf5e2cb0faef78330cea02ae08c4d73"
+  - "so:sha256:fedbae06e3e7325f0bb2be560b97096fe97ff72447c4312b0a678d8f3dc8f17c"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "property lane parameter implementation"
+  description: "The Turbo concurrency argument, default run count and seed, and their normalization helper declarations."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "property-verification lane procedure parameterization"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "repeatable property-test WorkUnit specification"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Numeric strings, a concurrency flag, and normalization declarations can be local defaults with no ontological standing. No observation records a property-test execution, a binding to the property token, or a resulting verdict."
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

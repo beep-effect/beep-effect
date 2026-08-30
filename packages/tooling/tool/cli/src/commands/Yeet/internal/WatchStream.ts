@@ -32,11 +32,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, HashMap } from "effect";
+import { Effect, HashMap, Match } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
+import type { YeetMonitorComment } from "./MonitorComments.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
 
@@ -178,6 +182,7 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
   {
     name: S.NonEmptyString,
     outcome: YeetCheckOutcome,
+    required: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     link: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
     signal: YeetCheckSignal.pipe(
       S.withConstructorDefault(Effect.succeed(YeetCheckSignal.make({ bucket: "", state: "" })))
@@ -241,9 +246,27 @@ export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSn
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
     mergeable: S.String,
+    mergeStateStatus: S.String.pipe(S.withConstructorDefault(Effect.succeed("UNKNOWN"))),
     prNumber: S.Finite,
     state: S.String,
     threads: S.Array(YeetWatchThread),
+    criteria: YeetMergeReadyCriteria.pipe(
+      S.withConstructorDefault(
+        Effect.succeed(
+          YeetMergeReadyCriteria.make({
+            prOpen: false,
+            notDraft: false,
+            closeoutRun: false,
+            requiredChecksGreen: false,
+            threadsResolved: false,
+            mergeable: false,
+            mergeStateAcceptable: false,
+            reviewDecisionAcceptable: false,
+            greptileScore: O.none(),
+          })
+        )
+      )
+    ),
   },
   $I.annote("YeetWatchSnapshot", {
     description: "Everything one yeet watch poll observed about the pull request.",
@@ -293,6 +316,7 @@ export class YeetCheckTransition extends S.Class<YeetCheckTransition>($I`YeetChe
     headSha: S.NonEmptyString,
     name: S.NonEmptyString,
     from: S.NullOr(YeetCheckOutcome),
+    required: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     to: YeetCheckOutcome,
   },
   $I.annote("YeetCheckTransition", {
@@ -345,6 +369,43 @@ export class YeetMergeabilityChanged extends S.Class<YeetMergeabilityChanged>($I
 ) {}
 
 /**
+ * One truthful merge-readiness criterion flipped between watch polls.
+ *
+ * **Example** (Describe a required-check recovery)
+ *
+ * ```ts
+ * import { YeetMergeReadyCriterionChanged } from "@beep/repo-cli/test/Yeet"
+ *
+ * const event = YeetMergeReadyCriterionChanged.make({
+ *   at: "2026-08-27T00:00:00Z", criterion: "required-checks-green",
+ *   from: false, headSha: "abc123", to: true
+ * })
+ * console.log(event.to) // true
+ * ```
+ *
+ * @category events
+ * @since 0.0.0
+ */
+export class YeetMergeReadyCriterionChanged extends S.Class<YeetMergeReadyCriterionChanged>(
+  $I`YeetMergeReadyCriterionChanged`
+)(
+  {
+    kind: S.tag("merge-ready-criterion-changed"),
+    schemaVersion: S.Literal(YEET_WATCH_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_WATCH_SCHEMA_VERSION))
+    ),
+    at: S.String,
+    headSha: S.NonEmptyString,
+    criterion: YeetMergeReadyCriterion,
+    from: S.Boolean,
+    to: S.Boolean,
+  },
+  $I.annote("YeetMergeReadyCriterionChanged", {
+    description: "One truthful merge-readiness criterion flipped between watch polls.",
+  })
+) {}
+
+/**
  * The PR's head moved: a new push supersedes the watched wave.
  *
  * @category models
@@ -366,7 +427,138 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
 ) {}
 
 /**
+ * A pull request comment arrived: one row per observed comment.
+ *
+ * **Details**
+ *
+ * `source` distinguishes the two REST collections the comment poller reads —
+ * `review` rows carry `path`/`line`, `issue` rows do not. `body` is the
+ * control-stripped, length-bounded excerpt (the full text lives at `url`), so
+ * a hostile comment cannot bloat the stream or smuggle escape codes through a
+ * consumer that echoes rows verbatim.
+ *
+ * **Example** (Construct a comment row)
+ *
+ * ```ts
+ * import { YeetCommentPosted } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetCommentPosted.make({
+ *   at: "2026-08-27T00:00:00Z",
+ *   author: "octocat",
+ *   body: "Please add a regression test.",
+ *   commentId: 44,
+ *   createdAt: "2026-08-27T00:00:00Z",
+ *   headSha: "abc123",
+ *   source: "issue",
+ *   url: "https://github.com/o/r/pull/1#issuecomment-44",
+ * })
+ * console.log(row.kind) // "comment-posted"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetCommentPosted extends S.Class<YeetCommentPosted>($I`YeetCommentPosted`)(
+  {
+    kind: S.tag("comment-posted"),
+    schemaVersion: S.Literal(YEET_WATCH_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_WATCH_SCHEMA_VERSION))
+    ),
+    at: S.String,
+    headSha: S.NonEmptyString,
+    source: LiteralKit(["review", "issue"]),
+    author: S.String,
+    body: S.String,
+    commentId: S.Finite,
+    createdAt: S.String,
+    line: S.NullOr(S.Finite).pipe(S.withConstructorDefault(Effect.succeed(null))),
+    path: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
+    url: S.String,
+  },
+  $I.annote("YeetCommentPosted", {
+    description: "One new PR review or conversation comment observed by the watch stream.",
+  })
+) {}
+
+// Matches the classic comment monitor's operator excerpt bound; the full body
+// is one click away at the row's URL.
+const WATCH_COMMENT_EXCERPT_LENGTH = 200;
+
+/**
+ * Map one polled comment into its watch-stream row.
+ *
+ * **Details**
+ *
+ * The data-last form exists for the batch case the watch loop actually has —
+ * one timestamp and head SHA stamped across every comment a poll returned.
+ *
+ * **Example** (Map an issue comment)
+ *
+ * ```ts
+ * import { yeetWatchCommentEvent, YeetMonitorIssueComment } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = yeetWatchCommentEvent(YeetMonitorIssueComment.make({
+ *   author: "octocat",
+ *   body: "The hosted checks are green.",
+ *   createdAt: "2026-08-27T00:00:00Z",
+ *   id: 44,
+ *   url: "https://github.com/o/r/pull/1#issuecomment-44",
+ * }), "2026-08-27T00:00:00Z", "abc123")
+ * console.log(row.source) // "issue"
+ * ```
+ *
+ * @param comment - The normalized comment from the poller.
+ * @param at - Timestamp stamped on the row.
+ * @param headSha - The head SHA the watch was on when the comment was observed.
+ * @returns The comment's watch-stream row.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const yeetWatchCommentEvent: {
+  (at: string, headSha: string): (comment: YeetMonitorComment) => YeetCommentPosted;
+  (comment: YeetMonitorComment, at: string, headSha: string): YeetCommentPosted;
+} = dual(
+  3,
+  (comment: YeetMonitorComment, at: string, headSha: string): YeetCommentPosted =>
+    Match.value(comment).pipe(
+      Match.tags({
+        review: (review) =>
+          YeetCommentPosted.make({
+            at,
+            author: review.author,
+            body: yeetCommentExcerpt(review.body, WATCH_COMMENT_EXCERPT_LENGTH),
+            commentId: review.id,
+            createdAt: review.createdAt,
+            headSha,
+            line: O.getOrNull(review.line),
+            path: review.path,
+            source: "review",
+            url: review.url,
+          }),
+        issue: (issue) =>
+          YeetCommentPosted.make({
+            at,
+            author: issue.author,
+            body: yeetCommentExcerpt(issue.body, WATCH_COMMENT_EXCERPT_LENGTH),
+            commentId: issue.id,
+            createdAt: issue.createdAt,
+            headSha,
+            source: "issue",
+            url: issue.url,
+          }),
+      }),
+      Match.exhaustive
+    )
+);
+
+/**
  * Reasons a watch stream ends.
+ *
+ * **Details**
+ *
+ * `event` is the `--until-event` contract: the stream observed an actionable
+ * event batch — a failing check or a settled comment burst — persisted its
+ * durable state, and exited to wake the supervising session.
  *
  * **Example** (Check a reason)
  *
@@ -379,7 +571,7 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
  * @category models
  * @since 0.0.0
  */
-export const YeetWatchEndReason = LiteralKit(["all-terminal", "pr-merged", "pr-closed", "poll-error"]).pipe(
+export const YeetWatchEndReason = LiteralKit(["all-terminal", "pr-merged", "pr-closed", "poll-error", "event"]).pipe(
   $I.annoteSchema("YeetWatchEndReason", {
     title: "Yeet Watch End Reason",
     description: "Why a yeet watch stream ended.",
@@ -433,7 +625,9 @@ export const YeetWatchEvent = S.Union([
   YeetCheckTransition,
   YeetThreadTransition,
   YeetMergeabilityChanged,
+  YeetMergeReadyCriterionChanged,
   YeetHeadChanged,
+  YeetCommentPosted,
   YeetWatchEnded,
 ]).pipe(
   $I.annoteSchema("YeetWatchEvent", {
@@ -575,6 +769,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
             headSha: next.headSha,
             name: check.name,
             from: O.getOrNull(before),
+            required: check.required,
             to: check.outcome,
           }),
         ];
@@ -601,7 +796,23 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
       ? A.empty()
       : [YeetMergeabilityChanged.make({ at, headSha: next.headSha, from: prev.mergeable, to: next.mergeable })];
 
-  return A.appendAll(A.appendAll(checkEvents, threadEvents), mergeabilityEvents);
+  const criteriaEvents = A.flatMap(YeetMergeReadyCriterion.Options, (criterion): ReadonlyArray<YeetWatchEvent> => {
+    const before = mergeReadyCriterionHolds(prev.criteria, criterion);
+    const after = mergeReadyCriterionHolds(next.criteria, criterion);
+    return before === after
+      ? A.empty()
+      : [
+          YeetMergeReadyCriterionChanged.make({
+            at,
+            criterion,
+            from: before,
+            headSha: next.headSha,
+            to: after,
+          }),
+        ];
+  });
+
+  return A.appendAll(A.appendAll(A.appendAll(checkEvents, threadEvents), mergeabilityEvents), criteriaEvents);
 };
 
 /**

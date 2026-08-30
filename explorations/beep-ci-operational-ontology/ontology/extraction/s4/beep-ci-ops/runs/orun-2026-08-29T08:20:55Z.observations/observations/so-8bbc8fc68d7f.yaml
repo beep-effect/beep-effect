@@ -1,0 +1,25 @@
+id: so:sha256:8bbc8fc68d7ff8865048928f754aea654b620b9ffbaae0064f8f4f1e9253f8b1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 153
+  end_line: 166
+  content_sha256: a476aa57f76cd2bedbaeb0a93ce6915fa9810e26582ab9c6ae4da9dedc2848c4
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::TurboConfigProofCountSummary
+  lexical_name: TurboConfigProofCountSummary
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: TurboConfigProofCountSummary
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class TurboConfigProofCountSummary extends S.Class<TurboConfigProofCountSummary>(
+epistemic_status: parser_derived

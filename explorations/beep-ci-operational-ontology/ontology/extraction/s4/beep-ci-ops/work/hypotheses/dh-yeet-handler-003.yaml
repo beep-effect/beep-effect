@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:003"
+observation_refs:
+  - "so:sha256:0841160457ebb8e4d926907f2285ceed0af8286ca21293b240466d2b7cf1604a"
+  - "so:sha256:f3bd3875e469c7c54681ef2eaec8c1fd20afd9cd6923cbbdb60f1bfe324781b2"
+cq_warrants: []
+proposed_referent:
+  label: "FullProofAdmissionIntent representation"
+  description: "No domain-ontology referent is proposed for the FullProofAdmissionIntent representation; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "full-proof admission-priority choice"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation lists implementation fields or a default value, but those representation details do not establish the identity or existence of a domain entity or independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.86, use_for_acceptance: false}

@@ -1,0 +1,34 @@
+id: "ic:alt1:047"
+hypothesis_ref: "dh:turbo-cache:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Turbo configuration documents are the same iff they are the
+    repository-wide Turbo settings document of this workspace at the same observed corpus
+    commit, carrying the bound affected-selection, global-input, environment, pass-through, and
+    task-collection prescriptions. The on-disk path is reidentification evidence, never the
+    sameness criterion."
+  reidentification_key:
+    - "turbo.json"
+    - "$schema"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one configuration document whose parts are schema binding, future flags, global
+    inputs/env, and the task collection; not a mereological heap of independent assertions
+    unless that rival is later chosen"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives: []
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "Editing only the coverage task would yield a different state of the same document
+      on the document reading, but would be a different individual on the 'collection of
+      independent assertions' reading; a Turbo run that consumes the document is not a second
+      document."
+status: "proposed"

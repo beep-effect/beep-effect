@@ -1,5 +1,8 @@
 # Sources
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 Provenance ledger for `shared-memory-code-kg-wiring`. This packet graduates
 from an **external research collection**, not an in-repo exploration.
 

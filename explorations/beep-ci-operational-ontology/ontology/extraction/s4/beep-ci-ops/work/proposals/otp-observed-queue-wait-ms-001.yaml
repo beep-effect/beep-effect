@@ -1,0 +1,57 @@
+id: "otp:observed-queue-wait-ms:001"
+hypothesis_ref: "dh:sched-core:018"
+identity_card_ref: "ic:sched-core:017"
+foundational_status: "analyzed"
+term:
+  local_name: "observedQueueWaitMs"
+  preferred_label: "observed queue wait milliseconds"
+  proposed_iri: "https://oip.law/ontology/ci-ops#observedQueueWaitMs"
+  owl_entity_kind: data_property
+definition:
+  text: >-
+    A data relation from a queued SeatRequest at a specified observation
+    boundary to the elapsed milliseconds since its enqueue boundary. CQ-023
+    requires this time-indexed operational fact so starvation analysis can
+    compare the request's wait with the applicable bound; equal numeric values
+    or duplicate collector records do not introduce distinct quality tokens.
+  source:
+    - "CQ-023"
+    - "so:sha256:aae98d5927e0b5760e2cd21c7eb757857be3c4a618f5c59c83191a9311cff21b"
+    - "po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807"
+    - "po:sha256:2d8b36c6bb7afb7cda727640a5656328452253def711c0a1cfdb43848de709a9"
+    - "po:sha256:452b4ed8ff3e6ac37d200a6c3d8a5737000078258fbde7864a0186d709407c89"
+    - "po:sha256:7a38addfdaf431d72a7cb4dec84da8da890034f021e7c3aa0e0d9a1885b27ee0"
+foundational:
+  ufo_category: "none"
+  gufo_alignment: "not applicable to an OWL property"
+ontoclean:
+  rigidity: "unresolved"
+  identity: "none"
+  dependence: "relational"
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+    - "CQ-023"
+alternatives_rejected:
+  - >-
+    Implementation-only logging value rejected by the hardened discriminator:
+    the deployed queue uses elapsed waiting to promote an eligible verify
+    request to publish priority after the configured aging window, so the
+    time-indexed relation changes admission ordering rather than merely
+    formatting a log message.
+  - "Rejected category alternative: a separate reified queue-wait quality token."
+open_issues: []
+revision_requests: []
+revision_log:
+  - from_sha256: "07b6c78f11222b8063b45dcbd3414d29d6a65cdcbe59e240d695ffd7f8dec768"
+    addressed:
+      - "identity-card-entity-kind-mismatch"
+      - "discriminator-true-of-logging-value"
+  - from_sha256: "19a648f097c8afed62c587597b88732a664f6bb645f8c985b4d9896b9328153f"
+    addressed:
+      - "identity-card-entity-kind-mismatch"
+      - "discriminator-true-of-logging-value"
+status: proposed

@@ -13,8 +13,9 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Duration } from "effect";
 import * as A from "effect/Array";
 import type * as HashMap from "effect/HashMap";
@@ -31,11 +32,12 @@ import { isRdfStore } from "../Rdf.ts";
 import { ShaclValidationReport } from "../Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/types");
-const RdfStoreFromSelf: S.Codec<RdfStore, unknown> = S.declare(isRdfStore).annotate({
+const RdfStoreFromSelf: S.Codec<RdfStore> = S.declare(isRdfStore).annotate({
   title: "RdfStore",
   description: "Opaque mutable RDF workflow store created by RdfBuilder.",
 });
-type AgentGraphValue = KnowledgeGraph | RdfStore;
+
+type AgentGraphCodec = S.Codec<KnowledgeGraph | RdfStore, typeof KnowledgeGraph.Encoded | RdfStore>;
 
 /**
  * Graph representation accepted at agent workflow boundaries.
@@ -58,11 +60,15 @@ type AgentGraphValue = KnowledgeGraph | RdfStore;
  * @category schemas
  * @since 0.0.0
  */
-export const AgentGraph: S.Codec<AgentGraphValue, unknown> = S.Union([KnowledgeGraph, RdfStoreFromSelf]).pipe(
+export const AgentGraph: ReturnType<typeof SchemaUtils.withEffectCodecStatics<AgentGraphCodec>> = S.Union([
+  KnowledgeGraph,
+  RdfStoreFromSelf,
+]).pipe(
   $I.annoteSchema("AgentGraph", {
     description: "Agent graph boundary accepting a knowledge graph or opaque RDF store.",
     toArbitrary: () => S.toArbitrary(KnowledgeGraph),
-  })
+  }),
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**
@@ -82,7 +88,7 @@ export const AgentGraph: S.Codec<AgentGraphValue, unknown> = S.Union([KnowledgeG
  * @category type-level
  * @since 0.0.0
  */
-export type AgentGraph = AgentGraphValue;
+export type AgentGraph = typeof AgentGraph.Type;
 
 // =============================================================================
 // Agent Task Definition
@@ -95,12 +101,13 @@ export type AgentGraph = AgentGraphValue;
  *
  * Wraps raw input with metadata for tracking and routing.
  *
- * **Example** (Inspect agent task)
+ * **Example** (Create an extraction task)
  *
  * ```ts
  * import { AgentTask } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(AgentTask)
+ * const task = AgentTask.forExtraction("task-1", "Ada founded Acme.")
+ * console.log(task.taskId) // "task-1"
  * ```
  *
  * @category schemas
@@ -208,12 +215,13 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
   /**
    * Create a text extraction task
    *
-   * **Example** (Inspect agent task.for extraction)
+   * **Example** (Create an extraction task)
    *
    * ```ts
    * import { AgentTask } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(AgentTask)
+   * const task = AgentTask.forExtraction("task-1", "Ada founded Acme.")
+   * console.log(task.taskId) // "task-1"
    * ```
    *
    * @param taskId - Input consumed by this operation.
@@ -222,12 +230,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @param agentConfig - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forExtraction(
-    taskId: string,
-    text: string,
-    documentId?: string,
-    agentConfig?: OntologyAgentConfig
-  ): AgentTask {
+  static forExtraction(taskId: string, text: string, documentId?: string, agentConfig?: OntologyAgentConfig) {
     return AgentTask.make({
       taskId,
       text: O.some(text),
@@ -240,31 +243,34 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
   /**
    * Create a validation task
    *
-   * **Example** (Inspect agent task.for validation)
+   * **Example** (Create a validation task)
    *
    * ```ts
+   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { AgentTask } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(AgentTask)
+   * const task = AgentTask.forValidation("task-2", KnowledgeGraph.make({}))
+   * console.log(task.taskId) // "task-2"
    * ```
    *
    * @param taskId - Input consumed by this operation.
    * @param graph - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forValidation(taskId: string, graph: KnowledgeGraph | RdfStore): AgentTask {
+  static forValidation(taskId: string, graph: KnowledgeGraph | RdfStore) {
     return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(NonNegativeInt.make(2)) });
   }
 
   /**
    * Create an ingestion task
    *
-   * **Example** (Inspect agent task.for ingestion)
+   * **Example** (Create an ingestion task)
    *
    * ```ts
    * import { AgentTask } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(AgentTask)
+   * const task = AgentTask.forIngestion("task-3", "https://example.org/ada")
+   * console.log(task.taskId) // "task-3"
    * ```
    *
    * @param taskId - Input consumed by this operation.
@@ -272,7 +278,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @param ingestionOptions - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forIngestion(taskId: string, sourceUrl: string, ingestionOptions?: unknown): AgentTask {
+  static forIngestion(taskId: string, sourceUrl: string, ingestionOptions?: unknown) {
     return AgentTask.make({
       taskId,
       sourceUrl: O.some(sourceUrl),
@@ -284,12 +290,19 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
   /**
    * Create a correction task
    *
-   * **Example** (Inspect agent task.for correction)
+   * **Example** (Create a correction task)
    *
    * ```ts
+   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { AgentTask } from "@effect-ontology/Service/Agent/types"
+   * import { ShaclValidationReport } from "@effect-ontology/Service/Shacl"
    *
-   * console.log(AgentTask)
+   * const task = AgentTask.forCorrection(
+   *   "task-4",
+   *   KnowledgeGraph.make({}),
+   *   ShaclValidationReport.make({ conforms: true, results: [] })
+   * )
+   * console.log(task.taskId) // "task-4"
    * ```
    *
    * @param taskId - Input consumed by this operation.
@@ -297,11 +310,7 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
    * @param validationReport - Input consumed by this operation.
    * @returns Result produced by this operation.
    */
-  static forCorrection(
-    taskId: string,
-    graph: KnowledgeGraph | RdfStore,
-    validationReport: ShaclValidationReport
-  ): AgentTask {
+  static forCorrection(taskId: string, graph: KnowledgeGraph | RdfStore, validationReport: ShaclValidationReport) {
     return AgentTask.make({
       taskId,
       graph: O.some(graph),
@@ -314,57 +323,11 @@ class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
 /**
  * Runtime value decoded by {@link AgentTask}.
  *
- * **Example** (Accept an agent task)
- * ```ts
- * import type { AgentTask } from "@effect-ontology/Service/Agent/types"
- *
- * const taskId = (task: AgentTask): string => task.taskId
- * console.log(typeof taskId) // "function"
- * ```
- *
+ * @see {@link AgentTask} for the runtime schema and extraction factories.
  * @category type-level
  * @since 0.0.0
  */
-export interface AgentTask {
-  readonly taskId: string;
-  readonly ontologyId: O.Option<string>;
-  readonly text: O.Option<string>;
-  readonly sourceUrl: O.Option<string>;
-  readonly agentConfig: O.Option<OntologyAgentConfig>;
-  readonly ingestionOptions: O.Option<unknown>;
-  readonly ingestionResult: O.Option<unknown>;
-  readonly graph: O.Option<AgentGraph>;
-  readonly knowledgeGraph: O.Option<KnowledgeGraph>;
-  readonly rdfStore: O.Option<RdfStore>;
-  readonly turtle: O.Option<string>;
-  readonly ontologyContext: O.Option<OntologyContext>;
-  readonly ontologyRef: O.Option<OntologyRef>;
-  readonly validationReport: O.Option<ShaclValidationReport>;
-  readonly validationExplanations: O.Option<ReadonlyArray<ViolationExplanation>>;
-  readonly correctionResult: O.Option<unknown>;
-  readonly documentId: O.Option<string>;
-  readonly context: O.Option<Readonly<Record<string, S.Json>>>;
-  readonly priority: O.Option<NonNegativeInt>;
-}
-
-type AgentTaskInput = Readonly<Pick<AgentTask, "taskId"> & Partial<Omit<AgentTask, "taskId">>>;
-
-interface AgentTaskSchema extends S.Codec<AgentTask, unknown> {
-  readonly make: (props: AgentTaskInput, options?: S.MakeOptions) => AgentTask;
-  readonly forExtraction: (
-    taskId: string,
-    text: string,
-    documentId?: string,
-    agentConfig?: OntologyAgentConfig
-  ) => AgentTask;
-  readonly forValidation: (taskId: string, graph: KnowledgeGraph | RdfStore) => AgentTask;
-  readonly forIngestion: (taskId: string, sourceUrl: string, ingestionOptions?: unknown) => AgentTask;
-  readonly forCorrection: (
-    taskId: string,
-    graph: KnowledgeGraph | RdfStore,
-    validationReport: ShaclValidationReport
-  ) => AgentTask;
-}
+export type AgentTask = typeof AgentTask.Type;
 
 /**
  * Schema-backed unit of work processed by the agent pipeline.
@@ -386,27 +349,28 @@ interface AgentTaskSchema extends S.Codec<AgentTask, unknown> {
  * @category schemas
  * @since 0.0.0
  */
-export const AgentTask: AgentTaskSchema = AgentTaskModel;
+export const AgentTask = AgentTaskModel.pipe(SchemaUtils.withEffectCodecStatics);
 
 // =============================================================================
 // Pipeline Configuration
 // =============================================================================
 
 /**
- * PipelineConfig - Configuration for a multi-agent pipeline
+ * Execution mode, agent sequence, and termination policy for a pipeline.
  *
- * **Example** (Inspect pipeline config)
+ * **Example** (Build a sequential pipeline)
  *
  * ```ts
  * import { PipelineConfig } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(PipelineConfig)
+ * const config = PipelineConfig.sequential("extract-validate", ["extractor", "validator"])
+ * console.log(config.mode) // "sequential"
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class PipelineConfig extends S.Class<PipelineConfig>("PipelineConfig")({
+export class PipelineConfig extends S.Class<PipelineConfig>($I`PipelineConfig`)({
   /**
    * Unique pipeline identifier
    */
@@ -441,21 +405,25 @@ export class PipelineConfig extends S.Class<PipelineConfig>("PipelineConfig")({
    * Enable detailed tracing
    */
   tracing: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-}) {
+  },
+  $I.annote("PipelineConfig", {
+    description: "Execution mode, agent sequence, and termination policy for a multi-agent pipeline.",
+  })
+) {
   /**
    * Create a simple sequential pipeline
    *
-   * **Example** (Inspect pipeline config.sequential)
+   * **Example** (Create a sequential pipeline)
    *
    * ```ts
    * import { PipelineConfig } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(PipelineConfig)
+   * const config = PipelineConfig.sequential("extract-validate", ["extractor", "validator"])
+   * console.log(config.mode) // "sequential"
    * ```
    *
-   * @param pipelineId - Input consumed by this operation.
-   * @param agents - Input consumed by this operation.
-   * @returns Result produced by this operation.
+   * @param pipelineId - Identifier assigned to the pipeline execution
+   * @param agents - Ordered agent ids to run
    */
   static sequential(pipelineId: string, agents: ReadonlyArray<string>): PipelineConfig {
     return PipelineConfig.make({
@@ -468,17 +436,17 @@ export class PipelineConfig extends S.Class<PipelineConfig>("PipelineConfig")({
   /**
    * Create an extraction-validation-correction loop
    *
-   * **Example** (Inspect pipeline config.refinement loop)
+   * **Example** (Create a refinement loop)
    *
    * ```ts
    * import { PipelineConfig } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(PipelineConfig)
+   * const config = PipelineConfig.refinementLoop("refine-graph", 3)
+   * console.log(config.mode) // "loop"
    * ```
    *
-   * @param pipelineId - Input consumed by this operation.
-   * @param maxIterations - Input consumed by this operation.
-   * @returns Result produced by this operation.
+   * @param pipelineId - Identifier assigned to the pipeline execution
+   * @param maxIterations - Loop bound before the pipeline stops
    */
   static refinementLoop(pipelineId: string, maxIterations: number = 5): PipelineConfig {
     return PipelineConfig.make({
@@ -500,17 +468,19 @@ export class PipelineConfig extends S.Class<PipelineConfig>("PipelineConfig")({
 // =============================================================================
 
 /**
- * HumanApprove - Human approves the current state
+ * Human approval of the current pipeline checkpoint.
  *
- * **Example** (Inspect human approve)
+ * **Example** (Approve the current state)
  *
  * ```ts
  * import { HumanApprove } from "@effect-ontology/Service/Agent/types"
+ * import * as O from "effect/Option"
  *
- * console.log(HumanApprove)
+ * const feedback = HumanApprove.make({ comment: O.some("Looks correct.") })
+ * console.log(feedback._tag) // "HumanApprove"
  * ```
  *
- * @category services
+ * @category models
  * @since 0.0.0
  */
 export class HumanApprove extends S.TaggedClass<HumanApprove>($I`HumanApprove`)(
@@ -523,17 +493,18 @@ export class HumanApprove extends S.TaggedClass<HumanApprove>($I`HumanApprove`)(
 ) {}
 
 /**
- * HumanReject - Human rejects the current state
+ * Human rejection of the current pipeline checkpoint.
  *
- * **Example** (Inspect human reject)
+ * **Example** (Reject the current state)
  *
  * ```ts
  * import { HumanReject } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(HumanReject)
+ * const feedback = HumanReject.make({ reason: "Founder relation is inverted." })
+ * console.log(feedback._tag) // "HumanReject"
  * ```
  *
- * @category services
+ * @category models
  * @since 0.0.0
  */
 export class HumanReject extends S.TaggedClass<HumanReject>($I`HumanReject`)(
@@ -546,17 +517,22 @@ export class HumanReject extends S.TaggedClass<HumanReject>($I`HumanReject`)(
 ) {}
 
 /**
- * HumanModify - Human provides modifications to the state
+ * Human-provided modifications to the current pipeline state.
  *
- * **Example** (Inspect human modify)
+ * **Example** (Supply checkpoint edits)
  *
  * ```ts
  * import { HumanModify } from "@effect-ontology/Service/Agent/types"
+ * import * as O from "effect/Option"
  *
- * console.log(HumanModify)
+ * const feedback = HumanModify.make({
+ *   changes: { mention: "Ada Lovelace" },
+ *   comment: O.some("Use the full name.")
+ * })
+ * console.log(feedback._tag) // "HumanModify"
  * ```
  *
- * @category services
+ * @category models
  * @since 0.0.0
  */
 export class HumanModify extends S.TaggedClass<HumanModify>($I`HumanModify`)(
@@ -570,17 +546,23 @@ export class HumanModify extends S.TaggedClass<HumanModify>($I`HumanModify`)(
 ) {}
 
 /**
- * HumanSkip - Human skips a specific agent
+ * Human request to skip one pipeline agent.
  *
- * **Example** (Inspect human skip)
+ * **Example** (Skip the corrector)
  *
  * ```ts
+ * import { AgentId } from "@effect-ontology/Model/Agent"
  * import { HumanSkip } from "@effect-ontology/Service/Agent/types"
+ * import * as O from "effect/Option"
  *
- * console.log(HumanSkip)
+ * const feedback = HumanSkip.make({
+ *   agentId: AgentId.make("corrector"),
+ *   reason: O.some("Validation already passed.")
+ * })
+ * console.log(feedback._tag) // "HumanSkip"
  * ```
  *
- * @category services
+ * @category models
  * @since 0.0.0
  */
 export class HumanSkip extends S.TaggedClass<HumanSkip>($I`HumanSkip`)(
@@ -617,7 +599,6 @@ export const HumanFeedback = S.Union([HumanApprove, HumanReject, HumanModify, Hu
 /**
  * Runtime feedback decoded by {@link HumanFeedback}.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -628,24 +609,25 @@ export type HumanFeedback = typeof HumanFeedback.Type;
 // =============================================================================
 
 /**
- * RefinementConfig - Configuration for the validation-correction loop
+ * Validation-correction loop bounds and stop conditions.
  *
  * **Details**
  *
  * Controls how the refinement loop executes and when it terminates.
  *
- * **Example** (Inspect refinement config)
+ * **Example** (Use the default refinement loop)
  *
  * ```ts
  * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(RefinementConfig)
+ * const config = RefinementConfig.default(3)
+ * console.log(config.stopOnConformance) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class RefinementConfig extends S.Class<RefinementConfig>("RefinementConfig")({
+export class RefinementConfig extends S.Class<RefinementConfig>($I`RefinementConfig`)({
   /**
    * Maximum number of correction iterations
    */
@@ -689,20 +671,24 @@ export class RefinementConfig extends S.Class<RefinementConfig>("RefinementConfi
    * Agent ID for the corrector
    */
   correctorId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-}) {
+  },
+  $I.annote("RefinementConfig", {
+    description: "Iteration, timeout, and conformance bounds for the validation-correction loop.",
+  })
+) {
   /**
    * Create a default refinement config
    *
-   * **Example** (Inspect refinement config.default)
+   * **Example** (Create a default refinement config)
    *
    * ```ts
    * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(RefinementConfig)
+   * const config = RefinementConfig.default(3)
+   * console.log(config.maxIterations) // 3
    * ```
    *
-   * @param maxIterations - Input consumed by this operation.
-   * @returns Result produced by this operation.
+   * @param maxIterations - Maximum correction iterations before stopping
    */
   static default(maxIterations: number = 5): RefinementConfig {
     return RefinementConfig.make({
@@ -714,17 +700,17 @@ export class RefinementConfig extends S.Class<RefinementConfig>("RefinementConfi
   /**
    * Create a strict refinement config with low confidence threshold
    *
-   * **Example** (Inspect refinement config.strict)
+   * **Example** (Create a strict refinement config)
    *
    * ```ts
    * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(RefinementConfig)
+   * const config = RefinementConfig.strict(8, 0.9)
+   * console.log(config.stopOnConformance) // true
    * ```
    *
-   * @param maxIterations - Input consumed by this operation.
-   * @param minConfidence - Input consumed by this operation.
-   * @returns Result produced by this operation.
+   * @param maxIterations - Maximum correction iterations before stopping
+   * @param minConfidence - Confidence floor that stops the loop
    */
   static strict(maxIterations: number = 10, minConfidence: number = 0.8): RefinementConfig {
     return RefinementConfig.make({
@@ -738,15 +724,14 @@ export class RefinementConfig extends S.Class<RefinementConfig>("RefinementConfi
   /**
    * Convert to TerminationCondition
    *
-   * **Example** (Inspect refinement config.to termination condition)
+   * **Example** (Convert to a termination condition)
    *
    * ```ts
    * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(RefinementConfig)
+   * const condition = RefinementConfig.default().toTerminationCondition()
+   * console.log(condition.stopOnConformance) // true
    * ```
-   *
-   * @returns Result produced by this operation.
    */
   toTerminationCondition(): TerminationCondition {
     return TerminationCondition.make({
@@ -764,7 +749,6 @@ export class RefinementConfig extends S.Class<RefinementConfig>("RefinementConfi
 /**
  * RefinementStatus - Outcome of a refinement loop
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -777,20 +761,30 @@ export type RefinementStatus =
   | "error"; // Pipeline error
 
 /**
- * RefinementResult - Result of a validation-correction loop
+ * Outcome of a validation-correction loop, including how it stopped.
  *
- * **Example** (Inspect refinement result)
+ * **Example** (Record a conformant refinement)
  *
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegNum } from "@beep/schema/Number"
+ * import * as O from "effect/Option"
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(RefinementResult)
+ * const result = RefinementResult.make({
+ *   graph: KnowledgeGraph.make({}),
+ *   iterations: NonNegativeInt.make(2),
+ *   status: "conformant",
+ *   durationMs: NonNegNum.make(1200)
+ * })
+ * console.log(result.isConformant) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class RefinementResult extends S.Class<RefinementResult>("RefinementResult")({
+export class RefinementResult extends S.Class<RefinementResult>($I`RefinementResult`)({
   /**
    * Final knowledge graph
    */
@@ -825,19 +819,31 @@ export class RefinementResult extends S.Class<RefinementResult>("RefinementResul
    * Violations fixed per iteration
    */
   violationsFixed: S.Array(NonNegativeInt).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-}) {
+  },
+  $I.annote("RefinementResult", {
+    description: "Final graph, iteration count, and termination status of a refinement loop.",
+  })
+) {
   /**
    * Whether refinement produced a conformant graph
    *
-   * **Example** (Inspect refinement result.is conformant)
+   * **Example** (Inspect conformance)
    *
    * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { NonNegNum } from "@beep/schema/Number"
+ * import * as O from "effect/Option"
+   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(RefinementResult)
+   * const result = RefinementResult.make({
+   *   graph: KnowledgeGraph.make({}),
+   *   iterations: NonNegativeInt.make(1),
+   *   status: "conformant",
+   *   durationMs: NonNegNum.make(250)
+   * })
+   * console.log(result.isConformant) // true
    * ```
-   *
-   * @returns Result produced by this operation.
    */
   get isConformant(): boolean {
     return this.status === "conformant";
@@ -846,15 +852,24 @@ export class RefinementResult extends S.Class<RefinementResult>("RefinementResul
   /**
    * Average violations fixed per iteration
    *
-   * **Example** (Inspect refinement result.avg violations fixed)
+   * **Example** (Average violations fixed)
    *
    * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { NonNegNum } from "@beep/schema/Number"
+ * import * as O from "effect/Option"
+   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
-   * console.log(RefinementResult)
+   * const result = RefinementResult.make({
+   *   graph: KnowledgeGraph.make({}),
+   *   iterations: NonNegativeInt.make(2),
+   *   status: "max-iterations",
+   *   durationMs: NonNegNum.make(800),
+   *   violationsFixed: O.some([NonNegativeInt.make(2), NonNegativeInt.make(1)])
+   * })
+   * console.log(result.avgViolationsFixed) // 1.5
    * ```
-   *
-   * @returns Result produced by this operation.
    */
   get avgViolationsFixed(): number {
     if (O.isNone(this.violationsFixed) || this.violationsFixed.value.length === 0) return 0;
@@ -903,7 +918,6 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = never, R = never>
 /**
  * AgentRegistry - Type for the agent registry map
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -914,24 +928,36 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
 // =============================================================================
 
 /**
- * ExecutionContext - Runtime context for agent execution
+ * Runtime context shared with agents during pipeline execution.
  *
  * **Details**
  *
- * Provides access to shared state and utilities during execution.
+ * Carries the current pipeline snapshot, loop iteration, and tracing identifiers.
  *
- * **Example** (Inspect execution context)
+ * **Example** (Create an execution context)
  *
  * ```ts
+ * import { DateTime } from "effect"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  * import { ExecutionContext } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(ExecutionContext)
+ * const context = ExecutionContext.make({
+ *   pipelineState: PipelineState.make({
+ *     pipelineId: "pipeline-ada",
+ *     startedAt: DateTime.nowUnsafe(),
+ *     status: PipelineStatus.cases.Pending.make({})
+ *   }),
+ *   iteration: NonNegativeInt.make(0),
+ *   tracingEnabled: false
+ * })
+ * console.log(context.tracingEnabled) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class ExecutionContext extends S.Class<ExecutionContext>("ExecutionContext")(
+export class ExecutionContext extends S.Class<ExecutionContext>($I`ExecutionContext`)(
   {
     /**
      * Current pipeline state
@@ -958,8 +984,8 @@ export class ExecutionContext extends S.Class<ExecutionContext>("ExecutionContex
      */
     correlationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
-  $I.annote("AgentTask", {
-    description: "Schema-backed unit of work routed through the agent pipeline.",
+  $I.annote("ExecutionContext", {
+    description: "Pipeline snapshot, iteration, and tracing identifiers supplied to executing agents.",
   })
 ) {}
 
@@ -968,14 +994,19 @@ export class ExecutionContext extends S.Class<ExecutionContext>("ExecutionContex
 // =============================================================================
 
 /**
- * AgentExecutionError - Error during agent execution
+ * Failure while executing a single orchestration agent.
  *
- * **Example** (Inspect agent execution error)
+ * **Example** (Construct an agent execution error)
  *
  * ```ts
+ * import { AgentId } from "@effect-ontology/Model/Agent"
  * import { AgentExecutionError } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(AgentExecutionError)
+ * const error = AgentExecutionError.make({
+ *   agentId: AgentId.make("extractor"),
+ *   message: "Language model returned an empty graph"
+ * })
+ * console.log(error._tag) // "AgentExecutionError"
  * ```
  *
  * @category errors
@@ -995,14 +1026,28 @@ export class AgentExecutionError extends S.TaggedError<AgentExecutionError>($I`A
 }
 
 /**
- * PipelineExecutionError - Error during pipeline execution
+ * Failure while executing an orchestration pipeline.
  *
- * **Example** (Inspect pipeline execution error)
+ * **Example** (Construct a pipeline execution error)
  *
  * ```ts
+ * import { DateTime } from "effect"
+ * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
  * import { PipelineExecutionError } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(PipelineExecutionError)
+ * const error = PipelineExecutionError.make({
+ *   pipelineId: "pipeline-ada",
+ *   message: "Extractor failed before validation",
+ *   state: PipelineState.make({
+ *     pipelineId: "pipeline-ada",
+ *     startedAt: DateTime.nowUnsafe(),
+ *     status: PipelineStatus.cases.Failed.make({
+ *       failedAt: DateTime.nowUnsafe(),
+ *       error: "Extractor failed before validation"
+ *     })
+ *   })
+ * })
+ * console.log(error._tag) // "PipelineExecutionError"
  * ```
  *
  * @category errors
@@ -1021,14 +1066,19 @@ export class PipelineExecutionError extends S.TaggedError<PipelineExecutionError
 ) {}
 
 /**
- * AgentNotFoundError - Requested agent not registered
+ * Requested orchestration agent is not registered.
  *
- * **Example** (Inspect agent not found error)
+ * **Example** (Construct an agent-not-found error)
  *
  * ```ts
+ * import { AgentId } from "@effect-ontology/Model/Agent"
  * import { AgentNotFoundError } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(AgentNotFoundError)
+ * const error = AgentNotFoundError.make({
+ *   agentId: AgentId.make("corrector"),
+ *   registeredAgents: [AgentId.make("extractor")]
+ * })
+ * console.log(error._tag) // "AgentNotFoundError"
  * ```
  *
  * @category errors
@@ -1044,14 +1094,20 @@ export class AgentNotFoundError extends S.TaggedError<AgentNotFoundError>($I`Age
 ) {}
 
 /**
- * CheckpointTimeoutError - Human approval not received in time
+ * Human checkpoint approval exceeded its configured timeout.
  *
- * **Example** (Inspect checkpoint timeout error)
+ * **Example** (Construct a checkpoint timeout)
  *
  * ```ts
+ * import { Duration } from "effect"
  * import { CheckpointTimeoutError } from "@effect-ontology/Service/Agent/types"
  *
- * console.log(CheckpointTimeoutError)
+ * const error = CheckpointTimeoutError.make({
+ *   pipelineId: "pipeline-ada",
+ *   checkpointId: "checkpoint-1",
+ *   timeout: Duration.minutes(5)
+ * })
+ * console.log(error._tag) // "CheckpointTimeoutError"
  * ```
  *
  * @category errors

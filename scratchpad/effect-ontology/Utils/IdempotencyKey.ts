@@ -36,21 +36,22 @@ const $I = $ScratchpadId.create("effect-ontology/Utils/IdempotencyKey");
 export { IdempotencyKey };
 
 /**
- * Extraction parameters that affect output
+ * Optional extraction knobs that change output and therefore enter the
+ * idempotency key: max tokens, temperature, confidence, and grounding
+ * threshold.
  *
- * **Details**
- *
- * Only parameters that change the extraction result should be included.
- *
- * **Example** (Validate extraction params)
+ * **Example** (Accept a temperature and reject a non-finite)
  *
  * ```ts
  * import { ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ExtractionParams)({}))
+ * console.log(O.isSome(S.decodeUnknownOption(ExtractionParams)({ temperature: 0.1 }))) // true
+ * console.log(O.isNone(S.decodeUnknownOption(ExtractionParams)({ temperature: Number.NaN }))) // true
  * ```
  *
+ * @see {@link computeIdempotencyKey} for hashing these params into a run key.
  * @category schemas
  * @since 0.0.0
  */
@@ -66,20 +67,9 @@ export const ExtractionParams = S.Struct({
 );
 
 /**
- * Describes the extraction params data exposed by this module.
+ * Decoded extraction knobs produced by {@link ExtractionParams}.
  *
- * **Example** (Decode ExtractionParams)
- *
- * ```ts
- * import { ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeExtractionParams = (_value: ExtractionParams): string => "valid extraction params"
- *
- * console.log(O.map(S.decodeUnknownOption(ExtractionParams)({}), summarizeExtractionParams))
- * ```
- *
+ * @see {@link ExtractionParams} for the runtime schema and optional-key decoding.
  * @category type-level
  * @since 0.0.0
  */
@@ -90,23 +80,18 @@ export type ExtractionParams = typeof ExtractionParams.Type;
 // =============================================================================
 
 /**
- * Normalize text for consistent hashing
+ * Trims, lowercases, and collapses whitespace so logically identical source
+ * text hashes to the same idempotency key.
  *
- * **Details**
- *
- * Applies deterministic transformations to ensure same logical content
- * produces same hash regardless of whitespace or formatting differences.
- *
- * **Example** (Inspect normalize text)
+ * **Example** (Normalize mixed whitespace)
  *
  * ```ts
  * import { normalizeText } from "@effect-ontology/Utils/IdempotencyKey"
  *
- * console.log(normalizeText)
+ * console.log(normalizeText("  Ada\nLovelace  ")) // "ada lovelace"
  * ```
  *
- * @param text - Raw input text
- * @returns Normalized text suitable for hashing
+ * @see {@link computeIdempotencyKey} for the constructor that hashes this normalized text.
  * @category normalization
  * @since 0.0.0
  */
@@ -118,23 +103,26 @@ export const normalizeText = flow(
 );
 
 /**
- * Create stable hash of extraction parameters
+ * Hashes defined extraction parameters into a 16-character hex digest.
  *
  * **Details**
  *
- * Sorts keys and stringifies deterministically to ensure
- * same parameters produce same hash regardless of object key order.
+ * Keys are sorted so object insertion order cannot change the digest. An
+ * empty parameter set hashes to sixteen zeros.
  *
- * **Example** (Inspect hash params)
+ * **Example** (Hash empty and temperature params)
  *
  * ```ts
- * import { hashParams } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { ExtractionParams, hashParams } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as S from "effect/Schema"
  *
- * console.log(hashParams)
+ * const empty = S.decodeUnknownSync(ExtractionParams)({})
+ * const withTemp = S.decodeUnknownSync(ExtractionParams)({ temperature: 0.1 })
+ * console.log(hashParams(empty).length) // 16
+ * console.log(hashParams(withTemp) !== hashParams(empty)) // true
  * ```
  *
- * @param params - Extraction parameters
- * @returns 16-character hex hash of parameters
+ * @returns 16-character hex hash of sorted defined parameters.
  * @category utilities
  * @since 0.0.0
  */
@@ -158,23 +146,19 @@ export const hashParams = (params: ExtractionParams): string => {
 };
 
 /**
- * Compute ontology version from content
+ * Content-hashes serialized ontology text into a 16-character version token.
  *
- * **Details**
- *
- * Uses content-based hashing so ontology changes invalidate cached results.
- * This is more reliable than URL-based versioning.
- *
- * **Example** (Inspect compute ontology version)
+ * **Example** (Version Turtle content)
  *
  * ```ts
  * import { computeOntologyVersion } from "@effect-ontology/Utils/IdempotencyKey"
  *
- * console.log(computeOntologyVersion)
+ * const version = computeOntologyVersion("@prefix foaf: <http://xmlns.com/foaf/0.1/> .")
+ * console.log(version.length) // 16
  * ```
  *
- * @param ontologyContent - Serialized ontology content (Turtle, JSON-LD, etc.)
- * @returns 16-character hex hash of ontology content
+ * @returns 16-character hex hash of ontology content.
+ * @see {@link computeIdempotencyKey} for combining this version with source text.
  * @category utilities
  * @since 0.0.0
  */
@@ -205,11 +189,7 @@ export const computeOntologyVersion = (ontologyContent: string): string => sha25
  * console.log(O.isSome(key)) // true
  * ```
  *
- * @param text - Source text for extraction
- * @param ontologyId - Ontology identifier
- * @param ontologyVersion - Content-based version hash
- * @param params - Extraction parameters (optional)
- * @returns SHA-256 idempotency key
+ * @see {@link computeIdempotencyKeyEffect} for the Effect-returning twin.
  * @category utilities
  * @since 0.0.0
  */
@@ -226,25 +206,24 @@ export const computeIdempotencyKey = dual4(
 );
 
 /**
- * Compute idempotency key as Effect
+ * Effect-returning twin of {@link computeIdempotencyKey}.
  *
- * **Details**
- *
- * Useful when you need to compose with other Effects.
- *
- * **Example** (Inspect compute idempotency key effect)
+ * **Example** (Match the synchronous constructor)
  *
  * ```ts
- * import { computeIdempotencyKeyEffect } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { computeIdempotencyKey, computeIdempotencyKeyEffect, ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
- * console.log(computeIdempotencyKeyEffect)
+ * const params = S.decodeUnknownSync(ExtractionParams)({ temperature: 0.1 })
+ * const syncKey = computeIdempotencyKey("Ada works at Apple.", "foaf", "abc123", params)
+ * const effectKey = Effect.runSync(
+ *   computeIdempotencyKeyEffect("Ada works at Apple.", "foaf", "abc123", params)
+ * )
+ * console.log(syncKey === effectKey) // true
  * ```
  *
- * @param text - Source text
- * @param ontologyId - Ontology identifier
- * @param ontologyVersion - Content-based version hash
- * @param params - Extraction parameters
- * @returns Effect yielding IdempotencyKey
+ * @see {@link computeIdempotencyKey} for the synchronous constructor.
  * @category utilities
  * @since 0.0.0
  */
@@ -263,36 +242,50 @@ export const computeIdempotencyKeyEffect = dual4(
 // =============================================================================
 
 /**
- * Validate that a string is a valid idempotency key
+ * Returns whether a string is a 64-character SHA-256 idempotency key.
  *
- * **Example** (Inspect is valid idempotency key)
+ * **Example** (Guard a computed key)
  *
  * ```ts
- * import { isValidIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { computeIdempotencyKey, ExtractionParams, isValidIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as S from "effect/Schema"
  *
- * console.log(isValidIdempotencyKey)
+ * const key = computeIdempotencyKey(
+ *   "Ada works at Apple.",
+ *   "foaf",
+ *   "abc123",
+ *   S.decodeUnknownSync(ExtractionParams)({})
+ * )
+ * console.log(isValidIdempotencyKey(key)) // true
+ * console.log(isValidIdempotencyKey("not-a-key")) // false
  * ```
  *
- * @param value - String to validate
- * @returns true if valid idempotency key format
+ * @see {@link parseIdempotencyKey} for Effect decoding that fails on invalid input.
  * @category predicates
  * @since 0.0.0
  */
 export const isValidIdempotencyKey = IdempotencyKey.is;
 
 /**
- * Parse string to IdempotencyKey with validation
+ * Decodes an unknown value as a branded {@link IdempotencyKey}.
  *
- * **Example** (Inspect parse idempotency key)
+ * **Example** (Parse a computed key)
  *
  * ```ts
- * import { parseIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { computeIdempotencyKey, ExtractionParams, parseIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
- * console.log(parseIdempotencyKey)
+ * const key = computeIdempotencyKey(
+ *   "Ada works at Apple.",
+ *   "foaf",
+ *   "abc123",
+ *   S.decodeUnknownSync(ExtractionParams)({})
+ * )
+ * console.log(Effect.runSync(parseIdempotencyKey(key)) === key) // true
  * ```
  *
- * @param input - Unknown value decoded as an idempotency key.
- * @returns Effect yielding IdempotencyKey or failing with ParseError
+ * @see {@link isValidIdempotencyKey} for the boolean guard.
  * @category parsing
  * @since 0.0.0
  */
@@ -303,36 +296,50 @@ export const parseIdempotencyKey = (input: unknown) => IdempotencyKey.decodeUnkn
 // =============================================================================
 
 /**
- * Get short version of key for display purposes
+ * Takes the first 12 characters of an idempotency key for compact display.
  *
- * **Example** (Inspect short key)
+ * **Example** (Shorten a 64-character key)
  *
  * ```ts
- * import { shortKey } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { computeIdempotencyKey, ExtractionParams, shortKey } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as S from "effect/Schema"
  *
- * console.log(shortKey)
+ * const key = computeIdempotencyKey(
+ *   "Ada works at Apple.",
+ *   "foaf",
+ *   "abc123",
+ *   S.decodeUnknownSync(ExtractionParams)({})
+ * )
+ * console.log(shortKey(key).length) // 12
+ * console.log(key.startsWith(shortKey(key))) // true
  * ```
  *
- * @param key - Full idempotency key
- * @returns First 12 characters of key
+ * @see {@link formatKeyForLog} for the `run-` prefixed log form.
  * @category utilities
  * @since 0.0.0
  */
 export const shortKey: (key: IdempotencyKey) => string = Str.slice(0, 12);
 
 /**
- * Format key for logging with prefix
+ * Formats an idempotency key as `run-` plus the 12-character short form.
  *
- * **Example** (Inspect format key for log)
+ * **Example** (Prefix a short key for logs)
  *
  * ```ts
- * import { formatKeyForLog } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { computeIdempotencyKey, ExtractionParams, formatKeyForLog, shortKey } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as S from "effect/Schema"
  *
- * console.log(formatKeyForLog)
+ * const key = computeIdempotencyKey(
+ *   "Ada works at Apple.",
+ *   "foaf",
+ *   "abc123",
+ *   S.decodeUnknownSync(ExtractionParams)({})
+ * )
+ * console.log(formatKeyForLog(key) === `run-${shortKey(key)}`) // true
+ * console.log(formatKeyForLog(key).startsWith("run-")) // true
  * ```
  *
- * @param key - Full idempotency key
- * @returns Formatted string like "run-abc123def456"
+ * @see {@link shortKey} for the unprefixed 12-character slice.
  * @category formatting
  * @since 0.0.0
  */

@@ -1,0 +1,46 @@
+target: "otp:fallow-audit-lane:001"
+target_sha256: "00236b7848bb489bbe907aad1185fb64955e4a3d392e9aa2f3fc6f4689cf13e0"
+chain_sha256: "4638c08c74f3470871919d5102dcdf74a8f6d5425a0aea959bd0900b56c6e66a"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists
+    to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: content-lineage-identity-conflict
+    counterexample: >-
+      Two repositories can carry semantically equal base-selection, new-only,
+      and verdict prescriptions under different file histories, while changing
+      new-only to all-findings changes the content. The revised card correctly
+      makes normative content identity-defining and treats lineage as provenance.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      WorkUnitSpecification and CQ-002 remain answerable with other admissible
+      lane-by-scope prescriptions. Neither the generic decision class nor its
+      CQ requires this named Fallow audit individual, so the proposed support
+      term is an optional A-Box example rather than necessary semantics.
+    outcome: landed
+  - surface: null_discriminator
+    rule: dated-execution-discriminator
+    counterexample: >-
+      A dormant config row could carry the same command, but it would not also
+      preserve the dated pilot inventory's origin/main invocation, new-only
+      gate, and recorded fail verdict under the root audit configuration. The
+      repeatable procedure content therefore survives the config-only null test.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048"
+  - "po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c"
+  - "CQ-002"

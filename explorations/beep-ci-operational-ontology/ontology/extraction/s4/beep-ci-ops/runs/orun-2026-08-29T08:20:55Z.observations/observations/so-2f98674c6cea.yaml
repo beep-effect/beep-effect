@@ -1,0 +1,23 @@
+id: so:sha256:2f98674c6ceae8db91b65dcc340eca5eb66c65ae8853ab555ac643b1155d5f97
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 237
+  end_line: 237
+  content_sha256: e83833e5b53e40cc97f8144fc1d660daf9b16831a2e735d1ba77d22a2b522740
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::isProofTaskName
+  lexical_name: isProofTaskName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const isProofTaskName = S.is(TurboConfigProofTaskName);
+epistemic_status: parser_derived

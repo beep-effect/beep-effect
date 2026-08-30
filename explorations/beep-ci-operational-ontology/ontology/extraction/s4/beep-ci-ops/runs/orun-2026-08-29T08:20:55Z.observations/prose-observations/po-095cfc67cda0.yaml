@@ -1,0 +1,10 @@
+id: po:sha256:095cfc67cda0eb55352dc1500cfb8ee009eb802d6892b2303261c41f0d310847
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 168
+  end_line: 174
+quote: availableGib - config.reserveGib
+epistemic_status: quoted_prose

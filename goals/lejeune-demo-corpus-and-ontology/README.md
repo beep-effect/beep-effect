@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `paused` (authored-but-not-started; day 1 starts on Benjamin's signal)
+Lifecycle: `active` (P0-P2 complete; repository and hosted closeout in progress)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -39,13 +39,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Fixture and ontology freeze proof — not started. Start only on Benjamin's signal.
+P3 Close — local bundle, provider, replay, and reflection proof is complete. Repository-wide
+quality review and hosted merge-readiness remain.
 
 ## Latest Evidence
 
-The source exploration passed shape review and decompose on 2026-08-26. Its
-[`MAP.md`](../../explorations/lejeune-bolt-agentic-demo/MAP.md) names this packet as the
-dependency-free deterministic bundle and freezes the first vertical slice.
+The 2026-08-27 [golden bundle report](./history/evidence/2026-08-27-golden-bundle.md) records
+four frozen synthetic source hashes, 20 exact spans, two explicit missing fields, six rule
+outcomes, deterministic PGlite/DuckDB/Oxigraph rebuilds, one sanitized live Anthropic
+recording, and byte-identical offline replay receipts.
 
 ## Notes
 

@@ -1,0 +1,27 @@
+id: so:sha256:81196942646bc6125f2b4d968506098e034fadcca9d1f7866e4c8c8874eb5198
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 789
+  end_line: 803
+  content_sha256: 3803b820beaaa382df5fd29576dc24e2fe0ea0ab5c43ed1d92f1051eb01c748d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::RunToExitOptions
+  lexical_name: RunToExitOptions
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_intersection_member
+  object: SpawnFields
+- predicate: declares_type_alias
+  object: RunToExitOptions
+- predicate: exports_symbol
+  object: RunToExitOptions
+source_excerpt: export type RunToExitOptions = SpawnFields & {
+epistemic_status: parser_derived

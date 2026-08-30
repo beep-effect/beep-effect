@@ -280,38 +280,51 @@ const resolveViolation = (
   });
 };
 
-const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTestImports")(function* (
-  includePaths: ReadonlyArray<string> | undefined
+const collectPackageTestImportViolations = Effect.fn("PackageTestImports.collectViolations")(function* (
+  files: ReadonlyArray<string>,
+  sources: ReadonlyArray<PackageSourceRoot>
 ) {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const project = new Project({ skipAddingFilesFromTsConfig: true });
+  const violations = yield* Effect.forEach(files, (file) =>
+    fs.readFileString(file).pipe(
+      Effect.orElseSucceed(() => Str.empty),
+      Effect.map((content) => collectModuleSpecifierUses(project, file, content)),
+      Effect.map((uses) => A.getSomes(A.map(uses, (use) => resolveViolation(path, sources, file, use))))
+    )
+  );
+  return A.flatten(violations);
+});
+
+const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTestImports")(function* (
+  includePaths: ReadonlyArray<string> | undefined,
+  includeRoot: string | undefined
+) {
   const path = yield* Path.Path;
   const repoRoot = normalizePath(path.resolve(process.cwd()));
   const packagesRoot = path.join(repoRoot, "packages");
   const sources = yield* collectPackageSourceRoots(packagesRoot);
+  if (includePaths !== undefined && includeRoot !== undefined) {
+    return yield* failWithReportedExit(
+      "check-package-test-imports: --include and --include-root are mutually exclusive."
+    );
+  }
+  const scanRoot = includeRoot === undefined ? packagesRoot : normalizePath(path.resolve(repoRoot, includeRoot));
+  const relativeScanRoot = normalizePath(path.relative(packagesRoot, scanRoot));
+  if (relativeScanRoot === ".." || Str.startsWith("../")(relativeScanRoot)) {
+    return yield* failWithReportedExit("check-package-test-imports: --include-root must stay under packages/.");
+  }
   const files =
     includePaths === undefined
-      ? yield* collectPackageTestFiles(packagesRoot, repoRoot)
+      ? yield* collectPackageTestFiles(scanRoot, repoRoot)
       : pipe(
           includePaths,
           A.filter(isPackageTestFilePath),
           A.map((filePath) => normalizePath(path.resolve(repoRoot, filePath))),
           A.sort(Order.String)
         );
-  const project = new Project({ skipAddingFilesFromTsConfig: true });
-  let violations = A.empty<PackageTestImportViolation>();
-
-  for (const file of files) {
-    const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
-    const uses = collectModuleSpecifierUses(project, file, content);
-
-    for (const use of uses) {
-      const violation = resolveViolation(path, sources, file, use);
-
-      if (O.isSome(violation)) {
-        violations = A.append(violations, violation.value);
-      }
-    }
-  }
+  const violations = yield* collectPackageTestImportViolations(files, sources);
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     yield* Console.error(
@@ -348,6 +361,14 @@ export const lintPackageTestImportsCommand = Command.make(
       Flag.withDescription("Comma-separated repo-relative test files to scan; defaults to the full package test scope"),
       Flag.withDefault("*")
     ),
+    includeRoot: Flag.string("include-root").pipe(
+      Flag.withDescription("Repo-relative package directory whose test files should be scanned"),
+      Flag.withDefault("*")
+    ),
   },
-  ({ include }) => runLintPackageTestImports(include === "*" ? undefined : Text.splitCommaSeparatedTrimmed(include))
+  ({ include, includeRoot }) =>
+    runLintPackageTestImports(
+      include === "*" ? undefined : Text.splitCommaSeparatedTrimmed(include),
+      includeRoot === "*" ? undefined : includeRoot
+    )
 ).pipe(Command.withDescription("Check package test files for relative imports into workspace src roots"));

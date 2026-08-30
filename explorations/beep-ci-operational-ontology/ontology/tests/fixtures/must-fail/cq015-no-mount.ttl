@@ -1,0 +1,4 @@
+# Seat E value-oracle negative: without the cache mount the ASK must be FALSE.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:proof-example ciops:validInEpoch ciops:epoch-example ; ciops:cachedIn ciops:cache-1 .
+ciops:checkout-example ciops:inEpoch ciops:epoch-example .

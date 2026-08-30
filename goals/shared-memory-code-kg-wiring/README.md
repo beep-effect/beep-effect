@@ -1,5 +1,8 @@
 # Shared Memory & Code-KG Wiring
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 ## Status
 
 Lifecycle: `completed-retained` (closed 2026-08-06; pilot review 2026-08-20)
@@ -16,13 +19,10 @@ the standards updated to match.
 
 ## Launch
 
-Use this command for execution-capable sessions:
-
-```text
-/goal follow the instructions in goals/shared-memory-code-kg-wiring/GOAL.md
-```
-
-`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
+**Do not launch this packet.** The adoption it executed was reversed on
+2026-08-29 (basic-memory + codegraph removed; see
+`standards/memory-architecture/04-decision-log.md`). `GOAL.md` and `SPEC.md`
+are retained as the historical record of what was built, not as instructions.
 
 ## Read This First
 

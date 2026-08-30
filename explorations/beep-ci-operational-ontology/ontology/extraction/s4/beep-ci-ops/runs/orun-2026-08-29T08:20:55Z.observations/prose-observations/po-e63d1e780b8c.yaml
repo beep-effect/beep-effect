@@ -1,0 +1,10 @@
+id: po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: AGENTS.md
+source_span:
+  start_line: 42
+  end_line: 45
+quote: let hosted required checks gate the merge
+epistemic_status: quoted_prose

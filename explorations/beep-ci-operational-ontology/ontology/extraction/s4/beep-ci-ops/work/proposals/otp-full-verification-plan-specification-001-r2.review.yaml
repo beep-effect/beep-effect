@@ -1,0 +1,35 @@
+target: "otp:full-verification-plan-specification:001"
+target_sha256: "9013abf41754b378e19aaee58a6c08e5acf9d3450ca008c68efa82bd594675f1"
+chain_sha256: "45f5bf596de153a2a00c295cd565007bee661bb89bd1f878bf8e47c9c7c67143"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: "An authoritative YeetProofTier semantics and artifact-identity contract must say whether full denotes the pre-push member prescription or the composite cheap-gates-plus-pre-push plan, and retained plan evidence must show that the referent is more than a freshly constructed dispatcher DTO."
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a edge to test; no valid subsumption relation is asserted."
+attacks:
+  - surface: identity
+    rule: "deferred-component-composite-identity"
+    counterexample: "A pre-push-only prescription and a cheap-gates-plus-pre-push composite have different parts and unity. The revision now marks identity unresolved, sets foundational status explicitly_deferred, and names that exact choice, so it no longer silently identifies the component with the composite."
+    outcome: survived
+  - surface: warrant
+    rule: "semantic-support-necessity"
+    counterexample: "If evidence from only the pre-push member is treated as evidence for the composite full plan, it can over-discharge a verification obligation. A plan-specification distinction is therefore genuinely needed to constrain VerificationEvidence, even though the selected identity remains deferred."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-dto"
+    counterexample: "A pure dispatcher can map the full string to a freshly constructed pre-push step DTO exactly as quoted. That fact remains true without an enduring plan-specification referent, so the current discriminator does not settle the deferred denotation."
+    outcome: landed
+rival_models_still_viable:
+  - "A composite cheap-gates-plus-pre-push plan specification"
+  - "A member-level pre-push prescription"
+  - "A family of context-bound plan-step specifications"
+evidence:
+  - "so:sha256:1adbba90ffeca74bb7274f9ac7af8f6887553ab1344981fdce3e7ab86aaa9f4f"
+  - "po:sha256:b565b1f59f1de2fb2810a5cbba36c6c707705f294baf25d0b54bc812b7104d91"
+  - "CQ-005"
+  - "CQ-006"

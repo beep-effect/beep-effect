@@ -1,0 +1,23 @@
+id: so:sha256:af230c68d95b93810f99a6a149caf4c72b625d7eea4fed27a5dd336e8b14bc69
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 506
+  end_line: 506
+  content_sha256: fbb09d37e96af55ade54e4a83495ce77a4daeb1a6b09bb7404dc6fc2a792d6b8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::CAPTURE_DRAIN_GRACE
+  lexical_name: CAPTURE_DRAIN_GRACE
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const CAPTURE_DRAIN_GRACE: Duration.Input = "2 seconds";'
+epistemic_status: parser_derived

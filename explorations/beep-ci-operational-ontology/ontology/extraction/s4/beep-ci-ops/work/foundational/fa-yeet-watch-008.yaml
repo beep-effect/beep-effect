@@ -1,0 +1,27 @@
+id: "fa:yeet-watch:008"
+hypothesis_ref: "dh:yeet-watch:029"
+identity_card_ref: "ic:yeet-watch:008"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Structural subkind of failed hosted jobs with a nonempty all-unconcluded step shape"
+    still_viable: true
+  - label: "Causal runner-reporting-loss event type inferred from that shape"
+    still_viable: true
+  - label: "Anti-rigid rerun-eligible role borne by a matching failed job under current policy"
+    still_viable: true
+  - label: "Particular failed job or runner-loss occurrence"
+    still_viable: false
+  - label: "Runner-loss literal with no denoted recognition prescription"
+    still_viable: false
+strongest_counterexample: >-
+  The all-unconcluded shape can be presented by incomplete or stale step data
+  as well as by a runner that stopped reporting. The detector therefore fixes
+  a repeatable information-level predicate but does not by itself establish a
+  causal runner-loss occurrence. Structural-job, causal-event-type, and
+  policy-role rivals remain viable pending independent runner telemetry and a
+  job-record completeness contract.
+verdict: analyzed

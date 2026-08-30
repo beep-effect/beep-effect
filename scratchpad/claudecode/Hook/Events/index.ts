@@ -3,6 +3,7 @@
  * `HookInput` discriminated union keyed on `hook_event_name` for
  * cross-event pattern matching and dispatch.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -97,14 +98,24 @@ export {
  * Discriminated union of every hook event input supported by
  * effect-claudecode, keyed on `hook_event_name`.
  *
- * **Example** (Inspect the union discriminator)
+ * **Example** (Narrow a tagged hook payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.HookInput.ast._tag) // "Union"
+ * const input = S.decodeUnknownSync(Hook.HookInput)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "Stop",
+ *   stop_hook_active: false,
+ * })
+ *
+ * console.log(input.hook_event_name) // "Stop"
  * ```
  *
+ * @see {@link HookEventName} for the union of event-name literals.
  * @category schemas
  * @since 0.0.0
  */
@@ -150,10 +161,10 @@ export const HookInput = S.Union([
 );
 
 /**
- * Public utility for `HookInput`.
+ * Decoded value produced by {@link HookInput}.
  *
- * @category utilities
- *
+ * @see {@link HookInput} for the runtime union and decoding behavior.
+ * @category type-level
  * @since 0.0.0
  */
 export type HookInput = typeof HookInput.Type;
@@ -161,6 +172,7 @@ export type HookInput = typeof HookInput.Type;
 /**
  * JSON representation accepted by {@link HookInput}.
  *
+ * @see {@link HookInput} for the runtime union and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -169,8 +181,8 @@ export type HookInputEncoded = typeof HookInput.Encoded;
 /**
  * Every hook event name currently supported by the library.
  *
+ * @see {@link HookInput} for the discriminated union keyed on this name.
  * @category type-level
  * @since 0.0.0
- *
  */
 export type HookEventName = HookInput["hook_event_name"];

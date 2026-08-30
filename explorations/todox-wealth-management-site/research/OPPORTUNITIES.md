@@ -1,5 +1,19 @@
 # Opportunities
 
+## 2026-08-30 - long-lived branch crossed configuration and packet-projection migrations
+
+- **Work:** Merge the latest `origin/main` into `todox-init` while preserving
+  the Todox workspace and packet.
+- **Evidence:** Git reported content and add/add conflicts in Claude/Codex
+  configuration, plus modify/delete conflicts for `explorations/ATLAS.md` and
+  `goals/INDEX.md` after those tracked projections were retired on `main`.
+- **Impact:** A routine base sync required stage-by-stage resolution to keep
+  the Todox workspace registration while adopting the current configuration
+  and packet-projection model.
+- **Prevention:** Keep feature branches closer to `main`, and provide a
+  canonical post-merge config/projection reconciler that preserves newly added
+  workspaces while applying repository-wide migrations.
+
 ## 2026-08-27 - canonical Impeccable payload fails the whitespace check
 
 - **Work:** Verify the provider update with the repository's ordinary diff

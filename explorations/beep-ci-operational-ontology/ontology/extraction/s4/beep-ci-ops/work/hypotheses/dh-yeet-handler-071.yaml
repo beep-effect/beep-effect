@@ -1,0 +1,23 @@
+id: "dh:yeet-handler:071"
+observation_refs:
+  - "so:sha256:0fd0abf7cb302f4f763b3a58aa6af6407d41aed5e9405aeb5ac6b97970e90ff4"
+  - "po:sha256:96adb15e475d44e88cd7f1edd0a0beb3af5c5dac0aea1a42f03a59bd4b84b3d3"
+  - "po:sha256:a8757840abf082cf2d3622dc431f79e8a9c66aa38728cafd325c609c3856a27d"
+cq_warrants: []
+proposed_referent:
+  label: "WorkUnitExecution of a WorkUnitSpecification"
+  description: "A candidate specification-to-execution bridge based on a verdict lane's identifier and planned-lane description."
+representation_status: unresolved
+alternatives:
+  - label: "record field containing a plan-step key"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "lexical correspondence between two identifiers"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A string identifier on a record and prose about a planned lane do not establish re-identification of a WorkUnitSpecification or a relation from a distinct dated execution occurrence."
+epistemic_status: proposed
+confidence: {value: 0.33, use_for_acceptance: false}

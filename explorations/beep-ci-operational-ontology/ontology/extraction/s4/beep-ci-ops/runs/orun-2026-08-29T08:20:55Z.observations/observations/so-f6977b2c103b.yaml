@@ -1,0 +1,23 @@
+id: so:sha256:f6977b2c103b2fca6391ffa410004dbf60ace56249edb4d4aee674e43ca26ac3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 121
+  end_line: 121
+  content_sha256: 1efdb21ae34923e0907a19cd5bb87e4b882db1b2d508763cfa28cf521b8fcbbf
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts::decodeTurboQueryAffectedDocument
+  lexical_name: decodeTurboQueryAffectedDocument
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const decodeTurboQueryAffectedDocument = S.decodeUnknownEffect(S.fromJsonString(TurboQueryAffectedDocument));
+epistemic_status: parser_derived

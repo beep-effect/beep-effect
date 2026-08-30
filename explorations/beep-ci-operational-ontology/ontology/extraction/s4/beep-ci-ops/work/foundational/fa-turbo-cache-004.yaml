@@ -1,0 +1,17 @@
+id: "fa:turbo-cache:004"
+hypothesis_ref: "dh:turbo-cache:004"
+identity_card_ref: "ic:turbo-cache:004"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A check verification lane is realized by the task specification but is not the information object itself."
+    still_viable: true
+  - label: "The root declaration is a template for several package-specific check specifications."
+    still_viable: true
+  - label: "The referent is a check execution result."
+    still_viable: false
+strongest_counterexample: "Several package check tasks can share the same root dependency and empty-output declarations while executing different scripts, so the declaration may not be one complete work-unit specification."
+verdict: analyzed

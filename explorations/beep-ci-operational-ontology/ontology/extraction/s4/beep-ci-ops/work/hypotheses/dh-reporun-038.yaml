@@ -1,0 +1,27 @@
+id: "dh:reporun:038"
+observation_refs:
+  - "so:sha256:c1a4b7a8cbcf4d7a688243597fc3b28d6db614cb6d358c6ca0587fbf06420f48"
+  - "so:sha256:5ba757a4aac98e0d3609a7d6642729c8acc1805c69aa7768f425fba4c793a2bf"
+  - "po:sha256:6a0fc8a8c0fdc7f387b6300ff3899f9c604c1fbf27a9ece7c5559cfa2fd4cef5"
+  - "so:sha256:1481dce51159e820cdd129b4d588a263707a188896aefe6aa3120e1e6c734b59"
+cq_warrants: ["CQ-013"]
+proposed_referent:
+  label: "ts2589-no-location quarantine-policy designation"
+  description: "A literal policy value optionally attached to a quality-task step and lexically suggestive of an environment-only failure signature."
+representation_status: unresolved
+alternatives:
+  - label: "FailureSignature for a locationless TS2589 occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Quality-runner exception code"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "CQ-013 could warrant a genuine failure signature, but the lane observations only declare the literal and an optional plan field. They do not observe the matching rule, an occurrence, or the environment-only discriminator, so the null stands."
+epistemic_status: proposed
+confidence:
+  value: 0.47
+  use_for_acceptance: false
+

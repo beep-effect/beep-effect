@@ -1,0 +1,47 @@
+target: "otp:hosted-required-check-merge-obligation:001"
+target_sha256: "fd498ea579dec3d54d48d43ae284371d2de95cdade26f03e52f641a79cb9d875"
+chain_sha256: "ec6a201d8b5c0af4607f7fc265e1ea623dc51c55755afaa18cbfdff905d45c88"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: activation-lineage-identity
+    counterexample: >-
+      One candidate head can satisfy a required check and later reacquire the
+      same designation under the same target and policy. Treating the shared
+      participant tuple as identity would merge two obligations, but the
+      revised card separates them at discharge and later reacquisition.
+    outcome: survived
+  - surface: warrant
+    rule: support-term-not-necessary
+    counterexample: >-
+      CQ-006 can relate a VerificationEvidence record directly to the generic
+      verification obligation or required-check designation it discharges.
+      That answer distinguishes the hosted gate without requiring a separate
+      HostedRequiredCheckMergeObligation class, so the claimed support term is
+      not necessary for the decision term.
+    outcome: landed
+  - surface: null_discriminator
+    rule: normative-gate-discriminator
+    counterexample: >-
+      A passive check-status DTO can report success, but it cannot by itself
+      make an unsatisfied hosted required check block the candidate transition.
+      The cited governing rule supplies that normative gate, so the proposed
+      referent survives the implementation-only null even though its dedicated
+      class remains unwarranted.
+    outcome: survived
+rival_models_still_viable:
+  - "A standing merge-policy specification plus generic obligation activations."
+evidence:
+  - "po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b"
+  - "CQ-006"

@@ -20,14 +20,13 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runGitOutput, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
+import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreeExistsError } from "./Worktree.errors.ts";
 import { parseWorktreePorcelain, WorktreeListEntry } from "./Worktree.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.command");
-
-const WORKTREES_ROOT_SUFFIX = "-worktrees";
 
 /**
  * Local-only files copied from the main checkout into a fresh worktree.

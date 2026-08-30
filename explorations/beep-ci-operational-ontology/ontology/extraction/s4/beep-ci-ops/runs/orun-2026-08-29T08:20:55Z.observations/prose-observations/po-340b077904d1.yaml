@@ -1,0 +1,10 @@
+id: po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 122
+  end_line: 170
+quote: 'One active admission lease: heavy work currently charged against capacity.'
+epistemic_status: quoted_prose

@@ -1,0 +1,24 @@
+id: "dh:quality:116"
+observation_refs:
+  - "so:sha256:fe44538eca0527dd216b0f0bf5ef18b5b18f14cfd430fc50540bacb847afe8fe"
+cq_warrants: []
+proposed_referent:
+  label: "Possible work-unit execution referent denoted by GithubCheckLaneRun"
+  description: "The lexical form suggests an occurrence or result, but the observations do not decide between an execution, a record about an execution, and a schema-only representation. No reusable specification is merged with it."
+representation_status: unresolved
+alternatives:
+  - label: "An information artifact recording GithubCheckLaneRun"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "GithubCheckLaneRun schema or DTO only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied facts show an exported schema declaration extending S.Class, with no observed occurrence time, state transition, participant, persistence, or exchange. They cannot defeat the code-only null."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.5
+  use_for_acceptance: false

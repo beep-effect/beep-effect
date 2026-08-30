@@ -6,11 +6,19 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
-import { Effect, flow, pipe } from "effect";
+import { Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { assertPinnedArchive, extractArchiveTextEntries, renderUnknownJsonModule } from "../internal/FreeLawProject.ts";
+import {
+  COURT_REPORTER_ARTIFACT_VERSION,
+  COURT_REPORTER_PROJECTION_VERSION,
+  COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+  classifyVocabularyAliases,
+  preserveIssuedVocabularyRecords,
+} from "../internal/FreeLawProjectVocabulary.ts";
 import { fetchSource, formatJson, normalizeJson, outputFile, sourceMetadata } from "../internal/Source.ts";
 import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
 import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
@@ -20,6 +28,8 @@ const targetId = "courts-db" as const;
 const outputRoot = "packages/law-practice/domain/src/internal/generated/free-law-project" as const;
 const outputPath = `${outputRoot}/courts.ts` as const;
 const canonicalPath = `${outputRoot}/courts-db.data.json` as const;
+const vocabularyOutputPath = `${outputRoot}/courts-vocabulary.ts` as const;
+const vocabularyDataPath = `${outputRoot}/courts-vocabulary.data.json` as const;
 const refreshCommand = "bun run beep sync-data-to-ts --target courts-db" as const;
 const expectedCourtCount = 2_809;
 
@@ -177,6 +187,50 @@ class CourtRecord extends S.Class<CourtRecord>($I`CourtRecord`)(
   })
 ) {}
 
+class VocabularyContextualAlias extends S.Class<VocabularyContextualAlias>($I`VocabularyContextualAlias`)(
+  {
+    alias: S.NonEmptyString,
+    context: S.NonEmptyString,
+  },
+  $I.annote("VocabularyContextualAlias", {
+    description: "Context-bearing alias retained in a generated court or reporter vocabulary.",
+  })
+) {}
+
+class CourtVocabularyOutputRecord extends S.Class<CourtVocabularyOutputRecord>($I`CourtVocabularyOutputRecord`)(
+  {
+    id: S.NonEmptyString,
+    sourceId: S.NonEmptyString,
+    semanticKey: S.NonEmptyString,
+    lineageKey: S.NonEmptyString,
+    name: S.NonEmptyString,
+    nameAbbreviation: S.NullOr(S.String),
+    citationString: S.String,
+    sourceJurisdiction: S.NullOr(S.String),
+    system: S.String,
+    type: S.NullOr(S.String),
+    hierarchyLevel: S.NullOr(S.String),
+    location: S.String,
+    parentId: S.NullOr(S.String),
+    effectiveRanges: S.Array(CourtDateRange),
+    aliases: S.Array(S.NonEmptyString),
+    contextualAliases: S.Array(VocabularyContextualAlias),
+    status: S.Literals(["active", "tombstone"]),
+    successorId: S.NullOr(S.NonEmptyString),
+  },
+  $I.annote("CourtVocabularyOutputRecord", {
+    description: "Generated court vocabulary row used to preserve previously issued identities across refreshes.",
+  })
+) {}
+
+const PreviousCourtVocabularyArtifact = S.Struct({
+  records: S.Array(CourtVocabularyOutputRecord),
+}).pipe(
+  $I.annoteSchema("PreviousCourtVocabularyArtifact", {
+    description: "Minimal checked-in court vocabulary shape required for lifecycle reconciliation.",
+  })
+);
+
 const Variables = S.Record(S.String, S.String).pipe(
   $I.annoteSchema("Variables", {
     description: "Regex variables used to assemble courts-db court records.",
@@ -202,6 +256,43 @@ const decodeVariables = S.decodeUnknownEffect(S.fromJsonString(Variables));
 const decodeOrdinals = S.decodeUnknownEffect(S.fromJsonString(Ordinals));
 const decodeRawCourts = S.decodeUnknownEffect(S.fromJsonString(RawCourts));
 const decodeCourts = S.decodeUnknownEffect(Courts);
+const decodePreviousCourtVocabularyArtifact = S.decodeUnknownEffect(S.fromJsonString(PreviousCourtVocabularyArtifact));
+
+/**
+ * Read the checked-in court vocabulary used to preserve issued identities.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPreviousCourtVocabularyForTesting = Effect.fn("SyncDataToTs.CourtsDb.readPreviousVocabulary")(
+  function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const repoRoot = yield* findRepoRoot().pipe(
+      SyncDataToTsError.mapError("Failed to locate the repo root for court vocabulary reconciliation", targetId)
+    );
+    const absolutePath = path.resolve(repoRoot, vocabularyDataPath);
+    const exists = yield* fs
+      .exists(absolutePath)
+      .pipe(
+        SyncDataToTsError.mapError("Failed to inspect the checked-in court vocabulary", targetId, vocabularyDataPath)
+      );
+
+    if (!exists) {
+      return A.empty<CourtVocabularyOutputRecord>();
+    }
+
+    const content = yield* fs
+      .readFileString(absolutePath)
+      .pipe(SyncDataToTsError.mapError("Failed to read the checked-in court vocabulary", targetId, vocabularyDataPath));
+    const artifact = yield* decodePreviousCourtVocabularyArtifact(content).pipe(
+      SyncDataToTsError.mapError("Failed to decode the checked-in court vocabulary", targetId, vocabularyDataPath)
+    );
+
+    return artifact.records;
+  }
+);
 
 const replaceLiteralAll = (text: string, search: string, replacement: string): string =>
   pipe(text, Str.split(search), A.join(replacement));
@@ -369,6 +460,27 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     });
   }
 
+  const previousCourtVocabulary = yield* readPreviousCourtVocabularyForTesting();
+  const courtVocabulary = yield* projectCourtVocabulary(courts, previousCourtVocabulary);
+
+  const vocabularyArtifact = {
+    schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+    projectionVersion: COURT_REPORTER_PROJECTION_VERSION,
+    artifactVersion: COURT_REPORTER_ARTIFACT_VERSION,
+    source: {
+      repository: "courts-db",
+      release: COURTS_DB_RELEASE,
+      commit: COURTS_DB_COMMIT,
+      retrievedOn: "2026-07-25",
+      sourceUrl: COURTS_DB_SOURCE_URL,
+      sha256: source.sha256,
+      semanticSha256: COURTS_DB_SEMANTIC_SHA256,
+      refreshCommand,
+    },
+    stableIdCount: A.length(courtVocabulary),
+    records: courtVocabulary,
+  };
+
   const metadata = sourceMetadata(source, { version: COURTS_DB_RELEASE });
   const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "law-practice/free-law-project/courts-db/v1",
@@ -384,6 +496,13 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     counts: {
       courts: A.length(courts),
       placeVariables: A.length(placeNames),
+      stableCourtIds: A.length(courtVocabulary),
+    },
+    artifact: {
+      version: COURT_REPORTER_ARTIFACT_VERSION,
+      schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
+      projectionVersion: COURT_REPORTER_PROJECTION_VERSION,
+      vocabularyPath: vocabularyDataPath,
     },
     data: {
       courts,
@@ -393,6 +512,15 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
   return SyncDataTargetProjection.make({
     files: [
       outputFile(outputPath, renderUnknownJsonModule({ exportName: "CourtsData", refreshCommand, value: courts })),
+      outputFile(
+        vocabularyOutputPath,
+        renderUnknownJsonModule({
+          exportName: "CourtsVocabularyData",
+          refreshCommand,
+          value: vocabularyArtifact,
+        })
+      ),
+      outputFile(vocabularyDataPath, formatJson(vocabularyArtifact)),
       outputFile(canonicalPath, formatJson(canonical)),
     ],
     canonicalPath,
@@ -401,6 +529,72 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     summary: `${A.length(courts)} assembled court records from courts-db ${COURTS_DB_RELEASE}`,
     sources: [metadata],
   });
+});
+
+/**
+ * Project assembled courts-db records into the stable court vocabulary.
+ *
+ * @category projection
+ * @since 0.0.0
+ */
+export const projectCourtVocabulary = Effect.fn("SyncDataToTs.CourtsDb.projectVocabulary")(function* (
+  courts: ReadonlyArray<CourtRecord>,
+  previousCourtVocabulary: ReadonlyArray<CourtVocabularyOutputRecord>
+) {
+  const aliasSeeds = A.map(courts, (court) => {
+    const aliases = pipe(
+      [court.name, court.citation_string],
+      A.appendAll(pipe(O.fromNullishOr(court.name_abbreviation), A.fromOption)),
+      A.appendAll(pipe(O.fromUndefinedOr(court.sub_names), O.getOrElse(A.empty<string>))),
+      A.filter(Str.isNonEmpty),
+      A.dedupe
+    );
+
+    return [court.id, `${court.location}: ${court.name}`, aliases] as const;
+  });
+  const aliasesByCourtId = pipe(
+    classifyVocabularyAliases(aliasSeeds),
+    A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
+    R.fromEntries
+  );
+  const projectedCourtVocabulary = A.map(courts, (court) => {
+    const aliases = pipe(
+      R.get(aliasesByCourtId, court.id),
+      O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
+    );
+
+    return CourtVocabularyOutputRecord.make({
+      id: court.id,
+      sourceId: court.id,
+      semanticKey: `court:${court.id}`,
+      lineageKey: `court:${court.id}`,
+      name: court.name,
+      nameAbbreviation: pipe(O.fromNullishOr(court.name_abbreviation), O.getOrNull),
+      citationString: court.citation_string,
+      sourceJurisdiction: pipe(O.fromNullishOr(court.jurisdiction), O.getOrNull),
+      system: court.system,
+      type: court.type,
+      hierarchyLevel: court.level,
+      location: court.location,
+      parentId: pipe(O.fromNullishOr(court.parent), O.getOrNull),
+      effectiveRanges: court.dates,
+      aliases: aliases.aliases,
+      contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
+      status: "active",
+      successorId: null,
+    });
+  });
+  return preserveIssuedVocabularyRecords(
+    previousCourtVocabulary,
+    projectedCourtVocabulary,
+    (previous, current) => (previous.status === "tombstone" ? previous : current),
+    (previous, successorId) =>
+      CourtVocabularyOutputRecord.make({
+        ...previous,
+        status: "tombstone",
+        successorId,
+      })
+  );
 });
 
 /**

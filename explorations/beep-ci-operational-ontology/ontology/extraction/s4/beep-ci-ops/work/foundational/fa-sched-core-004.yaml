@@ -1,0 +1,17 @@
+id: "fa:sched-core:004"
+hypothesis_ref: "dh:sched-core:004"
+identity_card_ref: "ic:sched-core:004"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The members are controlled lexical aliases that denote operational work categories without themselves forming a class taxonomy."
+    still_viable: true
+  - label: "Each literal is an ontological subkind of work merely because it is a LiteralKit member."
+    still_viable: false
+  - label: "The domain is only a closed string union with no information-object interpretation."
+    still_viable: false
+strongest_counterexample: "A second policy can copy every literal while changing the work admitted or its charge, demonstrating that enum membership alone neither fixes denotation nor makes subclasses."
+verdict: "analyzed"

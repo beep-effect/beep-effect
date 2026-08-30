@@ -1,0 +1,25 @@
+id: "dh:topology:104"
+observation_refs:
+  - "po:sha256:4cb3a5cb3d543cfe9baa2fc430f702e3ca45909d7a57d1bfaeaf82664fb3e4a2"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/qa-capture workspace package"
+  description: "The workspace software package information artifact identified by @beep/qa-capture in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "lexical_alias"
+alternatives:
+  - label: "@beep/qa-capture as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topological-sort report can emit the @beep/qa-capture spelling and numeric rank and then be discarded; the sole observation establishes only that serialized designation token, not package existence, query participation, or retained snapshot information."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

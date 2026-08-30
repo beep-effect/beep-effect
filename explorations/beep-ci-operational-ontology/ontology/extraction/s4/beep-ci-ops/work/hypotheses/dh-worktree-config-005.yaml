@@ -1,0 +1,18 @@
+id: "dh:worktree-config:005"
+observation_refs:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+cq_warrants: []
+proposed_referent:
+  label: "Fallow pilot-inventory configuration representation"
+  description: "The concrete configuration document recording pilot metadata, commands, paths, modes, and a verdict."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "dated Fallow pilot inventory"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Although the values look like an operational inventory, the observation alone establishes only a configuration document and does not show how that document functions as domain evidence."
+epistemic_status: proposed
+confidence: {value: 0.62, use_for_acceptance: false}

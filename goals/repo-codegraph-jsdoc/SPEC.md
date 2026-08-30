@@ -1,5 +1,8 @@
 # OVERVIEW: Repo Codegraph + JSDoc + NLP + Reasoning
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 ## 1. Purpose and Reader Contract
 ### State Split
 - `Implemented`: Canonical architecture, phase gates, and quality rubrics were previously captured in an archived `repo-codegraph-canonical` packet and provide the historical baseline for this synthesis.

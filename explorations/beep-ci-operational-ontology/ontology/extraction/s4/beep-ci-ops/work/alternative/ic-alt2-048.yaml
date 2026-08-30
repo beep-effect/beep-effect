@@ -1,0 +1,31 @@
+id: ic:alt2:048
+hypothesis_ref: dh:turbo-cache:007
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two test:integration task specifications are the same iff they prescribe the same repeatable integration-test work with
+    the same observed upstream build dependency; the task name is evidence rather than the criterion.
+  reidentification_key:
+  - turbo.json tasks.test:integration
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One specification per distinct Turbo task prescription named test:integration.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: A particular integration-test run is not this specification even when it consumed a build artifact.
+- description: >-
+    Editing outputs or env of the test:integration entry while keeping the same prescribed work is state change of one specification,
+    not a second task.
+status: proposed

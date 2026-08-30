@@ -1,0 +1,46 @@
+id: "ic:worktree-config:014"
+hypothesis_ref: "dh:worktree-config:018"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: sameness at least requires the same Fallow health analysis
+    semantics, input-scope rule, output interpretation, and tool revision; it
+    also requires the same complexity-ceiling profile only if those ceilings
+    are constitutive parts of the diagnostic prescription rather than a
+    separate policy applied to its measurements.
+  reidentification_key:
+    - "Fallow health analysis semantics"
+    - "input-scope and output-interpretation rules"
+    - "tool revision"
+    - "complexity-ceiling profile, conditional on the procedure-versus-policy ruling"
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One health-diagnostic prescription, with the ceiling profile included only
+    if evidence shows that the diagnostic consumes it rather than a separate
+    evaluator applying it afterward.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a raw health-diagnostic plan plus a separate threshold-policy specification"
+    - "process: one Fallow health execution"
+    - "information_object: the inventory command-entry record"
+  existential_dependencies:
+    - "At least one faithful realization of the diagnostic prescription"
+    - "The Fallow tool and repository configuration context that interprets it"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by changed diagnostic semantics"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      The health command and analysis algorithm can remain unchanged while
+      maxCognitive or another ceiling changes; that is one procedure under a
+      revised policy if thresholds are external, but a new procedure if they
+      are constitutive.
+status: proposed

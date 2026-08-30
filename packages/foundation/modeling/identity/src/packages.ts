@@ -196,7 +196,7 @@ const generatedComposers = $I.compose(
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
-const generatedLabComposers = $I.compose("api-docs", "semantica", "trustgraph-workbench");
+const generatedLabComposers = $I.compose("api-docs", "lejeune-bolt-workbench", "semantica", "trustgraph-workbench");
 // GENERATED LAB COMPOSERS END
 
 const composers = {
@@ -216,13 +216,31 @@ const composers = {
  * import { $ApiDocsId } from "@beep/identity"
  *
  * const id = $ApiDocsId.make("ApiDocs")
- * void id
+ * console.log(id)
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
 export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = composers.$ApiDocsId;
+
+/**
+ * Identity composer for `@beep/lejeune-bolt-workbench`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $LejeuneBoltWorkbenchId } from "@beep/identity"
+ *
+ * const id = $LejeuneBoltWorkbenchId.make("LejeuneBoltWorkbench")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $LejeuneBoltWorkbenchId: Identity.IdentityComposer<"@beep/lejeune-bolt-workbench"> =
+  composers.$LejeuneBoltWorkbenchId;
 
 /**
  * Identity composer for `@beep/semantica`.
@@ -233,7 +251,7 @@ export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = composers
  * import { $SemanticaId } from "@beep/identity"
  *
  * const id = $SemanticaId.make("Semantica")
- * void id
+ * console.log(id)
  * ```
  *
  * @category configuration
@@ -250,7 +268,7 @@ export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = compos
  * import { $TrustgraphWorkbenchId } from "@beep/identity"
  *
  * const id = $TrustgraphWorkbenchId.make("TrustgraphWorkbench")
- * void id
+ * console.log(id)
  * ```
  *
  * @category configuration

@@ -1,0 +1,46 @@
+id: "ic:reporun:008"
+hypothesis_ref: "dh:reporun:017"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    For the shared RepoPlanStepResume policy-designation domain, two
+    designation information objects are the same when they preserve the same
+    deontic content, applicability conditions, issuing policy, and revision
+    lineage across realizations. The fingerprint-match member specifically
+    permits skipping only when applicable fingerprint evidence matches; the
+    literal string alone does not establish sameness.
+  reidentification_key:
+    - "resume-policy literal together with the governing policy revision"
+    - "applicability conditions over phase, scope, mutability, and evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One designation is unified by a single permission, its conservative
+    applicability conditions, and the evidence relation required to exercise
+    that permission; it is an obligation-layer object, not a procedure.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "controlled-vocabulary individual for resume policy"
+    - "context-dependent resume-eligibility situation"
+    - "permission mode borne by a planned-step specification"
+    - "implementation-only planner control value"
+  existential_dependencies:
+    - "the policy or governance context that gives the designation force"
+    - "the planned-step specification that a concrete designation qualifies"
+    - "for an application, the fingerprint-evidence context on which eligibility depends"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded"
+    - "revoked"
+counterexamples:
+  - description: >-
+      A step may carry fingerprint-match yet have no matching fingerprint and
+      therefore execute normally, so the designation is neither a skipped
+      execution nor evidence that resume actually occurred.
+status: proposed

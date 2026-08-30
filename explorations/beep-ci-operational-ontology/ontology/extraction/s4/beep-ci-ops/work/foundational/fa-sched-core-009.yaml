@@ -1,0 +1,16 @@
+id: "fa:sched-core:009"
+hypothesis_ref: "dh:sched-core:010"
+identity_card_ref: "ic:sched-core:009"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The referent is the live admission-state situation, and AdmissionSnapshot is only its information projection."
+    still_viable: true
+  - label: "AdmissionSnapshot is an extensional response value rather than an independently reidentifiable information-object token."
+    still_viable: true
+strongest_counterexample: "Repeated reads with unchanged state produce indistinguishable values but distinct capture occurrences, so the available fields cannot decide whether one or multiple snapshot individuals exist."
+verdict: "explicitly_deferred"
+needed_evidence: "A capture timestamp or event reference, machine and policy scope, and provenance showing whether repeated status values are distinct snapshot tokens would decide individuation."

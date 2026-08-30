@@ -2,6 +2,8 @@
 
 ## Status
 
+Lifecycle: `active`
+
 Active product-definition initiative.
 
 ## Mission

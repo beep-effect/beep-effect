@@ -1,0 +1,25 @@
+id: "dh:sched-core:030"
+observation_refs:
+  - "so:sha256:10b44ba2f3d448b4a6be53a0a4cffeb046829f624edc4ac40cb85bf3c214a13d"
+  - "so:sha256:221ad0d8ebb47c9a41e743a23f074533dfab72a785c8c9fdf7e59e731779966f"
+  - "so:sha256:4a608a5ce1e05e5ad45c307b00c7232d0ee44a854f8654d02331dcd6de01319b"
+  - "so:sha256:54cac8719163cd47b18af0597c8b7659b89430d06a0bc6a210a092b93a8ae1ab"
+  - "so:sha256:737e9fcb9a92fb0b9e27aaab47440eb4b9297118ff0d971480b6be5c6fd614ff"
+  - "so:sha256:93c75a58b69c070ee734a1e02096aa7b6b682d84bad5bf4b72cd31408661472f"
+  - "so:sha256:b4f5b75392f29f2e7b41a869f0f685ed4eadd7fedc00d48ccf83f1613d07282f"
+  - "so:sha256:c2a59edad75f50637d0eaae645259cb6c6d820233773984c4acb1eadec23bcdb"
+cq_warrants: []
+proposed_referent:
+  label: "admission-record scan and repair implementation"
+  description: "Generic decoding, liveness classification, collection, reaping, and quarantine plumbing for admission files."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "admission-state ingestion procedure"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations describe generic codec callbacks, internal outcome tags, filesystem scans, and repair branching; they do not establish a CQ-warranted domain procedure distinct from this storage implementation."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

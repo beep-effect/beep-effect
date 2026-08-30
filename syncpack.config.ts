@@ -160,6 +160,16 @@ const config = {
   ],
   versionGroups: [
     {
+      // The private workspace root is an orchestration manifest, not a
+      // publishable package. Keep its intentionally absent version out of
+      // Syncpack's local-package version policy.
+      label: "Private workspace root is intentionally unversioned",
+      dependencies: ["@beep/root"],
+      packages: ["@beep/root"],
+      dependencyTypes: ["local"],
+      isIgnored: true,
+    },
+    {
       label: "Catalog (Pinned)",
       dependencies: ["**"],
       dependencyTypes: ["catalog"],

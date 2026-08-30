@@ -1,0 +1,23 @@
+id: "dh:worktree-config:008"
+observation_refs:
+  - "po:sha256:3208242164204b626fdec9ccef8311690ae6f88aa2054338d6cffee34f6d0a4a"
+  - "po:sha256:c13db8addc9d014305ab9aee478dec45f03d3b3cc65a65889949dbaf72b49303"
+  - "po:sha256:c51e70098e7cb7f6170bccb102a0436b5741f45bbba0c983f6c9461886ece32d"
+cq_warrants:
+  - "CQ-005"
+  - "CQ-006"
+proposed_referent:
+  label: "verification evidence record"
+  description: "A recorded result used as verification evidence, distinct from the lane, work specification, or execution that produced it."
+representation_status: information_artifact
+alternatives:
+  - label: "verification execution outcome"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The policy explicitly requires recorded evidence and identifies repository-wide output as proof, giving the record an evidentiary role."
+  discriminator: "The browser-QA quotation requires evidence recorded through record, extract, and judge stages; that persisted result is distinct from the command or code producing it."
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

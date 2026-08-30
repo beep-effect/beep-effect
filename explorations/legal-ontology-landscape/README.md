@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
 Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -15,8 +17,8 @@ docketing to a premature graph store or domain-entity model.
 
 ## Next Open Question
 
-None — M1 execution lives in goals/semantic-foundation; trademark stub paused
-behind M3.
+None — semantic-foundation M1 is closed. M2-M4 remain product-gated, with any
+future trademark packet still gated behind M3 vocabulary readiness.
 
 ## Read This First
 
@@ -31,6 +33,9 @@ behind M3.
 
 ## Trail
 
+- 2026-08-27: semantic-foundation M1 closed with a repo-owned seed, filing
+  projection, librarian loop, and one exact-manifest FOLIO alignment slice.
+  The asset ledger now has 17 checksum-pinned rows; M2-M4 remain product-gated.
 - 2026-07-14 (later): sibling review confirmed P0–4 research and verification
   complete and flipped the exploration to `graduated`; execution remains with
   semantic-foundation M1. The trademark-docketing-domain stub was deleted the
@@ -40,7 +45,7 @@ behind M3.
   compact research note
   [`07-ip-law-ontology-survey-distillation.md`](./research/07-ip-law-ontology-survey-distillation.md);
   the full survey remains a repository-history lookup, not a copied corpus.
-- 2026-07-08 (later): P1-P4 reports + verification landed (16 manifest rows,
+- 2026-07-08 (later): P1-P4 reports + verification landed (then 16 manifest rows,
   9 fully verified; LKIF namespaces found dead, SALI license conflict flagged);
   synthesis written to `RESEARCH.md`; recovered full packet from a yeet
   staged-only stash sweep during a parallel legal-document-intake run.

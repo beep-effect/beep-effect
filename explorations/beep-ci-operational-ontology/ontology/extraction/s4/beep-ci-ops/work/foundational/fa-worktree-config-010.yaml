@@ -1,0 +1,20 @@
+id: "fa:worktree-config:010"
+hypothesis_ref: "dh:worktree-config:014"
+identity_card_ref: "ic:worktree-config:010"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Reusable repository-wide docgen plan information content"
+    still_viable: true
+  - label: "Execution-bound plan for one concrete tree and toolchain context"
+    still_viable: true
+  - label: "Full-repository docgen execution"
+    still_viable: false
+strongest_counterexample: >-
+  One repository-wide prescription can be run against several commits, with a
+  distinct duration, generated artifact set, and result each time. Those
+  occurrences cannot be identical to the reusable work-unit specification.
+verdict: analyzed

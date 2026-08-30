@@ -1,0 +1,27 @@
+id: so:sha256:93c75a58b69c070ee734a1e02096aa7b6b682d84bad5bf4b72cd31408661472f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 471
+  end_line: 475
+  content_sha256: 1956e62a1c0e8f8142ed3dfba3b2655c9e4925eda751c2e6f8dc703936edd6df
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::AdmissionEntryCodec
+  lexical_name: AdmissionEntryCodec
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: decode
+- predicate: declares_field
+  object: describe
+- predicate: declares_field
+  object: ownerOf
+source_excerpt: interface AdmissionEntryCodec<Entry, DecodeError> {
+epistemic_status: parser_derived

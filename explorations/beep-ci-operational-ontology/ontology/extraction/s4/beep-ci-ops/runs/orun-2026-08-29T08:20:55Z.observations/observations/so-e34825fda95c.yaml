@@ -1,0 +1,25 @@
+id: so:sha256:e34825fda95ce3050968b41d1d89037c85ab81e7f0cbab58d9ea1a2d907163fa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 427
+  end_line: 437
+  content_sha256: 119bcccc34d6416590f7eccfeb9a5ec2db11f5f2a42a22aa74bd35b09d055b42
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::QualityProfileDetection
+  lexical_name: QualityProfileDetection
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: QualityProfileDetection
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class QualityProfileDetection extends S.Class<QualityProfileDetection>($I`QualityProfileDetection`)(
+epistemic_status: parser_derived

@@ -1,0 +1,10 @@
+id: po:sha256:e111144fd959c0d5a1d7f8caf1d62ed2e8b5ea12c9346adfd60c22001c7d26d4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: standards/fallow.pilot.inventory.jsonc
+source_span:
+  start_line: 92
+  end_line: 103
+quote: '"command": "bunx fallow health --format json --quiet"'
+epistemic_status: quoted_prose

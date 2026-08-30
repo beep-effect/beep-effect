@@ -147,17 +147,32 @@ bun run beep yeet monitor --until-merged
 ```
 
 - Stream one NDJSON row per PR state transition (typed `yeet-watch/v1` rows:
-  check transitions, thread open/resolve, mergeability, head supersession)
-  until the PR settles; exits non-zero on a red wave, a closed PR, or a poll
-  error. Every observed red also appends a failure capsule — derived from the
-  failing check's own record — to `<checkout>/.beep/inbox/failures.ndjson`
-  (`yeet-inbox/v1`) and advances the wave record at
-  `.beep/inbox/dispatch.json` (`yeet-dispatch/v1`): first red for a head opens
-  the repair session, later reds queue with headSha+lane dedup, a new push
-  supersedes the wave:
+  check transitions, thread open/resolve, new PR comments, mergeability, head
+  supersession) until the PR settles; exits non-zero on a red wave, a closed
+  PR, or a poll error. Every observed red also appends a failure capsule —
+  derived from the failing check's own record — to
+  `<checkout>/.beep/inbox/failures.ndjson` (`yeet-inbox/v1`) and advances the
+  wave record at `.beep/inbox/dispatch.json` (`yeet-dispatch/v1`): first red
+  for a head opens the repair session, later reds queue with headSha+lane
+  dedup, a new push supersedes the wave:
 
 ```bash
 bun run beep yeet monitor --watch
+```
+
+- The agent babysitting loop: the same stream, but the process **exits** on
+  the first actionable event batch — immediately when a check fails (the
+  failure capsule is already durable when it exits, even while sibling checks
+  still run), and ~20 seconds after the first new PR comment so a review bot's
+  burst lands as one batch of `comment-posted` rows. Exit code 0 is a
+  comment-only wake; non-zero means a red, a closed PR, or a poll error. The
+  comment cursor is a durable branch-scoped watermark shared with plain
+  `yeet monitor`, so relaunching after acting loses nothing: a comment posted
+  while no monitor was attached is the next session's first row. Run it as a
+  blocking command and treat its exit as the signal to act:
+
+```bash
+bun run beep yeet monitor --watch --until-event
 ```
 
 - Reset the clone after a merge (prune refs, fast-forward `main`, delete the
@@ -298,8 +313,14 @@ from a real security failure) before shipping such a fix.
 5. If no pull request exists for the pushed branch, prefer publishing with
    `--pr` so Yeet creates a ready PR from the commit log and local proof
    summary; `gh pr create --draft --fill` remains the manual fallback.
-6. Run `bun run beep yeet monitor --summary` for hosted checks when compact
-   operator output is enough; omit `--summary` when you need the full stream.
+6. Arm `bun run beep yeet monitor --watch --until-event` as a blocking command
+   (generous timeout) as soon as the PR exists. When it exits, act on the rows
+   it printed instead of waiting for anything more: `comment-posted` rows →
+   draft replies and run the reply flow; a non-zero exit with a red →
+   read the inbox capsule and `bun run beep yeet status --remote`, fix,
+   publish. Then re-arm the watch. The watch's exit IS the comment/red signal
+   — do not idle-poll the PR between exits. `bun run beep yeet monitor
+   --summary` remains for one-shot compact reads.
 7. Run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`
    to inspect unresolved actionable review threads and review-bot gates.
 8. Use `bun run beep yeet verify --tier review-fix` while fixing PR comments,
@@ -359,12 +380,19 @@ the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
 - `monitor --until-merged` re-reads status every poll, so a push landing
-  mid-session is picked up as the new budget scope. A failed job whose log
-  matches a known flake fingerprint (`ts2589-no-location`, CI timeout) gets
-  exactly one `gh run rerun --job <databaseId>` per job per head SHA — never
-  `--failed`, which would re-execute coexisting genuine reds. Anything else is
-  reported as "needs code fix". The loop ends on MERGED (after the sweep),
-  on CLOSED, or when you interrupt it.
+  mid-session is picked up as the new budget scope. Job triage is job-level
+  and mid-run: a completed red job is classified on the poll after it
+  concludes, without waiting for the parent workflow run to finish. A failed
+  job whose log matches a known flake fingerprint (`ts2589-no-location`, CI
+  timeout) gets exactly one `gh run rerun --job <databaseId>` per job per head
+  SHA — never `--failed`, which would re-execute coexisting genuine reds; a
+  known flake inside an active parent run is deferred without spending its
+  allowance. Once the run completes, the loop attempts the rerun once. A
+  rejected rerun keeps that allowance spent so authentication, permission, or
+  stale-job failures cannot become an unbounded polling loop. A red whose log
+  has not materialized yet reports "awaiting log" and is reclassified next
+  poll. Anything else is reported as "needs code fix". The loop ends on MERGED
+  (after the sweep), on CLOSED, or when you interrupt it.
 - **Branch-deletion contract.** `sweep` deletes with `-d` when the branch is an
   ancestor of `origin/main`. It uses `-D` only when the PR is MERGED **and** the
   local tip still equals the PR's recorded head SHA **and** no worktree holds the
@@ -458,7 +486,10 @@ turbo work, so they are cheap to run mid-loop.
   dead or pid-reused state is reaped automatically, and malformed state is
   quarantined visibly. Inspect with `bun run beep quality scheduler status`
   and repair with `bun run beep quality scheduler reap [--apply]` (dry-run by
-  default). `Ctrl-C` while queued removes the ticket.
+  default). `Ctrl-C` while queued removes the ticket. Admission transitions
+  are journaled best-effort to `$XDG_RUNTIME_DIR/beep/admit/journal.ndjson`
+  (ring-buffered NDJSON; admitted and released events keyed by ticket nonce
+  and pid), so granted queue-wait survives lease release.
   `verify --tier review-fix` remains the cheaper loop lane while a full proof
   is active (one token, never the origin lock); `--tier cheap-gates` takes
   neither admission nor the lock.

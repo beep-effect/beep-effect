@@ -1,0 +1,19 @@
+id: "dh:worktree-config:026"
+observation_refs:
+  - "so:sha256:0d096342f5ba116307ca177adcbc3fc775b860ae0e5fd62dfd4d090d86c660a3"
+cq_warrants:
+  - "CQ-015"
+proposed_referent:
+  label: "fleet checkout"
+  description: "A possible machine-local checkout bearer relevant to evidence-transferability decisions."
+representation_status: unresolved
+alternatives:
+  - label: "FleetCheckout schema declaration"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "CQ-015 needs a checkout bearer, but this observation supplies only export and schema-extension syntax and therefore cannot identify the source declaration with that referent."
+epistemic_status: proposed
+confidence: {value: 0.48, use_for_acceptance: false}

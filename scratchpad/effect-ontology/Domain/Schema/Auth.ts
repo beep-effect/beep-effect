@@ -59,7 +59,9 @@ export class TicketRequest extends S.Class<TicketRequest>($I`TicketRequest`)(
   $I.annote("TicketRequest", {
     description: "Request for a single-use WebSocket ticket scoped to one ontology.",
   })
-) {}
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketRequest)
+}
 
 /**
  * Issued single-use WebSocket authentication ticket.
@@ -106,6 +108,8 @@ export class TicketResponse extends S.Class<TicketResponse>($I`TicketResponse`)(
   })
 ) {
   static readonly is = S.is(TicketResponse);
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketResponse)
 }
 
 /**

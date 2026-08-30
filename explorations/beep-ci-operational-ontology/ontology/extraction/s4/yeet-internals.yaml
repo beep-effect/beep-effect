@@ -1,0 +1,259 @@
+telemetry:
+  lane: s4-yeet-internals
+  runner: "codex exec"
+  model: gpt-5.6-sol
+  reasoning_effort: max
+  prompt_version: s4-lane-contract-v2
+  corpus_commit: 469136d2a872
+  started: 2026-08-28T04:31:15Z
+  finished: 2026-08-28T04:43:45Z
+  wall_seconds: 750
+  frozen_inputs:
+    - { path: ontology/docs/competency-questions.yaml, sha256_12: e06ec7fe12a6 }
+    - { path: ontology/docs/pre-glossary.csv, sha256_12: 9184cddcecc7 }
+    - { path: ontology/docs/literal-domains.md, sha256_12: 7f0cf3e79e7e }
+    - { path: ontology/docs/orsd.md, sha256_12: 2b0fd670129b }
+    - { path: ontology/docs/scope.md, sha256_12: 6c39b69481a3 }
+  candidate_count: 16
+  fact_count: 0
+  issue_count: 5
+
+issues:
+  - id: yeet-internals-I01
+    kind: ambiguity
+    claim: "YeetProofTier selects local proof plans, but this corpus does not state a one-to-one mapping from those source tiers to AssuranceTier individuals."
+    evidence: "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — 'YeetProofTier.$match(tier, {'"
+    suggested_disposition: "Ratify an explicit source-tier-to-assurance mapping in S5, preserving YeetProofTier and AssuranceTierId as distinct domains."
+    status: open
+  - id: yeet-internals-I02
+    kind: missing-cq
+    claim: "The attempt journal enforces a 50-attempt retention limit, but no Must/Should CQ admits a retention-policy term or fact."
+    evidence: "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:24-25 — 'const RETAINED_ATTEMPTS = 50;'"
+    suggested_disposition: "Either classify retention as implementation-only or extend the requirements if CQ window completeness must expose this limit."
+    status: open
+  - id: yeet-internals-I03
+    kind: schema-conflict
+    claim: "YeetLaneStatus is a terminal planned-lane status domain and does not directly encode the RunningExecution, CompletedExecution, and CancelledExecution lifecycle."
+    evidence: "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:48-53 — 'export const YeetLaneStatus = LiteralKit([\"passed\", \"failed\", \"skipped\", \"not-run\", \"not-run-early-stop\"]).pipe('"
+    suggested_disposition: "Specify the ETL mapping explicitly, excluding never-executed lanes and sourcing running or cancelled state without treating not-run as cancellation."
+    status: open
+  - id: yeet-internals-I04
+    kind: schema-conflict
+    claim: "The lane-level durationMs source schema admits any finite number, while actualWallMs is frozen as an xsd:integer measured duration."
+    evidence: "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — 'durationMs: S.optionalKey(S.Finite),'"
+    suggested_disposition: "Require ETL validation to a non-negative integer and preserve durationMs as lane-grain cost, using elapsedMs only for whole-attempt executions."
+    status: open
+  - id: yeet-internals-I05
+    kind: schema-conflict
+    claim: "RemoteReadTurboCache accepts the whole two-member TurboCacheMode schema even though the resolver constructs remote-read only from local:rw,remote:r."
+    evidence: "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:397-402 — 'mode: TurboCacheMode,'"
+    suggested_disposition: "Constrain or validate the remote-read variant to LocalWriteRemoteRead before using decoded plans as CachePosture assertions."
+    status: open
+
+candidates:
+  - candidate: full
+    kind: literal-domain-member
+    source_domain: YeetProofTier
+    definition: "A YeetProofTier member that selects the pre-push proof surface and, in full-mode planning, follows a cheap-gates step."
+    admission_kind: semantic-support
+    supports: [AssuranceTier, VerificationLane]
+    decision_relevance: "Constrains the ratified mapping from Yeet's local planner tiers to assurance-tier obligations without conflating the domains."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier = LiteralKit([\"full\", \"cheap-gates\", \"review-fix\"]).pipe('"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — 'full: () => repoProofStepDefinition(\"pre-push\"),'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:428-431 — 'proofStep(context, \"cheap-gates\", true),'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: cheap-gates
+    kind: literal-domain-member
+    source_domain: YeetProofTier
+    definition: "A YeetProofTier member that selects the cheap-gates proof surface and its cheap-gate lane set."
+    admission_kind: semantic-support
+    supports: [AssuranceTier, VerificationLane]
+    decision_relevance: "Constrains which low-cost local proof surface can contribute toward an assurance-tier decision."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier = LiteralKit([\"full\", \"cheap-gates\", \"review-fix\"]).pipe('"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:380-385 — '\"cheap-gates\": () => repoProofStepDefinition(\"cheap-gates\"),'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:402-413 — '\"cheap-gates\": () => [...changesetStatusLanesForProof(context), ...githubCheckCheapGateLanes(context.repoRoot)],'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: review-fix
+    kind: literal-domain-member
+    source_domain: YeetProofTier
+    definition: "A YeetProofTier member that selects the review-fix proof surface, binds the base and head, and plans no GitHub-check lanes."
+    admission_kind: semantic-support
+    supports: [AssuranceTier, VerificationLane]
+    decision_relevance: "Constrains the distinct repair-loop proof posture used when mapping operational evidence to assurance obligations."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:108 — 'export const YeetProofTier = LiteralKit([\"full\", \"cheap-gates\", \"review-fix\"]).pipe('"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:393-397 — '\"review-fix\": () => [...args, \"--base\", context.base, \"--head\", context.head],'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts:402-413 — '\"review-fix\": A.empty<GithubCheckLaneSpec>,'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: VerificationAttempt
+    kind: class
+    definition: "A verification process occurrence whose start and terminal journal records share one UUID attempt identifier."
+    admission_kind: decision
+    cq_justification: [CQ-022]
+    decision_relevance: "Provides the attempt-scoped identity required to stop only executions made obsolete by a committed failure in the same attempt."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:42-53 — 'attemptId: UUID,'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — 'verdict: YeetVerdict,'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:100-105 — 'export const YeetAttemptJournalEvent = S.Union([YeetAttemptStarted, YeetAttemptFinished]).pipe('"
+    already_in_glossary: true
+    status: candidate
+  - candidate: inAttempt
+    kind: property
+    definition: "Relates a committed failure or work-unit execution carried by a terminal verdict to the UUID-identified verification attempt containing it."
+    domain: "CommittedFailure | WorkUnitExecution"
+    range: VerificationAttempt
+    admission_kind: decision
+    cq_justification: [CQ-022]
+    decision_relevance: "Supplies the same-attempt join that prevents an earlier failure from cancelling executions in a later retry."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — 'attemptId: UUID,'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — 'verdict: YeetVerdict,'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:491-506 — 'failedStepId: S.optionalKey(S.String),'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: CommittedFailure
+    kind: class
+    definition: "A failed verification-step result whose identifier is present in the terminal verdict embedded by an attempt-finished journal event."
+    admission_kind: decision
+    cq_justification: [CQ-022]
+    decision_relevance: "Identifies the same-attempt stopping signal that makes still-running executions obsolete."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — 'verdict: YeetVerdict,'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — 'failedStepId: S.optionalKey(S.String),'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — 'failureKind: YeetFailureKind.pipe(S.optionalKey),'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: WorkUnitExecution
+    kind: class
+    definition: "An occurrence of executing one planned verification lane that is represented by an executed lane record in a Yeet verdict."
+    admission_kind: decision
+    cq_justification: [CQ-022, CQ-025]
+    decision_relevance: "Provides the execution occurrence on which stopping state and measured wall cost are decided."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its execution status and repair command.'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — 'status: YeetLaneStatus,'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — 'durationMs: S.optionalKey(S.Finite),'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: ofWorkUnit
+    kind: property
+    definition: "Relates a work-unit execution represented by a verdict lane to the planned work-unit specification identified by that lane."
+    domain: WorkUnitExecution
+    range: WorkUnit
+    admission_kind: semantic-support
+    supports: [WorkUnitExecution, WorkUnit]
+    decision_relevance: "Preserves the specification-to-execution bridge needed to interpret lane-level cost and state without conflating occurrences with reusable plans."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its execution status and repair command.'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — 'id: S.String,'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: hasExecutionState
+    kind: property
+    definition: "Relates a work-unit execution to the packet execution-state member derived from its source execution structure and terminal lane status."
+    domain: WorkUnitExecution
+    range: ExecutionState
+    admission_kind: decision
+    cq_justification: [CQ-022, CQ-025]
+    decision_relevance: "Lets stopping and cost-calibration queries restrict executions to running or completed occurrences."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:48-53 — 'description: \"Execution status of one planned yeet lane.\"'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — 'status: YeetLaneStatus,'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: actualWallMs
+    kind: property
+    definition: "The measured wall duration in milliseconds of a completed work-unit execution, carried by lane durationMs or by attempt elapsedMs only when the execution is the whole attempt."
+    domain: WorkUnitExecution
+    range: xsd:integer
+    admission_kind: decision
+    cq_justification: [CQ-025]
+    decision_relevance: "Supplies the observed side of the actual-versus-estimated cost calibration pair."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — 'durationMs: S.optionalKey(S.Finite),'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — 'elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — 'verdict: YeetVerdict,'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: FailureSignature
+    kind: class
+    definition: "An equivalence class of verification failures determined by a failed step identifier together with its Yeet failure kind."
+    admission_kind: decision
+    cq_justification: [CQ-013]
+    decision_relevance: "Supports ranking the recurrent failure signatures that contribute the most delay to certainty."
+    evidence:
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — 'failedStepId: S.optionalKey(S.String),'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — 'failureKind: YeetFailureKind.pipe(S.optionalKey),'"
+      - "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:170-179 — 'export const YeetFailureKind = LiteralKit([\"step-exit\", \"handler-error\"]).pipe('"
+    already_in_glossary: true
+    status: candidate
+  - candidate: CachePosture
+    kind: class
+    definition: "A resolved cache decision for one Turbo invocation that is local-only, local-write-remote-read, or caller-controlled."
+    admission_kind: decision
+    cq_justification: [CQ-024]
+    decision_relevance: "Makes each execution's cache-transfer posture queryable for evidence-transfer and scheduling economics."
+    evidence:
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — 'description: \"The resolved local Turbo cache decision for one invocation.\"'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:309-313 — 'export const TurboCachePlanTag = LiteralKit([\"caller-controlled\", \"local-only\", \"remote-read\"]).pipe('"
+    already_in_glossary: true
+    status: candidate
+  - candidate: hasCachePosture
+    kind: property
+    definition: "Relates a work-unit execution to the resolved Turbo cache plan posture used for that invocation."
+    domain: WorkUnitExecution
+    range: CachePosture
+    admission_kind: decision
+    cq_justification: [CQ-024]
+    decision_relevance: "Projects the per-invocation cache decision onto the execution queried by the cache-posture CQ."
+    evidence:
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — 'The resolved cache decision for one Turbo invocation.'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:559-560 — 'Resolve the cache plan for one Turbo invocation.'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: LocalOnly
+    kind: literal-domain-member
+    source_domain: CachePosture
+    definition: "The CachePosture member whose resolved plan tag is local-only and whose emitted fail-closed cache argument is local:rw, not an honored remote-configuration input."
+    admission_kind: decision
+    cq_justification: [CQ-024]
+    decision_relevance: "Distinguishes executions whose Turbo arguments are forced to machine-local reads and writes."
+    evidence:
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:54-59 — '[\"local:rw\", \"LocalOnly\"],'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:362-370 — '_tag: S.tag(\"local-only\"),'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:648-654 — '\"local-only\": () => [`${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`],'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: LocalWriteRemoteRead
+    kind: literal-domain-member
+    source_domain: CachePosture
+    definition: "The CachePosture member whose deployed mode is local:rw,remote:r and whose resolved plan tag is remote-read."
+    admission_kind: decision
+    cq_justification: [CQ-024]
+    decision_relevance: "Distinguishes executions that may reuse shared remote evidence while keeping writes local."
+    evidence:
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:54-59 — '[\"local:rw,remote:r\", \"LocalWriteRemoteRead\"],'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:397-405 — '_tag: S.tag(\"remote-read\"),'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:616-624 — 'onSome: (mode) =>'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: CallerControlled
+    kind: literal-domain-member
+    source_domain: CachePosture
+    definition: "The CachePosture member for CI or an invocation with an explicit cache-control argument, where the CLI injects no cache flag."
+    admission_kind: decision
+    cq_justification: [CQ-024]
+    decision_relevance: "Prevents caller-owned cache behavior from being misclassified as the CLI's local-only fallback or sanctioned remote-read plan."
+    evidence:
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:337-344 — '_tag: S.tag(\"caller-controlled\"),'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:602-609 — 'return CallerControlledTurboCache.make({ reason: \"ci\" });'"
+      - "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:602-609 — 'return CallerControlledTurboCache.make({ reason: \"explicit-cache-arg\" });'"
+    already_in_glossary: true
+    status: candidate
+
+facts: []

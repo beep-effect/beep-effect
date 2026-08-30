@@ -41,3 +41,24 @@ export * from "./Corpus.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Corpus.service.ts";
+/**
+ * Preservation service contracts and live layers.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./internal/Preservation.contracts.ts";
+/**
+ * Live preservation layers and use-case implementations.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export {
+  ArchiveWriterLive,
+  CapacityPreflightServiceLive,
+  makeArchiveWriterLive,
+  PreservationManifestStoreLive,
+  PreservationVerifierLive,
+  StreamingHasherLive,
+} from "./internal/Preservation.ts";

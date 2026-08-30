@@ -1,0 +1,51 @@
+target: otp:agent:001
+target_sha256: 6ffa7d8e44d6fb93e8f7a814e6ec33759b144d40b0ff1e98e7273464e60d8c24
+chain_sha256: 66e3b45082ad8481e788ae6d04cc50fa38e3a343a09e740e6e03ffa59a9a49e7
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: The proposal asserts no parents edge; no subsumption relation is proposed, so no valid subsumption relation is available to test.
+attacks:
+- surface: identity
+  rule: identifier-is-identity
+  counterexample: Two processes can reuse the same pid, while one causally continuous process may be observed through several copied owner records; the card correctly requires process continuity plus one live ownership relation and treats pid, procStart, checkoutRoot, and record coordinates only as reidentification evidence.
+  outcome: survived
+- surface: identity
+  rule: identity-card-consistency
+  counterexample: If the role proposal supplied identity, two ownership episodes could incorrectly redefine process identity; the card says carries identity and the proposal agrees.
+  outcome: survived
+- surface: identity
+  rule: foundational-status-mismatch
+  counterexample: A deferred proposal backed by an analyzed foundational record would manufacture uncertainty, but both proposal and foundational record are analyzed.
+  outcome: survived
+- surface: identity
+  rule: rival-model-hidden
+  counterexample: The underlying operating-system process and the serialized owner-coordinate tuple impose different identity criteria from an ownership-role token; both alternatives are explicitly named in open_issues.
+  outcome: survived
+- surface: identity
+  rule: role-bearer-split
+  counterexample: A process can survive after its ticket is removed and later own another request; the proposal models the contingent admission-owner role rather than making ownership essential to the process bearer.
+  outcome: survived
+- surface: warrant
+  rule: cq-requires-term
+  counterexample: CQ-021 asks which agent owns each queued request and explicitly requires Agent and requestedBy, so an owner term is necessary for the projected answer.
+  outcome: survived
+- surface: null_discriminator
+  rule: discriminator-true-of-dto
+  counterexample: A scheduler can copy pid and procStart into ticket and lease DTOs and reap a record when that coordinate no longer resolves, without admitting an Agent role individual; the cited liveness behavior remains true in that pure-DTO world.
+  outcome: landed
+rival_models_still_viable:
+- The intended referent is the underlying operating-system process occurrence rather than its admission-owner role.
+- The intended referent is only the serialized owner-coordinate tuple copied between records.
+evidence:
+- so:sha256:158ec65eb4daf515df44b62ed4d173fcf19cbb58751efa0712d91e162a4ce1ea
+- po:sha256:792fb0d34c7c5554dc9c45ed05aa5f4cff6d5e0c28734d16a0ac63a889eba819
+- po:sha256:847e1ad7f271f529f3eaf0959d9ecd8a4c686b85e526064b402c00221ad1e05a
+- po:sha256:ff814eb11e80dc2620c720557874ef4c1137e1346a8ce8a03e917e5da315a71a
+- CQ-021

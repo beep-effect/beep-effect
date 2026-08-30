@@ -1,0 +1,22 @@
+id: fa:alt3:008
+hypothesis_ref: dh:sched-core:016
+identity_card_ref: ic:alt3:008
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'situation: time-indexed machine condition mem < floor and capacity 0'
+  still_viable: true
+- label: 'phase: the admission pool while the hard floor is engaged'
+  still_viable: true
+- label: 'information_object: the hardFloorEngaged boolean on a snapshot record'
+  still_viable: true
+strongest_counterexample: admissionCapacityTokensFor returns 0 under the same comparison that
+  snapshotAdmissionState records as hardFloorEngaged. A boolean set without forcing capacity
+  to zero would be a label, not this state.
+verdict: analyzed
+needed_evidence: A modeled bearer kind (machine or admission pool) that persists through engaging
+  and leaving the floor would discriminate phase from situation. Observationally equivalent
+  on the comparison-plus-snapshot evidence.

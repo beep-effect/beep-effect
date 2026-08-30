@@ -53,6 +53,7 @@ import {
   GithubCheckMode,
   GithubCheckRunReport,
   GithubChecksFallowFeatureMatrix,
+  githubCheckChangesetStatusLane,
   githubCheckCheapGateLanes,
   githubCheckLanePlan,
   githubCheckLanesForModeForTesting,
@@ -75,6 +76,7 @@ import {
   QualityTaskGroupFailed,
   QualityTaskStep,
   qualityProfileConfigForTesting,
+  readCoverageComparisonBaselineForTesting,
   renderCoverageFailuresForTesting,
   renderCoverageRemediation,
   reviewFixDocgenLocalArgsForTesting,
@@ -143,6 +145,12 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer
+);
+const PullRequestConfigLayer = ConfigProvider.layer(
+  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
+);
+const MainPushConfigLayer = ConfigProvider.layer(
+  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
 );
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
@@ -368,6 +376,42 @@ const githubCheckTestLane = (id: string, wave: GithubCheckLaneWave, source: stri
     stage: "repo-quality",
     step: bunScriptStep(id, source),
     wave,
+  });
+
+const initializeLaneProofRepository = Effect.fn("QualityTasksTest.initializeLaneProofRepository")(function* (
+  repoRoot: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(path.join(repoRoot, ".gitignore"), "/.beep/\n");
+  yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# baseline\n");
+  yield* runGit(repoRoot, ["init"]);
+  yield* runGit(repoRoot, ["config", "user.email", "lane-proof@example.test"]);
+  yield* runGit(repoRoot, ["config", "user.name", "Lane Proof Test"]);
+  yield* runGit(repoRoot, ["add", "."]);
+  yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
+  yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+});
+
+const laneProofTestLane = (
+  repoRoot: string,
+  id: string,
+  wave: GithubCheckLaneWave,
+  source: string,
+  useLocalEnv = false
+): GithubCheckLaneSpec =>
+  GithubCheckLaneSpec.make({
+    id,
+    stage: "repo-quality",
+    wave,
+    blockedBy: [],
+    step: QualityTaskStep.make({
+      label: id,
+      command: "bash",
+      args: ["-c", source],
+      cwd: repoRoot,
+      useLocalEnv,
+    }),
   });
 
 const commandOutputEncoder = new TextEncoder();
@@ -645,12 +689,16 @@ describe("quality task adapter", () => {
       "quality:knip",
       "quality:jsdoc-ratchet",
       "quality:docgen",
+      "quality:coverage",
+      "quality:codegen",
+      "quality:commitlint",
+      "quality:desktop-ipc",
       "quality:test-unit",
       "quality:test-integration",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
-    expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "build"]);
+    expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "beep", "ci", "lane", "build"]);
     expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
     expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     // Affected-scoped `beep ci lane check` drops the repo-wide tsgo extras root
@@ -669,12 +717,14 @@ describe("quality task adapter", () => {
     const lanes = githubCheckCheapGateLanes("/repo");
 
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
+      "cheap-gates:goals-index",
+      "cheap-gates:exploration-atlas",
       "cheap-gates:config-sync",
       "cheap-gates:tsgo-rules",
+      "cheap-gates:test-tsgo",
       "cheap-gates:effect-imports",
       "cheap-gates:schema-first",
       "cheap-gates:allowlist-check",
-      "cheap-gates:goals-index",
       "cheap-gates:goals-doctor",
       "cheap-gates:jsdoc-ratchet",
       "cheap-gates:knip",
@@ -707,10 +757,16 @@ describe("quality task adapter", () => {
       O.getOrThrow(A.head(ciLocalStepsForTesting("/repo", [laneId], prPlan))).args;
 
     expect(qualityLaneArgs(lanes, "quality:lint")).toEqual(hostedArgs("lint"));
+    expect(qualityLaneArgs(lanes, "quality:build")).toEqual(hostedArgs("build"));
     expect(qualityLaneArgs(lanes, "quality:lint-policy")).toEqual(hostedArgs("lint-policy"));
     expect(qualityLaneArgs(lanes, "quality:check")).toEqual(hostedArgs("check"));
     expect(qualityLaneArgs(lanes, "quality:test-unit")).toEqual(hostedArgs("test-unit"));
     expect(qualityLaneArgs(lanes, "quality:test-integration")).toEqual(hostedArgs("test-integration"));
+    expect(qualityLaneArgs(lanes, "quality:coverage")).toEqual(hostedArgs("coverage"));
+    expect(qualityLaneArgs(lanes, "quality:codegen")).toEqual(hostedArgs("codegen"));
+    expect(qualityLaneArgs(lanes, "quality:commitlint")).toEqual(hostedArgs("commitlint"));
+    expect(qualityLaneArgs(lanes, "quality:desktop-ipc")).toEqual(hostedArgs("desktop-ipc"));
+    expect(qualityLaneArgs(lanes, "quality:docgen")).toEqual(hostedArgs("docgen"));
 
     expect(qualityLaneArgs(lanes, "quality:check")).toEqual([
       "run",
@@ -726,33 +782,60 @@ describe("quality task adapter", () => {
   });
 
   it("carries a quarantine package filter into the nested check lane's Turbo invocation", () => {
-    const steps = ciLaneStepsForTesting(
-      "/repo",
-      "check",
-      CiLaneRunOptions.make({
-        affected: true,
-        base: "origin/main",
-        head: "HEAD",
-        summarize: true,
-        mode: "affected",
-        to: "HEAD",
-        last: false,
-        changesetStatus: false,
-        validateEnvelopes: false,
-        filter: "@beep/schema",
-      })
+    const steps = withEnvVar("GITHUB_ACTIONS", undefined, () =>
+      withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+        ciLaneStepsForTesting(
+          "/repo",
+          "check",
+          CiLaneRunOptions.make({
+            affected: true,
+            base: "origin/main",
+            head: "HEAD",
+            summarize: true,
+            mode: "affected",
+            to: "HEAD",
+            last: false,
+            changesetStatus: false,
+            validateEnvelopes: false,
+            filter: "@beep/schema",
+          })
+        )
+      )
     );
 
     expect(steps[0]?.args).toEqual([
       "run",
       "check",
       "--",
-      "--concurrency=1",
+      "--concurrency=3",
       "--affected",
       "--summarize",
       "--filter=@beep/schema",
     ]);
   });
+
+  it("pins direct CI Turbo lanes to a requested local-only cache", () =>
+    withEnvVar("CI", undefined, () =>
+      withEnvVar("TURBO_CACHE", "local:rw", () => {
+        const options = CiLaneRunOptions.make({
+          affected: true,
+          base: "origin/main",
+          head: "HEAD",
+          summarize: true,
+          mode: "affected",
+          to: "HEAD",
+          last: false,
+          changesetStatus: false,
+          validateEnvelopes: false,
+        });
+
+        for (const lane of ["lint", "labs", "property"] as const) {
+          const args = O.getOrThrow(A.head(ciLaneStepsForTesting("/repo", lane, options))).args;
+          expect(args).toContain("--cache=local:rw");
+          expect(args).not.toContain("--cache=local:rw,remote:r");
+        }
+      })
+    ));
 
   it("keeps the ts2589 flake quarantine on the dispatched check lane", () => {
     const lanes = githubCheckQualityLanesForTesting("/repo");
@@ -888,6 +971,316 @@ describe("quality task adapter", () => {
       )
     ));
 
+  it.effect(
+    "reuses only exact lane proofs and invalidates them when the virtual tree changes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-reuse-" });
+      const markerPath = path.join(tempRoot, ".beep", "lane-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(tempRoot, "proof:test", "preflight", "echo run >> .beep/lane-marker.txt");
+      const waves = [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })];
+      const run = collectGithubCheckLaneWavesForTesting("proof", waves, "fail-fast");
+
+      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\n");
+
+      yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# changed\n");
+      const invalidated = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(invalidated.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "invalidates a lane proof when the property-test run floor increases",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-fc-runs-" });
+      const markerPath = path.join(tempRoot, ".beep", "property-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "quality:test-unit",
+        "heavy",
+        "echo run >> .beep/property-marker.txt",
+        true
+      );
+      const waves = [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [lane] })];
+      const run = collectGithubCheckLaneWavesForTesting("proof-fc-runs", waves, "fail-fast");
+      const atRuns = (runs: string) =>
+        withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", withEnvVarEffect("BEEP_FC_NUM_RUNS", runs, run));
+
+      expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(A.map((yield* atRuns("400")).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "runs the lane when the configured proof base cannot be resolved",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-missing-base-" });
+      const markerPath = path.join(tempRoot, ".beep", "missing-base-marker.txt");
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "proof:missing-base",
+        "preflight",
+        "mkdir -p .beep; echo run >> .beep/missing-base-marker.txt"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-missing-base",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast"
+      );
+      const withMissingBase = withEnvVarEffect(
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "active",
+        withEnvVarEffect("BEEP_YEET_PROOF_BASE", "refs/heads/does-not-exist", run)
+      );
+
+      expect(A.map((yield* withMissingBase).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map((yield* withMissingBase).report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "merges successful lane proofs across waves",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-waves-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const waves = [
+        GithubCheckLaneWaveSpec.make({
+          wave: "preflight",
+          lanes: [laneProofTestLane(tempRoot, "proof:preflight", "preflight", "echo preflight >> .beep/lanes.txt")],
+        }),
+        GithubCheckLaneWaveSpec.make({
+          wave: "heavy",
+          lanes: [laneProofTestLane(tempRoot, "proof:heavy", "heavy", "echo heavy >> .beep/lanes.txt")],
+        }),
+      ];
+      const run = collectGithubCheckLaneWavesForTesting("proof-waves", waves, "fail-fast");
+
+      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
+      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused", "reused"]);
+      expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "lanes.txt"))).toBe("preflight\nheavy\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "invalidates history-sensitive proofs after a same-tree history rewrite",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-history-rewrite-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const secretsLane = laneProofTestLane(
+        tempRoot,
+        "pre-push:secrets",
+        "preflight",
+        "echo secrets >> .beep/secrets-history.txt"
+      );
+      const commitlintLane = laneProofTestLane(
+        tempRoot,
+        "quality:commitlint",
+        "preflight",
+        "echo commitlint >> .beep/commitlint-history.txt"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-history-rewrite",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [secretsLane, commitlintLane] })],
+        "fail-fast"
+      );
+
+      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
+      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused", "reused"]);
+
+      const originalTree = yield* runGit(tempRoot, ["rev-parse", "HEAD^{tree}"]);
+      yield* runGit(tempRoot, ["commit", "--amend", "-m", "same tree, rewritten history"]);
+      expect(yield* runGit(tempRoot, ["rev-parse", "HEAD^{tree}"])).toBe(originalTree);
+
+      const rewritten = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(rewritten.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
+      expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "secrets-history.txt"))).toBe("secrets\nsecrets\n");
+      expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "commitlint-history.txt"))).toBe(
+        "commitlint\ncommitlint\n"
+      );
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "rechecks a later-wave proof after an earlier wave changes the tree",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-cross-wave-mutation-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const heavyLane = laneProofTestLane(
+        tempRoot,
+        "proof:heavy-after-mutation",
+        "heavy",
+        "echo heavy >> .beep/heavy-after-mutation.txt"
+      );
+      const seedHeavy = collectGithubCheckLaneWavesForTesting(
+        "proof-cross-wave-seed",
+        [GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [heavyLane] })],
+        "fail-fast"
+      );
+      const seeded = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", seedHeavy);
+      expect(A.map(seeded.report.lanes, (result) => result.status)).toEqual(["passed"]);
+
+      const mutateLane = laneProofTestLane(
+        tempRoot,
+        "proof:mutate-before-heavy",
+        "preflight",
+        "printf '# changed before heavy\\n' > README.md"
+      );
+      const runMutatingWaves = collectGithubCheckLaneWavesForTesting(
+        "proof-cross-wave-mutation",
+        [
+          GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [mutateLane] }),
+          GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: [heavyLane] }),
+        ],
+        "fail-fast"
+      );
+      const afterMutation = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", runMutatingWaves);
+
+      expect(A.map(afterMutation.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
+      expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "heavy-after-mutation.txt"))).toBe("heavy\nheavy\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "never reuses volatile OSV security proofs",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-security-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(tempRoot, "pre-push:security", "preflight", "echo security >> .beep/security.txt");
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-security",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast"
+      );
+
+      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "security.txt"))).toBe("security\nsecurity\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "refuses to persist a proof when the lane changes the virtual tree",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-mutation-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "proof:mutation",
+        "preflight",
+        "echo run >> .beep/mutation.txt; printf '# mutated\\n' > README.md"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-mutation",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast"
+      );
+
+      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# baseline\n");
+      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "mutation.txt"))).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "uses a temporary proof index from a linked worktree git path",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const parent = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-worktree-" });
+      const primaryRoot = path.join(parent, "primary");
+      const worktreeRoot = path.join(parent, "linked");
+      yield* fs.makeDirectory(primaryRoot);
+      yield* initializeLaneProofRepository(primaryRoot);
+      yield* runGit(primaryRoot, ["worktree", "add", "-b", "lane-proof-linked", worktreeRoot, "HEAD"]);
+
+      const lane = laneProofTestLane(worktreeRoot, "proof:worktree", "preflight", "echo run >> .beep/worktree.txt");
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-worktree",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast"
+      );
+
+      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(yield* fs.readFileString(path.join(worktreeRoot, ".beep", "worktree.txt"))).toBe("run\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "does not persist a proof for an injected lane failure",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-failure-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(
+        tempRoot,
+        "proof:failure",
+        "preflight",
+        "if [[ -f .beep/pass-now ]]; then echo run >> .beep/failure.txt; else touch .beep/pass-now; exit 7; fi"
+      );
+      const run = collectGithubCheckLaneWavesForTesting(
+        "proof-failure",
+        [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })],
+        "fail-fast"
+      );
+
+      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      const third = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["failed"]);
+      expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["passed"]);
+      expect(A.map(third.report.lanes, (result) => result.status)).toEqual(["reused"]);
+      expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "failure.txt"))).toBe("run\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
   it("collects multiple cheap-gate findings in one schema-valid run", () =>
     Effect.runPromise(
       collectGithubCheckLaneWavesForTesting(
@@ -919,19 +1312,59 @@ describe("quality task adapter", () => {
   it("runs every cheap gate through the collected runner when all lanes pass", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
 
     return Effect.runPromise(
-      withEnvVarEffect("GITHUB_EVENT_NAME", "pull_request", runGithubChecks("cheap-gates")).pipe(
-        Effect.tap(() =>
-          Effect.gen(function* () {
-            const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-            expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
-            expect(logText).toContain('"failurePolicy":"collect-all"');
-            expect(logText).toContain('"status":"passed"');
-            expect(spawned).toHaveLength(A.length(cheapGateLanes) + 4);
-          })
-        ),
-        provideScopedLayer(cheapGatesTestLayer(spawned, A.empty()))
+      withEnvVarEffect(
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "off",
+        runGithubChecks("cheap-gates").pipe(
+          Effect.tap(
+            Effect.fnUntraced(function* () {
+              const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+              expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+              expect(logText).toContain('"failurePolicy":"collect-all"');
+              expect(logText).toContain('"status":"passed"');
+              expect(spawned).toContain(changesetStatusCommand);
+              expect(
+                A.every(cheapGateLanes, (lane) =>
+                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
+                )
+              ).toBe(true);
+            })
+          ),
+          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), PullRequestConfigLayer))
+        )
+      )
+    );
+  });
+
+  it("skips changeset status on a main push while running every cheap gate", () => {
+    const spawned: Array<string> = [];
+    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
+
+    return Effect.runPromise(
+      withEnvVarEffect(
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "off",
+        runGithubChecks("cheap-gates").pipe(
+          Effect.tap(
+            Effect.fnUntraced(function* () {
+              const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+              expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
+              expect(spawned).not.toContain(changesetStatusCommand);
+              expect(
+                A.every(cheapGateLanes, (lane) =>
+                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
+                )
+              ).toBe(true);
+            })
+          ),
+          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), MainPushConfigLayer))
+        )
       )
     );
   });
@@ -948,8 +1381,8 @@ describe("quality task adapter", () => {
 
     return Effect.runPromise(
       withEnvVarEffect(
-        "GITHUB_EVENT_NAME",
-        "pull_request",
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "off",
         Effect.gen(function* () {
           const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
 
@@ -973,7 +1406,7 @@ describe("quality task adapter", () => {
           expect(logText).toContain('"id":"cheap-gates:effect-imports","stage":"repo-quality","status":"failed"');
           expect(logText).toContain('"status":"passed"');
         })
-      ).pipe(provideScopedLayer(cheapGatesTestLayer(spawned, failedCommands)))
+      ).pipe(provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, failedCommands), PullRequestConfigLayer)))
     );
   });
 
@@ -2736,13 +3169,13 @@ describe("quality task adapter", () => {
         expect(A.every(A.drop(steps, 1), (step) => step.env?.VITEST_COVERAGE_REPORT_ONLY === undefined)).toBe(true);
       }));
 
-    it("keeps a wide local ratchet on Turbo's own scheduling but shards a wide baseline write", () => {
+    it("uses the same shard topology for wide local ratchets and baseline writes", () => {
       const packageNames = ["@beep/repo-cli", "@beep/a"];
       const localOptions = { hosted: false, writeBaseline: false };
 
       expect(
         A.map(coverageSelectedStepsForTesting("/repo", packageNames, [], localOptions), (step) => step.label)
-      ).toEqual(["coverage:ratchet"]);
+      ).toEqual(["coverage:prebuild", "coverage:shard-1", "coverage:shard-2"]);
       const writeSteps = coverageSelectedStepsForTesting("/repo", packageNames, [], {
         hosted: false,
         writeBaseline: true,
@@ -2866,6 +3299,116 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["checkout", "-q", "feature"]);
             yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a", 61) }));
             expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "trunk")).toEqual(delta(["@beep/a"]));
+          })
+        )
+      ));
+
+    it("pins comparison reads to TURBO_SCM_BASE instead of the branch baseline", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+            const writeBaseline = (document: CoverageRegressionBaseline) =>
+              S.encodeEffect(CoverageRegressionBaseline)(document).pipe(
+                Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+              );
+
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            yield* runGit(repoRoot, ["init"]);
+            yield* runGit(repoRoot, ["config", "user.email", "coverage-base@example.test"]);
+            yield* runGit(repoRoot, ["config", "user.name", "Coverage Base Test"]);
+            yield* writeBaseline(
+              CoverageRegressionBaseline.make({
+                ...coverageRegressionBaseline,
+                generated_at: "base",
+                packages: {
+                  "@beep/a": CoveragePackageBaseline.make({
+                    ...coveragePackageBaseline("packages/a", 80),
+                    files: { "packages/a/src/Existing.ts": coverageFileBaseline(80, 1) },
+                  }),
+                },
+              })
+            );
+            yield* runGit(repoRoot, ["add", "--all"]);
+            yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
+            yield* writeBaseline(
+              CoverageRegressionBaseline.make({
+                ...coverageRegressionBaseline,
+                generated_at: "branch-relaxation",
+                packages: {
+                  "@beep/a": CoveragePackageBaseline.make({
+                    ...coveragePackageBaseline("packages/a", 40),
+                    files: {
+                      "packages/a/src/Existing.ts": coverageFileBaseline(40, 10),
+                      "packages/a/src/New.ts": coverageFileBaseline(65, 3),
+                    },
+                  }),
+                },
+              })
+            );
+
+            const selected = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "HEAD" })
+              )
+            );
+            expect(selected.generated_at).toBe("base");
+            expect(selected.packages["@beep/a"]?.lines).toBe(80);
+            expect(selected.packages["@beep/a"]?.files["packages/a/src/Existing.ts"]?.lines).toBe(80);
+            expect(selected.packages["@beep/a"]?.files["packages/a/src/New.ts"]?.lines).toBe(65);
+          })
+        )
+      ));
+
+    it("reads the workspace baseline when TURBO_SCM_BASE is absent", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            yield* S.encodeEffect(CoverageRegressionBaseline)(
+              CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, generated_at: "workspace" })
+            ).pipe(Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded))));
+
+            const selected = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
+              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+            );
+            expect(selected.generated_at).toBe("workspace");
+          })
+        )
+      ));
+
+    it("fails clearly when the configured comparison baseline cannot be read", () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            yield* S.encodeEffect(CoverageRegressionBaseline)(coverageRegressionBaseline).pipe(
+              Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+            );
+            yield* runGit(repoRoot, ["init"]);
+
+            const failure = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "refs/heads/missing" })
+              ),
+              Effect.flip
+            );
+
+            expect(failure.message).toContain("Failed to read the coverage comparison baseline");
           })
         )
       ));

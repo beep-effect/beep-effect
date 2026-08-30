@@ -1,0 +1,21 @@
+id: "dh:quality:055"
+observation_refs:
+  - "so:sha256:614928c8c175bac46a12f02186c7b297306b95fa35819e8555bb6fdace0e7761"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration githubCheckModeFlagChoices in Quality.schemas.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by githubCheckModeFlagChoices"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only source export or declaration structure for githubCheckModeFlagChoices. Export visibility and lexical suggestiveness are compatible with implementation plumbing and provide no observed operational bearer, occurrence, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

@@ -1,0 +1,23 @@
+id: so:sha256:07929cc3199ac4278b3055ef5bceb048b46a7f1ff6a4f1bf2756ed1352b93794
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 282
+  end_line: 282
+  content_sha256: ff25bfa3586e0101a9a3cfe416f604111c83772cdee520160565df40b237904d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::isGateUnproven
+  lexical_name: isGateUnproven
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const isGateUnproven = S.is(GateUnproven);
+epistemic_status: parser_derived

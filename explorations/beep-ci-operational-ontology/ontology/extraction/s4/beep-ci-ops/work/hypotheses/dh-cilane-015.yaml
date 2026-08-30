@@ -1,0 +1,25 @@
+id: "dh:cilane:015"
+observation_refs:
+  - "po:sha256:0126fd0574061a79d5cdf4a90ee2961ba2d90b452535c332c5c3578986bd233d"
+  - "po:sha256:8ef6aaef02b0efc3469762070d659b8a701ccf3d9d4b40e9492577fc443a0177"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "lint policy verification lane"
+  description: "A possible policy-lint verification lane named by the quoted lint-policy token."
+representation_status: lexical_alias
+alternatives:
+  - label: "lint-policy command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "repository-policy verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotations establish a stable literal, not what policy is checked or whether a distinct lane exists. No canonical procedure, scope, obligation, or result defeats a dispatch-token interpretation."
+epistemic_status: proposed
+confidence:
+  value: 0.44
+  use_for_acceptance: false

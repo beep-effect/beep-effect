@@ -1,0 +1,10 @@
+id: po:sha256:847e1ad7f271f529f3eaf0959d9ecd8a4c686b85e526064b402c00221ad1e05a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 111
+  end_line: 113
+quote: 'pid: S.Finite, procStart: S.String'
+epistemic_status: quoted_prose

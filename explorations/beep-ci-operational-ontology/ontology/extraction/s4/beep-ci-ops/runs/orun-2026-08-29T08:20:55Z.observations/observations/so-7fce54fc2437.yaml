@@ -1,0 +1,25 @@
+id: so:sha256:7fce54fc24379f89f3d98edcff12951a680ae3ad4ec2b7add61e2576c4d7a2f1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 258
+  end_line: 258
+  content_sha256: 44c4ffda9139e874a01d38b94b7431268ee35b277f2cf3f83fb349b53a0087c0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetLiveness
+  lexical_name: FleetLiveness
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: FleetLiveness
+- predicate: exports_symbol
+  object: FleetLiveness
+source_excerpt: export type FleetLiveness = typeof FleetLiveness.Type;
+epistemic_status: parser_derived

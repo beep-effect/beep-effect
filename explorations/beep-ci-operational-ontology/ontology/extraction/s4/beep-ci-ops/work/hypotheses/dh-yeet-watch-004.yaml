@@ -1,0 +1,21 @@
+id: "dh:yeet-watch:004"
+observation_refs:
+  - "so:sha256:c09b165d2b3f335fdffe7f413cd2fd94fc96641256a05740402ac7f316c9d018"
+  - "so:sha256:f71baa22a5336e8a6f6c796390e35611498b56340c4447c0006f246781cc94aa"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo query subprocess adapter"
+  description: "The implementation procedure and testing export used to obtain JSON text from Turbo subprocess output."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Turbo command-result information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "One observation is an unrepresentable variable declaration and the other is a testing export; neither establishes a domain entity beyond subprocess plumbing."
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

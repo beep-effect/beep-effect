@@ -1,0 +1,29 @@
+id: "dh:reporun:017"
+observation_refs:
+  - "so:sha256:144feee4f8fcced0da17183fc1c52a2c3e24a8d760fd8174b67bfd3406c53ed1"
+  - "so:sha256:d6168d2c3d304ab7f89b4d3fa7a1f4e7a3227aa5fe6af21cc9c58320c8cee633"
+  - "po:sha256:2742825e7991f34d718c33b5a1c5fd4f4b94bee31b7389a60deef872b19a3859"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb"
+  - "so:sha256:906f9d719b7531f4c878c535e72c3cdae60b54bd8ef3ea349d1887b118f54cc9"
+cq_warrants: ["CQ-005"]
+proposed_referent:
+  label: "fingerprint-match resume-eligibility designation"
+  description: "A policy designation permitting a planned step to remain conditionally eligible for fingerprint-based resume."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A skipped WorkUnitExecution"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Uninterpreted planner enum member"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The adversary's planner-enum counterexample wins: a pure planning control can expose fingerprint-match, restrict it to conservative step shapes, and rewrite other values to never without establishing a governed permission or resume-eligibility referent."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

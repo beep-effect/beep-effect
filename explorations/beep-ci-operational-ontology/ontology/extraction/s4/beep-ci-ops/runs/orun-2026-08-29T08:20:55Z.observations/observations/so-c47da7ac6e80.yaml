@@ -1,0 +1,23 @@
+id: so:sha256:c47da7ac6e80e6c5b1c83d9a919f50c9bef2be03cbe0c43c59e29b99f1aef410
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 423
+  end_line: 442
+  content_sha256: bb050431d4b542bcdb387990b28173acdeee6585ec86e844ef8cfc4cae36cb92
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::collectStepOutput
+  lexical_name: collectStepOutput
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function* (
+epistemic_status: parser_derived

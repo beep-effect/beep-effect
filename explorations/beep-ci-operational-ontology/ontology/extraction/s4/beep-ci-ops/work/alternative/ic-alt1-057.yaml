@@ -1,0 +1,35 @@
+id: "ic:alt1:057"
+hypothesis_ref: "dh:yeet-planner:008"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Full verification procedure specifications are the same iff they are
+    the same proof-plan mapping from the full local proof tier to the pre-push proof-step
+    definition. The member spelling full and the pre-push surface it selects are
+    reidentification evidence, never the sameness criterion."
+  reidentification_key:
+    - "full"
+    - "pre-push"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one proof-plan specification selecting the pre-push proof definition; not the assurance
+    obligation and not a run"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies:
+    - "YeetProofTier member full"
+    - "pre-push RepoProofStepDefinition"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "proofDefinitionForTier maps full to repoProofStepDefinition(\"pre-push\"), which
+      is itself a specification. A full-tier verify execution is not a second Full
+      specification. The assurance tier as a social obligation is not this mapping: cheap-gates
+      and review-fix are other members of the same kit."
+status: "proposed"

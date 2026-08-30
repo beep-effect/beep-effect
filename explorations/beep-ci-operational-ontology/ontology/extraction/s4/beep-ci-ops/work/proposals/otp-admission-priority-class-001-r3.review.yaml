@@ -1,0 +1,51 @@
+target: "otp:admission-priority-class:001"
+target_sha256: "89a4ef489f3de77e61bf0c72180b11364d25bde1256423327f4cff99036479a9"
+chain_sha256: "7c49e0be136bd8b89335454987ccfa47f517b74afb17c4fae1934e1c99da6e8c"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  A governance and version-lineage artifact must show that the publish/verify
+  vocabulary is retained and revised independently of the aging comparator,
+  and must supply the resulting vocabulary identity criterion.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: unresolved-core-sortal-identity
+    counterexample: >-
+      Two authorities can retain the same publish and verify members while
+      governing different meanings, and one authority can change its aging
+      comparator without changing those members. The current card still makes
+      a unified vocabulary-and-ranking lineage conditional and unresolved, so
+      it cannot yet reidentify the narrowed vocabulary proposed here.
+    outcome: landed
+  - surface: warrant
+    rule: cq-requires-term
+    counterexample: >-
+      Removing AdmissionPriorityClass leaves CQ-021's projected priority value
+      without the required closed domain. The CQ asks for the classification of
+      every queued request, rather than merely mentioning a label.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      An inert enum DTO could carry the two strings, but it would not preserve
+      the cited deployed behavior in which elapsed waiting promotes a verify
+      request to publish-equivalent rank and changes shared queue ordering.
+      The runtime discriminator survives even though vocabulary identity does not.
+    outcome: survived
+rival_models_still_viable:
+  - "The priority vocabulary and effective-rank procedure are separately versioned information objects."
+  - "Effective queue priority is a contextual role or phase of a waiting request."
+evidence:
+  - "so:sha256:5e87f57f7f30cab771a4bc15b4510264f4a086fed36480da3266357386f66124"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "po:sha256:aa6a7b217122be466e63cfd890c480ef082f6f9d5b24c97731d889dd3a80886b"
+  - "CQ-021"

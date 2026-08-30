@@ -1,0 +1,23 @@
+id: so:sha256:a6c64d9df3926ab0efd3b01e652c94034794691743934535dcd7ad8abf9d5825
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 973
+  end_line: 1007
+  content_sha256: ab0c152797706bd8ad6ffa9adb8e50503fb64d4814f3f355a563f22b2b474b43
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::pollUntilMerged
+  lexical_name: pollUntilMerged
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
+epistemic_status: parser_derived

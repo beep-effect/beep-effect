@@ -1,0 +1,55 @@
+target: "otp:hosted-required-check-merge-obligation:001"
+target_sha256: "b16234e5c85b5d4db24ad4550a41fc7a0c588e3a22f2100b5a40fd648e5d02f7"
+chain_sha256: "e8089fe8ef7ff3a9915493a78d48c3cf0e6118dd3ebed8567310a4ad8ce0cc36"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: designation-vs-obligation-activation
+    counterexample: >-
+      One check can retain its required designation while successive candidate
+      obligations are discharged and later reacquired. The adopted class is the
+      check-relative designation, not any activation; the definition and open
+      issues separate those entities and leave designation individuation relative
+      to check, governed target, and policy unresolved.
+    outcome: survived
+  - surface: identity
+    rule: relational-mode-alignment
+    counterexample: >-
+      A required-check designation cannot exist independently of its check,
+      governed transition, and policy. The revision declares relational
+      dependence and gufo:ExtrinsicMode alignment, while openly retaining a
+      normative-relator alternative.
+    outcome: survived
+  - surface: warrant
+    rule: required-vs-optional-distinction
+    counterexample: >-
+      CQ-006 cannot determine which unsatisfied checks constitute unmet
+      obligations if required and optional check results are indistinguishable.
+      The generic designation supplies that mandatory-status distinction and
+      constrains when VerificationEvidence can discharge the merge gate.
+    outcome: survived
+  - surface: null_discriminator
+    rule: normative-gate-discriminator
+    counterexample: >-
+      A passive check-status DTO can report success or failure but cannot make
+      an unsatisfied required check block a merge transition. The governing
+      repository rule assigns that consequence, so the designation is not
+      exhausted by its status carrier.
+    outcome: survived
+rival_models_still_viable:
+  - "Represent RequiredCheckDesignation as a normative relator connecting check, target, and policy."
+  - "Model standing merge policy and generic VerificationObligation activations as distinct entities."
+evidence:
+  - "po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b"
+  - "CQ-006"

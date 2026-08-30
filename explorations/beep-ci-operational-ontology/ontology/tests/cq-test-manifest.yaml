@@ -1,0 +1,103 @@
+# beep-ci-ops CQ test manifest (GENERATED from competency-questions.yaml by
+# regen_cq_artifacts.py — do not hand-edit).
+tests:
+  - cq: CQ-001
+    file: tests/cq-001.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-002
+    file: tests/cq-002.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-003
+    file: tests/cq-003.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-004
+    file: tests/cq-004.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-005
+    file: tests/cq-005.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-006
+    file: tests/cq-006.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-007
+    file: tests/cq-007.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-008
+    file: tests/cq-008.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-009
+    file: tests/cq-009.sparql
+    expected: zero_rows
+    priority: must_have
+  - cq: CQ-010
+    file: tests/cq-010.sparql
+    expected: zero_rows
+    priority: must_have
+  - cq: CQ-011
+    file: tests/cq-011.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-012
+    file: tests/cq-012.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-013
+    file: tests/cq-013.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-014
+    file: tests/cq-014.sparql
+    expected: non_empty
+    priority: should_have
+  - cq: CQ-015
+    file: tests/cq-015.sparql
+    expected: boolean
+    priority: should_have
+  - cq: CQ-016
+    file: tests/cq-016.sparql
+    expected: non_empty
+    priority: should_have
+  - cq: CQ-017
+    file: tests/cq-017.sparql
+    expected: non_empty
+    priority: should_have
+  - cq: CQ-019
+    file: tests/cq-019.sparql
+    expected: zero_rows
+    priority: must_have
+  - cq: CQ-020
+    file: tests/cq-020.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-021
+    file: tests/cq-021.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-022
+    file: tests/cq-022.sparql
+    expected: non_empty
+    priority: must_have
+  - cq: CQ-023
+    file: tests/cq-023.sparql
+    expected: zero_rows
+    priority: must_have
+  - cq: CQ-024
+    file: tests/cq-024.sparql
+    expected: non_empty
+    priority: should_have
+  - cq: CQ-025
+    file: tests/cq-025.sparql
+    expected: non_empty
+    priority: should_have
+  - cq: CQ-026
+    file: tests/cq-026.sparql
+    expected: zero_rows
+    priority: should_have

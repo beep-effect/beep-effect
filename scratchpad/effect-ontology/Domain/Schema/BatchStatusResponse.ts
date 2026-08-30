@@ -12,6 +12,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import type * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BatchId } from "../Identity.ts";
 import { BatchState } from "../Model/BatchWorkflow.ts";
@@ -58,6 +59,21 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
   },
 });
 
+type BatchStatusResponseCodec = S.Codec<
+  | { readonly _tag: "Active"; readonly value: { readonly state: BatchState } }
+  | {
+      readonly _tag: "Suspended";
+      readonly value: {
+        readonly batchId: BatchId;
+        readonly cause: O.Option<string>;
+        readonly lastKnownState: O.Option<BatchState>;
+        readonly canResume: boolean;
+      };
+    }
+  | { readonly _tag: "NotFound"; readonly value: { readonly batchId: BatchId } },
+  unknown
+>;
+
 /**
  * Result of querying a batch workflow by identifier.
  *
@@ -85,7 +101,7 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
  * @category dtos
  * @since 0.0.0
  */
-export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
+export const BatchStatusResponse: BatchStatusResponseCodec = BatchStatusResponseDefinition.pipe(
   $I.annoteSchema("BatchStatusResponse", {
     description: "Discriminated batch query response with variant-owned state, suspension, or missing data.",
     toArbitrary: () => S.toArbitrary(BatchStatusResponseDefinition),
@@ -94,14 +110,6 @@ export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
 
 /**
  * Runtime value decoded by {@link BatchStatusResponse}.
- *
- * **Example** (Use BatchStatusResponse)
- * ```ts
- * import type { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse"
- *
- * const tag = (response: BatchStatusResponse) => response._tag
- * console.log(typeof tag) // "function"
- * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -1,0 +1,24 @@
+id: so:sha256:eb4d709190649a0db12de6477b0b7ff5b89269a90779140ca2a897008e3c5275
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1619
+  end_line: 1619
+  content_sha256: b300bdbd70b96bbdd1c73f5a603f705dc0ddb90712795437e326038884194faf
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CI_LOCAL_FAST_SKIPS
+  lexical_name: CI_LOCAL_FAST_SKIPS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const CI_LOCAL_FAST_SKIPS: ReadonlyArray<CiLaneId> = ["coverage", "test-integration",
+  "nix"];'
+epistemic_status: parser_derived

@@ -29,6 +29,7 @@ import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import { ErrorMessage, OptionalErrorCause, OptionalNonNegativeInt } from "../Domain/Error/Base.ts";
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
+import { extractLocalNameFromIri as extractLocalName } from "../Utils/Iri.ts";
 import { ConfigService } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 import type { RetryPolicy } from "./Retry.ts";
@@ -47,7 +48,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
  * ```ts
  * import { SparqlGenerationError } from "@effect-ontology/Service/SparqlGenerator"
  *
- * console.log(SparqlGenerationError)
+ * const error = SparqlGenerationError.make({
+ *   message: "The model returned empty SPARQL",
+ *   question: "Who founded Acme?"
+ * })
+ * console.log(error._tag) // "SparqlGenerationError"
  * ```
  *
  * @category errors
@@ -81,7 +86,11 @@ export class SparqlGenerationError extends S.TaggedError<SparqlGenerationError>(
  * ```ts
  * import { SparqlSyntaxError } from "@effect-ontology/Service/SparqlGenerator"
  *
- * console.log(SparqlSyntaxError)
+ * const error = SparqlSyntaxError.make({
+ *   message: "Missing closing brace",
+ *   sparql: "SELECT ?s WHERE { ?s ?p ?o"
+ * })
+ * console.log(error._tag) // "SparqlSyntaxError"
  * ```
  *
  * @category errors
@@ -115,7 +124,12 @@ export class SparqlSyntaxError extends S.TaggedError<SparqlSyntaxError>($I`Sparq
  * ```ts
  * import { SparqlCorrectionError } from "@effect-ontology/Service/SparqlGenerator"
  *
- * console.log(SparqlCorrectionError)
+ * const error = SparqlCorrectionError.make({
+ *   message: "Could not repair the query",
+ *   sparql: "SELECT ?s WHERE { ?s ?p ?o",
+ *   originalError: "Missing closing brace"
+ * })
+ * console.log(error._tag) // "SparqlCorrectionError"
  * ```
  *
  * @category errors
@@ -179,13 +193,19 @@ type SparqlResponse = typeof SparqlResponseSchema.Type;
  * Provides methods to translate natural language questions to SPARQL queries
  * using LLM with ontology schema context for grounding.
  *
- * **Example** (Inspect the SPARQL-generator layer)
+ * **Example** (Compose SPARQL generation)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
+ * import { OntologyContext } from "@effect-ontology/Model/Ontology"
  * import { SparqlGenerator } from "@effect-ontology/Service/SparqlGenerator"
  *
- * console.log(Layer.isLayer(SparqlGenerator.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const generator = yield* SparqlGenerator
+ *   return yield* generator.generate("Who founded Acme?", OntologyContext.make({}))
+ * }).pipe(Effect.provide(SparqlGenerator.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -606,14 +626,3 @@ Return a JSON object with:
 - confidence: Confidence score between 0 and 1
 
 Generate the corrected query now.`;
-
-/**
- * Extract local name from IRI
- */
-const extractLocalName = (iri: string): string => {
-  const hashIndex = iri.lastIndexOf("#");
-  if (hashIndex >= 0) return iri.slice(hashIndex + 1);
-  const slashIndex = iri.lastIndexOf("/");
-  if (slashIndex >= 0) return iri.slice(slashIndex + 1);
-  return iri;
-};

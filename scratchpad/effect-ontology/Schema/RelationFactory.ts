@@ -15,16 +15,15 @@
 
 import { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
-import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import type { EvidenceSpan as EvidenceSpanValue } from "../Domain/Model/Entity.ts";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
+import { partitionPropertiesByRangeType } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
-import { buildLocalNameToIriMapSafe, expandLocalNameToIri, extractLocalNameFromIri } from "../Utils/Iri.ts";
+import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
 
 /**
  * Coerce string array to IRI array.
@@ -44,49 +43,6 @@ const asIriArray = A.map((value: string) => IRI.make(value));
  */
 const unionFromStringArray = <T extends string>(values: ReadonlyArray<T>): S.Codec<T, T, never, never> =>
   S.Literals(values);
-
-/**
- * Helper: Creates a local name schema with case-insensitive validation
- *
- * Accepts local names (e.g., "playsFor", "hasTeam") and validates them against
- * the allowed property IRIs. LLM outputs local names which are later expanded
- * to full IRIs post-extraction.
- *
- * This approach:
- * 1. Reduces token usage by 60-70% (local names vs full URIs)
- * 2. Provides enum-like constraints to prevent hallucinated properties
- * 3. Handles case mismatches gracefully
- *
- * @internal
- */
-const localNameSchema = (propertyIris: ReadonlyArray<IRI>): S.Codec<string, string, never, never> => {
-  // Build case-insensitive local name to IRI map for validation
-  const { map: localNameMap } = buildLocalNameToIriMapSafe(propertyIris);
-  const localNames = A.map(propertyIris, extractLocalNameFromIri);
-
-  // Schema that validates local names (case-insensitive) and normalizes to canonical form
-  return S.String.pipe(
-    S.decodeTo(S.String, {
-      decode: SchemaGetter.transform((canonical) => canonical),
-      encode: SchemaGetter.transform((input) => {
-        // Try to find matching IRI and extract its canonical local name
-        const matchedIri = expandLocalNameToIri(input, localNameMap);
-        return O.match(matchedIri, {
-          onNone: () => input,
-          onSome: extractLocalNameFromIri,
-        });
-      }),
-    }),
-    S.check(
-      S.makeFilter((name) => MutableHashMap.has(localNameMap, Str.toLowerCase(name)), {
-        message: `Predicate must be one of: ${A.join(A.take(localNames, 10), ", ")}${A.length(localNames) > 10 ? "..." : ""}`,
-      })
-    ),
-    S.annotate({
-      description: `Property name (one of: ${A.join(localNames, ", ")})`,
-    })
-  );
-};
 
 /**
  * Creates Effect Schema for relation extraction (Stage 2)
@@ -139,18 +95,19 @@ export const makeRelationSchema = dual2(
     const EntityIdUnion = unionFromStringArray(validEntityIds);
 
     // Group properties by rangeType for predicate-discriminated schemas
-    const objectProperties = A.filter(properties, (property) => property.rangeType === "object");
-    const datatypeProperties = A.filter(properties, (property) => property.rangeType === "datatype");
+    const { datatypeProperties, objectProperties } = partitionPropertiesByRangeType(properties);
 
     // Create local name schemas for each property type
     // LLM outputs local names (e.g., "playsFor") which are expanded to full IRIs post-extraction
     const ObjectPropertyUnion = A.match(objectProperties, {
       onEmpty: O.none,
-      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)))),
+      onNonEmpty: (values) =>
+        O.some(makeLocalNameSchema(asIriArray(A.map(values, (value) => value.id)), "Predicate", "Property")),
     });
     const DatatypePropertyUnion = A.match(datatypeProperties, {
       onEmpty: O.none,
-      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)))),
+      onNonEmpty: (values) =>
+        O.some(makeLocalNameSchema(asIriArray(A.map(values, (value) => value.id)), "Predicate", "Property")),
     });
 
     // Create relation schemas discriminated by rangeType
@@ -161,7 +118,7 @@ export const makeRelationSchema = dual2(
       readonly evidence: O.Option<EvidenceSpanValue>;
     };
 
-    const relationSchemas: Array<S.Codec<RelationOutput, unknown, never, never>> = A.getSomes([
+    const relationSchemas: Array<S.Codec<RelationOutput, unknown>> = A.getSomes([
       O.map(ObjectPropertyUnion, (predicate) =>
         S.Struct({
           subjectId: EntityIdUnion.annotate({
@@ -246,37 +203,18 @@ CRITICAL RULES:
 );
 
 /**
- * Type helpers
+ * Runtime schema returned by {@link makeRelationSchema} for Stage-2 relation extraction.
  *
- * **Example** (Reference the relation graph schema factory result)
- *
- * ```ts
- * import { makeRelationSchema, type RelationGraphSchema } from "@effect-ontology/Schema/RelationFactory"
- *
- * const relationGraphSchemaFactory: typeof makeRelationSchema = makeRelationSchema
- * const describeRelationGraphSchema = (_schema: RelationGraphSchema): string => "relation graph schema"
- *
- * console.log(relationGraphSchemaFactory.length, describeRelationGraphSchema.length)
- * ```
- *
+ * @see {@link makeRelationSchema} for constructing the schema from Stage-1 entity IDs.
  * @category type-level
  * @since 0.0.0
  */
 export type RelationGraphSchema = ReturnType<typeof makeRelationSchema>;
 
 /**
- * Describes the relation graph type data exposed by this module.
+ * Decoded relation graph produced by {@link makeRelationSchema}.
  *
- * **Example** (Reference RelationGraph fields)
- *
- * ```ts
- * import type { RelationGraph } from "@effect-ontology/Schema/RelationFactory"
- *
- * const relationGraphFields: ReadonlyArray<keyof RelationGraph> = ["relations"]
- *
- * console.log(relationGraphFields)
- * ```
- *
+ * @see {@link makeRelationSchema} for Stage-2 predicate and object constraints.
  * @category type-level
  * @since 0.0.0
  */

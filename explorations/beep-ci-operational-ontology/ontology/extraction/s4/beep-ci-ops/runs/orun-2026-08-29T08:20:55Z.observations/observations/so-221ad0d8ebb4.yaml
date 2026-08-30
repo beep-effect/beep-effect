@@ -1,0 +1,23 @@
+id: so:sha256:221ad0d8ebb47c9a41e743a23f074533dfab72a785c8c9fdf7e59e731779966f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 500
+  end_line: 508
+  content_sha256: 18d441bcb157924c151a4809e4ab2c91c7c34074ed93dc910bd385c8ace19a20
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::reapDeadAdmissionEntry
+  lexical_name: reapDeadAdmissionEntry
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const reapDeadAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
+epistemic_status: parser_derived

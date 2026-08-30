@@ -1,0 +1,33 @@
+id: ic:alt2:003
+hypothesis_ref: dh:reporun:020
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two Turbo task telemetry entries are the same iff they are the same captured metadata row inside one Turbo snapshot for
+    one planned or run task; taskId is evidence rather than the criterion.
+  reidentification_key:
+  - TurboPlanTask.taskId
+  - optional TurboPlanTask.task
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One captured row per task entry in one TurboPlanSnapshot.tasks collection.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies:
+  - TurboPlanSnapshot
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - dropped from a later snapshot
+counterexamples:
+- description: Two rows with the same taskId in two different snapshots are two entries, not one enduring work-unit specification.
+- description: >-
+    Lookup by either task or taskId returning a row does not make that row the WorkUnitSpecification it describes; the specification
+    can exist with no telemetry row.
+status: proposed

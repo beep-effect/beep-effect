@@ -1,0 +1,39 @@
+id: "ic:alt1:010"
+hypothesis_ref: "dh:sched-core:022"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two admission-guarded work executions are the same iff they are the same
+    mediation of one heavy-work occurrence by one live heartbeated admission lease (and the
+    origin gate held with that lease). The lease path is reidentification evidence, never the
+    sameness criterion."
+  reidentification_key:
+    - "leasePath"
+    - "YeetAdmissionLease"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one relator mediating admitted work, lease, and origin gate; the work occurrence and the
+    lease are participants, not parts, unless a mereological model of the bracket is later
+    justified"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "relator"
+  alternatives:
+    - "process"
+    - "situation"
+  existential_dependencies:
+    - "the admitted work occurrence"
+    - "the live admission lease"
+    - "the origin gate"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "work ends and lease plus origin are released"
+    - "interrupted and resources released"
+counterexamples:
+  - description: "The same work function run without an admission lease is not this relator.
+      Heartbeat updates mutate lease heartbeat time without ending the mediation, so the relator
+      is not identical with a single heartbeat event."
+status: "proposed"

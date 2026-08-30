@@ -1,0 +1,27 @@
+id: "dh:sched-core:019"
+observation_refs:
+  - "so:sha256:3e8c52e70d0dfe96bccb840e61a4691e1d3f08801b3892ea976c3123f93d1f61"
+  - "so:sha256:4ca539a7a3ef2f6716f98022b42a4b54032476fd6ca39745d1a1b2aa2e9cd150"
+  - "so:sha256:7ed5d7ab988de72117c954ccac2060e758502fa1c727b6f5a725f4e2293e61e8"
+  - "po:sha256:3ec9e21469f254e3b0f8e2a60ef859b55b00bce90ea455a9f84f54c73b861b78"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:bef24461115ca5af988461aed9aedd081401c061710538fa444c2bc5e7e8e233"
+cq_warrants: ["CQ-009"]
+proposed_referent:
+  label: "admission origin key"
+  description: "An information artifact carried by tickets and leases that represents the origin used for concurrent-grant exclusion."
+representation_status: information_artifact
+alternatives:
+  - label: "the repository origin itself"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "arbitrary string used by one conditional"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The mixed-version scheduler behavior shows that origin-scoped blocking changes which contender is skippable and which later origin may advance in the shared order. That supports the carried origin key as operational join information without identifying it with the repository origin itself."
+  discriminator: "When one origin remains blocked, the scheduler marks that contender skippable so tickets for later origins can advance in the shared admission order."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

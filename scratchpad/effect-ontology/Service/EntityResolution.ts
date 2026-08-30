@@ -48,17 +48,28 @@ const makeEntityResolutionService = Effect.gen(function* () {
 });
 
 /**
- * Provides the entity resolution service service capability.
+ * Merges knowledge graphs and builds an entity-resolution graph.
  *
- * **Example** (Inspect entity resolution service)
+ * **Example** (Compose resolve against Default)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
  * import { EntityResolutionService } from "@effect-ontology/Service/EntityResolution"
  *
- * console.log(EntityResolutionService)
+ * const program = Effect.gen(function* () {
+ *   const resolution = yield* EntityResolutionService
+ *   return yield* resolution.resolve(
+ *     [KnowledgeGraph.make({ entities: [], relations: [] })],
+ *     EntityResolutionConfig.make({})
+ *   )
+ * }).pipe(Effect.provide(EntityResolutionService.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class EntityResolutionService extends Context.Service<EntityResolutionService>()($I`EntityResolutionService`, {

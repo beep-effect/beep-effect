@@ -1,0 +1,21 @@
+id: "dh:worktree-config:009"
+observation_refs:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:60ee0a392b7109f8914e89df188cdd5bd8e18390ddde480b96f362408411fdd4"
+cq_warrants:
+  - "CQ-002"
+proposed_referent:
+  label: "verification work-unit specification"
+  description: "A repeatable prescription pairing a verification lane with a scope; it is explicitly distinct from a dated WorkUnit execution."
+representation_status: information_artifact
+alternatives:
+  - label: "verification work-unit execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "A stale README could contain the same command text, but these quotations occur in the canonical agent policy that governs which docgen command and repository scope agents may use."
+  discriminator: "The canonical agent policy directs edit-loop agents to use affected-scope docgen:local and reserves full docgen for repo-wide proof, so the prescriptions govern executable work-unit scope."
+epistemic_status: proposed
+confidence: {value: 0.89, use_for_acceptance: false}

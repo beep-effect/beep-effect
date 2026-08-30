@@ -1,0 +1,29 @@
+id: "dh:yeet-watch:020"
+observation_refs:
+  - "so:sha256:9a050882c859fbe6a493e1313f31f1062c204cb96663c81dfcac83bef8f5d917"
+  - "so:sha256:be1853aae0f018d491da8f4e61a6144f1a4e2667aee6d3772e8a68897842cc5f"
+  - "so:sha256:475cea15f30764a8045bd4d652dbc2c3c65b2cbde1b708f31800facdf6a2fbb1"
+  - "so:sha256:fe40dd08ca1fbf3ff080c0f0df1d01acc8642d31d9258193c7e65865cc0fc01c"
+  - "so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c"
+  - "so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f"
+  - "so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350"
+cq_warrants: []
+proposed_referent:
+  label: "review-thread transition information record"
+  description: "A watch-stream row recording an observed review-thread opening, resolution, or reopening."
+representation_status: unresolved
+alternatives:
+  - label: "review-thread state-change event"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "thread-differ output token"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The source defines how a thread-transition value would be constructed and encoded, but no observed emitted row or CQ warrant distinguishes that value from an internal differ result."
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

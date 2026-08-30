@@ -1,0 +1,34 @@
+id: "dh:yeet-watch:032"
+observation_refs:
+  - "so:sha256:7d81fca784579f2d5bf1d2bed62d836c001fedda5a774dbed3b94280174af3f0"
+  - "so:sha256:b05fb409eaff217c8757f9310dedb0581462cc68b81bcc55feaa2e41312a75f9"
+  - "so:sha256:fc1a7afac87552a779a76bd632d960cf8a72272ed79d6187cfb88fd040cec99b"
+  - "so:sha256:ade05d26b085f9b2d69b9583ce1f0b4dcb97e42de7725390b49801e6f2b9c533"
+  - "so:sha256:ee1ece20418d730e54254ad7e2e33c3fe0193b1ee493d97e4cacb3717b4a0a4d"
+  - "so:sha256:a1c22fb0769c94f71dfe06a5f79cc81acad12d7b6ef289ddec66ee71291a695e"
+  - "so:sha256:0e23613c08bd8703273959a5bf2dc75dd4fdea088a0aed2f5cd6a7684c30a06c"
+  - "so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef"
+  - "so:sha256:538ac118dd5cd92616c9fe8d60133d6795e073e9433a44f749cce9951f291f2e"
+  - "so:sha256:a2352db33ca14ce4c1da0bf89decf6bc399e46f050d701ba267129ce31cda2e2"
+  - "so:sha256:3c67cece44cdfc67ae4bbc448bf87d837a9d92f55e59ff82135d00f2baec589e"
+  - "so:sha256:b4f2001b4007a0f71e2f29d05143ca181f19722ff84a0db5de252fcfc1a040f7"
+cq_warrants: []
+proposed_referent:
+  label: "merge-monitor job-decision information record"
+  description: "One planner-produced record selecting rerun, rerun-spent, needs-code-fix, awaiting-log, or awaiting-run handling for a red hosted job."
+representation_status: unresolved
+alternatives:
+  - label: "operational rerun decision"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "tagged-union control value"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The planner and applier use a tagged control value, but the lane supplies no CQ warrant for the decision-record kind and no independent record persistence; an operational decision remains only a viable alternative."
+epistemic_status: proposed
+confidence:
+  value: 0.79
+  use_for_acceptance: false

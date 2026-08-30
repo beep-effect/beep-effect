@@ -1,0 +1,250 @@
+- candidate: CommittedFailure
+  kind: class
+  definition: A failed verification-step result whose identifier is present in the terminal verdict embedded
+    by an attempt-finished journal event.
+  admission_kind: decision
+  cq_justification:
+  - CQ-022
+  decision_relevance: Identifies the same-attempt stopping signal that makes still-running executions
+    obsolete.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failedStepId: S.optionalKey(S.String),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failureKind: YeetFailureKind.pipe(S.optionalKey),'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: FailureSignature
+  kind: class
+  definition: An equivalence class of verification failures determined by a failed step identifier together
+    with its Yeet failure kind.
+  admission_kind: decision
+  cq_justification:
+  - CQ-013
+  decision_relevance: Supports ranking the recurrent failure signatures that contribute the most delay
+    to certainty.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failedStepId: S.optionalKey(S.String),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''failureKind: YeetFailureKind.pipe(S.optionalKey),'''
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:170-179 — 'export const YeetFailureKind
+    = LiteralKit(["step-exit", "handler-error"]).pipe('
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: WorkUnitExecution
+  kind: class
+  definition: An occurrence of executing one planned verification lane that is represented by an executed
+    lane record in a Yeet verdict.
+  admission_kind: decision
+  cq_justification:
+  - CQ-022
+  - CQ-025
+  decision_relevance: Provides the execution occurrence on which stopping state and measured wall cost
+    are decided.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its
+    execution status and repair command.'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''status: YeetLaneStatus,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''durationMs: S.optionalKey(S.Finite),'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: actualWallMs
+  kind: property
+  definition: The measured wall duration in milliseconds of a completed work-unit execution, carried by
+    lane durationMs or by attempt elapsedMs only when the execution is the whole attempt.
+  domain: WorkUnitExecution
+  range: xsd:integer
+  admission_kind: decision
+  cq_justification:
+  - CQ-025
+  decision_relevance: Supplies the observed side of the actual-versus-estimated cost calibration pair.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''durationMs: S.optionalKey(S.Finite),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:479-509 — ''elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey,
+    SchemaUtils.withNoneDefault),'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: contendsFor
+  kind: property
+  definition: Relates a SeatGrant to the ContendedResource coordinated by its admission call site.
+  domain: SeatGrant
+  range: ContendedResource
+  admission_kind: decision
+  cq_justification:
+  - CQ-008
+  decision_relevance: Lets CQ-008 report which active grant holds each resource, subject to the carrier
+    gap in issue I09.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:322-330 — ''tryAcquire: acquireFullProofLockOrObserveAtPath(lockPath,
+    context, proofSteps)'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hasExecutionState
+  kind: property
+  definition: Relates a work-unit execution to the packet execution-state member derived from its source
+    execution structure and terminal lane status.
+  domain: WorkUnitExecution
+  range: ExecutionState
+  admission_kind: decision
+  cq_justification:
+  - CQ-022
+  - CQ-025
+  decision_relevance: Lets stopping and cost-calibration queries restrict executions to running or completed
+    occurrences.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:48-53 — ''description: "Execution
+    status of one planned yeet lane."'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''status: YeetLaneStatus,'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: hasOriginKey
+  kind: property
+  definition: Relates a SeatGrant to the verbatim nonempty originKey used for kind-independent origin
+    exclusion.
+  domain: SeatGrant
+  range: xsd:string
+  admission_kind: decision
+  cq_justification:
+  - CQ-009
+  decision_relevance: Joins active grants by origin to detect prohibited concurrent grants.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:620-628 — 'lease.originKey ===
+    ticket.originKey'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:313-320 — ''originKey: path.basename(lockPath,
+    ".lock")'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: inAttempt
+  kind: property
+  definition: Relates a committed failure or work-unit execution carried by a terminal verdict to the
+    UUID-identified verification attempt containing it.
+  domain: CommittedFailure | WorkUnitExecution
+  range: VerificationAttempt
+  admission_kind: decision
+  cq_justification:
+  - CQ-022
+  decision_relevance: Supplies the same-attempt join that prevents an earlier failure from cancelling
+    executions in a later retry.
+  evidence:
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''attemptId: UUID,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts:73-80 — ''verdict: YeetVerdict,'''
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:491-506 — ''failedStepId: S.optionalKey(S.String),'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: ofWorkUnit
+  kind: property
+  definition: Relates a work-unit execution represented by a verdict lane to the planned work-unit specification
+    identified by that lane.
+  domain: WorkUnitExecution
+  range: WorkUnit
+  admission_kind: semantic-support
+  supports:
+  - WorkUnitExecution
+  - WorkUnit
+  decision_relevance: Preserves the specification-to-execution bridge needed to interpret lane-level cost
+    and state without conflating occurrences with reusable plans.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:123-156 — 'One planned lane with its
+    execution status and repair command.'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:143-152 — ''id: S.String,'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: publish
+  kind: literal-domain-member
+  source_domain: AdmissionPriority
+  definition: Deployed AdmissionPriority literal mapped to ontology member PublishPriority.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionPriorityClass
+  decision_relevance: Defines the priority used by publish proof scopes before FIFO tie breakers.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:68-72 — 'LiteralKit(["publish",
+    "verify"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:619-665 — ''priority: "publish"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: verify
+  kind: literal-domain-member
+  source_domain: AdmissionPriority
+  definition: Deployed AdmissionPriority literal mapped to ontology member VerifyPriority.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionPriorityClass
+  decision_relevance: Defines the base priority of ordinary full-proof, merged-preview, and review-fix
+    requests.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:68-72 — 'LiteralKit(["publish",
+    "verify"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:345-380 — ''priority: "verify"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: full-proof
+  kind: literal-domain-member
+  source_domain: AdmissionWorkKind
+  definition: Deployed AdmissionWorkKind literal mapped to ontology member FullProofWork.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionWorkKind
+  decision_relevance: Defines the closed work-kind value used by ordinary and publish-priority full proofs.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:313-320 — ''kind: "full-proof"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: merged-preview
+  kind: literal-domain-member
+  source_domain: AdmissionWorkKind
+  definition: Deployed AdmissionWorkKind literal mapped to ontology member MergedPreviewWork.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionWorkKind
+  decision_relevance: Defines the closed work-kind value for whole-flow merged-preview admission.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:345-361 — ''kind: "merged-preview"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: review-fix
+  kind: literal-domain-member
+  source_domain: AdmissionWorkKind
+  definition: Deployed AdmissionWorkKind literal mapped to ontology member ReviewFixWork, distinct from
+    the same spelling in YeetProofTier.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionWorkKind
+  decision_relevance: Defines the closed one-token work kind subject to the review-fix class cap.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:367-380 — ''kind: "review-fix"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler

@@ -1,0 +1,10 @@
+id: po:sha256:a4c9ba2698c972ba870cf2e564d05c31abea54f914b08dfb8df73bb101809160
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 41
+  end_line: 41
+quote: '@beep/skill-contract 40'
+epistemic_status: quoted_prose

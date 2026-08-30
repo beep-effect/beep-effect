@@ -1,0 +1,25 @@
+id: "dh:cilane:040"
+observation_refs:
+  - "so:sha256:1ecc4430ea9e9743effd21c15c86894d54cfbc09dc79bd6f9d8949206f424fdc"
+  - "so:sha256:8283793e4d780a8e09da065a259293d4c2af002a7b9205ce59c1a3b910002a66"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "JSDoc CI inventory path constants"
+  description: "Two source constants containing the JSONC and Markdown output paths used by the module."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "locations of JSDoc verification-evidence artifacts"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "JSDoc ratchet lane output specification"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Path strings identify intended filesystem locations inside the implementation but do not record that artifacts exist, what they contain, or that they evidence a lane execution. The path-constant interpretation is complete."
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

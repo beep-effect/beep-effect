@@ -1,0 +1,14 @@
+id: fa:sched-core:018
+hypothesis_ref: dh:sched-core:019
+identity_card_ref: ic:sched-core:018
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: Reify the origin key as an information object in addition to the CQ-required data relation.
+  still_viable: false
+strongest_counterexample: Equal strings under different derivation schemes cannot identify one key object or one origin; the
+  property assertion preserves subject and scheme context without making that identity claim.
+verdict: analyzed

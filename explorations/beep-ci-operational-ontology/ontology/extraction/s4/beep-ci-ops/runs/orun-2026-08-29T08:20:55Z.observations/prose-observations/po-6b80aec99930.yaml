@@ -1,0 +1,10 @@
+id: po:sha256:6b80aec99930cb6f59c239eedb9cb2a7b9aacc3dae5f01770fba11e1e78417e3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 164
+  end_line: 165
+quote: "\"build\",\n  \"check\","
+epistemic_status: quoted_prose

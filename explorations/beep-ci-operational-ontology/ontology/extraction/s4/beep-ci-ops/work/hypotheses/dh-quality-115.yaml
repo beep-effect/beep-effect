@@ -1,0 +1,21 @@
+id: "dh:quality:115"
+observation_refs:
+  - "so:sha256:fd50c382bac2ec92dc04756675e143f4a3c352cb42355c39d48c0f0180aaaa0f"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration packageCountFromDocument in TurboConfigProof.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by packageCountFromDocument"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is unrepresentable_construct for the source declaration. By contract that fact cannot ground a surviving referent, and it supplies no observed domain behavior, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

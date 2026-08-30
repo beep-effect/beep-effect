@@ -1,0 +1,71 @@
+target: "otp:admission-policy:001"
+target_sha256: "ceb9fccfb70a2e43c5d129457f91d20f20b33cb436eca3e05d9e97ea7c3c3055"
+chain_sha256: "8f10ac72a52cdf0f801ab9c8fa5194dc09f12eff7612c2afb71651a66786c414"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edges, so it proposes no is-a or
+    subsumption relation to test, including the possibility of no valid
+    subsumption relation.
+attacks:
+  - surface: identity
+    rule: identity-criterion-counterexample
+    counterexample: >-
+      Fleet A and fleet B can deploy byte-identical AdmissionConfig values
+      while different authorities govern different applicability scopes.
+      The criterion keeps those policy specifications distinct through
+      authority, scope, and lineage, so value equality does not collapse them.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two independently forked authorities can both label a policy
+      "admission-v1" and use the same technical version key. The card does not
+      identify them on that key alone; authoritative lineage and normative
+      context must also agree.
+    outcome: survived
+  - surface: identity
+    rule: ontoclean-identity-agreement
+    counterexample: >-
+      If the card merely carried another sortal's criterion while the proposal
+      claimed to supply one, the proposal would inherit incompatible identity.
+      Here the card and proposal both say that this rigid information object
+      supplies the policy-specification criterion.
+    outcome: survived
+  - surface: identity
+    rule: foundational-status-and-rival-disclosure
+    counterexample: >-
+      Treating the analyzed verdict as resolution would hide the viable deployed
+      policy-regime and configuration-value-object models. The proposal's open
+      issue names both rivals and its foundational_status matches the FA verdict.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-necessity
+    counterexample: >-
+      CQ-023 types the governing policy as AdmissionPolicy and reads its declared
+      starvation bound. Removing that decision class leaves the policy node
+      untyped and the requested invariant cannot be stated as written.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-config-dto
+    counterexample: >-
+      A pure AdmissionConfig DTO can feed effectivePriorityRank and
+      isTicketSkippable, changing queue rank and enforcing a review-fix cap,
+      without denoting an authoritative policy specification. Every claimed
+      discriminating fact therefore remains true in the null world.
+    outcome: landed
+rival_models_still_viable:
+  - "A deployed admission-policy regime as a situation or normative mode"
+  - "An AdmissionConfig value object without normative force"
+evidence:
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "po:sha256:abc08c224e904cfc5a0878b26ca70b707f559468bf33fde1b9ea74a01bb7edaf"
+  - "po:sha256:b92b48e2e7bcebad1b643f7f05cddc8dd411e43355076cdd384a9c37c0ee6c99"
+  - "CQ-023"

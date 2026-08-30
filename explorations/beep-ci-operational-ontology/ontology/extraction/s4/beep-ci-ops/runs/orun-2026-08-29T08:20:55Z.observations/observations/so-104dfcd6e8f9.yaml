@@ -1,0 +1,25 @@
+id: so:sha256:104dfcd6e8f97bd13c8e63b5aff056c849fe79ff488708009d46020f8cd34710
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 908
+  end_line: 908
+  content_sha256: da7a985fc3ca2b0ae9781f0aa582be22cdc59fb359fc89da986bc500f7a1a143
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::GithubCheckLaneRunStatus
+  lexical_name: GithubCheckLaneRunStatus
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: GithubCheckLaneRunStatus
+- predicate: exports_symbol
+  object: GithubCheckLaneRunStatus
+source_excerpt: export type GithubCheckLaneRunStatus = typeof GithubCheckLaneRunStatus.Type;
+epistemic_status: parser_derived
