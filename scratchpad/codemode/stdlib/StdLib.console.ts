@@ -1,14 +1,17 @@
+/**
+ * Formats guest `console` method arguments into host log lines for the
+ * CodeMode interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Unknown } from "@beep/schema/Unknown";
+import { A, O, P, R } from "@beep/utils";
+import { MutableHashSet, pipe } from "effect";
+import { dual } from "effect/Function";
+import { ConsoleMethod } from "../Codemode.method-names.ts";
+import { copyIn, copyOut } from "../Codemode.tool-runtime.ts";
 import {
-  containsOpaqueReference,
-  containsRuntimeReference,
-  isRuntimeReference,
-} from "../interpreter/Interpreter.references.ts";
-import {MutableHashSet, pipe} from "effect";
-import {A, O, P, R} from "@beep/utils";
-import {copyIn, copyOut} from "../Codemode.tool-runtime.ts";
-import {
-  isCodeModeValue,
   CodeModeDate,
   CodeModeMap,
   CodeModePromise,
@@ -16,22 +19,61 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
+  isCodeModeValue,
 } from "../Codemode.values.ts";
-import {boundedData, coerceToString} from "./StdLib.value.ts";
-import { ConsoleMethod } from "../Codemode.method-names.ts";
+import {
+  containsOpaqueReference,
+  containsRuntimeReference,
+  isRuntimeReference,
+} from "../interpreter/Interpreter.references.ts";
+import { boundedData, coerceToString } from "./StdLib.value.ts";
 
-export { ConsoleMethod };
+export { ConsoleMethod } from "../Codemode.method-names.ts";
 
 const MAX_CONSOLE_DEPTH = 32;
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const formatConsoleMessage = (name: ConsoleMethod, args: Array<unknown>): string => {
+/**
+ * Renders one guest `console` call as a single host-visible log line.
+ *
+ * **Gotchas**
+ *
+ * `warn`, `error`, and `debug` prefix the line with `[warn]`, `[error]`, or
+ * `[debug]`. `dir` formats only the first argument (or `"undefined"` when none
+ * are supplied) and drops the rest. `table` emits TSV with an `(index)` column
+ * plus optional named columns. Nesting deeper than 32 levels becomes `"..."`;
+ * cycles render as `"[Circular]"`; runtime references as `"[opaque reference]"`;
+ * and promises as `"[Promise (await it to get its value)]"`.
+ *
+ * **Example** (Format log, warn, and table output)
+ *
+ * ```ts
+ * import { formatConsoleMessage } from "../../../codemode/stdlib/StdLib.console.ts"
+ *
+ * console.log(formatConsoleMessage("log", ["ready"]))
+ * console.log(formatConsoleMessage("warn", ["slow query"]))
+ * console.log(formatConsoleMessage("table", [[{ name: "Ada" }]]))
+ * ```
+ *
+ * @see {@link ConsoleMethod} for the closed set of guest console methods.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const formatConsoleMessage: {
+  (args: Array<unknown>): (name: ConsoleMethod) => string;
+  (name: ConsoleMethod, args: Array<unknown>): string;
+} = dual(2, (name: ConsoleMethod, args: Array<unknown>): string => {
   if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);
   if (ConsoleMethod.is.table(name)) return formatConsoleTable(args[0], args[1]);
-  const prefix = ConsoleMethod.is.warn(name) ? "[warn] " : ConsoleMethod.is.error(name) ? "[error] " : name === "debug" ? "[debug] " : "";
+  const prefix = ConsoleMethod.is.warn(name)
+    ? "[warn] "
+    : ConsoleMethod.is.error(name)
+      ? "[error] "
+      : name === "debug"
+        ? "[debug] "
+        : "";
   return `${prefix}${pipe(args, A.map(formatConsoleArgument), A.join(" "))}`;
-};
+});
 
 const formatConsoleArgument = (value: unknown): string => {
   if (P.isUndefined(value)) return "undefined";
@@ -39,11 +81,7 @@ const formatConsoleArgument = (value: unknown): string => {
   return formatConsoleValue(value, MutableHashSet.empty(), 0);
 };
 
-const formatConsoleValue = (
-  value: unknown,
-  seen: MutableHashSet.MutableHashSet<object>,
-  depth: number,
-): string => {
+const formatConsoleValue = (value: unknown, seen: MutableHashSet.MutableHashSet<object>, depth: number): string => {
   if (P.isNull(value) || P.isUndefined(value)) return "null";
   if (P.isString(value)) return encodeJson(value);
   if (P.isNumber(value) || P.isBoolean(value)) return String(value);
@@ -61,7 +99,7 @@ const formatConsoleValue = (
       const entries = pipe(
         value.map.entries(),
         A.fromIterable,
-        A.map(([key, item]): Array<unknown> => [key, item]),
+        A.map(([key, item]): Array<unknown> => [key, item])
       );
       return `Map(${value.map.size}) ${formatConsoleValue(entries, seen, depth + 1)}`;
     } finally {
@@ -80,12 +118,16 @@ const formatConsoleValue = (
   MutableHashSet.add(seen, value);
   try {
     if (A.isArray(value)) {
-      return `[${pipe(value, A.map((item) => formatConsoleValue(item, seen, depth + 1)), A.join(","))}]`;
+      return `[${pipe(
+        value,
+        A.map((item) => formatConsoleValue(item, seen, depth + 1)),
+        A.join(",")
+      )}]`;
     }
     return `{${pipe(
       R.toEntries(value),
       A.map(([key, item]) => `${encodeJson(key)}:${formatConsoleValue(item, seen, depth + 1)}`),
-      A.join(","),
+      A.join(",")
     )}}`;
   } finally {
     MutableHashSet.remove(seen, value);
@@ -98,67 +140,58 @@ const formatConsoleTable = (value: unknown, columnsArgument: unknown): string =>
   const data = boundedData(value, "console.table argument");
   const columns = consoleTableColumns(columnsArgument);
   const rows = consoleTableRows(data, columns);
-  const keys = O.getOrElse(
-    columns,
-    () => pipe(rows, A.flatMap((row) => Object.keys(row.values)), A.dedupe),
+  const keys = O.getOrElse(columns, () =>
+    pipe(
+      rows,
+      A.flatMap((row) => R.keys(row.values)),
+      A.dedupe
+    )
   );
   const header = pipe(["(index)", ...keys], A.join("\t"));
   return pipe(
     [
       header,
-      ...A.map(
-        rows,
-        (row) => pipe(
-          [row.index, ...A.map(keys, (key) => formatConsoleTableCell(row.values[key]))],
-          A.join("\t"),
-        ),
+      ...A.map(rows, (row) =>
+        pipe([row.index, ...A.map(keys, (key) => formatConsoleTableCell(row.values[key]))], A.join("\t"))
       ),
     ],
-    A.join("\n"),
+    A.join("\n")
   );
 };
 
 const consoleTableColumns = (value: unknown): O.Option<ReadonlyArray<string>> => {
   if (P.isUndefined(value) || containsRuntimeReference(value)) return O.none();
   const columns = copyOut(copyIn(value, "console.table columns"), "nullify");
-  return A.isArray(columns)
-    ? O.some(A.map(columns, (column) => String(column)))
-    : O.none();
+  return A.isArray(columns) ? O.some(A.map(columns, (column) => String(column))) : O.none();
 };
 
 const consoleTableRows = (
   data: unknown,
-  columns: O.Option<ReadonlyArray<string>>,
+  columns: O.Option<ReadonlyArray<string>>
 ): Array<{
   readonly index: string;
-  readonly values: Record<string, unknown>
+  readonly values: Record<string, unknown>;
 }> => {
   if (A.isArray(data)) {
     return A.map(data, (item, index) => ({
       index: String(index),
-      values: consoleTableValues(item, columns)
+      values: consoleTableValues(item, columns),
     }));
   }
   if (P.isNotNull(data) && P.isObjectKeyword(data) && !isCodeModeValue(data)) {
-    return A.map(
-      R.toEntries(data),
-      ([index, item]) => ({index, values: consoleTableValues(item, columns)}),
-    );
+    return A.map(R.toEntries(data), ([index, item]) => ({ index, values: consoleTableValues(item, columns) }));
   }
-  return [{index: "0", values: {Value: data}}];
+  return [{ index: "0", values: { Value: data } }];
 };
 
-const consoleTableValues = (
-  value: unknown,
-  columns: O.Option<ReadonlyArray<string>>,
-): Record<string, unknown> => {
+const consoleTableValues = (value: unknown, columns: O.Option<ReadonlyArray<string>>): Record<string, unknown> => {
   if (P.isNotNull(value) && P.isObjectKeyword(value) && !A.isArray(value) && !isCodeModeValue(value)) {
     return O.match(columns, {
-      onNone: () => R.fromEntries(Object.entries(value)),
+      onNone: () => R.fromEntries(R.toEntries(value)),
       onSome: (names) => R.fromEntries(A.map(names, (column) => [column, Reflect.get(value, column)])),
     });
   }
-  return {Value: value};
+  return { Value: value };
 };
 
 const formatConsoleTableCell = (value: unknown): string => {

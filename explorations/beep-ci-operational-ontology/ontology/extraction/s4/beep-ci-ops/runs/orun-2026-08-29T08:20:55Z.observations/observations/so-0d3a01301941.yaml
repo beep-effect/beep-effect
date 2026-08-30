@@ -1,0 +1,23 @@
+id: so:sha256:0d3a013019417d3e867832ab9064c3d5a47b92384c531fb4284d9da022345a7b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 19
+  end_line: 19
+  content_sha256: ac40f33019e8273451de24ca52b21157dcf54e3103a4d83af9ba554ab08e6ace
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
+epistemic_status: parser_derived

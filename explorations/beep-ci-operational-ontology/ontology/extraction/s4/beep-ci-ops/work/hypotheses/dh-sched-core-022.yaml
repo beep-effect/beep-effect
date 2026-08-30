@@ -1,0 +1,27 @@
+id: "dh:sched-core:022"
+observation_refs:
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "so:sha256:d2b4a5bf30882ca8d4461695fdad5bf0d338847d2996011bb75358e374c71ec1"
+  - "po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85"
+  - "po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+cq_warrants: ["CQ-010"]
+proposed_referent:
+  label: "admission-guarded work execution"
+  description: "The operational relation in which heavy work executes while an active admission lease is heartbeated and capacity remains charged."
+representation_status: domain_referent
+alternatives:
+  - label: "resource-bracketing procedure that realizes the relation"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "generic acquire-use-release wrapper"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "Runtime promotion and overshoot rollback show that admission is a real precondition on whether the guarded heavy work begins, while the existing heartbeat-and-release bracket shows the grant remains in force during execution. Whether the ontology uses a binary property or a reified admission situation remains a foundational modeling issue."
+  discriminator: "The scheduler rolls back an overshooting admission before the work callback starts; admitted work proceeds only after a fitting lease wins promotion and remains charged."
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

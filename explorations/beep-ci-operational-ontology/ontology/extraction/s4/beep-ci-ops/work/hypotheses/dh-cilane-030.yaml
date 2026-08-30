@@ -1,0 +1,29 @@
+id: "dh:cilane:030"
+observation_refs:
+  - "so:sha256:3da435f85cc177bc2bb83322f86c1188ee51ff44d9989f48ab8f7c9ca097f875"
+  - "so:sha256:4328517f200d92dd2328ecc9c8160e6b7e2198ae106eff21a07bef1977d8a8a0"
+  - "so:sha256:66342ca46d8a670d353da0f19b94d0fcf756595f31b5a8b1cb59d06e0d77bd88"
+  - "so:sha256:774dd4e402f43ac133d044d38b73feb765e6c6defe51e391fe0465f88050963d"
+  - "so:sha256:7a3e43ee940c4c5682490928f43b01680fe428729cec3d6fdcbbe51182c00fca"
+cq_warrants:
+  - "CQ-002"
+  - "CQ-020"
+proposed_referent:
+  label: "CI lane step-planning implementation"
+  description: "The generic root-script, Bun, and Turbo step builders plus the exported lane-to-step planning declaration."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification WorkUnit specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "ordered verification procedure specification"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Four records expose only unrepresentable helper declarations, while the fifth establishes an exported declaration without canonical branch facts. No observation records an ordered WorkUnit specification, episode-bound schedule, or execution."
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

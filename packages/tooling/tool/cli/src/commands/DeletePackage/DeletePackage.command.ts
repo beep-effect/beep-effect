@@ -449,15 +449,13 @@ const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
 ];
 
 const baselineOutputWritten = (before: O.Option<BaselineOutputStamp>, after: O.Option<BaselineOutputStamp>): boolean =>
-  O.match(after, {
-    onNone: thunkFalse,
-    onSome: (afterStamp) =>
-      O.match(before, {
-        onNone: () => true,
-        onSome: (beforeStamp) =>
-          beforeStamp.mtimeMillis !== afterStamp.mtimeMillis || beforeStamp.size !== afterStamp.size,
-      }),
-  });
+  O.exists(after, (afterStamp) =>
+    O.match(before, {
+      onNone: () => true,
+      onSome: (beforeStamp) =>
+        beforeStamp.mtimeMillis !== afterStamp.mtimeMillis || beforeStamp.size !== afterStamp.size,
+    })
+  );
 
 const baselineStepOutcome = (
   exitCode: number,
@@ -487,7 +485,11 @@ const statBaselineOutput = Effect.fn("DeletePackage.statBaselineOutput")(functio
         Effect.map(
           O.map((info) =>
             BaselineOutputStamp.make({
-              mtimeMillis: O.match(info.mtime, { onNone: () => 0, onSome: (mtime) => mtime.getTime() }),
+              mtimeMillis: pipe(
+                info.mtime,
+                O.map((mtime) => mtime.getTime()),
+                O.getOrElse(() => 0)
+              ),
               size: Number(info.size),
             })
           )

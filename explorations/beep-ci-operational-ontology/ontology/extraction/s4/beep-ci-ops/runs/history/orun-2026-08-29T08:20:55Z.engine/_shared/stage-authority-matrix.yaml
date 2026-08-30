@@ -1,0 +1,91 @@
+# Stage-authority matrix — who may produce what, and with what authority.
+# Shared reference for the ontology skill family (primary consumer:
+# ontology-foundational-auditor). An LLM response is never authoritative merely
+# because it appeared in a transcript; artifacts are the state machine.
+
+artifacts:
+  - artifact: source-observations
+    producer: deterministic parser adapters
+    llm_allowed: false          # never for formal code facts
+    authority: deterministic
+    consumer: denotation analyst
+  - artifact: prose-observations
+    producer: quote/span extractor
+    llm_allowed: limited        # quotation only, span-preserving
+    authority: source text
+    consumer: denotation analyst
+  - artifact: denotation-hypotheses
+    producer: denotation analyst
+    llm_allowed: true
+    authority: proposal only
+    consumer: foundational analysts
+  - artifact: identity-cards
+    producer: UFO/OntoClean analyst
+    llm_allowed: true
+    authority: proposal only
+    consumer: adversary + steward
+  - artifact: foundational-analyses
+    producer: foundational agents
+    llm_allowed: true
+    authority: proposal only
+    consumer: term proposer
+  - artifact: term-proposals
+    producer: conceptualization agent
+    llm_allowed: true
+    authority: proposal only
+    consumer: steward
+  - artifact: rejections
+    producer: adversary/steward
+    llm_allowed: true
+    authority: steward decision
+    consumer: future runs
+  - artifact: ratifications
+    producer: human steward
+    llm_allowed: false          # no delegated authority
+    authority: authoritative
+    consumer: formalizer
+  - artifact: conceptual-model
+    producer: generator over ratified proposals
+    llm_allowed: false          # no semantic invention
+    authority: derived
+    consumer: ontology-architect
+  - artifact: ontology (OWL)
+    producer: formalizer
+    llm_allowed: draft-only
+    authority: formal checks + stewarded input
+    consumer: reasoner
+  - artifact: rules (Datalog)
+    producer: rule formalizer
+    llm_allowed: draft-only
+    authority: tests + stewarded semantics
+    consumer: Datalog engine
+  - artifact: shapes (SHACL)
+    producer: shape generator/formalizer
+    llm_allowed: draft-only
+    authority: validator
+    consumer: CI
+  # NOTE: these are THREE different semantics (reference/logical/integrity/
+  # operational split) — they must not bleed together; see foundational-analysis.md.
+  - artifact: benchmark gold labels
+    producer: expert adjudication
+    llm_allowed: challenge-only  # may attack a label, never set it, never vote
+    authority: human gold
+    consumer: benchmark runner
+
+# Decisions an LLM may PROPOSE but never AUTHORIZE (condensed; the full 40-row
+# table lives in the source review preserved in the beep-effect packet):
+forbidden_autonomous_decisions:
+  - mint a production class/property IRI
+  - decide class vs individual; entity vs information artifact; spec vs execution
+  - decide kind vs role vs phase; relator status; rigidity; dependence
+  - establish or accept an identity criterion; designate an identity provider
+  - assert subsumption, equivalence, disjointness, sameAs/differentFrom
+  - set OWL domain/range, cardinality, functionality, keys
+  - declare a data source complete; choose closed-world predicates; add NAF/defaults
+  - promote induced correlation or model confidence to ontology truth
+  - resolve contradictory authoritative sources; delete provenance
+  - reuse an IRI with changed meaning; deprecate or redefine a production term
+  - approve evidence transfer, fail-open scoped schedules, admission/fairness policy
+  - treat multi-agent consensus as validation; override failed formal checks
+  - weaken a failing test; manufacture missing evidence
+  - declare a CQ satisfied from natural-language plausibility

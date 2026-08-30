@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `decompose`
 Status: `active`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json). The exploration graduated
 on 2026-08-24, then returned to `decompose` on 2026-08-26 when the C0

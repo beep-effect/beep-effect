@@ -1,0 +1,19 @@
+id: "dh:worktree-config:034"
+observation_refs:
+  - "so:sha256:61e2bcefd6e05ffc3c0d0fd4c6e862206ab28a2622f216f5c4daae44daaccb7e"
+  - "so:sha256:aab52afa71d1611d153af47f1255d436eecaf1bcbd2a227bf137761751a5b32d"
+cq_warrants: []
+proposed_referent:
+  label: "FleetProbeReading source representation"
+  description: "The exported schema union named FleetProbeReading together with its generated TypeScript alias; member semantics are not observed."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet liveness-probe reading record"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only an exported union representation and its alias; no reading content, provenance, occurrence, or operational use is observed."
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

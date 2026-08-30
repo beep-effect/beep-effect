@@ -1,0 +1,113 @@
+term,category,source_cq,notes
+VerificationLane,class,CQ-001,"a named validation surface: turbo task, script, or collected gate"
+LaneKind,class,CQ-001,"TurboTaskLane | ScriptLane | CollectedGateLane"
+WorkUnit,class,CQ-002,"Lane x Scope — the scheduling quantum; the SPECIFICATION side of the ruled spec/execution split (occurrences are WorkUnitExecution); charge-bounded by grant admission (CQ-010)"
+Scope,class,CQ-002,"tagged union: FullRepoScope | AffectedScope | FilterScope | ShardScope"
+VerificationEpisode,class,CQ-002,"red streak -> certainty; the KPI's unit of account; spans attempts"
+AssuranceTier,class,CQ-002,"TierRepairGreen | TierLocalFullProof | TierCiMergeGreen; RENAMED from CertaintyTier (final grill Q4) — vernacular altLabel 'certainty tier'"
+CostEstimate,class,CQ-003,"p50/p95 wall ms + memory class + provenance per (lane, package); estimates are immutable snapshots — revisions mint new individuals (round-3 H W-05)"
+MemoryClass,class,CQ-003,"coarse memory demand bucket for grant packing"
+CostProvenance,class,CQ-003,"measured | census | default"
+ChangeSet,class,CQ-004,"a diff/event against a base tree"
+PackageRef,class,CQ-004,"@beep/* workspace package identity"
+VerificationEvidence,class,CQ-005,"a lane result valid for CacheEpoch x TreeState; RENAMED from Proof (final grill Q4 — reasoner-facing names must be category-honest: evidence, not truth) — vernacular altLabels 'proof', 'full proof', 'proof lock' (on the contended-resource individual)"
+CacheEpoch,class,CQ-005,"the hash-world evidence lives in; epoch change = invalidation event"
+TreeState,class,CQ-005,"a concrete tree (branch, head, merged-base state)"
+InvalidationEvent,class,CQ-011,"a change that kills evidence validity; carries a blast radius"
+HashSurface,class,CQ-011,"the input set feeding a lane's hash (incl. global.inputs membership)"
+SeatRequest,class,CQ-021,"an agent's queued ask for machine admission; DEPLOYED carrier = YeetAdmissionTicket (yeet-admission-ticket/v1); the ticket half of the ruled ticket/lease split; an ingested SeatRequest IS a queued ticket (the store deletes the ticket at admission — round-3 H-05/J-B4)"
+SeatGrant,class,CQ-008,"an admitted lease charged against capacity; DEPLOYED carrier = YeetAdmissionLease (yeet-admission-lease/v1); the lease half of the ruled ticket/lease split; NO stored edge to its ticket (linkage = lease filename stem nonce-pid only); lifecycle in GrantState"
+GrantState,class,CQ-008,"grant lifecycle state; closed domain: ActiveGrant | ReleasedGrant (WaitingGrant REMOVED round-3 H-10 — a waiting contender is a SeatRequest under the split; see literal-domains.md)"
+ResourceBudget,class,CQ-026,"advisory per-grant budget (softP95BudgetMs); demoted from hard-limit framing by the tri-split ruling"
+ContendedResource,class,CQ-008,"contended machine resource; members are INDIVIDUALS (MachineProofLock, TurboDaemonResource, CpuCoresResource, MemoryPoolResource, SharedCacheResource) — no punning with class SharedCache; see literal-domains.md"
+Checkout,class,CQ-015,"one clone/worktree; evidence-transferability endpoint (shared cache mounts). NOT an exclusion unit — the deployed admission law is ORIGIN-keyed (round-3 H-04/J-B3); checkoutRoot is a lease owner attribute S4 may re-propose with a warrant"
+FailureSignature,class,CQ-013,"failedStepId x failureKind equivalence class"
+OperationalChangeEvent,class,CQ-016,"a tagged change landing that partitions the KPI time-series; RENAMED from ControlIntervention (final grill round 3) — OBSERVATIONAL by default, causal status requires supporting design; vernacular altLabel 'control intervention'"
+SharedCache,class,CQ-015,"machine-shared turbo cache mount"
+Agent,class,CQ-021,"a coding agent driving episodes and owning seat requests; carrier = ticket owner identity pid+procStart+checkoutRoot — PROCESS-grain, many invocations of one coding agent are distinct pairs (round-3 J N4); admission-law warn closed by CQ-021"
+AffectedComputation,class,CQ-019,"one execution of affected-set determination with a typed outcome"
+FailOpenOutcome,class,CQ-019,"affected outcome that silently selects the whole graph; licenses no scoped assurance"
+FailClosedOutcome,class,CQ-019,"semantic-support (two-kind law): supports=FailOpenOutcome|AffectedComputation — the non-fail-open member of the closed outcome pair; required so 'typed outcome from the closed enum' is satisfiable by honest computations"
+ScheduleProposal,class,CQ-020,"the projection's emitted schedule as A-Box: ordered steps + derived hasScope; subject to CQ-019 closed scope-provenance (final grill Q2); currency via hasCurrentProposal (round-3 H-03)"
+ScheduleStep,class,CQ-020,"one ordered position in a ScheduleProposal: stepIndex + the WorkUnit it schedules"
+AdmissionWorkKind,class,CQ-021,"closed domain of admitted heavy-work classes; DEPLOYED carrier = AdmissionWorkKind LiteralKit (QualityScheduler.schemas.ts); members in literal-domains.md; PublishWork is reserved/unused by deployed callers (round-3 J W4)"
+AdmissionPriorityClass,class,CQ-021,"closed domain of queue ordering classes; DEPLOYED carrier = AdmissionPriority LiteralKit; members in literal-domains.md"
+WorkUnitExecution,class,CQ-022,"one occurrence of running a WorkUnit; the EXECUTION side of the ruled spec/execution split; carries state, cancel class, resolved cache posture, actual cost"
+CommittedFailure,class,CQ-022,"a definitively landed red step result; carrier = verdict.failedStepId NESTED in the attempt-finished journal event (optional, verdict-level — round-3 J W3)"
+VerificationAttempt,class,CQ-022,"one yeet attempt within an episode; carrier = attemptId UUID on yeet-attempt-journal/v1 events; the stopping join's unit (round-3 H-06)"
+ExecutionState,class,CQ-022,"closed domain: RunningExecution | CompletedExecution | CancelledExecution (literal-domains.md)"
+CancelClass,class,CQ-022,"closed domain: CleanCancel | DirtyCancel — whether interruption leaves corrupt state (literal-domains.md)"
+AdmissionPolicy,class,CQ-023,"the governing admission knob set; DEPLOYED carrier = AdmissionConfig (QualityScheduler.schemas.ts) — aging, class caps, capacity, floors enter as A-Box facts; the starvation bound is a DECLARED policy fact, NOT a deployed guarantee (round-3 H-07)"
+StarvationException,class,CQ-023,"closed domain of modeled legal-degradation states: HardFloorException ONLY (QuarantineException removed round-3 J-B1 — deployed quarantine is corrupt-record isolation, not an owner state); ETL-derived per-request from snapshot-global hardFloorEngaged"
+CachePosture,class,CQ-024,"closed domain of resolved turbo cache plans; DEPLOYED carrier = TurboCachePlan union (TurboCache.ts): LocalOnly | LocalWriteRemoteRead | CallerControlled (round-3 H W-04)"
+hasLaneKind,property,CQ-001,
+admissibleFor,property,CQ-002,
+executesLane,property,CQ-002,
+targetsTier,property,CQ-002,
+requiresLane,property,CQ-002,"tier -> lane obligation; S4 normalization mandate: conflates obligation with procedure (obligation/procedure split worksheet-decided)"
+hasCostEstimate,property,CQ-003,"lane/workunit -> its CURRENT estimate; the estimate that governed an admission is usedCostEstimate"
+p50Ms,property,CQ-003,"data property xsd:integer; closed for surfaced candidate lanes (closed-world.yaml, round-3 H-11)"
+p95Ms,property,CQ-003,data property xsd:integer
+hasMemoryClass,property,CQ-003,
+hasCostProvenance,property,CQ-003,
+touchesPackage,property,CQ-004,
+dependsOnTransitive,property,CQ-004,"Datalog fixpoint over dependsOn (rule-compiled)"
+dependsOn,property,CQ-004,"direct workspace dependency edge; semantic-support (two-kind law): supports=dependsOnTransitive — the fixpoint's base relation (round-3 I-03/H-09 licensing fix)"
+validInEpoch,property,CQ-005,
+provesTree,property,CQ-005,
+invalidates,property,CQ-005,
+dischargesObligation,property,CQ-006,"evidence -> lane obligation it satisfies"
+timeToCertaintyMs,property,CQ-007,data property
+lockWaitMs,property,CQ-007,data property
+executionMs,property,CQ-007,data property
+repairGapMs,property,CQ-007,data property
+ciWaitMs,property,CQ-007,data property
+contendsFor,property,CQ-008,
+hasGrantState,property,CQ-008,
+hasOriginKey,property,CQ-009,"data property xsd:string; verbatim deployed originKey (proof-lock basename of remote.origin.url); empty string = origin-exempt work (review-fix); the deployed exclusion identity (round-3 H-04/J-B3)"
+admittedBy,property,CQ-010,
+hasBudget,property,CQ-026,"grant -> advisory ResourceBudget (demoted with the tri-split)"
+softP95BudgetMs,property,CQ-026,"data property xsd:integer; ADVISORY p95 duration screen (né maxGrantCostMs — 'max' claimed a guarantee the tri-split forbids)"
+touchesHashSurface,property,CQ-011,
+feedsLane,property,CQ-011,"hash surface -> lane whose hash it feeds"
+radiatesToPackage,property,CQ-011,
+surfacedByLane,property,CQ-013,"failure signature -> lane that can surface it"
+beganAt,property,CQ-014,data property
+recordedAt,property,CQ-014,data property
+cachedIn,property,CQ-015,
+mountsCache,property,CQ-015,
+inEpoch,property,CQ-015,
+landedAt,property,CQ-016,data property
+hasAffectedOutcome,property,CQ-019,"computation -> typed outcome; closed (closed-world.yaml) so CQ-019 arm 4 can detect dangling provenance targets"
+scopedByComputation,property,CQ-019,"evidence/schedule -> the affected computation whose affected set it TRUSTS; an honest fail-open full-scope remap does not carry this edge (round-1 seat D definition)"
+hasScope,property,CQ-019,"evidence/schedule/workunit -> Scope member; DERIVED FROM THE SUBJECT'S WORKUNITS' SCOPES at ingestion, never from the trust edge (closed scope-provenance, final grill Q2); CQ-019 arm 3 also derives proposal scope through steps so omitting the materialized edge cannot launder (round-3 H-01)"
+queueWaitMs,property,CQ-007,"data property; seat-request-to-grant wait inside the episode decomposition (round-1 admission)"
+occurredAt,property,CQ-011,"data property xsd:dateTime; when an InvalidationEvent occurred (round-1 admission)"
+episodeStartedAt,property,CQ-012,"data property xsd:dateTime; episode window membership; one edge of episode identity (round-1 admission)"
+attributedDelayMs,property,CQ-013,"data property; certainty delay attributed to a FailureSignature — computed by the KPI ETL, never OWL-inferred (round-1 admission)"
+hasCurrentEpoch,property,CQ-014,"TreeState -> CacheEpoch; makes 'current epoch' queryable (round-1 admission)"
+hasCurrentProposal,property,CQ-020,"VerificationEpisode -> its CURRENT ScheduleProposal; the projection re-points it on supersession (round-3 H-03; hasCurrentEpoch precedent)"
+hasStep,property,CQ-020,"ScheduleProposal -> ScheduleStep"
+stepIndex,property,CQ-020,"data property xsd:integer; the ordered position"
+schedulesWorkUnit,property,CQ-020,"ScheduleStep -> WorkUnit"
+requestedBy,property,CQ-021,"SeatRequest -> Agent; carrier = ticket owner identity"
+hasWorkKind,property,CQ-021,"request -> AdmissionWorkKind member; carrier = ticket kind field"
+hasPriorityClass,property,CQ-021,"request -> AdmissionPriorityClass member; carrier = ticket priority field"
+admissionChargeTokens,property,CQ-021,"data property xsd:integer; the tri-split's AdmissionCharge — carrier = weightTokens verbatim (token units; the 5 GiB gloss is the default slotSizeGib in a reserve+floor capacity formula, not a per-token measurement — round-3 J W1)"
+enqueuedAt,property,CQ-021,"data property xsd:dateTime; carrier = enqueuedAtMillis (ETL-converted; ticket-only — the lease does not carry it)"
+capacityAtAdmissionTokens,property,CQ-010,"data property xsd:integer; remaining token capacity BEFORE the new charge at the admission instant (deployed check: activeTokenTotal + weight <= capacityTokens) — ETL-reconstructed, never read from a post-grant snapshot (round-3 H W-06)"
+inAttempt,property,CQ-022,"failure/execution -> the VerificationAttempt it belongs to; the stopping join (round-3 H-06)"
+hasExecutionState,property,CQ-022,"execution -> ExecutionState member"
+hasCancelClass,property,CQ-022,"execution -> CancelClass member (clean vs dirty interruption)"
+observedQueueWaitMs,property,CQ-023,"data property xsd:integer; ETL-materialized wait at snapshot for QUEUED tickets (snapshot_instant - enqueuedAtMillis) — granted-wait history is NOT derivable from the live store (self-erasing handoff, round-3 H-05/J-B4); NOW-free in-query"
+governedBy,property,CQ-023,"SeatRequest -> the AdmissionPolicy governing its admission"
+starvationBoundMs,property,CQ-023,"data property xsd:integer; the DECLARED operational starvation bound (packet/S7 policy fact) — NOT derived from publishAgingSeconds and NOT a scheduler guarantee (aging only promotes sort rank; round-3 H-07)"
+hasStarvationException,property,CQ-023,"SeatRequest -> StarvationException member (closed, single member); ETL-derived from snapshot-global hardFloorEngaged; the CQ pins the negation to the closed member so invented exceptions cannot suppress (round-3 H-12)"
+hasCachePosture,property,CQ-024,"WorkUnitExecution -> CachePosture member; carrier = resolved TurboCachePlan per invocation (round-3 H W-04)"
+ofWorkUnit,property,CQ-025,"WorkUnitExecution -> the WorkUnit specification it executes; semantic-support (two-kind law): supports=WorkUnitExecution|WorkUnit — the spec/execution bridge"
+usedCostEstimate,property,CQ-025,"execution/grant -> the IMMUTABLE CostEstimate snapshot that governed its admission (ETL-stamped; round-3 H W-05); actualWallMs carrier = verdict.lanes[].durationMs (round-3 J B2)"
+actualWallMs,property,CQ-025,"data property xsd:integer; measured wall cost of a completed execution — carrier = verdict.lanes[].durationMs nested in attempt-finished (per-lane wall; attempt-level verdict.elapsedMs only when the execution IS the whole attempt — round-3 J B2)"
+MachineProofLock,individual,CQ-008,"the per-origin machine-wide yeet proof lock (vernacular 'proof lock' altLabel lives here)"
+TierRepairGreen,individual,CQ-006,
+TierLocalFullProof,individual,CQ-006,
+TierCiMergeGreen,individual,CQ-006,

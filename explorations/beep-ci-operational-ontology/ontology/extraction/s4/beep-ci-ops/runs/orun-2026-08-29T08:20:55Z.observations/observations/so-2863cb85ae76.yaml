@@ -1,0 +1,35 @@
+id: so:sha256:2863cb85ae7617ad9d8b6ebf4ecf86c54ce5394f332033415e6a98b79b688868
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 617
+  end_line: 628
+  content_sha256: 02fbbe753e990dc445d1b3691203c7b6bdcfb5e351103fc76ef65aa44a750440
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::FallowQualityPromotionStatus
+  lexical_name: FallowQualityPromotionStatus
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: advisory
+- predicate: declares_literal_member
+  object: blocking
+- predicate: declares_literal_member
+  object: candidate-blocking
+- predicate: declares_literal_member
+  object: deferred
+- predicate: declares_literal_member
+  object: rejected
+- predicate: declares_literal_member
+  object: research
+- predicate: exports_symbol
+  object: FallowQualityPromotionStatus
+source_excerpt: export const FallowQualityPromotionStatus = LiteralKit([
+epistemic_status: parser_derived

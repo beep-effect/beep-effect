@@ -7,6 +7,11 @@ import {
   UTF8_SOURCE_TEXT_EXTRACTOR_VERSION,
 } from "@beep/file-processing/SourceText";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import {
+  VerifiedSourceText,
+  VerifySourceTextIdentityInput,
+  verifySourceTextIdentity,
+} from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -178,9 +183,19 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
           textDigest: digest,
         })
       ).pipe(Effect.withTracer(tracer));
+      const verifiedSource = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({
+          expectedSource: source.identity,
+          source: source.identity,
+          sourceText: source.text,
+        })
+      );
 
       expect(source.text).toBe(sourceText);
       expect(source.identity.sourceDigest).toBe(digest);
+      expect(S.is(VerifiedSourceText)(verifiedSource)).toBe(true);
+      expect(verifiedSource.sourceText).toBe(sourceText);
+      expect(verifiedSource.source).toEqual(source.identity);
       expectSourceTextResolveSpan(captured, {
         expectedFailureReason: O.none(),
         expectedOutcome: "resolved",

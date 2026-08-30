@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:045"
+observation_refs:
+  - "so:sha256:53673fe0c6cf5e0dc24ef39a749d9aaa246eb58c8be1454460215ee5a0c2c482"
+cq_warrants: []
+proposed_referent:
+  label: "Internal pull-request cache-posture object"
+  description: "An exported object declaration whose members and relation to an invocation were not observed."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A cache policy specification for pull-request invocations"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A pull-request execution cache posture"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The export fact and object opening expose no values, applicability conditions, or invocation relation, so the null remains sufficient."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

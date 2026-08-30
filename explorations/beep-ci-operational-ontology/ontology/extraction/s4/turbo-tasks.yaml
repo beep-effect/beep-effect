@@ -1,0 +1,2168 @@
+telemetry:
+  lane: s4-turbo-tasks
+  runner: "codex exec"
+  model: gpt-5.6-sol
+  reasoning_effort: max
+  prompt_version: s4-lane-contract-v2
+  corpus_commit: 469136d2a872
+  started: 2026-08-27T23:30:33-05:00
+  finished: 2026-08-27T23:41:31-05:00
+  wall_seconds: 658
+  frozen_inputs:
+    - { path: ontology/docs/competency-questions.yaml, sha256_12: e06ec7fe12a6 }
+    - { path: ontology/docs/pre-glossary.csv, sha256_12: 9184cddcecc7 }
+    - { path: ontology/docs/literal-domains.md, sha256_12: 7f0cf3e79e7e }
+    - { path: ontology/docs/orsd.md, sha256_12: 2b0fd670129b }
+    - { path: ontology/docs/scope.md, sha256_12: 6c39b69481a3 }
+  candidate_count: 36
+  fact_count: 214
+  issue_count: 7
+
+issues:
+  - id: turbo-tasks-I01
+    kind: assumption
+    claim: "A Turbo task declaration does not by itself prove that the task denotes an in-scope VerificationLane."
+    evidence: "turbo.json:237 — '\"persistent\": true,'"
+    suggested_disposition: "Ratify task individuals against actual yeet/CI use; reject persistent or support tasks that are implementation artifacts only."
+    status: open
+  - id: turbo-tasks-I02
+    kind: schema-conflict
+    claim: "A task-level cache boolean is not a member of the closed CachePosture domain."
+    evidence: "turbo.json:82 — '\"cache\": false,'"
+    suggested_disposition: "Keep taskCacheEnabled separate from LocalOnly, LocalWriteRemoteRead, and CallerControlled."
+    status: open
+  - id: turbo-tasks-I03
+    kind: ambiguity
+    claim: "Several tasks omit explicit inputs, outputs, or cache declarations, so their effective values depend on defaults not stated in this corpus."
+    evidence: "turbo.json:227-229 — '\"transit\": {'"
+    suggested_disposition: "Resolve Turborepo default semantics before asserting effective hash or cache posture for omitted fields."
+    status: open
+  - id: turbo-tasks-I04
+    kind: ambiguity
+    claim: "The three enabled future flags are named and valued but their operational transformations are not defined by turbo.json."
+    evidence: "turbo.json:4 — '\"affectedUsingTaskInputs\": true,'"
+    suggested_disposition: "Ratify their denotation against the pinned Turbo schema before formal axiomatization."
+    status: open
+  - id: turbo-tasks-I05
+    kind: missing-cq
+    claim: "The audit task's new-only output-log mode has no Must/Should CQ warrant."
+    evidence: "turbo.json:225 — '\"outputLogs\": \"new-only\"'"
+    suggested_disposition: "Leave output-log presentation outside the T-Box unless a scheduling or evidence decision requires it."
+    status: open
+  - id: turbo-tasks-I06
+    kind: ambiguity
+    claim: "Turbo selector tokens and negated globs are configuration-language literals, not filesystem individuals."
+    evidence: "turbo.json:38 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"$TURBO_ROOT$/.env*\", \"!.beep/**\"],'"
+    suggested_disposition: "Preserve selector spellings as xsd:string facts until a selector grammar is separately modeled."
+    status: open
+  - id: turbo-tasks-I07
+    kind: ambiguity
+    claim: "The source distinguishes env from passThroughEnv but does not state the latter's cache-key semantics."
+    evidence: "turbo.json:19 — '\"passThroughEnv\": ['"
+    suggested_disposition: "Keep pass-through variables separate from hash-environment variables and verify semantics before reasoning about transferability."
+    status: open
+
+candidates:
+  - candidate: TurboConfiguration
+    kind: class
+    definition: "An information artifact that declares Turbo task, affected-selection, hash-input, and cache behavior."
+    admission_kind: semantic-support
+    supports: [VerificationLane, AffectedComputation, HashSurface]
+    decision_relevance: "Provides the configuration bearer needed to interpret CQ-001, CQ-004, CQ-011, and CQ-019 source facts."
+    evidence:
+      - "turbo.json:3-8 — '\"futureFlags\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: TurboConfiguration469136d2a872
+    kind: individual
+    definition: "The Turbo configuration information artifact pinned to corpus commit 469136d2a872."
+    admission_kind: semantic-support
+    supports: [VerificationLane, AffectedComputation, HashSurface]
+    decision_relevance: "Bears the extracted configuration values used by the lane and hash-surface decisions."
+    evidence:
+      - "turbo.json:1-8 — '{'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: TurboTaskLane
+    kind: literal-domain-member
+    source_domain: LaneKind
+    definition: "The LaneKind member for a verification lane realized by a Turbo task."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "CQ-001 requires every admitted Turbo task lane to carry its lane kind."
+    evidence:
+      - "turbo.json:33-34 — '\"tasks\": {'"
+    already_in_glossary: true
+    status: candidate
+  - candidate: LaneBuild
+    kind: individual
+    definition: "The Turbo task named build, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:34 — '\"build\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneLint
+    kind: individual
+    definition: "The Turbo task named lint, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:68 — '\"lint\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneLintFix
+    kind: individual
+    definition: "The Turbo task named lint:fix, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:81 — '\"lint:fix\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneCheck
+    kind: individual
+    definition: "The Turbo task named check, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:91 — '\"check\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneTest
+    kind: individual
+    definition: "The Turbo task named test, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:100 — '\"test\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneTestProperty
+    kind: individual
+    definition: "The Turbo task named test:property, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:111 — '\"test:property\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneTestIntegration
+    kind: individual
+    definition: "The Turbo task named test:integration, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:120 — '\"test:integration\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneTestIntegrationParallel
+    kind: individual
+    definition: "The Turbo task named test:integration:parallel, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:136 — '\"test:integration:parallel\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneTestIntegrationSerial
+    kind: individual
+    definition: "The Turbo task named test:integration:serial, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:152 — '\"test:integration:serial\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneCoverage
+    kind: individual
+    definition: "The Turbo task named coverage, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:162 — '\"coverage\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneCodegen
+    kind: individual
+    definition: "The Turbo task named codegen, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:178 — '\"codegen\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneAudit
+    kind: individual
+    definition: "The Turbo task named audit, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:183 — '\"audit\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneTransit
+    kind: individual
+    definition: "The Turbo task named transit, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:227 — '\"transit\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneDocgen
+    kind: individual
+    definition: "The Turbo task named docgen, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:230 — '\"docgen\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneDev
+    kind: individual
+    definition: "The Turbo task named dev, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:236 — '\"dev\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneStorybook
+    kind: individual
+    definition: "The Turbo task named storybook, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:241 — '\"storybook\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneStorybookBuild
+    kind: individual
+    definition: "The Turbo task named storybook:build, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:245 — '\"storybook:build\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneStorybookStart
+    kind: individual
+    definition: "The Turbo task named storybook:start, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:261 — '\"storybook:start\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: LaneTestStorybook
+    kind: individual
+    definition: "The Turbo task named test:storybook, proposed for ratification as a turbo-task verification lane."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Supplies a candidate lane for the CQ-001 verification-lane inventory."
+    evidence:
+      - "turbo.json:266 — '\"test:storybook\": {'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: affectedUsingTaskInputs
+    kind: property
+    definition: "Relates a Turbo configuration to whether affected selection uses task input declarations."
+    domain: TurboConfiguration
+    range: xsd:boolean
+    admission_kind: semantic-support
+    supports: [AffectedComputation, HashSurface]
+    decision_relevance: "Constrains affected-set and hash-surface interpretation for CQ-004, CQ-011, and CQ-019."
+    evidence:
+      - "turbo.json:4 — '\"affectedUsingTaskInputs\": true,'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: filterUsingTasks
+    kind: property
+    definition: "Relates a Turbo configuration to whether filtering is evaluated using task definitions."
+    domain: TurboConfiguration
+    range: xsd:boolean
+    admission_kind: semantic-support
+    supports: [AffectedComputation, VerificationLane]
+    decision_relevance: "Constrains which task lanes participate in affected and scheduling decisions."
+    evidence:
+      - "turbo.json:5 — '\"filterUsingTasks\": true,'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: globalConfiguration
+    kind: property
+    definition: "Relates a Turbo configuration to whether its global configuration participates in task behavior."
+    domain: TurboConfiguration
+    range: xsd:boolean
+    admission_kind: semantic-support
+    supports: [HashSurface]
+    decision_relevance: "Constrains the global-input contribution to CQ-011 invalidation and CQ-015 evidence transferability."
+    evidence:
+      - "turbo.json:6 — '\"globalConfiguration\": true'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasGlobalInputPattern
+    kind: property
+    definition: "Relates a Turbo configuration to a declared global task-input selector literal."
+    domain: TurboConfiguration
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [HashSurface]
+    decision_relevance: "Defines the global portion of task hash surfaces needed by CQ-011 and CQ-015."
+    evidence:
+      - "turbo.json:10 — '\"inputs\": ['"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasTaskInputPattern
+    kind: property
+    definition: "Relates a verification lane to one declared task-input selector literal."
+    domain: VerificationLane
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [HashSurface]
+    decision_relevance: "Defines each lane-specific input surface for CQ-011 invalidation and CQ-015 transferability."
+    evidence:
+      - "turbo.json:38 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"$TURBO_ROOT$/.env*\", \"!.beep/**\"],'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasGlobalHashEnvironmentVariable
+    kind: property
+    definition: "Relates a Turbo configuration to a globally declared hash-environment variable pattern."
+    domain: TurboConfiguration
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [HashSurface]
+    decision_relevance: "Preserves global environment inputs that can alter task hashes and invalidation decisions."
+    evidence:
+      - "turbo.json:18 — '\"env\": [\"BEEP_ESLINT_PROFILE\", \"VITE_COSMOS_SPIKE\"],'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasHashEnvironmentVariable
+    kind: property
+    definition: "Relates a verification lane to one declared task hash-environment variable pattern."
+    domain: VerificationLane
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [HashSurface]
+    decision_relevance: "Preserves lane environment inputs needed for task-hash and evidence-validity decisions."
+    evidence:
+      - "turbo.json:39-40 — '\"env\": ['"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasGlobalPassThroughEnvironmentVariable
+    kind: property
+    definition: "Relates a Turbo configuration to one globally declared pass-through environment variable pattern."
+    domain: TurboConfiguration
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [VerificationEvidence]
+    decision_relevance: "Disambiguates runtime inputs from declared hash inputs when judging evidence transferability."
+    evidence:
+      - "turbo.json:19 — '\"passThroughEnv\": ['"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasPassThroughEnvironmentVariable
+    kind: property
+    definition: "Relates a verification lane to one declared task pass-through environment variable pattern."
+    domain: VerificationLane
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [VerificationEvidence]
+    decision_relevance: "Separates pass-through runtime context from lane hash inputs for CQ-015 validity judgments."
+    evidence:
+      - "turbo.json:101 — '\"passThroughEnv\": ['"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasDeclaredTaskDependency
+    kind: property
+    definition: "Relates a verification lane to one raw Turbo task-dependency selector literal."
+    domain: VerificationLane
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [VerificationLane, ScheduleProposal]
+    decision_relevance: "Constrains lane dependency ordering for CQ-001 inventory and CQ-020 schedule interpretation."
+    evidence:
+      - "turbo.json:37 — '\"dependsOn\": [\"^build\"],'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: taskCacheEnabled
+    kind: property
+    definition: "Relates a verification lane to its explicitly declared Turbo task-result cache boolean."
+    domain: VerificationLane
+    range: xsd:boolean
+    admission_kind: semantic-support
+    supports: [VerificationEvidence]
+    decision_relevance: "Constrains whether lane results can be reused when CQ-015 evaluates evidence transferability."
+    evidence:
+      - "turbo.json:36 — '\"cache\": true,'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasTaskOutputPattern
+    kind: property
+    definition: "Relates a verification lane to one declared cached-output selector literal."
+    domain: VerificationLane
+    range: xsd:string
+    admission_kind: semantic-support
+    supports: [VerificationEvidence]
+    decision_relevance: "Defines the declared artifact surface whose reuse bears on CQ-005 and CQ-015 evidence validity."
+    evidence:
+      - "turbo.json:53-54 — '\"outputs\": ['"
+    already_in_glossary: false
+    status: candidate
+  - candidate: hasEmptyTaskOutputDeclaration
+    kind: property
+    definition: "Relates a verification lane to whether it explicitly declares an empty cached-output list."
+    domain: VerificationLane
+    range: xsd:boolean
+    admission_kind: semantic-support
+    supports: [VerificationEvidence]
+    decision_relevance: "Preserves the check lane's explicit zero-output declaration for CQ-005 and CQ-015 validity reasoning."
+    evidence:
+      - "turbo.json:98 — '\"outputs\": []'"
+    already_in_glossary: false
+    status: candidate
+  - candidate: isPersistentTask
+    kind: property
+    definition: "Relates a verification-lane candidate to its explicitly declared persistent-execution boolean."
+    domain: VerificationLane
+    range: xsd:boolean
+    admission_kind: semantic-support
+    supports: [VerificationLane, WorkUnitExecution]
+    decision_relevance: "Distinguishes finite verification executions from persistent task services during CQ-001 ratification."
+    evidence:
+      - "turbo.json:35 — '\"persistent\": false,'"
+    already_in_glossary: false
+    status: candidate
+
+facts:
+  - subject: TurboConfiguration469136d2a872
+    predicate: affectedUsingTaskInputs
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-004, CQ-011, CQ-019]
+    evidence:
+      - "turbo.json:4 — '\"affectedUsingTaskInputs\": true,'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: filterUsingTasks
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-004, CQ-019, CQ-020]
+    evidence:
+      - "turbo.json:5 — '\"filterUsingTasks\": true,'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: globalConfiguration
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:6 — '\"globalConfiguration\": true'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalInputPattern
+    value: ".bun-version"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:11 — '\".bun-version\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalInputPattern
+    value: ".nvmrc"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:12 — '\".nvmrc\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalInputPattern
+    value: "package.json"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:13 — '\"package.json\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalInputPattern
+    value: "tsconfig.json"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:14 — '\"tsconfig.json\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalInputPattern
+    value: "tsconfig.base.json"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:15 — '\"tsconfig.base.json\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalInputPattern
+    value: "tsconfig.packages.json"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:16 — '\"tsconfig.packages.json\"'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalHashEnvironmentVariable
+    value: "BEEP_ESLINT_PROFILE"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:18 — '\"env\": [\"BEEP_ESLINT_PROFILE\", \"VITE_COSMOS_SPIKE\"],'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalHashEnvironmentVariable
+    value: "VITE_COSMOS_SPIKE"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:18 — '\"env\": [\"BEEP_ESLINT_PROFILE\", \"VITE_COSMOS_SPIKE\"],'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "TURBO_TOKEN"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:20 — '\"TURBO_TOKEN\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "TURBO_TEAM"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:21 — '\"TURBO_TEAM\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "NODE_TLS_REJECT_UNAUTHORIZED"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:22 — '\"NODE_TLS_REJECT_UNAUTHORIZED\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "CHAT_TRANSPORT"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:23 — '\"CHAT_TRANSPORT\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:24 — '\"EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "EPISTEMIC_POLICY_REVISION"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:25 — '\"EPISTEMIC_POLICY_REVISION\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "ONTOLOGY_MCP_MUTATIONS_ENABLED"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:26 — '\"ONTOLOGY_MCP_MUTATIONS_ENABLED\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "ONTOLOGY_WORKSPACE_ROOT"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:27 — '\"ONTOLOGY_WORKSPACE_ROOT\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "PORTLESS_*"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:28 — '\"PORTLESS_*\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "AWS_*"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:29 — '\"AWS_*\",'"
+    status: candidate
+  - subject: TurboConfiguration469136d2a872
+    predicate: hasGlobalPassThroughEnvironmentVariable
+    value: "SST_*"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:30 — '\"SST_*\"'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:34 — '\"build\": {'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:38 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"$TURBO_ROOT$/.env*\", \"!.beep/**\"],'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/.env*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:38 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"$TURBO_ROOT$/.env*\", \"!.beep/**\"],'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:38 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"$TURBO_ROOT$/.env*\", \"!.beep/**\"],'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "APP_ADMINS_EMAILS"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:40 — '\"APP_ADMINS_EMAILS\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "ALLOWED_EMAILS"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:41 — '\"ALLOWED_EMAILS\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "DATABASE_URL"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:42 — '\"DATABASE_URL\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "DATABASE_URL_UNPOOLED"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:43 — '\"DATABASE_URL_UNPOOLED\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "EMAIL_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:44 — '\"EMAIL_*\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "AUTH_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:45 — '\"AUTH_*\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "OPENAI_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:46 — '\"OPENAI_*\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "SECURITY_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:47 — '\"SECURITY_*\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "OAUTH_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:48 — '\"OAUTH_*\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "NEXT_PUBLIC_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:49 — '\"NEXT_PUBLIC_*\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "LIVEBLOCKS_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:50 — '\"LIVEBLOCKS_*\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasHashEnvironmentVariable
+    value: "RESEND_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:51 — '\"RESEND_*\"'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:37 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: taskCacheEnabled
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:36 — '\"cache\": true,'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "dist/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:54 — '\"dist/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "build/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:55 — '\"build/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: ".next/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:56 — '\".next/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "next-env.d.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:57 — '\"next-env.d.ts\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: ".expo/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:58 — '\".expo/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "_next/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:59 — '\"_next/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: ".output/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:60 — '\".output/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: ".vercel/output/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:61 — '\".vercel/output/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "storybook-static/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:62 — '\"storybook-static/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "**/node_modules/.tmp/*.tsbuildinfo"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:63 — '\"**/node_modules/.tmp/*.tsbuildinfo\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "!**/.turbo/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:64 — '\"!**/.turbo/**\",'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: hasTaskOutputPattern
+    value: "!.next/cache/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:65 — '\"!.next/cache/**\"'"
+    status: candidate
+  - subject: LaneBuild
+    predicate: isPersistentTask
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-001, CQ-022]
+    evidence:
+      - "turbo.json:35 — '\"persistent\": false,'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:68 — '\"lint\": {'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:72 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/biome.jsonc"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:73 — '\"$TURBO_ROOT$/biome.jsonc\",'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:74 — '\"$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**\",'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:75 — '\"$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**\",'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:76 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**\",'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasTaskInputPattern
+    value: "!$TURBO_ROOT$/tsconfig*.json"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:77 — '\"!$TURBO_ROOT$/tsconfig*.json\",'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:78 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneLint
+    predicate: hasDeclaredTaskDependency
+    value: "^lint"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:70 — '\"dependsOn\": [\"^lint\"],'"
+    status: candidate
+  - subject: LaneLint
+    predicate: taskCacheEnabled
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:69 — '\"cache\": true,'"
+    status: candidate
+  - subject: LaneLintFix
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:81 — '\"lint:fix\": {'"
+    status: candidate
+  - subject: LaneLintFix
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:85 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneLintFix
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/biome.jsonc"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:86 — '\"$TURBO_ROOT$/biome.jsonc\",'"
+    status: candidate
+  - subject: LaneLintFix
+    predicate: hasTaskInputPattern
+    value: "!$TURBO_ROOT$/tsconfig*.json"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:87 — '\"!$TURBO_ROOT$/tsconfig*.json\",'"
+    status: candidate
+  - subject: LaneLintFix
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:88 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneLintFix
+    predicate: hasDeclaredTaskDependency
+    value: "^lint:fix"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:83 — '\"dependsOn\": [\"^lint:fix\"],'"
+    status: candidate
+  - subject: LaneLintFix
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:82 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneCheck
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:91 — '\"check\": {'"
+    status: candidate
+  - subject: LaneCheck
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:94 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneCheck
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:95 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**\",'"
+    status: candidate
+  - subject: LaneCheck
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:96 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneCheck
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:92 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneCheck
+    predicate: hasEmptyTaskOutputDeclaration
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:98 — '\"outputs\": []'"
+    status: candidate
+  - subject: LaneTest
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:100 — '\"test\": {'"
+    status: candidate
+  - subject: LaneTest
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:106 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneTest
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.shared.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:107 — '\"$TURBO_ROOT$/vitest.shared.ts\",'"
+    status: candidate
+  - subject: LaneTest
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:108 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneTest
+    predicate: hasPassThroughEnvironmentVariable
+    value: "GITHUB_STEP_SUMMARY"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:102 — '\"GITHUB_STEP_SUMMARY\",'"
+    status: candidate
+  - subject: LaneTest
+    predicate: hasPassThroughEnvironmentVariable
+    value: "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE"
+    value_type: xsd:string
+    cq_justification: [CQ-015]
+    evidence:
+      - "turbo.json:103 — '\"BEEP_CREATE_PACKAGE_BUN_ARGS_FILE\"'"
+    status: candidate
+  - subject: LaneTestProperty
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:111 — '\"test:property\": {'"
+    status: candidate
+  - subject: LaneTestProperty
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:114 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneTestProperty
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.shared.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:115 — '\"$TURBO_ROOT$/vitest.shared.ts\",'"
+    status: candidate
+  - subject: LaneTestProperty
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.setup.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:116 — '\"$TURBO_ROOT$/vitest.setup.ts\",'"
+    status: candidate
+  - subject: LaneTestProperty
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:117 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneTestProperty
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_FC_NUM_RUNS"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:112 — '\"env\": [\"BEEP_FC_NUM_RUNS\", \"BEEP_FC_SEED\"],'"
+    status: candidate
+  - subject: LaneTestProperty
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_FC_SEED"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:112 — '\"env\": [\"BEEP_FC_NUM_RUNS\", \"BEEP_FC_SEED\"],'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:120 — '\"test:integration\": {'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:131 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.shared.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:132 — '\"$TURBO_ROOT$/vitest.shared.ts\",'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:133 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasHashEnvironmentVariable
+    value: "AI_VENICE_API_KEY"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:124 — '\"AI_VENICE_API_KEY\",'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_TEST_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:125 — '\"BEEP_TEST_*\",'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_TIKA_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:126 — '\"BEEP_TIKA_*\",'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasHashEnvironmentVariable
+    value: "CLOUD_BOX_TOKEN"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:127 — '\"CLOUD_BOX_TOKEN\",'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasHashEnvironmentVariable
+    value: "FIRECRAWL_API_KEY"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:128 — '\"FIRECRAWL_API_KEY\"'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:122 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneTestIntegration
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:121 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:136 — '\"test:integration:parallel\": {'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:147 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.shared.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:148 — '\"$TURBO_ROOT$/vitest.shared.ts\",'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:149 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasHashEnvironmentVariable
+    value: "AI_VENICE_API_KEY"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:140 — '\"AI_VENICE_API_KEY\",'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_TEST_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:141 — '\"BEEP_TEST_*\",'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_TIKA_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:142 — '\"BEEP_TIKA_*\",'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasHashEnvironmentVariable
+    value: "CLOUD_BOX_TOKEN"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:143 — '\"CLOUD_BOX_TOKEN\",'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasHashEnvironmentVariable
+    value: "FIRECRAWL_API_KEY"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:144 — '\"FIRECRAWL_API_KEY\"'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:138 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneTestIntegrationParallel
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:137 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneTestIntegrationSerial
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:152 — '\"test:integration:serial\": {'"
+    status: candidate
+  - subject: LaneTestIntegrationSerial
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:157 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneTestIntegrationSerial
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.shared.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:158 — '\"$TURBO_ROOT$/vitest.shared.ts\",'"
+    status: candidate
+  - subject: LaneTestIntegrationSerial
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:159 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneTestIntegrationSerial
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_TEST_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:155 — '\"env\": [\"BEEP_TEST_*\"],'"
+    status: candidate
+  - subject: LaneTestIntegrationSerial
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:154 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneTestIntegrationSerial
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:153 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:162 — '\"coverage\": {'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:172 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.shared.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:173 — '\"$TURBO_ROOT$/vitest.shared.ts\",'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:174 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_FC_SEED"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:166 — '\"BEEP_FC_SEED\",'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasHashEnvironmentVariable
+    value: "NODE_OPTIONS"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:167 — '\"NODE_OPTIONS\",'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasHashEnvironmentVariable
+    value: "VITEST_COVERAGE_REPORT_ONLY"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:168 — '\"VITEST_COVERAGE_REPORT_ONLY\",'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasHashEnvironmentVariable
+    value: "VITEST_COVERAGE_RATCHET"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:169 — '\"VITEST_COVERAGE_RATCHET\"'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:164 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:163 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneCoverage
+    predicate: hasTaskOutputPattern
+    value: "coverage/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:176 — '\"outputs\": [\"coverage/**\"]'"
+    status: candidate
+  - subject: LaneCodegen
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:178 — '\"codegen\": {'"
+    status: candidate
+  - subject: LaneCodegen
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:181 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"!.beep/**\"]'"
+    status: candidate
+  - subject: LaneCodegen
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:181 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"!.beep/**\"]'"
+    status: candidate
+  - subject: LaneCodegen
+    predicate: hasDeclaredTaskDependency
+    value: "^codegen"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:180 — '\"dependsOn\": [\"^codegen\"],'"
+    status: candidate
+  - subject: LaneCodegen
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:179 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:183 — '\"audit\": {'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:187 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/biome.jsonc"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:188 — '\"$TURBO_ROOT$/biome.jsonc\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/vitest.shared.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:189 — '\"$TURBO_ROOT$/vitest.shared.ts\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/.env*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:190 — '\"$TURBO_ROOT$/.env*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:191 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:192 — '\"!.beep/**\"'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "APP_ADMINS_EMAILS"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:195 — '\"APP_ADMINS_EMAILS\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "ALLOWED_EMAILS"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:196 — '\"ALLOWED_EMAILS\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "DATABASE_URL"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:197 — '\"DATABASE_URL\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "DATABASE_URL_UNPOOLED"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:198 — '\"DATABASE_URL_UNPOOLED\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "EMAIL_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:199 — '\"EMAIL_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "AUTH_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:200 — '\"AUTH_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "OPENAI_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:201 — '\"OPENAI_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "SECURITY_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:202 — '\"SECURITY_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "OAUTH_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:203 — '\"OAUTH_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "NEXT_PUBLIC_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:204 — '\"NEXT_PUBLIC_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "LIVEBLOCKS_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:205 — '\"LIVEBLOCKS_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "RESEND_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:206 — '\"RESEND_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_TEST_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:207 — '\"BEEP_TEST_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "BEEP_TIKA_*"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:208 — '\"BEEP_TIKA_*\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasHashEnvironmentVariable
+    value: "CI"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:209 — '\"CI\"'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasDeclaredTaskDependency
+    value: "^audit"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:185 — '\"dependsOn\": [\"^audit\"],'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: taskCacheEnabled
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:184 — '\"cache\": true,'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "dist/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:212 — '\"dist/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "build/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:213 — '\"build/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: ".next/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:214 — '\".next/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "next-env.d.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:215 — '\"next-env.d.ts\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: ".expo/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:216 — '\".expo/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "_next/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:217 — '\"_next/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: ".output/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:218 — '\".output/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: ".vercel/output/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:219 — '\".vercel/output/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "docs/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:220 — '\"docs/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "**/node_modules/.tmp/*.tsbuildinfo"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:221 — '\"**/node_modules/.tmp/*.tsbuildinfo\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "!**/.turbo/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:222 — '\"!**/.turbo/**\",'"
+    status: candidate
+  - subject: LaneAudit
+    predicate: hasTaskOutputPattern
+    value: "!.next/cache/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:223 — '\"!.next/cache/**\"'"
+    status: candidate
+  - subject: LaneTransit
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:227 — '\"transit\": {'"
+    status: candidate
+  - subject: LaneTransit
+    predicate: hasDeclaredTaskDependency
+    value: "^transit"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:228 — '\"dependsOn\": [\"^transit\"]'"
+    status: candidate
+  - subject: LaneDocgen
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:230 — '\"docgen\": {'"
+    status: candidate
+  - subject: LaneDocgen
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:233 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"!.beep/**\"],'"
+    status: candidate
+  - subject: LaneDocgen
+    predicate: hasTaskInputPattern
+    value: "!.beep/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:233 — '\"inputs\": [\"$TURBO_DEFAULT$\", \"!.beep/**\"],'"
+    status: candidate
+  - subject: LaneDocgen
+    predicate: hasDeclaredTaskDependency
+    value: "transit"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:232 — '\"dependsOn\": [\"transit\"],'"
+    status: candidate
+  - subject: LaneDocgen
+    predicate: taskCacheEnabled
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:231 — '\"cache\": true,'"
+    status: candidate
+  - subject: LaneDocgen
+    predicate: hasTaskOutputPattern
+    value: "docs/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:234 — '\"outputs\": [\"docs/**\", \".beep/docgen/**\"]'"
+    status: candidate
+  - subject: LaneDocgen
+    predicate: hasTaskOutputPattern
+    value: ".beep/docgen/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:234 — '\"outputs\": [\"docs/**\", \".beep/docgen/**\"]'"
+    status: candidate
+  - subject: LaneDev
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:236 — '\"dev\": {'"
+    status: candidate
+  - subject: LaneDev
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:239 — '\"dependsOn\": [\"^build\"]'"
+    status: candidate
+  - subject: LaneDev
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:238 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneDev
+    predicate: isPersistentTask
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-001, CQ-022]
+    evidence:
+      - "turbo.json:237 — '\"persistent\": true,'"
+    status: candidate
+  - subject: LaneStorybook
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:241 — '\"storybook\": {'"
+    status: candidate
+  - subject: LaneStorybook
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:243 — '\"cache\": false'"
+    status: candidate
+  - subject: LaneStorybook
+    predicate: isPersistentTask
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-001, CQ-022]
+    evidence:
+      - "turbo.json:242 — '\"persistent\": true,'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:245 — '\"storybook:build\": {'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:248 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/apps/storybook/.storybook/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:249 — '\"$TURBO_ROOT$/apps/storybook/.storybook/**\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:250 — '\"$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:251 — '\"$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:252 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/src/**\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:253 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/assets/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:254 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/assets/**\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:255 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/drivers/graph-3d/src/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:256 — '\"$TURBO_ROOT$/packages/drivers/graph-3d/src/**\",'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:257 — '\"$TURBO_ROOT$/packages/drivers/graph-3d/stories/**\"'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:246 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneStorybookBuild
+    predicate: hasTaskOutputPattern
+    value: "storybook-static/**"
+    value_type: xsd:string
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:259 — '\"outputs\": [\"storybook-static/**\"]'"
+    status: candidate
+  - subject: LaneStorybookStart
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:261 — '\"storybook:start\": {'"
+    status: candidate
+  - subject: LaneStorybookStart
+    predicate: hasDeclaredTaskDependency
+    value: "storybook:build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:264 — '\"dependsOn\": [\"storybook:build\"]'"
+    status: candidate
+  - subject: LaneStorybookStart
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:263 — '\"cache\": false,'"
+    status: candidate
+  - subject: LaneStorybookStart
+    predicate: isPersistentTask
+    value: true
+    value_type: xsd:boolean
+    cq_justification: [CQ-001, CQ-022]
+    evidence:
+      - "turbo.json:262 — '\"persistent\": true,'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasLaneKind
+    value: "TurboTaskLane"
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "turbo.json:266 — '\"test:storybook\": {'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_DEFAULT$"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:270 — '\"$TURBO_DEFAULT$\",'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/apps/storybook/.storybook/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:271 — '\"$TURBO_ROOT$/apps/storybook/.storybook/**\",'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:272 — '\"$TURBO_ROOT$/apps/storybook/vitest.storybook.config.ts\",'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:273 — '\"$TURBO_ROOT$/apps/storybook/vitest.storybook.setup.ts\",'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/src/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:274 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/src/**\",'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:275 — '\"$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**\",'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/drivers/graph-3d/src/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:276 — '\"$TURBO_ROOT$/packages/drivers/graph-3d/src/**\",'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasTaskInputPattern
+    value: "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
+    value_type: xsd:string
+    cq_justification: [CQ-011, CQ-015]
+    evidence:
+      - "turbo.json:277 — '\"$TURBO_ROOT$/packages/drivers/graph-3d/stories/**\"'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: hasDeclaredTaskDependency
+    value: "^build"
+    value_type: xsd:string
+    cq_justification: [CQ-001, CQ-020]
+    evidence:
+      - "turbo.json:268 — '\"dependsOn\": [\"^build\"],'"
+    status: candidate
+  - subject: LaneTestStorybook
+    predicate: taskCacheEnabled
+    value: false
+    value_type: xsd:boolean
+    cq_justification: [CQ-005, CQ-015]
+    evidence:
+      - "turbo.json:267 — '\"cache\": false,'"
+    status: candidate

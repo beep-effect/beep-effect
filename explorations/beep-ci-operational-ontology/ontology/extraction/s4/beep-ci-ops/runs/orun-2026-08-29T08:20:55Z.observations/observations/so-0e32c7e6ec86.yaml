@@ -1,0 +1,23 @@
+id: so:sha256:0e32c7e6ec861a9385ddd9c3833698560c2c0ca134fba57276d87c6f5ce9ec1d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 23
+  end_line: 23
+  content_sha256: 7cf5142c6c114e890e168258a8453632ae37296d9f31b33eff3b6e9e883fa5cd
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournal");
+epistemic_status: parser_derived

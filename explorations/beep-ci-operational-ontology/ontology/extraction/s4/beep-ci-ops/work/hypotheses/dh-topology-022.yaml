@@ -1,0 +1,25 @@
+id: "dh:topology:022"
+observation_refs:
+  - "po:sha256:6d3eadf1d7cefdc364000c6b87c77c3da7d999e7fd1de7971b677f2634b2f8a3"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/architecture-lab-use-cases workspace package"
+  description: "The workspace software package information artifact identified by @beep/architecture-lab-use-cases in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/architecture-lab-use-cases as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The topology-row DTO counterexample wins: @beep/architecture-lab-use-cases 92 can be parsed and consumed by CQ-004 without establishing a governed package-reference artifact or software-package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

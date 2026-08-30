@@ -1,0 +1,25 @@
+id: so:sha256:4ca539a7a3ef2f6716f98022b42a4b54032476fd6ca39745d1a1b2aa2e9cd150
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 155
+  end_line: 171
+  content_sha256: 996580b446387f1f4fd0b25bf354450bd08c1409caa15670d86843887440cb3e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts::YeetAdmissionLease
+  lexical_name: YeetAdmissionLease
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetAdmissionLease
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetAdmissionLease extends S.Class<YeetAdmissionLease>($I`YeetAdmissionLease`)(
+epistemic_status: parser_derived

@@ -60,7 +60,7 @@ export const typedIdentityExportBlock = (packageName: string): string => {
     ` * import { ${accessorName} } from "@beep/identity"`,
     " *",
     ` * const id = ${accessorName}.make("${exampleName}")`,
-    " * void id",
+    " * console.log(id)",
     ` * ${fence}`,
     " *",
     " * @category configuration",

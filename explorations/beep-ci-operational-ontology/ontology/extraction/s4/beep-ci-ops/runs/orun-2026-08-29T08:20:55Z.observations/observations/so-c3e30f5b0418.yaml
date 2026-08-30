@@ -1,0 +1,24 @@
+id: so:sha256:c3e30f5b0418ac3d0176afb335481f96e7c977a690fc83b254f5c3f3cbcfd843
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 324
+  end_line: 373
+  content_sha256: baf48d995c9875cc25fd33b65df15d7d01cb7613eacd0a6c335db674ea0057d3
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::selectPackageVerifyTargetForTesting
+  lexical_name: selectPackageVerifyTargetForTesting
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: selectPackageVerifyTargetForTesting
+source_excerpt: export const selectPackageVerifyTargetForTesting = Effect.fn("PackageVerify.selectPackageVerifyTarget")(function*
+  ({
+epistemic_status: parser_derived

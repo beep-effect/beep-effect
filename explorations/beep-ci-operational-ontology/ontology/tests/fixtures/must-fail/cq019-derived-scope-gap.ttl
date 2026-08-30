@@ -1,0 +1,7 @@
+# Falsifiability (round-3 H-01, Oxigraph-proven): a ScheduleProposal whose STEPS
+# schedule a narrowed WorkUnit, with NO materialized proposal-level hasScope and NO
+# provenance edge, laundered through arm 2 — arm 3 derives the scope through the steps.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:sp-derived a ciops:ScheduleProposal ; ciops:hasStep ciops:st-x .
+ciops:st-x ciops:stepIndex 1 ; ciops:schedulesWorkUnit ciops:wu-x .
+ciops:wu-x a ciops:WorkUnit ; ciops:hasScope ciops:AffectedScope .

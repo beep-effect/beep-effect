@@ -1,0 +1,10 @@
+id: po:sha256:6d3eadf1d7cefdc364000c6b87c77c3da7d999e7fd1de7971b677f2634b2f8a3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 93
+  end_line: 93
+quote: '@beep/architecture-lab-use-cases 92'
+epistemic_status: quoted_prose

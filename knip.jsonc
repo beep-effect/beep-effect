@@ -4,10 +4,9 @@
   // specifier can resolve a TSX module, matching TypeScript and the import-extension policy.
   "workspaces": {
     "packages/**": {
-      // Library packages publish their whole top-level src surface via a wildcard export —
-      // flat-uniform `"./*": "./src/*.ts"` or dir-uniform `"./*": "./src/*/index.ts"` — so
-      // treat both module shapes as entries (src/index.ts is already covered by the exports map).
-      "entry": ["src/*.ts", "src/*/index.ts"]
+      // Top-level source modules are public wildcard exports in flat-uniform packages.
+      // Directory barrels are discovered from each package's export map.
+      "entry": ["src/*.ts"]
     },
     "packages/ecosystem/effect-drizzle": {
       // These consumers are invoked out of band: tstyche discovers the contract file,
@@ -24,6 +23,16 @@
       // Pinned data modules are intentionally package-private and have no public barrel.
       // Treat them as generated asset entries until the later domain-contract phase imports them.
       "entry": ["src/internal/generated/free-law-project/*.ts"]
+    },
+    "packages/architecture-lab/server": {
+      // Operation plans read this proof barrel by file path rather than importing it.
+      "entry": ["src/entities/index.ts"]
+    },
+    "packages/architecture-lab/tables": {
+      "entry": ["src/entities/index.ts"]
+    },
+    "packages/architecture-lab/use-cases": {
+      "entry": ["src/entities/index.ts"]
     },
     "infra": {
       // Pulumi stack entrypoints (src/internal/*-entry.ts) are referenced from Pulumi.yaml,
@@ -54,6 +63,16 @@
         "@tailwindcss/postcss",
         "tailwindcss"
       ]
+    },
+    "apps/labs/trustgraph-workbench": {
+      // Knip's dependency graph does not follow CSS @imports. The app's global stylesheet
+      // imports @beep/ui/styles/globals.css to supply the shared Tailwind foundation.
+      "ignoreDependencies": ["@beep/ui"]
+    },
+    "apps/labs/lejeune-bolt-workbench": {
+      // Knip does not follow the PostCSS config re-export or the global CSS import that consume
+      // the shared UI package at build time.
+      "ignoreDependencies": ["@beep/ui"]
     },
     "apps/storybook": {
       // vitest.storybook.config.ts is invoked via `vitest run --config vitest.storybook.config.ts`
@@ -87,13 +106,6 @@
   // Ops scripts, scratch, test fixtures, runnable examples, and build configs are not part of
   // the analyzable source graph.
   "ignore": [
-    // codex-companion materializes full repo worktrees here at runtime; they are
-    // sibling checkouts, not source, and scanning one doubles every finding.
-    ".codex/**",
-    // Claude Code worktree-isolated sessions materialize checkouts under
-    // .claude/worktrees/ the same way; a live one floods knip with its exports.
-    // Scoped to worktrees only so tracked skill resources stay analyzable.
-    ".claude/worktrees/**",
     // Impeccable is a vendored agent skill mirrored for Claude Code and GitHub
     // Copilot. Its standalone detector scripts are invoked by editor hooks and
     // are not part of the workspace import graph.
@@ -104,7 +116,7 @@
     // explorations/CLAUDE.md); prototype code there (e.g. identity-as-iri/assets/ontology-prototype)
     // is not a workspace member and isn't part of the analyzable source graph, same as goals/**.
     "explorations/**",
-    "scratchpad/**",
+    // Generated GitHub runner SDK source is maintained outside the workspace graph.
     "infra/ci-runners/sdks/**",
     // Self-contained Lambda bundle source (own package.json + lockfile, not a workspace
     // member): esbuild bundles it into the deployed ZIP via infra/lambda/turbo-cache/build.sh,
@@ -116,11 +128,13 @@
     // tools/skillopt is a uv-managed Python project; its tests/fixtures contain
     // TS files used as SkillOpt eval-task fixtures, not workspace source.
     "tools/skillopt/**",
-    // tools/tsgo-shim provides the repo `tsgo` bin (consumed via node_modules/.bin,
-    // never imported), executing the Effect-patched @typescript/native compiler.
-    "tools/tsgo-shim/**",
-    // architecture proof barrels: read BY FILE PATH by beep architecture OperationPlan (see repo-cli test architecture-operation-plan.test.ts) — not import-referenced, knip cannot see the usage
-    "packages/architecture-lab/*/src/entities/index.ts"
+    "tools/skillopt/**"
+  ],
+  // Browser QA operators copy this documented harness template beside the app under test
+  // (see `.claude/skills/browser-qa-loop/SKILL.md`); it is a distributed skill resource,
+  // not an import-reachable workspace module.
+  "ignoreFiles": [
+    ".claude/skills/browser-qa-loop/resources/qa-capture-template.mjs"
   ],
   // @effect/language-service is a TypeScript LSP plugin referenced from tsconfig `plugins`
   // (editor-only, best-effort); it is not an importable runtime/build dependency.
@@ -128,29 +142,16 @@
   // CLI flag in every package's build script, which knip can't trace.
   "ignoreDependencies": [
     "@effect/language-service",
-    "babel-plugin-annotate-pure-calls",
-    // brace-expansion, fast-uri, hono, nanoid: root `dependencies` entries that exist solely to
-    // back the security-pin `overrides` (see package.json overrides); nothing imports them at root.
-    "brace-expansion",
-    "fast-uri",
-    "hono",
-    "nanoid"
+    "babel-plugin-annotate-pure-calls"
   ],
   // op = 1Password CLI, beep-cli = repo CLI bin, portless = dev proxy invoked from app scripts —
   // binaries not provided as a resolvable dependency import. readlink is a POSIX/coreutils
   // system binary (root `instructions:drift` script), never an npm-installable dependency.
-  // rustc is the Rust toolchain compiler, invoked via subprocess (`$`rustc -vV``) by
-  // apps/professional-desktop/scripts/build-sidecar.ts to read the host target triple —
-  // a system toolchain binary, not an npm-installable dependency.
-  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink", "rustc"],
+  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink"],
   // Scratchpad is a private experiment workspace kept in the root install graph
   // for dependency/TS trials but excluded from Knip's package graph. Scaffolded
   // test fixtures are likewise deliberately outside dependency-drift review.
-  "ignoreWorkspaces": [
-    "scratchpad",
-    "infra/ci-runners/sdks/**",
-    "**/test/fixtures/mock-monorepo"
-  ],
+  "ignoreWorkspaces": ["scratchpad", "**/test/fixtures/mock-monorepo"],
   "rules": {
     // Duplicate exports here are intentional conventions: Schema/<DomainName> dual-naming on
     // schema modules, Overridable/Overrideable upstream-compat aliases, and named/default React

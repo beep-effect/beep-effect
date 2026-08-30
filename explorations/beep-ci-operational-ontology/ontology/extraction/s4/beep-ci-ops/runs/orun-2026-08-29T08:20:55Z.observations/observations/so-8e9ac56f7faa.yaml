@@ -1,0 +1,27 @@
+id: so:sha256:8e9ac56f7faaa4343dc5e43ba0d5db57423412ece68eb4b5d65adbce396d5976
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 716
+  end_line: 721
+  content_sha256: 80d866f0a614b597245afb5e2bae82ddcc0324748714cf53768ba08c1d12c424
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::RunCapturedStreamsOptions
+  lexical_name: RunCapturedStreamsOptions
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_intersection_member
+  object: SpawnFields
+- predicate: declares_type_alias
+  object: RunCapturedStreamsOptions
+- predicate: exports_symbol
+  object: RunCapturedStreamsOptions
+source_excerpt: export type RunCapturedStreamsOptions = SpawnFields & {
+epistemic_status: parser_derived

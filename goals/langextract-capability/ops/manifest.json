@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/langextract-capability",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 265,
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",

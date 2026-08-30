@@ -1,0 +1,29 @@
+id: so:sha256:5ff32d0655a8cc9fbddace495da9b640c2633351caa4759c92235f53782b68e3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 154
+  end_line: 158
+  content_sha256: 5b5332e9e213869355e252047f9d0c77c33d7ed3be0a317f5d18b89b26d84249
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::RepoGraphHealthStatus
+  lexical_name: RepoGraphHealthStatus
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: error
+- predicate: declares_literal_member
+  object: ok
+- predicate: declares_literal_member
+  object: warning
+- predicate: exports_symbol
+  object: RepoGraphHealthStatus
+source_excerpt: export const RepoGraphHealthStatus = LiteralKit(["ok", "warning", "error"]).pipe(
+epistemic_status: parser_derived

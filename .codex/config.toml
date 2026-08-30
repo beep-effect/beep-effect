@@ -3,11 +3,8 @@
 # Claude remains the source of truth for the skill bodies in `.claude/skills`.
 # Codex discovers the mirrored repo skill root through `.agents/skills`, which is
 # linked to that Claude tree.
-# Keep repository sessions inside the checkout by default. Network access,
-# writes outside the workspace, and other privileged operations require an
-# explicit approval at the point of use.
-approval_policy = "never"
-sandbox_mode = "danger-full-access"
+# Permission and approval defaults are intentionally inherited from the user's
+# ~/.codex/config.toml; this project does not narrow them.
 
 [features]
   # The ChatGPT app/connectors MCP is useful for ad-hoc GitHub work, but it makes
@@ -55,6 +52,9 @@ sandbox_mode = "danger-full-access"
     enabled = true
   [[skills.config]]
     name = "onepassword-secret-refs"
+    enabled = true
+  [[skills.config]]
+    name = "ontology-foundational-auditor"
     enabled = true
   [[skills.config]]
     name = "oracle"

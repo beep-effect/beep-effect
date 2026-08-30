@@ -1,0 +1,32 @@
+id: ic:alt3:010
+hypothesis_ref: dh:sched-core:024
+identity:
+  supplies_identity: true
+  identity_criterion: Two quarantined records are the same iff they are the same undecodable
+    admission payload physically moved out of live ticket or lease state into the quarantine
+    location for operator inspection. The malformed tag is classification evidence rather
+    than the criterion.
+  reidentification_key:
+  - quarantine destination basename
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one admission file payload relocated as a quarantine object
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - phase
+  - event
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - removed by hand from quarantine
+  - successfully decoded and live
+counterexamples:
+- description: A dead-but-decodable lease is reaped, not quarantined; an empty file is skipped.
+    Neither is this record.
+status: proposed

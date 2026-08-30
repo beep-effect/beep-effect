@@ -1,0 +1,31 @@
+id: "dh:turbo-cache:002"
+observation_refs:
+  - "so:sha256:a334124621d3521f6b21e8ee7343c0a68ddab883a16a2d908fbdf14599349189"
+  - "po:sha256:3425016f996ff67665578be63737402e78cd0b472a6a5f076f2b75ed3222f197"
+  - "po:sha256:583ebf3bf3c93791289ee458576187a88e584ff6b7cb872b85f27463b3e2bd83"
+  - "po:sha256:5f28a425ea60165fe183d20c2dd424090c2d9d8e3885384ac72d49c224211a7d"
+  - "po:sha256:794e5d976270935225b239f72d5f1c0341a1bcf8ffc704558171002af0c76181"
+  - "po:sha256:9500975a58d50d0d0d53263018733f445e635414c251432cb6d8d62ad9e38b39"
+  - "po:sha256:bddb16c8e40ccdce0157b3e24c5b662f28ac400b7eb7a336920c90b166089c74"
+  - "po:sha256:f40d469d5323c5b6fe5863ecc02dcf44aeaf37bf10ee339b6b80f79a2bd66879"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named build"
+  description: "A repeatable work-unit specification carrying dependency, input, environment, cache, persistence, and output declarations; not a build execution."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A verification lane realized by the build task specification"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A particular build execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A pure turbo.json task configuration can carry the observed dependency, inputs, environment, cache, persistence, and output fields and govern repeated commands while remaining implementation configuration; no cited record attests a package-resolved prescription or governed identity."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

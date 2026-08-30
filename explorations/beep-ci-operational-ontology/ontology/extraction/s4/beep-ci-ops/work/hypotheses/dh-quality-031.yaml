@@ -1,0 +1,21 @@
+id: "dh:quality:031"
+observation_refs:
+  - "so:sha256:2f98674c6ceae8db91b65dcc340eca5eb66c65ae8853ab555ac643b1155d5f97"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration isProofTaskName in TurboConfigProof.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by isProofTaskName"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is unrepresentable_construct for the source declaration. By contract that fact cannot ground a surviving referent, and it supplies no observed domain behavior, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

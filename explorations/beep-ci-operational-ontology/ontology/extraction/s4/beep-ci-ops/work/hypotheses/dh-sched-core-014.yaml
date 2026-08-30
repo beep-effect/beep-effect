@@ -1,0 +1,26 @@
+id: "dh:sched-core:014"
+observation_refs:
+  - "so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f"
+  - "po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16"
+cq_warrants: []
+proposed_referent:
+  label: "active admission-charge total"
+  description: "The aggregate token charge currently consumed by live admission leases."
+representation_status: domain_referent
+alternatives:
+  - label: "snapshot field containing a computed sum"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "array-reduction result with no independent meaning"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "Concurrent promotion and overshoot rollback show that the aggregate charge borne by live leases is a time-indexed quantity of the admission situation, not solely a status projection. Its appropriate bearer and whether snapshots should reify it remain foundational questions."
+  discriminator: "The scheduler admits a contender only when its weight fits live capacity and rolls back the newest lease when concurrent promotions push the active charge over capacity."
+epistemic_status: proposed
+confidence: {value: 0.87, use_for_acceptance: false}

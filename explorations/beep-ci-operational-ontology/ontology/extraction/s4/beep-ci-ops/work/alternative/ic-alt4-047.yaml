@@ -1,0 +1,27 @@
+id: ic:alt4:047
+hypothesis_ref: dh:turbo-cache:004
+identity:
+  supplies_identity: true
+  identity_criterion: Two Turbo check task specifications are the same when they occupy the same pipeline slot with the same upstream build dependency and the same empty output declaration; the key spelling check is evidence, never the criterion.
+  reidentification_key:
+    - check
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: Depends-on plus empty outputs compose one check-task prescription.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies:
+    - turbo pipeline
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: A check run's cached artifact or exit code is an execution result, not this specification.
+  - description: Another task with dependsOn ^build but non-empty outputs is a different prescription.
+status: proposed

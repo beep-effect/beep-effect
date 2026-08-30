@@ -1,0 +1,24 @@
+id: "dh:yeet-handler:068"
+observation_refs:
+  - "so:sha256:0fd0abf7cb302f4f763b3a58aa6af6407d41aed5e9405aeb5ac6b97970e90ff4"
+  - "so:sha256:762d3dd11bc844d2df9f208f0ccba2170033d9af6c1a1c9e04e7e8b0f7c764b0"
+  - "po:sha256:88e8e724ffb0967198fa555ab886c8a9ea3e14cf26614dd018b57b409b1c79ef"
+  - "po:sha256:fba9735d9ec0b7c541bbfc2ff30b0a3dd19d8e4b8e37874547ce6a0768b5e4d5"
+cq_warrants: ["CQ-022", "CQ-025"]
+proposed_referent:
+  label: "WorkUnitExecution has execution state"
+  description: "A candidate relation from a dated execution occurrence to an execution-state member; the observations attach a broader status vocabulary to a verdict-lane record."
+representation_status: unresolved
+alternatives:
+  - label: "verdict-lane status field"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "mixed lane-disposition lexical vocabulary"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observed vocabulary includes not-run and skipped dispositions and is carried by a summary record, so the lane does not establish a relation whose bearer is necessarily an actual WorkUnitExecution."
+epistemic_status: proposed
+confidence: {value: 0.4, use_for_acceptance: false}

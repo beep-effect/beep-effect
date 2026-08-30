@@ -131,6 +131,8 @@ describe("lab identity segment", () => {
     const rendered = LabIdentitySegment.renderLabExportsRegion(["zeta-lab", "probe-lab"]);
     expect(rendered).toContain(CreatePackageIdentityRegistration.typedIdentityExportBlock("probe-lab"));
     expect(rendered).toContain("**Example** (Make package ID)");
+    expect(rendered).toContain("console.log(id)");
+    expect(rendered).not.toContain("void id");
     expect(rendered).toContain("@category configuration");
     expect(markerIndex("$ProbeLabId")(rendered)).toBeLessThan(markerIndex("$ZetaLabId")(rendered));
   });

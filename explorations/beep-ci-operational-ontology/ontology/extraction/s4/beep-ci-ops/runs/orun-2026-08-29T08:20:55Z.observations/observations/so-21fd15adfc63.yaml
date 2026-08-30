@@ -1,0 +1,23 @@
+id: so:sha256:21fd15adfc632d3c13e0b52ed7a7b241aa285daf9e695b7a4f91880efd71422e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 31
+  end_line: 38
+  content_sha256: f0c41b6ff3de90d7515d167acf64f4e1e4f536080269205dd05e961ec773deb9
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts::TurboQueryAffectedReason
+  lexical_name: TurboQueryAffectedReason
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: class TurboQueryAffectedReason extends S.Class<TurboQueryAffectedReason>($I`TurboQueryAffectedReason`)(
+epistemic_status: parser_derived

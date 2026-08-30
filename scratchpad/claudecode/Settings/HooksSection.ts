@@ -1,6 +1,8 @@
 /**
  * Schema for the `hooks` subtree of a Claude Code settings.json file.
  *
+ * **Details**
+ *
  * Claude Code's hooks wire-up format looks like:
  *
  * ```jsonc
@@ -21,6 +23,7 @@
  * Claude Code supports five hook types: `command`, `http`, `mcp_tool`,
  * `prompt`, and `agent`. This module schematizes all five.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -150,8 +153,11 @@ export class CommandHookEntry extends S.Class<CommandHookEntry>($I`CommandHookEn
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.CommandHookEntry.Encoded) => input
- * console.log(accept)
+ * const input: Settings.CommandHookEntry.Encoded = {
+ *   type: "command",
+ *   command: "bun hook.ts"
+ * }
+ * console.log(input.command)
  * ```
  *
  * @category type-level
@@ -211,8 +217,11 @@ export class HttpHookEntry extends S.Class<HttpHookEntry>($I`HttpHookEntry`)(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.HttpHookEntry.Encoded) => input
- * console.log(accept)
+ * const input: Settings.HttpHookEntry.Encoded = {
+ *   type: "http",
+ *   url: "https://hooks.example.com"
+ * }
+ * console.log(input.url)
  * ```
  *
  * @category type-level
@@ -275,8 +284,12 @@ export class McpToolHookEntry extends S.Class<McpToolHookEntry>($I`McpToolHookEn
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.McpToolHookEntry.Encoded) => input
- * console.log(accept)
+ * const input: Settings.McpToolHookEntry.Encoded = {
+ *   type: "mcp_tool",
+ *   server: "policy",
+ *   tool: "check"
+ * }
+ * console.log(input.tool)
  * ```
  *
  * @category type-level
@@ -336,8 +349,11 @@ export class PromptHookEntry extends S.Class<PromptHookEntry>($I`PromptHookEntry
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.PromptHookEntry.Encoded) => input
- * console.log(accept)
+ * const input: Settings.PromptHookEntry.Encoded = {
+ *   type: "prompt",
+ *   prompt: "Review $ARGUMENTS"
+ * }
+ * console.log(input.prompt)
  * ```
  *
  * @category type-level
@@ -390,6 +406,18 @@ export class AgentHookEntry extends S.Class<AgentHookEntry>($I`AgentHookEntry`)(
 
 /**
  * Companion types for {@link AgentHookEntry}.
+ *
+ * **Example** (Describe encoded agent hook input)
+ *
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const input: Settings.AgentHookEntry.Encoded = {
+ *   type: "agent",
+ *   prompt: "Verify $ARGUMENTS"
+ * }
+ * console.log(input.prompt)
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -495,6 +523,18 @@ export class HookMatcherGroup extends S.Class<HookMatcherGroup>($I`HookMatcherGr
 
 /**
  * Companion types for {@link HookMatcherGroup}.
+ *
+ * **Example** (Describe encoded matcher group)
+ *
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const input: Settings.HookMatcherGroup.Encoded = {
+ *   matcher: "Bash",
+ *   hooks: [{ type: "command", command: "bun hook.ts" }]
+ * }
+ * console.log(input.hooks.length)
+ * ```
  *
  * @category type-level
  * @since 0.0.0

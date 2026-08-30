@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:005"
+hypothesis_ref: "dh:turbo-cache:005"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same test task specification only when they are the same authored repeatable testing instruction in the same versioned configuration lineage with the same complete inherited prescriptions; the test key and pass-through environment declaration alone do not decide sameness."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key test"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The pass-through environment and input declarations participate in one reusable test instruction."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A test verification lane realized by the specification"
+    - "A root template for package-specific test specifications"
+  existential_dependencies:
+    - "The enclosing configuration and package task graph that complete the instruction"
+    - "At least one bearer of the test instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "The cited evidence exposes invocation-context variables but not the package scripts or test selection, so many semantically different test tasks can satisfy the same observed declaration."
+status: proposed

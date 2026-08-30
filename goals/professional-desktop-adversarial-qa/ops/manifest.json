@@ -10,8 +10,9 @@
   },
   "packetPath": "goals/professional-desktop-adversarial-qa",
   "lifecycle": "active",
+  "statusNote": "P1 remains in progress. Rounds 1 and 2 contain unresolved evidence-backed findings, so the campaign has not reached its two-consecutive-clean-round exit gate.",
   "mission": "Run adversarial QA and repair loops over the professional desktop surface until two consecutive rounds are clean.",
-  "executionCapable": false,
+  "executionCapable": true,
   "reflectionRequired": false,
   "provenance": {
     "exploration": "",
@@ -28,11 +29,20 @@
     "AGENTS.md",
     "CLAUDE.md",
     "goals/professional-desktop-adversarial-qa/README.md",
+    "goals/professional-desktop-adversarial-qa/GOAL.md",
     "goals/professional-desktop-adversarial-qa/ledgers/findings.md",
     "goals/professional-desktop-adversarial-qa/ledgers/waivers.md"
   ],
   "researchReports": [],
-  "agentLaunchers": [],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/professional-desktop-adversarial-qa/GOAL.md"
+    }
+  ],
   "phases": [
     {
       "id": "P0",

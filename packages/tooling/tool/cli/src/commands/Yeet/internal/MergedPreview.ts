@@ -74,6 +74,28 @@ const $I = $RepoCliId.create("commands/Yeet/internal/MergedPreview");
 export const YEET_MERGED_PREVIEW_DIR_NAME = `merged-preview-${process.pid}`;
 
 /**
+ * Conventional commit subject used for the synthetic merged-preview commit.
+ *
+ * **Details**
+ *
+ * The preview commit is checked by the same commitlint lane as ordinary
+ * commits. Keep the subject independent of branch and base names so arbitrary
+ * ref lengths cannot violate the repository's header limit.
+ *
+ * **Example** (Read the preview commit subject)
+ *
+ * ```ts
+ * import { YEET_MERGED_PREVIEW_COMMIT_MESSAGE } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_MERGED_PREVIEW_COMMIT_MESSAGE)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const YEET_MERGED_PREVIEW_COMMIT_MESSAGE = "chore(yeet): verify merged preview";
+
+/**
  * A merge preview whose tree merged cleanly.
  *
  * @category models
@@ -539,7 +561,7 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
     treeSha,
     ...parents,
     "-m",
-    `yeet verify --merged preview of ${context.branch} onto ${context.base}`,
+    YEET_MERGED_PREVIEW_COMMIT_MESSAGE,
   ]);
   const commitSha = yield* O.match(gitObjectIdFromOutput(committed.output), {
     onNone: () =>

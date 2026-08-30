@@ -1,0 +1,21 @@
+id: "fa:worktree-config:003"
+hypothesis_ref: "dh:worktree-config:007"
+identity_card_ref: "ic:worktree-config:003"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Review-thread information object with resolution stored as a mutable attribute rather than a phase subtype"
+    still_viable: true
+  - label: "Resolution-state quality inhering in the review-thread information object"
+    still_viable: true
+  - label: "Review-thread resolution obligation rather than the unresolved thread itself"
+    still_viable: true
+strongest_counterexample: >-
+  Resolving and reopening one anchored discussion changes whether it is
+  unresolved without changing the discussion individual. Any model that gives
+  unresolved threads their own identity or equates them with the obligation to
+  answer them fails on that lifecycle.
+verdict: analyzed

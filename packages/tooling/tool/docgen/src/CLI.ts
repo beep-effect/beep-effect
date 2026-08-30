@@ -103,8 +103,8 @@ const splitGlobList: (value: string) => ReadonlyArray<string> = flow(
 const resolveCompilerOptionsInput = (filePath: O.Option<string>, text: O.Option<string>) =>
   pipe(
     [
-      O.map(filePath, (value) => Effect.succeed(O.some(value))),
-      O.map(text, (value) => decodeCompilerOptionsText(value).pipe(Effect.map(O.some))),
+      O.map(filePath, flow(O.some, Effect.succeed)),
+      O.map(text, flow(decodeCompilerOptionsText, Effect.map(O.some))),
     ] satisfies ReadonlyArray<
       O.Option<Effect.Effect<O.Option<Configuration.CompilerOptionsInput>, Domain.DocgenError>>
     >,

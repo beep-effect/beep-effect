@@ -1,0 +1,23 @@
+id: so:sha256:d9db2dbfefa7d1fe28cb044abdbdd6a9102db4da94c4ed18c7360555af05a330
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 780
+  end_line: 784
+  content_sha256: 56e37a0f9acbcf6e53fe2ff05aac1d7f5aa660020e0943a23e39348251876c93
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::admissionInstantOrder
+  lexical_name: admissionInstantOrder
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const admissionInstantOrder: Order.Order<YeetAdmissionLease> = pipe('
+epistemic_status: parser_derived

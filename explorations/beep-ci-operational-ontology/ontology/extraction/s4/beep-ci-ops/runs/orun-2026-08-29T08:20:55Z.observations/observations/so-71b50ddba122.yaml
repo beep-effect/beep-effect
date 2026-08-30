@@ -1,0 +1,25 @@
+id: so:sha256:71b50ddba122798db630c794b22904c9c68ca3e01b483f183a0a69a93e28dd97
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 600
+  end_line: 600
+  content_sha256: 0e460218d701cc3356214d52081888d382039fd42eddb98e2203a9e2385877f9
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetUnknownReason
+  lexical_name: FleetUnknownReason
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: FleetUnknownReason
+- predicate: exports_symbol
+  object: FleetUnknownReason
+source_excerpt: export type FleetUnknownReason = typeof FleetUnknownReason.Type;
+epistemic_status: parser_derived

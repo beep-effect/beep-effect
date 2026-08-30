@@ -1,0 +1,10 @@
+id: po:sha256:452b4ed8ff3e6ac37d200a6c3d8a5737000078258fbde7864a0186d709407c89
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 975
+  end_line: 984
+quote: const waitedMillis = info.nowMillis - startMillis;
+epistemic_status: quoted_prose

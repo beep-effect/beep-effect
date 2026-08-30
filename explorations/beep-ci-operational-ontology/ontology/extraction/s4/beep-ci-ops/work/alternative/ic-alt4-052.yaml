@@ -1,0 +1,27 @@
+id: ic:alt4:052
+hypothesis_ref: dh:worktree-config:006
+identity:
+  supplies_identity: true
+  identity_criterion: Two hosted-required-check merge obligations are the same when they prescribe that hosted checks designated as required must be satisfied before a feature branch may merge; the AGENTS.md sentence is evidence of the prescription, never a hosted protection rule's own identity.
+  reidentification_key:
+    - hosted required checks
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The merge-gating prescription is one policy whole; listing particular check names would be parts of a different, more specific obligation.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - relator
+    - situation
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: A monitoring procedure that watches hosted checks without making them a merge condition is not this obligation.
+  - description: A required-check label in code that never constrains merge would be a name, not this policy.
+status: proposed

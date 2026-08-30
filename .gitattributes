@@ -1,2 +1,10 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Pure projections resolve through the repository-installed regenerate driver.
+# CI independently proves every generator; an absent or failing driver leaves
+# the merge conflicted instead of silently choosing a side.
+standards/fallow.boundaries.generated.jsonc merge=regenerate
+tsconfig.json merge=regenerate
+tsconfig.packages.json merge=regenerate
+apps/professional-desktop/src/runtime/Migrations.gen.ts merge=regenerate

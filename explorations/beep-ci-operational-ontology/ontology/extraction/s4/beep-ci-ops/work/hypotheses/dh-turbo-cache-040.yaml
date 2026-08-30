@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:040"
+observation_refs:
+  - "so:sha256:6de76354416466db63e65d2f6f00a837d633a55ebddde807ca6e2574616af4ac"
+cq_warrants: []
+proposed_referent:
+  label: "Internal cache-plan-to-argument projection helper"
+  description: "An exported procedure that returns string arguments from the cache-plan representation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A procedure specification for operationalizing a resolved cache decision"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A domain process that applies a cache posture"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Only the exported signature is observed; no produced argument list, invocation, or application event distinguishes a domain procedure from implementation plumbing."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

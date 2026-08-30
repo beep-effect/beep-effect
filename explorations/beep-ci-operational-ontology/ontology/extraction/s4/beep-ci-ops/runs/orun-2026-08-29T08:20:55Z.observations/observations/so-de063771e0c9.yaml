@@ -1,0 +1,23 @@
+id: so:sha256:de063771e0c90db62b7bc7cbf023f678bf5172b4d4e496c07119ae115c1e48d2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 297
+  end_line: 302
+  content_sha256: 2226416cc784764a071cd6db29d76457fc90c61f5fc405a12529ae715b8488ce
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::taskNameFromQueryItem
+  lexical_name: taskNameFromQueryItem
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const taskNameFromQueryItem = (item: Record<string, unknown>): string =>'
+epistemic_status: parser_derived

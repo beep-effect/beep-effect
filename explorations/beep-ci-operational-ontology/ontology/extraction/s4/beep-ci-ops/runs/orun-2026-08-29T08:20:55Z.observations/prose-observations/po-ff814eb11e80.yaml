@@ -1,0 +1,10 @@
+id: po:sha256:ff814eb11e80dc2620c720557874ef4c1137e1346a8ce8a03e917e5da315a71a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 122
+  end_line: 127
+quote: '`pid` plus `procStart` (the `/proc/<pid>/stat` start time) identify the'
+epistemic_status: quoted_prose

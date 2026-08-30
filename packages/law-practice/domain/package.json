@@ -22,7 +22,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage",
-    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
@@ -51,9 +51,11 @@
     "./values": "./src/values/index.ts",
     "./values/ApplicationNumber": "./src/values/ApplicationNumber/index.ts",
     "./values/CitingApplicationIdentity": "./src/values/CitingApplicationIdentity/index.ts",
+    "./values/CourtReporterVocabulary": "./src/values/CourtReporterVocabulary/index.ts",
     "./values/KindCode": "./src/values/KindCode/index.ts",
     "./values/ObservationVersionRef": "./src/values/ObservationVersionRef/index.ts",
     "./values/OfficeCode": "./src/values/OfficeCode/index.ts",
+    "./values/PatentDocument": "./src/values/PatentDocument/index.ts",
     "./values/PatentDocumentTriplet": "./src/values/PatentDocumentTriplet/index.ts",
     "./values/PatentNumber": "./src/values/PatentNumber/index.ts",
     "./package.json": "./package.json"
@@ -68,6 +70,7 @@
   "sideEffects": [],
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/md": "workspace:^",
     "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",

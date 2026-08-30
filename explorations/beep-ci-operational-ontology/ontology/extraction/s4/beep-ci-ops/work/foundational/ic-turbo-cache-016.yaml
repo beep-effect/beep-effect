@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:016"
+hypothesis_ref: "dh:turbo-cache:018"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same Storybook-build task specification only when they are the same authored repeatable build instruction in the same versioned configuration lineage with the same complete inherited dependency, input, and output prescriptions; the storybook:build key alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key storybook:build"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The declarations compose one reusable Storybook-build instruction, distinct from build executions and generated Storybook artifacts."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A Storybook-build procedure specification"
+    - "A verification lane"
+  existential_dependencies:
+    - "The versioned configuration, package scripts, and source inputs that complete the build instruction"
+    - "At least one bearer of the instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A Storybook build can produce a static artifact without verifying its behavior, and distinct package builds can share the same upstream build selector while remaining different procedures."
+status: proposed

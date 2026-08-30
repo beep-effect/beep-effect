@@ -1,0 +1,25 @@
+id: "dh:cilane:026"
+observation_refs:
+  - "so:sha256:48183c71db969a8df3fa0149e20c439726671c3f05906e08dc56af50dab87bc0"
+  - "so:sha256:8214c2ba78e9dd23b83c83aa727b3e73cd6323e1260ceb362beabcfa4fe4fbb8"
+  - "so:sha256:cbbc64702396f20d7f1f9e3e3ce349e1f7bec2f692b603ec0bbecd4c3ae1d87a"
+cq_warrants: []
+proposed_referent:
+  label: "CiLaneReplay source vocabulary"
+  description: "The code-level literal set, schema value, and derived alias for exact, approximate, or absent local replay."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "local replay-fidelity classification scheme"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "replay fidelity of a verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only three literals and their exported value and alias declarations. They do not record any replay attempt, comparison criterion, or lane assignment that would make fidelity more than implementation metadata."
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

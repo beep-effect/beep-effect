@@ -1,0 +1,33 @@
+id: "dh:turbo-cache:001"
+observation_refs:
+  - "so:sha256:f8df87ca16a70854ac361fd0718b4e3a659469e6ff9e3ddb85dfccd08760d3aa"
+  - "po:sha256:5692d34e939076f07304cb41f3102607dcfc98f5956255ef5830ec1f480d60ec"
+  - "po:sha256:5e479cd9b704c9f60c34e0d293851890a23a799e428ac2bd89965ed5dad71c5f"
+  - "po:sha256:7382f371ead09096fef755feb5035d7db74cadc95ecfbf14ebcade216db5958b"
+  - "po:sha256:739635830fbb6b37caa18e1bd7119b7196da32804f90f0e0696854188d643206"
+  - "po:sha256:7d7e029b4bd5d8388708a9c58fa4cf0bbe39d3c662c3ca73446946a38de77884"
+  - "po:sha256:9311303d2ae55b3de619c6752430ffff62c8339ed6fbdd6384ef3bb667ab1e79"
+  - "po:sha256:ad42ac38ad0e74502b26837d391eba68614cbce04a1c758802b09b28716d8c0e"
+  - "po:sha256:d1c4d474b3d5292d94cdc21f8bc733a963ca8cbe0d6c4676965c562d584ed4e5"
+  - "po:sha256:f9d582c0d33a1596d3faa1eb266f6295cc9d44592dabd36eb72463132b59c1a8"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo configuration document at the observed corpus commit"
+  description: "An information artifact that carries the observed repository-wide Turbo settings and task collection."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A collection of independent configuration assertions rather than one document-level information object"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A serialization-only repository artifact with no operational denotation"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The executable-configuration counterexample wins: turbo.json can contain every cited schema, flag, input, environment, and task-map field while remaining only implementation configuration; no governed identity or observed runtime consumption is cited."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.88
+  use_for_acceptance: false

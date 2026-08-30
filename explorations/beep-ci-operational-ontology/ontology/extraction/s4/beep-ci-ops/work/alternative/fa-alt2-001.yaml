@@ -1,0 +1,24 @@
+id: fa:alt2:001
+hypothesis_ref: dh:reporun:003
+identity_card_ref: ic:alt2:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: 'situation: failed job with nonempty steps and no step conclusions'
+  still_viable: true
+- label: 'information_object: the runner-loss classification criterion or label'
+  still_viable: true
+- label: 'event: the runner actually stopping reporting'
+  still_viable: true
+- label: incomplete GitHub job payload rather than runner loss
+  still_viable: true
+strongest_counterexample: >-
+  The detector and the evidence sentence jointly treat missing step conclusions as stopped runner reporting, so a truncated
+  or never-populated step payload is observationally equivalent to genuine runner loss on current records.
+verdict: analyzed
+needed_evidence: >-
+  A job payload known complete (every step present) whose conclusions are still all absent, versus a confirmed truncated/incomplete
+  payload with the same conjunction, would split the worldly runner-stop event from the information-pattern situation.

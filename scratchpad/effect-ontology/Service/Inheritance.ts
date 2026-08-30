@@ -20,17 +20,28 @@ import { OntologyService } from "./Ontology.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/Inheritance");
 
 /**
- * Service for computing inherited attributes
+ * Resolves inherited properties and class ancestry from ontology context.
  *
- * **Example** (Inspect inheritance service)
+ * **Gotchas**
+ *
+ * The service caches the ontology context from {@link OntologyService}; a later
+ * ontology reload is not visible until this service is reconstructed.
+ *
+ * **Example** (Look up inherited properties)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { InheritanceService } from "@effect-ontology/Service/Inheritance"
  *
- * console.log(InheritanceService)
+ * const program = Effect.gen(function* () {
+ *   const inheritance = yield* InheritanceService
+ *   return yield* inheritance.getEffectiveProperties("https://example.org/Person")
+ * }).pipe(Effect.provide(InheritanceService.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class InheritanceService extends Context.Service<InheritanceService>()($I`InheritanceService`, {

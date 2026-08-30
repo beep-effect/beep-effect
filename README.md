@@ -88,8 +88,9 @@ Honest status, not a launch deck.
 
 The north star is **Prose-to-Proof in front of Tom**: a real attorney doing
 real work in a shipped surface. Priority lives in
-[`docs/ROADMAP.md`](docs/ROADMAP.md). Packet lifecycle lives in
-[`goals/INDEX.md`](goals/INDEX.md).
+[`docs/ROADMAP.md`](docs/ROADMAP.md). Packet lifecycle lives in each tracked
+`goals/<slug>/ops/manifest.json`; `bun run beep goals index` renders the local,
+untracked portfolio view.
 
 ---
 
@@ -276,7 +277,7 @@ First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
 
 `.repos/effect` is a gitignored symlink to a machine-local clone of
 [Effect-TS/effect](https://github.com/Effect-TS/effect), provisioned by
-`scripts/setup-agent-memory.sh`, so agents validate APIs against real Effect
+`scripts/setup-effect-ref.sh`, so agents validate APIs against real Effect
 v4 source instead of training-data priors. Nothing under `.repos/` is part
 of the tracked tree.
 

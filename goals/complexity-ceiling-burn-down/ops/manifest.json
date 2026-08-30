@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/complexity-ceiling-burn-down",
   "lifecycle": "active",
+  "statusNote": "P0 research remains the next authorized phase: refresh the live Fallow tail inventory and record a triage verdict for every tail function before implementation.",
   "mission": "Clear the cognitive->15 tail (60 fns), promote the fallow health lane to a blocking baseline ratchet, and hold the maxCognitive=8 gate credible.",
   "executionCapable": true,
   "reflectionRequired": true,

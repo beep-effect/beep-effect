@@ -1,0 +1,40 @@
+target: otp:local-write-remote-read:001
+target_sha256: 528346d90f819922c3d79db547000359e3bad8e86c5494352c2b2305a64cb560
+chain_sha256: 510f9cb576a10777aba41e71fe033d15aa2fba6a7ab9810cfaf57441820dd7b3
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: The revised proposal asserts no parents edges; there is no is-a edge to test, and no valid subsumption relation
+    is proposed.
+attacks:
+- surface: identity
+  rule: individual-particular-identity-conflict
+  counterexample: Two WorkUnit executions can each bear a distinct local-write and remote-read posture particular. The revised
+    proposal is now a class of those particulars, so both executions can instantiate it without being collapsed into one reusable
+    OWL individual.
+  outcome: survived
+- surface: warrant
+  rule: decision-term-warrant
+  counterexample: CQ-024 explicitly enumerates LocalWriteRemoteRead as a closed CachePosture answer for executions, so a correctly
+    modeled posture value is operationally required.
+  outcome: survived
+- surface: null_discriminator
+  rule: discriminator-true-of-lexical-mapping
+  counterexample: A schema enum can map LocalWriteRemoteRead to the string local:rw,remote:r and carry a remote-read tag while
+    remaining only a lexical/configuration value. Both cited facts hold in that null world.
+  outcome: landed
+rival_models_still_viable:
+- LocalWriteRemoteRead is information content inside an invocation-scoped cache-plan decision record.
+- LocalWriteRemoteRead is one reusable controlled-vocabulary individual in the closed CachePosture domain.
+- The referent is a configuration-and-secret-session situation that enables shared remote reads.
+evidence:
+- so:sha256:abac752ac37354d5eedde577bf15ec6abf059d5a07396b61a3817eed3e9c7645
+- po:sha256:0c1451cdc80d47a798ce0094c28a4bdb1bab2f1618bbcac3fdba9ab8d605328b
+- po:sha256:4913306a00a80f1a737bdc0393fae6a091841e8c7f009a0f54bf60a178e2fadd
+- CQ-024

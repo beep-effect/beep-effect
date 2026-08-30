@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:027"
+observation_refs:
+  - "so:sha256:275ea5c26c4f922dac2336f5c5af96274511805278f284bfa218c727f16585ec"
+  - "so:sha256:b42ae304cac034541a411b5a78d6c1ab6cee760517b55b48bb9c2ae181d1d261"
+cq_warrants: []
+proposed_referent:
+  label: "Lexical aliases for observed Turbo cache environment-variable names"
+  description: "A closed software vocabulary spelling TURBO_API, TURBO_CACHE, TURBO_TEAM, and TURBO_TOKEN."
+representation_status: lexical_alias
+alternatives:
+  - label: "A configuration-input vocabulary information artifact"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Four distinct domain entities corresponding to environment variables"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The records establish spellings and an alias declaration only; they do not show value-bearing observations, configuration instances, or operational effects for these names."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false

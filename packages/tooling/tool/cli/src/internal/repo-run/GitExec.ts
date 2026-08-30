@@ -670,7 +670,7 @@ export const guardCloneLocalGitAttributes = Effect.fn("GitExec.guardCloneLocalGi
   );
   const attributesPath = path.isAbsolute(gitPath) ? gitPath : path.join(cwd, gitPath);
   const nonEmpty = yield* fs.stat(attributesPath).pipe(
-    Effect.map((info) => info.size > 0n),
+    Effect.map((info) => info.size > BigInt(0)),
     Effect.catchIf(
       (error) => error.reason._tag === "NotFound",
       () => Effect.succeed(false)

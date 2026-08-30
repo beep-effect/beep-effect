@@ -13,6 +13,7 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import type { Stream } from "effect";
 import { Context, DateTime, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
@@ -24,11 +25,11 @@ import { ContentHash } from "../Domain/Identity.ts";
 import type {
   AddAliasAction,
   CorrectTripleAction,
-  CurationAction,
   LinkToWikidataAction,
   MarkAsWrongAction,
   PromoteToPreferredAction,
 } from "../Domain/Schema/CurationAction.ts";
+import { CurationAction } from "../Domain/Schema/CurationAction.ts";
 import { BackgroundJobId, EmbeddingJob, PromptCacheJob } from "../Domain/Schema/JobSchema.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
@@ -41,6 +42,18 @@ import { EventBusService } from "./EventBus.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
 
+const CurationActionTag = LiteralKit([
+  "CorrectTripleAction",
+  "MarkAsWrongAction",
+  "AddAliasAction",
+  "PromoteToPreferredAction",
+  "LinkToWikidataAction",
+]).pipe(
+  $I.annoteSchema("CurationActionTag", {
+    description: "Discriminator of the curation action that produced a result.",
+  })
+);
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -48,51 +61,63 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
 /**
  * Combined error type for curation service operations
  *
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError | EventBusError;
 
 /**
- * Result of applying a curation action
+ * Outcome of applying one curation action to a claim or entity.
  *
- *
- * **Example** (Use the CurationResult contract)
+ * **Example** (Record a successful correction)
  *
  * ```ts
- * import type { CurationResult } from "@effect-ontology/Service/Curation"
+ * import { CurationResult } from "@effect-ontology/Service/Curation"
  *
- * const acceptsCurationResult = (_value: CurationResult): void => undefined
- *
- * console.log(acceptsCurationResult)
+ * const result = CurationResult.make({
+ *   action: "CorrectTripleAction",
+ *   success: true,
+ *   details: { claimId: "claim-ada-founded" }
+ * })
+ * console.log(result.success) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface CurationResult {
-  readonly action: CurationAction["_tag"];
-  readonly success: boolean;
-  readonly details?: Record<string, unknown>;
-}
+export class CurationResult extends S.Class<CurationResult>($I`CurationResult`)(
+  {
+    action: CurationActionTag,
+    success: S.Boolean,
+    details: S.Record(S.String, S.Unknown).pipe(S.optionalKey),
+  },
+  $I.annote("CurationResult", {
+    description: "Success flag and optional details for one tagged curation action.",
+  })
+) {}
 
 // =============================================================================
 // Service
 // =============================================================================
 
 /**
- * Provides the curation service service capability.
+ * Applies curation actions to claims and entities and publishes follow-up jobs.
  *
- * **Example** (Inspect curation service)
+ * **Example** (Compose a curation action)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { CurationService } from "@effect-ontology/Service/Curation"
  *
- * console.log(CurationService)
+ * const program = Effect.gen(function* () {
+ *   const curation = yield* CurationService
+ *   return curation
+ * }).pipe(Effect.provide(CurationService.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class CurationService extends Context.Service<CurationService>()($I`CurationService`, {
@@ -141,11 +166,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* Effect.logWarning("Claim not found for correction", {
           claimId: action.originalClaimId,
         });
-        return {
+        return CurationResult.make({
           action: "CorrectTripleAction",
           success: false,
           details: { reason: "claim_not_found" },
-        };
+        });
       }
 
       const original = originalOpt.value;
@@ -210,11 +235,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "CorrectTripleAction",
         success: true,
         details: { newClaimId: newClaim.id, correctionId: correction.id },
-      };
+      });
     });
 
     /**
@@ -230,11 +255,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* Effect.logWarning("Claim not found for deprecation", {
           claimId: action.claimId,
         });
-        return {
+        return CurationResult.make({
           action: "MarkAsWrongAction",
           success: false,
           details: { reason: "claim_not_found" },
-        };
+        });
       }
 
       const claim = claimOpt.value;
@@ -285,11 +310,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "MarkAsWrongAction",
         success: true,
         details: { negativeExampleId },
-      };
+      });
     });
 
     /**
@@ -308,15 +333,15 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* Effect.logWarning("Canonical entity not found for alias", {
           iri: action.canonicalEntity,
         });
-        return {
+        return CurationResult.make({
           action: "AddAliasAction",
           success: false,
           details: { reason: "entity_not_found" },
-        };
+        });
       }
 
       const canonical = canonicalOpt.value;
-      const canonicalEntityId = yield* S.decodeEffect(CanonicalEntityId)(canonical.id);
+      const canonicalEntityId = yield* CanonicalEntityId.decodeEffect(canonical.id);
 
       // Embed the alias
       const prefixedMention = `${action.ontologyId}: ${action.aliasMention}`;
@@ -363,11 +388,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "AddAliasAction",
         success: true,
         details: { aliasId: alias.id },
-      };
+      });
     });
 
     /**
@@ -387,11 +412,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "PromoteToPreferredAction",
         success: true,
         details: { claimId: action.claimId },
-      };
+      });
     });
 
     /**
@@ -418,11 +443,11 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         timestamp: now,
       });
 
-      return {
+      return CurationResult.make({
         action: "LinkToWikidataAction",
         success: true,
         details: { wikidataQid: action.wikidataQid },
-      };
+      });
     });
 
     // -------------------------------------------------------------------------

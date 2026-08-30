@@ -1,0 +1,8 @@
+# Falsifiability (round-3 H-04/J-B3): two active grants on ONE ORIGIN with DIFFERENT
+# checkouts are exactly the deployed-prohibited state the old checkout-joined query
+# missed — the origin-keyed query must violate.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:g1 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "same-origin" .
+ciops:g2 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "same-origin" .

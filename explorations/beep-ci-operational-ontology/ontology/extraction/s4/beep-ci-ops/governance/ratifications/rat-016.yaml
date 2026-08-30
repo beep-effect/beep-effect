@@ -1,0 +1,10 @@
+id: rat:16
+proposal_ref: otp:has-origin-key:001
+proposal_sha256: c2bff6e624e5dd1da7cce66efe7cb9fb5992cdf612e1a83c3752028dac460d0d
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept hasOriginKey — mirrors the deployed origin-keyed exclusion; empty key means exempt, documented
+  in the definition.

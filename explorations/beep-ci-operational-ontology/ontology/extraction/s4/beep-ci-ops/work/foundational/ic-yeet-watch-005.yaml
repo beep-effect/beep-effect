@@ -1,0 +1,70 @@
+id: "ic:yeet-watch:005"
+hypothesis_ref: "dh:yeet-watch:026"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Domain worksheet for the Yeet monitor failure-signature specification
+    domain: two specifications are the same information object only when they
+    preserve the same evidence model, normalization, recognition predicate and
+    priority, intended failure-family meaning, applicability context, and
+    version lineage. Copying or re-encoding the prescription does not create a
+    new specification, while changing a defining match rule creates a different
+    versioned specification. TS2589-no-location membership further requires the
+    strict normalized-log detector for Turbo-attributed locationless TS2589
+    diagnostics, absence of other TypeScript diagnostics, and an agreeing
+    failed-task footer; the member spelling is only evidence.
+  reidentification_key:
+    - "normalized evidence model and recognition predicate"
+    - "failure-family interpretation and classifier priority"
+    - "applicability context and specification version lineage"
+    - "strict TS2589 detector result and member token as supporting evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One repeatable prescription joins an evidence scope, normalization rule,
+    match predicate, classification meaning, and policy context. Matching job
+    failures and executions of the detector or rerun procedure are not parts of
+    the specification's unity.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "subkind: the class of failed hosted-job occurrences satisfying the TS2589 fingerprint"
+    - "role: a diagnostic pattern currently authorized by Yeet rerun policy"
+    - "process: one execution of the log detector or bounded rerun procedure"
+    - "event: one hosted-job failure carrying a locationless TS2589 diagnostic"
+    - "none: the ts2589-no-location token as only a lexical selector"
+  existential_dependencies:
+    - >-
+      The information content generically depends on at least one faithful
+      digital or material bearer, but not on this particular literal token.
+    - >-
+      Its interpretation depends on an evidence vocabulary and applicability
+      context that define normalized job logs, Turbo task attribution, and
+      TypeScript diagnostic completeness.
+    - >-
+      Its current authorization for a bounded rerun depends relationally on a
+      Yeet policy revision; that anti-rigid policy role does not supply the
+      specification's identity.
+    - >-
+      The reusable specification has no existential dependence on a matching
+      failure, detector execution, or rerun execution.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as a historical specification"
+    - "withdrawn from the current rerun policy"
+    - "ceased when no faithful bearer of the specification remains"
+counterexamples:
+  - description: >-
+      Two different hosted jobs can satisfy the same strict TS2589 predicate
+      while remaining distinct failures and detector evaluations, and the
+      specification can exist before either job runs.
+  - description: >-
+      The same ts2589-no-location spelling could remain after the diagnostic
+      completeness or Turbo-attribution rule changes; unchanged spelling would
+      then conceal a different versioned prescription.
+status: proposed

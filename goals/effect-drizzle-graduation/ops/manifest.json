@@ -14,8 +14,9 @@
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
-    "exploration": "scratchpad/bsl",
-    "graduated": "2026-08-10"
+    "exploration": null,
+    "graduated": "2026-08-10",
+    "note": "Graduated directly from the now-retired scratchpad/bsl prototype; its preserved research and decision evidence lives under this packet's research/bsl directory."
   },
   "completionGate": {
     "operator": "yeet",

@@ -1,0 +1,18 @@
+# Fill-in template — a LEGAL draft instance of identity-card.schema.yaml:
+# every constrained field starts at `unresolved` (the honest epistemic value),
+# so the validator accepts the draft and the analysis earns its rulings.
+# The counterexample below is a MODELED EXAMPLE to replace with your own —
+# the validator rejects uninstantiated placeholder text ("REQUIRED: ..."),
+# because an uncopied instruction is not an attempted counterexample.
+id: "ic:REPLACE:001"
+hypothesis_ref: "dh:REPLACE:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "unresolved: name the observation that would settle what makes two individuals the same"
+  reidentification_key: []
+ontoclean: {rigidity: unresolved, carries_identity: unresolved, supplies_identity: unresolved, unity: "", dependence: unresolved}
+ufo_analysis: {candidate_category: unresolved, alternatives: [], existential_dependencies: []}
+temporality: {exists_during_interval: unresolved, may_change_state_without_losing_identity: unresolved, terminal_states: []}
+counterexamples:
+  - description: "Replace with a real attempt, e.g.: two renewal records for one lease — does the criterion wrongly count them as two leases?"
+status: proposed

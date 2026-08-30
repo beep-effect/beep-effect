@@ -96,18 +96,16 @@ const isRetryableImageError = (error: ImageError): boolean =>
 /**
  * Options for image fetching
  *
- *
  * **Example** (Use the ImageFetchOptions contract)
  *
  * ```ts
- * import type { ImageFetchOptions } from "@effect-ontology/Service/ImageFetcher"
+ * import { ImageFetchOptions } from "@effect-ontology/Service/ImageFetcher"
  *
- * const acceptsImageFetchOptions = (_value: ImageFetchOptions): void => undefined
- *
- * console.log(acceptsImageFetchOptions)
+ * const options = ImageFetchOptions.make({})
+ * console.log(options.retry) // true
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class ImageFetchOptions extends S.Class<ImageFetchOptions>($I`ImageFetchOptions`)(
@@ -254,9 +252,15 @@ const inferContentTypeFromUrl = (url: string): string | undefined => {
  * **Example** (Inspect image fetcher)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ImageFetcher } from "@effect-ontology/Service/ImageFetcher"
  *
- * console.log(ImageFetcher)
+ * const program = Effect.gen(function* () {
+ *   const fetcher = yield* ImageFetcher
+ *   return fetcher
+ * }).pipe(Effect.provide(ImageFetcher.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -431,7 +435,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           )
         );
 
-        return yield* S.decodeUnknownEffect(ImageFetchResult)({ bytes, hash, contentType, candidate }).pipe(
+        return yield* ImageFetchResult.decodeUnknownEffect({ bytes, hash, contentType, candidate }).pipe(
           Effect.mapError((cause) =>
             ImageFetchError.make({
               message: "Fetched image metadata failed validation",

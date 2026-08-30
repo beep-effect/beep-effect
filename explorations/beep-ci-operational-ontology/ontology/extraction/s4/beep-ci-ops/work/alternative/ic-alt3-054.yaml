@@ -1,0 +1,29 @@
+id: ic:alt3:054
+hypothesis_ref: dh:worktree-config:013
+identity:
+  supplies_identity: true
+  identity_criterion: Two affected-docgen specifications are the same iff they prescribe the
+    same docgen:local command scoped to origin/main through HEAD plus dirty files for edit
+    loops. That scope is part of the prescription, not a report of one run's diff.
+  reidentification_key:
+  - docgen:local
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one affected-scope docgen prescription
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: The repo-wide bun run docgen proof is a different specification. A particular
+    edit-loop invocation that happens to cover the current dirty set is an execution of this
+    one.
+status: proposed

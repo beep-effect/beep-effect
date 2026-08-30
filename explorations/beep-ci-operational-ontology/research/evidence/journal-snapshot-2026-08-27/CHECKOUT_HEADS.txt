@@ -1,0 +1,28 @@
+beep-effect a3232ce91c3a main
+beep-effect10 3f3c3d6e9280 feat/citation-verified-span-substrate-pr
+beep-effect11 3405f3ca79ae docs/semantica-evidence-quote-candidate
+beep-effect12 768d3455890c feat/yeet-until-event
+beep-effect13 57a2c9deedc8 feat/oppold-corpus-salvage-restoration
+beep-effect13-handoff 285317ea8131 fix/nlp-handoff-mentions
+beep-effect14 5e64df650ce4 main
+beep-effect14-p3-jsdoc 6a531aed857f
+beep-effect15 2977c32e2524 feat/ui-linting
+beep-effect15-graphnosis 4ee44ab92856
+beep-effect16 f5bd62bc2a28 feat/ship-velocity-complete
+beep-effect17 94c7966fa18c feat/packet-convention-migration
+beep-effect18 457ed6460134 impeccable-plugin
+beep-effect19 74c171122765 feat/oppold-t7-preservation
+beep-effect19-openai-driver c7b4732aa21b feat/openai-driver
+beep-effect19-scratchpad-type-repairs bc72333eb84e fix/scratchpad-type-repairs
+beep-effect2 5c6fa7c2e109 main
+beep-effect20 398c5bf7078c feat/lejeune-demo-corpus-ontology
+beep-effect21 2199bfb53f80 todox-init
+beep-effect3 75706d9873cd docs/packet-session-b-rulings
+beep-effect3-coverage-nine 0d6127ac66da fix/coverage-nine-shards
+beep-effect3-pra f36180596571 docs/runner-campaign-receipts
+beep-effect5 5c6fa7c2e109 main
+beep-effect6 ad2091d1a69f feat/patent-document-schema
+beep-effect7 0ac912f71805 feat/court-reporter-vocabulary
+beep-effect7-gitleaks-beta105 3c6af7870db3 chore/gitleaks-effect-beta105-fingerprint
+beep-effect8 87e6d1edc4d5 api-ref-scratch
+beep-effect9 51a0162f6869 feat/semantic-foundation-closeout

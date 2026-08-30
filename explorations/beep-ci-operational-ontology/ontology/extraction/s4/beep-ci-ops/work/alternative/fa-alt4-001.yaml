@@ -1,0 +1,18 @@
+id: fa:alt4:001
+hypothesis_ref: dh:reporun:007
+identity_card_ref: ic:alt4:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: repeatable cheap-gates command prescription"
+    still_viable: true
+  - label: "kind: cheap-gates verification lane as an operational procedure (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: CLI selector token with no prescribed command
+    still_viable: false
+strongest_counterexample: repoProofStepDefinition maps cheap-gates to a distinct step slot, label, and argument sequence; a bare selector token would not determine that prescription.
+verdict: analyzed
+needed_evidence: An observed cheap-gates lane invocation that does not instantiate this step definition, or this definition reused for a different operational lane, would discriminate the prescription from a domain lane Kind.

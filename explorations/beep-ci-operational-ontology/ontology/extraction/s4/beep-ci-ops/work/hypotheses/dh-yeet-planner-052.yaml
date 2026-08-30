@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:052"
+observation_refs:
+  - "so:sha256:728abc5941f6706d7fee9f405055b6d2e6a1594ee01f66e538a738736b57bb18"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for feedbackStep in Planner.ts"
+  description: "No separate domain referent is established for the feedbackStep declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::feedbackStep"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

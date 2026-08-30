@@ -1,0 +1,21 @@
+id: "fa:worktree-config:012"
+hypothesis_ref: "dh:worktree-config:016"
+identity_card_ref: "ic:worktree-config:012"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Reusable symbolic origin-main new-only audit plan information content"
+    still_viable: true
+  - label: "Execution-bound plan with a concrete base commit and target tree"
+    still_viable: true
+  - label: "Origin-main new-only Fallow audit execution"
+    still_viable: false
+strongest_counterexample: >-
+  Advancing origin/main changes the concrete comparison without changing the
+  symbolic prescription. A model that identifies the WorkUnit specification
+  by the resolved commit confuses a reusable plan with its bound context and
+  execution.
+verdict: analyzed

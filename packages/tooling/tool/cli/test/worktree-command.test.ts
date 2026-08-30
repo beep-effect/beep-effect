@@ -52,11 +52,14 @@ const withScratchRepo = <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E,
     Effect.acquireUseRelease(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
-        yield* initScratchRepo(tmpDir);
-        return { fs, tmpDir } as const;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory({ prefix: "worktree-command-test-" });
+        const repoRoot = path.join(tmpDir, "main");
+        yield* fs.makeDirectory(repoRoot);
+        yield* initScratchRepo(repoRoot);
+        return { fs, repoRoot, tmpDir } as const;
       }),
-      ({ tmpDir }) => use(tmpDir),
+      ({ repoRoot }) => use(repoRoot),
       ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)
     ).pipe(provideScopedLayer(testLayer))
   );

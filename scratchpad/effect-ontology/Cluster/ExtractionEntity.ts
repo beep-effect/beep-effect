@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
@@ -23,6 +24,8 @@ import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { Entity as DomainEntity, Relation } from "../Domain/Model/Entity.ts";
 
+const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntity");
+
 // IdempotencyKey utilities used by entity handlers
 export { computeIdempotencyKey, type ExtractionParams } from "../Utils/IdempotencyKey.ts";
 
@@ -31,15 +34,21 @@ export { computeIdempotencyKey, type ExtractionParams } from "../Utils/Idempoten
 // =============================================================================
 
 /**
- * Extraction request payload
+ * Payload accepted by {@link ExtractFromTextRpc} for a streaming extraction run.
  *
- * **Example** (Validate extract from text payload)
+ * **Example** (Decode a text extraction payload)
  *
  * ```ts
  * import { ExtractFromTextPayload } from "@effect-ontology/Cluster/ExtractionEntity"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ExtractFromTextPayload)({}))
+ * const decoded = S.decodeUnknownOption(ExtractFromTextPayload)({
+ *   text: "Ada Lovelace wrote the first computer program.",
+ *   ontologyId: "foaf",
+ *   ontologyVersion: "e3b0c44298fc"
+ * })
+ * console.log(O.map(decoded, (payload) => payload.ontologyId))
  * ```
  *
  * @category schemas
@@ -59,38 +68,38 @@ export const ExtractFromTextPayload = S.Struct({
     includeConfidence: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     groundingThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-});
+}).pipe(
+  $I.annoteSchema("ExtractFromTextPayload", {
+    description: "Source text, ontology identity, and optional LLM parameters for a streaming extraction RPC.",
+  })
+);
 
 /**
- * Describes the extract from text payload data exposed by this module.
+ * Decoded extraction request accepted by {@link ExtractFromTextPayload}.
  *
- * **Example** (Decode ExtractFromTextPayload)
- *
- * ```ts
- * import { ExtractFromTextPayload } from "@effect-ontology/Cluster/ExtractionEntity"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeExtractFromTextPayload = (_value: ExtractFromTextPayload): string => "valid extract from text payload"
- *
- * console.log(O.map(S.decodeUnknownOption(ExtractFromTextPayload)({}), summarizeExtractFromTextPayload))
- * ```
- *
+ * @see {@link ExtractFromTextPayload} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
 export type ExtractFromTextPayload = typeof ExtractFromTextPayload.Type;
 
 /**
- * Extraction summary returned on completion
+ * Counts and duration recorded when a streaming extraction run completes.
  *
- * **Example** (Validate extraction summary)
+ * **Example** (Decode a completed extraction summary)
  *
  * ```ts
  * import { ExtractionSummary } from "@effect-ontology/Cluster/ExtractionEntity"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ExtractionSummary)({}))
+ * const decoded = S.decodeUnknownOption(ExtractionSummary)({
+ *   entityCount: 2,
+ *   relationCount: 1,
+ *   durationMs: 150,
+ *   idempotencyKey: "extract-ada"
+ * })
+ * console.log(O.map(decoded, (summary) => summary.entityCount))
  * ```
  *
  * @category schemas
@@ -101,38 +110,35 @@ export const ExtractionSummary = S.Struct({
   relationCount: NonNegativeInt,
   durationMs: NonNegNum,
   idempotencyKey: S.String,
-});
+}).pipe(
+  $I.annoteSchema("ExtractionSummary", {
+    description: "Entity and relation counts, elapsed milliseconds, and idempotency key for a finished extraction.",
+  })
+);
 
 /**
- * Describes the extraction summary data exposed by this module.
+ * Decoded completion summary produced by {@link ExtractionSummary}.
  *
- * **Example** (Decode ExtractionSummary)
- *
- * ```ts
- * import { ExtractionSummary } from "@effect-ontology/Cluster/ExtractionEntity"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeExtractionSummary = (_value: ExtractionSummary): string => "valid extraction summary"
- *
- * console.log(O.map(S.decodeUnknownOption(ExtractionSummary)({}), summarizeExtractionSummary))
- * ```
- *
+ * @see {@link ExtractionSummary} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
 export type ExtractionSummary = typeof ExtractionSummary.Type;
 
 /**
- * Cached result lookup payload
+ * Lookup key accepted by {@link GetCachedResultRpc}.
  *
- * **Example** (Validate get cached result payload)
+ * **Example** (Decode a cache lookup payload)
  *
  * ```ts
  * import { GetCachedResultPayload } from "@effect-ontology/Cluster/ExtractionEntity"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(GetCachedResultPayload)({}))
+ * const decoded = S.decodeUnknownOption(GetCachedResultPayload)({
+ *   idempotencyKey: "extract-ada"
+ * })
+ * console.log(O.map(decoded, (payload) => payload.idempotencyKey))
  * ```
  *
  * @category schemas
@@ -140,38 +146,43 @@ export type ExtractionSummary = typeof ExtractionSummary.Type;
  */
 export const GetCachedResultPayload = S.Struct({
   idempotencyKey: S.String,
-});
+}).pipe(
+  $I.annoteSchema("GetCachedResultPayload", {
+    description: "Idempotency key used to look up a previously completed extraction result.",
+  })
+);
 
 /**
- * Describes the get cached result payload data exposed by this module.
+ * Decoded cache lookup payload produced by {@link GetCachedResultPayload}.
  *
- * **Example** (Decode GetCachedResultPayload)
- *
- * ```ts
- * import { GetCachedResultPayload } from "@effect-ontology/Cluster/ExtractionEntity"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeGetCachedResultPayload = (_value: GetCachedResultPayload): string => "valid get cached result payload"
- *
- * console.log(O.map(S.decodeUnknownOption(GetCachedResultPayload)({}), summarizeGetCachedResultPayload))
- * ```
- *
+ * @see {@link GetCachedResultPayload} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
 export type GetCachedResultPayload = typeof GetCachedResultPayload.Type;
 
 /**
- * Knowledge graph result
+ * Cached knowledge-graph payload returned by {@link GetCachedResultRpc} on a hit.
  *
- * **Example** (Validate knowledge graph result)
+ * **Example** (Decode an empty cached graph)
  *
  * ```ts
  * import { KnowledgeGraphResult } from "@effect-ontology/Cluster/ExtractionEntity"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(KnowledgeGraphResult)({}))
+ * const decoded = S.decodeUnknownOption(KnowledgeGraphResult)({
+ *   entities: [],
+ *   relations: [],
+ *   metadata: {
+ *     idempotencyKey: "extract-ada",
+ *     ontologyId: "foaf",
+ *     ontologyVersion: "e3b0c44298fc",
+ *     extractedAt: "2026-08-26T00:00:00.000Z",
+ *     durationMs: 150
+ *   }
+ * })
+ * console.log(O.map(decoded, (result) => result.metadata.ontologyId))
  * ```
  *
  * @category schemas
@@ -187,23 +198,16 @@ export const KnowledgeGraphResult = S.Struct({
     extractedAt: S.String,
     durationMs: NonNegNum,
   }),
-});
+}).pipe(
+  $I.annoteSchema("KnowledgeGraphResult", {
+    description: "Cached entities, relations, and extraction metadata keyed by an idempotency key.",
+  })
+);
 
 /**
- * Describes the knowledge graph result data exposed by this module.
+ * Decoded cached graph produced by {@link KnowledgeGraphResult}.
  *
- * **Example** (Decode KnowledgeGraphResult)
- *
- * ```ts
- * import { KnowledgeGraphResult } from "@effect-ontology/Cluster/ExtractionEntity"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeKnowledgeGraphResult = (_value: KnowledgeGraphResult): string => "valid knowledge graph result"
- *
- * console.log(O.map(S.decodeUnknownOption(KnowledgeGraphResult)({}), summarizeKnowledgeGraphResult))
- * ```
- *
+ * @see {@link KnowledgeGraphResult} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -224,15 +228,15 @@ export type KnowledgeGraphResult = typeof KnowledgeGraphResult.Type;
  * Note: Entity routing by idempotency key is handled in the entity handler
  * by computing the key from the payload.
  *
- * **Example** (Inspect extract from text rpc)
+ * **Example** (Identify the streaming extract RPC)
  *
  * ```ts
  * import { ExtractFromTextRpc } from "@effect-ontology/Cluster/ExtractionEntity"
  *
- * console.log(ExtractFromTextRpc)
+ * console.log(ExtractFromTextRpc._tag) // "ExtractFromText"
  * ```
  *
- * @category schemas
+ * @category protocols
  * @since 0.0.0
  */
 export const ExtractFromTextRpc = Rpc.make("ExtractFromText", {
@@ -249,15 +253,15 @@ export const ExtractFromTextRpc = Rpc.make("ExtractFromText", {
  *
  * Returns None if no cached result exists or extraction incomplete.
  *
- * **Example** (Inspect get cached result rpc)
+ * **Example** (Identify the unary cache-lookup RPC)
  *
  * ```ts
  * import { GetCachedResultRpc } from "@effect-ontology/Cluster/ExtractionEntity"
  *
- * console.log(GetCachedResultRpc)
+ * console.log(GetCachedResultRpc._tag) // "GetCachedResult"
  * ```
  *
- * @category schemas
+ * @category protocols
  * @since 0.0.0
  */
 export const GetCachedResultRpc = Rpc.make("GetCachedResult", {
@@ -269,15 +273,15 @@ export const GetCachedResultRpc = Rpc.make("GetCachedResult", {
 /**
  * Cancel an in-progress extraction
  *
- * **Example** (Inspect cancel extraction rpc)
+ * **Example** (Identify the cancel RPC)
  *
  * ```ts
  * import { CancelExtractionRpc } from "@effect-ontology/Cluster/ExtractionEntity"
  *
- * console.log(CancelExtractionRpc)
+ * console.log(CancelExtractionRpc._tag) // "CancelExtraction"
  * ```
  *
- * @category schemas
+ * @category protocols
  * @since 0.0.0
  */
 export const CancelExtractionRpc = Rpc.make("CancelExtraction", {
@@ -298,15 +302,19 @@ const ExtractionStatusFields = {
 };
 
 /**
- * Validates and represents extraction status values at runtime.
+ * Lifecycle state of one extraction run keyed by idempotency key.
  *
- * **Example** (Validate extraction status)
+ * **Example** (Decode pending and complete statuses)
  *
  * ```ts
  * import { ExtractionStatus } from "@effect-ontology/Cluster/ExtractionEntity"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ExtractionStatus)({}))
+ * const pending = S.decodeUnknownOption(ExtractionStatus)({ status: "pending" })
+ * const complete = S.decodeUnknownOption(ExtractionStatus)({ status: "complete" })
+ * console.log(O.map(pending, (value) => value.status))
+ * console.log(O.map(complete, (value) => value.status))
  * ```
  *
  * @category schemas
@@ -317,23 +325,17 @@ export const ExtractionStatus = S.Union([
   S.Struct({ status: S.tag("running"), ...ExtractionStatusFields }),
   S.Struct({ status: S.tag("complete"), ...ExtractionStatusFields }),
   S.Struct({ status: S.tag("failed"), ...ExtractionStatusFields }),
-]).pipe(S.toTaggedUnion("status"));
+]).pipe(
+  S.toTaggedUnion("status"),
+  $I.annoteSchema("ExtractionStatus", {
+    description: "Pending, running, complete, or failed extraction lifecycle tagged by `status`.",
+  })
+);
 
 /**
- * Describes the extraction status data exposed by this module.
+ * Decoded extraction lifecycle produced by {@link ExtractionStatus}.
  *
- * **Example** (Decode ExtractionStatus)
- *
- * ```ts
- * import { ExtractionStatus } from "@effect-ontology/Cluster/ExtractionEntity"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeExtractionStatus = (_value: ExtractionStatus): string => "valid extraction status"
- *
- * console.log(O.map(S.decodeUnknownOption(ExtractionStatus)({}), summarizeExtractionStatus))
- * ```
- *
+ * @see {@link ExtractionStatus} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -342,15 +344,15 @@ export type ExtractionStatus = typeof ExtractionStatus.Type;
 /**
  * Get extraction status
  *
- * **Example** (Inspect get extraction status rpc)
+ * **Example** (Identify the status RPC)
  *
  * ```ts
  * import { GetExtractionStatusRpc } from "@effect-ontology/Cluster/ExtractionEntity"
  *
- * console.log(GetExtractionStatusRpc)
+ * console.log(GetExtractionStatusRpc._tag) // "GetExtractionStatus"
  * ```
  *
- * @category schemas
+ * @category protocols
  * @since 0.0.0
  */
 export const GetExtractionStatusRpc = Rpc.make("GetExtractionStatus", {
@@ -376,15 +378,15 @@ export const GetExtractionStatusRpc = Rpc.make("GetExtractionStatus", {
  * - Result caching
  * - Cancellation support
  *
- * **Example** (Inspect knowledge graph extractor)
+ * **Example** (Name the cluster entity type)
  *
  * ```ts
  * import { KnowledgeGraphExtractor } from "@effect-ontology/Cluster/ExtractionEntity"
  *
- * console.log(KnowledgeGraphExtractor)
+ * console.log(KnowledgeGraphExtractor.type)
  * ```
  *
- * @category services
+ * @category protocols
  * @since 0.0.0
  */
 export const KnowledgeGraphExtractor = Entity.make("KGExtractor", [
@@ -395,18 +397,9 @@ export const KnowledgeGraphExtractor = Entity.make("KGExtractor", [
 ]);
 
 /**
- * Describes the knowledge graph extractor data exposed by this module.
+ * Cluster entity constructor produced by {@link KnowledgeGraphExtractor}.
  *
- * **Example** (Reference the knowledge graph extractor value)
- *
- * ```ts
- * import { KnowledgeGraphExtractor } from "@effect-ontology/Cluster/ExtractionEntity"
- *
- * const knowledgeGraphExtractor: KnowledgeGraphExtractor = KnowledgeGraphExtractor
- *
- * console.log(knowledgeGraphExtractor)
- * ```
- *
+ * @see {@link KnowledgeGraphExtractor} for the RPC protocol and sharding type.
  * @category type-level
  * @since 0.0.0
  */

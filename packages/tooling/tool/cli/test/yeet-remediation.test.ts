@@ -30,6 +30,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -356,6 +357,18 @@ describe("supersedeYeetDispatchState", () => {
 });
 
 describe("dispatchYeetCheckFailure", () => {
+  it.live("records an optional failed check as P1", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const optionalCheck = YeetWatchCheck.make({ ...failingCheck, required: false });
+        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(optionalCheck), optionalCheck, AT);
+
+        const entry = yield* S.decodeUnknownEffect(YeetCheckFailedRow)((yield* readInboxRows(root))[0]);
+        expect(entry.severity).toBe("P1");
+      })
+    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+  );
+
   it.live("derives the capsule from the failing check's own record", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
@@ -363,14 +376,14 @@ describe("dispatchYeetCheckFailure", () => {
 
         const rows = yield* readInboxRows(root);
         expect(A.length(rows)).toBe(1);
-        const entry = rows[0];
-        expect(entry?.checkout).toBe(root);
-        expect(entry?.capsule.lane).toBe("Check / Coverage");
-        expect(entry?.capsule.link).toBe("https://github.com/beep/beep/actions/runs/1/job/2");
-        expect(entry?.capsule.workflow).toBe("Check");
+        const entry = yield* S.decodeUnknownEffect(YeetCheckFailedRow)(rows[0]);
+        expect(entry.checkout).toBe(root);
+        expect(entry.capsule.lane).toBe("Check / Coverage");
+        expect(entry.capsule.link).toBe("https://github.com/beep/beep/actions/runs/1/job/2");
+        expect(entry.capsule.workflow).toBe("Check");
         // The raw signal survives: CANCELLED steers repair toward a rerun.
-        expect(entry?.capsule.bucket).toBe("cancel");
-        expect(entry?.capsule.state).toBe("CANCELLED");
+        expect(entry.capsule.bucket).toBe("cancel");
+        expect(entry.capsule.state).toBe("CANCELLED");
 
         const persisted = yield* loadYeetRemediationWave(root);
         expect(O.isSome(persisted)).toBe(true);

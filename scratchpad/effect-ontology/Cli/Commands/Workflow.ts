@@ -14,8 +14,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { Command, Flag } from "effect/unstable/cli";
-import { LinkIngestionService } from "../../Service/LinkIngestionService.ts";
+import {LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import type {DrizzleError} from "drizzle-orm";
 
 // =============================================================================
 // Command Options
@@ -51,7 +52,7 @@ const dryRunOption = Flag.boolean("dry-run").pipe(
 // Subcommand: list-pending
 // =============================================================================
 
-const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: O.Option<string>, limit: number) {
+const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: O.Option<string>, limit: number): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Listing pending/failed links...");
   yield* Console.log("");
@@ -91,7 +92,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
   ontology: O.Option<string>,
   minutes: number,
   dryRun: boolean
-) {
+): Effect.fn.Return<void, DrizzleError | LinkIngestionError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   const ontologyId = O.getOrUndefined(ontology);
   yield* Console.log(`Looking for links stale for more than ${minutes} minutes...`);
@@ -137,7 +138,7 @@ const cleanupStaleCommand = Command.make(
 // Subcommand: re-enrich
 // =============================================================================
 
-const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string) {
+const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string): Effect.fn.Return<void, LinkIngestionError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log(`Re-enriching link: ${linkId}...`);
   const result = yield* ingestion.reEnrich(linkId);
@@ -162,7 +163,7 @@ const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ l
 // Subcommand: re-enrich-all
 // =============================================================================
 
-const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: O.Option<string>, limit: number) {
+const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: O.Option<string>, limit: number): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Finding failed links to re-enrich...");
   const links = yield* ingestion.list({
@@ -209,14 +210,21 @@ const reEnrichAllCommand = Command.make(
 // =============================================================================
 
 /**
- * Exposes workflow command for composition by callers of this module.
+ * Manages durable link-ingestion workflows: list pending work, mark stale
+ * links failed, and re-enrich failed content.
  *
- * **Example** (Inspect workflow command)
+ * **Example** (List pending workflow links)
  *
  * ```ts
  * import { workflowCommand } from "@effect-ontology/Cli/Commands/Workflow"
+ * import * as A from "effect/Array"
  *
- * console.log(workflowCommand)
+ * console.log(workflowCommand.name) // "workflow"
+ * console.log(
+ *   A.flatMap(workflowCommand.subcommands, (group) => A.map(group.commands, (command) => command.name))
+ * )
+ * // ["list-pending", "cleanup-stale", "re-enrich", "re-enrich-all"]
+ * // effect-onto workflow list-pending --ontology people
  * ```
  *
  * @category cli-commands

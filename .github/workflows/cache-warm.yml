@@ -1,0 +1,55 @@
+name: Cache Warm
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The backing bucket expires artifacts after 30 days. A twice-monthly
+    # recovery pass prevents quiet periods from turning every next PR cold.
+    - cron: "17 6 1,15 * *"
+
+concurrency:
+  group: cache-warm-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  warm:
+    name: Warm Turbo cache
+    runs-on: beep-ec2-heavy
+    timeout-minutes: 60
+    environment: turbo-cache-write
+    env:
+      TURBO_API: ${{ vars.TURBO_API }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      TURBO_CACHE: local:rw,remote:rw
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+          ref: main
+
+      - name: Setup pinned toolchain
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+
+      - name: Warm cache and write receipt
+        run: bun run beep cache warm --output .beep/cache-warm.json
+
+      - name: Upload warm receipt and Turbo summaries
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cache-warm-${{ github.run_id }}
+          path: |
+            .beep/cache-warm.json
+            .turbo/runs/*.json
+          if-no-files-found: warn
+          retention-days: 30

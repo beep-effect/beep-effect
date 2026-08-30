@@ -1,5 +1,5 @@
 /**
- * Public effect-ontology APIs for runtime/http server.
+ * Public HTTP surface for timeline, search, extraction, health, ontology, and the merged API routers.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -354,17 +354,24 @@ const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClai
 // =============================================================================
 
 /**
- * Validates and represents timeline router values at runtime.
+ * HTTP surface for entity timelines and conflict transitions.
  *
- * **Example** (Inspect timeline router)
+ * **Details**
+ *
+ * Entity timelines are served at `GET /v1/timeline/entities/:iri`.
+ *
+ * **Example** (Register the timeline routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { TimelineRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(TimelineRouter)
+ * const served = Layer.provide(TimelineRouter, HttpRouter.layer)
+ * console.log(served !== TimelineRouter) // true
  * ```
  *
- * @category schemas
+ * @category endpoints
  * @since 0.0.0
  */
 export const TimelineRouter = HttpRouter.addAll([
@@ -612,7 +619,7 @@ export const TimelineRouter = HttpRouter.addAll([
       }
 
       const params = yield* HttpRouter.params;
-      const id = yield* S.decodeUnknownEffect(UUID)(params.id);
+      const id = yield* UUID.decodeUnknownEffect(params.id);
       const query = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
       const action = yield* HttpServerRequest.schemaBodyJson(ConflictTransition);
       const conflictRepo = yield* ConflictRepository;
@@ -646,17 +653,24 @@ export const TimelineRouter = HttpRouter.addAll([
 // =============================================================================
 
 /**
- * Validates and represents search router values at runtime.
+ * HTTP surface for claim, article, and entity search.
  *
- * **Example** (Inspect search router)
+ * **Details**
+ *
+ * Claim search is served at `POST /v1/search/claims`.
+ *
+ * **Example** (Register the search routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { SearchRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(SearchRouter)
+ * const served = Layer.provide(SearchRouter, HttpRouter.layer)
+ * console.log(served !== SearchRouter) // true
  * ```
  *
- * @category schemas
+ * @category endpoints
  * @since 0.0.0
  */
 export const SearchRouter = HttpRouter.addAll([
@@ -1037,17 +1051,24 @@ const extractionRouteHandler = Effect.gen(function* () {
 });
 
 /**
- * Exposes extraction router for composition by callers of this module.
+ * HTTP surface for starting batch extraction and polling batch status.
  *
- * **Example** (Inspect extraction router)
+ * **Details**
+ *
+ * Batch extraction is accepted at `POST /v1/extract/batch`.
+ *
+ * **Example** (Register the extraction routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { ExtractionRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(ExtractionRouter)
+ * const served = Layer.provide(ExtractionRouter, HttpRouter.layer)
+ * console.log(served !== ExtractionRouter) // true
  * ```
  *
- * @category services
+ * @category endpoints
  * @since 0.0.0
  */
 export const ExtractionRouter = HttpRouter.addAll([
@@ -1081,17 +1102,24 @@ export const ExtractionRouter = HttpRouter.addAll([
 ]);
 
 /**
- * Exposes health router for composition by callers of this module.
+ * HTTP surface for liveness, readiness, and deep health probes.
  *
- * **Example** (Inspect health router)
+ * **Details**
+ *
+ * Liveness is served at `GET /health/live`.
+ *
+ * **Example** (Register the health probes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { HealthRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(HealthRouter)
+ * const served = Layer.provide(HealthRouter, HttpRouter.layer)
+ * console.log(served !== HealthRouter) // true
  * ```
  *
- * @category services
+ * @category endpoints
  * @since 0.0.0
  */
 export const HealthRouter = HttpRouter.addAll([
@@ -1128,17 +1156,24 @@ export const HealthRouter = HttpRouter.addAll([
 // =============================================================================
 
 /**
- * Exposes ontology router for composition by callers of this module.
+ * HTTP surface for looking up a registered ontology by id.
  *
- * **Example** (Inspect ontology router)
+ * **Details**
+ *
+ * Registry entries are served at `GET /v1/ontologies/:id`.
+ *
+ * **Example** (Register the ontology routes on an HTTP router)
  *
  * ```ts
+ * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { OntologyRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(OntologyRouter)
+ * const served = Layer.provide(OntologyRouter, HttpRouter.layer)
+ * console.log(served !== OntologyRouter) // true
  * ```
  *
- * @category services
+ * @category endpoints
  * @since 0.0.0
  */
 export const OntologyRouter = HttpRouter.addAll([
@@ -1175,17 +1210,17 @@ export const OntologyRouter = HttpRouter.addAll([
 // =============================================================================
 
 /**
- * Exposes api router for composition by callers of this module.
+ * Merged HTTP surface including timeline and search routers that need repositories.
  *
- * **Example** (Inspect api router)
+ * **Example** (Merge health into the public API)
  *
  * ```ts
- * import { ApiRouter } from "@effect-ontology/Runtime/HttpServer"
+ * import { ApiRouter, HealthRouter } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(ApiRouter)
+ * console.log(ApiRouter !== HealthRouter) // true
  * ```
  *
- * @category layers
+ * @category endpoints
  * @since 0.0.0
  */
 export const ApiRouter = Layer.mergeAll(
@@ -1203,17 +1238,17 @@ export const ApiRouter = Layer.mergeAll(
 );
 
 /**
- * Exposes api router without repositories for composition by callers of this module.
+ * Merged HTTP surface that omits timeline and search routes requiring repositories.
  *
- * **Example** (Inspect api router without repositories)
+ * **Example** (Serve the repository-free API)
  *
  * ```ts
- * import { ApiRouterWithoutRepositories } from "@effect-ontology/Runtime/HttpServer"
+ * import { ApiRouter, ApiRouterWithoutRepositories } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(ApiRouterWithoutRepositories)
+ * console.log(ApiRouterWithoutRepositories !== ApiRouter) // true
  * ```
  *
- * @category layers
+ * @category endpoints
  * @since 0.0.0
  */
 export const ApiRouterWithoutRepositories = Layer.mergeAll(
@@ -1282,12 +1317,12 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
   );
 
 /**
- * Provides the Effect layer for http server live dependencies.
+ * HTTP server layer serving {@link ApiRouter} with auth, shutdown, and logging middleware.
  *
- * **Example** (Inspect http server live)
+ * **Example** (Launch the full HTTP server layer)
  *
  * ```ts
- * import { HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
+ * import { ApiRouter, HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
  *
  * console.log(HttpServerLive)
  * ```
@@ -1298,14 +1333,14 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
 export const HttpServerLive = makeHttpServerLive(ApiRouter);
 
 /**
- * Provides the Effect layer for http server without repositories live dependencies.
+ * HTTP server layer serving {@link ApiRouterWithoutRepositories}.
  *
- * **Example** (Inspect http server without repositories live)
+ * **Example** (Launch the repository-free HTTP server)
  *
  * ```ts
- * import { HttpServerWithoutRepositoriesLive } from "@effect-ontology/Runtime/HttpServer"
+ * import { HttpServerLive, HttpServerWithoutRepositoriesLive } from "@effect-ontology/Runtime/HttpServer"
  *
- * console.log(HttpServerWithoutRepositoriesLive)
+ * console.log(HttpServerWithoutRepositoriesLive !== HttpServerLive) // true
  * ```
  *
  * @category layers

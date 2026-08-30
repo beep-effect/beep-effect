@@ -1,0 +1,24 @@
+id: fa:alt3:059
+hypothesis_ref: dh:yeet-watch:030
+identity_card_ref: ic:alt3:059
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: install-failure as a monitor rerun-signature specification'
+  still_viable: true
+- label: 'situation: the install-before-lane job-history pattern (same referent as dh:reporun:004)'
+  still_viable: true
+- label: 'event: one installation failure occurrence'
+  still_viable: false
+strongest_counterexample: classifyJob prefers detectGithubJobShapeClass and copies a match
+  onto YeetMonitorFailedJob.flakeClass; only then does the rerun planner fire. The monitor
+  therefore uses the job-shape criterion as a signature specification, which may or may not
+  be the same individual as the job-history situation.
+verdict: analyzed
+needed_evidence: Whether the monitor's install-failure signature is the same individual as
+  the install-before-lane situation, or a distinct policy-facing specification that happens
+  to be filled by that detector. A policy change that reran install-failure without treating
+  the job-history pattern as a CQ-013 signature would split them.

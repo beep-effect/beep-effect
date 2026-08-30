@@ -1,0 +1,36 @@
+target: "otp:split-stream-captured-subprocess-result:001"
+target_sha256: "1bcb7bef93794dcc4e2d4164ba3e97acb60a899adbff1afee9b38e07955ba249"
+chain_sha256: "8eeabbfe628f14a5f0033be9c989fcab2ca930533e04337c81a8889883b4b573"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: "A call-site trace must show persistence or VerificationEvidence use beyond the immediate return, and capture-attempt provenance must tie stdout, stderr, exit status, and truncation to one subprocess execution; body-level observations must also establish construction of that record."
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a edge to test; no valid subsumption relation is asserted."
+attacks:
+  - surface: identity
+    rule: "capture-provenance-identity-deferred"
+    counterexample: "Two independent captures can yield identical exitCode, stdout, stderr, and truncated values. The revision now marks identity unresolved, sets foundational status explicitly_deferred, and names missing capture provenance, so it no longer treats equal values as record identity."
+    outcome: survived
+  - surface: warrant
+    rule: "conditional-support-not-established"
+    counterexample: "A transient CapturedStreams return value can be discarded while CQ-005 and CQ-006 are answered by other retained VerificationEvidence records. The term becomes necessary only if call sites retain it as evidence, and the current closure contains no such use."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-not-in-observations"
+    counterexample: "The observations expose a record class, runner declaration, and options alias but no child spawn, separate folds, exit-code acquisition, or record construction. A stub runner returning a transient DTO satisfies the closure and leaves the implementation-only rival viable."
+    outcome: landed
+rival_models_still_viable:
+  - "A subprocess execution occurrence"
+  - "A retained diagnostic or VerificationEvidence artifact"
+  - "A transient return object with no retained operational role"
+evidence:
+  - "so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d"
+  - "so:sha256:ca5e01bb598282d204b571b9567ae92a62782dc0dea487b412200725b31fde49"
+  - "so:sha256:8e9ac56f7faaa4343dc5e43ba0d5db57423412ece68eb4b5d65adbce396d5976"
+  - "CQ-005"
+  - "CQ-006"

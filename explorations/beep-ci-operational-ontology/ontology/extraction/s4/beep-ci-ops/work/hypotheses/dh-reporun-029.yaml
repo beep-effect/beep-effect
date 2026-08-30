@@ -1,0 +1,21 @@
+id: "dh:reporun:029"
+observation_refs:
+  - "so:sha256:3df6996e4ed0018220e56be976dacf8c218e6e30ee00db2e490a7a9ab6a2a1b2"
+cq_warrants: []
+proposed_referent:
+  label: "StepExec module identifier binding"
+  description: "The local identifier-factory binding used to annotate subprocess-runner declarations."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Identifier for an execution-domain module"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation contains only an unrepresentable identifier-factory variable declaration. It supplies no execution, result, or failure referent beyond annotation plumbing."
+epistemic_status: proposed
+confidence:
+  value: 0.98
+  use_for_acceptance: false
+

@@ -1,0 +1,25 @@
+id: "dh:topology:001"
+observation_refs:
+  - "po:sha256:3842a52c7caada940ed89a9dd852f272f282f21620fd632dc4e92770ec7c49c1"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "workspace package identity"
+  description: "The information-bearing identity used to distinguish an @beep/* workspace software package in operational topology data."
+representation_status: "unresolved"
+alternatives:
+  - label: "workspace software package as an operational domain participant"
+    representation_status: "domain_referent"
+    plausibility: "viable"
+  - label: "PackageRef as only a query-vocabulary label"
+    representation_status: "lexical_alias"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "Deciding PackageRef requires a deployed graph-execution attestation for a pinned repository snapshot that binds a manifest-backed package node to an executed task and shows whether that node's lineage persists or breaks across a package rename; no enriched observation supplies that trace."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.82
+  use_for_acceptance: false

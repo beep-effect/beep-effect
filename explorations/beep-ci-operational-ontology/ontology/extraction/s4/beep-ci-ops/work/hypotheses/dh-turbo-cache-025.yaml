@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:025"
+observation_refs:
+  - "so:sha256:3137f4e5a8b817fe484a22b4181e2e0f14e153855f5d580591c14423c1931091"
+  - "so:sha256:421920520d237c5c5970b58744a28db92688d8c4bab291af3666b9819b891212"
+cq_warrants: []
+proposed_referent:
+  label: "Internal TurboCacheMode representation vocabulary"
+  description: "The paired value and alias declarations expose a software vocabulary, but the observations do not expose its members or operational semantics."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Lexical aliases for externally meaningful Turbo cache modes"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "A domain of cache-transfer postures"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Only paired declarations and export facts are observed; those facts are equally expected for a software-only vocabulary wrapper."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

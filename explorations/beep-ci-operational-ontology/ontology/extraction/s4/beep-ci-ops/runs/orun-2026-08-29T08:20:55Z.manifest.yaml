@@ -1,0 +1,86 @@
+run_id: orun-2026-08-29T08:20:55Z
+ontology:
+  name: beep-ci-ops
+engine:
+  validator_sha256_12: 6aec64cde23f
+  contracts_sha256_12: e1338e75966c
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  dirty: false
+scope_doc:
+  path: explorations/beep-ci-operational-ontology/ontology/docs/scope.md
+  sha256_12: 6c39b69481a3
+cq_suite:
+  path: explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml
+  sha256_12: e06ec7fe12a6
+  cq_count: 26
+adapters:
+- id: adapter-typescript
+  version: 1.0.0
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  script_sha256_12: eef82542944b
+  golden_fixture: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript
+- id: adapter-config
+  version: 1.0.0
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+  script_sha256_12: 046fb3e9085f
+  golden_fixture: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config
+agents:
+  denotation:
+    model: gpt-5.6-sol
+    prompt: prompts/denotation.md
+    prompt_sha256_12: 1d848ac2560f
+  foundational:
+    model: gpt-5.6-sol
+    prompt: prompts/ufo-analysis.md
+    prompt_sha256_12: 3d94feb0629c
+  synthesis:
+    model: gpt-5.6-sol
+    prompt: prompts/synthesis.md
+    prompt_sha256_12: 117d82b29904
+  adversary:
+    model: gpt-5.6-sol
+    prompt: prompts/ontoclean-adversary.md
+    prompt_sha256_12: 5a65b5db0e2c
+    independent_context: true
+  alternative:
+    model: grok-4.6
+    prompt: prompts/alternative-model.md
+    prompt_sha256_12: 7886433e3133
+    blinded: true
+first_run: true
+notes: 'Initiative effort directive (operator, 2026-08-27): every codex seat runs -c model_reasoning_effort=max;
+  the grok alternative seat runs --reasoning-effort xhigh. Seat independence: denotation/foundational/ synthesis
+  are separate fresh codex contexts; the adversary runs in its own fresh context (independent_context); the alternative
+  seat is a different provider (grok) and sees only observations + hypotheses (blinded). ProseObservations transcribed
+  from the S4 candidate harvest by the committed po_from_evidence.py (sha recorded below) with six verbatim manual
+  recaptures. Skill SKILL.md sha256_12 820ae60080cf; adapter engine adapter-typescript.ts pinned via committed sidecar
+  adapter-typescript.ts.sha256; po_from_evidence.py is not an SO extractor (ProseObservations carry no extractor
+  tuple) but is committed at the pin. ENGINE RE-LOCK 2026-08-29 (post-denotation): the canonical skill advanced
+  v9->v10 mid-run (validate_artifacts.py, ontoclean-rules.yaml, SKILL.md; prompts byte-identical, so seat prompt
+  digests stand). Per the skill carry-forward policy the manifest re-locks to the judging engine; all 1097 observations
+  and 692 hypotheses re-verify under v10. Prior engine: validator c8229fc304bd, contracts ee9e30584f63. ENGINE RE-LOCK
+  2 (post-FA): validator advanced again mid-run (039564222bd0 -> 982650ee041d, contracts unchanged, prompts byte-identical);
+  all artifacts re-verified under the new engine. ENGINE RE-LOCK 3 (pre-adversary): validator 982650ee041d -> 04b06d94567a;
+  artifacts re-verified. ENGINE RE-LOCK 4 (post-adversary): validator 04b06d94567a -> 6aec64cde23f, contracts fd8cb801a7b3
+  -> e1338e75966c; 235 reviews + full tree re-verified. ENGINE RE-LOCK 5 (pre-r2): contracts e1338e75966c -> 586f293df99f.
+  ENGINE FREEZE (final): the canonical skill install was emptied mid-run by a parallel restructuring session; the
+  run completes on the pinned Codex skills-mirror snapshot (the agents skills directory under the operator home; validator 6aec64cde23f, contracts e1338e75966c
+  — byte-identical to the digests this manifest pinned at the adversary stage; the transient contracts value 586f293df99f
+  observed between re-locks 4 and 5 no longer exists anywhere and is superseded).'
+frozen_inputs:
+- path: explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml
+  sha256_12: e06ec7fe12a6
+- path: explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv
+  sha256_12: 9184cddcecc7
+- path: explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md
+  sha256_12: 4c5bf9a78a6f
+- path: explorations/beep-ci-operational-ontology/ontology/docs/scope.md
+  sha256_12: 6c39b69481a3
+- path: explorations/beep-ci-operational-ontology/ontology/docs/s4-lane-contract.md
+  sha256_12: 157cdd1e4b59
+unresolved_fraction_waiver: '57.75% unresolved of non-irrelevant rows is deliberate parking, not dumping: the round-2
+  adversary held that static-syntax observations cannot ground the CQ suite s measurement and episode vocabulary
+  (VerificationAttempt/Episode, WorkUnitSpecification/Execution, tier and cost properties); each row names the runtime-attestation
+  evidence needed (journal/verdict corpus extension), and next-run re-opening is the designed channel. Ruled by
+  the auditor with steward-approved concede-where-held policy, 2026-08-29.'

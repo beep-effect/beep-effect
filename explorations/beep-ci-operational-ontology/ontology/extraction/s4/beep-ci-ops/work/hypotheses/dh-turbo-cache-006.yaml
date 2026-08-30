@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:006"
+observation_refs:
+  - "so:sha256:e84ff4ab2d4d73e8e74b77ed4615b6c72b21b955f75899edc4752f76386fc1a8"
+  - "po:sha256:cd039ccfee27376edd08a5ec9157acfddc84b5004ffa125174bfc5ff2f7fbf6a"
+cq_warrants: []
+proposed_referent:
+  label: "Possible Turbo task specification named test:property"
+  description: "The observations expose a configuration key but no representable task facts that decide its operational denotation."
+representation_status: unresolved
+alternatives:
+  - label: "A property-test work-unit specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "An implementation-only configuration key"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The parser supplied only unrepresentable_construct, and the quotation repeats the key. Neither observation distinguishes a task specification from a repository key."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.36
+  use_for_acceptance: false

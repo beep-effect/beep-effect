@@ -1,0 +1,1572 @@
+{
+  "pack": "jsonl",
+  "modules": [
+    {
+      "file": "jsonl/Envelope.ts",
+      "pack": "jsonl",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "pack": "jsonl",
+      "exportCount": 7,
+      "owningExportCount": 7,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "pack": "jsonl",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlEvent.ts",
+      "pack": "jsonl",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Line.ts",
+      "pack": "jsonl",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/LineSlice.ts",
+      "pack": "jsonl",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Slice.ts",
+      "pack": "jsonl",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/index.ts",
+      "pack": "jsonl",
+      "exportCount": 11,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": true,
+      "findings": []
+    },
+    {
+      "file": "jsonl/internal/merge.ts",
+      "pack": "jsonl",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/tail.ts",
+      "pack": "jsonl",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/utf8.ts",
+      "pack": "jsonl",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "jsonl/Envelope.ts",
+      "name": "EnvelopeFrame",
+      "line": 42,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Envelope.ts",
+      "name": "Envelope",
+      "line": 59,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Envelope.ts",
+      "name": "EnvelopeOf",
+      "line": 78,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Envelope.ts",
+      "name": "EnvelopeUnion",
+      "line": 88,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Envelope.ts",
+      "name": "EnvelopeWithTag",
+      "line": 95,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Envelope.ts",
+      "name": "Envelope",
+      "line": 180,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "name": "JournalWriteError",
+      "line": 48,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "name": "JournalReadError",
+      "line": 63,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "name": "AppendOptions",
+      "line": 70,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "name": "JournalShape",
+      "line": 80,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "name": "JournalConfig",
+      "line": 216,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "name": "JournalClass",
+      "line": 1108,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Journal.ts",
+      "name": "Journal",
+      "line": 1163,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "MalformedLine",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "UnknownEvent",
+      "line": 71,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "InvalidData",
+      "line": 98,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "TerminalViolation",
+      "line": 124,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "JournalNotFound",
+      "line": 147,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "UnserializableData",
+      "line": 178,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "JournalClosed",
+      "line": 207,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "JournalResync",
+      "line": 244,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@remarks",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlError.ts",
+      "name": "JsonlError",
+      "line": 268,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlEvent.ts",
+      "name": "DataSchema",
+      "line": 32,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlEvent.ts",
+      "name": "JsonlEventTypeId",
+      "line": 39,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlEvent.ts",
+      "name": "JsonlEventTypeId",
+      "line": 46,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlEvent.ts",
+      "name": "JsonlEvent",
+      "line": 59,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlEvent.ts",
+      "name": "JsonlEvent",
+      "line": 86,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/JsonlEvent.ts",
+      "name": "JsonlEvent",
+      "line": 154,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Line.ts",
+      "name": "ParsedLine",
+      "line": 26,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Line.ts",
+      "name": "Line",
+      "line": 47,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/LineSlice.ts",
+      "name": "LineSlice",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "jsonl",
+      "tags": [
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Slice.ts",
+      "name": "Slice",
+      "line": 24,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Slice.ts",
+      "name": "CursoredSlice",
+      "line": 52,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/Slice.ts",
+      "name": "matchesFrame",
+      "line": 73,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "EnvelopeOf, EnvelopeUnion, EnvelopeWithTag",
+      "line": 34,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "jsonl",
+      "tags": [
+        "@example",
+        "@effected",
+        "@see",
+        "@link",
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-carrier",
+          "detail": "Re-export JSDoc uses a retired @example or @remarks carrier."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "Envelope, EnvelopeFrame",
+      "line": 35,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "AppendOptions, JournalClass, JournalConfig, JournalReadError, JournalShape, JournalWriteError",
+      "line": 36,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "Journal",
+      "line": 44,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "JsonlError",
+      "line": 45,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "InvalidData, JournalClosed, JournalNotFound, JournalResync, MalformedLine, TerminalViolation, UnknownEvent, UnserializableData",
+      "line": 46,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "DataSchema",
+      "line": 56,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "JsonlEvent, JsonlEventTypeId",
+      "line": 57,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "Line, ParsedLine",
+      "line": 58,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "LineSlice",
+      "line": 59,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/index.ts",
+      "name": "CursoredSlice, Slice",
+      "line": 60,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "jsonl",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "jsonl/internal/merge.ts",
+      "name": "isRecordLike",
+      "line": 44,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/merge.ts",
+      "name": "isPlainRecord",
+      "line": 52,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/merge.ts",
+      "name": "canMerge",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@effected",
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/merge.ts",
+      "name": "shallowMerge",
+      "line": 109,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/tail.ts",
+      "name": "DEFAULT_WINDOW",
+      "line": 38,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@link",
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/tail.ts",
+      "name": "TailWindow",
+      "line": 45,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/tail.ts",
+      "name": "probeBomBytes",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/tail.ts",
+      "name": "readTail",
+      "line": 116,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/tail.ts",
+      "name": "readTailUntil",
+      "line": 164,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/tail.ts",
+      "name": "readRangeText",
+      "line": 202,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "jsonl/internal/utf8.ts",
+      "name": "utf8Length",
+      "line": 25,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "jsonl",
+      "tags": [
+        "@internal"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+id: "dh:cilane:012"
+observation_refs:
+  - "po:sha256:f592c1a1a0042dc9b4234a1b7217ea374f2799a2f4d04f77b263ef5d9058ab5d"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "knip verification lane"
+  description: "A possible operational verification lane named by the quoted knip token."
+representation_status: lexical_alias
+alternatives:
+  - label: "knip command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "unused-code verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation places knip in a string list and says nothing about the tool, work scope, invocation, or outcome. A code selector remains observationally indistinguishable from a verification lane referent."
+epistemic_status: proposed
+confidence:
+  value: 0.41
+  use_for_acceptance: false

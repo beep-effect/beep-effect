@@ -1,0 +1,26 @@
+id: "fa:alt1:059"
+hypothesis_ref: "dh:yeet-watch:028"
+identity_card_ref: "ic:alt1:059"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "the same information object as the JobShape setup-step-failure criterion, with
+      rerun-licensing as a use rather than a different spec"
+    still_viable: true
+  - label: "setup failure occurrence"
+    still_viable: false
+  - label: "setup-5xx literal token"
+    still_viable: false
+strongest_counterexample: "applyYeetMonitorJobDecision attempts a rerun only for a rerun
+  decision derived from a present flake class; the signature licenses a procedure and is not the
+  failed job. A token with no attached rerun plan would not explain planYeetMonitorReruns."
+verdict: "analyzed"
+needed_evidence: "Whether YeetMonitorFlakeClass.setup-5xx is stipulated to be the same
+  recognition criterion as GithubJobShapeClass.setup-5xx or a policy overlay (allowed-to-rerun)
+  on top of shape. Discriminating observation: a setup-shape match the monitor refuses to rerun,
+  or a flake-class match that does not go through detectGithubJobShapeClass. On current evidence
+  the same-object and policy-overlay models remain observationally close; context reification is
+  already required because shape is used as environment-only."

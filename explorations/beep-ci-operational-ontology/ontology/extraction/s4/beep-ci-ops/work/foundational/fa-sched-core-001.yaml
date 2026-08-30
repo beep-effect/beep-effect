@@ -1,0 +1,15 @@
+id: "fa:sched-core:001"
+hypothesis_ref: "dh:sched-core:001"
+identity_card_ref: "ic:sched-core:001"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "The ticket information object is itself the deployed SeatRequest rather than a record about a distinct request."
+    still_viable: true
+  - label: "The ticket is only a persistence DTO with no independently modeled information-object identity."
+    still_viable: false
+strongest_counterexample: "Two independently created ticket files can contain identical owner, work-kind, charge, and time values; value equality therefore cannot establish record-token identity."
+verdict: "analyzed"

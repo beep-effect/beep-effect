@@ -1,0 +1,28 @@
+id: "dh:yeet-watch:037"
+observation_refs:
+  - "so:sha256:44f7d897d1290f4e8005f22a3f3c08b8d91e5dfc7c1bd312cf3e519c23d9d046"
+  - "so:sha256:0eb452d5743afc10fb46926766d16e7646b4d9024e6aac0f0d665e549c8e19a9"
+  - "so:sha256:a6c64d9df3926ab0efd3b01e652c94034794691743934535dcd7ad8abf9d5825"
+  - "so:sha256:2780de54843e2c073117897235567afa904e090a4ded2c414df0b7b22bd7338f"
+  - "so:sha256:ebc06ef1abcd06cb13b2879f2c5f87822fd71e2f255e578feddae3c7ab7a2868"
+  - "so:sha256:f55fc96484a8d2d72e753eea1698683dbc60ead75a6c591012fca2789a6931e1"
+cq_warrants: []
+proposed_referent:
+  label: "until-merged monitoring procedure specification"
+  description: "The source-level polling, rendering, option, and interval machinery for following a pull request until a terminal state."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "until-merged monitoring execution"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "verification episode"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations specify a repeatable polling procedure but record no dated execution; the procedure-versus-execution split therefore prevents an operational episode from being inferred."
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false

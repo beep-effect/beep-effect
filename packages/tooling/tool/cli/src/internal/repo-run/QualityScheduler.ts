@@ -15,9 +15,11 @@
  *
  * @since 0.0.0
  */
+
 import { randomUUID } from "node:crypto";
-import { freemem, tmpdir, totalmem, userInfo } from "node:os";
+import { freemem, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import * as OptionUtils from "@beep/utils/Option";
 import {
   Clock,
   Console,
@@ -28,6 +30,7 @@ import {
   Fiber,
   FileSystem,
   Layer,
+  MutableHashSet,
   Order,
   Path,
   pipe,
@@ -38,7 +41,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../cli/EnvConfig.ts";
+import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
 import {
   AdmissionConfig,
   AdmissionRequest,
@@ -47,6 +50,17 @@ import {
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
+import { RunScopeRecord, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
+import {
+  enterRunScope,
+  listRunScopeUnits,
+  readRunScopeOwnerRoot,
+  readRunScopeTelemetry,
+  runScopeUnitName,
+  stopRunScopeForReap,
+} from "./RunScope.ts";
+import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -270,19 +284,11 @@ interface AdmissionDirectories {
   readonly root: string;
 }
 
-const admissionRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Return<string, never, Path.Path> {
-  const path = yield* Path.Path;
-  const configured = yield* configStringOption("XDG_RUNTIME_DIR");
-  return pipe(
-    configured,
-    O.filter(Str.isNonEmpty),
-    O.filter(path.isAbsolute),
-    O.match({
-      // Shared tmpdir fallback gets a uid suffix; XDG_RUNTIME_DIR is per-user.
-      onNone: () => path.join(tmpdir(), `beep-admit-uid-${userInfo().uid}`),
-      onSome: (root) => path.join(root, "beep", "admit"),
-    })
-  );
+const admissionDirectoriesFor = (path: Path.Path, root: string): AdmissionDirectories => ({
+  root,
+  leases: path.join(root, "leases"),
+  queue: path.join(root, "queue"),
+  quarantine: path.join(root, "quarantine"),
 });
 
 /**
@@ -385,13 +391,10 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* admissionRuntimeRoot();
-  const directories: AdmissionDirectories = {
-    root,
-    leases: path.join(root, "leases"),
-    queue: path.join(root, "queue"),
-    quarantine: path.join(root, "quarantine"),
-  };
+  // The base root is shared with the proof-lock coordinator (RuntimeRoot.ts),
+  // so every session on the machine coordinates under one tree.
+  const choice = yield* perUserRuntimeRoot();
+  const directories = admissionDirectoriesFor(path, admissionRootFor(path, choice));
   yield* Effect.forEach(
     [directories.root, directories.leases, directories.queue, directories.quarantine],
     (directory) =>
@@ -450,6 +453,7 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
 
 interface LiveAdmissionState {
   readonly dead: ReadonlyArray<string>;
+  readonly deadLeases: ReadonlyArray<{ readonly path: string; readonly lease: YeetAdmissionLease }>;
   readonly leases: ReadonlyArray<{ readonly path: string; readonly lease: YeetAdmissionLease }>;
   readonly quarantined: ReadonlyArray<string>;
   readonly tickets: ReadonlyArray<{ readonly path: string; readonly ticket: YeetAdmissionTicket }>;
@@ -532,7 +536,7 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
 ): Effect.fn.Return<
   {
     readonly live: ReadonlyArray<{ readonly path: string; readonly entry: Entry }>;
-    readonly dead: ReadonlyArray<string>;
+    readonly dead: ReadonlyArray<{ readonly path: string; readonly entry: Entry }>;
     readonly quarantined: ReadonlyArray<string>;
   },
   QualitySchedulerError,
@@ -557,7 +561,9 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
       )
     ),
     dead: A.getSomes(
-      A.map(classified, ({ entryPath, outcome }) => (outcome.kind === "dead" ? O.some(entryPath) : O.none()))
+      A.map(classified, ({ entryPath, outcome }) =>
+        outcome.kind === "dead" ? O.some({ path: entryPath, entry: outcome.entry }) : O.none()
+      )
     ),
     quarantined: A.getSomes(
       A.map(classified, ({ entryPath, outcome }) => (outcome.kind === "malformed" ? O.some(entryPath) : O.none()))
@@ -592,7 +598,11 @@ const scanAdmissionState = Effect.fnUntraced(function* (
   return {
     leases: A.map(leases.live, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
     tickets: A.map(tickets.live, ({ entry, path: entryPath }) => ({ path: entryPath, ticket: entry })),
-    dead: A.appendAll(leases.dead, tickets.dead),
+    dead: A.appendAll(
+      A.map(leases.dead, ({ path: entryPath }) => entryPath),
+      A.map(tickets.dead, ({ path: entryPath }) => entryPath)
+    ),
+    deadLeases: A.map(leases.dead, ({ entry, path: entryPath }) => ({ path: entryPath, lease: entry })),
     quarantined: A.appendAll(leases.quarantined, tickets.quarantined),
   };
 });
@@ -836,7 +846,7 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
 ): Effect.fn.Return<
   AdmissionAttempt<OriginLease>,
   QualitySchedulerError | GateError,
-  FileSystem.FileSystem | Path.Path | MemoryStats | GateRequirements
+  FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner | GateRequirements
 > {
   const originLease = yield* gate.tryAcquire;
   if (O.isNone(originLease)) {
@@ -871,7 +881,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string }>,
   QualitySchedulerError,
-  FileSystem.FileSystem | Path.Path | MemoryStats
+  FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const nowMillis = yield* Clock.currentTimeMillis;
@@ -889,6 +899,8 @@ const stageSelfLease = Effect.fnUntraced(function* (
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
     admittedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
+    enqueuedAtMillis: ticket.enqueuedAtMillis,
+    nonce: ticket.nonce,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const created = yield* tryCreateExclusive(leasePath, `${yield* encodeLeaseText(lease)}\n`);
@@ -905,7 +917,12 @@ const stageSelfLease = Effect.fnUntraced(function* (
     yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
     return O.none();
   }
-  return O.some({ lease, leasePath });
+  const scopedLease = YeetAdmissionLease.make({
+    ...lease,
+    runScope: yield* enterRunScope(ticket.nonce, directories.root),
+  });
+  yield* refreshHeartbeat(leasePath, yield* encodeLeaseText(scopedLease));
+  return O.some({ lease: scopedLease, leasePath });
 });
 
 const heartbeatLoop = Effect.fnUntraced(function* (
@@ -947,7 +964,7 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
 ): Effect.fn.Return<
   PromotionTick<OriginLease>,
   QualitySchedulerError | GateError,
-  FileSystem.FileSystem | Path.Path | MemoryStats | GateRequirements
+  FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner | GateRequirements
 > {
   const state = yield* scanAdmissionState(directories, true);
   const stats = yield* MemoryStats;
@@ -962,6 +979,22 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   if (O.isNone(attempt.admitted)) {
     return { admitted: O.none(), info, originBusy: attempt.originBusy };
   }
+  yield* appendAdmissionJournalEvent(
+    directories.root,
+    AdmissionJournalAdmitted.make({
+      schemaVersion: "yeet-admission-journal/v1",
+      _tag: "admission-admitted",
+      nonce: ticket.nonce,
+      pid: ticket.pid,
+      procStart: ticket.procStart,
+      kind: ticket.kind,
+      weightTokens: ticket.weightTokens,
+      priority: ticket.priority,
+      originKey: ticket.originKey,
+      enqueuedAtMillis: ticket.enqueuedAtMillis,
+      admittedAtMillis: attempt.admitted.value.lease.admittedAtMillis,
+    })
+  ).pipe(Effect.catch((error) => Console.warn(`[yeet] admission journal append failed: ${error.message}`)));
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(ticketPath, { force: true }).pipe(Effect.ignore);
   return { admitted: attempt.admitted, info, originBusy: false };
@@ -1029,7 +1062,7 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
 ): Effect.fn.Return<
   AdmittedState<OriginLease>,
   QualitySchedulerError | GateError,
-  FileSystem.FileSystem | Path.Path | MemoryStats | GateRequirements
+  FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner | GateRequirements
 > {
   const startMillis = yield* Clock.currentTimeMillis;
   let ticket = initialTicket;
@@ -1055,7 +1088,29 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   }
 });
 
+const matchActiveRunScope = <Success, Requirements>(
+  lease: YeetAdmissionLease,
+  options: {
+    readonly onNone: () => Effect.Effect<Success, never, Requirements>;
+    readonly onSome: (scope: RunScopeRecord) => Effect.Effect<Success, never, Requirements>;
+  }
+): Effect.Effect<Success, never, Requirements> =>
+  pipe(
+    O.fromUndefinedOr(lease.runScope),
+    O.filter((scope) => RunScopeSupport.is.active(scope.support)),
+    O.match(options)
+  );
+
+const readLeaseRunScopeTelemetry = (
+  lease: YeetAdmissionLease
+): Effect.Effect<RunScopeTelemetry, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  matchActiveRunScope(lease, {
+    onNone: () => Effect.succeed(RunScopeTelemetry.make({})),
+    onSome: (scope) => readRunScopeTelemetry(scope.unitName),
+  });
+
 const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequirements, OriginLease, GateRequirements>(
+  directories: AdmissionDirectories,
   admitted: AdmittedState<OriginLease>,
   releaseOrigin: (lease: OriginLease) => Effect.Effect<void, never, GateRequirements>,
   use: Effect.Effect<Success, UseError, UseRequirements>,
@@ -1066,13 +1121,28 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
 ): Effect.fn.Return<
   Success,
   UseError | QualitySchedulerError,
-  UseRequirements | FileSystem.FileSystem | GateRequirements
+  UseRequirements | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | GateRequirements
 > {
   return yield* Effect.acquireUseRelease(
     Effect.forkChild(heartbeatLoop(admitted.leasePath, admitted.lease, config)),
     () => restore(use),
     Effect.fnUntraced(function* (heartbeat) {
       yield* Fiber.interrupt(heartbeat);
+      const releasedAtMillis = yield* Clock.currentTimeMillis;
+      const telemetry = yield* readLeaseRunScopeTelemetry(admitted.lease);
+      yield* appendAdmissionJournalEvent(
+        directories.root,
+        AdmissionJournalReleased.make({
+          schemaVersion: "yeet-admission-journal/v1",
+          _tag: "admission-released",
+          nonce: admitted.lease.nonce,
+          pid: admitted.lease.pid,
+          releasedAtMillis,
+          ...OptionUtils.getSomesStruct({
+            memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
+          }),
+        })
+      ).pipe(Effect.catch((error) => Console.warn(`[yeet] admission journal append failed: ${error.message}`)));
       const fs = yield* FileSystem.FileSystem;
       yield* fs.remove(admitted.leasePath, { force: true }).pipe(Effect.ignore);
       yield* releaseOrigin(admitted.originLease);
@@ -1120,7 +1190,12 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
 ): Effect.fn.Return<
   Success,
   UseError | GateError | QualitySchedulerError,
-  UseRequirements | GateRequirements | FileSystem.FileSystem | Path.Path | MemoryStats
+  | UseRequirements
+  | GateRequirements
+  | FileSystem.FileSystem
+  | Path.Path
+  | MemoryStats
+  | ChildProcessSpawner.ChildProcessSpawner
 > {
   const resolved = config ?? AdmissionConfig.make({});
   const path = yield* Path.Path;
@@ -1187,7 +1262,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
           resolved,
           restore
         );
-        return yield* runAdmitted(admitted, gate.release, use, resolved, restore);
+        return yield* runAdmitted(directories, admitted, gate.release, use, resolved, restore);
       }),
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1245,20 +1320,53 @@ const bypassAdmission = Effect.fnUntraced(function* <
  */
 export const admissionStatus = Effect.fn("QualityScheduler.admissionStatus")(function* (
   config?: AdmissionConfig
-): Effect.fn.Return<AdmissionSnapshot, QualitySchedulerError, FileSystem.FileSystem | Path.Path | MemoryStats> {
+): Effect.fn.Return<
+  AdmissionSnapshot,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
+> {
   const resolved = config ?? AdmissionConfig.make({});
   const directories = yield* ensureAdmissionDirectories();
   return yield* snapshotAdmissionState(directories, resolved, false);
 });
 
+const enrichLeaseRunScopeTelemetry = (
+  lease: YeetAdmissionLease
+): Effect.Effect<YeetAdmissionLease, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  matchActiveRunScope(lease, {
+    onNone: () => Effect.succeed(lease),
+    onSome: (scope) =>
+      readRunScopeTelemetry(scope.unitName).pipe(
+        Effect.map((telemetry) =>
+          YeetAdmissionLease.make({
+            ...lease,
+            runScope: RunScopeRecord.make({
+              ...scope,
+              ...OptionUtils.getSomesStruct({
+                memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
+                tasksCurrent: O.fromUndefinedOr(telemetry.tasksCurrent),
+              }),
+            }),
+          })
+        )
+      ),
+  });
+
 const snapshotAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   config: AdmissionConfig,
   repair: boolean
-): Effect.fn.Return<AdmissionSnapshot, QualitySchedulerError, FileSystem.FileSystem | Path.Path | MemoryStats> {
+): Effect.fn.Return<
+  AdmissionSnapshot,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const state = yield* scanAdmissionState(directories, repair);
+  const leases = yield* Effect.forEach(state.leases, ({ lease }) => enrichLeaseRunScopeTelemetry(lease), {
+    concurrency: 4,
+  });
   const stats = yield* MemoryStats;
   const availableGib = yield* stats.availableGib;
   // Files already moved into quarantine stay on the operator's inspection
@@ -1271,11 +1379,49 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
     activeTokens: activeTokenTotal(state),
     memAvailableGib: availableGib,
     hardFloorEngaged: availableGib < config.hardFloorGib,
-    leases: A.map(state.leases, ({ lease }) => lease),
+    leases,
     tickets: A.map(state.tickets, ({ ticket }) => ticket),
     dead: state.dead,
     quarantined: A.appendAll(state.quarantined, persistedQuarantine),
   });
+});
+
+const derivedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
+  Str.isNonEmpty(lease.nonce) ? [runScopeUnitName(lease.nonce)] : A.empty();
+
+const recordedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
+  pipe(O.fromUndefinedOr(lease.runScope), O.match({ onNone: A.empty<string>, onSome: (scope) => [scope.unitName] }));
+
+// Only scopes that record this reaper's admission root as owner are candidates.
+// Production now has one invariant root; a scope from an isolated test fixture
+// is someone else's live work, never a leak from here.
+const ownedByRoot = (ownerRoot: string) =>
+  Effect.fnUntraced(function* (
+    unitName: string
+  ): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+    const recorded = yield* readRunScopeOwnerRoot(unitName);
+    return O.exists(recorded, (root) => root === ownerRoot) ? O.some(unitName) : O.none();
+  });
+
+const stopLeakedRunScopes = Effect.fnUntraced(function* (
+  state: LiveAdmissionState,
+  ownerRoot: string
+): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
+  // A live lease protects both its recorded unit and the nonce-derived unit,
+  // which covers the window before enterRunScope's record reaches the lease.
+  const liveUnits = MutableHashSet.fromIterable(
+    A.flatMap(state.leases, ({ lease }) => A.appendAll(derivedRunScopeUnitName(lease), recordedRunScopeUnitName(lease)))
+  );
+  const deadTargets = A.flatMap(state.deadLeases, ({ lease }) =>
+    pipe(
+      recordedRunScopeUnitName(lease),
+      A.match({ onEmpty: () => derivedRunScopeUnitName(lease), onNonEmpty: (recorded) => recorded })
+    )
+  );
+  const unowned = A.filter(yield* listRunScopeUnits(), (unitName) => !MutableHashSet.has(liveUnits, unitName));
+  const ownedTargets = A.getSomes(yield* Effect.forEach(unowned, ownedByRoot(ownerRoot), { concurrency: 4 }));
+  const targets = MutableHashSet.fromIterable(A.appendAll(deadTargets, ownedTargets));
+  yield* Effect.forEach(targets, stopRunScopeForReap, { concurrency: 4, discard: true });
 });
 
 /**
@@ -1298,7 +1444,14 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
  */
 export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState")(function* (options: {
   readonly apply: boolean;
-}): Effect.fn.Return<AdmissionSnapshot, QualitySchedulerError, FileSystem.FileSystem | Path.Path | MemoryStats> {
+}): Effect.fn.Return<
+  AdmissionSnapshot,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
+> {
   const directories = yield* ensureAdmissionDirectories();
+  if (options.apply) {
+    yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false), directories.root);
+  }
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply);
 });

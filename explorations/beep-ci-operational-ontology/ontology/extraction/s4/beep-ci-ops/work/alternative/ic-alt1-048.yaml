@@ -1,0 +1,32 @@
+id: "ic:alt1:048"
+hypothesis_ref: "dh:turbo-cache:005"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Turbo task specifications named test are the same iff they are the same
+    named task prescription in this repository's Turbo configuration document at the observed
+    corpus commit, carrying the observed pass-through environment list and inputs. The task key
+    spelling is reidentification evidence, never the sameness criterion."
+  reidentification_key:
+    - "test"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one named task specification test as a single information object inside the Turbo
+    document; a run of the task is not a part of the specification"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies:
+    - "Turbo configuration document at the observed commit"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A vitest run is an execution of something this specification names; it is not a
+      second test task specification. Absence of a dependsOn entry on test does not make the
+      entry a bare key: passThroughEnv is already reusable invocation-context content."
+status: "proposed"

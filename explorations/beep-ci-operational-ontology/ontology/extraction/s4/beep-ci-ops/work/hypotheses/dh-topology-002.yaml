@@ -1,0 +1,24 @@
+id: "dh:topology:002"
+observation_refs:
+  - "po:sha256:e1b16485ec1f3285d03674eb6bb8d3da10dad7235a569391e48bbd00697a9e16"
+cq_warrants: []
+proposed_referent:
+  label: "direct workspace package dependency relation"
+  description: "The direct declared dependency relation from one workspace package information artifact to another, used as the base relation for affected-package closure."
+representation_status: "unresolved"
+alternatives:
+  - label: "dependency-manifest assertion record"
+    representation_status: "information_artifact"
+    plausibility: "viable"
+  - label: "dependsOn as only a pre-glossary property token"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "Deciding the direct relation requires a deployed package-graph trace for one pinned invocation that links a manifest declaration from package A to package B with the resolved graph edge and a resulting task-order or affected-set consequence, including dependency-kind and snapshot provenance; no enriched observation supplies it."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.72
+  use_for_acceptance: false

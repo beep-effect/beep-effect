@@ -1,0 +1,20 @@
+id: "dh:worktree-config:004"
+observation_refs:
+  - "so:sha256:79a6ff70e63527a278ad68626ae995f28c6596b525dfdd74f6b168d97cc5d0f3"
+  - "po:sha256:62021c839bea6491193f09613f123ae0a2da09131955de754aad4938222ebcbb"
+  - "po:sha256:59af523949ee9a47fb7bafc2a0ddf9b755e5e5ab8a854f991ed2bfa58be27493"
+cq_warrants: []
+proposed_referent:
+  label: "Fallow boundary-provenance schema representation"
+  description: "The JSON-schema representation carrying the title and field names for boundary-rule provenance records."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Fallow boundary-rule provenance record"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A schema title, validator authority, constants, and provenance-shaped field names remain compatible with pure representation plumbing; the observations do not show an actual governed record or its operational use."
+epistemic_status: proposed
+confidence: {value: 0.72, use_for_acceptance: false}

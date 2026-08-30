@@ -1,6 +1,11 @@
 /**
  * Clean-HEAD frozen-lockfile install preflight for Yeet publish and verify.
  *
+ * The detached checkout and full install are minted beneath the persistent
+ * cache root, not the tmpfs-backed system temporary directory. A crash can
+ * therefore leak disk rather than zram; `beep quality tmpfs-reap` is the
+ * janitor for abandoned head-install roots.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -8,7 +13,12 @@
 import { O } from "@beep/utils";
 import { Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
-import { commandTextForStep, RepoStepRunResult, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import {
+  commandTextForStep,
+  RepoStepRunResult,
+  resolveBeepCacheRoot,
+  runRepoCommandCapture,
+} from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -59,8 +69,9 @@ const persistOutput = Effect.fn("Yeet.persistHeadInstallPreflightOutput")(functi
 /**
  * Install the committed repository tree in a detached temporary worktree.
  *
- * The temporary checkout is always removed and pruned, including when the
- * frozen install fails.
+ * The temporary checkout is created on persistent disk and is always removed
+ * and pruned, including when the frozen install fails. If the process crashes,
+ * the tmpfs janitor reaps the abandoned cache root later.
  *
  * @param context - Repository context whose committed HEAD is checked.
  * @param step - Planned preflight lane recorded in run artifacts.
@@ -82,8 +93,15 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const commandText = commandTextForStep(step);
+  const cacheRoot = yield* resolveBeepCacheRoot().pipe(
+    Effect.mapError(YeetCommandError.new("Failed to resolve the head-install preflight cache root."))
+  );
+  const headInstallBase = path.join(cacheRoot, "beep", "head-install");
+  yield* fs
+    .makeDirectory(headInstallBase, { recursive: true })
+    .pipe(Effect.mapError(YeetCommandError.new("Failed to create the head-install preflight cache directory.")));
   const tempRoot = yield* fs
-    .makeTempDirectory({ prefix: "beep-yeet-head-install-" })
+    .makeTempDirectory({ directory: headInstallBase, prefix: "beep-yeet-head-install-" })
     .pipe(Effect.mapError(YeetCommandError.new("Failed to create the head-install preflight temp directory.")));
   const worktreePath = path.join(tempRoot, "checkout");
 

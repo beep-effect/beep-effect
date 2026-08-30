@@ -1,0 +1,52 @@
+target: "otp:hosted-required-check-merge-obligation:001"
+target_sha256: "7f4c8cef2629a25ef7e9411bca3169495d9e33b8be400e16f94a951b6b08d449"
+chain_sha256: "fedd35c84a6854fdbd9bda3807165a0ee145b10437e6606c0056e41852b61ae5"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: activation-lineage-deferred
+    counterexample: >-
+      One candidate can satisfy a required-check designation and later reacquire
+      it under the same target and policy. The card now separates activations at
+      discharge and reacquisition and honestly defers reidentification pending
+      the named provenance.
+    outcome: survived
+  - surface: identity
+    rule: relational-mode-alignment-conflict
+    counterexample: >-
+      The obligation cannot exist without a candidate transition, required-check
+      designation, and governing merge policy. The proposal therefore declares
+      relational dependence but aligns the class to gufo:IntrinsicMode, which
+      cannot express that externally dependent normative unity.
+    outcome: landed
+  - surface: warrant
+    rule: support-warrant-self-contradiction
+    counterexample: >-
+      CQ-006 can relate VerificationEvidence directly to a generic verification
+      obligation or required-check designation. The revised definition and open
+      issue concede that this specialized class is unnecessary while the warrant
+      continues to assert necessary support for VerificationEvidence.
+    outcome: landed
+  - surface: null_discriminator
+    rule: normative-gate-discriminator
+    counterexample: >-
+      A passive check-status DTO can report success or failure but cannot make
+      an unsatisfied required check block a merge transition. The governing rule
+      assigns that consequence, so the normative gate survives the null twin.
+    outcome: survived
+rival_models_still_viable:
+  - "Model a standing merge-policy specification plus generic obligation activations."
+evidence:
+  - "po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b"
+  - "CQ-006"

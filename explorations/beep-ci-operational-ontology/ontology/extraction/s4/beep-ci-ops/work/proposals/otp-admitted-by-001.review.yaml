@@ -1,0 +1,72 @@
+target: "otp:admitted-by:001"
+target_sha256: "2e50ce64c12afdd96c595acecd5c57b3ad3eb1933f4e7a4346b98d672ad4ba0f"
+chain_sha256: "c75d2d2fd7df3f6d2132387c8309550d69c5832ec7c9396629ed2d54d8208eca"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The object-property proposal asserts no parents edges, so it proposes no
+    subproperty or is-a edge and there is no valid subsumption candidate to test.
+attacks:
+  - surface: identity
+    rule: foundational-category-identity-mismatch
+    counterexample: >-
+      Execution E may stand in admittedBy to grant G as one RDF relation. The
+      proposal nevertheless classifies the object property as a gufo:Event and
+      gives it the supplied identity of the whole temporally continuous process.
+      A relation assertion is not that process and cannot inherit its identity.
+    outcome: landed
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two disjoint invocations can reuse the same callback code and even a reused
+      technical grant identifier. The card correctly requires a continuous
+      invocation, grant lineage, and interval, so those identifiers alone do not
+      merge the executions.
+    outcome: survived
+  - surface: identity
+    rule: workunit-specification-execution-split
+    counterexample: >-
+      One reusable WorkUnit specification W can run as E1 under grant G1 and E2
+      under G2. Applying admittedBy to W collapses the two executions; applying it
+      only to E1 and E2 no longer satisfies CQ-010's stated WorkUnit subject. The
+      proposal and cited CQ therefore disagree across the mandated split.
+    outcome: landed
+  - surface: identity
+    rule: foundational-status-and-rival-disclosure
+    counterexample: >-
+      A process, a reusable bracketing procedure, and a reified admission
+      situation have different identity conditions. The analyzed status matches
+      the FA and the open issue exposes the rivals, but the selected object-property
+      term still carries the process analysis attacked above.
+    outcome: survived
+  - surface: warrant
+    rule: cq-domain-mismatch
+    counterexample: >-
+      CQ-010 requires admittedBy from ?wu, typed as WorkUnit, to a SeatGrant. In a
+      dataset containing only the proposal's execution-to-grant relation, a
+      WorkUnit specification W with an over-capacity execution E is invisible to
+      the query. The named property is required, but this proposed meaning does not
+      answer the cited CQ.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-resource-wrapper
+    counterexample: >-
+      A generic acquire-use-release implementation wrapper can run a callback,
+      heartbeat a lease, delete its lease file, and release a lock at termination
+      while remaining only runtime plumbing. Those exact implementation facts do
+      not falsify the null hypothesis.
+    outcome: landed
+rival_models_still_viable:
+  - "The reusable resource-bracketing procedure"
+  - "A reified admission relator or situation connecting execution and grant"
+evidence:
+  - "po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85"
+  - "po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a"
+  - "CQ-010"

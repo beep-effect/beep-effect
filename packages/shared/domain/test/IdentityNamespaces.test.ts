@@ -4,8 +4,10 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import { cast } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { hasFunctionStatic, invokeStatic } from "./StaticProbes.ts";
 import type * as EntityId from "@beep/shared-domain/entity/EntityId";
 
 type IdentitySpec = {
@@ -340,12 +342,46 @@ const specs = [
     slice: "workspace",
     tableName: "workspace_context_packet",
   },
+  {
+    brand: "WorkspaceThreadId",
+    description: "Identifier for a durable workspace conversation thread.",
+    entityType: "WorkspaceThread",
+    label: "Workspace.ThreadId",
+    name: "thread",
+    resource: "workspace.thread",
+    schema: Identity.Workspace.ThreadId,
+    slice: "workspace",
+    tableName: "workspace_thread",
+  },
+  {
+    brand: "WorkspaceTurnId",
+    description: "Identifier for a workspace conversation turn aggregate.",
+    entityType: "WorkspaceTurn",
+    label: "Workspace.TurnId",
+    name: "turn",
+    resource: "workspace.turn",
+    schema: Identity.Workspace.TurnId,
+    slice: "workspace",
+    tableName: "workspace_turn",
+  },
+  {
+    brand: "WorkspaceMessageId",
+    description: "Identifier for md-aligned workspace message content.",
+    entityType: "WorkspaceMessage",
+    label: "Workspace.MessageId",
+    name: "message",
+    resource: "workspace.message",
+    schema: Identity.Workspace.MessageId,
+    slice: "workspace",
+    tableName: "workspace_message",
+  },
 ] satisfies ReadonlyArray<IdentitySpec>;
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
   expect(Exit.isFailure(exit)).toBe(true);
 });
+const codecStaticKeys = ["is", "fromUnknown", "decodeOption", "decodeUnknownEffect", "encodeEffect", "equivalence"];
 
 describe("P3 identity namespaces", () => {
   it("expose deterministic entity-id metadata", () => {
@@ -357,6 +393,15 @@ describe("P3 identity namespaces", () => {
       expect(spec.schema.tableName, spec.label).toBe(spec.tableName);
       expect(spec.schema.definition.description, spec.label).toBe(spec.description);
       expect(spec.schema.definition.name, spec.label).toBe(spec.name);
+    }
+  });
+
+  it("carry the factory-attached codec statics at runtime", () => {
+    for (const spec of specs) {
+      for (const key of codecStaticKeys) {
+        expect(hasFunctionStatic(spec.schema, key), `${spec.label}.${key}`).toBe(true);
+      }
+      expect(O.getOrThrow(invokeStatic(spec.schema, "fromUnknown", 1)), spec.label).toBe(1);
     }
   });
 

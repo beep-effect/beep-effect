@@ -45,7 +45,14 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
  * @category models
  * @since 0.0.0
  */
-export const YeetLaneStatus = LiteralKit(["passed", "failed", "skipped", "not-run", "not-run-early-stop"]).pipe(
+export const YeetLaneStatus = LiteralKit([
+  "passed",
+  "reused",
+  "failed",
+  "skipped",
+  "not-run",
+  "not-run-early-stop",
+]).pipe(
   $I.annoteSchema("YeetLaneStatus", {
     title: "Yeet Lane Status",
     description: "Execution status of one planned yeet lane.",
@@ -147,6 +154,7 @@ export class YeetVerdictLane extends S.Class<YeetVerdictLane>($I`YeetVerdictLane
     phase: S.String,
     status: YeetLaneStatus,
     durationMs: S.optionalKey(S.Finite),
+    peakRssKb: S.optionalKey(S.Finite),
     exitCode: S.optionalKey(S.Finite),
     repairCommand: S.optionalKey(S.String),
   },
@@ -184,7 +192,7 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  *
  * **Details**
  *
- * Only the three hard criteria appear here. The Greptile score is a displayed
+ * Only hard criteria appear here. The Greptile score is a displayed
  * target rather than a gate, so it is carried on
  * {@link YeetMergeReadyCriteria} for the operator to read and can never be the
  * value of {@link YeetMergeReady.failing}.
@@ -200,10 +208,19 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export const YeetMergeReadyCriterion = LiteralKit(["closeout-run", "checks-green", "threads-resolved"]).pipe(
+export const YeetMergeReadyCriterion = LiteralKit([
+  "pr-open",
+  "not-draft",
+  "closeout-run",
+  "required-checks-green",
+  "threads-resolved",
+  "mergeable",
+  "merge-state-acceptable",
+  "review-decision-acceptable",
+]).pipe(
   $I.annoteSchema("YeetMergeReadyCriterion", {
     title: "Yeet Merge Ready Criterion",
-    description: "One hard criterion of the merge protocol.",
+    description: "One hard criterion of the truthful merge protocol.",
   })
 );
 
@@ -225,12 +242,17 @@ export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
  * import * as O from "effect/Option"
  *
  * const criteria = YeetMergeReadyCriteria.make({
+ *   prOpen: true,
+ *   notDraft: true,
  *   closeoutRun: true,
- *   checksGreen: true,
+ *   requiredChecksGreen: true,
  *   threadsResolved: false,
+ *   mergeable: true,
+ *   mergeStateAcceptable: true,
+ *   reviewDecisionAcceptable: true,
  *   greptileScore: O.some("5/5"),
  * })
- * console.log(criteria.checksGreen)
+ * console.log(criteria.requiredChecksGreen)
  * ```
  *
  * @category models
@@ -238,13 +260,18 @@ export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
  */
 export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`YeetMergeReadyCriteria`)(
   {
+    prOpen: S.Boolean,
+    notDraft: S.Boolean,
     closeoutRun: S.Boolean,
-    checksGreen: S.Boolean,
+    requiredChecksGreen: S.Boolean,
     threadsResolved: S.Boolean,
+    mergeable: S.Boolean,
+    mergeStateAcceptable: S.Boolean,
+    reviewDecisionAcceptable: S.Boolean,
     greptileScore: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetMergeReadyCriteria", {
-    description: "Observed state of each merge-protocol criterion; the Greptile score is display-only.",
+    description: "Observed state of every truthful merge-protocol criterion; the Greptile score is display-only.",
   })
 ) {}
 
@@ -256,8 +283,11 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
  * ```ts
  * import { mergeReadyCriterionHolds, YeetMergeReadyCriteria } from "@beep/repo-cli/test/Yeet"
  *
- * const criteria = YeetMergeReadyCriteria.make({ closeoutRun: true, checksGreen: false, threadsResolved: true })
- * console.log(mergeReadyCriterionHolds(criteria, "checks-green")) // false
+ * const criteria = YeetMergeReadyCriteria.make({
+ *   prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: false,
+ *   threadsResolved: true, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
+ * })
+ * console.log(mergeReadyCriterionHolds(criteria, "required-checks-green")) // false
  * ```
  *
  * @param criteria - Observed state of every merge-protocol criterion.
@@ -271,9 +301,14 @@ export const mergeReadyCriterionHolds: {
   (criteria: YeetMergeReadyCriteria, criterion: YeetMergeReadyCriterion): boolean;
 } = dual(2, (criteria: YeetMergeReadyCriteria, criterion: YeetMergeReadyCriterion): boolean =>
   YeetMergeReadyCriterion.$match(criterion, {
+    "pr-open": () => criteria.prOpen,
+    "not-draft": () => criteria.notDraft,
     "closeout-run": () => criteria.closeoutRun,
-    "checks-green": () => criteria.checksGreen,
+    "required-checks-green": () => criteria.requiredChecksGreen,
     "threads-resolved": () => criteria.threadsResolved,
+    mergeable: () => criteria.mergeable,
+    "merge-state-acceptable": () => criteria.mergeStateAcceptable,
+    "review-decision-acceptable": () => criteria.reviewDecisionAcceptable,
   })
 );
 
@@ -296,7 +331,8 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
   }) =>
     O.match(value.failing, {
       onNone: () =>
-        value.ready && value.criteria.closeoutRun && value.criteria.checksGreen && value.criteria.threadsResolved
+        value.ready &&
+        A.every(YeetMergeReadyCriterion.Options, (criterion) => mergeReadyCriterionHolds(value.criteria, criterion))
           ? undefined
           : {
               path: ["failing"],
@@ -320,11 +356,17 @@ const YeetMergeReadyCoherenceCheck = S.makeFilter(
 
 const YeetMergeReadyEncoded = S.Struct({
   ready: S.Boolean,
-  failing: YeetMergeReadyCriterion.pipe(S.optionalKey),
+  failing: S.Union([YeetMergeReadyCriterion, S.Literal("checks-green")]).pipe(S.optionalKey),
   criteria: S.Struct({
+    prOpen: S.optionalKey(S.Boolean),
+    notDraft: S.optionalKey(S.Boolean),
     closeoutRun: S.optionalKey(S.Boolean),
-    checksGreen: S.Boolean,
+    requiredChecksGreen: S.optionalKey(S.Boolean),
+    checksGreen: S.optionalKey(S.Boolean),
     threadsResolved: S.Boolean,
+    mergeable: S.optionalKey(S.Boolean),
+    mergeStateAcceptable: S.optionalKey(S.Boolean),
+    reviewDecisionAcceptable: S.optionalKey(S.Boolean),
     greptileScore: S.optionalKey(S.String),
   }),
 }).pipe(
@@ -333,18 +375,51 @@ const YeetMergeReadyEncoded = S.Struct({
   })
 );
 
+type EncodedMergeReady = typeof YeetMergeReadyEncoded.Type;
+
+const normalizeLegacyMergeReadyCriteria = (value: EncodedMergeReady) => ({
+  prOpen: value.criteria.prOpen ?? false,
+  notDraft: value.criteria.notDraft ?? false,
+  closeoutRun: value.criteria.closeoutRun ?? false,
+  requiredChecksGreen: value.criteria.requiredChecksGreen ?? false,
+  threadsResolved: value.criteria.threadsResolved,
+  mergeable: value.criteria.mergeable ?? false,
+  mergeStateAcceptable: value.criteria.mergeStateAcceptable ?? false,
+  reviewDecisionAcceptable: value.criteria.reviewDecisionAcceptable ?? false,
+  ...O.getSomesStruct({ greptileScore: O.fromUndefinedOr(value.criteria.greptileScore) }),
+});
+
+const legacyMergeReadyCriteriaComplete = (value: EncodedMergeReady): boolean =>
+  value.criteria.prOpen !== undefined &&
+  value.criteria.notDraft !== undefined &&
+  value.criteria.closeoutRun !== undefined &&
+  value.criteria.requiredChecksGreen !== undefined &&
+  value.criteria.mergeable !== undefined &&
+  value.criteria.mergeStateAcceptable !== undefined &&
+  value.criteria.reviewDecisionAcceptable !== undefined;
+
 const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type): typeof YeetMergeReady.Encoded => {
-  const closeoutRun = O.fromUndefinedOr(value.criteria.closeoutRun);
-  const legacyReady = O.isNone(closeoutRun) && value.ready && O.isNone(O.fromUndefinedOr(value.failing));
+  const criteria = normalizeLegacyMergeReadyCriteria(value);
+  const complete = legacyMergeReadyCriteriaComplete(value);
+  const firstFailing = A.findFirst(
+    YeetMergeReadyCriterion.Options,
+    (criterion) =>
+      !mergeReadyCriterionHolds(
+        YeetMergeReadyCriteria.make({
+          ...criteria,
+          greptileScore: O.fromUndefinedOr(value.criteria.greptileScore),
+        }),
+        criterion
+      )
+  );
+  const encodedFailing = O.fromUndefinedOr(value.failing);
+  const currentFailing = O.map(encodedFailing, (criterion) =>
+    criterion === "checks-green" ? YeetMergeReadyCriterion.Enum["required-checks-green"] : criterion
+  );
   return {
-    ready: legacyReady ? false : value.ready,
-    ...O.getSomesStruct({
-      failing: legacyReady ? O.some(YeetMergeReadyCriterion.Enum["closeout-run"]) : O.fromUndefinedOr(value.failing),
-    }),
-    criteria: {
-      ...value.criteria,
-      closeoutRun: O.getOrElse(closeoutRun, () => false),
-    },
+    ready: complete ? value.ready : false,
+    ...O.getSomesStruct({ failing: complete ? currentFailing : firstFailing }),
+    criteria,
   };
 };
 
@@ -376,7 +451,10 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
  * const mergeReady = YeetMergeReady.make({
  *   ready: false,
  *   failing: O.some("threads-resolved"),
- *   criteria: YeetMergeReadyCriteria.make({ closeoutRun: true, checksGreen: true, threadsResolved: false }),
+ *   criteria: YeetMergeReadyCriteria.make({
+ *     prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: true,
+ *     threadsResolved: false, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
+ *   }),
  * })
  * console.log(mergeReady.ready)
  * ```
@@ -601,6 +679,7 @@ const laneFromExecuted = (executed: YeetExecutedStep): YeetVerdictLane => {
         O.fromUndefinedOr(executed.result.elapsedMs),
         O.orElse(() => O.fromUndefinedOr(executed.durationMs))
       ),
+      peakRssKb: O.fromUndefinedOr(executed.result.peakRssKb),
       repairCommand,
     }),
   });
@@ -641,7 +720,7 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
   {
     base: S.String,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    baseFreshness: S.optional(YeetBaseFreshness),
+    baseFreshness: S.optionalKey(YeetBaseFreshness),
     branch: S.String,
     createdAt: S.String,
     startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -651,19 +730,19 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
     failurePolicy: GithubCheckFailurePolicy.pipe(
       S.withConstructorDefault(Effect.succeed(GithubCheckFailurePolicy.Enum["fail-fast"]))
     ),
-    flakeQuarantine: FlakeQuarantineIncident.pipe(S.Array, S.optional),
+    flakeQuarantine: FlakeQuarantineIncident.pipe(S.Array, S.optionalKey),
     head: S.String,
-    indexPath: S.optional(S.String),
+    indexPath: S.optionalKey(S.String),
     message: S.String,
     mode: S.String,
     outcome: YeetOutcome,
     packetPaths: S.Array(S.String),
     planned: S.Array(RepoPlanStep),
     runId: S.String,
-    stash: S.optional(YeetStashState),
-    failedStepId: S.optional(S.String),
-    failureKind: S.optional(YeetFailureKind),
-    mergeReady: S.optional(YeetMergeReady),
+    stash: S.optionalKey(YeetStashState),
+    failedStepId: S.optionalKey(S.String),
+    failureKind: S.optionalKey(YeetFailureKind),
+    mergeReady: S.optionalKey(YeetMergeReady),
   },
   $I.annote("BuildYeetVerdictInput", {
     description: "Run identity, outcome, planned steps, and executed results used to build the run verdict.",

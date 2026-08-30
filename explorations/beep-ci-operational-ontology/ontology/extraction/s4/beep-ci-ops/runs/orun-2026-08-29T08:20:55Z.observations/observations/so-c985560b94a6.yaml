@@ -1,0 +1,23 @@
+id: so:sha256:c985560b94a67ce0efae298da7cc2612087a23e58c884c58a145ddf1d3551dee
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 198
+  end_line: 204
+  content_sha256: fc54b474fc1b4517b61a0921b76f878d92007198caa4d54751d38554346b4b34
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::parseAdmissionProcStatStartTime
+  lexical_name: parseAdmissionProcStatStartTime
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: parseAdmissionProcStatStartTime
+source_excerpt: 'export const parseAdmissionProcStatStartTime = (stat: string): O.Option<string> =>'
+epistemic_status: parser_derived

@@ -1,0 +1,56 @@
+target: "otp:architecture-boundary-obligation:001"
+target_sha256: "ea08ddaa3a2f8bd02f8665f23bd12b07ab04f38156efe90fc333b5e0fc4dd1f8"
+chain_sha256: "f20cd39033d128cb85af8ff68ccd439a5fbe68addb2425e5339c1003e729321b"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: obligation-activation-individuation
+    counterexample: >-
+      One bearer can discharge an obligation and later incur an equivalent one
+      under the same norm. The card uses one continuing normative position and
+      discharge continuity rather than equal participant fields, while the
+      generic class supplies no bearer identity and keeps token reidentification
+      explicitly deferred.
+    outcome: survived
+  - surface: identity
+    rule: relational-mode-alignment
+    counterexample: >-
+      A verification obligation cannot exist without an obligated bearer and
+      governing norm. The revision declares relational dependence and aligns
+      the selected mode model to gufo:ExtrinsicMode, while retaining the
+      normative-relator alternative for steward choice.
+    outcome: survived
+  - surface: warrant
+    rule: obligation-procedure-split-required
+    counterexample: >-
+      Treating requiresLane as both the standing requirement and its realizing
+      procedure makes CQ-006 unable to distinguish an unmet obligation from a
+      procedure name. The CQ notes expressly mandate that split, and evidence
+      discharge requires the generic VerificationObligation semantic support.
+    outcome: survived
+  - surface: null_discriminator
+    rule: normative-policy-discriminator
+    counterexample: >-
+      A passive architecture label cannot require correction of a contradicting
+      proposal or amendment of the governing rule. The quoted policy imposes
+      that consequence, so its normative referent is not exhausted by the text
+      or by a checking procedure.
+    outcome: survived
+rival_models_still_viable:
+  - "Represent the generic obligation as a normative relator rather than an extrinsic mode."
+  - "Model the architecture-policy information object separately from every obligation activation."
+evidence:
+  - "po:sha256:a8f45d7aff5dac863717489999e1c1b730d1b57612435ac657d3bab1a0f533ea"
+  - "po:sha256:18ce6572b69bdaf8e3e4542f8b754842f0a93567e33c7d48d0a9f2b3a0bc95f3"
+  - "CQ-006"

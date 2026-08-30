@@ -1,0 +1,27 @@
+id: "dh:reporun:045"
+observation_refs:
+  - "so:sha256:2b05c3aeaadd2b9af92af310694b82a8321801d07b0940e02f12f186ffa4b359"
+  - "so:sha256:a15fec578e749ffbda17c61769214c914dcf401352c2c923f89cf6c5d3eebad9"
+  - "so:sha256:e2ba7516e81689f50df50b140803147b55bae9c8908f9e9270d8dd4472de9bdd"
+  - "so:sha256:912baa68a127d28e25dfadc820ef5f323d631f5f3e9dfd787c78ab0ae7d39593"
+cq_warrants: ["CQ-013"]
+proposed_referent:
+  label: "captured-command timeout occurrence"
+  description: "A runtime failure condition in which a captured child command exceeds the caller-supplied duration budget and is interrupted."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Configured timeout policy violation"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Tagged error value reporting the timeout"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The adversary's stub implementation is decisive: the cited observations establish an error declaration, function declarations, and a grace constant, all of which can exist without a duration race, child interruption, or captured-command timeout occurrence."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

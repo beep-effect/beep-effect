@@ -1,0 +1,17 @@
+id: "fa:turbo-cache:005"
+hypothesis_ref: "dh:turbo-cache:005"
+identity_card_ref: "ic:turbo-cache:005"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A test verification lane is realized by the repeatable specification but remains a distinct operational entity."
+    still_viable: true
+  - label: "The root declaration is a template for multiple package-specific test specifications."
+    still_viable: true
+  - label: "The entry is only an implementation configuration grouping."
+    still_viable: false
+strongest_counterexample: "Distinct package test commands can inherit the same pass-through environment declaration, so that declaration cannot distinguish one complete specification from a task family template."
+verdict: analyzed

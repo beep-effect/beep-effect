@@ -1,0 +1,24 @@
+id: so:sha256:409b6bdb5f8e8cb482df7dfce402d35ae5566bd461c15f16701098f39d1a58f2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 827
+  end_line: 847
+  content_sha256: b9c5c03be04413791f53f59a9374cec4e45d0c99c044f08d46466dc737078a24
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::fallowEnvelopeCheckStep
+  lexical_name: fallowEnvelopeCheckStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const fallowEnvelopeCheckStep = (repoRoot: string, lane: string, advisory: boolean):
+  QualityTaskStep =>'
+epistemic_status: parser_derived

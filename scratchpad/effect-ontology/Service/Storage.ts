@@ -128,18 +128,19 @@ const isLocalStorageKey = S.is(LocalStorageKey);
 /**
  * Result of getWithGeneration - includes content and version for optimistic locking
  *
- *
- * **Example** (Use the ObjectWithGeneration contract)
+ * **Example** (Read content with a generation)
  *
  * ```ts
- * import type { ObjectWithGeneration } from "@effect-ontology/Service/Storage"
+ * import { ObjectWithGeneration } from "@effect-ontology/Service/Storage"
  *
- * const acceptsObjectWithGeneration = (_value: ObjectWithGeneration): void => undefined
- *
- * console.log(acceptsObjectWithGeneration)
+ * const object = ObjectWithGeneration.make({
+ *   content: "Ada founded Acme.",
+ *   generation: "1"
+ * })
+ * console.log(object.generation) // "1"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ObjectWithGeneration extends S.Class<ObjectWithGeneration>($I`ObjectWithGeneration`)(
@@ -155,12 +156,18 @@ export class ObjectWithGeneration extends S.Class<ObjectWithGeneration>($I`Objec
 /**
  * Error thrown when setIfGenerationMatch fails due to concurrent modification
  *
- * **Example** (Inspect generation mismatch error)
+ * **Example** (Construct a generation mismatch)
  *
  * ```ts
  * import { GenerationMismatchError } from "@effect-ontology/Service/Storage"
+ * import * as O from "effect/Option"
  *
- * console.log(GenerationMismatchError)
+ * const error = GenerationMismatchError.make({
+ *   key: "docs/ada.txt",
+ *   expectedGeneration: "1",
+ *   actualGeneration: O.some("2")
+ * })
+ * console.log(error._tag) // "GenerationMismatchError"
  * ```
  *
  * @category errors
@@ -193,8 +200,12 @@ export class GenerationMismatchError extends S.TaggedError<GenerationMismatchErr
  * StorageService interface extending KeyValueStore
  * Adds `list` capability and optimistic locking for concurrent writes
  *
+ * **Details**
  *
- * @category type-level
+ * This extends Effect's live `KeyValueStore` protocol with executable storage
+ * operations, so it cannot be represented as a data schema.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
@@ -242,12 +253,21 @@ export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
 /**
  * Provides the storage service service capability.
  *
- * **Example** (Inspect storage service)
+ * **Example** (Put and get a document)
  *
  * ```ts
- * import { StorageService } from "@effect-ontology/Service/Storage"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(StorageService)
+ * const text = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const storage = yield* StorageService
+ *     yield* storage.set("docs/ada.txt", "Ada founded Acme.")
+ *     return yield* storage.getOption("docs/ada.txt")
+ *   }).pipe(Effect.provide(StorageServiceTest), Effect.orDie)
+ * )
+ * console.log(O.getOrElse(text, () => "")) // "Ada founded Acme."
  * ```
  *
  * @category services
@@ -259,14 +279,13 @@ export class StorageService extends Context.Service<StorageService, StorageServi
  * Describes the storage config value data exposed by this module.
  *
  *
- * **Example** (Use the StorageConfigValue contract)
+ * **Example** (Select the memory backend)
  *
  * ```ts
  * import type { StorageConfigValue } from "@effect-ontology/Service/Storage"
  *
- * const acceptsStorageConfigValue = (_value: StorageConfigValue): void => undefined
- *
- * console.log(acceptsStorageConfigValue)
+ * const config: StorageConfigValue = { type: "memory" }
+ * console.log(config.type) // "memory"
  * ```
  *
  * @category type-level
@@ -312,12 +331,13 @@ export type StorageBackend = typeof StorageBackend.Type;
 /**
  * Backend selection and backend-specific storage locations.
  *
- * **Example** (Inspect storage configuration)
+ * **Example** (Configure in-memory storage)
  *
  * ```ts
  * import { StorageConfigValue } from "@effect-ontology/Service/Storage"
  *
- * console.log(StorageConfigValue)
+ * const config = StorageConfigValue.make({ type: "memory" })
+ * console.log(config.type) // "memory"
  * ```
  *
  * @category models
@@ -338,12 +358,19 @@ export class StorageConfigValue extends S.Class<StorageConfigValue>($I`StorageCo
 /**
  * Provides the storage config service capability.
  *
- * **Example** (Inspect storage config)
+ * **Example** (Provide storage config)
  *
  * ```ts
- * import { StorageConfig } from "@effect-ontology/Service/Storage"
+ * import { Effect, Layer } from "effect"
+ * import { StorageConfig, StorageConfigValue } from "@effect-ontology/Service/Storage"
  *
- * console.log(StorageConfig)
+ * const type = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const config = yield* StorageConfig
+ *     return config.type
+ *   }).pipe(Effect.provide(Layer.succeed(StorageConfig, StorageConfigValue.make({ type: "memory" }))))
+ * )
+ * console.log(type) // "memory"
  * ```
  *
  * @category services
@@ -993,12 +1020,19 @@ const makeLocalStorageServiceLayer = (config: StorageConfigValue) =>
 /**
  * Provides the Effect layer for storage service live dependencies.
  *
- * **Example** (Inspect storage service live)
+ * **Example** (Compose get against the live layer)
  *
  * ```ts
- * import { StorageServiceLive } from "@effect-ontology/Service/Storage"
+ * import { Effect } from "effect"
+ * import { ConfigServiceDefault } from "@effect-ontology/Service/Config"
+ * import { StorageService, StorageServiceLive } from "@effect-ontology/Service/Storage"
  *
- * console.log(StorageServiceLive)
+ * const program = Effect.gen(function* () {
+ *   const storage = yield* StorageService
+ *   return yield* storage.getOption("docs/ada.txt")
+ * }).pipe(Effect.provide(StorageServiceLive), Effect.provide(ConfigServiceDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -1029,12 +1063,21 @@ export const StorageServiceLive = Layer.unwrap(
  * In-memory storage layer for testing
  * Does not require ConfigService
  *
- * **Example** (Inspect storage service test)
+ * **Example** (Round-trip a document in memory)
  *
  * ```ts
- * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(StorageServiceTest)
+ * const text = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const storage = yield* StorageService
+ *     yield* storage.set("docs/ada.txt", "Ada founded Acme.")
+ *     return yield* storage.getOption("docs/ada.txt")
+ *   }).pipe(Effect.provide(StorageServiceTest), Effect.orDie)
+ * )
+ * console.log(O.getOrElse(text, () => "")) // "Ada founded Acme."
  * ```
  *
  * @category layers

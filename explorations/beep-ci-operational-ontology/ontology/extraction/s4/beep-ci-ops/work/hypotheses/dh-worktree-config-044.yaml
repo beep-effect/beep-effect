@@ -1,0 +1,19 @@
+id: "dh:worktree-config:044"
+observation_refs:
+  - "so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123"
+cq_warrants:
+  - "CQ-008"
+proposed_referent:
+  label: "contested fleet path"
+  description: "A possible path-based contended resource relevant to active seat-grant accounting."
+representation_status: unresolved
+alternatives:
+  - label: "FleetContestedPath schema declaration"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "CQ-008 requires contended resources, but the observation supplies only export and schema-extension syntax and does not show that a path is such a resource."
+epistemic_status: proposed
+confidence: {value: 0.43, use_for_acceptance: false}

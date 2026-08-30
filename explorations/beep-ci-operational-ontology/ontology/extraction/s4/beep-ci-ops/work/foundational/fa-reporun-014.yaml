@@ -1,0 +1,24 @@
+id: "fa:reporun:014"
+hypothesis_ref: "dh:reporun:037"
+identity_card_ref: "ic:reporun:014"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "subprocess execution occurrence"
+    still_viable: true
+  - label: "retained diagnostic or verification-evidence artifact"
+    still_viable: true
+  - label: "transient return object with no retained operational role"
+    still_viable: true
+strongest_counterexample: >-
+  Distinct subprocess executions can produce identical separated streams and
+  exit codes, while the present record carries no command, capture-attempt, or
+  timestamp provenance that could reidentify the result token.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A call-site trace showing persistence or evidence use beyond the immediate
+  return, plus capture-attempt provenance tying stdout and stderr to one
+  subprocess execution, would decide retained-record status and identity.

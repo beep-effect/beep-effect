@@ -1,0 +1,28 @@
+id: "dh:yeet-watch:019"
+observation_refs:
+  - "so:sha256:47b1a59826ab332b9eb041001164f4b492dccb445629cf6fa858330701f649ff"
+  - "so:sha256:475cea15f30764a8045bd4d652dbc2c3c65b2cbde1b708f31800facdf6a2fbb1"
+  - "so:sha256:9d94f2c4eadf05ef6bb8063baffc7078f457c7e49fa37804ee1a9d4eb41cae85"
+  - "so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c"
+  - "so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f"
+  - "so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350"
+cq_warrants: []
+proposed_referent:
+  label: "check-transition information record"
+  description: "A timestamped watch-stream row recording that one named check moved between normalized outcomes."
+representation_status: unresolved
+alternatives:
+  - label: "check execution state-change event"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "snapshot-differ return DTO"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The differ and renderer establish a software representation path, but the lane supplies neither a runtime-emission observation nor a CQ warrant for the transition-record kind; that behavior remains compatible with implementation-only machinery."
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

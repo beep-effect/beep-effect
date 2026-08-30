@@ -1,0 +1,28 @@
+id: "dh:yeet-watch:009"
+observation_refs:
+  - "so:sha256:b614803893bb8f68eb1c45fc4d01e226ece696364727c688bd7320b9f6da0266"
+  - "so:sha256:e49d7857a2f1d0c247b2bf32b8005aff0f0790bcba3b74dbf5cc27023140a054"
+  - "so:sha256:dac0c567ff454baf98279c698442d3effa8c8ce8da4a9e26251a1234e99e11b8"
+  - "so:sha256:6305419fa96099617bb98162ac43d2718d51c1b66bcee82bc34027b762df7e60"
+  - "po:sha256:e0d1f36f373003dc34f8128df7d04a4631493aba04f2675ce52ec57792cbf782"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "chatgpt closeout gate"
+  description: "A possible collected verification gate named chatgpt."
+representation_status: unresolved
+alternatives:
+  - label: "chatgpt gate-name token"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "closeout gate-state field value"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The source observations establish an allowed report value but contain no collection or evaluation behavior for a ChatGPT gate, so a real collected gate is not yet grounded."
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

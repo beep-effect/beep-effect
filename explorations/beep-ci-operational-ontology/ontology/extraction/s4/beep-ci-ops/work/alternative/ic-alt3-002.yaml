@@ -1,0 +1,30 @@
+id: ic:alt3:002
+hypothesis_ref: dh:reporun:010
+identity:
+  supplies_identity: true
+  identity_criterion: 'Two procedure specifications are the same iff they prescribe the same
+    pre-push proof-surface mapping onto the same planned command: the argument sequence quality,
+    github-checks, pre-push with the dedicated step id and label. The surface token is reidentification
+    evidence rather than the criterion.'
+  reidentification_key:
+  - pre-push
+  - full:01-pre-push
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one planned-command prescription for the pre-push surface
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: A dated pre-push run that executes those arguments is not this specification;
+    rerunning the same prescription yields a new execution while the specification remains.
+status: proposed

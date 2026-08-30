@@ -1,11 +1,10 @@
 /**
- * Public effect-ontology APIs for index.
+ * Public Domain, Runtime, Workflow, and Schema facade for effect-ontology
+ * knowledge extraction.
  *
  * **Details**
  *
  * Package marker: `@effect-ontology/core-v2`.
- *
- * Effect-native knowledge extraction framework
  *
  * @packageDocumentation
  * @since 0.0.0

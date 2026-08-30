@@ -1,0 +1,24 @@
+id: "dh:reporun:047"
+observation_refs:
+  - "so:sha256:e7c4db887af80481d1069236c65ebd0e61bf291775ec17a59f7a1f3423e32bd8"
+cq_warrants: []
+proposed_referent:
+  label: "zero-exit enforcement helper"
+  description: "The implementation combinator that converts a nonzero result code into a caller-supplied failure."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Success criterion in a verification procedure"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "Committed failure occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The helper evaluates an exit-code field and delegates construction of an error, but it does not establish the procedure whose success criterion it enforces or a committed failure event. The null stands."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false
+

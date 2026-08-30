@@ -1,7 +1,19 @@
 {
-  "lastSuccessfulRun": null,
-  "lastAttemptedRun": "2026-08-26T22:22:00-05:00",
+  "lastSuccessfulRun": "2026-08-30T08:14:00-05:00",
+  "lastSuccessfulPacket": "research/2026-08-30",
+  "lastSuccessfulPr": 896,
+  "lastAttemptedRun": "2026-08-30T08:14:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-08-26",
-  "note": "Supervised first run. Stamp does not advance to successful until a human merges a success|partial packet they accept. Next run blocks if a research/* PR is still open."
+  "lastAttemptedPacket": "research/2026-08-30",
+  "note": "Advances stamp after human-merged #883 (2026-08-29). This run is partial (X still client-not-enrolled; arXiv Sunday announcement gap). Publisher must fill lastSuccessfulPr after PR opens; human admit is still required before treating as success in the next skip check if policy requires merged PR.",
+  "excludedUnmergedPackets": [
+    {
+      "date": "2026-08-27",
+      "pr": 862,
+      "branch": "research/2026-08-27",
+      "path": "research/ledger/excluded-packets/2026-08-27.jsonl",
+      "claims": 12,
+      "reason": "closed unmerged after commitlint type-enum rejected subject research:"
+    }
+  ]
 }

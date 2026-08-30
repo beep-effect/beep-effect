@@ -1,21 +1,18 @@
 /**
- * ConfigChange hook event.
- *
  * Fires when a Claude Code configuration file changes during a session
- * (user/project/local settings, policy settings, or skills). A handler
- * can return `decision: "block"` to prevent the config change from taking
- * effect — except `policy_settings` changes, which cannot be blocked.
- * Supports a matcher on `source`.
- * See https://code.claude.com/docs/en/hooks#configchange.
+ * (user, project, local, policy, or skills). A handler can return
+ * `decision: "block"` to refuse the change, except `policy_settings`
+ * which cannot be blocked. Matcher is on `source`. See
+ * https://code.claude.com/docs/en/hooks#configchange.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";
@@ -23,18 +20,20 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/ConfigChange");
 
 /**
- * Schema for `ConfigSource`.
+ * Named Claude Code settings scope that changed during the session.
  *
- * **Example** (Inspect the ConfigSource schema)
+ * **Example** (Decode a settings source)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.ConfigChange.ConfigSource)
+ * const source = S.decodeUnknownSync(Hook.ConfigChange.ConfigSource)("user_settings")
+ * console.log(source) // "user_settings"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this source.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const ConfigSource = LiteralKit([
@@ -50,26 +49,37 @@ export const ConfigSource = LiteralKit([
 );
 
 /**
- * Type-level model for `ConfigSource`.
+ * Decoded value produced by {@link ConfigSource}.
  *
+ * @see {@link ConfigSource} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
 export type ConfigSource = typeof ConfigSource.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a ConfigChange hook, including the settings `source`
+ * and optional `file_path`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a user-settings change)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.ConfigChange.Input)
+ * const input = S.decodeUnknownSync(Hook.ConfigChange.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "ConfigChange",
+ *   source: "user_settings",
+ * })
+ *
+ * console.log(input.source) // "user_settings"
  * ```
  *
+ * @see {@link ConfigSource} for the matcher field on this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`ConfigChangeInput`)(
@@ -85,18 +95,22 @@ export class Input extends S.Class<Input>($I`ConfigChangeInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a ConfigChange handler returns. `decision: "block"`
+ * refuses a non-policy settings change; empty output lets it apply.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect an empty allow output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ConfigChange.Output)
+ * const output = Hook.ConfigChange.Output.make()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link allow} for the empty-output constructor.
+ * @see {@link block} for refusing a non-policy change.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`ConfigChangeOutput`)(
@@ -115,52 +129,68 @@ export class Output extends S.Class<Output>($I`ConfigChangeOutput`)(
 ) {}
 
 /**
- * Constructor for `allow`.
+ * Let the configuration change take effect. Equivalent to empty
+ * `Output.make()`.
  *
- * **Example** (Use allow)
+ * **Example** (Allow a settings change)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ConfigChange.allow)
+ * const output = Hook.ConfigChange.allow()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link block} for refusing a non-policy configuration change.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const allow = (): Output => Output.make();
 
 /**
- * Constructor for `block`.
+ * Refuse a configuration change and feed `reason` back to Claude Code.
  *
- * **Example** (Use block)
+ * **Gotchas**
+ *
+ * `policy_settings` changes cannot be blocked. Returning this output
+ * for `source: "policy_settings"` is ignored and the policy still applies.
+ *
+ * **Example** (Block user settings)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ConfigChange.block)
+ * const output = Hook.ConfigChange.block("user settings are frozen for this session")
+ * console.log(O.getOrUndefined(output.decision)) // "block"
+ * console.log(O.getOrUndefined(output.reason)) // "user settings are frozen for this session"
  * ```
  *
+ * @see {@link allow} for letting the change apply.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
 
 /**
- * Constructor for `define`.
+ * Build a runnable ConfigChange hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a ConfigChange hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.ConfigChange.define)
+ * const hook = Hook.ConfigChange.define({
+ *   handler: () => Effect.succeed(Hook.ConfigChange.allow()),
+ * })
+ *
+ * console.log(hook.event) // "ConfigChange"
  * ```
  *
+ * @see {@link onMatcher} for filtering handlers on `source`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -175,14 +205,28 @@ export const define = <E, R>(config: {
 /**
  * Build a ConfigChange hook that only handles matching `source` values.
  *
- * **Example** (Build ConfigChange hook that only handles matching `source` values)
+ * **Gotchas**
+ *
+ * Omitted `onMismatch` succeeds {@link allow}, so a matcher miss lets the
+ * change apply instead of becoming a no-op. `policy_settings` still cannot
+ * be blocked even when the matcher hits.
+ *
+ * **Example** (Block matching user settings)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.ConfigChange.onMatcher)
+ * const hook = Hook.ConfigChange.onMatcher({
+ *   matcher: "user_settings",
+ *   handler: () => Effect.succeed(Hook.ConfigChange.block("user settings are frozen")),
+ * })
+ *
+ * console.log(hook.event) // "ConfigChange"
  * ```
  *
+ * @see {@link allow} for the default mismatch output.
+ * @see {@link block} for the matched-handler decision used here.
  * @category constructors
  * @since 0.0.0
  */

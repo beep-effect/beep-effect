@@ -1,0 +1,10 @@
+# CQ-014: When did a given tree state's current cache epoch begin, relative to its held proofs?
+# Expected: non_empty | priority: should_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?epoch ?began ?proof ?provedAt WHERE {
+  VALUES ?tree { ciops:tree-example }  # harness binds
+  ?tree ciops:hasCurrentEpoch ?epoch .
+  ?epoch ciops:beganAt ?began .
+  ?proof ciops:validInEpoch ?epoch ; ciops:recordedAt ?provedAt .
+}

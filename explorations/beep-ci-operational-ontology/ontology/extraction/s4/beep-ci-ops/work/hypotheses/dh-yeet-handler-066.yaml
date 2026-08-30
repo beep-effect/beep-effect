@@ -1,0 +1,22 @@
+id: "dh:yeet-handler:066"
+observation_refs:
+  - "po:sha256:3d30eb80b619e2b7cf5c9261718d56c4a20637d162845611a655b025482e6325"
+  - "po:sha256:7b9e1b59cb9fc7b104034c01453654a7477c36f848673ec924f1c4039fbdb554"
+cq_warrants: ["CQ-025"]
+proposed_referent:
+  label: "actual wall duration of a completed WorkUnitExecution"
+  description: "A candidate quantitative characteristic of a completed execution; lane durationMs and whole-attempt elapsedMs remain observationally ambiguous carriers."
+representation_status: unresolved
+alternatives:
+  - label: "per-lane duration recorded in a verdict"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "whole-attempt elapsed duration recorded in a verdict"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The field quotations do not state that either quantity is wall-clock time for a completed work-unit execution or establish the condition under which whole-attempt elapsed time may substitute for lane duration."
+epistemic_status: proposed
+confidence: {value: 0.41, use_for_acceptance: false}

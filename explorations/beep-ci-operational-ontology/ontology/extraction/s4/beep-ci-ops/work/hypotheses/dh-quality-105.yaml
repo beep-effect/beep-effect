@@ -1,0 +1,24 @@
+id: "dh:quality:105"
+observation_refs:
+  - "so:sha256:e78b1a951729f59c449331ce1b39c87d1775a6c55e16f9c27cfcf70d97544f90"
+cq_warrants: []
+proposed_referent:
+  label: "Possible information artifact denoted by PackageJsonDocument"
+  description: "The name suggests a report, summary, document, configuration, profile, matrix, or related record, but the observations do not establish that instances are created, retained, exchanged, or consulted outside the implementation."
+representation_status: unresolved
+alternatives:
+  - label: "PackageJsonDocument schema or DTO only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "An operational domain entity suggested by PackageJsonDocument"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only an S.Class-based declaration and possibly its export. Without an observed document lifecycle, persistence boundary, exchange, or domain bearer, the implementation-only null remains live."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.52
+  use_for_acceptance: false

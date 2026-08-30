@@ -10,6 +10,7 @@
   },
   "mission": "Bring @beep/box under an explicit type instantiation budget by scoping its generated SDK surface to declared demand (9 of 85 managers) with a driver-local manager manifest and transitive model-closure pruning, and record the staged levers (explicit type annotations, then per-manager split) to fire only if pruning misses budget.",
   "packetPath": "goals/box-typecheck-cost",
+  "mergedPullRequest": 541,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

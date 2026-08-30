@@ -36,14 +36,26 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Duration, Effect, flow, Ref, Result } from "effect";
+import { Console, DateTime, Duration, Effect, FileSystem, flow, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { runArtifactPathForContext } from "./ArtifactPaths.ts";
+import { PrCloseoutReportJson } from "./Closeout.ts";
+import {
+  appendYeetInboxRowOnce,
+  YeetBaseDriftCapsule,
+  YeetBaseDriftRow,
+  YeetReviewThreadCapsule,
+  YeetReviewThreadRow,
+  yeetBaseDriftRowId,
+  yeetReviewThreadRowId,
+} from "./Inbox.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
   acknowledgeYeetMonitorComments,
@@ -52,7 +64,9 @@ import {
   renderYeetMonitorCommentStreamStopped,
   YEET_MONITOR_COMMENT_FAILURE_BUDGET,
 } from "./MonitorComments.ts";
+import { retirePublishedPrLease } from "./PrLease.ts";
 import { dispatchYeetCheckFailure, supersedeYeetDispatchState } from "./Remediation.ts";
+import { YeetMergeReadyCriteria } from "./Verdict.ts";
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
@@ -70,7 +84,7 @@ import {
   yeetWatchCommentEvent,
   yeetWatchEndReason,
 } from "./WatchStream.ts";
-import type { FileSystem, Path } from "effect";
+import type { Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
@@ -82,8 +96,11 @@ class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullReq
   {
     headRefOid: S.NonEmptyString,
     id: S.NonEmptyString,
+    isDraft: S.Boolean,
     mergeable: S.NullOr(S.String),
+    mergeStateStatus: S.NullOr(S.String),
     number: S.Finite,
+    reviewDecision: S.NullOr(S.String),
     state: S.String,
   },
   $I.annote("WatchPullRequestView", {
@@ -112,12 +129,20 @@ class WatchThreadNode extends S.Class<WatchThreadNode>($I`WatchThreadNode`)(
   $I.annote("WatchThreadNode", { description: "One review thread's identity and resolution state." })
 ) {}
 
+class WatchThreadPageInfo extends S.Class<WatchThreadPageInfo>($I`WatchThreadPageInfo`)(
+  {
+    endCursor: S.NullOr(S.String),
+    hasNextPage: S.Boolean,
+  },
+  $I.annote("WatchThreadPageInfo", { description: "Cursor metadata for one review-thread page." })
+) {}
+
 class WatchThreadsDocument extends S.Class<WatchThreadsDocument>($I`WatchThreadsDocument`)(
   {
     data: S.Struct({
       node: S.NullOr(
         S.Struct({
-          reviewThreads: S.Struct({ nodes: S.Array(WatchThreadNode) }),
+          reviewThreads: S.Struct({ nodes: S.Array(WatchThreadNode), pageInfo: WatchThreadPageInfo }),
         })
       ),
     }),
@@ -130,12 +155,80 @@ const decodeCheckRows = S.decodeUnknownEffect(S.fromJsonString(S.Array(WatchChec
 const decodeThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(WatchThreadsDocument));
 
 const watchThreadsQuery =
-  "query($id:ID!){node(id:$id){... on PullRequest{reviewThreads(first:100){nodes{id isResolved}}}}}";
+  "query($id:ID!,$cursor:String){node(id:$id){... on PullRequest{reviewThreads(first:100,after:$cursor){pageInfo{hasNextPage endCursor} nodes{id isResolved}}}}}";
 
 // gh renders an absent link or workflow as "" in some check sources (plain
 // commit statuses); the domain speaks null for "the record has no such field".
 const presentOrNull = (value: string | null): string | null =>
   P.isNotNull(value) && Str.isNonEmpty(value) ? value : null;
+
+const acceptableWatchMergeStates: ReadonlyArray<string> = ["BEHIND", "CLEAN", "HAS_HOOKS", "UNSTABLE"];
+
+const checksRead = Effect.fn("Yeet.checksRead")(function* (
+  context: RepoRunContext,
+  required: boolean
+): Effect.fn.Return<ReadonlyArray<WatchCheckRow>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runRepoCommandCapture(
+    "gh",
+    ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow"],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR checks for yeet watch.")));
+  if (result.exitCode !== 0 && !NO_CHECKS_REPORTED.test(result.output)) {
+    return yield* YeetCommandError.make({
+      message: `yeet watch could not read PR checks: ${result.output}`,
+      exitCode: 1,
+    });
+  }
+  return result.exitCode === 0
+    ? yield* decodeCheckRows(result.output).pipe(
+        Effect.mapError(YeetCommandError.new("Failed to decode gh pr checks JSON for yeet watch."))
+      )
+    : A.empty<WatchCheckRow>();
+});
+
+// fallow-ignore-next-line complexity -- the GraphQL cursor and page validity checks form one pagination state machine
+const reviewThreadsRead = Effect.fn("Yeet.reviewThreadsRead")(function* (
+  context: RepoRunContext,
+  pullRequestId: string
+) {
+  const nodes: Array<WatchThreadNode> = [];
+  let cursor = O.none<string>();
+  while (true) {
+    const result = yield* runRepoCommandCapture(
+      "gh",
+      [
+        "api",
+        "graphql",
+        "-f",
+        `query=${watchThreadsQuery}`,
+        "-F",
+        `id=${pullRequestId}`,
+        ...O.match(cursor, { onNone: () => [], onSome: (value) => ["-F", `cursor=${value}`] }),
+      ],
+      context.repoRoot
+    ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR review threads for yeet watch.")));
+    if (result.exitCode !== 0) {
+      return yield* YeetCommandError.make({
+        message: `yeet watch could not read PR review threads: ${result.output}`,
+        exitCode: 1,
+      });
+    }
+    const connection = yield* decodeThreadsDocument(result.output).pipe(
+      Effect.map((document) => document.data.node?.reviewThreads),
+      Effect.mapError(YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."))
+    );
+    if (connection === undefined) return nodes;
+    nodes.push(...connection.nodes);
+    if (!connection.pageInfo.hasNextPage) return nodes;
+    if (connection.pageInfo.endCursor === null || Str.isEmpty(connection.pageInfo.endCursor)) {
+      return yield* YeetCommandError.make({
+        message: "PR review threads reported another GraphQL page without an end cursor.",
+        exitCode: 1,
+      });
+    }
+    cursor = O.some(connection.pageInfo.endCursor);
+  }
+});
 
 /**
  * Collect one typed snapshot of the current branch's pull request.
@@ -186,10 +279,14 @@ const presentOrNull = (value: string | null): string | null =>
  */
 export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot")(function* (
   context: RepoRunContext
-): Effect.fn.Return<YeetWatchSnapshot, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetWatchSnapshot,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
   const viewResult = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "id,number,state,mergeable,headRefOid"],
+    ["pr", "view", "--json", "id,number,state,isDraft,mergeable,mergeStateStatus,reviewDecision,headRefOid"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the pull request for yeet watch.")));
   if (viewResult.exitCode !== 0) {
@@ -202,39 +299,38 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON for yeet watch."))
   );
 
-  const checksResult = yield* runRepoCommandCapture(
-    "gh",
-    ["pr", "checks", "--json", "name,state,bucket,link,workflow"],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR checks for yeet watch.")));
-  if (checksResult.exitCode !== 0 && !NO_CHECKS_REPORTED.test(checksResult.output)) {
-    return yield* YeetCommandError.make({
-      message: `yeet watch could not read PR checks: ${checksResult.output}`,
-      exitCode: 1,
-    });
-  }
-  const checkRows =
-    checksResult.exitCode === 0
-      ? yield* decodeCheckRows(checksResult.output).pipe(
-          Effect.mapError(YeetCommandError.new("Failed to decode gh pr checks JSON for yeet watch."))
-        )
-      : A.empty<WatchCheckRow>();
+  const [checkRows, requiredCheckRows] = yield* Effect.all([checksRead(context, false), checksRead(context, true)]);
 
-  const threadsResult = yield* runRepoCommandCapture(
-    "gh",
-    ["api", "graphql", "-f", `query=${watchThreadsQuery}`, "-F", `id=${view.id}`],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR review threads for yeet watch.")));
-  if (threadsResult.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `yeet watch could not read PR review threads: ${threadsResult.output}`,
-      exitCode: 1,
-    });
-  }
-  const threadNodes = yield* decodeThreadsDocument(threadsResult.output).pipe(
-    Effect.map((document) => document.data.node?.reviewThreads.nodes ?? A.empty<WatchThreadNode>()),
-    Effect.mapError(YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."))
+  const threadNodes = yield* reviewThreadsRead(context, view.id);
+
+  const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
+  const fs = yield* FileSystem.FileSystem;
+  const closeout = yield* fs
+    .readFileString(closeoutPath)
+    .pipe(Effect.option, Effect.map(O.flatMap(PrCloseoutReportJson.decodeOption)));
+  const closeoutRun = O.exists(closeout, (report) =>
+    O.exists(report.reviewedHeadSha, (reviewedHeadSha) => reviewedHeadSha === view.headRefOid)
   );
+  const requiredChecksGreen =
+    A.isReadonlyArrayNonEmpty(requiredCheckRows) &&
+    A.every(requiredCheckRows, (row) => {
+      const outcome = classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state }));
+      return YeetCheckOutcome.is.pass(outcome) || YeetCheckOutcome.is.skip(outcome);
+    });
+  const threadsResolved =
+    A.every(threadNodes, (thread) => thread.isResolved) && !O.exists(closeout, (report) => report.issueCount > 0);
+  const mergeStateStatus = view.mergeStateStatus ?? "UNKNOWN";
+  const criteria = YeetMergeReadyCriteria.make({
+    prOpen: Str.toUpperCase(view.state) === "OPEN",
+    notDraft: !view.isDraft,
+    closeoutRun,
+    requiredChecksGreen,
+    threadsResolved,
+    mergeable: Str.toUpperCase(view.mergeable ?? "UNKNOWN") === "MERGEABLE",
+    mergeStateAcceptable: A.contains(acceptableWatchMergeStates, Str.toUpperCase(mergeStateStatus)),
+    reviewDecisionAcceptable: view.reviewDecision === null || Str.toUpperCase(view.reviewDecision) === "APPROVED",
+    greptileScore: O.none(),
+  });
 
   return YeetWatchSnapshot.make({
     checks: A.map(checkRows, (row) => {
@@ -242,6 +338,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       return YeetWatchCheck.make({
         name: row.name,
         outcome: classifyYeetCheckOutcome(signal),
+        required: A.some(requiredCheckRows, (requiredRow) => requiredRow.name === row.name),
         link: presentOrNull(row.link),
         signal,
         workflow: presentOrNull(row.workflow),
@@ -249,9 +346,11 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     }),
     headSha: view.headRefOid,
     mergeable: view.mergeable ?? "UNKNOWN",
+    mergeStateStatus,
     prNumber: view.number,
     state: view.state,
     threads: A.map(threadNodes, (node) => YeetWatchThread.make({ id: node.id, isResolved: node.isResolved })),
+    criteria,
   });
 });
 
@@ -269,16 +368,64 @@ const emitWatchEvent = (event: YeetWatchEvent): Effect.Effect<void, YeetCommandE
 // deterministic and the wave record drops known ids as duplicates, so running
 // this on every tick is idempotent — which is also the retry path for a
 // capsule whose append failed while its red stayed steady.
-const convergeYeetWatchDispatch = (
+const convergeYeetWatchDispatch = Effect.fn("convergeYeetWatchDispatch")(function* (
   context: RepoRunContext,
   snapshot: YeetWatchSnapshot,
   at: string
-): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path> =>
-  Effect.forEach(
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  yield* Effect.forEach(
     A.filter(snapshot.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)),
     (check) => dispatchYeetCheckFailure(context.repoRoot, snapshot, check, at),
     { discard: true }
   );
+  yield* Effect.forEach(
+    A.filter(snapshot.threads, (thread) => !thread.isResolved),
+    (thread) => {
+      const capsule = YeetReviewThreadCapsule.make({
+        headSha: snapshot.headSha,
+        link: null,
+        prNumber: snapshot.prNumber,
+        threadId: thread.id,
+      });
+      return appendYeetInboxRowOnce(
+        context.repoRoot,
+        YeetReviewThreadRow.make({
+          capsule,
+          checkout: context.repoRoot,
+          id: yeetReviewThreadRowId(capsule),
+          severity: "P1",
+          ts: at,
+        })
+      ).pipe(
+        Effect.catch((error) =>
+          Console.error(`[yeet] failed to append review-thread inbox row ${thread.id}: ${error.message}`)
+        ),
+        Effect.asVoid
+      );
+    },
+    { discard: true }
+  );
+  if (Str.toUpperCase(snapshot.mergeStateStatus) === "BEHIND") {
+    const capsule = YeetBaseDriftCapsule.make({
+      base: context.base,
+      headSha: snapshot.headSha,
+      prNumber: snapshot.prNumber,
+    });
+    yield* appendYeetInboxRowOnce(
+      context.repoRoot,
+      YeetBaseDriftRow.make({
+        capsule,
+        checkout: context.repoRoot,
+        id: yeetBaseDriftRowId(capsule),
+        severity: "P2",
+        ts: at,
+      })
+    ).pipe(
+      Effect.catch((error) => Console.error(`[yeet] failed to append base-drift inbox row: ${error.message}`)),
+      Effect.asVoid
+    );
+  }
+});
 
 // How many consecutive zero-check polls the watch sits through before it
 // believes an empty rollup. GitHub registers a push's checks a few seconds
@@ -482,6 +629,66 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
     : Effect.void;
 
 /**
+ * Selects the published-PR lease retirement effect for a watch ending.
+ *
+ * **Details**
+ *
+ * The injectable retirement operation keeps terminal-reason routing focused
+ * and testable without weakening the production lease transition.
+ *
+ * **Example** (Inspect the testing seam)
+ *
+ * ```ts
+ * import { retireWatchLeaseForEndForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof retireWatchLeaseForEndForTesting === "function") // true
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const retireWatchLeaseForEndForTesting: {
+  <Error, Requirements>(
+    snapshot: YeetWatchSnapshot,
+    reason: YeetWatchEndReason,
+    retire: (
+      context: RepoRunContext,
+      prNumber: number,
+      headSha: string,
+      reason: YeetWatchEndReason
+    ) => Effect.Effect<void, Error, Requirements>
+  ): (context: RepoRunContext) => Effect.Effect<void, Error, Requirements>;
+  <Error, Requirements>(
+    context: RepoRunContext,
+    snapshot: YeetWatchSnapshot,
+    reason: YeetWatchEndReason,
+    retire: (
+      context: RepoRunContext,
+      prNumber: number,
+      headSha: string,
+      reason: YeetWatchEndReason
+    ) => Effect.Effect<void, Error, Requirements>
+  ): Effect.Effect<void, Error, Requirements>;
+} = dual(
+  4,
+  <Error, Requirements>(
+    context: RepoRunContext,
+    snapshot: YeetWatchSnapshot,
+    reason: YeetWatchEndReason,
+    retire: (
+      context: RepoRunContext,
+      prNumber: number,
+      headSha: string,
+      reason: YeetWatchEndReason
+    ) => Effect.Effect<void, Error, Requirements>
+  ) =>
+    YeetWatchEndReason.is["pr-merged"](reason) || YeetWatchEndReason.is["pr-closed"](reason)
+      ? retire(context, snapshot.prNumber, snapshot.headSha, reason)
+      : Effect.void
+);
+
+/**
  * Poll the pull request and stream one NDJSON row per state transition.
  *
  * **Details**
@@ -560,6 +767,7 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
  * @category services
  * @since 0.0.0
  */
+// fallow-ignore-next-line complexity -- the polling loop owns one coherent snapshot, comment cursor, and exit decision
 export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function* (
   context: RepoRunContext,
   config: { readonly intervalMillis: number; readonly untilEvent?: boolean }
@@ -602,6 +810,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   while (true) {
     const end = watchStreamEnd(untilEvent, current, emptyPolls, settleTicks);
     if (O.isSome(end)) {
+      yield* retireWatchLeaseForEndForTesting(context, current, end.value, retirePublishedPrLease);
       return yield* emitWatchEnded(current, end.value);
     }
     yield* reportWatchRegistrationWait(current, emptyPolls);

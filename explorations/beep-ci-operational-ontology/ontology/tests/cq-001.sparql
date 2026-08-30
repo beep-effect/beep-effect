@@ -1,0 +1,9 @@
+# CQ-001: What verification lanes exist, and of what kind is each (turbo task, script, collected gate)?
+# Expected: non_empty | priority: must_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?lane ?kind WHERE {
+  ?lane rdf:type ciops:VerificationLane ;
+        ciops:hasLaneKind ?kind .
+}

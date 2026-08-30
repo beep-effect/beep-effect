@@ -1,0 +1,9 @@
+id: rat:28
+proposal_ref: otp:full-verification-plan-specification:001
+proposal_sha256: e8f5ff4d68e838e2f04aabb0f77be51cd60e36850d93b57138710e147643d0d2
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept VerificationPlanSpecification — completes the ratified spec chain to ScheduleProposal.

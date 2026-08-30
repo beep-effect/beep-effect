@@ -1,0 +1,60 @@
+target: "otp:local-only:001"
+target_sha256: "47118655d476f6301e3b079dc18b0f12db6de063b49bdbfc2f1f8e7ae8a2d12b"
+chain_sha256: "014c03025a4fa3de6e9207681fde765001b3766dd9031852cf4716edda38039c"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists
+    to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: identifier-is-not-identity
+    counterexample: >-
+      Two invocations can emit separate resolver records containing local:rw
+      while referring to one governed local-only posture, whereas a value with
+      the same LocalOnly label that permits remote writes is a different
+      posture. The card uses authority content and vocabulary version rather
+      than the tag or cache string as identity, so the attack does not land.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-effective-posture
+    counterexample: >-
+      An answer to CQ-024 that reports only the local tag would omit whether
+      remote access is forbidden. The named posture supplies the effective
+      local-read/write and no-remote authority that the CQ asks for, so it is
+      not a merely mentioned listing term.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-cache-posture-discriminator
+    counterexample: >-
+      A lexical DTO could carry the string local:rw without governing a run,
+      but the cited resolver branch selects the local-only plan and hands that
+      cache argument to Turbo. The observed deployed transfer posture would be
+      absent in the pure-DTO twin.
+    outcome: survived
+  - surface: null_discriminator
+    rule: prior-landed-attack-not-retired
+    counterexample: >-
+      The immediately preceding review of proposal digest
+      8916ea102d533dec83b17e7437a651ad5fbbbd84bb71d6fc122c39489ac6585e
+      landed discriminator-true-of-dto. Although the hardened observations now
+      support a deployed posture, revision_log names only digest
+      1fc00c530f5afcc790666c2676bcf027c6dc48ea1fc9daebe594e849852fb6ba.
+      The chain therefore contains no declared synthesis response to the later
+      landed attack, so PASS would discard evidence history.
+    outcome: landed
+rival_models_still_viable:
+  - "The reusable posture is supported on the merits but its last landed discriminator is not retired in revision history."
+evidence:
+  - "so:sha256:c5efde190ee92ca63e6e934eb78e8deb7bec01d061e7f60a251c65bc458a5eee"
+  - "po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c"
+  - "po:sha256:441c069829b93c9562a294dce2ca9c5757b16db3b6dd1af5dc6ee070360ead3d"
+  - "po:sha256:f145ee478d3d0a92bbbe070e06d3596bffb5b28c620dc5d1f60eaa02a14cba7a"
+  - "CQ-024"

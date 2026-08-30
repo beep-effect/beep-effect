@@ -1,0 +1,20 @@
+id: fa:alt3:054
+hypothesis_ref: dh:worktree-config:013
+identity_card_ref: ic:alt3:054
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: affected-scope docgen work-unit specification'
+  still_viable: true
+- label: 'event: an affected docgen execution'
+  still_viable: false
+strongest_counterexample: The quotation binds docgen:local to origin/main...HEAD plus dirty
+  files for edit loops. That is a repeatable scope rule whose extension changes with the working
+  tree without minting a new specification.
+verdict: analyzed
+needed_evidence: Whether each dirty-tree evaluation is a new specification individual or the
+  same prescription applied to a new context. Context reification is needed for the extension;
+  it is not needed to identify the prescription.

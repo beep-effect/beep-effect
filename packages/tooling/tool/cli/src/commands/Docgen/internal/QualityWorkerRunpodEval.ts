@@ -62,7 +62,7 @@ const OLLAMA_INSTALL_SCRIPT_SHA256 = "25f64b810b947145095956533e1bdf56eacea2673c
 
 class OllamaTagsModel extends S.Class<OllamaTagsModel>($I`OllamaTagsModel`)(
   {
-    model: S.optional(S.String),
+    model: S.optionalKey(S.String),
     name: S.String,
   },
   $I.annote("OllamaTagsModel", {
@@ -276,23 +276,23 @@ export class RunDocgenQualityWorkerRunpodEvalOptions extends S.Class<RunDocgenQu
   $I`RunDocgenQualityWorkerRunpodEvalOptions`
 )(
   {
-    allow24GbFallback: S.optional(S.Boolean),
+    allow24GbFallback: S.optionalKey(S.Boolean),
     confirmRunpodEval: S.Boolean,
-    gpuTypeIds: S.Array(S.String).pipe(S.optional),
-    keepPod: S.optional(S.Boolean),
+    gpuTypeIds: S.Array(S.String).pipe(S.optionalKey),
+    keepPod: S.optionalKey(S.Boolean),
     model: S.String,
-    otlpBaseUrl: S.optional(S.String),
-    otlpEnabled: S.optional(S.Boolean),
-    otlpProject: S.optional(S.String),
-    packetLimit: S.optional(S.Finite),
+    otlpBaseUrl: S.optionalKey(S.String),
+    otlpEnabled: S.optionalKey(S.Boolean),
+    otlpProject: S.optionalKey(S.String),
+    packetLimit: S.optionalKey(S.Finite),
     provider: DocgenQualityWorkerEvalProvider,
-    readinessTimeoutMs: S.optional(S.Finite),
+    readinessTimeoutMs: S.optionalKey(S.Finite),
     report: DocgenQualityReport,
     scope: DocgenQualityWorkerEvalScope,
     sourceQualityReport: S.String,
-    allowPublicTemplateSearch: S.optional(S.Boolean),
-    skipTemplateSearch: S.optional(S.Boolean),
-    templateId: S.optional(S.String),
+    allowPublicTemplateSearch: S.optionalKey(S.Boolean),
+    skipTemplateSearch: S.optionalKey(S.Boolean),
+    templateId: S.optionalKey(S.String),
   },
   $I.annote("RunDocgenQualityWorkerRunpodEvalOptions", {
     description: "Options used to create an ephemeral Runpod pod and execute a read-only worker eval.",
@@ -537,6 +537,33 @@ const fallbackTemplate = ({
     templateName: null,
   });
 
+const explicitTemplate = (templateId: string | undefined): O.Option<DocgenQualityWorkerRunpodEvalTemplate> =>
+  pipe(
+    O.fromUndefinedOr(templateId),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.map((normalizedTemplateId) =>
+      DocgenQualityWorkerRunpodEvalTemplate.make({
+        imageName: RUNPOD_PYTORCH_IMAGE,
+        searchIncludedPublicTemplates: false,
+        searchIncludedRunpodTemplates: false,
+        strategy: "explicit-template",
+        templateId: normalizedTemplateId,
+        templateName: null,
+      })
+    )
+  );
+
+const existingTemplate = (template: Template): DocgenQualityWorkerRunpodEvalTemplate =>
+  DocgenQualityWorkerRunpodEvalTemplate.make({
+    imageName: template.imageName ?? RUNPOD_PYTORCH_IMAGE,
+    searchIncludedPublicTemplates: true,
+    searchIncludedRunpodTemplates: true,
+    strategy: "existing-template",
+    templateId: template.id ?? null,
+    templateName: template.name ?? null,
+  });
+
 const resolveTemplate = Effect.fn("DocgenQualityWorkerRunpodEval.resolveTemplate")(function* ({
   allowPublicTemplateSearch,
   skipTemplateSearch,
@@ -546,17 +573,8 @@ const resolveTemplate = Effect.fn("DocgenQualityWorkerRunpodEval.resolveTemplate
   readonly skipTemplateSearch: boolean;
   readonly templateId?: string;
 }) {
-  const normalizedTemplateId = templateId === undefined ? undefined : Str.trim(templateId);
-  if (normalizedTemplateId !== undefined && Str.isNonEmpty(normalizedTemplateId)) {
-    return DocgenQualityWorkerRunpodEvalTemplate.make({
-      imageName: RUNPOD_PYTORCH_IMAGE,
-      searchIncludedPublicTemplates: false,
-      searchIncludedRunpodTemplates: false,
-      strategy: "explicit-template",
-      templateId: normalizedTemplateId,
-      templateName: null,
-    });
-  }
+  const selectedExplicitTemplate = explicitTemplate(templateId);
+  if (O.isSome(selectedExplicitTemplate)) return selectedExplicitTemplate.value;
 
   if (skipTemplateSearch || !allowPublicTemplateSearch) {
     return fallbackTemplate({
@@ -574,23 +592,16 @@ const resolveTemplate = Effect.fn("DocgenQualityWorkerRunpodEval.resolveTemplate
       })
     )
     .pipe(Effect.mapError(DomainError.newCause("Failed to list Runpod templates for worker eval.")));
-  const selected = selectQualityWorkerRunpodTemplate(templates);
-
-  if (O.isSome(selected)) {
-    return DocgenQualityWorkerRunpodEvalTemplate.make({
-      imageName: selected.value.imageName ?? RUNPOD_PYTORCH_IMAGE,
-      searchIncludedPublicTemplates: true,
-      searchIncludedRunpodTemplates: true,
-      strategy: "existing-template",
-      templateId: selected.value.id ?? null,
-      templateName: selected.value.name ?? null,
-    });
-  }
-
-  return fallbackTemplate({
-    searchIncludedPublicTemplates: true,
-    searchIncludedRunpodTemplates: true,
-  });
+  return pipe(
+    selectQualityWorkerRunpodTemplate(templates),
+    O.map(existingTemplate),
+    O.getOrElse(() =>
+      fallbackTemplate({
+        searchIncludedPublicTemplates: true,
+        searchIncludedRunpodTemplates: true,
+      })
+    )
+  );
 });
 
 const ollamaTagsIncludeModel = (model: string, tags: OllamaTagsResponse): boolean =>

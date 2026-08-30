@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:012"
+observation_refs:
+  - "so:sha256:b93e24dcce24ac58dfd157edb363b6f71b6b25909d4e0d5f243f34df93562cbc"
+  - "po:sha256:d5c9550bb2b43b17e1d8639c3e9ca8c94bda3098606dc227a57d1528370afd0e"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo task specification named lint:fix"
+  description: "A repeatable task specification with an observed dependency selector; the observations do not establish it as a verification lane."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A mutating lint-repair procedure specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A lint verification lane"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A turbo.json repair-task entry can prescribe upstream lint:fix ordering as ordinary build configuration; the cited selector establishes no governed repair prescription, execution provenance, or verification lane."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.68
+  use_for_acceptance: false

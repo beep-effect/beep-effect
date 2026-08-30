@@ -1,0 +1,47 @@
+target: "otp:hard-floor-engaged-situation:001"
+target_sha256: "b1b4cac8a6ddb410fb9694087aa45498def5deebcc7316b879f967b5637ff82c"
+chain_sha256: "7dd77a7b1e7573938845b77e90e46cf72d7bad6f556389f7f46d25734dbc0335"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: identity-continuity-evidence-gap
+    counterexample: >-
+      Snapshots at 10:00 and 10:02 can both report a hard floor while memory
+      recovered at 10:01, creating two situations rather than one. The revised
+      rigid class and card use uninterrupted below-floor continuity and remain
+      explicitly deferred because the snapshots cannot establish that interval.
+    outcome: survived
+  - surface: warrant
+    rule: support-not-necessary-for-decision-term
+    counterexample: >-
+      CQ-023 can derive HardFloorException directly from the snapshot-global
+      hardFloorEngaged comparison, as its notes specify, and can link the
+      request to AdmissionPolicy without reifying a continuous situation.
+      AdmissionPolicy therefore does not require this support class.
+    outcome: landed
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A Boolean DTO alone would not preserve the cited machine-side fact that
+      measured available memory below the governed floor forces live admission
+      capacity to zero. The world-side control condition survives the null test,
+      even though its cross-snapshot identity remains unsettled.
+    outcome: survived
+rival_models_still_viable:
+  - "The query may use only a time-indexed snapshot assertion without reifying a continuous situation."
+evidence:
+  - "so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451"
+  - "po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6"
+  - "po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301"
+  - "CQ-023"

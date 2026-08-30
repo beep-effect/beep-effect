@@ -1,0 +1,10 @@
+id: po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: AGENTS.md
+source_span:
+  start_line: 46
+  end_line: 48
+quote: '`bun run docgen:local` for edit loops (bounded to `origin/main...HEAD` + dirty files)'
+epistemic_status: quoted_prose

@@ -579,12 +579,16 @@ const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function
 
   return yield* Effect.forEach(
     files,
-    (filePath) => {
+    Effect.fnUntraced(function* (filePath) {
       if (MutableHashSet.has(residualAllow, filePath)) {
-        return Effect.succeed(A.empty<JSDocLegacyFileFinding>());
+        return A.empty<JSDocLegacyFileFinding>();
       }
-      return fs.readFileString(path.join(repoRoot, filePath)).pipe(
-        Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`)),
+      const absolutePath = path.join(repoRoot, filePath);
+      if (!(yield* fs.exists(absolutePath).pipe(Effect.orElseSucceed(() => false)))) {
+        return A.empty<JSDocLegacyFileFinding>();
+      }
+      return yield* fs.readFileString(absolutePath).pipe(
+        Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`, {})),
         Effect.map((sourceText) => {
           if (!includeGenerated && hasGeneratedFileHeader(sourceText)) {
             return A.empty<JSDocLegacyFileFinding>();
@@ -598,7 +602,7 @@ const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function
           );
         })
       );
-    },
+    }),
     { concurrency: 32 }
   ).pipe(Effect.map(A.flatten));
 });

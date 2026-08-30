@@ -1,0 +1,54 @@
+target: "otp:schedule-proposal:001"
+target_sha256: "9660b75a774f282f69643c9be6940bfddcc8bfbca0f3c5710c60d885f509490d"
+chain_sha256: "588288ed8a3528ba28d168e40568c4ce5fc2b372746f0e761edbc7721942d716"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  A deployed retention or materialization trace that links one RepoRunPlan
+  output to a persisted ScheduleProposal instance and records the associated
+  VerificationEpisode hasCurrentProposal update would decide between the
+  materialized artifact and transient planner-DTO models.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: provenance-bearing-plan-identity
+    counterexample: >-
+      Two planning acts can produce byte-equal ordered steps for the same
+      repository coordinates, while one plan can be faithfully copied between
+      carriers. The card distinguishes the independent planning lineages and
+      preserves identity across copies, so neither step-array equality nor a
+      storage identifier controls identity.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-current-ordered-prescription
+    counterexample: >-
+      CQ-020 cannot identify a VerificationEpisode's current proposal or its
+      prescribed WorkUnit order from isolated step specifications. The
+      proposal term supplies the current ordered prescription genuinely
+      required by the question.
+    outcome: survived
+  - surface: null_discriminator
+    rule: null-rival-still-viable
+    counterexample: >-
+      A transient RepoRunPlan DTO can contain a run context and a deterministic
+      phase-then-identifier step array, drive immediate execution, and then be
+      discarded. Every cited fact remains true in that null world, while no
+      retained ScheduleProposal individual or hasCurrentProposal assertion
+      exists.
+    outcome: landed
+rival_models_still_viable:
+  - "A materialized current ScheduleProposal linked to a VerificationEpisode."
+  - "A transient planner DTO used only to order immediate execution."
+evidence:
+  - "so:sha256:b1addafaac37d8ae5ba61d331e1478b13bf74addcbb005c427cb6cd00da76fc3"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46"
+  - "CQ-020"

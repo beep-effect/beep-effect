@@ -1,0 +1,10 @@
+id: po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 322
+  end_line: 330
+quote: 'tryAcquire: acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps)'
+epistemic_status: quoted_prose

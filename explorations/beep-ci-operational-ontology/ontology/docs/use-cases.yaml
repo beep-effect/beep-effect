@@ -1,0 +1,91 @@
+# beep-ci-ops — use case catalog (S2, 2026-08-27)
+# Each use case connects a stakeholder need to ontology behavior and derives CQs.
+
+- id: UC-001
+  name: "Agent plans the cheapest next validation sequence"
+  actor: "Coding agent, immediately after editing code"
+  goal: "Compute the WorkUnit sequence for the current diff and epoch, ordered to minimize expected time-to-first-actionable-failure — the scheduling heuristic serving the one KPI (episode time-to-certainty), not a rival objective"
+  preconditions:
+    - "Diff against base is known; package topology and hash surfaces are represented"
+    - "Cost estimates exist per (lane, package) with measured/census/default provenance"
+  main_flow:
+    - "Agent submits its change set and target assurance tier"
+    - "Projection returns an ordered ScheduleProposal of charge-feasible WorkUnits (diff-touched first, topo tie-break, ascending cost); the advisory p95 screen (CQ-026) flags smells, never gates"
+  postconditions:
+    - "Agent runs the first WorkUnit; a failure re-enters the loop with narrowed scope"
+  related_cqs: [CQ-001, CQ-002, CQ-003, CQ-004, CQ-010, CQ-013, CQ-018, CQ-020]
+  # ordering is covered by CQ-020 (final-grill admission): the projection's emitted
+  # ScheduleProposal is A-Box, so the ordered sequence is queryable and auditable.
+  priority: must_have
+
+- id: UC-002
+  name: "Scheduler grants seats under backpressure"
+  actor: "Proof coordinator / seat scheduler"
+  goal: "Admit charge-feasible grants across concurrent agents without starvation or origin contention"
+  preconditions:
+    - "Active grants, seat requests, and admission policy facts are represented"
+  main_flow:
+    - "Scheduler validates admission invariants per the ACTIVE AdmissionPolicy (admission charge vs remaining token capacity — CQ-010; origin exclusion on originKey — CQ-009; class caps for concurrent-safe kinds; declared starvation bound — CQ-023)"
+    - "DEPLOYED policy (#870 weighted admission): order by effective priority + enqueue time with capacity fitting, aging, and class caps"
+    - "PROSPECTIVE policy (R3-derived DRR, unimplemented): drain per-agent queues by cost-denominated deficit round-robin"
+  postconditions:
+    - "No WorkUnit is admitted whose charge exceeded remaining capacity; contention and queue state are observable (duration budgets are advisory — the tri-split forbids a hard-duration reading; hard execution limits are S7 projection-contract territory)"
+  related_cqs: [CQ-008, CQ-009, CQ-010, CQ-021, CQ-022, CQ-023, CQ-026]
+  # fairness/starvation is now ontology-queryable (final-grill admission): CQ-021
+  # (seat queue on the deployed ticket/lease carriers), CQ-023 (starvation hard
+  # invariant against the declared policy bound), CQ-022 (stopping/cancellation),
+  # CQ-026 (advisory p95 screen). The "no covering CQ" caveat is retired.
+  #
+  # DEPLOYED-vs-PROSPECTIVE (partner review, verified 2026-08-27): as of PR #870
+  # (merged 19:52Z, origin/main) the DEPLOYED scheduler is weighted admission —
+  # durable tickets/leases, effective priority + enqueue time ordering, capacity
+  # fitting, aging, class caps — NOT deficit round-robin. DRR here is the
+  # PROSPECTIVE R3-derived design for WorkUnit-level scheduling. The ontology must
+  # model deployed policy as A-Box facts (AdmissionWorkKind/AdmissionPriority
+  # LiteralKits, QualityScheduler.schemas.ts) and never state DRR as runtime truth.
+  priority: must_have
+
+- id: UC-003
+  name: "Change event invalidation blast radius"
+  actor: "Agent or scheduler receiving a change event (source edit, dep bump, config change, base merge)"
+  goal: "Determine which proofs stay valid and which (lane x package) results are invalidated, per hash-surface semantics"
+  preconditions:
+    - "Hash surfaces per lane and the package dependency closure are represented"
+  main_flow:
+    - "Event classified (which HashSurface it touches) -> blast radius computed as lanes x packages"
+    - "Proofs outside the radius retain validity for their epoch"
+  postconditions:
+    - "No invalidated proof is trusted; no valid proof is redundantly recomputed"
+  related_cqs: [CQ-004, CQ-005, CQ-011, CQ-014, CQ-019]
+  priority: must_have
+
+- id: UC-004
+  name: "Certainty accounting before publish"
+  actor: "Coding agent preparing to publish"
+  goal: "Know which certainty tier holds for the current tree/epoch and the remaining obligations to reach merge-certainty"
+  preconditions:
+    - "Tier definitions and their lane obligations are represented, including local-vs-CI asymmetries"
+  main_flow:
+    - "Agent queries held tier at (branch, head, epoch)"
+    - "Projection lists unmet obligations for the target tier"
+  postconditions:
+    - "Agent proceeds to publish or runs exactly the missing obligations"
+  related_cqs: [CQ-005, CQ-006, CQ-015, CQ-017, CQ-024]
+  priority: must_have
+
+- id: UC-005
+  name: "KPI attribution and lever discovery"
+  actor: "Operator; the ontology pipeline itself"
+  goal: "Decompose episode time into causes, rank candidate levers, and evaluate tagged operational change events (vernacular: control interventions) as observational deltas"
+  preconditions:
+    - "Episodes with attempt-level telemetry (lock bounces, execution, repair gaps, CI waits) are loaded as A-Box"
+  main_flow:
+    - "Pipeline aggregates episode decompositions over a window"
+    - "Operator compares KPI distributions before/after a tagged intervention"
+  postconditions:
+    - "Levers are ranked by OBSERVED KPI deltas, not intuition (ranking is ETL over
+       CQ-016 partition points — the ontology supplies change events + decompositions,
+       the external KPI series supplies the ordering; causal claims require the
+       kpi-measurement-rules supporting design, never the delta alone)"
+  related_cqs: [CQ-007, CQ-011, CQ-012, CQ-013, CQ-016, CQ-025]
+  priority: must_have
