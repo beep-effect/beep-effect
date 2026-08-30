@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-29T22:46:30.116Z",
+  "generatedAt": "2026-08-30T00:14:38.060Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -71218,8 +71218,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-122-export-qualityscriptcommanderror-from-quality-errors-ts",
+          "line": 124,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-124-export-qualityscriptcommanderror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -71240,8 +71240,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 129,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-129-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
+          "line": 131,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-131-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -71262,8 +71262,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 153,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-153-qualityprofiledetectioninput",
+          "line": 155,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-155-qualityprofiledetectioninput",
           "currentTags": [
             "@category",
             "@since"
@@ -71284,8 +71284,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 169,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-169-githubchecklanesformodefortesting",
+          "line": 171,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-171-githubchecklanesformodefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71306,8 +71306,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 185,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-185-githubcheckprepushexternallanesfortesting",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-187-githubcheckprepushexternallanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71328,8 +71328,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-201-githubcheckpromotedfallowlanediagnosticsfortesting",
+          "line": 203,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-203-githubcheckpromotedfallowlanediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71350,8 +71350,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 218,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-218-githubcheckqualitylanesfortesting",
+          "line": 220,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-220-githubcheckqualitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71372,8 +71372,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 234,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-234-githubcheckreposanitylanesfortesting",
+          "line": 236,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-236-githubcheckreposanitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71394,8 +71394,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 250,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-250-promotedfallowgithubchecklaneidsfortesting",
+          "line": 252,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-252-promotedfallowgithubchecklaneidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71416,8 +71416,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 266,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-266-detectqualityprofilefortesting",
+          "line": 268,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-268-detectqualityprofilefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71438,8 +71438,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 282,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-282-qualityprofileconfigfortesting",
+          "line": 284,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-284-qualityprofileconfigfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71460,8 +71460,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-298-activeosvignoreidsfortesting",
+          "line": 300,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-300-activeosvignoreidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71482,8 +71482,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 352,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-352-iseffectdiagnosticsdirectivefortesting",
+          "line": 354,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-354-iseffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -71506,8 +71506,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 657,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-657-runbunaudit",
+          "line": 659,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-659-runbunaudit",
           "currentTags": [
             "@param",
             "@returns",
@@ -71534,8 +71534,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 783,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-783-devqualitystepsfortesting",
+          "line": 785,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-785-devqualitystepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -71558,8 +71558,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 851,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-851-reviewfixdocgenlocalargsfortesting",
+          "line": 853,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-853-reviewfixdocgenlocalargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -71582,8 +71582,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1076,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1076-rungithubchecks",
+          "line": 1078,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1078-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -71606,8 +71606,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1388,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1388-collecteffecttsgodiagnosticlines",
+          "line": 1390,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1390-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -71630,8 +71630,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1615,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1615-collecttsgopluginprofilediagnosticsfortesting",
+          "line": 1617,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1617-collecttsgopluginprofilediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -71652,8 +71652,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1743,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1743-runtsgorulescheck",
+          "line": 1745,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1745-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -71675,8 +71675,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1894,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1894-runtesttsgochecks",
+          "line": 1896,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1896-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -71699,8 +71699,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1992,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1992-runtsgosmokecheck",
+          "line": 1994,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1994-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -71722,8 +71722,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2102,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2102-ismoduletagscannedpathfortesting",
+          "line": 2104,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2104-ismoduletagscannedpathfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -71746,8 +71746,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2123,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2123-runjsdocmoduletagscheck",
+          "line": 2125,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2125-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -71769,8 +71769,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2200,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2200-runjsdocinventory",
+          "line": 2202,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2202-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -71792,8 +71792,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2253,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2253-runjsdocquality",
+          "line": 2255,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2255-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -71814,8 +71814,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2764,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2764-qualitycommand",
+          "line": 2814,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2814-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
