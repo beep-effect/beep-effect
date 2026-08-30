@@ -1905,6 +1905,13 @@ describe("corpus restoration preservation", () => {
           return yield* Effect.die("Expected sealed preflight, file, and directory terminal fixture rows.");
         }
         const archiveRoot = path.join(fixture.corpusRoot, "raw", "synthetic-restoration");
+        const emptySeal = ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
+          ...seal.value,
+          manifestSha256: Sha256Hex.make(bytesToHex(sha256(new Uint8Array()))),
+          recordCount: NonNegativeInt.make(0),
+        });
+        const encodedEmptySeal = yield* encodeArchiveLedgerRecordJson(emptySeal);
+        expect(yield* RA.validateArchiveManifestSeal(archiveRoot, [encodedEmptySeal], [emptySeal])).toEqual(emptySeal);
         const fileDestination = path.join(archiveRoot, fileTerminal.value.destinationRelativePath);
         const originalFileBytes = yield* fs.readFile(fileDestination);
         yield* fs.writeFileString(fileDestination, "corrupt-terminal-bytes");
@@ -1936,6 +1943,11 @@ describe("corpus restoration preservation", () => {
         expect(
           (yield* RA.verifyArchiveTerminal(archiveRoot, failureTerminal.objectId, failureTerminal)).record
         ).toMatchObject({ _tag: "Some", value: { failureKind: "unapproved-terminal" } });
+        expect(
+          yield* RA.requireArchivePayloadOwned(archiveRoot, RA.indexArchiveTerminals([failureTerminal]).terminals).pipe(
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
         const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
         const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (
           unsealed: ReadonlyArray<ArchiveLedgerRecord>
