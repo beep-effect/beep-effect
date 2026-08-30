@@ -1061,8 +1061,10 @@ export const selectDirectDocgenPackagesForTesting: {
   (
     packages: ReadonlyArray<DocgenWorkspacePackage>,
     selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>
-  ): ReadonlyArray<DocgenWorkspacePackage> =>
-    A.filter(packages, (pkg) => A.some(selectedPackages, (selected) => selected.name === pkg.name))
+  ): ReadonlyArray<DocgenWorkspacePackage> => {
+    const selectedNames = HashSet.fromIterable(A.map(selectedPackages, (selected) => selected.name));
+    return A.filter(packages, (pkg) => HashSet.has(selectedNames, pkg.name));
+  }
 );
 
 const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan: DocgenLocalPlan, repoRoot: string) {
@@ -1095,7 +1097,6 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
   if (A.every(proofStatuses, (status) => status.status === "current")) {
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
-    /* v8 ignore next -- pure direct-package selection is covered through both exported call forms; this delegation sits behind spawned Turbo dry-run and proof-manifest integration */
     const selectedPackages = selectDirectDocgenPackagesForTesting(packages, plan.selectedPackages);
     yield* checkPackageDocumentation(selectedPackages, plan.parallel);
     yield* runStepWithStallWatchdog(
