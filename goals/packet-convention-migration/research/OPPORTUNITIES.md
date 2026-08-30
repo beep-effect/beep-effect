@@ -1248,3 +1248,21 @@
 - **Disposition:** commit-message contract friction; keep the resolved index
   intact and retry with a conventional merge subject.
 - **Owner:** merge commit UX and commitlint diagnostic ordering.
+
+## 2026-08-30 — GitHub CLI remote inference changes between adjacent PR commands
+
+- **What happened:** immediately after `gh pr view` and `gh pr checks` resolved
+  PR #906 from the worktree, the attached required-check watcher refused to
+  start because GitHub CLI no longer inferred a default repository.
+- **Evidence:** `gh pr checks 906 --required --watch --fail-fast --interval 10`
+  exited 1 with `No default remote repository has been set` and requested
+  `gh repo set-default`, while adjacent PR queries in the same checkout had
+  succeeded without an explicit repository.
+- **What would have prevented it:** make repository inference consistent for
+  all `gh pr` subcommands, or have the Yeet/closeout runbook always pass the
+  canonical `-R owner/repository` argument to hosted watchers.
+- **Disposition:** GitHub CLI context friction; do not mutate global CLI
+  defaults during goal closeout, and retry the read-only watcher with an
+  explicit repository.
+- **Owner:** hosted-check command construction and GitHub CLI repository
+  context.
