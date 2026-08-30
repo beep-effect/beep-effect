@@ -875,6 +875,7 @@ describe("quality-scheduler", () => {
                 "#!/bin/sh\nprintf 'MemoryPeak=16384\\nTasksCurrent=7\\n'\n"
               );
               yield* writeFakeLease(tempRoot, {
+                weightTokens: 10,
                 runScope: RunScopeRecord.make({
                   unitName: "agent-run-telemetry.scope",
                   support: "active",
@@ -883,11 +884,23 @@ describe("quality-scheduler", () => {
                 }),
               });
 
-              const snapshot = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
+              const queued = yield* Effect.forkChild(
+                withQualityAdmission(
+                  request({ originKey: "origin-telemetry-contender" }),
+                  noAdmissionOriginGate,
+                  Effect.void,
+                  fastConfig
+                )
+              );
+              yield* Effect.sleep("100 millis");
+
+              const snapshot = yield* withPrependedPath(binDirectory, admissionStatus());
               expect(snapshot.leases[0]?.runScope).toMatchObject({
                 memoryPeakBytes: 16_384,
                 tasksCurrent: 7,
               });
+              expect(snapshot.tickets).toHaveLength(1);
+              yield* Fiber.interrupt(queued);
             }),
           128,
           true
