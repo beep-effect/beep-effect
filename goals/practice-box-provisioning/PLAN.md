@@ -11,12 +11,14 @@ Status: `pending`
 | P0 Research | pending | Verify CCG platform-app approval on the Business plan; repair Box SDK version provenance; confirm the reconciler package home with `bun run beep architecture`; gather the Box quote items (Governance-on-Business, Business Plus, collaborator seats) into a decision-ready table. | CCG verdict + quote table recorded in `history/`; package topology chosen; SDK provenance marker repaired. |
 | P1 Implement | pending | Driver expansion (reads first, then mutations, regenerate + remeasure), then the reconciler: intent/observed/plan/receipt schemas → service contracts (`Inventory`, `Planner`, `Applier`, orchestration) → implementation. | Acceptance criteria for the driver surface and the dry-run vertical slice are met. |
 | P2 Verify | pending | Dry-run plan artifact against the live tenant; repeat-run identity; operator-attended first apply; all-`Noop` re-plan; package-verify handoffs. | Verification matrix green; apply receipt in `history/`. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P3 Yeet: PR to mergeable | pending | Publish work commits through yeet and drive the PR toward mergeable: required checks green, review comments answered and resolved. The packet's final merge-ready verdict is deliberately not taken here — it belongs to P4, after the closeout edits are published on the same PR. | Checks green and zero unresolved review threads on the latest work head. |
+| P4 Close | pending | Land the closeout reflection and packet-state flip in the same PR as the final work (same-PR packet-state flips — never a post-merge follow-up), publish that closeout head through yeet, and take the packet's final gate on it. | `bun run beep yeet monitor` reports `merge-ready: yes` on the head that contains the reflection and status flip. |
 
 ## P4 Closeout Checklist
 
-Before marking the packet closed (and `status` → `completed-retained`):
+Run this checklist before the final work PR publishes — the reflection and
+the `status` → `completed-retained` flip land in that same PR (same-PR
+packet-state flips), never as a post-merge follow-up:
 
 1. Write a closeout reflection via the `/reflect` skill to
    `history/reflections/<YYYY-MM-DD>-<agent>.md`; its YAML frontmatter must
@@ -25,6 +27,9 @@ Before marking the packet closed (and `status` → `completed-retained`):
    `reflectionRequired: true`).
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json`
    phase statuses + `initiative.status`.
+4. Publish the closeout commit through yeet and run
+   `bun run beep yeet monitor` until it reports `merge-ready: yes` on that
+   head — the packet's final gate.
 
 ## Execution Notes
 

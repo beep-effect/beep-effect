@@ -38,16 +38,20 @@ Workflow:
    beside Business Premium; open the >100 GB support case; census source
    PSTs (counts/sizes/nesting only — no client-identifying names in the
    repo).
-2. Choose the staging form from the nesting census: flat directory + blank
+2. Tranche uploads are hard-gated: P2 runs only after the preservation
+   gate of `goals/oppold-corpus-salvage-restoration` passes for the mail
+   media, with the staging manifest derived from the preserved estate's
+   verified census. P0/P1 preflight runs in parallel, ungated.
+3. Choose the staging form from the nesting census: flat directory + blank
    `FilePath`, or `--recursive=true` + `FilePath` prefixes. The flat form
    uploads only top-level files — flatten first or go recursive.
-3. Import with `IsArchive=TRUE`, `TargetRootFolder=/Historical-PST` — never
+4. Import with `IsArchive=TRUE`, `TargetRootFolder=/Historical-PST` — never
    root `/`.
-4. Reconcile each tranche against the staged manifest before the next; gate
+5. Reconcile each tranche against the staged manifest before the next; gate
    tranches 2/3 on the support-case verdict.
-5. Verify Outlook search with the attorney; record evidence.
-6. Leave `RetentionHoldEnabled` ON.
-7. At P4 Close, write the reflection via `/reflect`;
+6. Verify Outlook search with the attorney; record evidence.
+7. Leave `RetentionHoldEnabled` ON.
+8. At P4 Close, write the reflection via `/reflect`;
    `bun run beep lint reflection-artifacts` must pass.
 
 Acceptance:
