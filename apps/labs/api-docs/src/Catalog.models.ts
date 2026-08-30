@@ -108,11 +108,10 @@ export type CatalogSlug = typeof CatalogSlug.Type;
  * ```ts
  * import { CatalogEntryMeta, CatalogSlug } from "@beep/api-docs/src/Catalog.models"
  *
- * const meta = CatalogEntryMeta.make({
+ * const meta = CatalogEntryMeta.cases.served.make({
  *   slug: CatalogSlug.make("example-api"),
  *   title: "Example API",
- *   description: "Example contract used in API documentation.",
- *   audience: "served"
+ *   description: "Example contract used in API documentation."
  * })
  *
  * console.log(meta.title) // "Example API"
@@ -224,11 +223,10 @@ export const makeContractSource = <Id extends string, Groups extends HttpApiGrou
  * } from "@beep/api-docs/src/Catalog.models"
  *
  * const entry = new CatalogEntry({
- *   meta: CatalogEntryMeta.make({
+ *   meta: CatalogEntryMeta.cases.consumed.make({
  *     slug: CatalogSlug.make("example-api"),
  *     title: "Example API",
- *     description: "Committed API specification.",
- *     audience: "consumed"
+ *     description: "Committed API specification."
  *   }),
  *   source: CatalogSource.SpecSource({
  *     specPath: "packages/example/openapi.json",
