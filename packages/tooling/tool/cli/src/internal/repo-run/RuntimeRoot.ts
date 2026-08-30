@@ -6,6 +6,13 @@
  * split sibling sessions across separate trees. This module instead fixes the
  * host base at POSIX `/tmp`; each consumer appends its existing UID-scoped leaf.
  *
+ * This change is a hard cutover, not a mixed-version migration. Before adopting
+ * it, operators must drain every Yeet process, admission lease or ticket,
+ * proof-lock file, and `agent-run-*.scope` created by a version that coordinates
+ * under `/run/user/<uid>`. Running the two root schemes concurrently is not
+ * supported: an old process cannot observe a compatibility lock introduced only
+ * in the new process, so a one-sided bridge would provide false safety.
+ *
  * @since 0.0.0
  */
 import { userInfo } from "node:os";
@@ -66,6 +73,9 @@ export const provideRuntimeRootForTesting: {
  * `XDG_RUNTIME_DIR`, `TMPDIR`, or a fallible `/run/user/<uid>` probe, so sibling
  * sessions cannot independently select different coordination trees. Admission
  * and proof consumers retain their existing UID-scoped leaves below this base.
+ * Deployment must follow the module-level hard-cutover procedure; mixed-version
+ * coordination with the prior `/run/user/<uid>` scheme is intentionally refused
+ * as an operational rollout shape.
  *
  * **Example** (Resolve the invariant host base)
  *
