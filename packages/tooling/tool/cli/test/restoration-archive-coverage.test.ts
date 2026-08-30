@@ -75,8 +75,8 @@ describe("restoration archive boundary helpers", () => {
         expect(yield* RA.prefixMatches(source, equal, 6, 2)).toBe(true);
         expect(yield* RA.prefixMatches(source, different, 6, 2)).toBe(false);
         expect(yield* RA.prefixMatches(source, short, 6, 2)).toBe(false);
-        expect(yield* RA.maybeCrash("before-copy", "after-copy")).toBeUndefined();
-        expect(yield* RA.maybeCrash("before-copy", "before-copy").pipe(Effect.exit)).toMatchObject({
+        expect(yield* RA.maybeCrash("none", "after-copy")).toBeUndefined();
+        expect(yield* RA.maybeCrash("after-rename", "after-rename").pipe(Effect.exit)).toMatchObject({
           _tag: "Failure",
         });
       },
