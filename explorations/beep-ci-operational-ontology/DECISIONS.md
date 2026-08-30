@@ -500,6 +500,11 @@ flagged identity obligations. Rulings:
   the 8 INDETERMINATEs acknowledged as flagged obligations; PublishPriority and
   VerifyPriority excluded (S6 A-Box enumerates the deployed LiteralKit).
 
+(Clarifying supersession: the design-grill phrase "all 89 literal-domain members
+appear as leaf records" is bounded by these sittings — 1a/4b parked the 80 members
+of unratified domains, so the leaf rule covers ACCEPTED members only; the contract
+text is amended accordingly.)
+
 **TAXONOMY RATIFIED at 38 terms** (gate 0 blockers / 0 warns, all 27 constraints
 bound or reason-waived). `apply_s5_dispositions.py` projected the rulings:
 CANDIDATES 32 accepted / 2 merged / 1 deferred-s6 / 139 rejected / 163 parked;
