@@ -678,4 +678,7 @@ export const goalsMigrateConventionsCommand = Command.make(
       })
     );
   })
-).pipe(Command.withDescription("Preview or apply the goal-fleet v2 convention migration"));
+).pipe(
+  Command.withDescription("Preview or apply the goal-fleet v2 convention migration"),
+  Command.provide(migrationLayer)
+);
