@@ -32,11 +32,12 @@ run is rotated and replayable from
 UNDERWAY**: the contract is binding at
 [`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md), the
 mechanical join pass is committed (`extraction/s5/JOIN.yaml`: 25 accepted-via / 7
-domain leaves / 305 open), and sitting 1's bulk rulings (19 parked domains, the
-138-package census rejection as A-Box ETL material, the 45 parked properties,
-merge-pair + residual-individual passes) are being scribed. **NEXT: finish the S5
-sittings, run the six-seat round, land DISPOSITIONS/TAXONOMY + the `--s5` gate +
-`apply_s5_dispositions.py`.** After S5: auditor run 2 (`first_run: false`, prior index
+domain leaves / 305 open), the sittings are COMPLETE (1–3 scribed in
+DECISIONS.md: all 337 candidates, all 104 LEDGER entries, the docket policy), the
+dispositions surface is landed and gated (`s5/DISPOSITIONS.yaml` +
+`validate_packet.py --s5`: 0 blockers), and the six-seat TAXONOMY round is running.
+**NEXT: merge the seat fragments into `s5/TAXONOMY.yaml`, clear the adversary and
+blinded divergences with the steward, ratify, and land `apply_s5_dispositions.py`.** After S5: auditor run 2 (`first_run: false`, prior index
 `orun-2026-08-29T08:20:55Z.index.yaml`) with the journal/verdict corpus extension and
 adapter v1.1.0. Do NOT rerun §4b.
 

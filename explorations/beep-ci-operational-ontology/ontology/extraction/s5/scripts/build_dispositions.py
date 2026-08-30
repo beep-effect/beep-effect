@@ -24,6 +24,9 @@ def rat_for(slug: str) -> str:
     raise SystemExit(f"no ratification for otp:{slug}:001")
 
 
+POLICY_RAT = "rat-017"  # resolved in main() via rat_for("admission-policy")
+
+
 def candidate_rule(row: dict, lock_rat: str, rcd_rat: str, vo_rat: str) -> dict:
     c, kind, bucket = row["candidate"], row["kind"], row["bucket"]
     if bucket == "accepted-via":
@@ -42,7 +45,7 @@ def candidate_rule(row: dict, lock_rat: str, rcd_rat: str, vo_rat: str) -> dict:
         return {"ruling": "merged-into", "merged_into": "VerificationObligation", "join_ref": vo_rat,
                 "justification": "§4b reshape source referent (sitting 2b)"}
     if c == "YeetWeightedAdmissionV1":
-        return {"ruling": "deferred-s6", "join_ref": "rat-003",
+        return {"ruling": "deferred-s6", "join_ref": POLICY_RAT,
                 "justification": "individual of accepted AdmissionPolicy; the S6 A-Box ratifies it (sitting 2d)"}
     if c == "TurboConfiguration469136d2a872":
         return {"ruling": "rejected", "join_ref": SITTINGS,
@@ -88,6 +91,8 @@ def main() -> None:
     facts = yaml.safe_load((S4 / "FACTS.yaml").read_text())
     index = yaml.safe_load(
         (BC / "runs/orun-2026-08-29T08:20:55Z.index.yaml").read_text())
+    global POLICY_RAT
+    POLICY_RAT = rat_for("admission-policy")
     lock_rat = rat_for("machine-proof-lock")
     rcd_rat = rat_for("hosted-required-check-merge-obligation")
     vo_rat = rat_for("architecture-boundary-obligation")
@@ -135,10 +140,10 @@ def main() -> None:
         ruling = {"accepted-via": "accepted-via", "merged-into": "accepted-via",
                   "deferred-s6": "deferred-s6", "rejected": "rejected",
                   "parked-run-2": "parked-run-2", "orphan": "orphan",
-                  "ambiguous-subject": "parked-run-2"}[disp]
+                  "unknown-term": "parked-run-2", "ambiguous": "parked-run-2"}[disp]
         fact_rows.append({"predicate": pred, "subject_disposition": disp, "ruling": ruling,
                           "covers": idxs,
-                          "justification": "derived from subject disposition (contract §2: bulk fact classes)"})
+                          "justification": "derived from the weakest of subject and term-valued-object dispositions (contract §2; PR #905 review)"})
     orphans = [r for r in fact_rows if r["ruling"] == "orphan"]
     assert not orphans, f"unruled orphan fact classes: {[r['predicate'] for r in orphans]}"
     covered = sum(len(r["covers"]) for r in fact_rows)

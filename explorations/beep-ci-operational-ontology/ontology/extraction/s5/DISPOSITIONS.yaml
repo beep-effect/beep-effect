@@ -1499,7 +1499,7 @@ candidates:
   candidate: YeetWeightedAdmissionV1
   kind: individual
   ruling: deferred-s6
-  join_ref: rat-003
+  join_ref: rat-017
   justification: individual of accepted AdmissionPolicy; the S6 A-Box ratifies it (sitting 2d)
 - seq: 248
   candidate: publish
@@ -2355,7 +2355,7 @@ ledger:
   ruling: accepted-via
   join_ref: con:literalkits-I04
   justification: 'docket standing-constraint: adopted as a standing S5 constraint — FallowQualityFeatureFamily
-    and FallowFeatureFamily stay separate source domains; matrix-row denotation is a named run-2 leg'
+    and FallowFeatureFamily stay separate source domains'
 - entry: merge-conflict-fact-LaneAudit-hasHashEnvironmentVariable
   ruling: parked-run-2
   join_ref: LEDGER-DOCKET.yaml merge-conflict-fact-LaneAudit-hasHashEnvironmentVariable
@@ -3162,19 +3162,22 @@ fact_classes:
   - 1003
   - 1004
   - 1005
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: affectedUsingTaskInputs
   subject_disposition: rejected
   ruling: rejected
   covers:
   - 1007
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: capacityMaxTokens
   subject_disposition: deferred-s6
   ruling: deferred-s6
   covers:
   - 1031
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: dependsOn
   subject_disposition: rejected
   ruling: rejected
@@ -3840,38 +3843,44 @@ fact_classes:
   - 795
   - 796
   - 797
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: executesLane
   subject_disposition: accepted-via
   ruling: accepted-via
   covers:
   - 800
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: executesLane
   subject_disposition: parked-run-2
   ruling: parked-run-2
   covers:
   - 802
   - 806
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: filterUsingTasks
   subject_disposition: rejected
   ruling: rejected
   covers:
   - 1008
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: globalConfiguration
   subject_disposition: rejected
   ruling: rejected
   covers:
   - 1009
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hardFloorGib
   subject_disposition: deferred-s6
   ruling: deferred-s6
   covers:
   - 1032
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasDeclaredTaskDependency
   subject_disposition: parked-run-2
   ruling: parked-run-2
@@ -3892,20 +3901,23 @@ fact_classes:
   - 976
   - 990
   - 1001
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasEmptyTaskOutputDeclaration
   subject_disposition: parked-run-2
   ruling: parked-run-2
   covers:
   - 879
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasGlobalHashEnvironmentVariable
   subject_disposition: rejected
   ruling: rejected
   covers:
   - 1010
   - 1011
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasGlobalInputPattern
   subject_disposition: rejected
   ruling: rejected
@@ -3916,7 +3928,8 @@ fact_classes:
   - 1015
   - 1016
   - 1017
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasGlobalPassThroughEnvironmentVariable
   subject_disposition: rejected
   ruling: rejected
@@ -3932,7 +3945,8 @@ fact_classes:
   - 1026
   - 1027
   - 1028
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasHashEnvironmentVariable
   subject_disposition: parked-run-2
   ruling: parked-run-2
@@ -3981,14 +3995,16 @@ fact_classes:
   - 977
   - 983
   - 984
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasLaneKind
   subject_disposition: accepted-via
   ruling: accepted-via
   covers:
   - 805
   - 809
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasLaneKind
   subject_disposition: parked-run-2
   ruling: parked-run-2
@@ -4017,27 +4033,31 @@ fact_classes:
   - 1002
   - 1029
   - 1030
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasPassThroughEnvironmentVariable
   subject_disposition: parked-run-2
   ruling: parked-run-2
   covers:
   - 949
   - 950
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasScope
   subject_disposition: accepted-via
   ruling: accepted-via
   covers:
   - 801
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasScope
   subject_disposition: parked-run-2
   ruling: parked-run-2
   covers:
   - 803
   - 807
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasTaskInputPattern
   subject_disposition: parked-run-2
   ruling: parked-run-2
@@ -4106,7 +4126,8 @@ fact_classes:
   - 997
   - 998
   - 999
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: hasTaskOutputPattern
   subject_disposition: parked-run-2
   ruling: parked-run-2
@@ -4139,13 +4160,15 @@ fact_classes:
   - 908
   - 909
   - 943
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: heartbeatSeconds
   subject_disposition: deferred-s6
   ruling: deferred-s6
   covers:
   - 1033
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: isPersistentTask
   subject_disposition: parked-run-2
   ruling: parked-run-2
@@ -4154,13 +4177,15 @@ fact_classes:
   - 902
   - 929
   - 946
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: publishAgingSeconds
   subject_disposition: deferred-s6
   ruling: deferred-s6
   covers:
   - 1034
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: rdf:type
   subject_disposition: rejected
   ruling: rejected
@@ -4303,31 +4328,36 @@ fact_classes:
   - 785
   - 792
   - 798
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: requiresLane
   subject_disposition: parked-run-2
   ruling: parked-run-2
   covers:
   - 1006
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: reserveGib
   subject_disposition: deferred-s6
   ruling: deferred-s6
   covers:
   - 1035
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: reviewFixClassCap
   subject_disposition: deferred-s6
   ruling: deferred-s6
   covers:
   - 1036
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: slotSizeGib
   subject_disposition: deferred-s6
   ruling: deferred-s6
   covers:
   - 1037
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'
 - predicate: taskCacheEnabled
   subject_disposition: parked-run-2
   ruling: parked-run-2
@@ -4346,4 +4376,5 @@ fact_classes:
   - 975
   - 982
   - 1000
-  justification: 'derived from subject disposition (contract §2: bulk fact classes)'
+  justification: 'derived from the weakest of subject and term-valued-object dispositions (contract §2;
+    PR #905 review)'

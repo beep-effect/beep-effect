@@ -27,8 +27,7 @@ OVERRIDES = {
     "fallow-laws-I02": ("standing-constraint",
                         "result-attribution scope != execution scope binds every hasScope assertion"),
     "literalkits-I04": ("standing-constraint",
-                        "FallowQualityFeatureFamily and FallowFeatureFamily stay separate source domains; "
-                        "matrix-row denotation is a named run-2 leg"),
+                        "FallowQualityFeatureFamily and FallowFeatureFamily stay separate source domains"),
     "turbo-tasks-I04": ("run-2-obligation", "future-flag denotation needs the pinned Turbo schema corpus"),
     "turbo-tasks-I01": ("run-2-obligation", "task-vs-VerificationLane proof needs yeet/CI runtime use"),
     "fallow-laws-I01": ("run-2-obligation", "ScriptLane/CollectedGateLane facts ratify against runtime corpus"),
@@ -75,6 +74,11 @@ def main() -> None:
             else:
                 ruling, reason = "run-2-obligation", "subject vocabulary is parked; the suggestion joins the run-2 queue"
         row = {"id": eid, "kind": kind, "ruling": ruling, "reason": reason}
+        if eid == "literalkits-I04":
+            # dual ruling (sitting 3): the constraint stands AND the matrix-row
+            # denotation question joins the structured run-2 queue
+            row["run2_obligation"] = ("ratify which FallowQualityFeatureFamily matrix rows denote "
+                                      "deployed VerificationLanes (run-2 corpus)")
         rows.append(row)
         if ruling in ("standing-constraint", "taxonomy-input"):
             constraints.append({

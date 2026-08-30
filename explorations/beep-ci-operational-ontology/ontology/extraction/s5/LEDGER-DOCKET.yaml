@@ -263,8 +263,9 @@ rows:
 - id: literalkits-I04
   kind: schema-conflict
   ruling: standing-constraint
-  reason: FallowQualityFeatureFamily and FallowFeatureFamily stay separate source domains; matrix-row
-    denotation is a named run-2 leg
+  reason: FallowQualityFeatureFamily and FallowFeatureFamily stay separate source domains
+  run2_obligation: ratify which FallowQualityFeatureFamily matrix rows denote deployed VerificationLanes
+    (run-2 corpus)
 - id: merge-conflict-fact-LaneAudit-hasHashEnvironmentVariable
   kind: schema-conflict
   ruling: run-2-obligation

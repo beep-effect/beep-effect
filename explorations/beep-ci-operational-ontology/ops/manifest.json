@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Finish the S5 sittings (bulk rulings scribed via the s5-taxonomy-contract), run the six-seat round, and land DISPOSITIONS/TAXONOMY + the --s5 gate; the scaffolding and join pass are already committed — do not redo them, and do not rerun §4b."
+      "Merge the S5 seat fragments into TAXONOMY.yaml, settle adversary/blinded divergences with the steward, ratify, and land apply_s5_dispositions.py — sittings 1-3 and the gated dispositions surface are DONE (do not redo them; do not rerun §4b)."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

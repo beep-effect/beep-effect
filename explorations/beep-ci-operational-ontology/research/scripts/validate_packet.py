@@ -163,6 +163,8 @@ if _args.s5:
         j = jrows.get(r.get("seq"))
         if j is None or j.get("candidate") != r.get("candidate"):
             blocker(f"candidate seq={r.get('seq')} does not match JOIN row identity")
+        elif j.get("kind") != r.get("kind"):
+            blocker(f"candidate seq={r.get('seq')}: kind {r.get('kind')!r} disagrees with JOIN kind {j.get('kind')!r}")
         if r.get("ruling") == "deferred-s6" and r.get("kind") != "individual":
             blocker(f"candidate seq={r.get('seq')}: deferred-s6 is legal only for individuals")
         if r.get("ruling") == "merged-into" and not r.get("merged_into"):
@@ -205,9 +207,45 @@ if _args.s5:
         warn("TAXONOMY.yaml absent — pre-seat stage; the completion gate requires it")
     else:
         tax = yaml.safe_load(tax_path.read_text())
-        terms = {t.get("term"): t for t in tax.get("terms", [])}
+        term_list = tax.get("terms", [])
+        names = [t.get("term") for t in term_list]
+        for n in sorted({x for x in names if names.count(x) > 1}):
+            blocker(f"taxonomy term {n} appears more than once")
+        terms = {t.get("term"): t for t in term_list}
         accepted_terms = set(terms)
-        for t in tax.get("terms", []):
+        # REQUIRED set derives from the ratified proposals + accepted dispositions,
+        # never from what the seats submitted (PR #905 review)
+        required = set()
+        for f in sorted((BC / "work/proposals").glob("otp-*.yaml")):
+            if "review" not in f.name:
+                required.add(yaml.safe_load(f.read_text())["term"]["local_name"])
+        allowed_extra = set()
+        for r in rows:
+            if r.get("ruling") == "accepted-via":
+                required.add(r.get("candidate"))
+            elif r.get("ruling") in ("merged-into", "deferred-s6", "rejected", "parked-run-2"):
+                allowed_extra.add(r.get("candidate"))
+        for n in sorted(required - accepted_terms):
+            blocker(f"taxonomy is missing required accepted term {n}")
+        for n in sorted(accepted_terms - required):
+            blocker(f"taxonomy term {n} is not an accepted term"
+                    + (" (its candidate was not accepted)" if n in allowed_extra else ""))
+        kind_by_name = {}
+        for r in rows:
+            kind_by_name.setdefault(r.get("candidate"), set()).add(r.get("kind"))
+        for t in term_list:
+            kind = t.get("kind")
+            for field in ("term", "kind"):
+                if not t.get(field):
+                    blocker(f"taxonomy record missing required field {field}: {t}")
+            if kind in ("class", "property"):
+                for field in ("rigidity", "identity_ref"):
+                    if not t.get(field):
+                        blocker(f"taxonomy {t.get('term')}: {field} is required for a {kind}")
+            src_kinds = kind_by_name.get(t.get("term"))
+            if src_kinds and kind not in src_kinds and kind is not None:
+                blocker(f"taxonomy {t.get('term')}: kind {kind} disagrees with the S4 candidate kind {sorted(src_kinds)}")
+        for t in term_list:
             kind = t.get("kind")
             for parent in t.get("parents") or []:
                 if parent not in accepted_terms:
@@ -220,6 +258,8 @@ if _args.s5:
                 blocker(f"taxonomy {t.get('term')}: individuals need instance_of")
             if io and io not in accepted_terms:
                 blocker(f"taxonomy {t.get('term')}: instance_of {io} is not accepted")
+            elif io and terms[io].get("kind") != "class":
+                blocker(f"taxonomy {t.get('term')}: instance_of target {io} must be a class")
             for prm in t.get("parameters") or []:
                 name = str(prm.get("property") or "")
                 if (name.endswith("Ms") or name.endswith("Millis") or "token" in name.lower())                         and prm.get("range_kind") not in ("recorded-value",):
