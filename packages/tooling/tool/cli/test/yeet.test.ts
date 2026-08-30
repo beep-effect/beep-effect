@@ -818,7 +818,9 @@ describe("yeet planner", () => {
   });
 
   it("plans collect-all as an explicit override of fail-fast wave scheduling", () => {
-    const plan = buildYeetRunPlanForTesting({ collectAll: true, context, message: O.none(), mode: "verify" });
+    const plan = withEnvVar("BEEP_YEET_LANE_PROOF_MODE", undefined, () =>
+      buildYeetRunPlanForTesting({ collectAll: true, context, message: O.none(), mode: "verify" })
+    );
 
     expect(findStep(plan.steps, "full:pre-push").args).toEqual([
       "run",
@@ -828,6 +830,7 @@ describe("yeet planner", () => {
       "pre-push",
       "--collect-all",
     ]);
+    expect(findStep(plan.steps, "full:pre-push").env?.BEEP_YEET_LANE_PROOF_MODE).toBe("active");
   });
 
   it("builds explicit CI parity as the installed merge-preview CI battery", () => {
