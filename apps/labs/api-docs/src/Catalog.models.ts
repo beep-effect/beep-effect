@@ -8,9 +8,8 @@
 import { $ApiDocsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Data } from "effect";
+import { Data, Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 import type { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
 import type { HttpApi, HttpApiGroup } from "effect/unstable/httpapi";
 
@@ -131,6 +130,13 @@ export const CatalogEntryMeta = ApiAudience.mapMembers(
   })
 );
 
+/**
+ * Decoded route metadata produced by {@link CatalogEntryMeta}.
+ *
+ * @see {@link CatalogEntryMeta} for validation and construction.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CatalogEntryMeta = typeof CatalogEntryMeta.Type;
 
 /**
