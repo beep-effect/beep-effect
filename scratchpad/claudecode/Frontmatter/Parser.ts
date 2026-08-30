@@ -7,13 +7,11 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { YamlTextToUnknown } from "@beep/schema";
 import { thunk0 } from "@beep/utils";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
+import { Effect, FileSystem } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { FrontmatterDecodeError, FrontmatterParseError, FrontmatterReadError } from "../Errors.ts";
 import { CommandFrontmatter } from "./Command.ts";
 import { OutputStyleFrontmatter } from "./OutputStyle.ts";
@@ -24,6 +22,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Parser");
 
 /**
  * A markdown document split into a YAML-decoded value and its opaque body.
+ *
+ * **Details**
  *
  * The raw `frontmatter` remains `unknown` until one of the typed parse helpers
  * validates it against the corresponding Claude Code schema.
@@ -168,6 +168,8 @@ const decodeFrontmatter = <Schema extends S.Top>(
 /**
  * Parse a raw markdown string into YAML-decoded frontmatter and its body.
  *
+ * **Details**
+ *
  * Missing or malformed delimiters are treated as a body-only document.
  * Invalid YAML fails with {@link FrontmatterParseError}.
  *
@@ -177,10 +179,8 @@ const decodeFrontmatter = <Schema extends S.Top>(
  * import { Effect } from "effect"
  * import { Frontmatter } from "effect-claudecode"
  *
- * const program = Effect.gen(function* () {
- *   const parsed = yield* Frontmatter.parse("---\nname: review\n---\n# Review", "<inline>")
- *   console.log(parsed.body) // "# Review"
- * })
+ * const parsed = Effect.runSync(Frontmatter.parse("---\nname: review\n---\n# Review", "<inline>"))
+ * console.log(parsed.body) // "# Review"
  * ```
  *
  * @effects Annotates the current span and emits debug logs; may fail with {@link FrontmatterParseError}.

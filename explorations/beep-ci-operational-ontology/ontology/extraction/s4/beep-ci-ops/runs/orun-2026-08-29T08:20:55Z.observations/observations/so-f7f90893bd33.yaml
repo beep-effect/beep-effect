@@ -1,0 +1,23 @@
+id: so:sha256:f7f90893bd33b9cbc3bc52152898caaa2e2bd8a3c274e19e6a21c855043e77f7
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 25
+  end_line: 25
+  content_sha256: 7bc263fcb921bc4e1e7dcd51ad2680bbca78d8e4896b9d61074cc1921bca91f4
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts::RETAINED_ATTEMPTS
+  lexical_name: RETAINED_ATTEMPTS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const RETAINED_ATTEMPTS = 50;
+epistemic_status: parser_derived

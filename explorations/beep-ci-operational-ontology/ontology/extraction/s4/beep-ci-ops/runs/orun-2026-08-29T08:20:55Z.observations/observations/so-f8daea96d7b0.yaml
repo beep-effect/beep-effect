@@ -1,0 +1,24 @@
+id: so:sha256:f8daea96d7b0f2077c97131541c4686446c4a15b102e3818bac44640ff8fa2a6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 721
+  end_line: 728
+  content_sha256: 7f8eca440122928c39d55e5bc145458680ac4c4c29d0ca41528cab29cf719667
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::docgenLaneSteps
+  lexical_name: docgenLaneSteps
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep>
+  =>'
+epistemic_status: parser_derived

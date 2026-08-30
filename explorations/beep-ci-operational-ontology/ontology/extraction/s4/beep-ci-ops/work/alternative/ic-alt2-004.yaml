@@ -1,0 +1,33 @@
+id: ic:alt2:004
+hypothesis_ref: dh:reporun:037
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two split-stream captured-subprocess result records are the same iff they are the same output bundle produced by one child-process
+    spawn, packing that spawn's exit code, stdout, stderr, and combined truncation flag; sharing an exit code never makes
+    two captures the same.
+  reidentification_key:
+  - CapturedStreams produced by one runCapturedStreams call
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One result record per completed spawn that folds the two streams.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies:
+  - child-process spawn
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    The spawn occurrence is not this record: runCapturedStreams constructs CapturedStreams from runtime results after the
+    child has already produced them.
+- description: Two spawns that both exit 0 with empty streams are two records; equality of field values is not sameness of
+    capture.
+status: proposed

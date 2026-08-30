@@ -1,0 +1,22 @@
+id: fa:alt2:057
+hypothesis_ref: dh:yeet-planner:009
+identity_card_ref: ic:alt2:057
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: review-fix proof-plan specification in the planner'
+  still_viable: true
+- label: 'kind: review-fix operational procedure kind shared with the proof-surface bundle'
+  still_viable: true
+- label: 'implementation_artifact_only: literal planner selector token'
+  still_viable: false
+strongest_counterexample: >-
+  The cited lane mapping contributes an empty GitHub-check collection while still supplying base and head arguments, which
+  is repeatable plan content, not a bare selector token.
+verdict: analyzed
+needed_evidence: >-
+  A join from YeetProofTier.review-fix to RepoProofSurface.review-fix (or an explicit statement they are the same procedure)
+  would decide one procedure-kind versus two information encodings.

@@ -1,0 +1,23 @@
+id: so:sha256:3df6996e4ed0018220e56be976dacf8c218e6e30ee00db2e490a7a9ab6a2a1b2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 39
+  end_line: 39
+  content_sha256: 08c76f72cb5bdab386195c912ae4845768b58af49f2193e18412b477b1bc581a
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("internal/process/StepExec");
+epistemic_status: parser_derived

@@ -1,0 +1,59 @@
+target: "otp:split-stream-captured-subprocess-result:001"
+target_sha256: "85123d91ae4e2b669b7103fcd18429f2025fe0d036c00b367782fc79810afc8b"
+chain_sha256: "b04075bff89aa5ca082f2708bdb4b01b4d19f86cbb3c1921c59963037ad9357d"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; no is-a edge or valid subsumption relation is proposed to test."
+attacks:
+  - surface: identity
+    rule: identity-criterion-unobservable
+    counterexample: >-
+      Two subprocess captures can yield identical exitCode, stdout, stderr, and
+      truncated values. The criterion says they are distinct when produced by distinct
+      capture acts, but the proposed record carries neither capture provenance nor a
+      subprocess identifier, so no pair of records can be tested against that criterion;
+      the FA correctly leaves identity explicitly deferred.
+    outcome: landed
+  - surface: identity
+    rule: identity-and-foundational-record-agreement
+    counterexample: >-
+      A proposal marked `carries` whose IdentityCard supplied a different identity criterion or carried none, or a
+      proposal marked `explicitly_deferred` over an FA with a different verdict, would
+      launder an unresolved identity decision. Here the card records
+      supplies_identity=false and carries_identity=true, and the FA
+      verdict is `explicitly_deferred`; both agree with the proposal, so this
+      consistency attack is survived.
+    outcome: survived
+  - surface: warrant
+    rule: support-term-not-necessary
+    counterexample: >-
+      CQ-005 and CQ-006 require retained VerificationEvidence with applicability and
+      discharge relations. A transient CapturedStreams return value is unnecessary,
+      and the observations show no persistence or evidence use that would make this
+      result class part of VerificationEvidence semantics.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-not-in-observations
+    counterexample: >-
+      The three observations expose a CapturedStreams class, a runCapturedStreams
+      function declaration, and an options alias. They do not state that a child is
+      spawned, streams are folded separately, an exit code is obtained, or a record is
+      constructed. A pure transient return DTO with a stub runner satisfies them all.
+    outcome: landed
+rival_models_still_viable:
+  - "Subprocess execution occurrence"
+  - "Retained diagnostic or verification-evidence artifact"
+  - "Transient return object with no retained operational role"
+evidence:
+  - "so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d"
+  - "so:sha256:ca5e01bb598282d204b571b9567ae92a62782dc0dea487b412200725b31fde49"
+  - "so:sha256:8e9ac56f7faaa4343dc5e43ba0d5db57423412ece68eb4b5d65adbce396d5976"
+  - "CQ-005"
+  - "CQ-006"

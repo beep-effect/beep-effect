@@ -1,0 +1,34 @@
+id: "ic:alt1:058"
+hypothesis_ref: "dh:yeet-watch:015"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two pending check-outcome classifications are the same iff they are the
+    same conservative recorded outcome assigned to a watched PR check when raw bucket or state
+    evidence is pending, running, queued, waiting, or otherwise not safely terminal. The member
+    spelling pending is reidentification evidence, never the sameness criterion."
+  reidentification_key:
+    - "pending"
+    - "YeetCheckOutcome"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one classification value as a single information object; raw GitHub bucket/state strings
+    are evidence feeding it, not parts of it"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "phase"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "A check whose GitHub state is in_progress and a check whose bucket is queued both
+      classify as pending; if pending were the running phase of the check, those would be
+      different phases. yeetWatchEndReason refuses a terminal end while any check carries
+      pending, including unknown vocabulary that falls through to pending, so pending is a
+      recorded classification, not a single execution phase."
+status: "proposed"

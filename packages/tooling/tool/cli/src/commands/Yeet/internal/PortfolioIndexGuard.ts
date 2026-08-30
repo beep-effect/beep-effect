@@ -4,8 +4,10 @@
  * `goals/INDEX.md` is a whole-file deterministic projection of
  * `goals/<slug>/ops/manifest.json`, so a textual merge of two branches can only
  * ever produce a plausible-but-false index. Publish therefore renders the
- * projection itself immediately before the commit and refuses any hand-staged
- * copy that disagrees with it.
+ * projection itself immediately before the commit and refuses every staged
+ * addition or modification so the ignored local view can never re-enter Git
+ * history. A staged deletion is the one safe exception: it retires a legacy
+ * tracked projection while the regenerated local copy remains ignored.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -20,7 +22,7 @@ import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { GOALS_DIR } from "../../Goals/Inventory.ts";
 import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "../../Goals/PortfolioIndex.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { runGitOutput } from "./GitExec.ts";
+import { runGitPathList } from "./GitExec.ts";
 import { failPublishScopeWithPacket } from "./PublishScope.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -50,11 +52,12 @@ export const PORTFOLIO_INDEX_WRITE_COMMAND = "bun run beep goals index --write";
  * **Details**
  *
  * `absent` means the checkout carries no `goals/` portfolio at all, so the guard
- * does not apply. `current` means the committed projection already matches the
- * manifests. `regenerated` means publish rendered a fresh projection and staged
- * it into the commit. `drifted` means the publish intent hand-stages an index
- * that disagrees with the manifests, which publish refuses rather than
- * overwrite.
+ * does not apply. `current` means the local projection already matches the
+ * manifests. `regenerated` means publish refreshed the ignored local projection
+ * without staging it. `removed` means the commit retires a legacy tracked copy
+ * while retaining the ignored local projection. `drifted` means the publish
+ * intent stages an addition or modification, which publish refuses even when
+ * its bytes are current.
  *
  * **Example** (Check a disposition)
  *
@@ -67,7 +70,13 @@ export const PORTFOLIO_INDEX_WRITE_COMMAND = "bun run beep goals index --write";
  * @category models
  * @since 0.0.0
  */
-export const PortfolioIndexPublishDisposition = LiteralKit(["absent", "current", "regenerated", "drifted"]).pipe(
+export const PortfolioIndexPublishDisposition = LiteralKit([
+  "absent",
+  "current",
+  "regenerated",
+  "removed",
+  "drifted",
+]).pipe(
   $I.annoteSchema("PortfolioIndexPublishDisposition", {
     description: "Outcome of the derived goals-index guard for one yeet publish commit.",
   })
@@ -96,9 +105,9 @@ export type PortfolioIndexPublishDisposition = typeof PortfolioIndexPublishDispo
  * **Details**
  *
  * The decision is pure so the whole behavior matrix is testable without a Git
- * fixture: a committed copy that already equals the projection is accepted
- * whether or not it was staged, a staged copy that disagrees is refused, and an
- * unstaged disagreement is regenerated into the commit.
+ * fixture: an unstaged copy that already equals the projection is accepted, any
+ * staged addition or modification is refused, a staged deletion is accepted,
+ * and an unstaged disagreement is regenerated locally.
  *
  * **Example** (Refuse a hand-staged index that disagrees)
  *
@@ -110,7 +119,8 @@ export type PortfolioIndexPublishDisposition = typeof PortfolioIndexPublishDispo
  *   committed: O.some("# Goals Index\n\nhand edited\n"),
  *   present: true,
  *   regenerated: "# Goals Index\n\ngenerated\n",
- *   staged: true
+ *   staged: true,
+ *   stagedDeletion: false
  * })
  *
  * console.log(disposition) // "drifted"
@@ -128,17 +138,16 @@ export const portfolioIndexPublishDisposition = (input: {
   readonly present: boolean;
   readonly regenerated: string;
   readonly staged: boolean;
-}): PortfolioIndexPublishDisposition =>
-  !input.present
-    ? "absent"
-    : O.contains(input.committed, input.regenerated)
-      ? "current"
-      : input.staged
-        ? "drifted"
-        : "regenerated";
+  readonly stagedDeletion: boolean;
+}): PortfolioIndexPublishDisposition => {
+  if (!input.present) return "absent";
+  if (input.staged && !input.stagedDeletion) return "drifted";
+  if (!O.contains(input.committed, input.regenerated)) return "regenerated";
+  return input.stagedDeletion ? "removed" : "current";
+};
 
 /**
- * Regenerate the derived goals index into the commit publish is about to make.
+ * Regenerate the ignored goals index beside the commit publish is about to make.
  *
  * **Details**
  *
@@ -179,10 +188,10 @@ export const portfolioIndexPublishDisposition = (input: {
  *
  * @param context - Repo context whose worktree and Git index are updated.
  * @param intent - Reviewed staged paths publish is about to commit.
- * @returns The disposition, after staging a regenerated index or refusing a
- * hand-staged one.
- * @effects Writes and stages {@link PORTFOLIO_INDEX_PATH} when the committed
- * projection is stale.
+ * @returns The disposition, after refreshing a local projection or refusing a
+ * staged one.
+ * @effects Writes {@link PORTFOLIO_INDEX_PATH} when the local projection is
+ * stale; never stages it.
  * @category use-cases
  * @since 0.0.0
  */
@@ -208,22 +217,38 @@ export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfol
     )
   );
   const committed = yield* fs.readFileString(indexPath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  const staged = A.contains(intent.paths, PORTFOLIO_INDEX_PATH);
+  const stagedDeletions = staged
+    ? yield* runGitPathList(context.repoRoot, [
+        "diff",
+        "--cached",
+        "--diff-filter=D",
+        "--name-only",
+        "-z",
+        "--",
+        PORTFOLIO_INDEX_PATH,
+      ])
+    : A.empty<string>();
   const disposition = portfolioIndexPublishDisposition({
     committed,
     present,
     regenerated,
-    staged: A.contains(intent.paths, PORTFOLIO_INDEX_PATH),
+    staged,
+    stagedDeletion: A.contains(stagedDeletions, PORTFOLIO_INDEX_PATH),
   });
 
-  if (PortfolioIndexPublishDisposition.is.current(disposition)) {
+  if (
+    PortfolioIndexPublishDisposition.is.current(disposition) ||
+    PortfolioIndexPublishDisposition.is.removed(disposition)
+  ) {
     return disposition;
   }
 
   if (PortfolioIndexPublishDisposition.is.drifted(disposition)) {
     return yield* failPublishScopeWithPacket(context, {
-      message: `yeet publish refuses a hand-staged ${PORTFOLIO_INDEX_PATH}. It is a generated whole-file projection of ${GOALS_DIR}/*/ops/manifest.json, and the staged copy disagrees with the current manifests, so committing it would publish a false index.`,
+      message: `yeet publish refuses staged ${PORTFOLIO_INDEX_PATH}. It is an ignored local projection of ${GOALS_DIR}/*/ops/manifest.json and must never enter a commit.`,
       paths: [PORTFOLIO_INDEX_PATH],
-      remediation: `Run \`${PORTFOLIO_INDEX_WRITE_COMMAND}\` and stage the regenerated file, or unstage ${PORTFOLIO_INDEX_PATH} and let yeet publish regenerate it into the commit.`,
+      remediation: `Unstage ${PORTFOLIO_INDEX_PATH}, then run \`${PORTFOLIO_INDEX_WRITE_COMMAND}\` to refresh the local projection.`,
       subCategory: "derived-index-hand-staged",
     });
   }
@@ -231,9 +256,6 @@ export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfol
   yield* writeContainedFileString(context.repoRoot, indexPath, regenerated).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to write the regenerated ${PORTFOLIO_INDEX_PATH}.`))
   );
-  yield* runGitOutput(context.repoRoot, ["add", "--", PORTFOLIO_INDEX_PATH]);
-  yield* Console.log(
-    `[yeet] regenerated ${PORTFOLIO_INDEX_PATH} from ${GOALS_DIR}/*/ops/manifest.json and staged it into the commit`
-  );
+  yield* Console.log(`[yeet] regenerated local ${PORTFOLIO_INDEX_PATH} from ${GOALS_DIR}/*/ops/manifest.json`);
   return disposition;
 });

@@ -1,0 +1,31 @@
+id: ic:alt3:058
+hypothesis_ref: dh:yeet-watch:026
+identity:
+  supplies_identity: true
+  identity_criterion: Two such signature specifications are the same iff they are the same
+    repeatable log-fingerprint criterion that detectYeetMonitorFlakeClass uses to recognize
+    a no-location TS2589 failure on a hosted job. The literal token is reidentification evidence
+    rather than the criterion.
+  reidentification_key:
+  - ts2589-no-location
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one log-fingerprint criterion for no-location TS2589
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - situation
+  - quality
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: A red job whose log has TS2589 mixed with another TypeScript diagnostic is
+    not a match; the detector returns none and the planner treats that as needs-code-fix,
+    so the job occurrence is not this signature.
+status: proposed

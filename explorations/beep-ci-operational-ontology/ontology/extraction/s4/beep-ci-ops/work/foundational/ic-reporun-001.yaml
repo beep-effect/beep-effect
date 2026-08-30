@@ -1,0 +1,41 @@
+id: "ic:reporun:001"
+hypothesis_ref: "dh:reporun:002"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two setup-step failure situations are the same only when they are the same
+    bounded failure state of the same GitHub job execution and involve the same
+    setup-step occurrence; equality of a setup-5xx label or job record is not
+    sufficient for sameness.
+  reidentification_key:
+    - "GitHub job database identifier together with its run attempt"
+    - "setup-step occurrence and the interval of the observed failure state"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One situation is unified by one job execution, its failing setup-step
+    occurrence, and the interval over which that failure state obtains.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+    - "anti-rigid classification of a GitHub job bearer"
+    - "setup failure event rather than the resulting situation"
+    - "information record assigning the setup-5xx label"
+  existential_dependencies:
+    - "the particular GitHub job execution"
+    - "the setup-step execution whose failure grounds the situation"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "the job execution ends"
+    - "the defining observation is corrected or superseded"
+counterexamples:
+  - description: >-
+      A workflow that names a nonexistent action version can deterministically
+      fail its setup step and produce exactly this shape without any hosted
+      control-plane outage.
+status: proposed

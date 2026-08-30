@@ -1,0 +1,9 @@
+id: rat:5
+proposal_ref: otp:cache-posture:001
+proposal_sha256: adf9f0758b925e41b7b3504717a85db7eff15abff3ffcb390e55afe7ea5ca3aa
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept CachePosture — the resolver-decision reading; execution attestation is deferred to S5.

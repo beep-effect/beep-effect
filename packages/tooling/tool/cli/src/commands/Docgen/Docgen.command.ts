@@ -34,7 +34,7 @@ import {
 import { DoctestCliConfig, DoctestReport } from "./Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "./Doctest.service.ts";
 import { DoctestFenceAnalyzerLive, DoctestFenceRewriterLive } from "./internal/Doctest.ts";
-import { runDocgenLocal } from "./internal/Local.ts";
+import { renderDocgenIssueText, runDocgenLocal } from "./internal/Local.ts";
 import {
   aggregateGeneratedDocs,
   analyzePackageDocumentation,
@@ -76,6 +76,7 @@ import {
   verifyDocgenCheckProofManifests,
 } from "./internal/Targets.ts";
 import type { MarkPlan } from "./Doctest.schemas.ts";
+import type { DocgenPackageAnalysis, DocgenWorkspacePackage } from "./internal/Operations.ts";
 
 const packageFlag = Flag.string("package").pipe(
   Flag.withAlias("p"),
@@ -312,6 +313,25 @@ const docgenInitCommand = Command.make(
   )
 ).pipe(Command.withDescription("Create or refresh docgen.json for a workspace package"));
 
+const renderVerboseDocgenStatus = Effect.fn("Docgen.renderVerboseStatus")(function* (pkg: DocgenWorkspacePackage) {
+  yield* printLines([
+    "",
+    pkg.name,
+    `  path: ${pkg.relativePath}`,
+    `  status: ${pkg.status}`,
+    `  aggregate: docs/generated/${pkg.docsOutputPath}`,
+  ]);
+  if (!pkg.hasDocgenConfig) return;
+  const config = yield* loadDocgenConfigDocument(pkg.absolutePath).pipe(Effect.option);
+  if (O.isSome(config)) {
+    yield* printLines([
+      `  srcDir: ${config.value.srcDir ?? "src"}`,
+      `  outDir: ${config.value.outDir ?? "docs"}`,
+      `  exclude: ${A.join(config.value.exclude ?? [], ", ") || "none"}`,
+    ]);
+  }
+});
+
 const docgenStatusCommand = Command.make(
   "status",
   {
@@ -351,27 +371,7 @@ const docgenStatusCommand = Command.make(
         return;
       }
 
-      for (const pkg of packages) {
-        yield* printLines([
-          ``,
-          `${pkg.name}`,
-          `  path: ${pkg.relativePath}`,
-          `  status: ${pkg.status}`,
-          `  aggregate: docs/generated/${pkg.docsOutputPath}`,
-        ]);
-
-        if (pkg.hasDocgenConfig) {
-          const config = yield* loadDocgenConfigDocument(pkg.absolutePath).pipe(Effect.option);
-
-          if (O.isSome(config)) {
-            yield* printLines([
-              `  srcDir: ${config.value.srcDir ?? "src"}`,
-              `  outDir: ${config.value.outDir ?? "docs"}`,
-              `  exclude: ${A.join(config.value.exclude ?? [], ", ") || "none"}`,
-            ]);
-          }
-        }
-      }
+      yield* Effect.forEach(packages, renderVerboseDocgenStatus, { discard: true });
     },
     Effect.catchTags({
       DomainError: reportDocgenCommandError,
@@ -548,6 +548,67 @@ const docgenLocalCommand = Command.make(
   )
 ).pipe(Command.withDescription("Run a bounded local docgen proof for changed package surfaces"));
 
+const analysisJsonContent = Effect.fn("Docgen.analysisJsonContent")(function* (
+  analyses: ReadonlyArray<DocgenPackageAnalysis>
+) {
+  const only = A.head(analyses);
+  return yield* O.isSome(only) && A.length(analyses) === 1
+    ? Effect.succeed(generateAnalysisJson(only.value))
+    : renderDocgenJson(analyses);
+});
+
+const emitOptionalOutputContent = Effect.fn("Docgen.emitOptionalOutputContent")(function* (
+  output: O.Option<string>,
+  content: string
+) {
+  if (O.isNone(output)) {
+    yield* Console.log(content);
+    return;
+  }
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.writeFileString(output.value, content);
+  yield* Console.log(`docgen: wrote ${output.value}`);
+});
+
+const renderAnalysisJson = Effect.fn("Docgen.renderAnalysisJson")(function* (
+  analyses: ReadonlyArray<DocgenPackageAnalysis>,
+  output: O.Option<string>
+) {
+  const content = yield* analysisJsonContent(analyses);
+  yield* emitOptionalOutputContent(output, content);
+});
+
+const writeSelectedAnalysis = Effect.fn("Docgen.writeSelectedAnalysis")(function* (
+  target: DocgenWorkspacePackage,
+  analysis: DocgenPackageAnalysis,
+  output: O.Option<string>,
+  fixMode: boolean
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const destination = O.getOrElse(output, () => defaultAnalysisPath(target.absolutePath, false, path));
+  yield* fs.writeFileString(destination, generateAnalysisReport(analysis, fixMode));
+  yield* Console.log(`docgen: wrote ${destination}`);
+});
+
+const writeAllAnalyses = Effect.fn("Docgen.writeAllAnalyses")(function* (
+  targets: ReadonlyArray<DocgenWorkspacePackage>,
+  analyses: ReadonlyArray<DocgenPackageAnalysis>,
+  fixMode: boolean
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* Effect.forEach(
+    A.zip(targets, analyses),
+    Effect.fnUntraced(function* ([target, analysis]) {
+      const destination = defaultAnalysisPath(target.absolutePath, false, path);
+      yield* fs.writeFileString(destination, generateAnalysisReport(analysis, fixMode));
+      yield* Console.log(`docgen: wrote ${destination}`);
+    }),
+    { discard: true }
+  );
+});
+
 const docgenAnalyzeCommand = Command.make(
   "analyze",
   {
@@ -558,8 +619,6 @@ const docgenAnalyzeCommand = Command.make(
   },
   Effect.fn(
     function* ({ package: selector, output, json, fixMode }) {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
       const targets = yield* resolveAnalyzeTargets(selector);
 
       if (targets.length === 0) {
@@ -577,44 +636,17 @@ const docgenAnalyzeCommand = Command.make(
       });
 
       if (json) {
-        if (O.isSome(output)) {
-          const content =
-            analyses.length === 1 ? generateAnalysisJson(analyses[0]!) : yield* renderDocgenJson(analyses);
-          yield* fs.writeFileString(output.value, content);
-          yield* Console.log(`docgen: wrote ${output.value}`);
-          return;
-        }
-
-        yield* Console.log(
-          analyses.length === 1 ? generateAnalysisJson(analyses[0]!) : yield* renderDocgenJson(analyses)
-        );
+        yield* renderAnalysisJson(analyses, output);
         return;
       }
 
       if (O.isSome(selector)) {
-        const target = targets[0];
-        const analysis = analyses[0];
-        if (target === undefined || analysis === undefined) {
-          return;
-        }
-        const report = generateAnalysisReport(analysis, fixMode);
-        const destination = O.getOrElse(output, () => defaultAnalysisPath(target.absolutePath, false, path));
-        yield* fs.writeFileString(destination, report);
-        yield* Console.log(`docgen: wrote ${destination}`);
+        const selected = O.all({ target: A.head(targets), analysis: A.head(analyses) });
+        if (O.isSome(selected))
+          yield* writeSelectedAnalysis(selected.value.target, selected.value.analysis, output, fixMode);
         return;
       }
-
-      for (let index = 0; index < targets.length; index += 1) {
-        const target = targets[index];
-        const analysis = analyses[index];
-        if (target === undefined || analysis === undefined) {
-          continue;
-        }
-
-        const destination = defaultAnalysisPath(target.absolutePath, false, path);
-        yield* fs.writeFileString(destination, generateAnalysisReport(analysis, fixMode));
-        yield* Console.log(`docgen: wrote ${destination}`);
-      }
+      yield* writeAllAnalyses(targets, analyses, fixMode);
     },
     Effect.catchTags({
       DomainError: reportDocgenCommandError,
@@ -622,6 +654,28 @@ const docgenAnalyzeCommand = Command.make(
     })
   )
 ).pipe(Command.withDescription("Analyze JSDoc coverage and write a human-first report"));
+
+const renderDocgenCheckAnalysis = Effect.fn("Docgen.renderCheckAnalysis")(function* (analysis: DocgenPackageAnalysis) {
+  const issues = A.filter(
+    analysis.exports,
+    (entry) => A.isReadonlyArrayNonEmpty(entry.missingTags) || A.isReadonlyArrayNonEmpty(entry.categoryIssues)
+  );
+  if (A.isReadonlyArrayEmpty(issues)) {
+    yield* Console.log(`docgen: OK ${analysis.packagePath}`);
+    return;
+  }
+  yield* Console.error(
+    `docgen: ${analysis.packagePath} has ${analysis.summary.missingDocumentation} export(s) missing docgen metadata`
+  );
+  yield* Effect.forEach(
+    issues,
+    (issue) =>
+      Console.error(
+        `  ${issue.filePath}:${issue.line} ${issue.name} ${renderDocgenIssueText(issue.missingTags, issue.categoryIssues)}`
+      ),
+    { discard: true }
+  );
+});
 
 const docgenCheckCommand = Command.make(
   "check",
@@ -678,34 +732,7 @@ const docgenCheckCommand = Command.make(
         yield* Console.log(`docgen: skipped ${skippedByProofManifest} package(s) with current proof manifests`);
       }
 
-      for (const analysis of analyses) {
-        const issues = A.filter(
-          analysis.exports,
-          (entry) => A.isReadonlyArrayNonEmpty(entry.missingTags) || A.isReadonlyArrayNonEmpty(entry.categoryIssues)
-        );
-
-        if (issues.length === 0) {
-          yield* Console.log(`docgen: OK ${analysis.packagePath}`);
-          continue;
-        }
-
-        yield* Console.error(
-          `docgen: ${analysis.packagePath} has ${analysis.summary.missingDocumentation} export(s) missing docgen metadata`
-        );
-        for (const issue of issues) {
-          const issueText = A.join(
-            [
-              ...(issue.missingTags.length === 0 ? A.empty() : [`missing ${A.join(issue.missingTags, ", ")}`]),
-              ...(issue.categoryIssues.length === 0
-                ? A.empty()
-                : [`invalid category: ${A.join(issue.categoryIssues, "; ")}`]),
-            ],
-            "; "
-          );
-
-          yield* Console.error(`  ${issue.filePath}:${issue.line} ${issue.name} ${issueText}`);
-        }
-      }
+      yield* Effect.forEach(analyses, renderDocgenCheckAnalysis, { discard: true });
 
       if (failures.length > 0) {
         return yield* failWithReportedExit("docgen: check found missing documentation.");
@@ -717,6 +744,36 @@ const docgenCheckCommand = Command.make(
     })
   )
 ).pipe(Command.withDescription("Fail when package exports are missing required JSDoc/docgen metadata"));
+
+const qualityOutputPath = (
+  output: O.Option<string>,
+  packageSelector: O.Option<string>,
+  targets: ReadonlyArray<DocgenWorkspacePackage>,
+  json: boolean,
+  path: Path.Path
+): O.Option<string> => {
+  if (O.isSome(output)) return output;
+  if (O.isNone(packageSelector) || A.length(targets) !== 1) return O.none();
+  return O.map(A.head(targets), (target) => defaultQualityPath(target.absolutePath, json, path));
+};
+
+const emitQualityContent = Effect.fn("Docgen.emitQualityContent")(function* (
+  output: O.Option<string>,
+  packageSelector: O.Option<string>,
+  targets: ReadonlyArray<DocgenWorkspacePackage>,
+  json: boolean,
+  content: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const destination = qualityOutputPath(output, packageSelector, targets, json, path);
+  if (O.isNone(destination)) {
+    yield* Console.log(content);
+    return;
+  }
+  yield* fs.writeFileString(destination.value, content);
+  yield* Console.log(`docgen: wrote ${destination.value}`);
+});
 
 const docgenQualityCommand = Command.make(
   "quality",
@@ -732,8 +789,6 @@ const docgenQualityCommand = Command.make(
   },
   Effect.fn(
     function* ({ package: packageSelector, all, check, changedFiles, output, json, score, packetLimit }) {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
       const { scope, targets } = yield* resolveDocgenQualityTargets({
         all,
         changedFiles,
@@ -758,33 +813,7 @@ const docgenQualityCommand = Command.make(
         targets,
       });
       const content = json ? yield* generateQualityJson(report) : generateQualityReport(report);
-
-      if (O.isSome(output)) {
-        yield* fs.writeFileString(output.value, content);
-        yield* Console.log(`docgen: wrote ${output.value}`);
-        if (check && qualityReportHasBlockingFindings(report)) {
-          return yield* failWithReportedExit("docgen: quality check found failures.");
-        }
-        return;
-      }
-
-      if (O.isSome(packageSelector) && targets.length === 1) {
-        const target = A.head(targets);
-
-        if (O.isNone(target)) {
-          return;
-        }
-
-        const destination = defaultQualityPath(target.value.absolutePath, json, path);
-        yield* fs.writeFileString(destination, content);
-        yield* Console.log(`docgen: wrote ${destination}`);
-        if (check && qualityReportHasBlockingFindings(report)) {
-          return yield* failWithReportedExit("docgen: quality check found failures.");
-        }
-        return;
-      }
-
-      yield* Console.log(content);
+      yield* emitQualityContent(output, packageSelector, targets, json, content);
       if (check && qualityReportHasBlockingFindings(report)) {
         return yield* failWithReportedExit("docgen: quality check found failures.");
       }
@@ -897,6 +926,63 @@ const docgenQualityWorkerEvalCommand = Command.make(
   Command.withDescription("Run read-only worker evaluation over deterministic docgen quality remediation packets")
 );
 
+const requireRunpodEvalSource = (
+  input: O.Option<string>,
+  packageSelector: O.Option<string>,
+  all: boolean
+): Effect.Effect<void, DomainError> =>
+  (O.isSome(input) ? 1 : 0) + (O.isSome(packageSelector) ? 1 : 0) + (all ? 1 : 0) === 1
+    ? Effect.void
+    : Effect.fail(
+        DomainError.newMessage(
+          "Choose exactly one docgen quality-worker-eval-runpod source: --input, --package, or --all."
+        )
+      );
+
+const requireNonNegativeRunpodPacketLimit = (packetLimit: number): Effect.Effect<void, DomainError> =>
+  packetLimit >= 0
+    ? Effect.void
+    : Effect.fail(
+        DomainError.newMessage("--packet-limit must be zero or greater; use 0 to suppress worker packet turns.")
+      );
+
+const requirePositiveRunpodReadinessTimeout = (readinessTimeoutMs: number): Effect.Effect<void, DomainError> =>
+  readinessTimeoutMs > 0
+    ? Effect.void
+    : Effect.fail(DomainError.newMessage("--readiness-timeout-ms must be greater than zero."));
+
+const requireRunpodTemplateSearchMode = (
+  skipTemplateSearch: boolean,
+  allowPublicTemplateSearch: boolean
+): Effect.Effect<void, DomainError> =>
+  skipTemplateSearch && allowPublicTemplateSearch
+    ? Effect.fail(
+        DomainError.newMessage(
+          "Choose at most one template-search mode: --skip-template-search or --allow-public-template-search."
+        )
+      )
+    : Effect.void;
+
+const requireRunpodWorker = (provider: string, model: string, confirmed: boolean): Effect.Effect<void, DomainError> => {
+  if (provider !== "ollama") {
+    return Effect.fail(DomainError.newMessage("docgen quality-worker-eval-runpod v1 only supports --provider ollama."));
+  }
+  if (model !== requiredQualityWorkerRunpodEvalModel()) {
+    return Effect.fail(
+      DomainError.newMessage(
+        `docgen quality-worker-eval-runpod v1 requires --model ${requiredQualityWorkerRunpodEvalModel()}.`
+      )
+    );
+  }
+  return confirmed
+    ? Effect.void
+    : Effect.fail(
+        DomainError.newMessage(
+          "docgen quality-worker-eval-runpod creates a billable remote GPU pod; pass --confirm-runpod-eval to continue."
+        )
+      );
+};
+
 const docgenQualityWorkerRunpodEvalCommand = Command.make(
   "quality-worker-eval-runpod",
   {
@@ -940,46 +1026,11 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
       otlpBaseUrl,
       otlpProject,
     }) {
-      const fs = yield* FileSystem.FileSystem;
-      const sourceCount = (O.isSome(input) ? 1 : 0) + (O.isSome(packageSelector) ? 1 : 0) + (all ? 1 : 0);
-
-      if (sourceCount !== 1) {
-        return yield* DomainError.newMessage(
-          "Choose exactly one docgen quality-worker-eval-runpod source: --input, --package, or --all."
-        );
-      }
-
-      if (packetLimit < 0) {
-        return yield* DomainError.newMessage(
-          "--packet-limit must be zero or greater; use 0 to suppress worker packet turns."
-        );
-      }
-
-      if (readinessTimeoutMs <= 0) {
-        return yield* DomainError.newMessage("--readiness-timeout-ms must be greater than zero.");
-      }
-
-      if (skipTemplateSearch && allowPublicTemplateSearch) {
-        return yield* DomainError.newMessage(
-          "Choose at most one template-search mode: --skip-template-search or --allow-public-template-search."
-        );
-      }
-
-      if (provider !== "ollama") {
-        return yield* DomainError.newMessage("docgen quality-worker-eval-runpod v1 only supports --provider ollama.");
-      }
-
-      if (model !== requiredQualityWorkerRunpodEvalModel()) {
-        return yield* DomainError.newMessage(
-          `docgen quality-worker-eval-runpod v1 requires --model ${requiredQualityWorkerRunpodEvalModel()}.`
-        );
-      }
-
-      if (!confirmRunpodEval) {
-        return yield* DomainError.newMessage(
-          "docgen quality-worker-eval-runpod creates a billable remote GPU pod; pass --confirm-runpod-eval to continue."
-        );
-      }
+      yield* requireRunpodEvalSource(input, packageSelector, all);
+      yield* requireNonNegativeRunpodPacketLimit(packetLimit);
+      yield* requirePositiveRunpodReadinessTimeout(readinessTimeoutMs);
+      yield* requireRunpodTemplateSearchMode(skipTemplateSearch, allowPublicTemplateSearch);
+      yield* requireRunpodWorker(provider, model, confirmRunpodEval);
 
       const source = yield* resolveQualityWorkerEvalSource({
         all,
@@ -1026,14 +1077,7 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
         )
       );
       const content = yield* generateQualityWorkerRunpodEvalJson(report);
-
-      if (O.isSome(output)) {
-        yield* fs.writeFileString(output.value, content);
-        yield* Console.log(`docgen: wrote ${output.value}`);
-        return;
-      }
-
-      yield* Console.log(content);
+      yield* emitOptionalOutputContent(output, content);
     },
     Effect.catchTags({
       DomainError: reportDocgenCommandError,

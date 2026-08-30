@@ -1,0 +1,23 @@
+id: so:sha256:1a56cc8fed67d02b42159c7b862ffd919b182676dfc04714df67e4fa93e522d4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 124
+  end_line: 133
+  content_sha256: aec6eeb872e82768fe95e3f95bd799c879d891d9f4790452124854568c0a68cd
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts::shouldCollectAffectedFeedbackTasks
+  lexical_name: shouldCollectAffectedFeedbackTasks
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const shouldCollectAffectedFeedbackTasks = (mode: YeetRunMode): boolean =>'
+epistemic_status: parser_derived

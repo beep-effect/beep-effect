@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for the cached Claude project service.
  *
@@ -159,3 +158,4 @@ describe("ClaudeProject", () => {
     })()
   );
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

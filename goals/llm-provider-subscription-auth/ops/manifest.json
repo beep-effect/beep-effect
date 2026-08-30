@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/llm-provider-subscription-auth",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 392,
   "mission": "Users authenticate to LLM providers via their subscriptions through vendor-CLI delegation (t3code methodology): provider instances with isolated HOME dirs, rich auth probes, and zero provider tokens at rest in beep-owned storage.",
   "executionCapable": true,
   "reflectionRequired": true,

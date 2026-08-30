@@ -1,0 +1,20 @@
+id: fa:alt3:053
+hypothesis_ref: dh:worktree-config:009
+identity_card_ref: ic:alt3:053
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: repeatable verification work-unit specification (lane x scope)'
+  still_viable: true
+- label: 'event: a dated verification work-unit execution'
+  still_viable: false
+strongest_counterexample: AGENTS.md contrasts bun run docgen:local bounded to origin/main...HEAD
+  plus dirty files with full bun run docgen for the repo-wide proof. Two scopes, two prescriptions,
+  zero dated runs in the quotation.
+verdict: analyzed
+needed_evidence: A work-unit schema that stores these prescriptions as individuals with lane
+  and scope fields would confirm the specification reading; a log that identified a run by
+  the same key as the prescription would threaten the spec/execution split.

@@ -1,0 +1,25 @@
+id: so:sha256:66dc0a53bdc9340aaaec07d7fcddd2e6191226b9c111d60b2cf1a8f3f27a88a3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 1520
+  end_line: 1540
+  content_sha256: a5c9c8a814d18474d34145e07db567eb645dc4a09fc0649f8ec1f255a618e8eb
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::BuildYeetRunPlanTestOptions
+  lexical_name: BuildYeetRunPlanTestOptions
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: BuildYeetRunPlanTestOptions
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class BuildYeetRunPlanTestOptions extends S.Class<BuildYeetRunPlanTestOptions>($I`BuildYeetRunPlanTestOptions`)(
+epistemic_status: parser_derived

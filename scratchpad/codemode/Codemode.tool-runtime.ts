@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Unknown } from "@beep/schema/Unknown";
-import {$ScratchpadId} from "@beep/identity";
+
+import { $ScratchpadId } from "@beep/identity";
 import {
   LiteralKit,
   NonEmptyTrimmedStr,
@@ -14,31 +14,16 @@ import {
   SafeObject as SafeObjectSchema,
   SchemaUtils,
 } from "@beep/schema";
-import {A, O, P, pipe, R, Str, Struct, thunkNull} from "@beep/utils";
-import {
-  Cause,
-  Clock,
-  DateTime,
-  Effect,
-  Exit,
-  HashMap,
-  HashSet,
-  Order,
-  Ref,
-  Result,
-  Stream,
-} from "effect";
+import { Unknown } from "@beep/schema/Unknown";
+import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
+import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as AiError from "effect/unstable/ai/AiError";
+import type * as AiError from "effect/unstable/ai/AiError";
 import * as Tool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
-import {ToolError} from "./Codemode.tool-error.ts";
-import {
-  identifierSegment,
-  inputProperties,
-  inputTypeScript,
-  outputTypeScript
-} from "./Codemode.tool-schema.ts";
+import { ToolError } from "./Codemode.tool-error.ts";
+import { identifierSegment, inputProperties, inputTypeScript, outputTypeScript } from "./Codemode.tool-schema.ts";
 import {
   CodeModeDate,
   CodeModeMap,
@@ -52,14 +37,39 @@ import {
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 
-export type {SafeObject} from "@beep/schema/SafeObject";
+export type { SafeObject } from "@beep/schema/SafeObject";
 
-/** Services required to obtain Toolkit handlers and run their streams. */
+/**
+ * Services required to obtain Toolkit handlers and run their streams.
+ *
+ * @see {@link make} for the execution-local runtime that requires these services.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Services<ToolkitType extends Toolkit.Any> =
   | (ToolkitType extends Effect.Effect<unknown, never, infer Requirements> ? Requirements : never)
   | Tool.HandlerServices<Toolkit.Tools<ToolkitType>[keyof Toolkit.Tools<ToolkitType>]>;
 
-/** Canonical catalog entry exposed to the CodeMode host. */
+/**
+ * Canonical catalog entry exposed to the CodeMode host.
+ *
+ * **Example** (Construct a catalog entry)
+ *
+ * ```ts
+ * import { ToolDescription } from "@beep/scratchpad/codemode"
+ *
+ * const description = ToolDescription.new(
+ *   "search.docs",
+ *   "Search project documentation",
+ *   "tools.search.docs(input: { query: string }): Promise<string>"
+ * )
+ *
+ * console.log(description.path) // "search.docs"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription`)(
   {
     path: S.String,
@@ -71,21 +81,51 @@ export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription
   })
 ) {
   static readonly new = (path: string, description: string, signature: string): ToolDescription =>
-    ToolDescription.make({path, description, signature});
+    ToolDescription.make({ path, description, signature });
 }
 
-/** A tool call admitted during one execution. */
+/**
+ * Canonical name of one admitted tool call.
+ *
+ * **Example** (Record an admitted call)
+ *
+ * ```ts
+ * import { ToolCall } from "@beep/scratchpad/codemode"
+ *
+ * const call = ToolCall.new("search")
+ *
+ * console.log(call.name) // "search"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
-  {name: NonEmptyTrimmedStr},
+  { name: NonEmptyTrimmedStr },
   $I.annote("ToolCall", {
     description: "Canonical name of one admitted tool call.",
   })
 ) {
-  static readonly new = (name: string): ToolCall =>
-    ToolCall.make({name: NonEmptyTrimmedStr.make(name)});
+  static readonly new = (name: string): ToolCall => ToolCall.make({ name: NonEmptyTrimmedStr.make(name) });
 }
 
-/** Hook payload emitted immediately before handler execution. */
+/**
+ * Hook payload emitted immediately before handler execution.
+ *
+ * **Example** (Build a start observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted } from "@beep/scratchpad/codemode"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), { query: "docs" })
+ *
+ * console.log(started.name) // "search"
+ * console.log(started.index) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted`)(
   {
     index: NonNegativeInt,
@@ -111,7 +151,30 @@ const endedFields = {
   durationMs: NonNegativeInt,
 };
 
-/** Successful terminal observation for one admitted tool call. */
+/**
+ * Successful terminal observation for one admitted tool call.
+ *
+ * **Gotchas**
+ *
+ * `message` is `S.optionalKey(S.Never)` so the ended field set is shared with
+ * {@link ToolCallFailed}; a success observation cannot carry a message.
+ *
+ * **Example** (Build a success observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted, ToolCallSucceeded } from "@beep/scratchpad/codemode"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallSucceeded.new(started, 5)
+ *
+ * console.log(ended._tag) // "success"
+ * console.log(ended.durationMs) // 5
+ * ```
+ *
+ * @see {@link ToolCallEnded} for the union of success, interruption, and failure.
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolCallSucceeded`)(
   "success",
   {
@@ -122,10 +185,7 @@ export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolC
     description: "An admitted tool call completed successfully.",
   })
 ) {
-  static readonly new = (
-    call: ToolCallStarted,
-    durationMs: number
-  ): ToolCallSucceeded =>
+  static readonly new = (call: ToolCallStarted, durationMs: number): ToolCallSucceeded =>
     ToolCallSucceeded.make({
       index: call.index,
       name: call.name,
@@ -134,7 +194,30 @@ export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolC
     });
 }
 
-/** Interrupted terminal observation for one admitted tool call. */
+/**
+ * Interrupted terminal observation for one admitted tool call.
+ *
+ * **Gotchas**
+ *
+ * `message` is uninhabited (`S.Never`) so this observation shares ended fields
+ * with {@link ToolCallFailed} without carrying a failure message.
+ *
+ * **Example** (Build an interruption observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted } from "@beep/scratchpad/codemode"
+ * import { ToolCallInterrupted } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallInterrupted.new(started, 2)
+ *
+ * console.log(ended._tag) // "interrupted"
+ * ```
+ *
+ * @see {@link ToolCallEnded} for the union of success, interruption, and failure.
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`ToolCallInterrupted`)(
   "interrupted",
   {
@@ -145,10 +228,7 @@ export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`T
     description: "An admitted tool call was interrupted.",
   })
 ) {
-  static readonly new = (
-    call: ToolCallStarted,
-    durationMs: number
-  ): ToolCallInterrupted =>
+  static readonly new = (call: ToolCallStarted, durationMs: number): ToolCallInterrupted =>
     ToolCallInterrupted.make({
       index: call.index,
       name: call.name,
@@ -157,7 +237,26 @@ export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`T
     });
 }
 
-/** Failed terminal observation for one admitted tool call. */
+/**
+ * Failed terminal observation for one admitted tool call.
+ *
+ * **Example** (Build a failure observation)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallStarted } from "@beep/scratchpad/codemode"
+ * import { ToolCallFailed } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallFailed.new(started, 3, "search is disabled")
+ *
+ * console.log(ended._tag) // "failure"
+ * console.log(ended.message) // "search is disabled"
+ * ```
+ *
+ * @see {@link ToolCallEnded} for the union of success, interruption, and failure.
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFailed`)(
   "failure",
   {
@@ -168,11 +267,7 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
     description: "An admitted tool call failed with a hook-safe message.",
   })
 ) {
-  static readonly new = (
-    call: ToolCallStarted,
-    durationMs: number,
-    message: string
-  ): ToolCallFailed =>
+  static readonly new = (call: ToolCallStarted, durationMs: number, message: string): ToolCallFailed =>
     ToolCallFailed.make({
       index: call.index,
       name: call.name,
@@ -182,12 +277,26 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
     });
 }
 
-/** Exhaustive terminal observation for one admitted tool call. */
-export const ToolCallEnded = S.Union([
-  ToolCallSucceeded,
-  ToolCallInterrupted,
-  ToolCallFailed,
-]).pipe(
+/**
+ * Exhaustive terminal observation for one admitted tool call.
+ *
+ * **Example** (Recognize a success member)
+ *
+ * ```ts
+ * import { ToolCall, ToolCallEnded, ToolCallStarted, ToolCallSucceeded } from "@beep/scratchpad/codemode"
+ *
+ * const started = ToolCallStarted.new(0, ToolCall.new("search"), {})
+ * const ended = ToolCallSucceeded.new(started, 5)
+ *
+ * console.log(ToolCallEnded.is(ended)) // true
+ * console.log(ended._tag) // "success"
+ * ```
+ *
+ * @see {@link ToolCallSucceeded} for the success member whose `message` is uninhabited.
+ * @category models
+ * @since 0.0.0
+ */
+export const ToolCallEnded = S.Union([ToolCallSucceeded, ToolCallInterrupted, ToolCallFailed]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
@@ -195,16 +304,52 @@ export const ToolCallEnded = S.Union([
   SchemaUtils.withCodecStatics
 );
 
-/** Runtime type for {@link ToolCallEnded}. */
+/**
+ * Decoded terminal observation produced by {@link ToolCallEnded}.
+ *
+ * @see {@link ToolCallEnded} for the runtime tagged union and membership guard.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolCallEnded = typeof ToolCallEnded.Type;
 
-/** Optional observers for tool execution. */
+/**
+ * Optional observers invoked around admitted tool execution.
+ *
+ * @see {@link ToolCallStarted} for the start payload passed to `onToolCallStart`.
+ * @see {@link ToolCallEnded} for the terminal payload passed to `onToolCallEnd`.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolCallHooks<R = never> = {
   readonly onToolCallStart?: (call: ToolCallStarted) => Effect.Effect<void, never, R>;
   readonly onToolCallEnd?: (call: ToolCallEnded) => Effect.Effect<void, never, R>;
 };
 
-/** Built-in discovery request. */
+/**
+ * Search query and pagination controls for the built-in discovery function.
+ *
+ * **Gotchas**
+ *
+ * Default page size is `limit=10` and `offset=0` when those keys are omitted.
+ *
+ * **Example** (Use discovery defaults)
+ *
+ * ```ts
+ * import { SearchInput } from "../../../codemode/Codemode.tool-runtime.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const input = S.decodeUnknownSync(SearchInput)({})
+ *
+ * console.log(input.limit) // 10
+ * console.log(input.offset) // 0
+ * console.log(O.isNone(input.query)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
   {
     query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -216,12 +361,7 @@ export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
     description: "Search query and pagination controls for the built-in discovery function.",
   })
 ) {
-  static readonly new = (
-    query?: string,
-    namespace?: string,
-    limit: number = 10,
-    offset: number = 0
-  ): SearchInput =>
+  static readonly new = (query?: string, namespace?: string, limit: number = 10, offset: number = 0): SearchInput =>
     SearchInput.make({
       query: O.fromNullishOr(query),
       namespace: O.fromNullishOr(namespace),
@@ -230,7 +370,26 @@ export class SearchInput extends S.Class<SearchInput>($I`SearchInput`)(
     });
 }
 
-/** One discovery response item. */
+/**
+ * One tool matched by built-in discovery.
+ *
+ * **Example** (Construct a discovery hit)
+ *
+ * ```ts
+ * import { SearchItem } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const item = SearchItem.new(
+ *   "tools.search",
+ *   "Find tools",
+ *   "search(input: { query?: string }): { items: Array<unknown> }"
+ * )
+ *
+ * console.log(item.path) // "tools.search"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchItem extends S.Class<SearchItem>($I`SearchItem`)(
   {
     path: S.String,
@@ -242,36 +401,68 @@ export class SearchItem extends S.Class<SearchItem>($I`SearchItem`)(
   })
 ) {
   static readonly new = (path: string, description: string, signature: string): SearchItem =>
-    SearchItem.make({path, description, signature});
+    SearchItem.make({ path, description, signature });
 }
 
-/** Built-in discovery response. */
+/**
+ * Paginated tool-discovery results.
+ *
+ * **Example** (Build a complete page)
+ *
+ * ```ts
+ * import { SearchItem, SearchOutput } from "../../../codemode/Codemode.tool-runtime.ts"
+ * import * as O from "effect/Option"
+ *
+ * const output = SearchOutput.new(
+ *   [SearchItem.new("tools.search", "Find tools", "search(...)")],
+ *   0
+ * )
+ *
+ * console.log(output.remaining) // 0
+ * console.log(O.isNone(output.next)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
   {
     items: S.Array(SearchItem),
     remaining: NonNegativeInt,
-    next: S.OptionFromNullOr(S.Struct({offset: NonNegativeInt})).pipe(SchemaUtils.withNoneDefault),
+    next: S.OptionFromNullOr(S.Struct({ offset: NonNegativeInt })).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SearchOutput", {
     description: "Paginated tool-discovery results.",
   })
 ) {
-  static readonly new = (
-    items: ReadonlyArray<SearchItem>,
-    remaining: number,
-    nextOffset?: number
-  ): SearchOutput =>
+  static readonly new = (items: ReadonlyArray<SearchItem>, remaining: number, nextOffset?: number): SearchOutput =>
     SearchOutput.make({
       items,
       remaining: NonNegativeInt.make(remaining),
       next: pipe(
         O.fromNullishOr(nextOffset),
-        O.map((offset) => ({offset: NonNegativeInt.make(offset)}))
+        O.map((offset) => ({ offset: NonNegativeInt.make(offset) }))
       ),
     });
 }
 
-/** Indexed representation of one catalog entry. */
+/**
+ * Pre-tokenized catalog entry used by the discovery function.
+ *
+ * **Example** (Index one catalog path)
+ *
+ * ```ts
+ * import { SearchEntry, ToolDescription } from "@beep/scratchpad/codemode"
+ *
+ * const description = ToolDescription.new("search.docs", "Search docs", "tools.search.docs()")
+ * const entry = SearchEntry.new(description, "search", "search.docs\nsearch docs")
+ *
+ * console.log(entry.namespace) // "search"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SearchEntry extends S.Class<SearchEntry>($I`SearchEntry`)(
   {
     description: ToolDescription,
@@ -282,14 +473,28 @@ export class SearchEntry extends S.Class<SearchEntry>($I`SearchEntry`)(
     description: "Pre-tokenized catalog entry used by the discovery function.",
   })
 ) {
-  static readonly new = (
-    description: ToolDescription,
-    namespace: string,
-    searchText: string
-  ): SearchEntry => SearchEntry.make({description, namespace, searchText});
+  static readonly new = (description: ToolDescription, namespace: string, searchText: string): SearchEntry =>
+    SearchEntry.make({ description, namespace, searchText });
 }
 
-/** Prepared immutable discovery data. */
+/**
+ * Stable catalog and search index for one Toolkit.
+ *
+ * **Example** (Build an empty plan)
+ *
+ * ```ts
+ * import { DiscoveryPlan } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const plan = DiscoveryPlan.new([], [])
+ *
+ * console.log(plan.catalog.length) // 0
+ * console.log(plan.searchIndex.length) // 0
+ * ```
+ *
+ * @see {@link prepare} for the function that builds this plan from a Toolkit.
+ * @category models
+ * @since 0.0.0
+ */
 export class DiscoveryPlan extends S.Class<DiscoveryPlan>($I`DiscoveryPlan`)(
   {
     catalog: S.Array(ToolDescription),
@@ -302,32 +507,91 @@ export class DiscoveryPlan extends S.Class<DiscoveryPlan>($I`DiscoveryPlan`)(
   static readonly new = (
     catalog: ReadonlyArray<ToolDescription>,
     searchIndex: ReadonlyArray<SearchEntry>
-  ): DiscoveryPlan => DiscoveryPlan.make({catalog, searchIndex});
+  ): DiscoveryPlan => DiscoveryPlan.make({ catalog, searchIndex });
 }
 
-/** Boundary copy behavior. */
+/**
+ * Boundary copy behavior for bare `undefined` at the guest-to-host edge.
+ *
+ * **Gotchas**
+ *
+ * Non-finite numbers always become `null` in both modes. `json` drops undefined
+ * object keys and nullifies undefined array items; `nullify` preserves object
+ * keys while replacing undefined with `null`. {@link ToolReference} objects
+ * pass through uncopied.
+ *
+ * **Example** (Nullify undefined)
+ *
+ * ```ts
+ * import { CopyOutMode } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * console.log(CopyOutMode.is.json("json")) // true
+ * console.log(CopyOutMode.is.nullify("nullify")) // true
+ * ```
+ *
+ * @see {@link copyOut} for the copier that interprets these modes.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const CopyOutMode = LiteralKit(["json", "nullify"]).pipe(
   $I.annoteSchema("CopyOutMode", {
     description: "Whether a bare undefined is preserved or normalized to null.",
   })
 );
 
-/** Runtime type for {@link CopyOutMode}. */
+/**
+ * Decoded copy-out mode produced by {@link CopyOutMode}.
+ *
+ * @see {@link CopyOutMode} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CopyOutMode = typeof CopyOutMode.Type;
 
-/** Runtime handle representing a namespace path below `tools`. */
+/**
+ * Runtime handle representing a namespace path below `tools`.
+ *
+ * **Example** (Build a nested tool path)
+ *
+ * ```ts
+ * import { ToolReference } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * const reference = ToolReference.new(["search", "docs"])
+ *
+ * console.log(ToolReference.is(reference)) // true
+ * console.log(reference.path) // ["search", "docs"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ToolReference extends S.TaggedClass<ToolReference>($I`ToolReference`)(
   "ToolReference",
-  {path: S.Array(S.String)},
+  { path: S.Array(S.String) },
   $I.annote("ToolReference", {
     description: "A path into the current Toolkit namespace tree.",
   })
 ) {
   static readonly is = S.is(ToolReference);
-  static readonly new = (path: ReadonlyArray<string>): ToolReference => ToolReference.make({path});
+  static readonly new = (path: ReadonlyArray<string>): ToolReference => ToolReference.make({ path });
 }
 
-/** Stable ToolRuntime failure categories. */
+/**
+ * Stable ToolRuntime failure categories owned by the Toolkit adapter.
+ *
+ * **Example** (Admit UnknownTool)
+ *
+ * ```ts
+ * import { ToolRuntimeErrorKind } from "../../../codemode/Codemode.tool-runtime.ts"
+ *
+ * console.log(ToolRuntimeErrorKind.is.UnknownTool("UnknownTool")) // true
+ * console.log(ToolRuntimeErrorKind.is.UnknownTool("TimeoutExceeded")) // false
+ * ```
+ *
+ * @see {@link ToolRuntimeError} for the tagged error that carries one of these kinds.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ToolRuntimeErrorKind = LiteralKit([
   "UnknownTool",
   "InvalidToolInput",
@@ -340,10 +604,33 @@ export const ToolRuntimeErrorKind = LiteralKit([
   })
 );
 
-/** Runtime type for {@link ToolRuntimeErrorKind}. */
+/**
+ * Decoded failure kind produced by {@link ToolRuntimeErrorKind}.
+ *
+ * @see {@link ToolRuntimeErrorKind} for the runtime literal kit and membership guards.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolRuntimeErrorKind = typeof ToolRuntimeErrorKind.Type;
 
-/** Typed Toolkit adapter failure. */
+/**
+ * Normalized failure at the CodeMode Toolkit or plain-data boundary.
+ *
+ * **Example** (Construct an unknown-tool failure)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * const error = ToolRuntime.ToolRuntimeError.new("UnknownTool", "Unknown tool 'search.docs'.")
+ *
+ * console.log(ToolRuntime.ToolRuntimeError.is(error)) // true
+ * console.log(error.kind) // "UnknownTool"
+ * ```
+ *
+ * @see {@link ToolRuntimeErrorKind} for the finite kind domain carried on `kind`.
+ * @category errors
+ * @since 0.0.0
+ */
 export class ToolRuntimeError extends S.TaggedError<ToolRuntimeError>($I`ToolRuntimeError`)(
   "ToolRuntimeError",
   {
@@ -360,13 +647,32 @@ export class ToolRuntimeError extends S.TaggedError<ToolRuntimeError>($I`ToolRun
     kind: ToolRuntimeErrorKind,
     message: string,
     suggestions: ReadonlyArray<string> = A.empty()
-  ): ToolRuntimeError => ToolRuntimeError.make({kind, message, suggestions});
+  ): ToolRuntimeError => ToolRuntimeError.make({ kind, message, suggestions });
 }
 
 const MAX_VALUE_DEPTH = 32;
 const blockedMemberNames = HashSet.fromIterable(["__proto__", "constructor", "prototype"]);
 
-/** Returns whether a property name is blocked at the guest object boundary. */
+/**
+ * Returns whether a property name is blocked at the guest object boundary.
+ *
+ * **Details**
+ *
+ * Blocked names are exactly `__proto__`, `constructor`, and `prototype`.
+ *
+ * **Example** (Reject constructor, admit name)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * console.log(ToolRuntime.isBlockedMember("constructor")) // true
+ * console.log(ToolRuntime.isBlockedMember("name")) // false
+ * ```
+ *
+ * @see {@link copyIn} for the copier that throws when a blocked member is present.
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isBlockedMember = (name: string): boolean => HashSet.has(blockedMemberNames, name);
 
 const isoFromEpochMillis = (millis: number): string | null =>
@@ -378,9 +684,47 @@ const isoFromEpochMillis = (millis: number): string | null =>
 /**
  * Copies host data into a bounded guest representation.
  *
- * Checkpoint mode preserves guest objects; boundary mode JSON-normalizes them.
+ * **Details**
+ *
+ * Checkpoint mode (`preserveCodeModeValues=true`) preserves guest objects and
+ * wraps native Date/Map/Set/URL/URLSearchParams as CodeMode adapters.
+ * Boundary mode JSON-normalizes those values (ISO dates, empty objects for
+ * Map/Set/RegExp) and rejects un-awaited {@link CodeModePromise} handles.
+ *
+ * **Gotchas**
+ *
+ * Depth is capped at 32. Circular values, blocked members (`__proto__`,
+ * `constructor`, `prototype`), non-plain prototypes, non-data values, and
+ * un-awaited promises throw {@link ToolRuntimeError}. Checkpoint mode copies
+ * enumerable named array properties; invalid Date values remain observable.
+ *
+ * **Example** (Normalize a Date and reject a circular value)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * const copied = ToolRuntime.copyIn(new Date("2020-01-01T00:00:00.000Z"), "value")
+ * console.log(copied) // "2020-01-01T00:00:00.000Z"
+ *
+ * const circular: { self?: unknown } = {}
+ * circular.self = circular
+ * try {
+ *   ToolRuntime.copyIn(circular, "value")
+ * } catch (error) {
+ *   console.log(ToolRuntime.ToolRuntimeError.is(error)) // true
+ * }
+ * ```
+ *
+ * @param label - Path label included in thrown {@link ToolRuntimeError} messages.
+ * @param preserveCodeModeValues - When true, keep guest adapters; when false, JSON-normalize.
+ * @throws ToolRuntimeError when depth exceeds 32, a value is circular, a blocked member is present, a prototype is not plain, a non-data value appears, or a CodeModePromise is un-awaited.
+ * @see {@link copyOut} for the guest-to-host copier.
+ * @see {@link isBlockedMember} for the blocked property-name predicate.
+ * @see {@link CopyOutMode} for how the reverse copy treats undefined.
+ * @category encoding
+ * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The required boundary label plus defaulted adapter-preservation flag leave no unambiguous curried arity.
 export const copyIn = (value: unknown, label: string, preserveCodeModeValues = false): unknown =>
   copyBounded(value, label, 0, HashSet.empty(), preserveCodeModeValues);
 
@@ -392,10 +736,7 @@ const copyBounded = (
   preserveCodeModeValues: boolean
 ): unknown => {
   if (depth > MAX_VALUE_DEPTH) {
-    throw ToolRuntimeError.new(
-      "InvalidDataValue",
-      `${label} exceeds the maximum value depth of ${MAX_VALUE_DEPTH}.`
-    );
+    throw ToolRuntimeError.new("InvalidDataValue", `${label} exceeds the maximum value depth of ${MAX_VALUE_DEPTH}.`);
   }
   if (P.isNullish(value) || P.isString(value) || P.isBoolean(value) || P.isNumber(value)) return value;
   if (A.isArray(value)) {
@@ -403,14 +744,12 @@ const copyBounded = (
       throw ToolRuntimeError.new("InvalidDataValue", `${label} contains a circular value.`);
     }
     const nextSeen = HashSet.add(seen, value);
-    const copied = A.map(value, (item) =>
-      copyBounded(item, label, depth + 1, nextSeen, preserveCodeModeValues)
-    );
+    const copied = A.map(value, (item) => copyBounded(item, label, depth + 1, nextSeen, preserveCodeModeValues));
     if (preserveCodeModeValues) {
       // Guest arrays may carry enumerable named properties. Reflect mutation
       // remains isolated to this ECMAScript checkpoint adapter.
       for (const [key, item] of Struct.entries(value)) {
-        if (Object.hasOwn(copied, key)) continue;
+        if (P.hasProperty(copied, key)) continue;
         if (isBlockedMember(key)) {
           throw ToolRuntimeError.new("InvalidDataValue", `${label} contains blocked property '${key}'.`);
         }
@@ -457,10 +796,14 @@ const copyBounded = (
   }
 
   if (CodeModeDate.is(value)) return isoFromEpochMillis(value.time);
-  if (value instanceof Date) return pipe(DateTime.make(value), O.match({
-    onNone: thunkNull,
-    onSome: DateTime.formatIso
-  }));
+  if (value instanceof Date)
+    return pipe(
+      DateTime.make(value),
+      O.match({
+        onNone: thunkNull,
+        onSome: DateTime.formatIso,
+      })
+    );
   if (CodeModeURL.is(value)) return value.url.href;
   if (value instanceof URL) return value.href;
   if (
@@ -497,9 +840,41 @@ const copyBounded = (
   );
 };
 
-/** Copies a guest value out through JSON-compatible boundary semantics. */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
+/**
+ * Copies a guest value out through JSON-compatible boundary semantics.
+ *
+ * **Gotchas**
+ *
+ * Arrays longer than 100000 items throw {@link ToolRuntimeError}. Index
+ * construction densifies holes. Non-finite numbers always become `null`.
+ * `json` drops undefined object keys and nullifies undefined array items;
+ * `nullify` replaces bare undefined with `null`. {@link ToolReference} objects
+ * pass through uncopied.
+ *
+ * **Example** (Nullify undefined and densify holes)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * console.log(ToolRuntime.copyOut(undefined, "nullify")) // null
+ * console.log(ToolRuntime.copyOut(Number.NaN, "json")) // null
+ *
+ * const sparse: Array<number | undefined> = []
+ * sparse[1] = 1
+ * console.log(ToolRuntime.copyOut(sparse, "json")) // [null, 1]
+ * ```
+ *
+ * @param mode - `json` drops undefined object keys; `nullify` replaces bare undefined with null.
+ * @throws ToolRuntimeError when an array exceeds the 100000-item boundary limit.
+ * @see {@link copyIn} for the host-to-guest copier.
+ * @see {@link CopyOutMode} for the literal kit of copy-out modes.
+ * @category serialization
+ * @since 0.0.0
+ */
+export const copyOut: {
+  (mode: CopyOutMode): (value: unknown) => unknown;
+  (value: unknown, mode: CopyOutMode): unknown;
+} = dual(2, (value: unknown, mode: CopyOutMode): unknown => {
   if (P.isUndefined(value) && CopyOutMode.is.nullify(mode)) return null;
   if (P.isNumber(value) && !Number.isFinite(value)) return null;
   if (A.isArray(value)) {
@@ -508,10 +883,13 @@ export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
     }
     // Index construction densifies holes, matching JSON-compatible boundary semantics.
     if (A.isArrayEmpty(value)) return A.empty();
-    return A.map(A.makeBy(A.length(value), (index) => value[index]), (item) => {
-      const copied = copyOut(item, mode);
-      return P.isUndefined(copied) && CopyOutMode.is.json(mode) ? null : copied;
-    });
+    return A.map(
+      A.makeBy(A.length(value), (index) => value[index]),
+      (item) => {
+        const copied = copyOut(item, mode);
+        return P.isUndefined(copied) && CopyOutMode.is.json(mode) ? null : copied;
+      }
+    );
   }
   if (P.isObject(value) && !P.isNull(value) && !ToolReference.is(value)) {
     return pipe(
@@ -522,7 +900,7 @@ export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
     );
   }
   return value;
-};
+});
 
 type ToolNode = {
   readonly tool: O.Option<Tool.Any>;
@@ -534,12 +912,11 @@ const emptyToolNode = (): ToolNode => ({
   children: HashMap.empty(),
 });
 
-const canonicalSegments = (path: ReadonlyArray<string>): ReadonlyArray<string> =>
-  A.flatMap(path, Str.split("."));
+const canonicalSegments = (path: ReadonlyArray<string>): ReadonlyArray<string> => A.flatMap(path, Str.split("."));
 
 const insertTool = (node: ToolNode, segments: ReadonlyArray<string>, tool: Tool.Any): ToolNode => {
   const [head, ...tail] = segments;
-  if (P.isUndefined(head)) return {...node, tool: O.some(tool)};
+  if (P.isUndefined(head)) return { ...node, tool: O.some(tool) };
   if (Str.isEmpty(head)) {
     throw ToolRuntimeError.new("InvalidDataValue", `Tool name '${tool.name}' contains an empty segment.`);
   }
@@ -553,20 +930,21 @@ const insertTool = (node: ToolNode, segments: ReadonlyArray<string>, tool: Tool.
 const toolTrie = (toolkit: Toolkit.Any): Result.Result<ToolNode, ToolRuntimeError> =>
   Result.try({
     try: () =>
-      A.reduce(
-        R.values(toolkit.tools),
-        emptyToolNode(),
-        (root, tool) => insertTool(root, Str.split(tool.name, "."), tool)
+      A.reduce(R.values(toolkit.tools), emptyToolNode(), (root, tool) =>
+        insertTool(root, Str.split(tool.name, "."), tool)
       ),
     catch: (cause) =>
       ToolRuntimeError.is(cause)
         ? cause
-        : ToolRuntimeError.new("InvalidDataValue", "Toolkit names could not be indexed.")
+        : ToolRuntimeError.new("InvalidDataValue", "Toolkit names could not be indexed."),
   });
 
 const lookup = (root: ToolNode, path: ReadonlyArray<string>): O.Option<ToolNode> =>
   A.reduce(canonicalSegments(path), O.some(root), (node, segment) =>
-    pipe(node, O.flatMap((current) => HashMap.get(current.children, segment)))
+    pipe(
+      node,
+      O.flatMap((current) => HashMap.get(current.children, segment))
+    )
   );
 
 const resolve = (root: ToolNode, path: ReadonlyArray<string>): Result.Result<Tool.Any, ToolRuntimeError> => {
@@ -595,10 +973,7 @@ const namespaceKeys = (
     O.match({
       onNone: () =>
         Result.fail(
-          ToolRuntimeError.new(
-            "UnknownTool",
-            `Unknown tool namespace '${pipe(canonicalSegments(path), A.join("."))}'.`
-          )
+          ToolRuntimeError.new("UnknownTool", `Unknown tool namespace '${pipe(canonicalSegments(path), A.join("."))}'.`)
         ),
       onSome: (node) => Result.succeed(A.fromIterable(HashMap.keys(node.children))),
     })
@@ -610,7 +985,7 @@ const flattenTools = (
 ): ReadonlyArray<{ readonly path: string; readonly tool: Tool.Any }> => [
   ...pipe(
     node.tool,
-    O.map((tool) => [{path: A.join(path, "."), tool}]),
+    O.map((tool) => [{ path: A.join(path, "."), tool }]),
     O.getOrElse(A.empty)
   ),
   ...pipe(
@@ -621,21 +996,30 @@ const flattenTools = (
 ];
 
 const compareText = (left: string, right: string): -1 | 0 | 1 => (left < right ? -1 : left > right ? 1 : 0);
-const byPath = Order.make(
-  (
-    left: { readonly path: string },
-    right: { readonly path: string }
-  ): -1 | 0 | 1 => compareText(left.path, right.path)
+const byPath = Order.make((left: { readonly path: string }, right: { readonly path: string }): -1 | 0 | 1 =>
+  compareText(left.path, right.path)
 );
 
-/** Renders a canonical Toolkit path as a guest expression. */
+/**
+ * Renders a canonical Toolkit path as a guest expression.
+ *
+ * **Example** (Dot-access vs computed segment)
+ *
+ * ```ts
+ * import { toolExpression } from "@beep/scratchpad/codemode"
+ *
+ * console.log(toolExpression("search.docs")) // "tools.search.docs"
+ * console.log(toolExpression("foo-bar")) // "tools[\"foo-bar\"]"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const toolExpression = (path: string): string =>
   `tools${pipe(
     Str.split(path, "."),
     A.map((segment) =>
-      identifierSegment(segment)
-        ? `.${segment}`
-        : `[${Unknown.encodeUnknownSyncFromJsonString(segment)}]`
+      identifierSegment(segment) ? `.${segment}` : `[${Unknown.encodeUnknownSyncFromJsonString(segment)}]`
     ),
     A.join("")
   )}`;
@@ -651,21 +1035,19 @@ const visibleTools = (root: ToolNode) =>
   pipe(
     flattenTools(root),
     A.sort(byPath),
-    A.map(({path, tool}) => ({
+    A.map(({ path, tool }) => ({
       path,
       tool,
-      description: describeTool(path, tool)
+      description: describeTool(path, tool),
     }))
   );
 
-const tokenize = (query: string): ReadonlyArray<string> =>
-  pipe(
-    query,
-    Str.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
-    Str.toLowerCase,
-    Str.split(/[^a-z0-9]+/),
-    A.filter((term) => Str.isNonEmpty(term) && term !== "*")
-  );
+const tokenize: (query: string) => ReadonlyArray<string> = flow(
+  Str.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
+  Str.toLowerCase,
+  Str.split(/[^a-z0-9]+/),
+  A.filter((term) => Str.isNonEmpty(term) && term !== "*")
+);
 
 const termForms = (term: string): ReadonlyArray<string> => [
   term,
@@ -673,19 +1055,19 @@ const termForms = (term: string): ReadonlyArray<string> => [
   ...(Str.endsWith(term, "s") && Str.length(term) > 2 ? [pipe(term, Str.slice(0, -1))] : []),
 ];
 
-const toSearchEntry = (
-  path: string,
-  tool: Tool.Any,
-  description: ToolDescription
-): SearchEntry =>
+const toSearchEntry = (path: string, tool: Tool.Any, description: ToolDescription): SearchEntry =>
   SearchEntry.new(
     description,
-    pipe(Str.split(path, "."), A.head, O.getOrElse(() => "")),
+    pipe(
+      Str.split(path, "."),
+      A.head,
+      O.getOrElse(() => "")
+    ),
     pipe(
       [
         path,
         Tool.getDescription(tool) ?? "",
-        ...A.flatMap(inputProperties(tool), ({name, description}) =>
+        ...A.flatMap(inputProperties(tool), ({ name, description }) =>
           pipe(
             description,
             O.match({
@@ -700,35 +1082,68 @@ const toSearchEntry = (
     )
   );
 
-/** Prepares the stable catalog and search index for a Toolkit. */
-export const prepare = (
-  toolkit: Toolkit.Any
-): Result.Result<DiscoveryPlan, ToolRuntimeError> =>
+/**
+ * Prepares the stable catalog and search index for a Toolkit.
+ *
+ * **Example** (Prepare the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ * import { Result } from "effect"
+ *
+ * const plan = Result.getOrThrow(ToolRuntime.prepare(ToolRuntime.emptyToolkit))
+ *
+ * console.log(plan.catalog.length) // 0
+ * console.log(plan.searchIndex.length) // 0
+ * ```
+ *
+ * @see {@link searchIndex} for the helper that returns only the search index.
+ * @see {@link emptyToolkit} for the default Toolkit used when no host tools are provided.
+ * @category factories
+ * @since 0.0.0
+ */
+export const prepare = (toolkit: Toolkit.Any): Result.Result<DiscoveryPlan, ToolRuntimeError> =>
   pipe(
     toolTrie(toolkit),
     Result.map((root) => {
       const visible = visibleTools(root);
       return DiscoveryPlan.new(
-        A.map(visible, ({description}) => description),
-        A.map(visible, ({
-                          path,
-                          tool,
-                          description
-                        }) => toSearchEntry(path, tool, description))
+        A.map(visible, ({ description }) => description),
+        A.map(visible, ({ path, tool, description }) => toSearchEntry(path, tool, description))
       );
     })
   );
 
-/** Builds only the search index for a Toolkit. */
-export const searchIndex = (
-  toolkit: Toolkit.Any
-): Result.Result<ReadonlyArray<SearchEntry>, ToolRuntimeError> =>
-  pipe(prepare(toolkit), Result.map((plan) => plan.searchIndex));
+/**
+ * Builds only the search index for a Toolkit.
+ *
+ * **Details**
+ *
+ * This is {@link prepare} then `.searchIndex`. Prefer {@link prepare} when the
+ * catalog is needed as well.
+ *
+ * **Example** (Index the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ * import { Result } from "effect"
+ *
+ * const index = Result.getOrThrow(ToolRuntime.searchIndex(ToolRuntime.emptyToolkit))
+ *
+ * console.log(index.length) // 0
+ * ```
+ *
+ * @see {@link prepare} for the full catalog-and-index constructor.
+ * @category factories
+ * @since 0.0.0
+ */
+export const searchIndex = (toolkit: Toolkit.Any): Result.Result<ReadonlyArray<SearchEntry>, ToolRuntimeError> =>
+  pipe(
+    prepare(toolkit),
+    Result.map((plan) => plan.searchIndex)
+  );
 
-const search = (
-  index: ReadonlyArray<SearchEntry>,
-  input: SearchInput
-): SearchOutput => {
+const search = (index: ReadonlyArray<SearchEntry>, input: SearchInput): SearchOutput => {
   const scoped = pipe(
     input.namespace,
     O.match({
@@ -738,17 +1153,13 @@ const search = (
   );
   const query = O.getOrElse(input.query, () => "");
   const trimmed = Str.trim(query);
-  const pathQuery = Str.startsWith(trimmed, "tools.")
-    ? pipe(trimmed, Str.slice(Str.length("tools.")))
-    : trimmed;
+  const pathQuery = Str.startsWith(trimmed, "tools.") ? pipe(trimmed, Str.slice(Str.length("tools."))) : trimmed;
   const exact = Str.isEmpty(pathQuery)
     ? O.none<SearchEntry>()
     : A.findFirst(
-      scoped,
-      (entry) =>
-        entry.description.path === pathQuery ||
-        toolExpression(entry.description.path) === trimmed
-    );
+        scoped,
+        (entry) => entry.description.path === pathQuery || toolExpression(entry.description.path) === trimmed
+      );
   const terms = A.map(tokenize(query), termForms);
   const ranked = pipe(
     exact,
@@ -760,56 +1171,64 @@ const search = (
           A.map((entry) => {
             const path = Str.toLowerCase(entry.description.path);
             const description = Str.toLowerCase(entry.description.description);
-            const score = A.reduce(terms, 0, (total, forms) =>
-              total +
-              (A.some(forms, (form) => path === form || Str.endsWith(path, `.${form}`)) ? 20 : 0) +
-              (A.some(forms, (form) => pipe(path, Str.includes(form))) ? 8 : 0) +
-              (A.some(forms, (form) => pipe(description, Str.includes(form))) ? 4 : 0) +
-              (A.some(forms, (form) => pipe(entry.searchText, Str.includes(form))) ? 2 : 0)
+            const score = A.reduce(
+              terms,
+              0,
+              (total, forms) =>
+                total +
+                (A.some(forms, (form) => path === form || Str.endsWith(path, `.${form}`)) ? 20 : 0) +
+                (A.some(forms, (form) => pipe(path, Str.includes(form))) ? 8 : 0) +
+                (A.some(forms, (form) => pipe(description, Str.includes(form))) ? 4 : 0) +
+                (A.some(forms, (form) => pipe(entry.searchText, Str.includes(form))) ? 2 : 0)
             );
-            return {entry, score};
+            return { entry, score };
           }),
-          A.filter(({score}) => A.isReadonlyArrayEmpty(terms) || score > 0),
+          A.filter(({ score }) => A.isReadonlyArrayEmpty(terms) || score > 0),
           A.sort(
-            Order.make<{ readonly entry: SearchEntry; readonly score: number }>(
-              (left, right): -1 | 0 | 1 =>
-                left.score === right.score
-                  ? compareText(left.entry.description.path, right.entry.description.path)
-                  : left.score > right.score
-                    ? -1
-                    : 1
+            Order.make<{ readonly entry: SearchEntry; readonly score: number }>((left, right): -1 | 0 | 1 =>
+              left.score === right.score
+                ? compareText(left.entry.description.path, right.entry.description.path)
+                : left.score > right.score
+                  ? -1
+                  : 1
             )
           ),
-          A.map(({entry}) => entry)
+          A.map(({ entry }) => entry)
         ),
     })
   );
   const page = A.take(A.drop(ranked, input.offset), input.limit);
-  const items = A.map(page, ({description}) =>
+  const items = A.map(page, ({ description }) =>
     SearchItem.new(toolExpression(description.path), description.description, description.signature)
   );
   const remaining = Math.max(0, A.length(ranked) - input.offset - A.length(items));
-  return SearchOutput.new(
-    items,
-    remaining,
-    remaining > 0 ? input.offset + A.length(items) : undefined
-  );
+  return SearchOutput.new(items, remaining, remaining > 0 ? input.offset + A.length(items) : undefined);
 };
 
-/** Exact callable signature of the built-in discovery function. */
+/**
+ * Exact callable signature of the built-in discovery function.
+ *
+ * **Example** (Inspect the printed search signature)
+ *
+ * ```ts
+ * import { searchSignature } from "@beep/scratchpad/codemode"
+ *
+ * console.log(searchSignature.startsWith("search(")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const searchSignature =
   "search(input: { query?: string; namespace?: string; limit?: number; offset?: number }): { items: Array<{ path: string; description: string; signature: string }>; remaining: number; next: { offset: number } | null }";
 
-type AnyWithHandler = Toolkit.WithHandler<any>;
+type AnyWithHandler = Toolkit.WithHandler<Record<string, Tool.Any>>;
 
 const handleDynamic = <R>(
   handlers: AnyWithHandler,
   name: string,
   input: unknown
-): Effect.Effect<
-  Stream.Stream<Tool.HandlerResult<Tool.Any>, unknown, R>,
-  AiError.AiError
-> =>
+): Effect.Effect<Stream.Stream<Tool.HandlerResult<Tool.Any>, unknown, R>, AiError.AiError> =>
   // The name/tool pairing is proven by the trie immediately before this call.
   handlers.handle(name as never, input as never) as unknown as Effect.Effect<
     Stream.Stream<Tool.HandlerResult<Tool.Any>, unknown, R>,
@@ -822,13 +1241,25 @@ const normalizeAiError = (name: string, error: AiError.AiError): ToolRuntimeErro
   return ToolRuntimeError.new(
     kind,
     `${invalidInput ? "Invalid input for" : "Invalid output from"} tool '${name}': ${error.reason.message}`,
-    invalidInput
-      ? ["The signature may have changed. Use search to get the current signature."]
-      : A.empty()
+    invalidInput ? ["The signature may have changed. Use search to get the current signature."] : A.empty()
   );
 };
 
-/** Runtime state and operations owned by one execution. */
+/**
+ * Runtime state and operations owned by one execution.
+ *
+ * **Gotchas**
+ *
+ * `keys` throws {@link ToolRuntimeError} synchronously via `Result.getOrElse`
+ * even though its type is `ReadonlyArray<string>`. `execute` and `search`
+ * require exactly one input object. Tool `failureMode "return"` yields
+ * `encodedResult` to the guest; `"error"` hits the Stream error path as
+ * {@link ToolError}.
+ *
+ * @see {@link make} for the constructor that returns this runtime.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolRuntime<R = never> = {
   readonly root: ToolReference;
   readonly calls: Effect.Effect<ReadonlyArray<ToolCall>>;
@@ -836,14 +1267,53 @@ export type ToolRuntime<R = never> = {
     path: ReadonlyArray<string>,
     args: ReadonlyArray<unknown>
   ) => Effect.Effect<unknown, ToolRuntimeError | ToolError, R>;
-  readonly search: (
-    args: ReadonlyArray<unknown>
-  ) => Effect.Effect<unknown, ToolRuntimeError | ToolError, R>;
+  readonly search: (args: ReadonlyArray<unknown>) => Effect.Effect<unknown, ToolRuntimeError | ToolError, R>;
   readonly keys: (path: ReadonlyArray<string>) => ReadonlyArray<string>;
 };
 
-/** Creates execution-local state around a Toolkit with installed handlers. */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+/**
+ * Creates execution-local state around a Toolkit with installed handlers.
+ *
+ * **Gotchas**
+ *
+ * This constructor is not the public `CodeMode.make` runtime factory. The
+ * returned `keys` method throws {@link ToolRuntimeError} for unknown
+ * namespaces. `execute` and `search` require exactly one input object.
+ * `failureMode "return"` yields encoded failures to the guest; `"error"`
+ * surfaces {@link ToolError} on the Stream error path.
+ *
+ * **Example** (List keys of the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ * import { Effect, Result } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const handlers = yield* ToolRuntime.emptyToolkit
+ *     const index = Result.getOrThrow(ToolRuntime.searchIndex(ToolRuntime.emptyToolkit))
+ *     const runtime = yield* ToolRuntime.make(
+ *       ToolRuntime.emptyToolkit,
+ *       handlers,
+ *       O.none(),
+ *       index
+ *     )
+ *     return runtime.keys([])
+ *   })
+ * ).then((keys) => {
+ *   console.log(keys) // []
+ * })
+ * ```
+ *
+ * @throws ToolRuntimeError from the returned `keys` method when the namespace is unknown.
+ * @see {@link prepare} for catalog construction used before this runtime is created.
+ * @see {@link searchIndex} for the search-index-only helper used by this constructor.
+ * @see {@link emptyToolkit} for the default Toolkit when CodeMode omits host tools.
+ * @category factories
+ * @since 0.0.0
+ */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Toolkit, handlers, limits, index, and hooks are co-primary factory inputs rather than a data-first transformation.
 export const make = <R>(
   toolkit: Toolkit.Any,
   handlers: AnyWithHandler,
@@ -855,31 +1325,21 @@ export const make = <R>(
     const root = yield* Effect.fromResult(toolTrie(toolkit));
     const calls = yield* Ref.make<ReadonlyArray<ToolCall>>(A.empty());
 
-    const admitCall = (
-      name: string,
-      input: unknown
-    ): Effect.Effect<ToolCallStarted, ToolRuntimeError> =>
+    const admitCall = (name: string, input: unknown): Effect.Effect<ToolCallStarted, ToolRuntimeError> =>
       Ref.modify(
         calls,
-        (
-          current
-        ): readonly [
-          Result.Result<ToolCallStarted, ToolRuntimeError>,
-          ReadonlyArray<ToolCall>,
-        ] =>
+        (current): readonly [Result.Result<ToolCallStarted, ToolRuntimeError>, ReadonlyArray<ToolCall>] =>
           pipe(
             maxToolCalls,
             O.filter((limit) => A.length(current) >= limit),
             O.match({
-              onSome: (limit) => [
-                Result.fail(
-                  ToolRuntimeError.new(
-                    "ToolCallLimitExceeded",
-                    `Execution exceeded its tool-call limit of ${limit}.`
-                  )
-                ),
-                current,
-              ] as const,
+              onSome: (limit) =>
+                [
+                  Result.fail(
+                    ToolRuntimeError.new("ToolCallLimitExceeded", `Execution exceeded its tool-call limit of ${limit}.`)
+                  ),
+                  current,
+                ] as const,
               onNone: () => {
                 const call = ToolCall.new(name);
                 return [
@@ -910,19 +1370,14 @@ export const make = <R>(
               }
               const error = Cause.squash(exit.cause);
               const message =
-                ToolRuntimeError.is(error) || ToolError.is(error)
-                  ? error.message
-                  : "Tool execution failed";
+                ToolRuntimeError.is(error) || ToolError.is(error) ? error.message : "Tool execution failed";
               return yield* hooks.onToolCallEnd(ToolCallFailed.new(call, durationMs, message));
             })
           )
         );
       });
 
-    const executeTool = (
-      name: string,
-      input: unknown
-    ): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
+    const executeTool = (name: string, input: unknown): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
       Effect.gen(function* () {
         const started = yield* admitCall(name, input);
         return yield* observeEnd(
@@ -932,49 +1387,36 @@ export const make = <R>(
               Effect.mapError((error) => normalizeAiError(name, error))
             );
             const last = yield* stream.pipe(
-              Stream.mapError((cause) =>
-                ToolError.new(`Tool '${name}' failed.`, cause)
-              ),
-              Stream.runLast,
+              Stream.mapError((cause) => ToolError.new(`Tool '${name}' failed.`, cause)),
+              Stream.runLast
             );
             const result = yield* O.match(last, {
               onNone: () =>
-                Effect.fail(
-                  ToolRuntimeError.new("InvalidToolOutput", `Tool '${name}' produced no final result.`)
-                ),
+                Effect.fail(ToolRuntimeError.new("InvalidToolOutput", `Tool '${name}' produced no final result.`)),
               // failureMode "return" intentionally returns encoded failures
               // to the guest; failureMode "error" reaches the Stream error path.
               onSome: (output) => Effect.succeed(output.encodedResult),
             });
             return yield* Effect.try({
               try: () => copyIn(result, `Result from tool '${name}'`),
-              catch: () =>
-                ToolRuntimeError.new("InvalidToolOutput", `Invalid output from tool '${name}'.`),
+              catch: () => ToolRuntimeError.new("InvalidToolOutput", `Invalid output from tool '${name}'.`),
             });
           }),
           started
         );
       });
 
-    const executeSearch = (
-      args: ReadonlyArray<unknown>
-    ): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
+    const executeSearch = (args: ReadonlyArray<unknown>): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
       Effect.gen(function* () {
         if (A.length(args) !== 1) {
-          return yield* ToolRuntimeError.new(
-            "InvalidToolInput",
-            "Tool 'search' expects exactly one input object."
-          );
+          return yield* ToolRuntimeError.new("InvalidToolInput", "Tool 'search' expects exactly one input object.");
         }
         const external = yield* Effect.try({
           try: () => copyOut(copyIn(args[0], "Arguments for tool 'search'"), "json"),
           catch: (error) =>
             ToolRuntimeError.is(error)
               ? error
-              : ToolRuntimeError.new(
-                  "InvalidToolInput",
-                  "Arguments for tool 'search' could not be copied."
-                ),
+              : ToolRuntimeError.new("InvalidToolInput", "Arguments for tool 'search' could not be copied."),
         });
         const input = yield* S.decodeUnknownEffect(SearchInput)(external).pipe(
           Effect.mapError((cause) =>
@@ -1006,30 +1448,37 @@ export const make = <R>(
           })
         ),
       search: executeSearch,
-      execute:
-        Effect.fnUntraced(function* (path, args) {
-          const name = pipe(canonicalSegments(path), A.join("."));
-          if (A.length(args) !== 1) {
-            return yield* ToolRuntimeError.new(
-              "InvalidToolInput",
-              `Tool '${name}' expects exactly one input object.`
-            );
-          }
-          const input = yield* Effect.try({
-            try: () => copyOut(copyIn(args[0], `Arguments for tool '${name}'`), "json"),
-            catch: (error) =>
-              ToolRuntimeError.is(error)
-                ? error
-                : ToolRuntimeError.new(
-                    "InvalidToolInput",
-                    `Arguments for tool '${name}' could not be copied.`
-                  ),
-          });
-          yield* Effect.fromResult(resolve(root, path));
-          return yield* executeTool(name, input);
-        }),
+      execute: Effect.fnUntraced(function* (path, args) {
+        const name = pipe(canonicalSegments(path), A.join("."));
+        if (A.length(args) !== 1) {
+          return yield* ToolRuntimeError.new("InvalidToolInput", `Tool '${name}' expects exactly one input object.`);
+        }
+        const input = yield* Effect.try({
+          try: () => copyOut(copyIn(args[0], `Arguments for tool '${name}'`), "json"),
+          catch: (error) =>
+            ToolRuntimeError.is(error)
+              ? error
+              : ToolRuntimeError.new("InvalidToolInput", `Arguments for tool '${name}' could not be copied.`),
+        });
+        yield* Effect.fromResult(resolve(root, path));
+        return yield* executeTool(name, input);
+      }),
     };
   });
 
-/** Empty default Toolkit used when no host tools are provided. */
+/**
+ * Empty default Toolkit used when no host tools are provided.
+ *
+ * **Example** (Inspect the empty toolkit)
+ *
+ * ```ts
+ * import { ToolRuntime } from "@beep/scratchpad/codemode"
+ *
+ * console.log(Object.keys(ToolRuntime.emptyToolkit.tools)) // []
+ * ```
+ *
+ * @see {@link make} for the execution-local adapter built around this toolkit.
+ * @category constants
+ * @since 0.0.0
+ */
 export const emptyToolkit = Toolkit.empty;

@@ -1,0 +1,22 @@
+id: fa:alt2:054
+hypothesis_ref: dh:worktree-config:012
+identity_card_ref: ic:alt2:054
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: docgen procedure specification with two scoped command variants'
+  still_viable: true
+- label: 'kind: docgen verification lane as an operational sortal'
+  still_viable: true
+- label: 'information_object: merely a pair of unrelated command descriptions'
+  still_viable: false
+strongest_counterexample: >-
+  Selecting docgen:local versus full docgen by operating context is one activity with scoped work specifications; treating
+  the two quotes as unrelated commands loses the lane.
+verdict: analyzed
+needed_evidence: >-
+  A lane registry that reidentifies docgen independently of these two commands, or an observation that edit-loop docgen is
+  a different lane from repo-wide docgen, would split one procedure from two.

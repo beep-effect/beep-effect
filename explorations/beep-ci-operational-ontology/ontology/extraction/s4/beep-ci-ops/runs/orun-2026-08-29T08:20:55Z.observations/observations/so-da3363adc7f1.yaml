@@ -1,0 +1,25 @@
+id: so:sha256:da3363adc7f18c987a1ff10256e90f7f2a1eacee9a98ad57b4eaaed1dc976511
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 572
+  end_line: 575
+  content_sha256: e8ca421abb0747bd389f628209045a15b528fe4b8ec07b227824bb47173677c0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::YeetMonitorRerunPlan
+  lexical_name: YeetMonitorRerunPlan
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: budget
+- predicate: declares_field
+  object: decisions
+source_excerpt: interface YeetMonitorRerunPlan {
+epistemic_status: parser_derived

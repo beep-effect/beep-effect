@@ -1,0 +1,24 @@
+id: "fa:yeet-watch:003"
+hypothesis_ref: "dh:yeet-watch:015"
+identity_card_ref: "ic:yeet-watch:003"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Epistemic watch situation in which accepted terminal evidence is absent"
+    still_viable: true
+  - label: "Snapshot-bound pending-assignment information object rather than one reusable pending value"
+    still_viable: true
+  - label: "Single queued, running, or waiting phase of the check execution"
+    still_viable: false
+  - label: "Pending literal as a selector with no denoted classification content"
+    still_viable: false
+strongest_counterexample: >-
+  The classifier deliberately sends previously unseen raw vocabulary to
+  pending so the watch will revisit it. Such a check need not actually be in a
+  queued, running, or waiting phase, which rules out any one execution-phase
+  referent while leaving a context-bound epistemic situation and a
+  snapshot-bound information-token model viable.
+verdict: analyzed

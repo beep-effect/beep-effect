@@ -1,0 +1,59 @@
+id: otp:fallow-health-lane:001
+hypothesis_ref: dh:worktree-config:018
+identity_card_ref: ic:worktree-config:014
+foundational_status: explicitly_deferred
+term:
+  local_name: FallowHealthLane
+  preferred_label: Fallow health lane
+  proposed_iri: https://oip.law/ontology/ci-ops#FallowHealthLane
+  owl_entity_kind: individual
+definition:
+  text: The VerificationLane procedure-specification individual denoted by the inventory's invocable Fallow health diagnostic.
+    CQ-001 requires the governed lane inventory, so this named diagnostic lane is part of a complete answer. The inventory
+    command entry is a carrier of that prescription; separately configured complexity ceilings belong to a threshold-policy
+    specification and are not asserted as inputs to this lane without dataflow or execution evidence.
+  source:
+  - CQ-001
+  - so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208
+  - po:sha256:e111144fd959c0d5a1d7f8caf1d62ed2e8b5ea12c9346adfd60c22001c7d26d4
+  - po:sha256:38ed56de8a68cd967d27668d420a8c5f46209fa8ecefd523ce74676362c611a6
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: unresolved
+  dependence: intrinsic
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-001
+alternatives_rejected:
+- 'Rejected unconnected-config-pair model: The lane denotes the invocable health diagnostic in the required CQ-001 inventory;
+  complexity ceilings remain a separate policy unless evidence connects them to the diagnostic.'
+open_issues:
+- 'Steward choice remains open only for a future relation to the separate threshold policy: tool documentation or an execution
+  trace may justify linking the diagnostic to ceilings, but the current FallowHealthLane identity is the inventory-declared
+  health prescription and does not depend on that unobserved linkage.'
+revision_log:
+- from_sha256: 2303a50e5dfc9161f073ea2aa244112b4e15dcd6e495f767475aa998d31611d7
+  addressed:
+  - listing-cq-warrant
+  - discriminator-true-of-config-pair
+- from_sha256: 74b588c34978d37212714fa5ef9c2327ded6485baaad9b05ea1aa781a924777e
+  addressed:
+  - listing-cq-warrant
+  - discriminator-true-of-config-pair
+- from_sha256: 1d92dadf6d4d9cf8b1fda11700fc0c146622801eb63955bf07704e5ab09f2d8f
+  addressed:
+  - listing-cq-warrant
+  - discriminator-true-of-config-pair
+- from_sha256: e5e4df42f10f99fb3fdc44d015af377f8816067081df0134cec0162c9a805940
+  addressed:
+  - support-warrant-self-contradiction
+  - discriminator-true-of-unconnected-config-pair
+status: proposed
+revision_requests: []

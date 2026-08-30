@@ -1,0 +1,21 @@
+id: "fa:alt1:004"
+hypothesis_ref: "dh:reporun:036"
+identity_card_ref: "ic:alt1:004"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "the subprocess execution occurrence itself"
+    still_viable: false
+  - label: "transient return object with no retained operational role"
+    still_viable: true
+strongest_counterexample: "runCaptured constructs CapturedStep from concurrently observed text
+  and exit code after the child has been spawned; the record is produced from the occurrence and
+  is not the occurrence."
+verdict: "analyzed"
+needed_evidence: "Whether any competency question or retained evidence store reidentifies a
+  CapturedStep after the calling fiber returns. If the value is discarded at the call site, the
+  transient-object rival stays viable; if a later proof surface reads the record, that rival
+  dies."

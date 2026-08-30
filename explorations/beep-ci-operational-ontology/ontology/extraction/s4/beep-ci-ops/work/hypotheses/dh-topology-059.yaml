@@ -1,0 +1,24 @@
+id: "dh:topology:059"
+observation_refs:
+  - "po:sha256:51cd9d324d80693c9f4bc26126d743dd08b3a4a3d48fc1e91c359e01a26fee50"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/graph-3d workspace package"
+  description: "The workspace software package information artifact identified by @beep/graph-3d in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/graph-3d as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort DTO row can contain @beep/graph-3d and feed affected-package closure code while remaining only an implementation record; the sole cited quote does not establish enduring package-reference information content or a package bearer."
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

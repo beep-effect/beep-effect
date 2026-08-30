@@ -1,0 +1,26 @@
+id: "dh:turbo-cache:008"
+observation_refs:
+  - "so:sha256:dbd7976fa262aa03531c4daed80c2d8220c324134630cd0b831fb62756e78706"
+  - "po:sha256:d5d67e086d6af09ad84e84eb7ebc72cf651433c436c6862421bb845a05870c49"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named test:integration:parallel"
+  description: "A repeatable parallel-integration task specification with an observed upstream build dependency."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A parallel integration-test verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A lexical specialization of the integration task"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The task-config DTO counterexample wins: test:integration:parallel can name ^build while the package script runs serially, so the cited row establishes neither parallel execution nor a governed work specification."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.74
+  use_for_acceptance: false

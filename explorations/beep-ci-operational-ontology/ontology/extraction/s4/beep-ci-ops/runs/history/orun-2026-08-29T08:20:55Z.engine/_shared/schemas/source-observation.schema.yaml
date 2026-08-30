@@ -1,0 +1,46 @@
+# SourceObservation — EVIDENCE. Produced ONLY by a committed adapter script over
+# parseable source (the agent may AUTHOR the script; it may never hand-type
+# observation records for source a parser can read). Machine enforcement:
+# ontology-foundational-auditor/scripts/validate_artifacts.py.
+# The key set is CLOSED (validator-enforced): unknown keys are rejected, so
+# ontology_interpretation and friends cannot ride along. Under --repo every
+# fact object must OCCUR in the span text — an invented fact behind an honest
+# span hash is caught. unrepresentable_construct facts must be their OWN
+# records (mixing one real fact in launders the escape hatch — rejected).
+# File layout: one record per file, work/observations/so-<sha12>.yaml.
+id: "so:sha256:<full-64-hex>"   # RECOMPUTED by the validator — the id is
+#   sha256(json.dumps([commit, path, start_line, end_line,
+#     sorted([[predicate, object], ...]), extractor.id, extractor.version],
+#     sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+#   (canonical JSON, exactly this serialization). A random or stale hex cannot
+#   match — but a matching id proves CONTENT-CONSISTENCY, not that the adapter
+#   authored the record (Known Limits). The extractor tuple must match a
+#   manifest-pinned adapter; an adapter upgrade (new extractor.version) MUST
+#   change every id.
+schema_version: 1
+repository: {commit: "<sha>", path: "<repo path>"}
+source_span: {start_line: 0, end_line: 0, content_sha256: "<hex>"}   # sha256 of the EXACT
+                                  # span text; the validator recomputes it from the pinned
+                                  # tree under --repo — the adapter fidelity tripwire
+extractor: {id: "<adapter>", version: "<semver>", parser: "<engine>", script: "<committed script path>"}
+symbol: {qualified_name: "", lexical_name: "", syntactic_kind: ""}
+observed_facts:
+  # predicate MUST come from the CLOSED syntactic vocabulary below — predicates are
+  # syntax descriptions, never interpretations (no role/subsumption/domain flavor):
+  #   declares_field | declares_member | declares_literal_member |
+  #   extends_syntactically | implements_syntactically | references_type |
+  #   declares_parameter | declares_return_type | declares_type_alias |
+  #   declares_union_member | declares_intersection_member | decorates_with |
+  #   config_key_value | task_depends_on_syntactically | exports_symbol |
+  #   unrepresentable_construct
+  # The OBJECT is grammar-checked per predicate by the validator: identifier
+  # predicates take a bare identifier (no prose, no spaces, no slashes —
+  # "Requester/role of Person" is interpretation smuggled into the object);
+  # config_key_value takes "<key>=<value>" and is only legal for config-file
+  # paths (.json/.yaml/.toml/...), never for parseable source.
+  # unrepresentable_construct is the ESCAPE HATCH (object = the syntactic kind)
+  # for syntax this vocabulary cannot describe — never squash into a near-miss
+  # predicate; such observations may only be dispositioned unresolved/irrelevant.
+  - {predicate: declares_field, object: ""}
+source_excerpt: ""
+epistemic_status: parser_derived   # parser_derived ONLY — prose uses prose-observation

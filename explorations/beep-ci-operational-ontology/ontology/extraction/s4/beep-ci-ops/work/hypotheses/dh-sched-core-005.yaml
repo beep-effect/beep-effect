@@ -1,0 +1,22 @@
+id: "dh:sched-core:005"
+observation_refs:
+  - "so:sha256:ebee067e625c3a5650da8dd8f45209c9f1ecba5607feb53883b955501198153c"
+  - "po:sha256:1df4ac671a4779bf2519466b2ecb2dcc2b23e9ba22e02ad5cebe87366eca3566"
+cq_warrants: []
+proposed_referent:
+  label: "admission token-weight mapping specification"
+  description: "A repeatable policy procedure that assigns a nominal token charge to each admission work kind."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "intrinsic resource cost of each work kind"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "hard-coded switch used only by this implementation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A scheduler-local switch can deterministically map every work-kind literal to a number and copy the result into admission records while remaining ordinary implementation behavior; the cited records attest neither policy authority nor governed lineage."
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

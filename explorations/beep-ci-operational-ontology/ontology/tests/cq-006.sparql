@@ -1,0 +1,14 @@
+# CQ-006: For a given tree state and cache epoch, which lane obligations remain unmet toward a given target assurance tier (vernacular: certainty tier)? (Held tier = the highest tier whose remainder is empty, computed by evaluating this query per tier — documented external iteration.)
+# Expected: non_empty | priority: must_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?lane WHERE {
+  VALUES (?target ?tree ?epoch) { (ciops:TierCiMergeGreen ciops:tree-example ciops:epoch-example) }  # harness binds
+  ?target ciops:requiresLane ?lane .
+  FILTER NOT EXISTS {
+    ?proof ciops:dischargesObligation ?lane ;
+           ciops:provesTree ?tree ;
+           ciops:validInEpoch ?epoch .
+    FILTER NOT EXISTS { ?event ciops:invalidates ?proof }
+  }
+}

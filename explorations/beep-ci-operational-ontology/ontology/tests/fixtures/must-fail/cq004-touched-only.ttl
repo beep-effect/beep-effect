@@ -1,0 +1,4 @@
+# Seat E regression: touched-only change set must return the touched package BOUND
+# (the round-1 BIND arm returned an UNBOUND row that greened non_empty).
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:cs-example ciops:touchesPackage ciops:pkg-only .

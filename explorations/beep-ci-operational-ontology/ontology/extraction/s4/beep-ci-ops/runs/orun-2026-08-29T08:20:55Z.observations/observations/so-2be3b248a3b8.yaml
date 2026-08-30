@@ -1,0 +1,23 @@
+id: so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 614
+  end_line: 673
+  content_sha256: c84adaca847ede8e636f2134d47ec06d5886f3265b0fcd9ad790afd0fca090e2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::planYeetMonitorReruns
+  lexical_name: planYeetMonitorReruns
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: planYeetMonitorReruns
+source_excerpt: 'export const planYeetMonitorReruns: {'
+epistemic_status: parser_derived

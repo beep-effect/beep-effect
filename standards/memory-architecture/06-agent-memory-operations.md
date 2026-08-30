@@ -1,5 +1,11 @@
 # Agent Memory Operations
 
+> **SUPERSEDED (2026-08-29) — do not follow.** basic-memory and codegraph were
+> removed entirely; file memory is the memory layer (see the 2026-08-29 entry
+> in [`04-decision-log.md`](./04-decision-log.md) and `AGENTS.md` §Agent
+> Memory). This runbook is retained as history only. Do not register, launch,
+> or provision either tool from these instructions.
+
 This runbook implements the authoritative external-memory decision in
 [`04-decision-log.md`](./04-decision-log.md#2026-07-08-external-memory-stack--donor-portfolio-confirmed-cognee-is-the-sole-dev-memory-incumbent-doctrine-phrasing-sharpened).
 It records mutable operator and session details only; changes here do not amend

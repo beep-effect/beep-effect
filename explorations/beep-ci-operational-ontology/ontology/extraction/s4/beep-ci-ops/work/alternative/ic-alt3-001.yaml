@@ -1,0 +1,37 @@
+id: ic:alt3:001
+hypothesis_ref: dh:reporun:004
+identity:
+  supplies_identity: false
+  identity_criterion: 'Two such patterns are the same situation iff they are the same completed
+    GitHub job''s step-history configuration: a failed installation step with every later
+    step absent, skipped, or cleanup. The shape-class label is reidentification evidence rather
+    than the criterion, and the cause (lockfile versus network) is not part of sameness.'
+  reidentification_key:
+  - install-failure
+  - GithubJobRecord.databaseId
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: the failed install step together with the suffix of later steps as one job-history
+    configuration
+  dependence: relational
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+  - event
+  - information_object
+  existential_dependencies:
+  - the GitHub job occurrence
+  - its ordered steps
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - job completed with this shape
+  - record refused for missing steps
+counterexamples:
+- description: A cancelled job can show the same all-null later-step shape as runner loss;
+    the detector requires job-level failure and an install step that actually concluded failure,
+    so cancellation is not this situation.
+status: proposed

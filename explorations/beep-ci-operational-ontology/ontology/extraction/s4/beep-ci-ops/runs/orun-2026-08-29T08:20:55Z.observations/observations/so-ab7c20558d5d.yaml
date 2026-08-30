@@ -1,0 +1,24 @@
+id: so:sha256:ab7c20558d5d8b07fa09730e6b8c8de5767c8a74ea32a58ec9ea10cc424ebb38
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1299
+  end_line: 1304
+  content_sha256: c5bd464b619ead00818bf7732dea2a8ab96b80a9f922d474918c8cde84ecf232
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::reapAdmissionState
+  lexical_name: reapAdmissionState
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: reapAdmissionState
+source_excerpt: 'export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState")(function*
+  (options: {'
+epistemic_status: parser_derived

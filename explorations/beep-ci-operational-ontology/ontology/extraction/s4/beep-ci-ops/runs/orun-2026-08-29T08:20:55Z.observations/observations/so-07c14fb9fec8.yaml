@@ -1,0 +1,23 @@
+id: so:sha256:07c14fb9fec8f1350585267dff71467e701063f59409c0923226d82d1bc7b3dd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+source_span:
+  start_line: 16
+  end_line: 16
+  content_sha256: e2e505a46023b74815b056d88082a722d2c2cb04437348da00df8ec6f8a132e5
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Closeout.schemas");
+epistemic_status: parser_derived

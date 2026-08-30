@@ -1,0 +1,23 @@
+id: so:sha256:2c684a3590927276418bb8d7513c0b63f029bca95ea416ffeca894c77ceba2fa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1202
+  end_line: 1228
+  content_sha256: 7bef577f17a0f99a1ed7c72af3edcef96e5d545694d3765af02b296800a8da35
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::bypassAdmission
+  lexical_name: bypassAdmission
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const bypassAdmission = Effect.fnUntraced(function* <
+epistemic_status: parser_derived

@@ -1,0 +1,32 @@
+{
+  "prefixes": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "sh": "http://www.w3.org/ns/shacl#",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "BFO": "http://purl.obolibrary.org/obo/BFO_",
+    "RO": "http://purl.obolibrary.org/obo/RO_",
+    "IAO": "http://purl.obolibrary.org/obo/IAO_",
+    "OBI": "http://purl.obolibrary.org/obo/OBI_",
+    "sssom": "https://w3id.org/sssom/",
+    "semapv": "https://w3id.org/semapv/vocab/",
+    "linkml": "https://w3id.org/linkml/",
+    "oio": "http://www.geneontology.org/formats/oboInOwl#",
+    "pav": "http://purl.org/pav/",
+    "schema": "http://schema.org/",
+    "prov": "http://www.w3.org/ns/prov#"
+  },
+  "notes": {
+    "obo": "OBO PURL base — class IRIs are obo:{ONTOLOGY}_{ID} (e.g., obo:BFO_0000001)",
+    "BFO": "Basic Formal Ontology — upper ontology (ISO 21838-2)",
+    "RO": "OBO Relation Ontology — standard cross-ontology relations",
+    "IAO": "Information Artifact Ontology — metadata properties (definitions, deprecation)",
+    "oio": "OBO in OWL annotations — synonyms, xrefs, subsets",
+    "sssom": "Simple Standard for Sharing Ontological Mappings",
+    "semapv": "Semantic Mapping Vocabulary — mapping justification terms"
+  }
+}

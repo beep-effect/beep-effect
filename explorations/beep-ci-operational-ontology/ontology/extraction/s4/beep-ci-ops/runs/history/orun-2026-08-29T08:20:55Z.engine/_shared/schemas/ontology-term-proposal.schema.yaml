@@ -1,0 +1,56 @@
+# OntologyTermProposal — a POSSIBLE modeling commitment. Only steward ratification
+# turns it into ontology; status transitions are HUMAN-only (recorded in a
+# Ratification record — the proposal's status field alone proves nothing).
+# File layout: one record per file, work/proposals/otp-<slug>-<nnn>.yaml.
+id: "otp:<slug>:<nnn>"
+hypothesis_ref: "dh:..."
+identity_card_ref: "ic:..."
+foundational_status: analyzed | explicitly_deferred   # deferred proposals reach the
+                                                      # steward FLAGGED, never hidden
+term: {preferred_label: "", local_name: "", proposed_iri: "", owl_entity_kind: class | object_property | data_property | individual}
+definition:
+  text: ""                        # unique, human-readable, genus-differentia preferred
+  source: []                      # CQ ids + observation ids
+foundational: {ufo_category: "", gufo_alignment: ""}
+ontoclean: {rigidity: "", identity: supplies | carries | none | unresolved, dependence: ""}
+                                  # REQUIRED, DERIVED from the joined IdentityCard
+                                  # (validator-enforced equality; identity is a
+                                  # CLOSED enum mapped to the IC provider booleans
+                                  # — free prose cannot invert polarity by phrasing;
+                                  # an UNSETTLED card demands 'unresolved', a settled
+                                  # one forbids it)
+parents: []                       # candidate is-a edges: [{parent: "", justification: ""}]
+                                  # — parent is a TERM IDENTIFIER (grammar-checked, no
+                                  # prose), justification >=20 chars; the adversary's
+                                  # taxonomy surface reads these (when parents exist,
+                                  # taxonomy can never be no_surface); an existing-
+                                  # hierarchy audit carries its asserted edges here
+revision_log: []                  # [{from_sha256: "<64hex of the FAILed proposal bytes>",
+                                  #   addressed: ["<attack rule answered>", ...]}]
+                                  # REQUIRED before a post-FAIL PASS review — the
+                                  # validator refuses a PASS after a FAIL unless the
+                                  # revised proposal names every failed digest it
+                                  # answers; a whitespace tweak is not a revision
+reuse:
+  searched: true                  # must be TRUE (validator-enforced) — declaring the
+                                  # search skipped does not exempt the mandatory
+                                  # reuse pass; run it
+  exact_reuse_found: false        # true = this proposal IS the mapping record and
+  mappings: []                    # each mapping REQUIRES {iri, compatibility} where
+                                  # compatibility is a substantive semantic
+                                  # justification (>=20 chars) — homonym matching is
+                                  # not compatibility; the index's `mapped` outcome
+                                  # may ONLY ref such a proposal, never a bare IRI
+operational_warrant:              # XOR — a term is a DECISION term or a SUPPORT term,
+                                  # never both (dual-role warrants are the cycle smuggle)
+  competency_questions: []        # decision term: CQ ids that EXIST in the CQ file
+                                  # (--repo resolves membership; ghost CQs fail)
+  semantic_support_for: []        # OR support term: `otp:` ids from THIS run (target
+                                  # must carry decision CQs) or IRIs of steward-ACCEPTED
+                                  # proposals in scan — never a CQ id, never itself
+alternatives_rejected: []
+open_issues: []
+revision_requests: []             # adversary repairs land HERE (next synthesis pass input),
+                                  # never as silent in-place fixes
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed                  # the ONLY value this pipeline may write

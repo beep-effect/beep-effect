@@ -1,0 +1,20 @@
+id: fa:alt3:056
+hypothesis_ref: dh:yeet-handler:010
+identity_card_ref: ic:alt3:056
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: serialized Yeet run-result record'
+  still_viable: true
+- label: 'event: the verification-attempt terminal outcome occurrence'
+  still_viable: true
+strongest_counterexample: YeetVerdict carries elapsedMs, is JSON-codec'd, and is written by
+  writeRunVerdict. The run can finish without a surviving file, and a file can be rewritten
+  in tests via writeRunVerdictForTesting, so the record is not the occurrence.
+verdict: analyzed
+needed_evidence: Whether operators treat verdict.json as the governed artifact of record (information
+  object) or query only the live terminal state of the run (event). Both remain viable; they
+  are not the same individual.

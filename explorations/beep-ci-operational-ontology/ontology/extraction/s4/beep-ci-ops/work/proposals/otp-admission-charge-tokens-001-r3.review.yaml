@@ -1,0 +1,46 @@
+target: "otp:admission-charge-tokens:001"
+target_sha256: "1b0e23435746cde4103d63ec898ae30d8c1b8238b499fc972b750afd9157dcb5"
+chain_sha256: "1dedb70592551fc16c849c92cf448ab9fc5c699f3e8c1f5c0012d95723aceac9"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: property-value-not-identity
+    counterexample: >-
+      Requests R1 and R2 can each carry a charge of three tokens while being
+      distinct requests under distinct policy assignments. The revised card
+      treats subject, assignment provenance, magnitude, and convention as the
+      assertion context and does not identify either subject by the number.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-term
+    counterexample: >-
+      Removing admissionChargeTokens leaves CQ-010 unable to bind the grant's
+      charge and leaves CQ-021 unable to return the queued request's charge.
+      Both CQs project or compare this property, so the warrant is necessary.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A DTO can copy an integer named weightTokens, but an implementation-only
+      counter with no admission-charge meaning cannot preserve the observed
+      scheduler rule that this exact value is added to live charges and decides
+      whether the contender may stage. The runtime fact defeats the null twin.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5"
+  - "po:sha256:7133fd16712631ed47e3cc1618eb4043126bbb8ad13ddcc94dd120afebb1c174"
+  - "po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f"
+  - "CQ-010"
+  - "CQ-021"

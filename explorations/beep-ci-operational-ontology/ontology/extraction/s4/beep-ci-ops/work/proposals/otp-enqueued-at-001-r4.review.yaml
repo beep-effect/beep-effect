@@ -1,0 +1,45 @@
+target: "otp:enqueued-at:001"
+target_sha256: "71ba4e63cbea2b3037e195019dea2372d43d2d55d0bf52b582625dbd9ac4beb6"
+chain_sha256: "af961fe32461a8851486cfab5a183a7b90f6a30a296e50b01bf9548c5bd5ebf3"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The data-property proposal asserts no parents edge; no is-a or subproperty
+    relation exists to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: property-not-event-identity
+    counterexample: >-
+      One request can be enqueued twice within one millisecond, and two requests
+      can share the same recorded instant. The card supplies no event identity
+      and keys each assertion to its request and enqueue occurrence, so equal
+      timestamp values merge neither requests nor occurrences.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-required
+    counterexample: >-
+      Removing enqueuedAt prevents CQ-021 from returning the enqueue instant
+      projected for every queued SeatRequest. The property is a required answer
+      column and deployed carrier, not a word mentioned only in listing prose.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-queue-time-discriminator
+    counterexample: >-
+      An unused timestamp field could be implementation-only, but it would not
+      preserve the deployed behavior that stamps the durable ticket and later
+      compares the enqueue instant with current time to change effective
+      priority. The runtime temporal relation is not exhausted by its field.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf"
+  - "po:sha256:9c431dec2cde95c190b0b7d6cdbcbda162b9cf587a8906a6fe1a4d2286a01d58"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "CQ-021"

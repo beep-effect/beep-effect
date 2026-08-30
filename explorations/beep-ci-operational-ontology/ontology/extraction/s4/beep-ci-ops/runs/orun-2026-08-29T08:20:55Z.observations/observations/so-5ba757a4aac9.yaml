@@ -1,0 +1,25 @@
+id: so:sha256:5ba757a4aac98e0d3609a7d6642729c8acc1805c69aa7768f425fba4c793a2bf
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 203
+  end_line: 203
+  content_sha256: 7b3d1099ffe182bb287c7e5ff2d12bec96455b946fcf8db75a6e384705bf5991
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::StepFlakeQuarantinePolicy
+  lexical_name: StepFlakeQuarantinePolicy
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: StepFlakeQuarantinePolicy
+- predicate: exports_symbol
+  object: StepFlakeQuarantinePolicy
+source_excerpt: export type StepFlakeQuarantinePolicy = typeof StepFlakeQuarantinePolicy.Type;
+epistemic_status: parser_derived

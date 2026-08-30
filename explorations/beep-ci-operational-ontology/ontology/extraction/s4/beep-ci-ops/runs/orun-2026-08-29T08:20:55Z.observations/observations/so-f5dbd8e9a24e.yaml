@@ -1,0 +1,24 @@
+id: so:sha256:f5dbd8e9a24e99ef10073dea2eaaef6f53f6b5027ef1b8752ddbe4ffd1c4ab22
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1628
+  end_line: 1647
+  content_sha256: b9fd7b32d492252528885b37f28e4440f9fd293f75c4a7246e3ae54042b551bb
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::parseCiLocalLaneSelection
+  lexical_name: parseCiLocalLaneSelection
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(function*
+  (
+epistemic_status: parser_derived

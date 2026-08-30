@@ -1,0 +1,33 @@
+id: "dh:reporun:002"
+observation_refs:
+  - "so:sha256:34b48a9193cc6492f7d9dc29870607f32b095b278c89c94ca42778403c80271d"
+  - "so:sha256:d04af36f48e323964940f6af826755a579e49fadfd4f88d1bec812dbacc5bab6"
+  - "po:sha256:fa61728f315583616a5f480898459fd11490e806fb3e45aa9d494ab6d4d4291d"
+  - "so:sha256:0277f1c842a57e6b4661bcb5c4322652755a4f40781e23e26013fc13dcbffb6f"
+  - "so:sha256:393aa76baec79587745218d551a7847a929f7b6289d65373194454f4a59a3061"
+  - "so:sha256:091d871f1ccb6d54b3a0e821fa93c85449dafe94995b0362c4dd2aa8f68df6ab"
+  - "so:sha256:800c2cca278c275a2a9a053bc05d6a67f4f76d94fed64af9b4a92c4d071e0dae"
+  - "so:sha256:c4609511021730abce805c627e8ac39fb16a03089ebf2edff20a186e2f2c05af"
+  - "so:sha256:cb422be87036ac0926cb6bef56d7228ba4a48995c1f55cf8f8e7a4d04ef490fe"
+  - "so:sha256:0e80d676e52c56b59dd8ea000f3f88c70c6909505051e24cb53897f2aa66cef0"
+  - "so:sha256:1f683086a8f3d62635b93bd05ecc2c2c67a6b96894eb14b86059bf79a7b873e4"
+cq_warrants: ["CQ-013"]
+proposed_referent:
+  label: "setup-step failure job-shape pattern"
+  description: "A failed GitHub job whose implicit setup step itself concluded failure before repository commands ran."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Deterministic workflow setup defect rather than a hosted control-plane failure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Classification label recorded about a GitHub job"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A failed-job DTO can carry the setup-5xx classifier result, matching step records, and an explanation that no repository command ran while remaining only a classification record; the cited declarations do not establish a separately retained failure situation."
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

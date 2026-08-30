@@ -1,0 +1,23 @@
+id: "dh:yeet-handler:072"
+observation_refs:
+  - "po:sha256:64a464663a4fa77d86caca2465000e3826e0c545074e497d877d20c8b729da90"
+  - "po:sha256:7eca76982889e1d44935a61fc120bb17d98363eb8870b838664ed0ddb3ed1d51"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "publish admission-priority token"
+  description: "A lexical alias used to select the publish priority in an admission call; it is not itself the priority category."
+representation_status: lexical_alias
+alternatives:
+  - label: "publish-priority category"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "local string with no operational interpretation"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "Contrasting call sites pass publish and verify through a field explicitly labeled priority, supporting a vocabulary interpretation without turning either token into a domain entity."
+  discriminator: "The publish-mode call passes publish through the same priority slot for which ordinary admission calls pass verify, so the token selects an operational priority alternative."
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

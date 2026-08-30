@@ -31,7 +31,11 @@ import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storag
  * ```ts
  * import { StorageKeyValueStoreLive } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(StorageKeyValueStoreLive)
+ * import { Layer } from "effect"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
+ *
+ * const layer = Layer.provide(StorageKeyValueStoreLive, StorageServiceTest)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -76,9 +80,11 @@ export const StorageKeyValueStoreLive = Layer.effect(
  * **Example** (Inspect workflow persistence live)
  *
  * ```ts
- * import { WorkflowPersistenceLive } from "@effect-ontology/Service/WorkflowPersistence"
+ * import { Layer } from "effect"
+ * import { WorkflowPersistenceLive, WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(WorkflowPersistenceLive)
+ * const layer = Layer.merge(WorkflowPersistenceLive, WorkflowPersistenceMemory)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -100,9 +106,11 @@ export const WorkflowPersistenceLive = Persistence.layerKvs.pipe(
  * **Example** (Inspect workflow persistence test)
  *
  * ```ts
- * import { WorkflowPersistenceTest } from "@effect-ontology/Service/WorkflowPersistence"
+ * import { Layer } from "effect"
+ * import { WorkflowPersistenceMemory, WorkflowPersistenceTest } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(WorkflowPersistenceTest)
+ * const layer = Layer.merge(WorkflowPersistenceTest, WorkflowPersistenceMemory)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -125,7 +133,9 @@ export const WorkflowPersistenceTest = Persistence.layerKvs.pipe(
  * ```ts
  * import { WorkflowPersistenceMemory } from "@effect-ontology/Service/WorkflowPersistence"
  *
- * console.log(WorkflowPersistenceMemory)
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.merge(WorkflowPersistenceMemory, WorkflowPersistenceMemory))
  * ```
  *
  * @category services

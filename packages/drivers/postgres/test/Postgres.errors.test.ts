@@ -19,6 +19,7 @@ import {
 } from "@beep/postgres";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Equal, Layer, Result } from "effect";
 import * as O from "effect/Option";
@@ -569,7 +570,9 @@ describe("Postgres Drizzle migrations", () => {
         objects: () => Effect.succeed([]),
         transaction: (run: (tx: { readonly execute: typeof execute }) => Effect.Effect<unknown>) => run({ execute }),
       };
-      const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config);
+      const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config).pipe(
+        provideScopedLayer(NodeCrypto.layer)
+      );
 
       expectRoundTrip(MigrationBundleConfig, config);
       expect(result).toBeUndefined();

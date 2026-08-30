@@ -1,0 +1,20 @@
+id: "dh:yeet-watch:012"
+observation_refs:
+  - "so:sha256:8d14a99f2db54bc130bc1c710c254f84c35ef25278cb249b5221e8a17c972877"
+cq_warrants: []
+proposed_referent:
+  label: "PR closeout invocation options"
+  description: "The source-level configuration object accepted by the closeout implementation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "closeout procedure specification"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An exported options declaration is configuration plumbing; the observation contains no independent operational entity, obligation, or execution that would survive the implementation representation."
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

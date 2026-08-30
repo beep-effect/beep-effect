@@ -1,0 +1,25 @@
+id: "dh:cilane:020"
+observation_refs:
+  - "po:sha256:184a30a7033da8a1b98cfbddc05c823305330ae4c08f4c61d276497c8bfa14fe"
+  - "po:sha256:65f5a991f4d9445c5c7b1a91a45c89fed3aa5c6078f0e14de0555a3961a4aee4"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "secrets verification lane"
+  description: "A possible secret-scanning verification lane named by the quoted secrets token."
+representation_status: lexical_alias
+alternatives:
+  - label: "secrets command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "secret-scanning verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations repeat the secrets literal but do not report a scanner, target corpus, execution, finding, or verdict. Stable spelling and list membership remain compatible with pure dispatch vocabulary."
+epistemic_status: proposed
+confidence:
+  value: 0.44
+  use_for_acceptance: false

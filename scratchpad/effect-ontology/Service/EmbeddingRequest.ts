@@ -36,38 +36,50 @@ export interface EmbedTextRequest extends Request.Request<Embedding, AnyEmbeddin
 }
 
 /**
- * EmbedTextRequest constructor
+ * Tagged Effect Request constructor for a single embedding.
  *
- * **Example** (Inspect embed text request)
+ * **Example** (Build a tagged embed request)
  *
  * ```ts
+ * import { ProviderMetadata } from "@effect-ontology/Service/EmbeddingProvider"
  * import { EmbedTextRequest } from "@effect-ontology/Service/EmbeddingRequest"
  *
- * console.log(EmbedTextRequest)
+ * const request = EmbedTextRequest({
+ *   text: "Ada founded Acme.",
+ *   taskType: "search_document",
+ *   metadata: ProviderMetadata.make({ providerId: "nomic", modelId: "nomic-v1", dimension: 768 })
+ * })
+ * console.log(request._tag) // "EmbedTextRequest"
  * ```
  *
- * @category services
+ * @category constructors
  * @since 0.0.0
  */
 export const EmbedTextRequest = Request.tagged<EmbedTextRequest>("EmbedTextRequest");
 
 /**
- * Generate a unique hash for an embedding request
+ * Build the batch-window deduplication key for an embedding request.
  *
  * **Details**
  *
- * Used for request deduplication within a batch window.
- * Format: providerId::modelId::taskType::text
+ * Format is `providerId::modelId::taskType::text`. Requests that share this
+ * key collapse inside the resolver window.
  *
- * **Example** (Inspect embed request hash)
+ * **Example** (Hash a tagged request)
  *
  * ```ts
- * import { embedRequestHash } from "@effect-ontology/Service/EmbeddingRequest"
+ * import { ProviderMetadata } from "@effect-ontology/Service/EmbeddingProvider"
+ * import { EmbedTextRequest, embedRequestHash } from "@effect-ontology/Service/EmbeddingRequest"
  *
- * console.log(embedRequestHash)
+ * const request = EmbedTextRequest({
+ *   text: "Ada founded Acme.",
+ *   taskType: "search_document",
+ *   metadata: ProviderMetadata.make({ providerId: "nomic", modelId: "nomic-v1", dimension: 768 })
+ * })
+ * console.log(embedRequestHash(request)) // "nomic::nomic-v1::search_document::Ada founded Acme."
  * ```
  *
- * @category services
+ * @category utilities
  * @since 0.0.0
  */
 export const embedRequestHash = (req: EmbedTextRequest): string =>

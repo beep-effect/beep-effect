@@ -1,0 +1,26 @@
+id: "dh:sched-core:025"
+observation_refs:
+  - "so:sha256:4373c8b7887960e86fdd53df2ace2627e4358d7cb383ebb6a245c4e22cd48de3"
+  - "so:sha256:9f2099c635ef34ad3043590638b518c6f513ccc8c08bf1bc20d9b1796f321b52"
+  - "so:sha256:acf93268297dcd9c7541ec055877b1c9d58b4e892e52c6c6444c0d65fb5393c6"
+  - "so:sha256:c985560b94a67ce0efae298da7cc2612087a23e58c884c58a145ddf1d3551dee"
+  - "po:sha256:792fb0d34c7c5554dc9c45ed05aa5f4cff6d5e0c28734d16a0ac63a889eba819"
+  - "po:sha256:ff814eb11e80dc2620c720557874ef4c1137e1346a8ce8a03e917e5da315a71a"
+cq_warrants: []
+proposed_referent:
+  label: "admission-owner liveness criterion"
+  description: "An information artifact specifying how current process existence and process-start continuity determine whether a recorded admission owner still persists."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "the process's current alive-or-dead condition"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "platform-specific process probing implementation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "JSON owner fields plus scheduler helper code can probe pid and process start and reap stale files, reproducing the cited behavior without a separately governed liveness-criterion artifact."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

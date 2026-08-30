@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for the shared Claude runtime.
  *
@@ -216,3 +215,4 @@ describe("ClaudeRuntime", () => {
       .finally(() => runtime.dispose());
   });
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

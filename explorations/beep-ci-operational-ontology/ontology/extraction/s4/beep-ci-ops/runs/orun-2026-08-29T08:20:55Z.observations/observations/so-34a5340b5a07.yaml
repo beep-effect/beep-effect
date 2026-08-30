@@ -1,0 +1,23 @@
+id: so:sha256:34a5340b5a0732e78f33e8b457b196ec85c08dc8a4e35fae42f74234642956c2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 1464
+  end_line: 1512
+  content_sha256: 782e188bed98c5f9d431329a484dd80216526e6e3c206ade0f68263488d054f2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runYeet
+  lexical_name: runYeet
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: runYeet
+source_excerpt: export const runYeet = Effect.fn("Yeet.runYeet")(function* (
+epistemic_status: parser_derived

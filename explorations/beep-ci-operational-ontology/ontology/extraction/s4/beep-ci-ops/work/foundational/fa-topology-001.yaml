@@ -1,0 +1,17 @@
+id: "fa:topology:001"
+hypothesis_ref: "dh:topology:001"
+identity_card_ref: "ic:topology:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Workspace software package bearer modeled as a kind rather than a PackageRef information object"
+    still_viable: true
+  - label: "Package-name token modeled as an anti-rigid reference role of another information object"
+    still_viable: true
+  - label: "PackageRef as only a query-vocabulary label"
+    still_viable: false
+strongest_counterexample: "The same @beep/* spelling can designate different packages in separate repositories or after deletion and recreation, while one continuing package can be renamed; name equality and package-bearer identity therefore diverge."
+verdict: analyzed

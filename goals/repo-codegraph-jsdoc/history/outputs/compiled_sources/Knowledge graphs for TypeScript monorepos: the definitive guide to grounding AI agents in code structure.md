@@ -1,5 +1,8 @@
 # Knowledge graphs for TypeScript monorepos: the definitive guide to grounding AI agents in code structure
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 **A compiler-accurate knowledge graph built from TypeScript's own type system is the single most effective architecture for eliminating AI code hallucinations in large monorepos.** The approach works because code — unlike natural language — has deterministic, parseable structure that knowledge graphs can capture precisely, giving AI agents verified facts about every function, type, import, and dependency instead of forcing them to guess. Research shows **32.8% improvement in bug-fix resolve rates** (RepoGraph, 2024) and **36.36% pass@1 on repository-level generation** (KG-CodeGen, ICSE 2025) when graph-structured context replaces naive vector search. Yet remarkably, only a handful of tools — Greptile, Potpie AI, and FalkorDB's Code Graph — actually build knowledge graphs from codebases today. Every major AI coding assistant (Cursor, Copilot, Claude Code, Codex) still relies on vector similarity or brute-force context windows. This represents both a significant technical opportunity and a validated market gap.
 
 This report synthesizes findings across 100+ sources — academic papers, open-source projects, commercial tools, and production architectures — to provide a complete blueprint for building a TypeScript monorepo knowledge graph system that dramatically reduces LLM hallucinations across code generation, review, debugging, documentation, and migration tasks.

@@ -1,0 +1,22 @@
+id: fa:alt2:059
+hypothesis_ref: dh:yeet-watch:029
+identity_card_ref: ic:alt2:059
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: allowed environment-only rerun signature specification'
+  still_viable: true
+- label: 'situation: the runner-loss job-shape obtaining classified on the failed job'
+  still_viable: true
+- label: 'lexical_alias: runner-loss literal token'
+  still_viable: false
+strongest_counterexample: >-
+  planYeetMonitorReruns and applyYeetMonitorJobDecision act on a present flake class as a rerun license, which a mere vocabulary
+  token cannot explain and which a particular lost-runner event would not survive reuse across jobs.
+verdict: analyzed
+needed_evidence: >-
+  An observation that the monitor's runner-loss class is exactly the detector conjunction (or a strictly coarser/finer criterion)
+  would join or split this signature from the job-shape situation.

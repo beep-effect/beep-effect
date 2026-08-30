@@ -1,0 +1,25 @@
+id: so:sha256:e78b1a951729f59c449331ce1b39c87d1775a6c55e16f9c27cfcf70d97544f90
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 295
+  end_line: 304
+  content_sha256: 86caa23b7c7623ab0d798f442c075334e242e76176faec83effa9cb36f6d81da
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::PackageJsonDocument
+  lexical_name: PackageJsonDocument
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: PackageJsonDocument
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class PackageJsonDocument extends S.Class<PackageJsonDocument>($I`PackageJsonDocument`)(
+epistemic_status: parser_derived

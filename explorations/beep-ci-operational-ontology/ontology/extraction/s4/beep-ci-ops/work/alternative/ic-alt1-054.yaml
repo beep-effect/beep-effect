@@ -1,0 +1,31 @@
+id: "ic:alt1:054"
+hypothesis_ref: "dh:worktree-config:011"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two browser-QA verification-lane procedures are the same iff they prescribe
+    the same repeatable record-then-extract-then-judge sequence for gesture-bearing UI
+    verification. The command spelling bun run beep qa is reidentification evidence, never the
+    sameness criterion."
+  reidentification_key:
+    - "bun run beep qa"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one procedure specification whose stages are record, extract, and judge; a QA session is
+    not a part of the specification"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A recorded QA session with a witness log is an execution plus evidence, not a
+      second procedure. The AGENTS.md sentence is documentation of the procedure, not the
+      procedure itself."
+status: "proposed"

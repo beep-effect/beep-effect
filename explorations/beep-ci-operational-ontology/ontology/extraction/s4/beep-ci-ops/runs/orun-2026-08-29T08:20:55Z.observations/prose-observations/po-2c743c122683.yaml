@@ -1,0 +1,10 @@
+id: po:sha256:2c743c12268376189d5c1e2c3cf5407be95ddded11339842a938d1a0bb54415c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 16
+  end_line: 16
+quote: '@beep/shared-domain 15'
+epistemic_status: quoted_prose

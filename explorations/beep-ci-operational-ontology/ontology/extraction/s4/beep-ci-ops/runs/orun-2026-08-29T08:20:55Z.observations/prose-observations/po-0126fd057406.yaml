@@ -1,0 +1,10 @@
+id: po:sha256:0126fd0574061a79d5cdf4a90ee2961ba2d90b452535c332c5c3578986bd233d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 177
+  end_line: 178
+quote: "\"lint\",\n  \"lint-policy\","
+epistemic_status: quoted_prose

@@ -1,0 +1,24 @@
+id: fa:alt3:002
+hypothesis_ref: dh:reporun:010
+identity_card_ref: ic:alt3:002
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: repeatable pre-push command prescription'
+  still_viable: true
+- label: 'kind: the pre-push verification lane as an operational participant'
+  still_viable: true
+- label: 'event: a particular pre-push execution'
+  still_viable: false
+strongest_counterexample: repoProofStepDefinition maps every surface, including pre-push,
+  onto RepoProofStepDefinition records; that constructor can be rerun without consuming CPU,
+  so collapsing the prescription into a lane-run would make the plan consume resources it
+  never runs.
+verdict: analyzed
+needed_evidence: An observation that pre-push is scheduled, obligated, or scoped as a verification
+  lane independently of this command mapping, which would discriminate the lane-kind reading
+  from the procedure-specification reading. Observationally equivalent on the constructor
+  alone.

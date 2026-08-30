@@ -1,0 +1,23 @@
+id: so:sha256:e75ee764c9fa77bcea783080d7e9ad681b83eba6debf4d44d68e6145d651bc31
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 204
+  end_line: 209
+  content_sha256: 04a4d3c2fa2cd9d9ae21cc8fab91293d85a3b819e5b11d878a4df618271a81ed
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts::packagePathsByName
+  lexical_name: packagePathsByName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const packagePathsByName = (document: TurboQueryLsDocument): Record<string, string> =>'
+epistemic_status: parser_derived

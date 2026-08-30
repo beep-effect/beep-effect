@@ -1,0 +1,30 @@
+id: ic:alt3:053
+hypothesis_ref: dh:worktree-config:009
+identity:
+  supplies_identity: true
+  identity_criterion: Two verification work-unit specifications are the same iff they prescribe
+    the same pairing of a verification activity with a scope. Affected edit-loop docgen and
+    full-repository docgen are two such prescriptions, not two executions.
+  reidentification_key:
+  - docgen:local
+  - docgen
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one lane-by-scope verification prescription
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: Running bun run docgen:local on a particular day is an execution of the affected
+    prescription, not a second specification; the full docgen command is a different specification,
+    not a later state of the same one.
+status: proposed

@@ -1,0 +1,23 @@
+id: "fa:alt1:002"
+hypothesis_ref: "dh:reporun:008"
+identity_card_ref: "ic:alt1:002"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "quality verification lane as a rigid process kind whose instances are runs"
+    still_viable: true
+  - label: "general software quality attribute"
+    still_viable: false
+  - label: "CLI selector token with no prescribed command content"
+    still_viable: false
+strongest_counterexample: "repoProofStepDefinition maps the quality member to a
+  RepoProofStepDefinition value; that constructor does not spawn a process, so taking the
+  specification to be an execution occurrence is already false on the observed function."
+verdict: "analyzed"
+needed_evidence: "An observation of a quality-surface run that is reidentified independently of
+  the definition (a dated WorkUnitExecution). If operations quantify only over the definition,
+  the process-kind rival dies; if they reidentify runs as instances of a quality-lane kind, the
+  rivals remain and a spec/execution pair must be minted."

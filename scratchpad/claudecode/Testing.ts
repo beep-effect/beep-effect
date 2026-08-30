@@ -1,31 +1,42 @@
 /**
  * Test helpers for effect-claudecode.
  *
+ * **Details**
+ *
  * Provides a test harness (`runHookWithMockStdin`) that exercises the entire
  * runner pipeline — stdin → decode → handler → encode → stdout — without
  * spawning a process. Plus mock constructors and assertion helpers.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
-import { pipe } from "effect";
+import {
+  Cause,
+  Effect,
+  Exit,
+  FileSystem,
+  HashMap,
+  Inspectable,
+  Layer,
+  MutableHashMap,
+  MutableHashSet,
+  Path,
+  PlatformError,
+  pipe,
+  Sink,
+  Stdio,
+  Stream,
+} from "effect";
 import * as A from "effect/Array";
-import * as Cause from "effect/Cause";
-import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stdio from "effect/Stdio";
-import * as Stream from "effect/Stream";
-
 import {
   HookControlledExit,
   HookHandlerError,
@@ -148,13 +159,13 @@ export const makeMockStdioLayer = (options: {
   const decoder = new TextDecoder();
   const writeStdoutChunk = (chunk: string | Uint8Array) =>
     Effect.sync(() => {
-      options.stdoutBuffer.push(typeof chunk === "string" ? chunk : decoder.decode(chunk));
+      options.stdoutBuffer.push(P.isString(chunk) ? chunk : decoder.decode(chunk));
     });
   const writeStderrChunk = (chunk: string | Uint8Array) =>
     Effect.sync(() => {
       const buf = options.stderrBuffer;
       if (buf !== undefined) {
-        buf.push(typeof chunk === "string" ? chunk : decoder.decode(chunk));
+        buf.push(P.isString(chunk) ? chunk : decoder.decode(chunk));
       }
     });
   const stdoutSink = (): Sink.Sink<void, string | Uint8Array, never, never> => Sink.forEach(writeStdoutChunk);
@@ -228,41 +239,39 @@ type HookInputEnvelope = Pick<HookEnvelope, "session_id" | "transcript_path" | "
  * **Example** (Describe a successful hook result)
  *
  * ```ts
- * import type { Testing } from "effect-claudecode"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { Testing } from "effect-claudecode"
  *
- * const result = {
+ * const result = Testing.RunHookResult.make({
  *   output: undefined,
  *   stdout: "",
  *   stderr: "",
- *   exitCode: 0,
+ *   exitCode: NonNegativeInt.make(0),
  *   errorTag: undefined
- * } satisfies Testing.RunHookResult
+ * })
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface RunHookResult {
-  /** Parsed JSON written to stdout, or `undefined` if nothing was written. */
-  readonly output: unknown;
-  /** Raw stdout string. */
-  readonly stdout: string;
-  /** Captured stderr string. */
-  readonly stderr: string;
-  /**
-   * Exit code the runner would produce under the real `runMain` teardown.
-   * `0` success, handler-authored `HookProcessOutput` exits use their
-   * requested code, `2` input decode failure, `1` other runner failure,
-   * `130` interrupt.
-   */
-  readonly exitCode: number;
-  /** The `_tag` of the runner failure, if any. */
-  readonly errorTag: string | undefined;
-}
+export class RunHookResult extends S.Class<RunHookResult>($I`RunHookResult`)(
+  {
+    output: S.Unknown,
+    stdout: S.String,
+    stderr: S.String,
+    exitCode: NonNegativeInt,
+    errorTag: S.UndefinedOr(S.String),
+  },
+  $I.annote("RunHookResult", {
+    description: "Captured output, diagnostics, and classified exit state from an isolated hook execution.",
+  })
+) {}
 
 /**
  * Run a hook definition end-to-end against a mock stdin payload and capture
  * the stdout the runner would have written.
+ *
+ * **Details**
  *
  * This exercises the full runner pipeline (stdin read → JSON parse →
  * schema decode → handler → schema encode → stdout write) using
@@ -289,7 +298,7 @@ export interface RunHookResult {
  * @category testing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Hook and input are co-primary operands; the optional runtime layer leaves no unambiguous data-last arity.
 export const runHookWithMockStdin = <In extends HookInputEnvelope, Out, E, R>(
   hook: HookDefinition<In, Out, E, R>,
   stdinJson: string
@@ -320,7 +329,7 @@ export const runHookWithMockStdin = <In extends HookInputEnvelope, Out, E, R>(
 
     const { exitCode, errorTag } = classifyExit(exit);
 
-    return { output, stdout, stderr, exitCode, errorTag };
+    return RunHookResult.make({ output, stdout, stderr, exitCode: NonNegativeInt.make(exitCode), errorTag });
   });
 
 // ---------------------------------------------------------------------------
@@ -354,6 +363,8 @@ const makeFixture =
  * Fixture builders for every Claude Code hook event. Each entry
  * returns a JSON string suitable for passing to
  * `runHookWithMockStdin`.
+ *
+ * **Details**
  *
  * Defaults carry only the minimum fields required by the event
  * schema; callers override only what matters for the test.
@@ -506,13 +517,21 @@ export const fixtures = {
 
 const AnyString = Symbol.for("effect-claudecode/Testing/AnyString");
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
+const isRecord = P.isObject;
 
 const formatAssertionValue = (value: unknown): string =>
-  typeof value === "string" ? value : (JSON.stringify(value, null, 2) ?? String(value));
+  P.isString(value) ? value : Inspectable.toStringUnknown(value, 2);
+
+class TestingAssertionError extends S.TaggedError<TestingAssertionError>($I`TestingAssertionError`)(
+  "TestingAssertionError",
+  { message: S.String },
+  $I.annote("TestingAssertionError", {
+    description: "Synchronous assertion failure raised by the Claude Code test harness.",
+  })
+) {}
 
 const failAssertion = (message: string): never => {
-  throw new Error(message);
+  throw TestingAssertionError.make({ message });
 };
 
 const matchesExpected = (actual: unknown, expected: unknown): boolean => {
@@ -521,23 +540,23 @@ const matchesExpected = (actual: unknown, expected: unknown): boolean => {
   }
 
   if (expected === AnyString) {
-    return typeof actual === "string";
+    return P.isString(actual);
   }
 
-  if (expected instanceof RegExp) {
-    return typeof actual === "string" && expected.test(actual);
+  if (P.isRegExp(expected)) {
+    return P.isString(actual) && expected.test(actual);
   }
 
-  if (Array.isArray(expected)) {
+  if (A.isArray(expected)) {
     return (
-      Array.isArray(actual) &&
+      A.isArray(actual) &&
       actual.length === expected.length &&
       expected.every((item, index) => matchesExpected(actual[index], item))
     );
   }
 
   if (isRecord(expected)) {
-    return isRecord(actual) && Object.entries(expected).every(([key, value]) => matchesExpected(actual[key], value));
+    return isRecord(actual) && A.every(R.toEntries(expected), ([key, value]) => matchesExpected(actual[key], value));
   }
 
   return Object.is(actual, expected);
@@ -585,7 +604,7 @@ const assertDefined = <A>(value: A | undefined, label: string): A => {
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- An optional assertion hint makes one-argument direct calls indistinguishable from a curried overload.
 export const expectAllowDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = {
     permissionDecision: "allow",
@@ -612,7 +631,7 @@ export const expectAllowDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- An optional assertion hint makes one-argument direct calls indistinguishable from a curried overload.
 export const expectDenyDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = {
     permissionDecision: "deny",
@@ -639,7 +658,7 @@ export const expectDenyDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- An optional assertion hint makes one-argument direct calls indistinguishable from a curried overload.
 export const expectAskDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = {
     permissionDecision: "ask",
@@ -653,6 +672,8 @@ export const expectAskDecision = (output: unknown, reason?: string): void => {
 /**
  * Assert that `output` is a top-level `block` decision. If `reason`
  * is provided, it must match `reason`.
+ *
+ * **Details**
  *
  * Applies to events that encode a top-level JSON `decision: "block"`, such
  * as UserPromptSubmit, PostToolUse, PostToolUseFailure, PostToolBatch, Stop,
@@ -675,7 +696,7 @@ export const expectAskDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- An optional assertion hint makes one-argument direct calls indistinguishable from a curried overload.
 export const expectBlockDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = { decision: "block" };
   if (reason !== undefined) {
@@ -704,7 +725,7 @@ export const expectBlockDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- An optional assertion hint makes one-argument direct calls indistinguishable from a curried overload.
 export const expectAddContext = (output: unknown, context?: string): void => {
   const expected: Record<string, unknown> =
     context === undefined ? { additionalContext: AnyString } : { additionalContext: context };
@@ -796,10 +817,15 @@ export interface MockFileSystemOptions {
  * @category models
  * @since 0.0.0
  */
-export interface MockFileSystemSnapshot {
-  readonly files: ReadonlyMap<string, string>;
-  readonly directories: ReadonlyArray<string>;
-}
+export class MockFileSystemSnapshot extends S.Class<MockFileSystemSnapshot>($I`MockFileSystemSnapshot`)(
+  {
+    files: S.HashMap(S.String, S.String),
+    directories: S.Array(S.String),
+  },
+  $I.annote("MockFileSystemSnapshot", {
+    description: "Deterministic file contents and directory paths captured from the in-memory file-system harness.",
+  })
+) {}
 
 /**
  * Stateful in-memory file system harness used by tests.
@@ -861,8 +887,11 @@ const ancestorDirectories = (path: string): ReadonlyArray<string> => {
   return directories;
 };
 
-const toFileMap = (files?: MockFileEntries): Map<string, string> =>
-  files === undefined ? new Map() : files instanceof Map ? new Map(files) : new Map(Object.entries(files));
+const toFileMap = (files?: MockFileEntries): MutableHashMap.MutableHashMap<string, string> => {
+  if (P.isUndefined(files)) return MutableHashMap.empty();
+  if (files instanceof Map) return MutableHashMap.fromIterable(files);
+  return MutableHashMap.fromIterable(R.toEntries(files as Readonly<Record<string, string>>));
+};
 
 const permissionDeniedError = (path: string, method: MockFileSystemOperation) =>
   PlatformError.systemError({
@@ -891,33 +920,38 @@ const directoryNotEmptyError = (path: string) =>
     pathOrDescriptor: path,
   });
 
-const ensureInitialDirectories = (files: Map<string, string>): Set<string> => {
-  const directories = new Set<string>(["/"]);
-  for (const filePath of files.keys()) {
+const ensureInitialDirectories = (
+  files: MutableHashMap.MutableHashMap<string, string>
+): MutableHashSet.MutableHashSet<string> => {
+  const directories = MutableHashSet.fromIterable(["/"]);
+  for (const filePath of MutableHashMap.keys(files)) {
     for (const directory of ancestorDirectories(parentDirectory(filePath))) {
-      directories.add(directory);
+      MutableHashSet.add(directories, directory);
     }
   }
   return directories;
 };
 
-const hasEntry = (files: ReadonlyMap<string, string>, directories: ReadonlySet<string>, path: string): boolean =>
-  files.has(path) || directories.has(normalizeDirectoryPath(path));
+const hasEntry = (
+  files: MutableHashMap.MutableHashMap<string, string>,
+  directories: MutableHashSet.MutableHashSet<string>,
+  path: string
+): boolean => MutableHashMap.has(files, path) || MutableHashSet.has(directories, normalizeDirectoryPath(path));
 
 const directDirectoryEntries = (
-  files: ReadonlyMap<string, string>,
-  directories: ReadonlySet<string>,
+  files: MutableHashMap.MutableHashMap<string, string>,
+  directories: MutableHashSet.MutableHashSet<string>,
   dirPath: string
 ): ReadonlyArray<string> => {
   const normalized = normalizeDirectoryPath(dirPath);
   const prefix = normalized === "/" ? "/" : `${normalized}/`;
-  const entries = new Set<string>();
+  const entries = MutableHashSet.empty<string>();
 
-  for (const filePath of files.keys()) {
+  for (const filePath of MutableHashMap.keys(files)) {
     if (!filePath.startsWith(prefix)) continue;
     const remainder = filePath.slice(prefix.length);
     const slashIndex = remainder.indexOf("/");
-    entries.add(slashIndex === -1 ? remainder : remainder.slice(0, slashIndex));
+    MutableHashSet.add(entries, slashIndex === -1 ? remainder : remainder.slice(0, slashIndex));
   }
 
   for (const directoryPath of directories) {
@@ -925,28 +959,28 @@ const directDirectoryEntries = (
     const remainder = directoryPath.slice(prefix.length);
     if (remainder.length === 0) continue;
     const slashIndex = remainder.indexOf("/");
-    entries.add(slashIndex === -1 ? remainder : remainder.slice(0, slashIndex));
+    MutableHashSet.add(entries, slashIndex === -1 ? remainder : remainder.slice(0, slashIndex));
   }
 
-  return Array.from(entries)
+  return A.fromIterable(entries)
     .filter((entry) => entry.length > 0)
     .sort();
 };
 
 const recursiveDirectoryEntries = (
-  files: ReadonlyMap<string, string>,
-  directories: ReadonlySet<string>,
+  files: MutableHashMap.MutableHashMap<string, string>,
+  directories: MutableHashSet.MutableHashSet<string>,
   dirPath: string
 ): ReadonlyArray<string> => {
   const normalized = normalizeDirectoryPath(dirPath);
   const prefix = normalized === "/" ? "/" : `${normalized}/`;
-  const entries = new Set<string>();
+  const entries = MutableHashSet.empty<string>();
 
-  for (const filePath of files.keys()) {
+  for (const filePath of MutableHashMap.keys(files)) {
     if (filePath.startsWith(prefix)) {
       const remainder = filePath.slice(prefix.length);
       if (remainder.length > 0) {
-        entries.add(remainder);
+        MutableHashSet.add(entries, remainder);
       }
     }
   }
@@ -955,16 +989,18 @@ const recursiveDirectoryEntries = (
     if (directoryPath === normalized || !directoryPath.startsWith(prefix)) continue;
     const remainder = directoryPath.slice(prefix.length);
     if (remainder.length > 0) {
-      entries.add(remainder);
+      MutableHashSet.add(entries, remainder);
     }
   }
 
-  return Array.from(entries).sort();
+  return A.fromIterable(entries).sort();
 };
 
 /**
  * Build a stateful in-memory file system harness with a ready-to-provide
  * `FileSystem` + `Path` layer and snapshot helpers for assertions.
+ *
+ * **Details**
  *
  * Unlike the earlier read-only helper, this harness supports directory
  * listings and writes, so it can exercise `Plugin.write`, `Plugin.scan`,
@@ -985,7 +1021,7 @@ const recursiveDirectoryEntries = (
  * @category testing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- This zero-to-two-argument test-fixture constructor has no data operand to pipe.
 export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSystemOptions): MockFileSystem => {
   const fileMap = toFileMap(files);
   const directories = ensureInitialDirectories(fileMap);
@@ -1002,21 +1038,21 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
           return Effect.fail(failure.value);
         }
         const sourceDir = normalizeDirectoryPath(fromPath);
-        if (!fileMap.has(fromPath) && !directories.has(sourceDir)) {
+        if (!MutableHashMap.has(fileMap, fromPath) && !MutableHashSet.has(directories, sourceDir)) {
           return Effect.fail(notFoundError(fromPath, "copy"));
         }
         return Effect.sync(() => {
           const addDirectories = (paths: ReadonlyArray<string>): void => {
             A.forEach(paths, (directory) => {
-              directories.add(directory);
+              MutableHashSet.add(directories, directory);
             });
           };
 
-          if (fileMap.has(fromPath)) {
-            const content = fileMap.get(fromPath);
+          if (MutableHashMap.has(fileMap, fromPath)) {
+            const content = O.getOrUndefined(MutableHashMap.get(fileMap, fromPath));
             if (content !== undefined) {
               addDirectories(ancestorDirectories(parentDirectory(toPath)));
-              fileMap.set(toPath, content);
+              MutableHashMap.set(fileMap, toPath, content);
             }
             return;
           }
@@ -1034,10 +1070,10 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
             addDirectories
           );
           pipe(
-            A.fromIterable(fileMap.entries()),
+            A.fromIterable(fileMap),
             A.filter(([filePath]) => filePath.startsWith(prefix)),
             A.forEach(([filePath, content]) => {
-              fileMap.set(`${targetDir}/${filePath.slice(prefix.length)}`, content);
+              MutableHashMap.set(fileMap, `${targetDir}/${filePath.slice(prefix.length)}`, content);
             })
           );
         });
@@ -1051,7 +1087,7 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
         if (O.isSome(failure)) {
           return Effect.fail(failure.value);
         }
-        const content = fileMap.get(path);
+        const content = O.getOrUndefined(MutableHashMap.get(fileMap, path));
         return content === undefined ? Effect.fail(notFoundError(path, "readFileString")) : Effect.succeed(content);
       },
       readFile: (path: string) => {
@@ -1059,7 +1095,7 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
         if (O.isSome(failure)) {
           return Effect.fail(failure.value);
         }
-        const content = fileMap.get(path);
+        const content = O.getOrUndefined(MutableHashMap.get(fileMap, path));
         return content === undefined
           ? Effect.fail(notFoundError(path, "readFile"))
           : Effect.succeed(textEncoder.encode(content));
@@ -1070,11 +1106,11 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
           return Effect.fail(failure.value);
         }
         const directory = parentDirectory(path);
-        if (!directories.has(directory)) {
+        if (!MutableHashSet.has(directories, directory)) {
           return Effect.fail(notFoundError(path, "writeFileString"));
         }
         return Effect.sync(() => {
-          fileMap.set(path, content);
+          MutableHashMap.set(fileMap, path, content);
         });
       },
       writeFile: (path: string, data: Uint8Array) => {
@@ -1083,11 +1119,11 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
           return Effect.fail(failure.value);
         }
         const directory = parentDirectory(path);
-        if (!directories.has(directory)) {
+        if (!MutableHashSet.has(directories, directory)) {
           return Effect.fail(notFoundError(path, "writeFile"));
         }
         return Effect.sync(() => {
-          fileMap.set(path, new TextDecoder().decode(data));
+          MutableHashMap.set(fileMap, path, new TextDecoder().decode(data));
         });
       },
       makeDirectory: Effect.fn("Testing.makeMockFileSystem.makeDirectory")(function* (path: string, makeOptions) {
@@ -1097,12 +1133,12 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
         }
         const normalized = normalizeDirectoryPath(path);
         const recursive = makeOptions?.recursive ?? false;
-        if (!recursive && !directories.has(parentDirectory(normalized))) {
+        if (!recursive && !MutableHashSet.has(directories, parentDirectory(normalized))) {
           return yield* notFoundError(path, "makeDirectory");
         }
         yield* Effect.sync(() => {
           for (const directory of recursive ? ancestorDirectories(normalized) : [normalized]) {
-            directories.add(directory);
+            MutableHashSet.add(directories, directory);
           }
         });
       }),
@@ -1112,7 +1148,7 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
           return Effect.fail(failure.value);
         }
         const normalized = normalizeDirectoryPath(path);
-        if (!directories.has(normalized)) {
+        if (!MutableHashSet.has(directories, normalized)) {
           return Effect.fail(notFoundError(path, "readDirectory"));
         }
         return Effect.succeed(
@@ -1130,21 +1166,23 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
         const recursive = removeOptions?.recursive ?? false;
         const force = removeOptions?.force ?? false;
 
-        if (fileMap.has(path)) {
+        if (MutableHashMap.has(fileMap, path)) {
           return yield* Effect.sync(() => {
-            fileMap.delete(path);
+            MutableHashMap.remove(fileMap, path);
           });
         }
 
-        if (!directories.has(normalized)) {
+        if (!MutableHashSet.has(directories, normalized)) {
           if (force) {
             return;
           }
           return yield* notFoundError(path, "remove");
         }
 
-        const descendants = Array.from(fileMap.keys()).filter((filePath) => filePath.startsWith(`${normalized}/`));
-        const descendantDirectories = Array.from(directories).filter(
+        const descendants = A.fromIterable(MutableHashMap.keys(fileMap)).filter((filePath) =>
+          filePath.startsWith(`${normalized}/`)
+        );
+        const descendantDirectories = A.fromIterable(directories).filter(
           (directoryPath) => directoryPath !== normalized && directoryPath.startsWith(`${normalized}/`)
         );
 
@@ -1154,12 +1192,12 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
 
         yield* Effect.sync(() => {
           for (const filePath of descendants) {
-            fileMap.delete(filePath);
+            MutableHashMap.remove(fileMap, filePath);
           }
           for (const directoryPath of descendantDirectories) {
-            directories.delete(directoryPath);
+            MutableHashSet.remove(directories, directoryPath);
           }
-          directories.delete(normalized);
+          MutableHashSet.remove(directories, normalized);
         });
       }),
     }),
@@ -1168,17 +1206,20 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
 
   return {
     layer,
-    snapshot: () => ({
-      files: new Map(Array.from(fileMap.entries()).sort(([left], [right]) => left.localeCompare(right))),
-      directories: Array.from(directories).sort(),
-    }),
-    readFile: (path: string) => fileMap.get(path),
+    snapshot: () =>
+      MockFileSystemSnapshot.make({
+        files: HashMap.fromIterable(fileMap),
+        directories: A.fromIterable(directories).sort(),
+      }),
+    readFile: (path: string) => O.getOrUndefined(MutableHashMap.get(fileMap, path)),
     exists: (path: string) => hasEntry(fileMap, directories, path),
   };
 };
 
 /**
  * Assert that a written plugin tree matches the expected file set exactly.
+ *
+ * **Details**
  *
  * String expectations must match exactly. `RegExp` expectations must match the
  * full file content via `expect(...).toMatch(...)`.
@@ -1200,27 +1241,32 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
-export const expectPluginTree = (
-  input: MockFileSystem | MockFileSystemSnapshot,
-  expected: Readonly<Record<string, string | RegExp>>
-): void => {
-  const snapshot = "layer" in input ? input.snapshot() : input;
-  const actualPaths = Array.from(snapshot.files.keys()).sort();
-  const expectedPaths = Object.keys(expected).sort();
+export const expectPluginTree: {
+  (expected: Readonly<Record<string, string | RegExp>>): (input: MockFileSystem | MockFileSystemSnapshot) => void;
+  (input: MockFileSystem | MockFileSystemSnapshot, expected: Readonly<Record<string, string | RegExp>>): void;
+} = dual(
+  2,
+  (input: MockFileSystem | MockFileSystemSnapshot, expected: Readonly<Record<string, string | RegExp>>): void => {
+    const snapshot = "layer" in input ? input.snapshot() : input;
+    const actualPaths = A.fromIterable(HashMap.keys(snapshot.files)).sort();
+    const expectedPaths = R.keys(expected).sort();
 
-  assertEqual(actualPaths, expectedPaths, "Plugin tree paths did not match.");
+    assertEqual(actualPaths, expectedPaths, "Plugin tree paths did not match.");
 
-  for (const path of expectedPaths) {
-    const actual = assertDefined(snapshot.files.get(path), `Expected plugin tree to contain ${path}.`);
-    const matcher = expected[path];
-    if (matcher instanceof RegExp) {
-      assertMatch(actual, matcher, `Plugin tree file ${path} did not match the expected pattern.`);
-    } else {
-      assertEqual(actual, matcher, `Plugin tree file ${path} did not match the expected contents.`);
+    for (const path of expectedPaths) {
+      const actual = assertDefined(
+        O.getOrUndefined(HashMap.get(snapshot.files, path)),
+        `Expected plugin tree to contain ${path}.`
+      );
+      const matcher = expected[path];
+      if (P.isRegExp(matcher)) {
+        assertMatch(actual, matcher, `Plugin tree file ${path} did not match the expected pattern.`);
+      } else {
+        assertEqual(actual, matcher, `Plugin tree file ${path} did not match the expected contents.`);
+      }
     }
   }
-};
+);
 
 /**
  * Write a plugin definition into an in-memory file system harness and return
@@ -1242,7 +1288,7 @@ export const expectPluginTree = (
  * @category testing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The defaulted destination and options make a one-argument direct call indistinguishable from a curried overload.
 export const writePluginToMemory = (
   definition: Plugin.PluginDefinition,
   destDir = "/plugin",
@@ -1297,7 +1343,7 @@ export interface PluginRoundTripResult {
  * @category testing
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The defaulted destination and options make a one-argument direct call indistinguishable from a curried overload.
 export const roundTripPlugin = (
   definition: Plugin.PluginDefinition,
   destDir = "/plugin",

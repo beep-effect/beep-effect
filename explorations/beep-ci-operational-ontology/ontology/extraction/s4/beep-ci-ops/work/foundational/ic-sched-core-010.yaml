@@ -1,0 +1,32 @@
+id: "ic:sched-core:010"
+hypothesis_ref: "dh:sched-core:011"
+identity:
+  supplies_identity: "unresolved"
+  identity_criterion: "Two live-memory observation artifacts are the same only when they derive from one measurement act on the same machine at the same observation boundary using the same measurement method; equal GiB values do not establish sameness."
+  reidentification_key:
+    - "measurement-event provenance not emitted"
+    - "machine scope not emitted"
+    - "observation time not emitted"
+    - "measurement method and unit"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: "unresolved"
+  supplies_identity: "unresolved"
+  unity: "One measurement output coupling available and total memory to one machine, method, and observation boundary; the implementation exposes values without that provenance bundle."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "the machine's time-varying memory-availability quality"
+    - "an operating-system adapter service with no observation-record tokens"
+  existential_dependencies:
+    - "a machine and measurement act"
+    - "a transient or durable information carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded for current-decision use by a later measurement"
+counterexamples:
+  - description: "The same machine can report 40 GiB twice and two machines can report 40 GiB once; without time and machine provenance these are indistinguishable values but not one observation."
+status: "proposed"

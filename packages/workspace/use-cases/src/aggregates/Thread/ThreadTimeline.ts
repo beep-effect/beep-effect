@@ -13,7 +13,9 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadTimeline");
@@ -289,8 +291,15 @@ export const activeBranchTurns = (turns: ReadonlyArray<TimelineTurn>): ReadonlyA
       // simply continues the conversation) rather than trusted: an unresolvable
       // parent must never be able to truncate the transcript, which is what a
       // reader would lose if this projection took a corrupt link at its word.
-      O.filter((replacedTurnId) => replacedTurnId !== turn.turnId),
-      O.flatMap((replacedTurnId) => A.findFirstIndex(branch, (candidate) => candidate.turnId === replacedTurnId)),
+      O.filter(P.not(Eq.equals(turn.turnId))),
+      O.flatMap((replacedTurnId) =>
+        A.findFirstIndex(
+          branch,
+          P.Struct({
+            turnId: Eq.equals(replacedTurnId),
+          })
+        )
+      ),
       O.map((index) => A.append(A.take(branch, index), turn)),
       O.getOrElse(() => A.append(branch, turn))
     )

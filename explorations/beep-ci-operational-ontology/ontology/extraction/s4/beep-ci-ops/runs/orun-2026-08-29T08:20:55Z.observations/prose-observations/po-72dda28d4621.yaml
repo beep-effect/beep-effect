@@ -1,0 +1,10 @@
+id: po:sha256:72dda28d4621e5ab4bf1a1f2d85ef9ae34b2393bde139ab0360ca629281cbebd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 559
+  end_line: 560
+quote: Resolve the cache plan for one Turbo invocation.
+epistemic_status: quoted_prose

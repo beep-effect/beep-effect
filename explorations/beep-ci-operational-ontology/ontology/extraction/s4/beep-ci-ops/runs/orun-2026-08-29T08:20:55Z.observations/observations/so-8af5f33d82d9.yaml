@@ -1,0 +1,23 @@
+id: so:sha256:8af5f33d82d9abddf82d12b528a4d62ae7f70b8bd48721c480913f6af5b10d44
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 185
+  end_line: 185
+  content_sha256: c01e3a0a74aa53ecbd556597d406b1fb3e4be4d2377f083d6db2503109076292
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/github/JobShape.ts::CLEANUP_STEP_NAME_PATTERN
+  lexical_name: CLEANUP_STEP_NAME_PATTERN
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const CLEANUP_STEP_NAME_PATTERN = /^(?:post\s|complete job$)/u;
+epistemic_status: parser_derived

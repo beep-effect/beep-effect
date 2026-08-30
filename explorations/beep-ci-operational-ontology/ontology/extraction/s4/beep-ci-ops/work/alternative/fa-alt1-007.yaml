@@ -1,0 +1,21 @@
+id: "fa:alt1:007"
+hypothesis_ref: "dh:sched-core:010"
+identity_card_ref: "ic:alt1:007"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "the live admission state as a situation at the observation instant"
+    still_viable: true
+  - label: "status-response DTO only"
+    still_viable: false
+strongest_counterexample: "admissionStatus is documented as a point-in-time view and
+  materializes lists copied off live leases and tickets; treating that copy as the continuant
+  pool would make every subsequent scan the same individual with teleported field values."
+verdict: "analyzed"
+needed_evidence: "Whether any competency question asks for the live pool as it is, independently
+  of a produced snapshot record. If status is always answered from AdmissionSnapshot, the
+  situation rival is a world-side duplicate of this information object and remains
+  observationally equivalent until a non-snapshot observation of the live pool exists."

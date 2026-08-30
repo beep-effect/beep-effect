@@ -1,0 +1,29 @@
+id: "dh:yeet-watch:031"
+observation_refs:
+  - "so:sha256:0a2c5f86ed363ec9af7d18b61cde9a0bd8f3332c6e23b7d14371b102026aa2b0"
+  - "so:sha256:b859fe7dc5c52ac10800e3b365fc4da4e1b6fcad4a91bed38c5c97daec171815"
+  - "so:sha256:aa27be879e233ca36dcecec3f679542311bebe32151e815c1f40f6e4b6e3bf66"
+  - "so:sha256:614f708e68eef38493e5d90a39b82b49bab0a7ef730bc3d5b8cf8e89090e8784"
+  - "so:sha256:88e351f78781291181cc784951d2b3c83fe9ad58311233a4115e98d0ab244e05"
+  - "so:sha256:a54ed495f8b367b873cce3eeb1d1ca8c0baa31727fe130d5b42091d0080359cc"
+  - "so:sha256:c5638e3942dc3becc40f695c02528ee5b1344a8b002a1091cc84e8de9acc0032"
+cq_warrants: []
+proposed_referent:
+  label: "classified failed-job information record"
+  description: "A record of one terminal-red hosted job, including its remote identity and any recognized rerun signature."
+representation_status: unresolved
+alternatives:
+  - label: "failed hosted-job occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "monitor-loop DTO"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The collector constructs an internal record from remote job data, but no CQ or harvested support relation requires that record kind; a distinct information artifact remains plausible without defeating the null."
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false

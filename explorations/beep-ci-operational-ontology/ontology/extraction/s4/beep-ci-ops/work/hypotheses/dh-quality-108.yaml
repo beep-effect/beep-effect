@@ -1,0 +1,21 @@
+id: "dh:quality:108"
+observation_refs:
+  - "so:sha256:ee43602771a1544dfa534bd4596207c68dc6991ede8507b7919f8e04be817388"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration GITHUB_CHECK_RUN_REPORT_PREFIX in Quality.schemas.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "An operational policy quantity or code list suggested by GITHUB_CHECK_RUN_REPORT_PREFIX"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only source export or declaration structure for GITHUB_CHECK_RUN_REPORT_PREFIX. Export visibility and lexical suggestiveness are compatible with implementation plumbing and provide no observed operational bearer, occurrence, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

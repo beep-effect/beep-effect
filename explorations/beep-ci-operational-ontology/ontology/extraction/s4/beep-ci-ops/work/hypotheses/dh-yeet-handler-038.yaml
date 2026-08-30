@@ -1,0 +1,25 @@
+id: "dh:yeet-handler:038"
+observation_refs:
+  - "so:sha256:762d3dd11bc844d2df9f208f0ccba2170033d9af6c1a1c9e04e7e8b0f7c764b0"
+  - "so:sha256:cb3fb801af009d95f033957cf3855eb423cd89bc4221cc580ff01ed7e3099ccb"
+  - "po:sha256:88e8e724ffb0967198fa555ab886c8a9ea3e14cf26614dd018b57b409b1c79ef"
+  - "po:sha256:fba9735d9ec0b7c541bbfc2ff30b0a3dd19d8e4b8e37874547ce6a0768b5e4d5"
+cq_warrants: ["CQ-022", "CQ-025"]
+proposed_referent:
+  label: "Yeet lane-disposition code vocabulary"
+  description: "The five codes lexically label the status slot of a verdict-lane summary; the vocabulary includes both execution outcomes and non-execution dispositions."
+representation_status: lexical_alias
+alternatives:
+  - label: "ExecutionState domain"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "verdict status value"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The codes populate an operational status slot, but passed or failed and not-run or skipped do not automatically form one uniform class of execution states."
+  discriminator: "The verdict-lane status slot is constrained to the observed passed, failed, skipped, not-run, and not-run-early-stop values, giving those tokens operational disposition meaning."
+epistemic_status: proposed
+confidence: {value: 0.79, use_for_acceptance: false}

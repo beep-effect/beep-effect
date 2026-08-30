@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/ingestion-secret-scrub",
   "lifecycle": "active",
+  "statusNote": "P0 remains the next authorized phase: consolidate the two live redaction pattern banks and establish the synthetic fixture corpus before implementation.",
   "mission": "Deliver a pre-LLM file-processing secret scrub with one canonical pattern bank, no-secret proof, honest coverage/residue, and enforced prompt gating.",
   "executionCapable": true,
   "reflectionRequired": true,

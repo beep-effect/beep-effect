@@ -1,0 +1,23 @@
+id: so:sha256:704700c3569c97c04ce6698d167bf38c6ee95850d1a68bd3c0d8a3732107994f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts
+source_span:
+  start_line: 46
+  end_line: 50
+  content_sha256: b6d23c1bdb47a7591092eb7469f1f02b2c3ec34cf4c491701965e007a902b2c3
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts::GithubCheckMode
+  lexical_name: GithubCheckMode
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: GithubCheckMode
+source_excerpt: export const GithubCheckMode = LiteralKit(GITHUB_CHECK_MODE_VALUES).pipe(
+epistemic_status: parser_derived

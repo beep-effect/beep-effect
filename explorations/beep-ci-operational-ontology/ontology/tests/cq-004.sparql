@@ -1,0 +1,15 @@
+# CQ-004: Which packages are affected by a given change set via dependency closure (touched packages included)? Hash-surface radiation is CQ-011's question.
+# Expected: non_empty | priority: must_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT DISTINCT ?pkg WHERE {
+  VALUES ?change { ciops:cs-example }  # harness binds
+  {
+    ?change ciops:touchesPackage ?pkg .
+  }
+  UNION
+  {
+    ?change ciops:touchesPackage ?touched .
+    ?pkg ciops:dependsOnTransitive ?touched .
+  }
+}

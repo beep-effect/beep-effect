@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -37,7 +38,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ReconciliationService")
  * ```ts
  * import { ReconciliationError } from "@effect-ontology/Service/ReconciliationService"
  *
- * console.log(ReconciliationError)
+ * const error = ReconciliationError.make({
+ *   message: "Wikidata search failed",
+ *   entityIri: "https://example.org/Ada"
+ * })
+ * console.log(error._tag) // "ReconciliationError"
  * ```
  *
  * @category errors
@@ -75,13 +80,14 @@ export class ReconciliationError extends S.TaggedError<ReconciliationError>($I`R
  * ```ts
  * import { ReconciliationConfig } from "@effect-ontology/Service/ReconciliationService"
  *
- * console.log(ReconciliationConfig)
+ * const config = ReconciliationConfig.make({})
+ * console.log(config.autoLinkThreshold) // 90
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class ReconciliationConfig extends S.Class<ReconciliationConfig>("ReconciliationConfig")({
+export class ReconciliationConfig extends S.Class<ReconciliationConfig>($I`ReconciliationConfig`)({
   /** Minimum score for automatic linking (default: 90) */
   autoLinkThreshold: Percentage.pipe(SchemaUtils.withKeyDefaults(Percentage.make(90))),
 
@@ -93,54 +99,92 @@ export class ReconciliationConfig extends S.Class<ReconciliationConfig>("Reconci
 
   /** Language for Wikidata search (default: "en") */
   language: S.String.pipe(SchemaUtils.withKeyDefaults("en")),
-}) {}
+  },
+  $I.annote("ReconciliationConfig", {
+    description: "Auto-link and queue score thresholds plus candidate and language bounds.",
+  })
+) {}
 
 const DEFAULT_CONFIG = ReconciliationConfig.make({});
 
 /**
- * Result of entity reconciliation
+ * Outcome selected by the reconciliation threshold policy.
  *
- *
- * **Example** (Use the ReconciliationResult contract)
+ * **Example** (Validate a queue decision)
  *
  * ```ts
- * import type { ReconciliationResult } from "@effect-ontology/Service/ReconciliationService"
+ * import { ReconciliationDecision } from "@effect-ontology/Service/ReconciliationService"
  *
- * const acceptsReconciliationResult = (_value: ReconciliationResult): void => undefined
- *
- * console.log(acceptsReconciliationResult)
+ * console.log(ReconciliationDecision.is.queued("queued")) // true
+ * console.log(ReconciliationDecision.is.queued("manual")) // false
  * ```
  *
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface ReconciliationResult {
-  /** Entity IRI being reconciled */
-  readonly entityIri: string;
-  /** Original label used for search */
-  readonly label: string;
-  /** Decision made */
-  readonly decision: ReconciliationDecision;
-  /** Candidates considered */
-  readonly candidates: ReadonlyArray<WikidataCandidate>;
-  /** Best match if any */
-  readonly bestMatch?: WikidataCandidate;
-  /** Verification task ID if queued */
-  readonly verificationTaskId?: string;
-}
+export const ReconciliationDecision = LiteralKit(["auto_linked", "queued", "no_match", "skipped"]).pipe(
+  $I.annoteSchema("ReconciliationDecision", {
+    description: "Finite reconciliation outcomes produced by automatic linking and review thresholds.",
+  })
+);
 
 /**
- * Describes the reconciliation decision data exposed by this module.
- *
+ * Runtime decision decoded by {@link ReconciliationDecision}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export type ReconciliationDecision =
-  | "auto_linked" // Score >= autoLinkThreshold, link created
-  | "queued" // Score in queueThreshold..autoLinkThreshold, needs review
-  | "no_match" // Score < queueThreshold or no candidates
-  | "skipped"; // Already linked or other reason to skip
+export type ReconciliationDecision = typeof ReconciliationDecision.Type;
+
+/**
+ * Result of reconciling one local entity against Wikidata candidates.
+ *
+ * **Example** (Validate a queued result)
+ *
+ * ```ts
+ * import { ReconciliationResult } from "@effect-ontology/Service/ReconciliationService"
+ * import * as S from "effect/Schema"
+ *
+ * const result = S.decodeUnknownSync(ReconciliationResult)({
+ *   entityIri: "https://example.org/Ada",
+ *   label: "Ada Lovelace",
+ *   decision: "queued",
+ *   candidates: []
+ * })
+ * console.log(result.decision) // "queued"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ReconciliationResult = S.Struct({
+  entityIri: S.String.annotateKey({ description: "Local entity IRI being reconciled." }),
+  label: S.String.annotateKey({ description: "Original entity label used for candidate search." }),
+  decision: ReconciliationDecision.annotateKey({ description: "Threshold-policy outcome for this entity." }),
+  candidates: S.Array(WikidataCandidate).annotateKey({ description: "Scored Wikidata candidates considered." }),
+  bestMatch: S.optionalKey(WikidataCandidate).annotateKey({ description: "Highest-scoring candidate when present." }),
+  verificationTaskId: S.optionalKey(S.String).annotateKey({
+    description: "Human-review task identifier when the result was queued.",
+  }),
+}).pipe(
+  $I.annoteSchema("ReconciliationResult", {
+    description: "Decision, candidates, and optional review linkage for one reconciled entity.",
+  })
+);
+
+/**
+ * Runtime reconciliation result decoded by {@link ReconciliationResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ReconciliationResult = typeof ReconciliationResult.Type;
+
+const VerificationStatus = LiteralKit(["pending", "approved", "rejected"]).pipe(
+  $I.annoteSchema("VerificationStatus", {
+    description: "Finite lifecycle states of a human reconciliation verification task.",
+  })
+);
 
 /**
  * Verification task for human review
@@ -148,10 +192,19 @@ export type ReconciliationDecision =
  * **Example** (Validate verification task)
  *
  * ```ts
- * import { VerificationTask } from "@effect-ontology/Service/ReconciliationService"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { VerificationTask } from "@effect-ontology/Service/ReconciliationService"
  *
- * console.log(S.is(VerificationTask)({}))
+ * const decoded = S.decodeUnknownOption(VerificationTask)({
+ *   id: "task-1",
+ *   entityIri: "https://example.org/Ada",
+ *   label: "Ada Lovelace",
+ *   candidates: [],
+ *   createdAt: "2026-01-01T00:00:00.000Z",
+ *   status: "pending"
+ * })
+ * console.log(O.isSome(decoded)) // true
  * ```
  *
  * @category schemas
@@ -163,12 +216,15 @@ export const VerificationTask = S.Struct({
   label: S.String,
   candidates: S.Array(WikidataCandidate),
   createdAt: S.DateFromString,
-  status: S.Literals(["pending", "approved", "rejected"]),
+  status: VerificationStatus,
   approvedQid: S.optionalKey(S.String),
-});
+}).pipe(
+  $I.annoteSchema("VerificationTask", {
+    description: "Human-review task linking an entity to scored Wikidata candidates.",
+  })
+);
 /**
  * Describes the verification task data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -200,9 +256,15 @@ const encodeWikidataLink = S.encodeEffect(WikidataLinkJson);
  * **Example** (Inspect reconciliation service)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ReconciliationService } from "@effect-ontology/Service/ReconciliationService"
  *
- * console.log(ReconciliationService)
+ * const program = Effect.gen(function* () {
+ *   const reconciliation = yield* ReconciliationService
+ *   return reconciliation
+ * }).pipe(Effect.provide(ReconciliationService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

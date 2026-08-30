@@ -1,0 +1,24 @@
+id: "dh:cilane:021"
+observation_refs:
+  - "po:sha256:b2a4ef6c6f19b1b64eb0eff2e82ca5e318b7776d2f9c3bbae7527a54078d6c8e"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "security verification lane"
+  description: "A possible operational security-verification lane named by the quoted security token."
+representation_status: lexical_alias
+alternatives:
+  - label: "security command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "security-verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Security is a broad label quoted without a target, method, scope, execution, or result. The supplied evidence cannot tell a distinct verification lane from an internal branch token."
+epistemic_status: proposed
+confidence:
+  value: 0.39
+  use_for_acceptance: false

@@ -1,0 +1,24 @@
+id: "dh:sched-core:028"
+observation_refs:
+  - "so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5"
+  - "so:sha256:d9db2dbfefa7d1fe28cb044abdbdd6a9102db4da94c4ed18c7360555af05a330"
+  - "po:sha256:4402abe676bf2b32d81e3bf9430462ec3c966f15db74ea106a12931193d01c4d"
+cq_warrants: []
+proposed_referent:
+  label: "grant admission instant"
+  description: "The immutable time at which a staged admission lease became a candidate active grant."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "millisecond timestamp recorded on the lease"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "tie-breaker field only"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The adversary's tie-breaker DTO is decisive: a lease row can carry a finite admittedAtMillis value and a sorter can order rows by it without establishing an admission event boundary, temporal quality, or governed timestamp artifact."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.84, use_for_acceptance: false}

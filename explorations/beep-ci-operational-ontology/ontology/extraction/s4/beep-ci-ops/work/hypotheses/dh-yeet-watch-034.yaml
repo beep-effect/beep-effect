@@ -1,0 +1,27 @@
+id: "dh:yeet-watch:034"
+observation_refs:
+  - "so:sha256:f8963ec48e961a04e383747bb395792880b08befbcd942fe659fe7fad0da33cb"
+  - "so:sha256:177fb3af96fac344cee73f33ab05cddcce1c695f27838693cca1d14538e26c40"
+  - "so:sha256:8ee7607038f5041474aaef3747945ec491da23aadf1609c9999cc27d142d093b"
+  - "so:sha256:a6c64d9df3926ab0efd3b01e652c94034794691743934535dcd7ad8abf9d5825"
+  - "so:sha256:2780de54843e2c073117897235567afa904e090a4ded2c414df0b7b22bd7338f"
+cq_warrants: []
+proposed_referent:
+  label: "terminal pull-request-state classification"
+  description: "The merged-or-closed information value computed from a remote pull-request state and returned when monitoring ends."
+representation_status: unresolved
+alternatives:
+  - label: "pull request terminal phase"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "monitor-loop control token"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The mapper and loop use merged-or-closed control values, but no CQ or harvested candidate requires their independent representation; a pull-request phase interpretation remains plausible without defeating the null."
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

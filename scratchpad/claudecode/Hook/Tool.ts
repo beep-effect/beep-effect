@@ -1,17 +1,19 @@
 /**
  * Typed adapters for common Claude Code tool payloads.
  *
+ * **Details**
+ *
  * The core hook event schemas intentionally preserve Claude Code's raw wire
  * format (`tool_input` / `tool_response` as loose records). This module adds a
  * thin typed layer for the built-in tool shapes documented by Claude Code.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-
 import { HookToolDecodeError } from "../Errors.ts";
 import type * as PostToolUse from "./Events/PostToolUse.ts";
 import type * as PreToolUse from "./Events/PreToolUse.ts";
@@ -25,9 +27,9 @@ const $I = $ScratchpadId.create("claudecode/Hook/Tool");
 /**
  * Typed adapter for decoding a `tool_input` payload.
  *
+ * @see {@link definePreAdapter} to construct an adapter for {@link decodePreToolUseWith}.
  * @category models
  * @since 0.0.0
- *
  */
 export interface PreToolAdapter<TName extends string, TTool> {
   readonly toolName: TName;
@@ -37,9 +39,9 @@ export interface PreToolAdapter<TName extends string, TTool> {
 /**
  * Typed adapter for decoding both `tool_input` and `tool_response` payloads.
  *
+ * @see {@link definePostAdapter} to construct an adapter for {@link decodePostToolUseWith}.
  * @category models
  * @since 0.0.0
- *
  */
 export interface PostToolAdapter<TName extends string, TTool, TResponse> extends PreToolAdapter<TName, TTool> {
   readonly responseSchema: S.Decoder<TResponse>;
@@ -48,17 +50,32 @@ export interface PostToolAdapter<TName extends string, TTool, TResponse> extends
 /**
  * Define a typed pre-tool adapter from a schema.
  *
- * **Example** (Use definePreAdapter)
+ * **Example** (Decode a custom pre-tool adapter)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.definePreAdapter)
+ * const adapter = Hook.Tool.definePreAdapter({
+ *   toolName: "Bash",
+ *   inputSchema: Hook.Tool.BashToolInput
+ * })
+ * const input = Hook.PreToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PreToolUse",
+ *   tool_name: "Bash",
+ *   tool_input: { command: "pwd" }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePreToolUseWith(adapter, input))
+ * console.log(adapter.toolName) // "Bash"
+ * console.log(decoded.tool.command) // "pwd"
  * ```
  *
+ * @see {@link decodePreToolUseWith} to apply the adapter to a PreToolUse payload.
  * @category constructors
  * @since 0.0.0
- *
  */
 export const definePreAdapter = <const TName extends string, TTool>(config: {
   readonly toolName: TName;
@@ -68,17 +85,35 @@ export const definePreAdapter = <const TName extends string, TTool>(config: {
 /**
  * Define a typed post-tool adapter from input / response schemas.
  *
- * **Example** (Use definePostAdapter)
+ * **Example** (Decode a custom post-tool adapter)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.definePostAdapter)
+ * const adapter = Hook.Tool.definePostAdapter({
+ *   toolName: "Bash",
+ *   inputSchema: Hook.Tool.BashToolInput,
+ *   responseSchema: Hook.Tool.BashToolResponse
+ * })
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Bash",
+ *   tool_input: { command: "pwd" },
+ *   tool_response: { stdout: "/repo" }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(adapter, input))
+ * console.log(adapter.toolName) // "Bash"
+ * console.log(O.getOrUndefined(decoded.response.stdout)) // "/repo"
  * ```
  *
+ * @see {@link decodePostToolUseWith} to apply the adapter to a PostToolUse payload.
  * @category constructors
  * @since 0.0.0
- *
  */
 export const definePostAdapter = <const TName extends string, TTool, TResponse>(config: {
   readonly toolName: TName;
@@ -93,12 +128,13 @@ export const definePostAdapter = <const TName extends string, TTool, TResponse>(
 /**
  * Typed `tool_input` payload for the `Bash` tool.
  *
- * **Example** (Inspect bash tool input)
+ * **Example** (Construct bash tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.BashToolInput)
+ * const input = Hook.Tool.BashToolInput.make({ command: "pwd" })
+ * console.log(input.command) // "pwd"
  * ```
  *
  * @category schemas
@@ -120,12 +156,14 @@ export class BashToolInput extends S.Class<BashToolInput>($I`BashToolInput`)(
 /**
  * Typed `tool_response` payload for the `Bash` tool.
  *
- * **Example** (Inspect bash tool response)
+ * **Example** (Construct bash tool response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.BashToolResponse)
+ * const response = Hook.Tool.BashToolResponse.make({ stdout: O.some("/repo") })
+ * console.log(O.getOrUndefined(response.stdout)) // "/repo"
  * ```
  *
  * @category schemas
@@ -147,12 +185,13 @@ export class BashToolResponse extends S.Class<BashToolResponse>($I`BashToolRespo
 /**
  * Typed `tool_input` payload for the `Read` tool.
  *
- * **Example** (Inspect read tool input)
+ * **Example** (Construct read tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.ReadToolInput)
+ * const input = Hook.Tool.ReadToolInput.make({ file_path: "/tmp/a.ts" })
+ * console.log(input.file_path) // "/tmp/a.ts"
  * ```
  *
  * @category schemas
@@ -173,12 +212,14 @@ export class ReadToolInput extends S.Class<ReadToolInput>($I`ReadToolInput`)(
 /**
  * Typed `tool_response` payload for the `Read` tool.
  *
- * **Example** (Inspect read tool response)
+ * **Example** (Construct read tool response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.ReadToolResponse)
+ * const response = Hook.Tool.ReadToolResponse.make({ content: O.some("export {}") })
+ * console.log(O.getOrUndefined(response.content)) // "export {}"
  * ```
  *
  * @category schemas
@@ -195,12 +236,16 @@ export class ReadToolResponse extends S.Class<ReadToolResponse>($I`ReadToolRespo
 /**
  * Typed `tool_input` payload for the `Write` tool.
  *
- * **Example** (Inspect write tool input)
+ * **Example** (Construct write tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.WriteToolInput)
+ * const input = Hook.Tool.WriteToolInput.make({
+ *   file_path: "/tmp/a.ts",
+ *   content: "export {}"
+ * })
+ * console.log(input.file_path) // "/tmp/a.ts"
  * ```
  *
  * @category schemas
@@ -217,12 +262,17 @@ export class WriteToolInput extends S.Class<WriteToolInput>($I`WriteToolInput`)(
 /**
  * Typed `tool_input` payload for the `Edit` tool.
  *
- * **Example** (Inspect edit tool input)
+ * **Example** (Construct edit tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.EditToolInput)
+ * const input = Hook.Tool.EditToolInput.make({
+ *   file_path: "/tmp/a.ts",
+ *   old_string: "a",
+ *   new_string: "b"
+ * })
+ * console.log(input.new_string) // "b"
  * ```
  *
  * @category schemas
@@ -244,12 +294,13 @@ export class EditToolInput extends S.Class<EditToolInput>($I`EditToolInput`)(
 /**
  * Typed `tool_input` payload for the `Glob` tool.
  *
- * **Example** (Inspect glob tool input)
+ * **Example** (Construct glob tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.GlobToolInput)
+ * const input = Hook.Tool.GlobToolInput.make({ pattern: "**\/*.ts" })
+ * console.log(input.pattern) // "**\/*.ts"
  * ```
  *
  * @category schemas
@@ -264,18 +315,19 @@ export class GlobToolInput extends S.Class<GlobToolInput>($I`GlobToolInput`)(
 ) {}
 
 /**
- * Tool schema for `GrepOutputMode`.
+ * Output representation requested from Claude Code's Grep tool.
  *
- * **Example** (Inspect grep output mode)
+ * **Example** (Decode a grep output mode)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Tool.GrepOutputMode)
+ * const mode = S.decodeUnknownSync(Hook.Tool.GrepOutputMode)("content")
+ * console.log(mode) // "content"
  * ```
  *
  * @category tool-schemas
- *
  * @since 0.0.0
  */
 export const GrepOutputMode = LiteralKit(["content", "files_with_matches", "count"]).pipe(
@@ -285,10 +337,10 @@ export const GrepOutputMode = LiteralKit(["content", "files_with_matches", "coun
 );
 
 /**
- * Type-level model for `GrepOutputMode`.
+ * Decoded value produced by {@link GrepOutputMode}.
  *
+ * @see {@link GrepOutputMode} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type GrepOutputMode = typeof GrepOutputMode.Type;
@@ -296,12 +348,13 @@ export type GrepOutputMode = typeof GrepOutputMode.Type;
 /**
  * Typed `tool_input` payload for the `Grep` tool.
  *
- * **Example** (Inspect grep tool input)
+ * **Example** (Construct grep tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.GrepToolInput)
+ * const input = Hook.Tool.GrepToolInput.make({ pattern: "TODO" })
+ * console.log(input.pattern) // "TODO"
  * ```
  *
  * @category schemas
@@ -325,12 +378,16 @@ export class GrepToolInput extends S.Class<GrepToolInput>($I`GrepToolInput`)(
 /**
  * Typed `tool_input` payload for the `WebFetch` tool.
  *
- * **Example** (Inspect web fetch tool input)
+ * **Example** (Construct web fetch tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.WebFetchToolInput)
+ * const input = Hook.Tool.WebFetchToolInput.make({
+ *   url: "https://example.com",
+ *   prompt: "Summarize"
+ * })
+ * console.log(input.url) // "https://example.com"
  * ```
  *
  * @category schemas
@@ -354,12 +411,13 @@ const DomainNames = S.String.pipe(
 /**
  * Typed `tool_input` payload for the `WebSearch` tool.
  *
- * **Example** (Inspect web search tool input)
+ * **Example** (Construct web search tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.WebSearchToolInput)
+ * const input = Hook.Tool.WebSearchToolInput.make({ query: "effect schema" })
+ * console.log(input.query) // "effect schema"
  * ```
  *
  * @category schemas
@@ -380,12 +438,17 @@ export class WebSearchToolInput extends S.Class<WebSearchToolInput>($I`WebSearch
 /**
  * Typed `tool_input` payload for the `Agent` tool.
  *
- * **Example** (Inspect agent tool input)
+ * **Example** (Construct agent tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.AgentToolInput)
+ * const input = Hook.Tool.AgentToolInput.make({
+ *   prompt: "Summarize the diff",
+ *   description: "Summarize",
+ *   subagent_type: "general-purpose"
+ * })
+ * console.log(input.subagent_type) // "general-purpose"
  * ```
  *
  * @category schemas
@@ -420,12 +483,16 @@ const AgentToolContent = S.Unknown.pipe(
 /**
  * Typed `tool_response` payload for the `Agent` tool.
  *
- * **Example** (Inspect agent tool response)
+ * **Example** (Construct agent tool response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.AgentToolResponse)
+ * const response = Hook.Tool.AgentToolResponse.make({
+ *   status: O.some("completed")
+ * })
+ * console.log(O.getOrUndefined(response.status)) // "completed"
  * ```
  *
  * @category schemas
@@ -453,12 +520,13 @@ export class AgentToolResponse extends S.Class<AgentToolResponse>($I`AgentToolRe
 /**
  * A single option for the `AskUserQuestion` tool.
  *
- * **Example** (Inspect ask user question option)
+ * **Example** (Construct an ask-user-question option)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.AskUserQuestionOption)
+ * const option = Hook.Tool.AskUserQuestionOption.make({ label: "TypeScript" })
+ * console.log(option.label) // "TypeScript"
  * ```
  *
  * @category schemas
@@ -475,12 +543,17 @@ export class AskUserQuestionOption extends S.Class<AskUserQuestionOption>($I`Ask
 /**
  * A single question for the `AskUserQuestion` tool.
  *
- * **Example** (Inspect ask user question question)
+ * **Example** (Construct an ask-user-question prompt)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.AskUserQuestionQuestion)
+ * const question = Hook.Tool.AskUserQuestionQuestion.make({
+ *   question: "Which language?",
+ *   header: "Language",
+ *   options: [Hook.Tool.AskUserQuestionOption.make({ label: "TypeScript" })]
+ * })
+ * console.log(question.header) // "Language"
  * ```
  *
  * @category schemas
@@ -502,12 +575,18 @@ export class AskUserQuestionQuestion extends S.Class<AskUserQuestionQuestion>($I
 /**
  * Typed `tool_input` payload for the `AskUserQuestion` tool.
  *
- * **Example** (Inspect ask user question tool input)
+ * **Example** (Construct ask-user-question tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.AskUserQuestionToolInput)
+ * const question = Hook.Tool.AskUserQuestionQuestion.make({
+ *   question: "Which language?",
+ *   header: "Language",
+ *   options: [Hook.Tool.AskUserQuestionOption.make({ label: "TypeScript" })]
+ * })
+ * const input = Hook.Tool.AskUserQuestionToolInput.make({ questions: [question] })
+ * console.log(input.questions.length) // 1
  * ```
  *
  * @category schemas
@@ -527,12 +606,16 @@ export class AskUserQuestionToolInput extends S.Class<AskUserQuestionToolInput>(
 /**
  * A prompt-based permission request in `ExitPlanMode`.
  *
- * **Example** (Inspect exit plan allowed prompt)
+ * **Example** (Construct an exit-plan allowed prompt)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.ExitPlanAllowedPrompt)
+ * const prompt = Hook.Tool.ExitPlanAllowedPrompt.make({
+ *   tool: "Bash",
+ *   prompt: "run tests"
+ * })
+ * console.log(prompt.tool) // "Bash"
  * ```
  *
  * @category schemas
@@ -556,12 +639,16 @@ const ExitPlanAllowedPrompts = ExitPlanAllowedPrompt.pipe(
 /**
  * Typed `tool_input` payload for the `ExitPlanMode` tool.
  *
- * **Example** (Inspect exit plan mode tool input)
+ * **Example** (Construct exit-plan-mode tool input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.Tool.ExitPlanModeToolInput)
+ * const input = Hook.Tool.ExitPlanModeToolInput.make({
+ *   plan: "Ship the matcher docs",
+ *   planFilePath: "/tmp/plan.md"
+ * })
+ * console.log(input.planFilePath) // "/tmp/plan.md"
  * ```
  *
  * @category schemas
@@ -582,12 +669,16 @@ export class ExitPlanModeToolInput extends S.Class<ExitPlanModeToolInput>($I`Exi
 /**
  * Typed `tool_response` payload for the `ExitPlanMode` tool.
  *
- * **Example** (Inspect exit plan mode tool response)
+ * **Example** (Construct exit-plan-mode tool response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.ExitPlanModeToolResponse)
+ * const response = Hook.Tool.ExitPlanModeToolResponse.make({
+ *   approved: O.some(true)
+ * })
+ * console.log(O.getOrUndefined(response.approved)) // true
  * ```
  *
  * @category schemas
@@ -612,17 +703,30 @@ export class ExitPlanModeToolResponse extends S.Class<ExitPlanModeToolResponse>(
 /**
  * Built-in adapter for the `Bash` tool.
  *
- * **Example** (Inspect bash adapter)
+ * **Example** (Decode a Bash post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.BashAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Bash",
+ *   tool_input: { command: "pwd" },
+ *   tool_response: { stdout: "/repo" }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.BashAdapter, input))
+ * console.log(Hook.Tool.BashAdapter.toolName) // "Bash"
+ * console.log(O.getOrUndefined(decoded.response.stdout)) // "/repo"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const BashAdapter = definePostAdapter({
   toolName: "Bash",
@@ -633,17 +737,30 @@ export const BashAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `Read` tool.
  *
- * **Example** (Inspect read adapter)
+ * **Example** (Decode a Read post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.ReadAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Read",
+ *   tool_input: { file_path: "/tmp/a.ts" },
+ *   tool_response: { content: "export {}" }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.ReadAdapter, input))
+ * console.log(Hook.Tool.ReadAdapter.toolName) // "Read"
+ * console.log(O.getOrUndefined(decoded.response.content)) // "export {}"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const ReadAdapter = definePostAdapter({
   toolName: "Read",
@@ -654,17 +771,35 @@ export const ReadAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `Write` tool.
  *
- * **Example** (Inspect write adapter)
+ * **Gotchas**
+ *
+ * Post-tool `tool_response` is decoded as `unknown` because Claude Code does
+ * not publish a stable response shape for this tool.
+ *
+ * **Example** (Decode a Write post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.WriteAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Write",
+ *   tool_input: { file_path: "/tmp/a.ts", content: "export {}" },
+ *   tool_response: { ok: true }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.WriteAdapter, input))
+ * console.log(Hook.Tool.WriteAdapter.toolName) // "Write"
+ * console.log(decoded.tool.file_path) // "/tmp/a.ts"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
+ * @see {@link BashAdapter} for a built-in adapter with a typed response schema.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const WriteAdapter = definePostAdapter({
   toolName: "Write",
@@ -675,17 +810,35 @@ export const WriteAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `Edit` tool.
  *
- * **Example** (Inspect edit adapter)
+ * **Gotchas**
+ *
+ * Post-tool `tool_response` is decoded as `unknown` because Claude Code does
+ * not publish a stable response shape for this tool.
+ *
+ * **Example** (Decode an Edit post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.EditAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Edit",
+ *   tool_input: { file_path: "/tmp/a.ts", old_string: "a", new_string: "b" },
+ *   tool_response: { ok: true }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.EditAdapter, input))
+ * console.log(Hook.Tool.EditAdapter.toolName) // "Edit"
+ * console.log(decoded.tool.new_string) // "b"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
+ * @see {@link BashAdapter} for a built-in adapter with a typed response schema.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const EditAdapter = definePostAdapter({
   toolName: "Edit",
@@ -696,17 +849,35 @@ export const EditAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `Glob` tool.
  *
- * **Example** (Inspect glob adapter)
+ * **Gotchas**
+ *
+ * Post-tool `tool_response` is decoded as `unknown` because Claude Code does
+ * not publish a stable response shape for this tool.
+ *
+ * **Example** (Decode a Glob post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.GlobAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Glob",
+ *   tool_input: { pattern: "**\/*.ts" },
+ *   tool_response: { files: ["src/a.ts"] }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.GlobAdapter, input))
+ * console.log(Hook.Tool.GlobAdapter.toolName) // "Glob"
+ * console.log(decoded.tool.pattern) // "**\/*.ts"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
+ * @see {@link BashAdapter} for a built-in adapter with a typed response schema.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const GlobAdapter = definePostAdapter({
   toolName: "Glob",
@@ -717,17 +888,35 @@ export const GlobAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `Grep` tool.
  *
- * **Example** (Inspect grep adapter)
+ * **Gotchas**
+ *
+ * Post-tool `tool_response` is decoded as `unknown` because Claude Code does
+ * not publish a stable response shape for this tool.
+ *
+ * **Example** (Decode a Grep post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.GrepAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Grep",
+ *   tool_input: { pattern: "TODO" },
+ *   tool_response: { matches: [] }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.GrepAdapter, input))
+ * console.log(Hook.Tool.GrepAdapter.toolName) // "Grep"
+ * console.log(decoded.tool.pattern) // "TODO"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
+ * @see {@link BashAdapter} for a built-in adapter with a typed response schema.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const GrepAdapter = definePostAdapter({
   toolName: "Grep",
@@ -738,17 +927,35 @@ export const GrepAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `WebFetch` tool.
  *
- * **Example** (Inspect web fetch adapter)
+ * **Gotchas**
+ *
+ * Post-tool `tool_response` is decoded as `unknown` because Claude Code does
+ * not publish a stable response shape for this tool.
+ *
+ * **Example** (Decode a WebFetch post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.WebFetchAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "WebFetch",
+ *   tool_input: { url: "https://example.com", prompt: "Summarize" },
+ *   tool_response: { text: "Example Domain" }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.WebFetchAdapter, input))
+ * console.log(Hook.Tool.WebFetchAdapter.toolName) // "WebFetch"
+ * console.log(decoded.tool.url) // "https://example.com"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
+ * @see {@link BashAdapter} for a built-in adapter with a typed response schema.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const WebFetchAdapter = definePostAdapter({
   toolName: "WebFetch",
@@ -759,17 +966,35 @@ export const WebFetchAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `WebSearch` tool.
  *
- * **Example** (Inspect web search adapter)
+ * **Gotchas**
+ *
+ * Post-tool `tool_response` is decoded as `unknown` because Claude Code does
+ * not publish a stable response shape for this tool.
+ *
+ * **Example** (Decode a WebSearch post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.WebSearchAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "WebSearch",
+ *   tool_input: { query: "effect schema" },
+ *   tool_response: { results: [] }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.WebSearchAdapter, input))
+ * console.log(Hook.Tool.WebSearchAdapter.toolName) // "WebSearch"
+ * console.log(decoded.tool.query) // "effect schema"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
+ * @see {@link BashAdapter} for a built-in adapter with a typed response schema.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const WebSearchAdapter = definePostAdapter({
   toolName: "WebSearch",
@@ -780,17 +1005,34 @@ export const WebSearchAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `Agent` tool.
  *
- * **Example** (Inspect agent adapter)
+ * **Example** (Decode an Agent post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.AgentAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "Agent",
+ *   tool_input: {
+ *     prompt: "Summarize the diff",
+ *     description: "Summarize",
+ *     subagent_type: "general-purpose"
+ *   },
+ *   tool_response: { status: "completed" }
+ * })
+ * const decoded = Effect.runSync(Hook.Tool.decodePostToolUseWith(Hook.Tool.AgentAdapter, input))
+ * console.log(Hook.Tool.AgentAdapter.toolName) // "Agent"
+ * console.log(O.getOrUndefined(decoded.response.status)) // "completed"
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const AgentAdapter = definePostAdapter({
   toolName: "Agent",
@@ -801,17 +1043,43 @@ export const AgentAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `AskUserQuestion` tool.
  *
- * **Example** (Inspect ask user question adapter)
+ * **Gotchas**
+ *
+ * Post-tool `tool_response` is decoded as `unknown` because Claude Code does
+ * not publish a stable response shape for this tool.
+ *
+ * **Example** (Decode an AskUserQuestion post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.Tool.AskUserQuestionAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "AskUserQuestion",
+ *   tool_input: {
+ *     questions: [{
+ *       question: "Which language?",
+ *       header: "Language",
+ *       options: [{ label: "TypeScript" }]
+ *     }]
+ *   },
+ *   tool_response: { answers: { Language: "TypeScript" } }
+ * })
+ * const decoded = Effect.runSync(
+ *   Hook.Tool.decodePostToolUseWith(Hook.Tool.AskUserQuestionAdapter, input)
+ * )
+ * console.log(Hook.Tool.AskUserQuestionAdapter.toolName) // "AskUserQuestion"
+ * console.log(decoded.tool.questions.length) // 1
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
+ * @see {@link BashAdapter} for a built-in adapter with a typed response schema.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const AskUserQuestionAdapter = definePostAdapter({
   toolName: "AskUserQuestion",
@@ -822,17 +1090,32 @@ export const AskUserQuestionAdapter = definePostAdapter({
 /**
  * Built-in adapter for the `ExitPlanMode` tool.
  *
- * **Example** (Inspect exit plan mode adapter)
+ * **Example** (Decode an ExitPlanMode post-tool payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.Tool.ExitPlanModeAdapter)
+ * const input = Hook.PostToolUse.Input.make({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PostToolUse",
+ *   tool_name: "ExitPlanMode",
+ *   tool_input: { plan: "Ship docs", planFilePath: "/tmp/plan.md" },
+ *   tool_response: { approved: true }
+ * })
+ * const decoded = Effect.runSync(
+ *   Hook.Tool.decodePostToolUseWith(Hook.Tool.ExitPlanModeAdapter, input)
+ * )
+ * console.log(Hook.Tool.ExitPlanModeAdapter.toolName) // "ExitPlanMode"
+ * console.log(O.getOrUndefined(decoded.response.approved)) // true
  * ```
  *
+ * @see {@link decodePostToolUse} to decode a PostToolUse payload by tool name.
  * @category adapters
  * @since 0.0.0
- *
  */
 export const ExitPlanModeAdapter = definePostAdapter({
   toolName: "ExitPlanMode",
@@ -841,19 +1124,20 @@ export const ExitPlanModeAdapter = definePostAdapter({
 });
 
 /**
- * Tool names with built-in typed adapters.
+ * Claude Code tool names that have a built-in typed adapter.
  *
- * **Example** (Inspect supported tool name)
+ * **Example** (Decode a supported tool name)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.Tool.SupportedToolName)
+ * const name = S.decodeUnknownSync(Hook.Tool.SupportedToolName)("Bash")
+ * console.log(name) // "Bash"
  * ```
  *
  * @category schemas
  * @since 0.0.0
- *
  */
 export const SupportedToolName = LiteralKit([
   "Bash",
@@ -874,10 +1158,10 @@ export const SupportedToolName = LiteralKit([
 );
 
 /**
- * Type-level model for `SupportedToolName`.
+ * Decoded value produced by {@link SupportedToolName}.
  *
+ * @see {@link SupportedToolName} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type SupportedToolName = typeof SupportedToolName.Type;
@@ -976,11 +1260,13 @@ const postToolAdapters: {
 };
 
 /**
- * Decoded typed view over a `PreToolUse` payload.
+ * Typed PreToolUse view produced by {@link decodePreToolUseWith}, pairing the
+ * raw event with a schema-decoded `tool` payload.
  *
+ * @see {@link decodePreToolUseWith} to decode with a custom adapter.
+ * @see {@link decodePreToolUse} to decode a built-in tool by name.
  * @category models
  * @since 0.0.0
- *
  */
 export type DecodedPreToolUseWith<TTool> = {
   readonly input: PreToolUse.Input;
@@ -988,20 +1274,24 @@ export type DecodedPreToolUseWith<TTool> = {
 };
 
 /**
- * Decoded typed view over a built-in `PreToolUse` payload.
+ * Typed PreToolUse view produced by {@link decodePreToolUse} for a built-in
+ * tool name.
  *
+ * @see {@link decodePreToolUse} for the built-in decoder that yields this view.
+ * @see {@link decodePreToolUseWith} when supplying a custom adapter instead.
  * @category models
  * @since 0.0.0
- *
  */
 export type DecodedPreToolUse<T extends SupportedToolName> = DecodedPreToolUseWith<PreToolTypeMap[T]>;
 
 /**
- * Decoded typed view over a `PostToolUse` payload.
+ * Typed PostToolUse view produced by {@link decodePostToolUseWith}, pairing the
+ * raw event with schema-decoded `tool` and `response` payloads.
  *
+ * @see {@link decodePostToolUseWith} to decode with a custom adapter.
+ * @see {@link decodePostToolUse} to decode a built-in tool by name.
  * @category models
  * @since 0.0.0
- *
  */
 export type DecodedPostToolUseWith<TTool, TResponse> = {
   readonly input: PostToolUse.Input;
@@ -1010,11 +1300,13 @@ export type DecodedPostToolUseWith<TTool, TResponse> = {
 };
 
 /**
- * Decoded typed view over a built-in `PostToolUse` payload.
+ * Typed PostToolUse view produced by {@link decodePostToolUse} for a built-in
+ * tool name.
  *
+ * @see {@link decodePostToolUse} for the built-in decoder that yields this view.
+ * @see {@link decodePostToolUseWith} when supplying a custom adapter instead.
  * @category models
  * @since 0.0.0
- *
  */
 export type DecodedPostToolUse<T extends SupportedToolName> = DecodedPostToolUseWith<
   PostToolTypeMap[T]["tool"],
@@ -1238,17 +1530,18 @@ export const decodePostToolUse = Effect.fn("Hook.Tool.decodePostToolUse")(
 /**
  * Decoded and wire-encoded companion types for {@link BashToolInput}.
  *
- * **Example** (Verify the encoded Bash input shape)
+ * **Example** (Encode constructed Bash input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.BashToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.BashToolInput.make({ command: "pwd" })
+ * const encoded = S.encodeSync(Hook.Tool.BashToolInput)(input)
+ * console.log(encoded.command) // "pwd"
  * ```
  *
+ * @see {@link BashToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1272,17 +1565,19 @@ export declare namespace BashToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link BashToolResponse}.
  *
- * **Example** (Verify the encoded Bash response shape)
+ * **Example** (Encode constructed Bash response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.BashToolResponse.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const response = Hook.Tool.BashToolResponse.make({ stdout: O.some("/repo") })
+ * const encoded = S.encodeSync(Hook.Tool.BashToolResponse)(response)
+ * console.log(encoded.stdout) // "/repo"
  * ```
  *
+ * @see {@link BashToolResponse} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1306,17 +1601,18 @@ export declare namespace BashToolResponse {
 /**
  * Decoded and wire-encoded companion types for {@link ReadToolInput}.
  *
- * **Example** (Verify the encoded Read input shape)
+ * **Example** (Encode constructed Read input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.ReadToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.ReadToolInput.make({ file_path: "/tmp/a.ts" })
+ * const encoded = S.encodeSync(Hook.Tool.ReadToolInput)(input)
+ * console.log(encoded.file_path) // "/tmp/a.ts"
  * ```
  *
+ * @see {@link ReadToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1340,17 +1636,19 @@ export declare namespace ReadToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link ReadToolResponse}.
  *
- * **Example** (Verify the encoded Read response shape)
+ * **Example** (Encode constructed Read response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.ReadToolResponse.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const response = Hook.Tool.ReadToolResponse.make({ content: O.some("export {}") })
+ * const encoded = S.encodeSync(Hook.Tool.ReadToolResponse)(response)
+ * console.log(encoded.content) // "export {}"
  * ```
  *
+ * @see {@link ReadToolResponse} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1374,17 +1672,21 @@ export declare namespace ReadToolResponse {
 /**
  * Decoded and wire-encoded companion types for {@link WriteToolInput}.
  *
- * **Example** (Verify the encoded Write input shape)
+ * **Example** (Encode constructed Write input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.WriteToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.WriteToolInput.make({
+ *   file_path: "/tmp/a.ts",
+ *   content: "export {}"
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.WriteToolInput)(input)
+ * console.log(encoded.file_path) // "/tmp/a.ts"
  * ```
  *
+ * @see {@link WriteToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1408,17 +1710,22 @@ export declare namespace WriteToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link EditToolInput}.
  *
- * **Example** (Verify the encoded Edit input shape)
+ * **Example** (Encode constructed Edit input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.EditToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.EditToolInput.make({
+ *   file_path: "/tmp/a.ts",
+ *   old_string: "a",
+ *   new_string: "b"
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.EditToolInput)(input)
+ * console.log(encoded.new_string) // "b"
  * ```
  *
+ * @see {@link EditToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1442,17 +1749,18 @@ export declare namespace EditToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link GlobToolInput}.
  *
- * **Example** (Verify the encoded Glob input shape)
+ * **Example** (Encode constructed Glob input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.GlobToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.GlobToolInput.make({ pattern: "**\/*.ts" })
+ * const encoded = S.encodeSync(Hook.Tool.GlobToolInput)(input)
+ * console.log(encoded.pattern) // "**\/*.ts"
  * ```
  *
+ * @see {@link GlobToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1476,17 +1784,18 @@ export declare namespace GlobToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link GrepToolInput}.
  *
- * **Example** (Verify the encoded Grep input shape)
+ * **Example** (Encode constructed Grep input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.GrepToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.GrepToolInput.make({ pattern: "TODO" })
+ * const encoded = S.encodeSync(Hook.Tool.GrepToolInput)(input)
+ * console.log(encoded.pattern) // "TODO"
  * ```
  *
+ * @see {@link GrepToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1510,17 +1819,21 @@ export declare namespace GrepToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link WebFetchToolInput}.
  *
- * **Example** (Verify the encoded WebFetch input shape)
+ * **Example** (Encode constructed WebFetch input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.WebFetchToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.WebFetchToolInput.make({
+ *   url: "https://example.com",
+ *   prompt: "Summarize"
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.WebFetchToolInput)(input)
+ * console.log(encoded.url) // "https://example.com"
  * ```
  *
+ * @see {@link WebFetchToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1544,17 +1857,18 @@ export declare namespace WebFetchToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link WebSearchToolInput}.
  *
- * **Example** (Verify the encoded WebSearch input shape)
+ * **Example** (Encode constructed WebSearch input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.WebSearchToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.WebSearchToolInput.make({ query: "effect schema" })
+ * const encoded = S.encodeSync(Hook.Tool.WebSearchToolInput)(input)
+ * console.log(encoded.query) // "effect schema"
  * ```
  *
+ * @see {@link WebSearchToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1578,17 +1892,22 @@ export declare namespace WebSearchToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link AgentToolInput}.
  *
- * **Example** (Verify the encoded Agent input shape)
+ * **Example** (Encode constructed Agent input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.AgentToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.AgentToolInput.make({
+ *   prompt: "Summarize the diff",
+ *   description: "Summarize",
+ *   subagent_type: "general-purpose"
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.AgentToolInput)(input)
+ * console.log(encoded.subagent_type) // "general-purpose"
  * ```
  *
+ * @see {@link AgentToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1612,17 +1931,21 @@ export declare namespace AgentToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link AgentToolResponse}.
  *
- * **Example** (Verify the encoded Agent response shape)
+ * **Example** (Encode constructed Agent response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.AgentToolResponse.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const response = Hook.Tool.AgentToolResponse.make({
+ *   status: O.some("completed")
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.AgentToolResponse)(response)
+ * console.log(encoded.status) // "completed"
  * ```
  *
+ * @see {@link AgentToolResponse} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1646,17 +1969,18 @@ export declare namespace AgentToolResponse {
 /**
  * Decoded and wire-encoded companion types for {@link AskUserQuestionOption}.
  *
- * **Example** (Verify the encoded question option shape)
+ * **Example** (Encode a constructed question option)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.AskUserQuestionOption.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const option = Hook.Tool.AskUserQuestionOption.make({ label: "TypeScript" })
+ * const encoded = S.encodeSync(Hook.Tool.AskUserQuestionOption)(option)
+ * console.log(encoded.label) // "TypeScript"
  * ```
  *
+ * @see {@link AskUserQuestionOption} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1680,17 +2004,22 @@ export declare namespace AskUserQuestionOption {
 /**
  * Decoded and wire-encoded companion types for {@link AskUserQuestionQuestion}.
  *
- * **Example** (Verify the encoded question shape)
+ * **Example** (Encode a constructed question)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.AskUserQuestionQuestion.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const question = Hook.Tool.AskUserQuestionQuestion.make({
+ *   question: "Which language?",
+ *   header: "Language",
+ *   options: [Hook.Tool.AskUserQuestionOption.make({ label: "TypeScript" })]
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.AskUserQuestionQuestion)(question)
+ * console.log(encoded.header) // "Language"
  * ```
  *
+ * @see {@link AskUserQuestionQuestion} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1714,17 +2043,23 @@ export declare namespace AskUserQuestionQuestion {
 /**
  * Decoded and wire-encoded companion types for {@link AskUserQuestionToolInput}.
  *
- * **Example** (Verify the encoded question tool shape)
+ * **Example** (Encode constructed AskUserQuestion input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.AskUserQuestionToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const question = Hook.Tool.AskUserQuestionQuestion.make({
+ *   question: "Which language?",
+ *   header: "Language",
+ *   options: [Hook.Tool.AskUserQuestionOption.make({ label: "TypeScript" })]
+ * })
+ * const input = Hook.Tool.AskUserQuestionToolInput.make({ questions: [question] })
+ * const encoded = S.encodeSync(Hook.Tool.AskUserQuestionToolInput)(input)
+ * console.log(encoded.questions.length) // 1
  * ```
  *
+ * @see {@link AskUserQuestionToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1748,17 +2083,21 @@ export declare namespace AskUserQuestionToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link ExitPlanAllowedPrompt}.
  *
- * **Example** (Verify the encoded allowed-prompt shape)
+ * **Example** (Encode a constructed allowed prompt)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.ExitPlanAllowedPrompt.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const prompt = Hook.Tool.ExitPlanAllowedPrompt.make({
+ *   tool: "Bash",
+ *   prompt: "run tests"
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.ExitPlanAllowedPrompt)(prompt)
+ * console.log(encoded.tool) // "Bash"
  * ```
  *
+ * @see {@link ExitPlanAllowedPrompt} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1782,17 +2121,21 @@ export declare namespace ExitPlanAllowedPrompt {
 /**
  * Decoded and wire-encoded companion types for {@link ExitPlanModeToolInput}.
  *
- * **Example** (Verify the encoded exit-plan input shape)
+ * **Example** (Encode constructed ExitPlanMode input)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.ExitPlanModeToolInput.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const input = Hook.Tool.ExitPlanModeToolInput.make({
+ *   plan: "Ship the matcher docs",
+ *   planFilePath: "/tmp/plan.md"
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.ExitPlanModeToolInput)(input)
+ * console.log(encoded.planFilePath) // "/tmp/plan.md"
  * ```
  *
+ * @see {@link ExitPlanModeToolInput} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */
@@ -1816,17 +2159,21 @@ export declare namespace ExitPlanModeToolInput {
 /**
  * Decoded and wire-encoded companion types for {@link ExitPlanModeToolResponse}.
  *
- * **Example** (Verify the encoded exit-plan response shape)
+ * **Example** (Encode constructed ExitPlanMode response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * type IsWireObject = Hook.Tool.ExitPlanModeToolResponse.Encoded extends Readonly<Record<string, unknown>> ? true : false
- * const isWireObject: IsWireObject = true
- *
- * console.log(isWireObject) // true
+ * const response = Hook.Tool.ExitPlanModeToolResponse.make({
+ *   approved: O.some(true)
+ * })
+ * const encoded = S.encodeSync(Hook.Tool.ExitPlanModeToolResponse)(response)
+ * console.log(encoded.approved) // true
  * ```
  *
+ * @see {@link ExitPlanModeToolResponse} for the runtime schema, `.make`, and decoded fields.
  * @category type-level
  * @since 0.0.0
  */

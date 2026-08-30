@@ -1,0 +1,24 @@
+id: so:sha256:94bd8f607a0e5fb6f88b9a7dedc94f12aa59aa9571da62cfb1def5ffd735cfff
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 1387
+  end_line: 1403
+  content_sha256: 66d7a6b784cfe8d94302e224999876f0f8b1e71c1862c14f16fd93fe177323f2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::warnMergedVerifyIgnoresUncommittedWork
+  lexical_name: warnMergedVerifyIgnoresUncommittedWork
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const warnMergedVerifyIgnoresUncommittedWork = Effect.fn("Yeet.warnMergedVerifyIgnoresUncommittedWork")(function*
+  (
+epistemic_status: parser_derived

@@ -45,30 +45,13 @@ export const packageShellTargetFor = (boundedContext: string): ArchitecturePlanT
   });
 
 const packageShellExportsForRole = ArchitecturePackageRole.$match({
-  domain: () => [
-    ".",
-    "./aggregates",
-    "./aggregates/*",
-    "./entities",
-    "./entities/*",
-    "./identity",
-    "./values",
-    "./values/*",
-  ],
-  "use-cases": () => [
-    ".",
-    "./public",
-    "./server",
-    "./aggregates/*",
-    "./aggregates/*/server",
-    "./entities/*",
-    "./entities/*/server",
-  ],
-  config: () => [".", "./public", "./server", "./secrets", "./layer", "./test", "./aggregates/*"],
-  server: () => [".", "./layer", "./test", "./aggregates/*", "./entities/*"],
-  tables: () => [".", "./tables", "./aggregates/*", "./entities/*"],
-  client: () => [".", "./aggregates/*"],
-  ui: () => [".", "./aggregates/*"],
+  domain: () => [".", "./aggregates", "./entities", "./identity", "./values"],
+  "use-cases": () => [".", "./public", "./server"],
+  config: () => [".", "./public", "./server", "./secrets", "./layer", "./test"],
+  server: () => [".", "./layer", "./test"],
+  tables: () => [".", "./tables"],
+  client: () => ["."],
+  ui: () => ["."],
 });
 
 /**
@@ -85,7 +68,7 @@ const packageShellExportsForRole = ArchitecturePackageRole.$match({
  *
  * @param target - Plan target describing the slice being scaffolded.
  * @param role - Package role whose name, path, and exports are resolved.
- * @returns Role plan metadata for the shell-only package.
+ * @returns Role plan metadata for files created by the shell-only package.
  * @category constructors
  * @since 0.0.0
  */

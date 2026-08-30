@@ -1,0 +1,22 @@
+id: "dh:sched-core:027"
+observation_refs:
+  - "so:sha256:d9db2dbfefa7d1fe28cb044abdbdd6a9102db4da94c4ed18c7360555af05a330"
+  - "so:sha256:dd8a1d3615f8155e9cc0333c1268bd978fedd18040c333508a9519ed9a0f6bd9"
+cq_warrants: []
+proposed_referent:
+  label: "capacity-overshoot rollback procedure"
+  description: "A deterministic procedure that orders concurrently staged leases and rolls back a lease whose cumulative charge falls outside the capacity-fitting prefix."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "a capacity-overshoot recovery occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "race-resolution helper local to file-based admission"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "File-local concurrency helpers can declare admission ordering and an overshoot-loser predicate while remaining implementation-specific repair code; the cited observations do not state the cumulative-prefix rule or rollback-before-use behavior."
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

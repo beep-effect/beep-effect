@@ -1,0 +1,24 @@
+id: so:sha256:24d6b85aa384168778baa867a734b75151f1dc7cbda5869cf1b4e48960b431b4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 149
+  end_line: 150
+  content_sha256: 428c318bce67a2a98b3caebd5e498ce845d2fff79e017fe8d296af12a8c0a1dc
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::parseWorktreePorcelain
+  lexical_name: parseWorktreePorcelain
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: parseWorktreePorcelain
+source_excerpt: 'export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<WorktreeListEntry>
+  =>'
+epistemic_status: parser_derived

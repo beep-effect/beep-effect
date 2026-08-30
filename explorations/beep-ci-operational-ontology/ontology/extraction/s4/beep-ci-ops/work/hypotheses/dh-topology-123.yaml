@@ -1,0 +1,24 @@
+id: "dh:topology:123"
+observation_refs:
+  - "po:sha256:a4c9ba2698c972ba870cf2e564d05c31abea54f914b08dfb8df73bb101809160"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/skill-contract workspace package"
+  description: "The workspace software package information artifact identified by @beep/skill-contract in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "lexical_alias"
+alternatives:
+  - label: "@beep/skill-contract as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort row containing @beep/skill-contract can feed the affected-package query while remaining serialized implementation data, so the cited observation establishes only the package-name token."
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

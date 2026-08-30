@@ -1,0 +1,22 @@
+id: "dh:sched-core:029"
+observation_refs:
+  - "so:sha256:10dce1f7b343c888cb89540d1239b4ad5b98aac01ff6935e4e66dd2df2bcd8a1"
+  - "so:sha256:72c2e90d56f4e7e673b428faebfe8fbda95c1593d73ca2619e2d52a78650716a"
+  - "so:sha256:aae98d5927e0b5760e2cd21c7eb757857be3c4a618f5c59c83191a9311cff21b"
+  - "so:sha256:b77a1aa7b6de4031d675944160a6526962c420458363f4ce8b2f019000153f0f"
+  - "so:sha256:fd571922e63548144b22f2138d95da60be21ad39b2f6363461fa1729c859c7dd"
+cq_warrants: []
+proposed_referent:
+  label: "admission-wait progress reporting implementation"
+  description: "Internal bookkeeping and formatting used to print queue position, elapsed wait, and escalation messages."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "queue-wait monitoring procedure"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish local progress state, thresholds, and console reporting, but no CQ requires this particular reporting mechanism and no independent monitored artifact is observed."
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

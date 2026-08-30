@@ -22,19 +22,27 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 /**
- * Extraction metrics input
+ * Duration, output counts, and outcome of one extraction run.
  *
- * **Example** (Reference ExtractionMetrics fields)
+ * **Example** (Record a successful extraction)
  *
  * ```ts
- * import type { ExtractionMetrics } from "@effect-ontology/Telemetry/Metrics"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { ExtractionMetrics } from "@effect-ontology/Telemetry/Metrics"
+ * import { Duration } from "effect"
  *
- * const extractionMetricsFields: ReadonlyArray<keyof ExtractionMetrics> = ["duration", "entityCount", "relationCount"]
- *
- * console.log(extractionMetricsFields)
+ * const metrics = ExtractionMetrics.make({
+ *   duration: Duration.millis(120),
+ *   entityCount: NonNegativeInt.make(3),
+ *   relationCount: NonNegativeInt.make(1),
+ *   chunkCount: NonNegativeInt.make(1),
+ *   success: true
+ * })
+ * console.log(metrics.entityCount) // 3
  * ```
  *
- * @category type-level
+ * @see {@link MetricsService} for recording this payload into Prometheus counters.
+ * @category models
  * @since 0.0.0
  */
 export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionMetrics`)(
@@ -51,19 +59,29 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionM
 ) {}
 
 /**
- * LLM call metrics input
+ * Provider identity, latency, token counts, and outcome of one language-model
+ * call.
  *
- * **Example** (Reference LlmCallMetrics fields)
+ * **Example** (Record a billed LLM call)
  *
  * ```ts
- * import type { LlmCallMetrics } from "@effect-ontology/Telemetry/Metrics"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { LlmCallMetrics } from "@effect-ontology/Telemetry/Metrics"
+ * import { Duration } from "effect"
  *
- * const llmCallMetricsFields: ReadonlyArray<keyof LlmCallMetrics> = ["provider", "model", "duration"]
- *
- * console.log(llmCallMetricsFields)
+ * const metrics = LlmCallMetrics.make({
+ *   provider: "anthropic",
+ *   model: "claude-sonnet-4-5",
+ *   duration: Duration.millis(80),
+ *   tokensIn: NonNegativeInt.make(100),
+ *   tokensOut: NonNegativeInt.make(40),
+ *   success: true
+ * })
+ * console.log(metrics.model) // "claude-sonnet-4-5"
  * ```
  *
- * @category type-level
+ * @see {@link MetricsService} for aggregating these calls by provider and model.
+ * @category models
  * @since 0.0.0
  */
 export class LlmCallMetrics extends S.Class<LlmCallMetrics>($I`LlmCallMetrics`)(
@@ -81,19 +99,25 @@ export class LlmCallMetrics extends S.Class<LlmCallMetrics>($I`LlmCallMetrics`)(
 ) {}
 
 /**
- * Embedding cache metrics input
+ * Hit and miss counts plus measured cache latency for embedding lookups.
  *
- * **Example** (Reference EmbeddingCacheMetrics fields)
+ * **Example** (Snapshot cache hit rate inputs)
  *
  * ```ts
- * import type { EmbeddingCacheMetrics } from "@effect-ontology/Telemetry/Metrics"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { EmbeddingCacheMetrics } from "@effect-ontology/Telemetry/Metrics"
+ * import { Duration } from "effect"
  *
- * const embeddingCacheMetricsFields: ReadonlyArray<keyof EmbeddingCacheMetrics> = ["hits", "misses", "latency"]
- *
- * console.log(embeddingCacheMetricsFields)
+ * const metrics = EmbeddingCacheMetrics.make({
+ *   hits: NonNegativeInt.make(9),
+ *   misses: NonNegativeInt.make(1),
+ *   latency: Duration.millis(4)
+ * })
+ * console.log(metrics.hits) // 9
  * ```
  *
- * @category type-level
+ * @see {@link MetricsService} for recording cache hits and misses into gauges.
+ * @category models
  * @since 0.0.0
  */
 export class EmbeddingCacheMetrics extends S.Class<EmbeddingCacheMetrics>($I`EmbeddingCacheMetrics`)(
@@ -157,17 +181,35 @@ const initialState: MetricsState = {
 };
 
 /**
- * MetricsService - Prometheus metrics collection
+ * In-memory Prometheus metrics collector for extraction, LLM, and embedding
+ * cache counters.
  *
- * **Example** (Inspect metrics service)
+ * **Example** (Record an extraction and scrape the text format)
  *
  * ```ts
- * import { MetricsService } from "@effect-ontology/Telemetry/Metrics"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { ExtractionMetrics, MetricsService } from "@effect-ontology/Telemetry/Metrics"
+ * import { Duration, Effect } from "effect"
  *
- * console.log(MetricsService)
+ * const scrape = Effect.gen(function* () {
+ *   const metrics = yield* MetricsService
+ *   yield* metrics.recordExtraction(
+ *     ExtractionMetrics.make({
+ *       duration: Duration.millis(120),
+ *       entityCount: NonNegativeInt.make(3),
+ *       relationCount: NonNegativeInt.make(1),
+ *       chunkCount: NonNegativeInt.make(1),
+ *       success: true
+ *     })
+ *   )
+ *   return yield* metrics.toPrometheus
+ * })
+ * const text = Effect.runSync(Effect.provide(scrape, MetricsService.Default))
+ * console.log(text.includes("extraction_total 1")) // true
  * ```
  *
- * @category layers
+ * @see {@link ExtractionMetrics} for the payload recorded by `recordExtraction`.
+ * @category services
  * @since 0.0.0
  */
 export class MetricsService extends Context.Service<MetricsService>()($I`MetricsService`, {

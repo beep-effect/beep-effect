@@ -1,0 +1,23 @@
+id: so:sha256:12f0283e6bc462f502a24b5cbc92676be9a56923385013744f7ca9c210e0856c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 707
+  end_line: 766
+  content_sha256: 453b79eabfa686965feb02e83df705b4bee77ade5013e71439b3cdaf904fd9c8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::buildYeetVerdict
+  lexical_name: buildYeetVerdict
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: buildYeetVerdict
+source_excerpt: 'export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {'
+epistemic_status: parser_derived

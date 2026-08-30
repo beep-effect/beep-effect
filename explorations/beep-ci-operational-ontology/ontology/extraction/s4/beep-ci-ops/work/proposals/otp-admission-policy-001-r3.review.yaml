@@ -1,0 +1,47 @@
+target: "otp:admission-policy:001"
+target_sha256: "31b6cfc9bb65b0c624917ebfa7e57b889a741026bb477137255b94045ef45d30"
+chain_sha256: "822069b2a3ac9f9633c233cafe8bcc6a6dd45470f25ddd2368cab9710141c768"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: identity-criterion-counterexample
+    counterexample: >-
+      Fleet A and fleet B can deploy byte-identical parameter values while
+      different authorities govern different applicability scopes. The card
+      requires authoritative lineage, normative rule content, scope, and
+      version, so value equality does not wrongly identify their policies.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-necessity
+    counterexample: >-
+      A SeatRequest with a measured wait cannot be evaluated by CQ-023 unless
+      it is linked to the governing AdmissionPolicy whose starvation bound the
+      query reads. Removing the policy term destroys that requested comparison.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-config-dto
+    counterexample: >-
+      An arbitrary config DTO can feed branches, but it cannot also preserve
+      the cited characterization of these values as chartered production
+      defaults governing live priority aging and review-fix admission refusal.
+      The authority plus deployed behavior makes the null twin non-equivalent.
+    outcome: survived
+rival_models_still_viable:
+  - "A deployed policy regime is distinct from the specification that governs it."
+  - "A configuration value object is a carrier rather than the policy specification."
+evidence:
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "po:sha256:abc08c224e904cfc5a0878b26ca70b707f559468bf33fde1b9ea74a01bb7edaf"
+  - "po:sha256:b92b48e2e7bcebad1b643f7f05cddc8dd411e43355076cdd384a9c37c0ee6c99"
+  - "CQ-023"

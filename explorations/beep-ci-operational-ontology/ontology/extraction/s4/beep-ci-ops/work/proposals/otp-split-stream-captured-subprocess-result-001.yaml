@@ -1,0 +1,70 @@
+id: otp:split-stream-captured-subprocess-result:001
+hypothesis_ref: dh:reporun:037
+identity_card_ref: ic:reporun:014
+foundational_status: explicitly_deferred
+term:
+  local_name: VerificationResultArtifact
+  preferred_label: verification result artifact
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationResultArtifact
+  owl_entity_kind: class
+definition:
+  text: >-
+    An information object recording the outcome of a verification execution in a
+    form that may bear the contingent VerificationEvidence role when policy-required
+    applicability and provenance are present. CQ-005 and CQ-006 require an evidence
+    record to have such result content, while allowing diagnostic result artifacts
+    that do not bear the role. A transient or retained split-stream carrier containing
+    exit status, bounded stdout and stderr, and truncation state is one accommodated
+    representation; this proposal makes no unobserved retention or evidence-use claim.
+  source:
+    - CQ-005
+    - CQ-006
+    - so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d
+    - so:sha256:ca5e01bb598282d204b571b9567ae92a62782dc0dea487b412200725b31fde49
+    - so:sha256:8e9ac56f7faaa4343dc5e43ba0d5db57423412ece68eb4b5d65adbce396d5976
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: intrinsic
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  semantic_support_for:
+    - otp:verification-evidence:001
+alternatives_rejected:
+  - >-
+    Rejected category collapse: the subprocess execution is an occurrence,
+    whereas VerificationResultArtifact is information content about that
+    occurrence. Retention is a carrier property, and evidentiary status is a
+    contingent role, so neither changes the selected generic denotation.
+open_issues:
+  - >-
+    Steward choice remains open between result-content identity and issued record-token
+    identity. A split-stream return is classified as VerificationEvidence only when
+    an instance-level trace supplies the policy, applicability, and provenance for
+    that contingent role; otherwise it remains a VerificationResultArtifact.
+revision_requests: []
+revision_log:
+  - from_sha256: 85123d91ae4e2b669b7103fcd18429f2025fe0d036c00b367782fc79810afc8b
+    addressed:
+      - identity-criterion-unobservable
+      - support-term-not-necessary
+      - discriminator-not-in-observations
+  - from_sha256: 1bcb7bef93794dcc4e2d4164ba3e97acb60a899adbff1afee9b38e07955ba249
+    addressed:
+      - conditional-support-not-established
+      - discriminator-not-in-observations
+  - from_sha256: c1b6d3f79a90d9c291aedb5de5a9c793d44bb045d7ba8fd6422437d044720327
+    addressed:
+      - conditional-support-not-established
+      - discriminator-not-in-observations
+  - from_sha256: cb668d89ddb2edffcbc1310ca3aa03ca716881882c0615377404cf971ca01343
+    addressed:
+      - support-warrant-self-contradiction
+      - discriminator-not-in-observations
+status: proposed

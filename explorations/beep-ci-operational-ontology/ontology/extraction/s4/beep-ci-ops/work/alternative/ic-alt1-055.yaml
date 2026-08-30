@@ -1,0 +1,34 @@
+id: "ic:alt1:055"
+hypothesis_ref: "dh:worktree-config:015"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Fallow audit verification-lane procedures are the same iff they
+    prescribe the same invocable base-relative audit with the same finding gate. The inventory
+    command string and the gate value new-only are reidentification evidence, never the sameness
+    criterion."
+  reidentification_key:
+    - "fallow:audit"
+    - "new-only"
+    - "origin/main"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one audit-procedure specification whose parts include the command, the base, and the
+    gate; an audit run is not a part"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A dated fallow:audit run against origin/main is an execution, not a second
+      procedure. The inventory command entry is a record of the procedure, not identical with
+      every key in the pilot inventory (schemaVersion, recordedAt, and knipRole are other
+      contents)."
+status: "proposed"

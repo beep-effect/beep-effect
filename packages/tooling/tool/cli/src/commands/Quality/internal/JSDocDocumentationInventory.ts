@@ -205,7 +205,21 @@ type DirectExportDescriptor =
     };
 
 const outputJsonRelativePath = "standards/jsdoc-documentation.inventory.jsonc";
-const outputMarkdownRelativePath = "standards/jsdoc-documentation.inventory.md";
+/**
+ * Default path for the human-readable JSDoc documentation inventory.
+ *
+ * **Example** (Resolve the companion inventory)
+ *
+ * ```ts
+ * import { defaultJSDocDocumentationInventoryMarkdownPath } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(defaultJSDocDocumentationInventoryMarkdownPath === "standards/jsdoc-documentation.inventory.md") // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const defaultJSDocDocumentationInventoryMarkdownPath = "standards/jsdoc-documentation.inventory.md";
 const requiredExportTags = ["@example", "@category", "@since"];
 const requiredModuleTags = ["@since"];
 const forbiddenTags = ["@module", "@template"];
@@ -288,7 +302,8 @@ const resolveJSDocInventoryOptions = Effect.fn("JSDocDocumentationInventory.reso
   return {
     repoRoot,
     outputJsonPath: options.outputJsonPath ?? path.join(repoRoot, outputJsonRelativePath),
-    outputMarkdownPath: options.outputMarkdownPath ?? path.join(repoRoot, outputMarkdownRelativePath),
+    outputMarkdownPath:
+      options.outputMarkdownPath ?? path.join(repoRoot, defaultJSDocDocumentationInventoryMarkdownPath),
     generatedAt,
   };
 });
@@ -512,56 +527,76 @@ const malformedConditionalTags = (commentText: string): ReadonlyArray<Documentat
   return findings;
 };
 
-const exampleImportViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
-  const violations: Array<DocumentationIssue> = [];
-  const requiredNamespaceImports = [
-    { module: "effect/Schema", alias: "S" },
-    { module: "effect/Array", alias: "A" },
-    { module: "effect/Option", alias: "O" },
-    { module: "effect/Predicate", alias: "P" },
-    { module: "effect/Record", alias: "R" },
-  ];
+const requiredNamespaceImports = [
+  { module: "effect/Schema", alias: "S" },
+  { module: "effect/Array", alias: "A" },
+  { module: "effect/Option", alias: "O" },
+  { module: "effect/Predicate", alias: "P" },
+  { module: "effect/Record", alias: "R" },
+];
 
-  for (const [exampleIndex, example] of A.entries(extractExamples(commentText))) {
-    if (/@effect\/schema/.test(example)) {
-      A.appendInPlace(violations, {
-        example: exampleIndex + 1,
-        rule: "no-deprecated-effect-schema-import",
-        detail: "Examples must import Schema APIs from effect/Schema, not @effect/schema.",
-      });
-    }
-
-    for (const required of requiredNamespaceImports) {
-      const namedImportPattern = new RegExp(
-        `import\\s*\\{[^}]+\\}\\s*from\\s*["']${escapeRegExp(required.module)}["']`
-      );
-      const namespaceImportPattern = new RegExp(
-        `import\\s*\\*\\s*as\\s+${required.alias}\\s*from\\s*["']${escapeRegExp(required.module)}["']`
-      );
-
-      if (namedImportPattern.test(example)) {
-        A.appendInPlace(violations, {
-          example: exampleIndex + 1,
-          rule: "use-required-namespace-import",
-          detail: `Use import * as ${required.alias} from "${required.module}".`,
-        });
-      }
-
-      if (Str.includes(`from "${required.module}"`)(example) && !namespaceImportPattern.test(example)) {
-        A.appendInPlace(violations, {
-          example: exampleIndex + 1,
-          rule: "wrong-required-namespace-alias",
-          detail: `Examples importing ${required.module} must use the ${required.alias} namespace alias.`,
-        });
-      }
-    }
-  }
-
-  return violations;
+const requiredNamespaceImportViolations = (
+  example: string,
+  exampleNumber: number,
+  required: (typeof requiredNamespaceImports)[number]
+): ReadonlyArray<DocumentationIssue> => {
+  const escapedModule = escapeRegExp(required.module);
+  const namedImportPattern = new RegExp(`import\\s*\\{[^}]+\\}\\s*from\\s*["']${escapedModule}["']`);
+  const namespaceImportPattern = new RegExp(
+    `import\\s*\\*\\s*as\\s+${required.alias}\\s*from\\s*["']${escapedModule}["']`
+  );
+  return A.flatten([
+    namedImportPattern.test(example)
+      ? [
+          {
+            example: exampleNumber,
+            rule: "use-required-namespace-import" as const,
+            detail: `Use import * as ${required.alias} from "${required.module}".`,
+          },
+        ]
+      : [],
+    Str.includes(`from "${required.module}"`)(example) && !namespaceImportPattern.test(example)
+      ? [
+          {
+            example: exampleNumber,
+            rule: "wrong-required-namespace-alias" as const,
+            detail: `Examples importing ${required.module} must use the ${required.alias} namespace alias.`,
+          },
+        ]
+      : [],
+  ]);
 };
+
+const exampleImportViolations = (commentText: string): ReadonlyArray<DocumentationIssue> =>
+  A.flatMap(A.entries(extractExamples(commentText)), ([exampleIndex, example]) => {
+    const exampleNumber = exampleIndex + 1;
+    const deprecatedSchemaImport: ReadonlyArray<DocumentationIssue> = /@effect\/schema/.test(example)
+      ? [
+          {
+            example: exampleNumber,
+            rule: "no-deprecated-effect-schema-import",
+            detail: "Examples must import Schema APIs from effect/Schema, not @effect/schema.",
+          },
+        ]
+      : [];
+    return A.appendAll(
+      deprecatedSchemaImport,
+      A.flatMap(requiredNamespaceImports, (required) =>
+        requiredNamespaceImportViolations(example, exampleNumber, required)
+      )
+    );
+  });
 
 const importStatementTerminatorPattern = /from\s*["'][^"']*["']\s*;?\s*$/;
 const bareImportStatementPattern = /^\s*import\s*["'][^"']*["']\s*;?\s*$/;
+
+const indexAfterImportStatement = (lines: ReadonlyArray<string>, start: number): number => {
+  let cursor = start;
+  while (cursor < lines.length && !importStatementTerminatorPattern.test(lines[cursor] ?? "")) {
+    cursor += 1;
+  }
+  return cursor + 1;
+};
 
 // Strips complete import statements — including multi-line named-import
 // blocks (`import {\n  type X as Y,\n} from "mod"`) — rather than only lines
@@ -579,11 +614,7 @@ const stripImportStatements = (example: string): string => {
       continue;
     }
     if (/^\s*import\b/.test(line)) {
-      let cursor = index;
-      while (cursor < lines.length && !importStatementTerminatorPattern.test(lines[cursor] ?? "")) {
-        cursor += 1;
-      }
-      index = cursor + 1;
+      index = indexAfterImportStatement(lines, index);
       continue;
     }
     A.appendInPlace(kept, Str.trim(line));
@@ -700,6 +731,31 @@ const schemaAnnotationGaps = (name: string, node: Node, sourceFile: SourceFile):
   return gaps;
 };
 
+const moduleDocumentationKind = (fileoverview: string | undefined, presentTags: ReadonlyArray<string>): string => {
+  if (A.contains(presentTags, "@packageDocumentation")) {
+    return "packageDocumentation";
+  }
+  if (A.contains(presentTags, "@module")) {
+    return "module";
+  }
+  return fileoverview === undefined ? "none" : "jsdoc";
+};
+
+const moduleDocumentationIssues = (fileoverview: string | undefined) => {
+  if (fileoverview === undefined) {
+    return {
+      malformedTags: [] as Array<DocumentationIssue>,
+      categoryIssues: [] as Array<DocumentationIssue>,
+      shapeIssues: [] as Array<DocumentationIssue>,
+    };
+  }
+  return {
+    malformedTags: malformedConditionalTags(fileoverview),
+    categoryIssues: categoryViolations(fileoverview),
+    shapeIssues: documentationShapeViolations(fileoverview),
+  };
+};
+
 const analyzeModule = (
   sourceFile: SourceFile,
   packagePath: string,
@@ -714,24 +770,16 @@ const analyzeModule = (
   const missingTags = exportCount === 0 ? [] : missingRequiredTags(presentTags, requiredModuleTags);
   const forbidden = forbiddenTagsIn(presentTags);
   const missingSummary = fileoverview === undefined ? exportCount > 0 : O.isNone(summaryFromComment(fileoverview));
-  let docKind = "jsdoc";
-  if (A.contains(presentTags, "@packageDocumentation")) {
-    docKind = "packageDocumentation";
-  } else if (A.contains(presentTags, "@module")) {
-    docKind = "module";
-  } else if (fileoverview === undefined) {
-    docKind = "none";
-  }
-  const malformedTags = fileoverview === undefined ? [] : malformedConditionalTags(fileoverview);
-  const categoryIssues = fileoverview === undefined ? [] : categoryViolations(fileoverview);
-  const shapeIssues = fileoverview === undefined ? [] : documentationShapeViolations(fileoverview);
-  const findingCount =
-    missingTags.length +
-    forbidden.length +
-    malformedTags.length +
-    categoryIssues.length +
-    shapeIssues.length +
-    (missingSummary ? 1 : 0);
+  const docKind = moduleDocumentationKind(fileoverview, presentTags);
+  const { malformedTags, categoryIssues, shapeIssues } = moduleDocumentationIssues(fileoverview);
+  const findingCount = countFindings(
+    missingSummary,
+    missingTags,
+    forbidden,
+    malformedTags,
+    categoryIssues,
+    shapeIssues
+  );
 
   return {
     docKind,
@@ -1043,6 +1091,80 @@ const documentationRuleCounts = (entries: ReadonlyArray<InventoryEntry>): JsonRe
     ])
   );
 
+const sourceFileIsInPackageInventory = (
+  sourceFilePath: string,
+  packageInfo: WorkspacePackageInfo,
+  srcDir: string,
+  exclude: ReadonlyArray<string>,
+  repoRoot: string,
+  path: Path.Path,
+  trackedPaths: O.Option<MutableHashSet.MutableHashSet<string>>
+): boolean =>
+  O.match(trackedPaths, {
+    onNone: () => true,
+    onSome: (paths) => MutableHashSet.has(paths, repoRelative(sourceFilePath, repoRoot, path)),
+  }) &&
+  !A.some(exclude, (pattern) =>
+    packageSourceMatchesExclude(packageInfo.absolutePath, srcDir, sourceFilePath, pattern, path)
+  );
+
+const analyzePackageSourceFile = (
+  sourceFile: SourceFile,
+  packageInfo: WorkspacePackageInfo,
+  repoRoot: string,
+  path: Path.Path
+): ReadonlyArray<InventoryEntry> =>
+  A.map(exportedDeclarationsFor(sourceFile, packageInfo.absolutePath, repoRoot, path), (entry) =>
+    entry.analysis !== undefined
+      ? {
+          ...entry.analysis,
+          filePath: normalizeSlashes(path.relative(packageInfo.absolutePath, sourceFile.getFilePath())),
+          repoPath: repoRelative(sourceFile.getFilePath(), repoRoot, path),
+        }
+      : analyzeDirectExport(entry.name, entry.declaration, sourceFile, packageInfo.absolutePath, repoRoot, path)
+  );
+
+const packageInventoryStatus = (
+  sourceFileCount: number,
+  modules: ReadonlyArray<InventoryEntry>,
+  exports: ReadonlyArray<InventoryEntry>,
+  openFindingCount: number
+): string => {
+  if (sourceFileCount === 0 || (modules.length === 0 && exports.length === 0)) {
+    return "no-public-src-surface";
+  }
+  return openFindingCount === 0 ? "clean" : "needs-remediation";
+};
+
+const entryFindingCount = (
+  entries: ReadonlyArray<InventoryEntry>,
+  findings: (entry: InventoryEntry) => ReadonlyArray<unknown>
+): number => A.reduce(entries, 0, (total, entry) => total + findings(entry).length);
+
+const packageInventoryCounts = (
+  modules: ReadonlyArray<InventoryEntry>,
+  exports: ReadonlyArray<InventoryEntry>,
+  openModuleCount: number,
+  openExportCount: number
+) => ({
+  openModules: openModuleCount,
+  openExports: openExportCount,
+  missingExportExamples: A.filter(exports, (entry) => entry.missingRequiredTags.includes("@example")).length,
+  missingExportCategories: A.filter(exports, (entry) => entry.missingRequiredTags.includes("@category")).length,
+  missingExportSince: A.filter(exports, (entry) => entry.missingRequiredTags.includes("@since")).length,
+  missingExportSummaries: A.filter(exports, (entry) => entry.missingSummary).length,
+  forbiddenTagFindings:
+    entryFindingCount(modules, (entry) => entry.forbiddenTags) +
+    entryFindingCount(exports, (entry) => entry.forbiddenTags),
+  malformedConditionalTagFindings:
+    entryFindingCount(modules, (entry) => entry.malformedConditionalTags) +
+    entryFindingCount(exports, (entry) => entry.malformedConditionalTags),
+  exampleImportFindings: entryFindingCount(exports, (entry) => entry.exampleImportViolations),
+  unsafeExampleFindings: entryFindingCount(exports, (entry) => entry.unsafeExampleViolations),
+  schemaAnnotationFindings: entryFindingCount(exports, (entry) => entry.schemaAnnotationGaps),
+  documentationRuleFindings: documentationRuleCounts(A.appendAll(modules, exports)),
+});
+
 const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(function* (
   packageInfo: WorkspacePackageInfo,
   topoOrder: number,
@@ -1057,16 +1179,8 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   const srcDir = P.isString(docgenConfig.srcDir) ? docgenConfig.srcDir : "src";
   const exclude = A.isArray(docgenConfig.exclude) ? A.filter(docgenConfig.exclude, P.isString) : [];
   const sourceRoot = path.join(packageInfo.absolutePath, srcDir);
-  const sourceFiles = A.filter(
-    yield* listSourceFiles(sourceRoot, path),
-    (sourceFilePath) =>
-      O.match(trackedPaths, {
-        onNone: () => true,
-        onSome: (paths) => MutableHashSet.has(paths, repoRelative(sourceFilePath, repoRoot, path)),
-      }) &&
-      !A.some(exclude, (pattern) =>
-        packageSourceMatchesExclude(packageInfo.absolutePath, srcDir, sourceFilePath, pattern, path)
-      )
+  const sourceFiles = A.filter(yield* listSourceFiles(sourceRoot, path), (sourceFilePath) =>
+    sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, trackedPaths)
   );
   const project = createInMemoryTsMorphProject();
   const modules: Array<InventoryEntry> = [];
@@ -1074,23 +1188,7 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
 
   for (const sourceFilePath of sourceFiles) {
     const sourceFile = project.addSourceFileAtPath(sourceFilePath);
-    const packageExports: Array<InventoryEntry> = [];
-    const directExports = exportedDeclarationsFor(sourceFile, packageInfo.absolutePath, repoRoot, path);
-
-    for (const entry of directExports) {
-      if (entry.analysis !== undefined) {
-        A.appendInPlace(packageExports, {
-          ...entry.analysis,
-          filePath: normalizeSlashes(path.relative(packageInfo.absolutePath, sourceFile.getFilePath())),
-          repoPath: repoRelative(sourceFile.getFilePath(), repoRoot, path),
-        });
-        continue;
-      }
-      A.appendInPlace(
-        packageExports,
-        analyzeDirectExport(entry.name, entry.declaration, sourceFile, packageInfo.absolutePath, repoRoot, path)
-      );
-    }
+    const packageExports = analyzePackageSourceFile(sourceFile, packageInfo, repoRoot, path);
 
     if (packageExports.length > 0) {
       A.appendInPlace(
@@ -1103,12 +1201,7 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
 
   const openModuleCount = A.filter(modules, (entry) => entry.remediationStatus === "open").length;
   const openExportCount = A.filter(exports, (entry) => entry.remediationStatus === "open").length;
-  let status = "needs-remediation";
-  if (sourceFiles.length === 0 || (modules.length === 0 && exports.length === 0)) {
-    status = "no-public-src-surface";
-  } else if (openModuleCount + openExportCount === 0) {
-    status = "clean";
-  }
+  const status = packageInventoryStatus(sourceFiles.length, modules, exports, openModuleCount + openExportCount);
 
   return {
     packageName: packageInfo.name,
@@ -1127,24 +1220,7 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
       enforceExamples: docgenConfig.enforceExamples === true,
       enforceVersion: docgenConfig.enforceVersion !== false,
     },
-    counts: {
-      openModules: openModuleCount,
-      openExports: openExportCount,
-      missingExportExamples: A.filter(exports, (entry) => entry.missingRequiredTags.includes("@example")).length,
-      missingExportCategories: A.filter(exports, (entry) => entry.missingRequiredTags.includes("@category")).length,
-      missingExportSince: A.filter(exports, (entry) => entry.missingRequiredTags.includes("@since")).length,
-      missingExportSummaries: A.filter(exports, (entry) => entry.missingSummary).length,
-      forbiddenTagFindings:
-        A.reduce(modules, 0, (total, entry) => total + entry.forbiddenTags.length) +
-        A.reduce(exports, 0, (total, entry) => total + entry.forbiddenTags.length),
-      malformedConditionalTagFindings:
-        A.reduce(modules, 0, (total, entry) => total + entry.malformedConditionalTags.length) +
-        A.reduce(exports, 0, (total, entry) => total + entry.malformedConditionalTags.length),
-      exampleImportFindings: A.reduce(exports, 0, (total, entry) => total + entry.exampleImportViolations.length),
-      unsafeExampleFindings: A.reduce(exports, 0, (total, entry) => total + entry.unsafeExampleViolations.length),
-      schemaAnnotationFindings: A.reduce(exports, 0, (total, entry) => total + entry.schemaAnnotationGaps.length),
-      documentationRuleFindings: documentationRuleCounts(A.appendAll(modules, exports)),
-    },
+    counts: packageInventoryCounts(modules, exports, openModuleCount, openExportCount),
     modules,
     exports,
   };
@@ -1252,116 +1328,127 @@ const inventoryTotals = (packages: ReadonlyArray<PackageInventory>, rootPolicy: 
   };
 };
 
-const detailList = (entry: InventoryEntry): string => {
-  const details: Array<string> = [];
+const detailWhen = (condition: boolean, detail: string): ReadonlyArray<string> => (condition ? [detail] : []);
 
-  if (entry.missingSummary) {
-    A.appendInPlace(details, "missing summary");
-  }
-  if (entry.missingRequiredTags.length > 0) {
-    A.appendInPlace(details, `missing ${entry.missingRequiredTags.join(", ")}`);
-  }
-  if (entry.forbiddenTags.length > 0) {
-    A.appendInPlace(details, `forbidden ${entry.forbiddenTags.join(", ")}`);
-  }
-  if (entry.malformedConditionalTags.length > 0) {
-    A.appendInPlace(details, `${entry.malformedConditionalTags.length} malformed conditional tag(s)`);
-  }
-  if (entry.exampleImportViolations.length > 0) {
-    A.appendInPlace(details, `${entry.exampleImportViolations.length} example import violation(s)`);
-  }
-  if (entry.unsafeExampleViolations.length > 0) {
-    A.appendInPlace(details, `${entry.unsafeExampleViolations.length} unsafe example violation(s)`);
-  }
-  if (entry.schemaAnnotationGaps.length > 0) {
-    A.appendInPlace(details, `${entry.schemaAnnotationGaps.length} schema annotation/type-alias gap(s)`);
-  }
-  if (entry.categoryViolations.length > 0) {
-    A.appendInPlace(details, `${entry.categoryViolations.length} category casing violation(s)`);
-  }
-  if (entry.documentationShapeViolations.length > 0) {
-    A.appendInPlace(details, `${entry.documentationShapeViolations.length} documentation section/link violation(s)`);
-  }
+const detailList = (entry: InventoryEntry): string =>
+  A.match(
+    A.flatten([
+      detailWhen(entry.missingSummary, "missing summary"),
+      detailWhen(
+        A.isReadonlyArrayNonEmpty(entry.missingRequiredTags),
+        `missing ${A.join(entry.missingRequiredTags, ", ")}`
+      ),
+      detailWhen(A.isReadonlyArrayNonEmpty(entry.forbiddenTags), `forbidden ${A.join(entry.forbiddenTags, ", ")}`),
+      detailWhen(
+        A.isReadonlyArrayNonEmpty(entry.malformedConditionalTags),
+        `${entry.malformedConditionalTags.length} malformed conditional tag(s)`
+      ),
+      detailWhen(
+        A.isReadonlyArrayNonEmpty(entry.exampleImportViolations),
+        `${entry.exampleImportViolations.length} example import violation(s)`
+      ),
+      detailWhen(
+        A.isReadonlyArrayNonEmpty(entry.unsafeExampleViolations),
+        `${entry.unsafeExampleViolations.length} unsafe example violation(s)`
+      ),
+      detailWhen(
+        A.isReadonlyArrayNonEmpty(entry.schemaAnnotationGaps),
+        `${entry.schemaAnnotationGaps.length} schema annotation/type-alias gap(s)`
+      ),
+      detailWhen(
+        A.isReadonlyArrayNonEmpty(entry.categoryViolations),
+        `${entry.categoryViolations.length} category casing violation(s)`
+      ),
+      detailWhen(
+        A.isReadonlyArrayNonEmpty(entry.documentationShapeViolations),
+        `${entry.documentationShapeViolations.length} documentation section/link violation(s)`
+      ),
+    ]),
+    { onEmpty: () => "resolved", onNonEmpty: (details) => A.join(details, "; ") }
+  );
 
-  return details.length === 0 ? "resolved" : A.join(details, "; ");
-};
+const renderInventoryTotals = (inventory: Inventory): ReadonlyArray<string> => [
+  "## Totals",
+  "",
+  "| Metric | Count |",
+  "|---|---:|",
+  ...A.map(R.toEntries(inventory.totals), ([key, value]) => `| ${key} | ${value} |`),
+];
+
+const renderRootPolicy = (rootPolicy: RootPolicyInventory): ReadonlyArray<string> => [
+  "## Root Policy",
+  "",
+  "| File | Tag | Status | Missing |",
+  "|---|---|---|---|",
+  ...A.map(
+    rootPolicy.customTags,
+    (tag) => `| ${rootPolicy.filePath} | \`${tag.tagName}\` | ${tag.status} | ${A.join(tag.missing, ", ") || "none"} |`
+  ),
+];
+
+const renderPackageSummary = (packages: ReadonlyArray<PackageInventory>): ReadonlyArray<string> => [
+  "## Package Summary",
+  "",
+  "| Order | Package | Path | Status | Modules | Exports | Open Modules | Open Exports |",
+  "|---:|---|---|---|---:|---:|---:|---:|",
+  ...A.map(
+    packages,
+    (pkg) =>
+      `| ${pkg.topoOrder} | \`${pkg.packageName}\` | \`${pkg.packagePath}\` | ${pkg.status} | ${pkg.sourceCoverage.publicModuleCount} | ${pkg.sourceCoverage.publicExportCount} | ${pkg.counts.openModules} | ${pkg.counts.openExports} |`
+  ),
+];
+
+const renderEntryFindings = (
+  heading: string,
+  entries: ReadonlyArray<InventoryEntry>,
+  render: (entry: InventoryEntry) => string
+): ReadonlyArray<string> =>
+  A.match(entries, {
+    onEmpty: () => [],
+    onNonEmpty: (nonEmptyEntries) => ["", heading, ...A.map(nonEmptyEntries, render)],
+  });
+
+const renderOpenPackageFindings = (pkg: PackageInventory): ReadonlyArray<string> => [
+  "",
+  `### ${pkg.packageName}`,
+  "",
+  `Path: \`${pkg.packagePath}\``,
+  ...renderEntryFindings(
+    "Module findings:",
+    A.filter(pkg.modules, (entry) => entry.remediationStatus === "open"),
+    (entry) => `- \`${entry.filePath}:${entry.line}\` (${entry.docKind}) - ${detailList(entry)}`
+  ),
+  ...renderEntryFindings(
+    "Export findings:",
+    A.filter(pkg.exports, (entry) => entry.remediationStatus === "open"),
+    (entry) =>
+      `- \`${entry.filePath}:${entry.line}\` \`${entry.symbolName}\` (${entry.exportKind}) - ${detailList(entry)}`
+  ),
+];
 
 const renderMarkdown = (inventory: Inventory): string => {
-  const lines: Array<string> = [];
-  A.appendInPlace(lines, "# JSDoc Documentation Compliance Inventory");
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, `Generated: ${inventory.generatedAt}`);
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "## Scope");
-  A.appendInPlace(lines, "");
-  A.appendInPlace(
-    lines,
-    "The package universe is the current `bun run topo-sort` output. This inventory checks repo JSDoc rules that package docgen does not fully validate yet: kind-aware Example presence, summaries, section grammar, described links, retired tags, TSDoc grammar, example import aliases, unsafe examples, root TSDoc custom tag registration, and schema annotation/type-alias gaps."
-  );
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "## Totals");
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "| Metric | Count |");
-  A.appendInPlace(lines, "|---|---:|");
-  for (const [key, value] of R.toEntries(inventory.totals)) {
-    A.appendInPlace(lines, `| ${key} | ${value} |`);
-  }
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "## Root Policy");
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "| File | Tag | Status | Missing |");
-  A.appendInPlace(lines, "|---|---|---|---|");
-  for (const tag of inventory.rootPolicy.customTags) {
-    A.appendInPlace(
-      lines,
-      `| ${inventory.rootPolicy.filePath} | \`${tag.tagName}\` | ${tag.status} | ${tag.missing.join(", ") || "none"} |`
-    );
-  }
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "## Package Summary");
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "| Order | Package | Path | Status | Modules | Exports | Open Modules | Open Exports |");
-  A.appendInPlace(lines, "|---:|---|---|---|---:|---:|---:|---:|");
-  for (const pkg of inventory.packages) {
-    A.appendInPlace(
-      lines,
-      `| ${pkg.topoOrder} | \`${pkg.packageName}\` | \`${pkg.packagePath}\` | ${pkg.status} | ${pkg.sourceCoverage.publicModuleCount} | ${pkg.sourceCoverage.publicExportCount} | ${pkg.counts.openModules} | ${pkg.counts.openExports} |`
-    );
-  }
-  A.appendInPlace(lines, "");
-  A.appendInPlace(lines, "## Open Findings");
-
-  for (const pkg of inventory.packages.filter((entry) => entry.status === "needs-remediation")) {
-    A.appendInPlace(lines, "");
-    A.appendInPlace(lines, `### ${pkg.packageName}`);
-    A.appendInPlace(lines, "");
-    A.appendInPlace(lines, `Path: \`${pkg.packagePath}\``);
-
-    const openModules = pkg.modules.filter((entry) => entry.remediationStatus === "open");
-    if (openModules.length > 0) {
-      A.appendInPlace(lines, "");
-      A.appendInPlace(lines, "Module findings:");
-      for (const moduleEntry of openModules) {
-        A.appendInPlace(
-          lines,
-          `- \`${moduleEntry.filePath}:${moduleEntry.line}\` (${moduleEntry.docKind}) - ${detailList(moduleEntry)}`
-        );
-      }
-    }
-
-    const openExports = pkg.exports.filter((entry) => entry.remediationStatus === "open");
-    if (openExports.length > 0) {
-      A.appendInPlace(lines, "");
-      A.appendInPlace(lines, "Export findings:");
-      for (const exportEntry of openExports) {
-        A.appendInPlace(
-          lines,
-          `- \`${exportEntry.filePath}:${exportEntry.line}\` \`${exportEntry.symbolName}\` (${exportEntry.exportKind}) - ${detailList(exportEntry)}`
-        );
-      }
-    }
-  }
-
+  const lines = A.flatten([
+    [
+      "# JSDoc Documentation Compliance Inventory",
+      "",
+      `Generated: ${inventory.generatedAt}`,
+      "",
+      "## Scope",
+      "",
+      "The package universe is the current `bun run topo-sort` output. This inventory checks repo JSDoc rules that package docgen does not fully validate yet: kind-aware Example presence, summaries, section grammar, described links, retired tags, TSDoc grammar, example import aliases, unsafe examples, root TSDoc custom tag registration, and schema annotation/type-alias gaps.",
+      "",
+    ],
+    renderInventoryTotals(inventory),
+    [""],
+    renderRootPolicy(inventory.rootPolicy),
+    [""],
+    renderPackageSummary(inventory.packages),
+    ["", "## Open Findings"],
+    A.flatMap(
+      A.filter(inventory.packages, (entry) => entry.status === "needs-remediation"),
+      renderOpenPackageFindings
+    ),
+  ]);
   return `${A.join(lines, "\n")}\n`;
 };
 

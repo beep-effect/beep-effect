@@ -1,0 +1,24 @@
+id: "dh:yeet-planner:011"
+observation_refs:
+  - "so:sha256:2c69da902821ace2904ede4845d9193e0358eb571e5d563d0aaaf080dcfe161a"
+  - "so:sha256:505c45f1b6b21cea941e3727724c4453c62fc6afc248ae88a8f3a817372b9afb"
+cq_warrants: []
+proposed_referent:
+  label: "Gate staleness assessment result"
+  description: "A possible information artifact expressing a fresh, stale, or unproven assessment of a gate artifact."
+representation_status: unresolved
+alternatives:
+  - label: "Schema union and derived source alias"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "Freshness state of verification evidence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The union declaration and source alias do not disclose the represented subject, assessment production, persistence, or identity; the same syntax can be a purely internal result type."
+epistemic_status: proposed
+confidence:
+  value: 0.51
+  use_for_acceptance: false

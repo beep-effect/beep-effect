@@ -5,11 +5,12 @@
     "title": "Epistemic Contradiction Detection",
     "status": "active",
     "created": "2026-08-06",
-    "updated": "2026-08-06",
+    "updated": "2026-08-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-contradiction-detection",
   "lifecycle": "active",
+  "statusNote": "Authored but not started: all phases remain pending. The next work is P0 contract citation re-verification when this packet is explicitly prioritized.",
   "mission": "Produce ContradictionCandidate records for typed direct-conflict classes as a pure, model-free function of a belief-view snapshot, against the contract epistemic-contradiction-triage already ships.",
   "executionCapable": true,
   "reflectionRequired": true,

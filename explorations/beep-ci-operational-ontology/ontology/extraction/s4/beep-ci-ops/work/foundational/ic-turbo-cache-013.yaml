@@ -1,0 +1,31 @@
+id: "ic:turbo-cache:013"
+hypothesis_ref: "dh:turbo-cache:014"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same transit task specification only when they are the same authored repeatable instruction in the same versioned configuration lineage with the same complete inherited task semantics; the transit key and self-named upstream selector are reidentification evidence but cannot supply the criterion."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key transit"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The versioned declaration is one repeatable instruction placeholder whose complete operational content is resolved in package context."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A transit work procedure specification"
+    - "An aggregation template for package-local transit tasks"
+    - "A verification lane"
+  existential_dependencies:
+    - "Package-local transit scripts and the task graph that supply the declaration's operational meaning"
+    - "At least one bearer of the instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "The observed declaration contains only an upstream transit selector, so it could be an aggregation node, a copy procedure, a transformation procedure, or a no-op without changing the cited evidence."
+status: proposed

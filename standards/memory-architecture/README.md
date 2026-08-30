@@ -51,8 +51,8 @@ _(2026-06-17: the original "until repo-memory v0 is running" gate is superseded 
 | `03-saas-landscape-assessment.md` | Condensed evaluations of external solutions (closed, not ongoing) |
 | `04-decision-log.md` | Dated decision entries as the architecture evolves |
 | `05-context-graph-capability-assessment.md` | Bounded addendum selecting feature donors for provenance, ontology graphs, context graphs, and agent recall UX |
-| `06-agent-memory-operations.md` | Operational runbook implementing 04's dev-memory decision: provisioning envelope, recall routing, session continuity |
-| `07-shared-memory-adoption.md` | Adopted 2026-08-06 memory plane: basic-memory as the shared cross-agent store, codegraph as the code KG, store conventions, wiring, and the Cognee role retirement |
+| `06-agent-memory-operations.md` | **Superseded 2026-08-29** (history only) — former operational runbook for the removed basic-memory/codegraph plane |
+| `07-shared-memory-adoption.md` | **Retired 2026-08-29** (history only) — the 2026-08-06 basic-memory/codegraph adoption, reversed by 04's 2026-08-29 removal entry |
 
 ## Relationship to Other Standards
 

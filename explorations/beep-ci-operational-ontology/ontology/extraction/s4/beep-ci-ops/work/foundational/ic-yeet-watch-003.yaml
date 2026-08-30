@@ -1,0 +1,54 @@
+id: "ic:yeet-watch:003"
+hypothesis_ref: "dh:yeet-watch:015"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Membership check against the Yeet check-outcome classification-value
+    domain in ic:yeet-watch:001: two occurrences realize the same pending
+    member only when they preserve the same conservative nonterminal judgment
+    under the same classifier semantics, applicability context, and version
+    lineage. Membership covers recognized pending bucket or state evidence and
+    the fallback for evidence that is neither failing, pending, skipped, nor
+    explicitly successful. Snapshot assignments remain distinct records, and
+    the pending spelling is only evidence.
+  reidentification_key:
+    - "normalized conservative pending-classification content"
+    - "classifier precedence, fallback rule, and version lineage"
+    - "raw pending or unrecognized signal as supporting evidence"
+    - "bearing check and snapshot assignment as supporting record evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One conservative judgment that the watch lacks safely terminal evidence;
+    queued, running, waiting, and unrecognized raw signals are evidence for the
+    member, not phases or parts merged into one execution.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a snapshot-bound pending assignment in one watched-check record"
+    - "situation: the watch lacks accepted terminal evidence for a check"
+    - "phase: a queued, running, or waiting execution phase"
+    - "none: the pending token as only a lexical selector"
+  existential_dependencies:
+    - "At least one faithful bearer of the normalized pending content, generically rather than this token"
+    - "The Yeet classifier interpretation, including its conservative fallback and version"
+    - "For a particular assignment, the classified check and snapshot record that carries it"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as historical classifier content"
+    - "ceased when no faithful bearer of the content remains"
+    - "replaced when the conservative pending rule changes"
+counterexamples:
+  - description: >-
+      An unfamiliar bucket and state with no recognized terminal evidence maps
+      to pending even when the underlying check is not known to be queued,
+      running, or waiting, defeating identity with any one execution phase.
+  - description: >-
+      The same check can carry pending across several snapshots and later pass
+      or fail, so the classification is not the enduring check bearer.
+status: proposed

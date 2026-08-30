@@ -1,0 +1,23 @@
+id: so:sha256:4347cdd32b99feaed87e2f98c37862d30a596e55cd5ec53546113310ea2ad7b0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 562
+  end_line: 574
+  content_sha256: 1a02355956a81e70eeb4952e17571e636ce91522b0de21c18b4648243de4e9bf
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::closeoutPrContextStep
+  lexical_name: closeoutPrContextStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const closeoutPrContextStep = (context: RepoRunContext): RepoPlanStep =>'
+epistemic_status: parser_derived

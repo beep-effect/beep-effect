@@ -89,14 +89,6 @@ export const DocumentStatus = DocumentStatusDefinition.pipe(
 /**
  * Runtime value decoded by {@link DocumentStatus}.
  *
- * **Example** (Use DocumentStatus)
- * ```ts
- * import type { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow"
- *
- * const tag = (status: DocumentStatus): DocumentStatus["status"] => status.status
- * console.log(typeof tag) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -417,14 +409,6 @@ export const BatchState = BatchStateDefinition.pipe(
 
 /**
  * Runtime value decoded by {@link BatchState}.
- *
- * **Example** (Use BatchState)
- * ```ts
- * import type { BatchState } from "@effect-ontology/Model/BatchWorkflow"
- *
- * const stage = (state: BatchState): BatchState["_tag"] => state._tag
- * console.log(typeof stage) // "function"
- * ```
  *
  * @category type-level
  * @since 0.0.0

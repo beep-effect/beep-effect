@@ -1,0 +1,21 @@
+id: fa:alt3:050
+hypothesis_ref: dh:turbo-cache:016
+identity_card_ref: ic:alt3:050
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: persistent Turbo task specification named dev'
+  still_viable: true
+- label: 'process: a long-running development service occurrence type'
+  still_viable: true
+- label: 'kind: a verification lane'
+  still_viable: false
+strongest_counterexample: turbo.json sets persistent true, cache false, and dependsOn ^build.
+  That cannot be a report of one finished work unit. Nothing cited treats dev as verification.
+verdict: analyzed
+needed_evidence: Whether operators treat a running dev server as realizing this specification
+  (process type versus information object). The verification-lane reading is already out on
+  current evidence.

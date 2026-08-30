@@ -1,0 +1,21 @@
+id: "fa:alt1:056"
+hypothesis_ref: "dh:worktree-config:019"
+identity_card_ref: "ic:alt1:056"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "Yeet monitor as a process kind whose instances are monitor sessions"
+    still_viable: true
+  - label: "Yeet monitor command instruction (documentation only)"
+    still_viable: true
+strongest_counterexample: "The quotation directs operators to run the monitor until merge-ready:
+  yes, which is a goal-conditioned procedure rather than a one-shot command mention. It is still
+  only documentation of that procedure."
+verdict: "analyzed"
+needed_evidence: "A CLI/package-script observation of beep yeet monitor plus a dated monitor
+  session. Documentation-only dies on the command entry; process-kind versus procedure-spec
+  remains observationally equivalent until sessions are reidentified independently of the
+  prescription."

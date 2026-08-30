@@ -1,0 +1,35 @@
+id: ic:alt2:022
+hypothesis_ref: dh:topology:043
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two @beep/effect-drizzle workspace packages are the same iff they are the same workspace software unit participating in
+    the captured package-name topology; the scoped name is evidence rather than the criterion, and the trailing sort index
+    is not part of the package.
+  reidentification_key:
+  - "@beep/effect-drizzle"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One software unit per distinct @beep/effect-drizzle workspace package in the captured topology.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies:
+  - workspace topology snapshot
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - removed from the workspace / absent from a later topology capture
+counterexamples:
+- description: >-
+    The trailing numeric token on the topo-sort line for @beep/effect-drizzle is a sort index, not part of the package: two
+    captures with different indices and the same scoped name are still this package.
+- description: >-
+    A lexical occurrence of @beep/effect-drizzle outside the topology capture (a comment, a lockfile extra) is not this workspace
+    package participant.
+status: proposed

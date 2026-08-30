@@ -1,0 +1,28 @@
+id: ic:alt4:009
+hypothesis_ref: dh:sched-core:021
+identity:
+  supplies_identity: true
+  identity_criterion: Two origin-scoped proof-lock resources are the same when they are the full-proof lock of the same repository origin; acquire and release operations are evidence of use, never the sameness criterion.
+  reidentification_key:
+    - AdmissionOriginGate
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One origin has one full-proof lock as a contended whole; concurrent tryAcquire calls are operations on that whole, not parts of it.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+    - relator
+    - information_object
+  existential_dependencies:
+    - repository origin
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: A generic mutex interface with tryAcquire and release but no origin scope would not be this resource.
+  - description: Machine-wide admission capacity is a different contended resource sitting above this per-origin lock.
+status: proposed

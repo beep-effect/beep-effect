@@ -1,0 +1,22 @@
+id: "dh:quality:023"
+observation_refs:
+  - "so:sha256:205188fdb6f27e3dda0ab655f04e9db1a92801228d2325cef0f008725cb486c5"
+  - "so:sha256:2863cb85ae7617ad9d8b6ebf4ecf86c54ce5394f332033415e6a98b79b688868"
+cq_warrants: []
+proposed_referent:
+  label: "FallowQualityPromotionStatus source vocabulary"
+  description: "A source-controlled lexical vocabulary containing \"advisory\", \"blocking\", \"candidate-blocking\", \"deferred\", \"rejected\", \"research\". The record supports those spellings, not independently existing domain individuals or kinds."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational classification corresponding to FallowQualityPromotionStatus"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only literal membership, aliasing, or export facts for FallowQualityPromotionStatus. Those facts are fully compatible with a code-only vocabulary and do not observe policies, states, events, or other domain instances carrying the labels."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

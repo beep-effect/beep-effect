@@ -1,0 +1,34 @@
+id: "ic:alt1:053"
+hypothesis_ref: "dh:worktree-config:007"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two unresolved pull-request review threads are the same iff they are the
+    same review-thread individual while it remains in the unresolved phase. Resolution does not
+    create a different thread; it ends this phase of that thread. The merge-gate policy is
+    evidence of the phase's operational consequence, never the thread's sameness criterion."
+  reidentification_key: []
+ontoclean:
+  rigidity: "anti_rigid"
+  carries_identity: true
+  supplies_identity: false
+  unity: "one phase of one review-thread bearer; comments on the thread are not parts of the
+    unresolved phase"
+  dependence: "intrinsic"
+ufo_analysis:
+  candidate_category: "phase"
+  alternatives:
+    - "information_object"
+    - "relator"
+  existential_dependencies:
+    - "the pull-request review thread"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "resolved"
+    - "thread deleted"
+counterexamples:
+  - description: "A resolved thread is still the same thread; if unresolved-thread were a kind,
+      resolution would destroy the individual. The merge-gate obligation can hold of many
+      threads at once and is not itself a thread."
+status: "proposed"

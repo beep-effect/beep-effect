@@ -1,11 +1,14 @@
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema/Int";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Context, Effect, Exit, Fiber, Layer } from "effect";
+import { Cause, Context, DateTime, Effect, Exit, Fiber, Layer, PubSub, Scope } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { OntologyName } from "../../Domain/Identity.ts";
+import { OntologyEventEntry } from "../../Domain/Schema/EventSchema.ts";
 import { InferenceRunResponse } from "../../Domain/Schema/Inference.ts";
 import { EventBridgeLive, EventBridgeService } from "../../Runtime/EventBridge.ts";
-import { EventBroadcastHubMemory } from "../../Runtime/EventBroadcastRouter.ts";
+import { BroadcastEvent, EventBroadcastHub, EventBroadcastHubMemory } from "../../Runtime/EventBroadcastRouter.ts";
 import { InferenceJobStore, InferenceJobStoreLive } from "../../Runtime/InferenceRouter.ts";
 import { EventBusService, EventBusServiceMemory } from "../../Service/EventBus.ts";
 
@@ -64,6 +67,42 @@ const EventBridgeTest = EventBridgeLive.pipe(
 
 describe("EventBridge", () => {
   it.layer(EventBridgeTest)("with scoped event services", (it) => {
+    it.effect(
+      "tracks scoped broadcast subscribers",
+      Effect.fnUntraced(function* () {
+        const hub = yield* EventBroadcastHub;
+        const ontologyId = OntologyName.make("runtime-event-test");
+        const clientScope = yield* Scope.make();
+        const subscription = yield* hub.subscribe(ontologyId).pipe(Effect.provideService(Scope.Scope, clientScope));
+
+        assert.strictEqual(yield* hub.getClientCount(ontologyId), 1);
+
+        const createdAt = yield* DateTime.now;
+        const entry = yield* OntologyEventEntry.decodeUnknownEffect({
+          id: "event-1",
+          primaryKey: "runtime-event-test:claim-abc123def456",
+          createdAt,
+          event: "ClaimPromoted",
+          payload: {
+            ontologyId,
+            claimId: "claim-abc123def456",
+            timestamp: "2026-08-24T00:00:00.000Z",
+          },
+        });
+        const event = BroadcastEvent.make({
+          entry,
+          ontologyId,
+          timestamp: NonNegativeInt.make(0),
+        });
+
+        yield* hub.broadcast(ontologyId, event);
+        assert.deepStrictEqual(yield* PubSub.take(subscription), event);
+
+        yield* Scope.close(clientScope, Exit.void);
+        assert.strictEqual(yield* hub.getClientCount(ontologyId), 0);
+      })
+    );
+
     it.effect(
       "preserves interruption when the event stream shuts down",
       Effect.fnUntraced(function* () {

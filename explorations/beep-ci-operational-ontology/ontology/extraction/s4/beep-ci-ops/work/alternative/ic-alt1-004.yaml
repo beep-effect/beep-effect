@@ -1,0 +1,31 @@
+id: "ic:alt1:004"
+hypothesis_ref: "dh:reporun:036"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two combined captured-subprocess result records are the same iff each is
+    the capture produced by the same subprocess execution occurrence, carrying that occurrence's
+    observed exit code, folded output, and truncation state. Equal field values from distinct
+    spawns are coincidental, not sameness."
+  reidentification_key:
+    - "CapturedStep"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one produced record whose parts are exit code, folded output, and truncation flag"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "event"
+  existential_dependencies:
+    - "the subprocess execution that produced the capture"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Two independent spawns that both exit 0 with empty output yield equal field tuples
+      but are two records; identifying the record with the subprocess occurrence would also make
+      truncation a property of the process rather than of the capture bound."
+status: "proposed"

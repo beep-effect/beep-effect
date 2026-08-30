@@ -28,6 +28,21 @@ export {
   agentEffectivenessCommand,
 } from "./commands/AgentEffectiveness/index.ts";
 /**
+ * Turbo cache recovery and evidence command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  /**
+   * Turbo cache recovery and evidence command group.
+   *
+   * @category cli-commands
+   * @since 0.0.0
+   */
+  cacheCommand,
+} from "./commands/Cache/index.ts";
+/**
  * CI helper command group.
  *
  * @category cli-commands

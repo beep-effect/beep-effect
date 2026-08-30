@@ -122,10 +122,8 @@ const renderRowLine = (row: LabsListRow): string =>
         const base = `${row.name} | ${manifest.disposition} | created ${manifest.created.toISOString()} | ${manifest.purpose}`;
         return pipe(
           manifest.postgresSchema,
-          O.match({
-            onNone: () => base,
-            onSome: (schema) => `${base} | postgres: ${schema}`,
-          })
+          O.map((schema) => `${base} | postgres: ${schema}`),
+          O.getOrElse(() => base)
         );
       },
     })

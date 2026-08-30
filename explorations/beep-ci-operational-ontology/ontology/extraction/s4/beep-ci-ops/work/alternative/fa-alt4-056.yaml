@@ -1,0 +1,20 @@
+id: fa:alt4:056
+hypothesis_ref: dh:yeet-planner:007
+identity_card_ref: ic:alt4:056
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: Yeet planner cheap-gates proof-step specification"
+    still_viable: true
+  - label: same individual as the repo-run cheap-gates procedure specification (observationally equivalent on current evidence because proofDefinitionForTier reuses repoProofStepDefinition)
+    still_viable: true
+  - label: "kind: cheap-gates operational procedure"
+    still_viable: true
+  - label: literal planner selector token
+    still_viable: false
+strongest_counterexample: proofDefinitionForTier maps cheap-gates onto repoProofStepDefinition, then proofStep wraps it with cheap-gate lanes; a selector token without that constructor would not prescribe the command or the lane collection.
+verdict: analyzed
+needed_evidence: A planner cheap-gates step whose command sequence diverges from repoProofStepDefinition cheap-gates, or a use of that definition outside Yeet planning, would discriminate one shared spec from two site-specific specs.

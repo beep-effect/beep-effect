@@ -1,0 +1,16 @@
+id: fa:alt4:055
+hypothesis_ref: dh:worktree-config:018
+identity_card_ref: ic:alt4:055
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: Fallow health command prescription plus complexity ceilings"
+    still_viable: true
+  - label: "kind or process: the health diagnostic activity as an operational lane (observationally equivalent on current evidence)"
+    still_viable: true
+strongest_counterexample: The pilot inventory records both an invocable command and elapsedMs from a past analysis in one document; collapsing those would merge specification with one execution snapshot.
+verdict: analyzed
+needed_evidence: A Fallow health run occurrence whose command line and ceilings can be compared with this inventory, or a ceiling change that does not alter the recorded snapshot, would discriminate the procedure spec from the lane occurrence.

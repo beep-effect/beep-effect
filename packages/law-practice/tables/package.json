@@ -25,7 +25,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
@@ -34,7 +34,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./tables": "./src/Tables.ts",
-    "./aggregates/*": "./src/aggregates/*/index.ts",
     "./entities": "./src/entities/index.ts",
     "./entities/*": "./src/entities/*/index.ts",
     "./internal/*": null,
@@ -54,7 +53,6 @@
     "exports": {
       ".": "./dist/index.js",
       "./tables": "./dist/Tables.js",
-      "./aggregates/*": "./dist/aggregates/*/index.js",
       "./entities": "./dist/entities/index.js",
       "./entities/*": "./dist/entities/*/index.js",
       "./internal/*": null,

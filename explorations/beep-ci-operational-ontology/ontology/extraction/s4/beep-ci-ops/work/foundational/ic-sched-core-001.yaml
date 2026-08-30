@@ -1,0 +1,33 @@
+id: "ic:sched-core:001"
+hypothesis_ref: "dh:sched-core:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two queued-request record tokens are the same only when they continue one provenance-bearing record created by one enqueue act; heartbeat updates preserve that lineage, whereas copying identical serialized content creates another token."
+  reidentification_key:
+    - "exclusive ticket creation provenance"
+    - "nonce and process coordinates as supporting evidence"
+    - "continuous carrier lineage"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One durably created ticket record whose fields and heartbeat history belong to a single carrier lineage until deletion or quarantine."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "queued admission request in the operational world"
+    - "serialization-only queue DTO"
+  existential_dependencies:
+    - "at least one digital carrier"
+    - "the enqueue act and admission context represented by the record"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "deleted after successful lease staging"
+    - "removed on interruption or dead-owner reaping"
+    - "moved to quarantine when undecodable"
+counterexamples:
+  - description: "A byte-for-byte copy of one ticket JSON in another carrier would be a second record token, not the original queued-request record."
+status: "proposed"

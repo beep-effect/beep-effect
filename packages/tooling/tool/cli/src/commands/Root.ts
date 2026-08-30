@@ -10,6 +10,7 @@ import { Command } from "effect/unstable/cli";
 import { agentEffectivenessCommand } from "./AgentEffectiveness/index.ts";
 import { aiMetricsCommand } from "./AIMetrics/index.ts";
 import { architectureCommand } from "./Architecture/index.ts";
+import { cacheCommand } from "./Cache/index.ts";
 import { ciCommand } from "./Ci/index.ts";
 import { codegenCommand } from "./Codegen/index.ts";
 import { codexCommand } from "./Codex/index.ts";
@@ -71,6 +72,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     agentEffectivenessCommand,
     aiMetricsCommand,
     architectureCommand,
+    cacheCommand,
     ciCommand,
     codexCommand,
     corpusCommand,

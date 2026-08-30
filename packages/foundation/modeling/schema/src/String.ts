@@ -9,6 +9,7 @@ import { $SchemaId } from "@beep/identity";
 import { Str } from "@beep/utils";
 import { identity, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 import { Unknown } from "./Unknown.ts";
 
 const $I = $SchemaId.create("String");
@@ -62,6 +63,7 @@ const stringifyUnknown = (value: unknown): string => {
  */
 export const NonEmptyTrimmedStr = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" })).pipe(
   S.brand("NonEmptyTrimmedStr"),
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("NonEmptyTrimmedStr", {
     description: "Non-empty trimmed string",
     documentation: "A string that is not empty and has leading/trailing whitespace removed.",
@@ -104,6 +106,7 @@ export type NonEmptyTrimmedStr = typeof NonEmptyTrimmedStr.Type;
  */
 export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
   S.brand("UUID"),
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("UUID", {
     description: "Universally Unique Identifier",
     documentation: "A 128-bit number used to identify information in computer systems.",
@@ -267,3 +270,38 @@ export const StrFromUnknown = S.Unknown.pipe(
  * @since 0.0.0
  */
 export type StrFromUnknown = typeof StrFromUnknown.Type;
+
+/**
+ * Type for {@link StrFromUnknown}.
+ *
+ * **Example** (Decode Error to message)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { StrFromUnknown } from "@beep/schema/String"
+ *
+ * const text: StrFromUnknown = Effect.runSync(S.decodeUnknownEffect(StrFromUnknown)(new Error("boom")))
+ * console.log(text) // "boom"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OptionFromOptionalStrWithNoneDefault = S.String.pipe(
+  S.OptionFromOptionalKey,
+  SchemaUtils.withNoneDefault,
+  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withOptionCodecStatics,
+  $I.annoteSchema("OptionFromOptionalStrWithNoneDefault", {
+    description: "Optional string property codec decoded as Option with None as the missing-key default.",
+  })
+);
+
+/**
+ * Decoded value produced by {@link OptionFromOptionalStrWithNoneDefault}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OptionFromOptionalStrWithNoneDefault = typeof OptionFromOptionalStrWithNoneDefault.Type;

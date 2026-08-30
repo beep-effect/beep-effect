@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
 Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Graduated 2026-08-17: the [`MAP`](./MAP.md) was ratified with four
 adversarial-review amendments and

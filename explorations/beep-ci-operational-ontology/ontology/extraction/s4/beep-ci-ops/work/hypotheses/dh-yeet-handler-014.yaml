@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:014"
+observation_refs:
+  - "so:sha256:2c6d8a45b211cb161a8b30a2ac0f2dfd79f93e383cb987a2a088ee21b0b53642"
+  - "so:sha256:544f10ba494e47d860040ba0e1b3a2dd055d5aee2376a1c4dba859413dff1448"
+cq_warrants: []
+proposed_referent:
+  label: "runMonitorPhase implementation and test alias"
+  description: "No domain-ontology referent is proposed for the runMonitorPhase implementation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "monitoring-phase procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show an implementation declaration and a test-facing alias. Aliasing executable code for tests does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}
