@@ -1,3 +1,5 @@
+import { ArtifactId, ArtifactReference, ContentDigest, OperationId } from "@beep/file-processing/Artifact";
+import { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import {
   ArchiveLedgerRecord,
@@ -10,7 +12,7 @@ import {
   TransformationLedgerRecord,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
-import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt, PosInt, PosixPath, Sha256Hex } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -193,6 +195,7 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       expect(O.isNone(RT.residueRootFor("ordinary/file"))).toBe(true);
       expect(RT.safeRestoredPath(path, "C:\\bad<name>\\file. ")).toBe("bad_name_/file");
       expect(RT.safeRestoredPath(path, "")).toBe("_");
+      expect(RT.safeRestoredPath(path, "x".repeat(200))).toContain("__");
       expect(RT.safeRestoredPath(path, Array.from({ length: 33 }, (_, index) => `s${index}`).join("/"))).toContain(
         "_long-path"
       );
@@ -240,6 +243,7 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
     expect(RT.quarantineDisposition()).toEqual({ disposition: "quarantine" });
     expect(RT.transformationPolicySha256(["a", 2])).toBe(sha("a\u00002"));
     expect(RT.transformationLinesSha256(["a", "b"])).toBe(sha("a\nb\n"));
+    expect(RT.transformationLinesSha256([])).toBe(sha(""));
 
     const partial = { sha256: sha("partial"), sizeBytes: 4 };
     const final = { sha256: sha("final"), sizeBytes: 6 };
@@ -250,6 +254,7 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
     expect(RT.emptyMailAttemptOutputDigest().sizeBytes).toBe(0);
     expect(O.getOrUndefined(RT.parseNormalizedRmse("123 (0.125)"))).toBe(0.125);
     expect(O.isNone(RT.parseNormalizedRmse("missing"))).toBe(true);
+    expect(O.isNone(RT.parseNormalizedRmse(`(${"9".repeat(400)})`))).toBe(true);
     expect(RT.isCompoundFileBinary(Uint8Array.of(0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1))).toBe(true);
     expect(RT.isCompoundFileBinary(Uint8Array.of(0xd0))).toBe(false);
     expect(
@@ -369,12 +374,13 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const pstLarger = archivedFile("pst-larger", "$Recycle.Bin/S-1/$RSTORE2.PST", 3 * 1024 * 1024);
       const eml = archivedFile("eml", "mail/one.EML");
       const residue = archivedFile("residue", "mail/folder.export/item.txt");
+      const residueDuplicate = archivedFile("residue-duplicate", "mail/folder.export/other.txt");
       const docA = archivedFile("doc-a", "legacy/a.doc");
       const docADuplicate = ArchiveLedgerRecord.cases["archive-file-pass"].make({
         ...archivedFile("doc-a-copy", "legacy/a-copy.doc"),
         sha256: docA.sha256,
       });
-      const records = [ordinary, pst, pstLarger, eml, residue, docA, docADuplicate];
+      const records = [ordinary, pst, pstLarger, eml, residue, residueDuplicate, docA, docADuplicate];
 
       const mail = RT.mailCandidates(path, "/archive", records);
       expect(mail.map((candidate) => candidate.family)).toEqual(["eml", "pst", "pst", "residue"]);
@@ -651,19 +657,40 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         retainedOutputSha256: RT.emptyMailAttemptOutputDigest().sha256,
         sourceFamily: "pst",
       });
-      yield* writeRecords(mailLedger, [familyRunStart("mail", 1), mailStart, mailException]);
+      const unmatchedMailStart = familyAttemptStart("mail", "unmatched-mail", sha("unmatched-source"));
+      const unmatchedMailException = TransformationLedgerRecord.cases["mail-store-exception"].make({
+        ...mailException,
+        attemptId: unmatchedMailStart.attemptId,
+        objectId: "unmatched-mail",
+      });
+      yield* writeRecords(mailLedger, [
+        familyRunStart("mail", 2),
+        mailStart,
+        mailException,
+        unmatchedMailStart,
+        unmatchedMailException,
+      ]);
       const processedPass = archivedFile("processed-pass", "mail/processed.pst", 3);
       const pendingPass = archivedFile("pending-pass", "mail/pending.pst", 5);
       const mailResume = yield* RT.mailResumeState(
         mailContext,
         [
           { family: "pst" as const, objectId: processedMail, pass: O.some(processedPass), sourcePath: "/processed" },
+          { family: "residue" as const, objectId: "unmatched-mail", pass: O.none(), sourcePath: "/residue" },
           { family: "pst" as const, objectId: "pending-mail", pass: O.some(pendingPass), sourcePath: "/pending" },
         ],
         11
       );
       expect(mailResume.candidates.map((candidate) => candidate.objectId)).toEqual(["pending-mail"]);
-      expect(mailResume.counters).toMatchObject({ exceptionCount: 1, inputBytes: 3, outputBytes: 11 });
+      expect(mailResume.counters).toMatchObject({ exceptionCount: 2, inputBytes: 3, outputBytes: 11 });
+      const unknownCandidateError = yield* RT.mailResumeState(
+        mailContext,
+        [{ family: "pst" as const, objectId: processedMail, pass: O.some(processedPass), sourcePath: "/processed" }],
+        0
+      ).pipe(Effect.flip);
+      expect(unknownCandidateError.message).toContain(
+        "Prior mail exception references unknown candidate unmatched-mail"
+      );
       yield* writeRecords(mailLedger, [familyRunStart("mail", 1), mailStart]);
       expect(O.isNone(yield* RT.mailResumeState(mailContext, [], 0).pipe(Effect.option))).toBe(true);
 
@@ -683,7 +710,31 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         originalSha256: processedDigest,
         recordType: "legacy-word-exception",
       });
-      yield* writeRecords(legacyLedger, [familyRunStart("legacy-word", 1), legacyStart, legacyException]);
+      const passedDigest = sha("passed-legacy");
+      const legacyPassStart = familyAttemptStart("legacy-word", passedDigest, passedDigest);
+      const convertedPath = path.join(legacyOutput, `converted/${passedDigest}.docx`);
+      yield* fs.makeDirectory(path.dirname(convertedPath), { recursive: true });
+      yield* fs.writeFileString(convertedPath, "converted");
+      const legacyPass = TransformationLedgerRecord.cases["legacy-word-pass"].make({
+        ...identity,
+        attemptId: legacyPassStart.attemptId,
+        convertedSha256: sha("converted"),
+        engineVersion: "LibreOffice test",
+        family: "legacy-word",
+        normalizedTextSha256: sha("normalized"),
+        originalSha256: passedDigest,
+        pageCountDelta: 0,
+        postProcessOriginalSha256: passedDigest,
+        recordType: "legacy-word-pass",
+        visualRmse: 0,
+      });
+      yield* writeRecords(legacyLedger, [
+        familyRunStart("legacy-word", 2),
+        legacyStart,
+        legacyException,
+        legacyPassStart,
+        legacyPass,
+      ]);
       const legacyResume = yield* RT.legacyResumeState(
         legacyContext,
         [
@@ -699,11 +750,17 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
             pass: archivedFile("legacy-pending", "legacy/pending.doc", 5),
             sourcePath: "/pending.doc",
           },
+          {
+            digest: passedDigest,
+            occurrenceCount: 1,
+            pass: archivedFile("legacy-passed", "legacy/passed.doc", 3),
+            sourcePath: "/passed.doc",
+          },
         ],
         13
       );
       expect(legacyResume.candidates.map((candidate) => candidate.digest)).toEqual([sha("pending-legacy")]);
-      expect(legacyResume.counters).toMatchObject({ exceptionCount: 1, inputBytes: 3, outputBytes: 13 });
+      expect(legacyResume.counters).toMatchObject({ exceptionCount: 1, inputBytes: 6, outputBytes: 13, passCount: 1 });
       yield* writeRecords(legacyLedger, [familyRunStart("legacy-word", 1), legacyStart]);
       expect(O.isNone(yield* RT.legacyResumeState(legacyContext, [], 0).pipe(Effect.option))).toBe(true);
     })
@@ -741,6 +798,9 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const destination = path.join(directory, "preservation.json");
       const canonical = yield* RT.readCanonicalAcceptance(directory, destination, "acceptance");
       expect(canonical).toContain('"family":"preservation"');
+      expect(O.isNone(yield* RT.readCanonicalAcceptance(directory, directory, "acceptance").pipe(Effect.option))).toBe(
+        true
+      );
 
       const partial = `${destination}.partial`;
       yield* fs.writeFileString(partial, `${canonical}\n`);
@@ -958,8 +1018,10 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const rendered = path.join(root, "rendered");
       yield* fs.makeDirectory(rendered);
       yield* fs.writeFileString(path.join(rendered, "page-1.png"), "png");
+      yield* fs.writeFileString(path.join(rendered, "page-2.png"), "png");
       expect(yield* RT.renderPdfPages(input, rendered, emptyOptions, budget)).toEqual([
         path.join(rendered, "page-1.png"),
+        path.join(rendered, "page-2.png"),
       ]);
       expect(
         O.isNone(
@@ -974,6 +1036,16 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       expect(yield* RT.comparePageRmse(input, input, compareOptions, budget)).toBe(0.25);
       expect(O.isNone(yield* RT.comparePageRmse(input, input, failedOptions, budget).pipe(Effect.option))).toBe(true);
       expect(O.isNone(yield* RT.comparePageRmse(input, input, emptyOptions, budget).pipe(Effect.option))).toBe(true);
+      const compareFailure = path.join(root, "compare-failure.sh");
+      yield* fs.writeFileString(compareFailure, "#!/bin/sh\nexit 2\n");
+      expect((yield* RT.runLegacyStep("chmod", ["+x", compareFailure], 2_000)).exitCode).toBe(0);
+      const compareFailureError = yield* RT.comparePageRmse(
+        input,
+        input,
+        RestorationLegacyWordOptions.make({ ...baseOptions, bwrapPath: compareFailure }),
+        budget
+      ).pipe(Effect.flip);
+      expect(compareFailureError.message).toContain("Rendered-page comparison failed or exceeded");
 
       const workRoot = yield* RT.makeLegacyWorkRoot(outputRoot, sha("work"), "attempt-work");
       expect(yield* fs.exists(workRoot)).toBe(true);
@@ -1397,6 +1469,51 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       );
       expect(resumed.candidates).toEqual([]);
       expect(resumed.counters.inputBytes).toBe(1);
+      expect(yield* RT.currentLedgerDigest(path.join(root, "absent.jsonl"))).toBe(sha(""));
+      expect(RT.familyRunStartMatches(runStart, runContext, 1, PosInt.make(100), PosInt.make(100), sha("policy"))).toBe(
+        true
+      );
+      expect(
+        RT.familyRunStartMatches(
+          runStart,
+          { ...runContext, mailScope: O.some<"full" | "slice">("full") },
+          1,
+          PosInt.make(100),
+          PosInt.make(100),
+          sha("policy")
+        )
+      ).toBe(false);
+      expect((yield* RT.applyFamilyCeiling(RT.emptyFamilyCounters(), -1, 0, 100)).unapprovedCount).toBe(1);
+      expect(
+        O.isNone(
+          yield* RT.rejectFamilyPreflight(
+            true,
+            runContext,
+            1,
+            PosInt.make(100),
+            PosInt.make(100),
+            "rejected",
+            "pending rejection"
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+      const summary = familySummary("legacy-word", 0, 0, 0);
+      expect(
+        O.isNone(
+          yield* RT.completePendingFamilySummary({
+            context: runContext,
+            contractMatches: false,
+            counters: RT.emptyFamilyCounters(),
+            decoded: { lines: [yield* encodeTransformationLedgerRecordJson(summary)], records: [summary] },
+            expectedTerminalCount: 0,
+            maxTotalElapsedMillis: PosInt.make(100),
+            maxTotalOutputBytes: PosInt.make(100),
+            outputTree: { sha256: sha(""), sizeBytes: 0 },
+            sourceCount: 0,
+            terminalCount: 0,
+          }).pipe(Effect.option)
+        )
+      ).toBe(true);
     })
   );
 
@@ -1416,17 +1533,14 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       const now = DateTime.toEpochMillis(yield* DateTime.now);
       expect(yield* RT.familyElapsedMillis(-1)).toBeGreaterThan(0);
       expect(O.isNone(yield* RT.familyElapsedMillis(now + 60_000).pipe(Effect.option))).toBe(true);
-      expect(
-        O.isNone(
-          yield* RT.extractAttachmentText(
-            "/missing",
-            "expired",
-            options,
-            { ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") },
-            0
-          ).pipe(Effect.option)
-        )
-      ).toBe(true);
+      const expiredAttachmentError = yield* RT.extractAttachmentText(
+        "/missing",
+        "expired",
+        options,
+        { ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") },
+        -1_000
+      ).pipe(Effect.flip);
+      expect(expiredAttachmentError.message).toContain("Attachment repair exhausted the elapsed-time budget");
       expect(
         yield* RT.processPstCandidate(
           { family: "pst", objectId: "missing", pass: O.none(), sourcePath: "/missing.pst" },
@@ -1437,6 +1551,45 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
           "attempt-1"
         )
       ).toEqual({ inputBytes: 0, outputBytes: 0, passed: false, unapproved: true });
+    })
+  );
+
+  it.effect("matches PST engine children by path, digest, and optional size", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "pst-engine-child-" });
+      const absolutePath = path.join(root, "child.eml");
+      yield* fs.writeFileString(absolutePath, "child");
+      const file = { absolutePath, relativePath: "messages/child.eml", sizeBytes: 5 };
+      const artifactId = ArtifactId.make(`artifact:${sha("child")}`);
+      const operationId = OperationId.make(`operation:${sha("operation")}`);
+      const sourceArtifactId = ArtifactId.make(`artifact:${sha("source")}`);
+      const child = ArtifactReference.make({
+        digest: ContentDigest.make(`sha256:${sha("child")}`),
+        id: artifactId,
+        relativePath: PosixPath.make("messages/child.eml"),
+        sizeBytes: NonNegativeInt.make(5),
+      });
+      const result = ArchiveExportResult.make({
+        children: [child],
+        engine: "libpff",
+        operationId,
+        sourceArtifactId,
+        warnings: [],
+      });
+      expect(yield* RT.pstEngineChildMatches(result, file)).toBe(true);
+      expect(yield* RT.pstEngineChildMatches({ ...result, children: [] }, file)).toBe(false);
+      expect(
+        yield* RT.pstEngineChildMatches(
+          { ...result, children: [{ ...child, digest: ContentDigest.make(`sha256:${sha("different")}`) }] },
+          file
+        )
+      ).toBe(false);
+      const { digest: _digest, ...childWithoutDigest } = child;
+      expect(yield* RT.pstEngineChildMatches({ ...result, children: [childWithoutDigest] }, file)).toBe(true);
+      const { sizeBytes: _sizeBytes, ...childWithoutSize } = child;
+      expect(yield* RT.pstEngineChildMatches({ ...result, children: [childWithoutSize] }, file)).toBe(true);
     })
   );
 

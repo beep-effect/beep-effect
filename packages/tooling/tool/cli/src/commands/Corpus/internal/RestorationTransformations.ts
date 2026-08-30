@@ -2186,18 +2186,18 @@ const mailResumeState = Effect.fn("CorpusRestoration.mailResumeState")(function*
           A.map(exceptions, (record) => record.objectId)
         )
       );
-      const exceptionInputBytes = A.reduce(
-        exceptions,
-        0,
-        (total, record) =>
-          total +
-          O.getOrElse(
-            O.flatMap(
-              A.findFirst(candidates, (candidate) => candidate.objectId === record.objectId),
-              (candidate) => O.map(candidate.pass, (pass) => Math.trunc(pass.sizeBytes))
-            ),
-            () => 0
-          )
+      const exceptionCandidates = yield* Effect.forEach(exceptions, (record) =>
+        O.match(
+          A.findFirst(candidates, (candidate) => candidate.objectId === record.objectId),
+          {
+            onNone: () =>
+              Effect.fail(transformationError(`Prior mail exception references unknown candidate ${record.objectId}.`)),
+            onSome: Effect.succeed,
+          }
+        )
+      );
+      const exceptionInputBytes = A.reduce(exceptionCandidates, 0, (total, candidate) =>
+        O.match(candidate.pass, { onNone: () => total, onSome: (pass) => total + Math.trunc(pass.sizeBytes) })
       );
       const inputBytes =
         exceptionInputBytes + A.reduce(passes, 0, (total, record) => total + Math.trunc(record.inputBytes));
@@ -4924,6 +4924,7 @@ export const restorationTransformationTesting = {
   appendAttachmentRepair,
   appendFamilyAttemptStart,
   appendRecycleJoins,
+  applyFamilyCeiling,
   attachmentRepairsReconcile,
   attemptBindingsReconcile,
   attemptRetryOrdinalsReconcile,
@@ -4935,6 +4936,7 @@ export const restorationTransformationTesting = {
   combineMailAttemptOutputDigests,
   completePendingFamilySummary,
   contextFromFamilyStart,
+  currentLedgerDigest,
   currentPreservationEvidence,
   deterministicPreservationElapsed,
   digestString,
@@ -4949,6 +4951,7 @@ export const restorationTransformationTesting = {
   familyEvidenceDigestsMatch,
   familyEvidenceTerminalsMatch,
   familyRunStartReconciles,
+  familyRunStartMatches,
   familyStartStateIsResumable,
   familySummaryStateIsResumable,
   familyElapsedMillis,
