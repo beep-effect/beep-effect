@@ -33,32 +33,26 @@ const WellFormedSourceText = S.String.check(
 const isWellFormedSourceText = S.is(WellFormedSourceText);
 const utf8Encoder = new TextEncoder();
 
-const immutableSourceTextIdentity = (source: SourceTextIdentity): SourceTextIdentity =>
-  Object.freeze(
-    SourceTextIdentity.make({
-      extractor: Object.freeze(
-        SourceTextExtractor.make({
-          name: source.extractor.name,
-          version: source.extractor.version,
-        })
-      ),
-      locator: source.locator,
-      normalizationVersion: source.normalizationVersion,
-      scopeRef: source.scopeRef,
-      sourceDigest: source.sourceDigest,
-      sourceRef: source.sourceRef,
-      textDigest: source.textDigest,
-    })
-  );
+const copySourceTextIdentity = (source: SourceTextIdentity): SourceTextIdentity =>
+  SourceTextIdentity.make({
+    extractor: SourceTextExtractor.make({
+      name: source.extractor.name,
+      version: source.extractor.version,
+    }),
+    locator: source.locator,
+    normalizationVersion: source.normalizationVersion,
+    scopeRef: source.scopeRef,
+    sourceDigest: source.sourceDigest,
+    sourceRef: source.sourceRef,
+    textDigest: source.textDigest,
+  });
 
-const immutableTextAnchor = (anchor: TextAnchor): TextAnchor =>
-  Object.freeze(
-    TextAnchor.make({
-      endChar: anchor.endChar,
-      quote: anchor.quote,
-      startChar: anchor.startChar,
-    })
-  );
+const copyTextAnchor = (anchor: TextAnchor): TextAnchor =>
+  TextAnchor.make({
+    endChar: anchor.endChar,
+    quote: anchor.quote,
+    startChar: anchor.startChar,
+  });
 
 /**
  * Machine-readable reasons a text anchor cannot acquire verified status.
@@ -177,13 +171,12 @@ class VerifiedSourceTextValue {
   readonly #sourceText: string;
 
   constructor(source: SourceTextIdentity, sourceText: string) {
-    this.#source = immutableSourceTextIdentity(source);
+    this.#source = copySourceTextIdentity(source);
     this.#sourceText = sourceText;
-    Object.freeze(this);
   }
 
   get source(): SourceTextIdentity {
-    return this.#source;
+    return copySourceTextIdentity(this.#source);
   }
 
   get sourceText(): string {
@@ -340,17 +333,16 @@ class VerifiedTextAnchorValue {
   readonly #source: SourceTextIdentity;
 
   constructor(anchor: TextAnchor, source: SourceTextIdentity) {
-    this.#anchor = immutableTextAnchor(anchor);
-    this.#source = immutableSourceTextIdentity(source);
-    Object.freeze(this);
+    this.#anchor = copyTextAnchor(anchor);
+    this.#source = copySourceTextIdentity(source);
   }
 
   get anchor(): TextAnchor {
-    return this.#anchor;
+    return copyTextAnchor(this.#anchor);
   }
 
   get source(): SourceTextIdentity {
-    return this.#source;
+    return copySourceTextIdentity(this.#source);
   }
 
   static readonly is = (input: unknown): input is VerifiedTextAnchorValue =>
@@ -536,8 +528,8 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
 export const verifySourceTextIdentity = Effect.fn("VerifiedTextAnchor.verifySourceTextIdentity")(function* (
   input: VerifySourceTextIdentityInput
 ): Effect.fn.Return<VerifiedSourceText, VerifiedTextAnchorError, Crypto.Crypto> {
-  const expectedSource = immutableSourceTextIdentity(input.expectedSource);
-  const source = immutableSourceTextIdentity(input.source);
+  const expectedSource = copySourceTextIdentity(input.expectedSource);
+  const source = copySourceTextIdentity(input.source);
   const sourceText = input.sourceText;
 
   if (!Eq.equals(expectedSource.scopeRef, source.scopeRef)) {

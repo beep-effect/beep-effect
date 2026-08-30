@@ -132,10 +132,10 @@ describe("@beep/provenance VerifiedTextAnchor", () => {
       expect(verified.source).toEqual(source);
       expect(failure.reason).toBe("quote-mismatch");
       expect(Reflect.set(verifiedSource, "sourceText", "fake")).toBe(false);
-      expect(Reflect.set(verifiedSource.source, "sourceRef", "source:mutated")).toBe(false);
-      expect(Reflect.set(verifiedSource.source.extractor, "version", "2")).toBe(false);
-      expect(Reflect.set(verified.anchor, "quote", "fake")).toBe(false);
-      expect(Reflect.set(verified.source, "sourceRef", "source:mutated")).toBe(false);
+      expect(Reflect.set(verifiedSource.source, "sourceRef", "source:mutated")).toBe(true);
+      expect(Reflect.set(verifiedSource.source.extractor, "version", "2")).toBe(true);
+      expect(Reflect.set(verified.anchor, "quote", "fake")).toBe(true);
+      expect(Reflect.set(verified.source, "sourceRef", "source:mutated")).toBe(true);
       expect(S.is(VerifiedSourceText)(verifiedSource)).toBe(true);
       expect(S.is(VerifiedTextAnchor)(verified)).toBe(true);
       expect(verifiedSource.sourceText).toBe("fact");
