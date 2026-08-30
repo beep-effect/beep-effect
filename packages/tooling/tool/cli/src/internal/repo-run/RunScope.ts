@@ -170,13 +170,19 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
  * console.log(typeof enterRunScope) // "function"
  * ```
  *
+ * The unit description records the admission root that owns the scope, so a
+ * reaper running against a different root (another `XDG_RUNTIME_DIR`, a test
+ * fixture, an env-scrubbed session) never mistakes it for a leak.
+ *
  * @param ticketId - Admission ticket nonce used to generate a safe unit name.
+ * @param ownerRoot - Admission root directory whose lease owns the scope.
  * @returns The best-effort scope attachment record.
  * @category admission
  * @since 0.0.0
  */
 export const enterRunScope = Effect.fn("RunScope.enterRunScope")(function* (
-  ticketId: string
+  ticketId: string,
+  ownerRoot: string
 ): Effect.fn.Return<RunScopeRecord, never, ChildProcessSpawner.ChildProcessSpawner> {
   const unitName = runScopeUnitName(ticketId);
   const support = yield* detectRunScopeSupport();
@@ -193,7 +199,10 @@ export const enterRunScope = Effect.fn("RunScope.enterRunScope")(function* (
     "ssa(sv)a(sa(sv))",
     unitName,
     "fail",
-    "3",
+    "4",
+    "Description",
+    "s",
+    runScopeDescription(ticketId, ownerRoot),
     "Slice",
     "s",
     "agent-runs.slice",
@@ -217,6 +226,56 @@ export const enterRunScope = Effect.fn("RunScope.enterRunScope")(function* (
             O.some(`busctl StartTransientUnit exited with code ${capture.exitCode}.`)
           ),
   });
+});
+
+const RUN_SCOPE_DESCRIPTION_PREFIX = "beep-yeet-lease";
+
+const runScopeDescription = (ticketId: string, ownerRoot: string): string =>
+  `${RUN_SCOPE_DESCRIPTION_PREFIX} nonce=${ticketId} root=${ownerRoot}`;
+
+const ownerRootFromDescription = (description: string): O.Option<string> =>
+  pipe(
+    description,
+    Str.match(/^beep-yeet-lease nonce=.* root=(.+)$/u),
+    O.flatMap((matched) => O.fromUndefinedOr(matched[1])),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty)
+  );
+
+/**
+ * Read the admission root recorded as the owner of one run scope.
+ *
+ * Scopes started by {@link enterRunScope} carry
+ * `Description=beep-yeet-lease nonce=<nonce> root=<admission root>`. Scopes
+ * without that description, command failures, and spawn failures all read as
+ * an unknown owner, which the reaper leaves alone.
+ *
+ * **Example** (Reference the owner reader)
+ *
+ * ```ts
+ * import { readRunScopeOwnerRoot } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof readRunScopeOwnerRoot) // "function"
+ * ```
+ *
+ * @param unitName - Loaded `agent-run-*.scope` unit name.
+ * @returns The owning admission root when the scope records one.
+ * @category admission
+ * @since 0.0.0
+ */
+export const readRunScopeOwnerRoot = Effect.fn("RunScope.readRunScopeOwnerRoot")(function* (
+  unitName: string
+): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const shown = yield* runScopeCommand("systemctl", ["--user", "show", unitName, "-p", "Description"]);
+  if (O.isNone(shown) || shown.value.exitCode !== 0) {
+    return O.none();
+  }
+  return pipe(
+    Str.split(shown.value.output, "\n"),
+    A.findFirst(Str.startsWith("Description=")),
+    O.map(Str.slice(Str.length("Description="))),
+    O.flatMap(ownerRootFromDescription)
+  );
 });
 
 const parseTelemetryValue = (value: O.Option<string>): O.Option<number> =>
@@ -297,8 +356,9 @@ export const stopRunScopeForReap = Effect.fn("RunScope.stopRunScopeForReap")(fun
  * List the run-scope units currently loaded by the systemd user manager.
  *
  * The reaper compares this census against live leases so scopes kept alive by
- * detached descendants are stopped once no lease owns them. Spawn and command
- * failures become an empty census.
+ * detached descendants are stopped once no lease owns them, after confirming
+ * with {@link readRunScopeOwnerRoot} that the scope belongs to the reaper's own
+ * admission root. Spawn and command failures become an empty census.
  *
  * **Example** (Reference the scope census)
  *

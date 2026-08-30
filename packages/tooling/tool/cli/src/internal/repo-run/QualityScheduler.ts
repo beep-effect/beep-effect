@@ -55,6 +55,7 @@ import { RunScopeRecord, RunScopeSupport, RunScopeTelemetry } from "./RunScope.s
 import {
   enterRunScope,
   listRunScopeUnits,
+  readRunScopeOwnerRoot,
   readRunScopeTelemetry,
   runScopeUnitName,
   stopRunScopeForReap,
@@ -929,7 +930,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
   }
   const scopedLease = YeetAdmissionLease.make({
     ...lease,
-    runScope: yield* enterRunScope(ticket.nonce),
+    runScope: yield* enterRunScope(ticket.nonce, directories.root),
   });
   yield* refreshHeartbeat(leasePath, yield* encodeLeaseText(scopedLease));
   return O.some({ lease: scopedLease, leasePath });
@@ -1402,8 +1403,20 @@ const derivedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<strin
 const recordedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
   pipe(O.fromUndefinedOr(lease.runScope), O.match({ onNone: A.empty<string>, onSome: (scope) => [scope.unitName] }));
 
+// Only scopes that record this reaper's admission root as owner are candidates:
+// a scope from another root (another XDG_RUNTIME_DIR, an env-scrubbed session,
+// a test fixture) is someone else's live work, never a leak from here.
+const ownedByRoot = (ownerRoot: string) =>
+  Effect.fnUntraced(function* (
+    unitName: string
+  ): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+    const recorded = yield* readRunScopeOwnerRoot(unitName);
+    return O.exists(recorded, (root) => root === ownerRoot) ? O.some(unitName) : O.none();
+  });
+
 const stopLeakedRunScopes = Effect.fnUntraced(function* (
-  state: LiveAdmissionState
+  state: LiveAdmissionState,
+  ownerRoot: string
 ): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
   // A live lease protects both its recorded unit and the nonce-derived unit,
   // which covers the window before enterRunScope's record reaches the lease.
@@ -1416,13 +1429,9 @@ const stopLeakedRunScopes = Effect.fnUntraced(function* (
       A.match({ onEmpty: () => derivedRunScopeUnitName(lease), onNonEmpty: (recorded) => recorded })
     )
   );
-  const listed = yield* listRunScopeUnits();
-  const targets = MutableHashSet.fromIterable(
-    A.appendAll(
-      deadTargets,
-      A.filter(listed, (unitName) => !MutableHashSet.has(liveUnits, unitName))
-    )
-  );
+  const unowned = A.filter(yield* listRunScopeUnits(), (unitName) => !MutableHashSet.has(liveUnits, unitName));
+  const ownedTargets = A.getSomes(yield* Effect.forEach(unowned, ownedByRoot(ownerRoot), { concurrency: 4 }));
+  const targets = MutableHashSet.fromIterable(A.appendAll(deadTargets, ownedTargets));
   yield* Effect.forEach(targets, stopRunScopeForReap, { concurrency: 4, discard: true });
 });
 
@@ -1453,7 +1462,7 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
 > {
   const directories = yield* ensureAdmissionDirectories();
   if (options.apply) {
-    yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false));
+    yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false), directories.root);
   }
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply);
 });

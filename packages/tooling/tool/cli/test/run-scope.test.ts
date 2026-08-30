@@ -1,6 +1,7 @@
 import {
   detectRunScopeSupport,
   enterRunScope,
+  readRunScopeOwnerRoot,
   readRunScopeTelemetry,
   runScopeCleanupHint,
 } from "@beep/repo-cli/test/RepoRun";
@@ -77,14 +78,14 @@ describe("run scope", () => {
           `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && printf 'o "/org/freedesktop/systemd1/unit/agent_2drun_2dticket_2dwith_2dspaces_2escope"\\n'\ndone\nexit 0\n`
         );
 
-        const record = yield* enterRunScope("ticket with spaces").pipe(configured({ PATH: root }));
+        const record = yield* enterRunScope("ticket with spaces", root).pipe(configured({ PATH: root }));
         expect(record.support).toBe("active");
         expect(record.unitName).toMatch(/^agent-run-[a-zA-Z0-9:_.-]+\.scope$/u);
         expect(record.unitName).toBe("agent-run-ticket-with-spaces.scope");
 
         const captured = yield* fs.readFileString(capturePath);
         expect(captured).toContain(
-          `StartTransientUnit\nssa(sv)a(sa(sv))\n${record.unitName}\nfail\n3\nSlice\ns\nagent-runs.slice\nPIDs\nau\n1\n${process.pid}\nCollectMode\ns\ninactive-or-failed\n0\n`
+          `StartTransientUnit\nssa(sv)a(sa(sv))\n${record.unitName}\nfail\n4\nDescription\ns\nbeep-yeet-lease nonce=ticket with spaces root=${root}\nSlice\ns\nagent-runs.slice\nPIDs\nau\n1\n${process.pid}\nCollectMode\ns\ninactive-or-failed\n0\n`
         );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
@@ -98,7 +99,7 @@ describe("run scope", () => {
           path.join(root, "busctl"),
           '#!/bin/sh\nfor argument do\n  [ "$argument" = "StartTransientUnit" ] && exit 23\ndone\nexit 0\n'
         );
-        const record = yield* enterRunScope("d0a7b0dc").pipe(configured({ PATH: root }));
+        const record = yield* enterRunScope("d0a7b0dc", root).pipe(configured({ PATH: root }));
         expect(record.support).toBe("failed");
         expect(O.getOrElse(O.fromUndefinedOr(record.warning), () => "")).toContain("23");
       })
@@ -113,7 +114,7 @@ describe("run scope", () => {
           path.join(root, "busctl"),
           '#!/bin/sh\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && printf \'o "/org/freedesktop/systemd1/unit/session_2d4_2escope"\\n\'\ndone\nexit 0\n'
         );
-        const record = yield* enterRunScope("d0a7b0dc").pipe(configured({ PATH: root }));
+        const record = yield* enterRunScope("d0a7b0dc", root).pipe(configured({ PATH: root }));
         expect(record.support).toBe("failed");
         expect(O.getOrElse(O.fromUndefinedOr(record.warning), () => "")).toContain("did not adopt");
       })
@@ -129,7 +130,7 @@ describe("run scope", () => {
           fakePath,
           `#!/bin/sh\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && { /bin/rm -- '${fakePath}'; exit 0; }\ndone\nexit 0\n`
         );
-        const record = yield* enterRunScope("d0a7b0dc").pipe(configured({ PATH: root }));
+        const record = yield* enterRunScope("d0a7b0dc", root).pipe(configured({ PATH: root }));
         expect(record.support).toBe("failed");
         expect(O.getOrElse(O.fromUndefinedOr(record.warning), () => "")).toContain(
           "Could not start the transient systemd run scope."
@@ -188,6 +189,42 @@ describe("run scope", () => {
         const telemetry = yield* readRunScopeTelemetry("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
         expect(telemetry.memoryPeakBytes).toBeUndefined();
         expect(telemetry.tasksCurrent).toBeUndefined();
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("reads the owning admission root from the scope description", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* writeExecutable(
+          path.join(root, "systemctl"),
+          "#!/bin/sh\nprintf 'Id=agent-run-d0a7b0dc.scope\\nDescription=beep-yeet-lease nonce=d0a7b0dc root=/run/user/1000/beep/admit\\n'\n"
+        );
+        const owner = yield* readRunScopeOwnerRoot("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
+        expect(O.getOrNull(owner)).toBe("/run/user/1000/beep/admit");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("treats scopes without an ownership description as unowned", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nprintf 'Description=session-4.scope\\n'\n");
+        const owner = yield* readRunScopeOwnerRoot("session-4.scope").pipe(configured({ PATH: root }));
+        expect(O.isNone(owner)).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("treats a failing systemctl show as an unknown owner", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nexit 5\n");
+        const owner = yield* readRunScopeOwnerRoot("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
+        expect(O.isNone(owner)).toBe(true);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

@@ -828,6 +828,13 @@ describe("quality-scheduler", () => {
         const gibRef = yield* Ref.make(50);
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            // The applied reap consults the user manager for loaded scopes; keep
+            // this test off the host bus so it never sees (or stops) real units.
+            const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
             const live = yield* writeFakeLease(tempRoot, { weightTokens: 3, originKey: "origin-live" });
             const dead = yield* writeFakeLease(tempRoot, { pid: DEAD_PID, weightTokens: 5, originKey: "origin-dead" });
             const snapshot = yield* admissionStatus(fastConfig);
@@ -840,10 +847,9 @@ describe("quality-scheduler", () => {
             expect(dryRun.dead).toStrictEqual([dead]);
             expect(A.length(yield* listDirectory(tempRoot.leases))).toBe(2);
 
-            const applied = yield* reapAdmissionState({ apply: true });
+            const applied = yield* withPrependedPath(binDirectory, reapAdmissionState({ apply: true }));
             expect(applied.dead).toStrictEqual([dead]);
             const remaining = yield* listDirectory(tempRoot.leases);
-            const path = yield* Path.Path;
             expect(remaining).toStrictEqual([path.basename(live)]);
           })
         );
@@ -928,6 +934,40 @@ describe("quality-scheduler", () => {
                 expect(yield* fs.readFileString(capturePath)).toBe(
                   "--user\nlist-units\n--plain\n--no-legend\nagent-run-*.scope\n--user\nstop\nagent-run-deadbeef.scope\n"
                 );
+              })
+            );
+          })
+        );
+      })
+    ));
+
+  it("stops only unowned scopes that record this admission root as owner", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const runtimeDirectory = path.dirname(path.dirname(tempRoot.root));
+            const binDirectory = path.join(runtimeDirectory, "bin");
+            const capturePath = path.join(runtimeDirectory, "systemctl.argv");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            // Three loaded scopes, none owned by a lease here: one records this
+            // root, one records another root, one predates ownership records.
+            yield* writeExecutable(
+              path.join(binDirectory, "systemctl"),
+              `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\ncase "$2" in\n  list-units) printf 'agent-run-mine.scope loaded active running\\nagent-run-theirs.scope loaded active running\\nagent-run-legacy.scope loaded active running\\n' ;;\n  show)\n    case "$3" in\n      agent-run-mine.scope) printf 'Description=beep-yeet-lease nonce=mine root=${tempRoot.root}\\n' ;;\n      agent-run-theirs.scope) printf 'Description=beep-yeet-lease nonce=theirs root=/elsewhere/beep/admit\\n' ;;\n      *) printf 'Description=agent-run-legacy.scope\\n' ;;\n    esac ;;\nesac\nexit 0\n`
+            );
+
+            yield* withPrependedPath(
+              binDirectory,
+              Effect.gen(function* () {
+                yield* reapAdmissionState({ apply: true });
+                const captured = yield* fs.readFileString(capturePath);
+                expect(captured).toContain("--user\nstop\nagent-run-mine.scope\n");
+                expect(captured).not.toContain("stop\nagent-run-theirs.scope");
+                expect(captured).not.toContain("stop\nagent-run-legacy.scope");
               })
             );
           })
