@@ -1,0 +1,417 @@
+# Pack codemode
+
+- modules: 34
+- owning exports: 350
+- re-exports: 40
+- open modules: 19
+- open owning exports: 348
+
+## Files
+
+- `codemode/Codemode.data.ts` owning=2 moduleFindings=none
+- `codemode/Codemode.method-names.ts` owning=41 moduleFindings=none
+- `codemode/Codemode.result.ts` owning=11 moduleFindings=none
+- `codemode/Codemode.service.ts` owning=8 moduleFindings=none
+- `codemode/Codemode.tool-error.ts` owning=2 moduleFindings=none
+- `codemode/Codemode.tool-runtime.ts` owning=31 moduleFindings=none
+- `codemode/Codemode.tool-schema.ts` owning=8 moduleFindings=none
+- `codemode/Codemode.values.ts` owning=10 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/index.ts` owning=0 moduleFindings=none
+- `codemode/interpreter/Interpreter.errors.ts` owning=4 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/Interpreter.execute.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/Interpreter.iterator.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/Interpreter.methods.ts` owning=8 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/Interpreter.model.ts` owning=80 moduleFindings=none
+- `codemode/interpreter/Interpreter.promises.ts` owning=8 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/Interpreter.references.ts` owning=7 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/Interpreter.runtime.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/Interpreter.scope.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/interpreter/index.ts` owning=0 moduleFindings=none
+- `codemode/openapi/OpenAPI.runtime.ts` owning=1 moduleFindings=none
+- `codemode/openapi/OpenAPI.specification.ts` owning=19 moduleFindings=none
+- `codemode/openapi/OpenAPI.types.ts` owning=49 moduleFindings=none
+- `codemode/openapi/index.ts` owning=1 moduleFindings=none
+- `codemode/stdlib/StdLib.console.ts` owning=2 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.date.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.json.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.math.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.number.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.object.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.regexp.ts` owning=7 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.string.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.url.ts` owning=7 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/StdLib.value.ts` owning=24 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `codemode/stdlib/index.ts` owning=0 moduleFindings=none
+
+## Open modules
+
+- `codemode/Codemode.values.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.errors.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.execute.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.iterator.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.methods.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.promises.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.references.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.runtime.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/interpreter/Interpreter.scope.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.console.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.date.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.json.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.math.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.number.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.object.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.regexp.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.string.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.url.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `codemode/stdlib/StdLib.value.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+
+## Open owning exports
+
+- `codemode/Codemode.data.ts:13` `DataValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.data.ts:20` `DataValue` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.method-names.ts:9` `arrayMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:48` `ArrayMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:50` `arrayStatics` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:52` `ArrayStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:54` `mapMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:66` `MapMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:68` `mapStatics` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:70` `MapStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:72` `setMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:90` `SetMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:92` `stringMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:124` `StringMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:126` `stringStatics` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:128` `StringStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:130` `DateSetterName` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:148` `DateSetterName` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:150` `DateSetterArity` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:168` `dateMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:196` `DateMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:198` `dateStatics` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:200` `DateStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:202` `regexpMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:203` `RegExpMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:205` `regexpStatics` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:206` `RegExpStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:208` `objectStatics` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:219` `ObjectStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:221` `numberMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:229` `NumberMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:231` `numberStatics` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:240` `NumberStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:242` `mathMethods` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:282` `MathMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:284` `ConsoleMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:294` `ConsoleMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:296` `UrlMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:297` `UrlMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:299` `UrlStatic` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:300` `UrlStatic` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:302` `UrlSearchParamsMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/Codemode.method-names.ts:317` `UrlSearchParamsMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/Codemode.result.ts:19` `DiagnosticLocation` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.result.ts:30` `DiagnosticModel` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.result.ts:56` `Diagnostic` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.result.ts:63` `Diagnostic` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.result.ts:66` `SuccessModel` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.result.ts:81` `FailureModel` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.result.ts:95` `ResultModel` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.result.ts:104` `ResultModel` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.result.ts:170` `Result` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.result.ts:177` `Result` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.result.ts:180` `encodeResultModel` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.service.ts:47` `ExecutionLimits` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.service.ts:66` `InvalidExecutionLimits` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.service.ts:84` `ExecuteOptions` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.service.ts:95` `Options` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.service.ts:103` `Runtime` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.service.ts:109` `resolveExecutionLimits` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.service.ts:117` `execute` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.service.ts:127` `make` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-error.ts:20` `ToolError` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.tool-error.ts:48` `ToolError` (value/namespace) missing=@category|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:58` `Services` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:63` `ToolDescription` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:78` `ToolCall` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:89` `ToolCallStarted` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:115` `ToolCallSucceeded` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:138` `ToolCallInterrupted` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:161` `ToolCallFailed` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:186` `ToolCallEnded` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:199` `ToolCallEnded` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:202` `ToolCallHooks` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:208` `SearchInput` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:234` `SearchItem` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:249` `SearchOutput` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:275` `SearchEntry` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:293` `DiscoveryPlan` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:309` `CopyOutMode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:316` `CopyOutMode` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:319` `ToolReference` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:331` `ToolRuntimeErrorKind` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:344` `ToolRuntimeErrorKind` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:347` `ToolRuntimeError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:370` `isBlockedMember` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:384` `copyIn` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:502` `copyOut` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:632` `toolExpression` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:704` `prepare` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:723` `searchIndex` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:800` `searchSignature` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:832` `ToolRuntime` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:847` `make` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-runtime.ts:1035` `emptyToolkit` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:32` `IdentifierSegment` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:42` `identifierSegment` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:479` `toTypeScript` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:502` `jsonSchemaToTypeScript` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:519` `InputProperty` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:558` `inputProperties` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:592` `inputTypeScript` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.tool-schema.ts:597` `outputTypeScript` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:53` `CodeModePromise` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:75` `CodeModeDate` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:94` `CodeModeRegExp` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:120` `CodeModeMap` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:139` `CodeModeSet` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:158` `CodeModeURLSearchParams` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:176` `CodeModeURL` (value/class) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:201` `CodeModeValue` (value/const) missing=@example findings=missing-required-tags
+- `codemode/Codemode.values.ts:217` `CodeModeValue` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/Codemode.values.ts:220` `isCodeModeValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.errors.ts:47` `normalizeError` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.errors.ts:102` `caughtErrorValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.errors.ts:118` `constructErrorValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.errors.ts:123` `constructAggregateErrorValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.execute.ts:35` `executeWithLimits` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.iterator.ts:4` `IteratorCursor` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.iterator.ts:9` `SyncIteratorRunner` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.iterator.ts:14` `preserveConsumerError` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:90` `CallbackRunner` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:104` `SupportedCallback` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:129` `isSupportedCallback` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:137` `invokeIntrinsic` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:228` `invokeGlobalMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:462` `invokeArrayFrom` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:498` `invokeGroupBy` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.methods.ts:657` `applyCollectionCallback` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:59` `SourcePosition` (value/class) missing=@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:81` `SourceLocation` (value/class) missing=@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:129` `AstNode` (value/const) missing=@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:156` `ProgramNode` (value/const) missing=@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:178` `Binding` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:196` `Scope` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:206` `Scope` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:209` `StatementNone` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:220` `StatementReturn` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:232` `StatementBreak` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:248` `StatementContinue` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:264` `StatementResult` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:277` `StatementResult` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:291` `MemberReference` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:332` `CodeModeFunction` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:361` `GeneratorRequestKind` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:368` `GeneratorRequestKind` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:371` `CodeModeGenerator` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:394` `GeneratorMethodKind` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:404` `GeneratorMethodKind` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:407` `GeneratorMethodReference` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:445` `IntrinsicMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:501` `IntrinsicMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:504` `IntrinsicReference` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:518` `ComputedValue` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:533` `PromiseNamespace` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:544` `SymbolNamespace` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:554` `AsyncIteratorSymbol` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:555` `IteratorSymbol` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:556` `IteratorSymbols` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:559` `PromiseMethodName` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:566` `PromiseMethodName` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:568` `PromiseMethodReference` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:580` `PromiseInstanceMethodName` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:586` `PromiseInstanceMethodName` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:588` `PromiseInstanceMethodReference` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:606` `PromiseCapabilityFunction` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:620` `GlobalNamespaceName` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:638` `GlobalNamespaceName` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:640` `GlobalNamespace` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:651` `GlobalMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:670` `GlobalMethod` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:672` `GlobalMethodReference` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:686` `JsonMethodName` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:692` `JsonMethodName` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:694` `JsonMethodReference` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:705` `CoercionFunctionName` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:719` `CoercionFunctionName` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:721` `CoercionFunction` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:732` `UriFunctionName` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:743` `UriFunctionName` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:745` `UriFunction` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:756` `SearchFunction` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:766` `ProgramThrow` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:778` `GeneratorReturn` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:791` `ErrorConstructorName` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:807` `ErrorConstructorName` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:809` `ErrorConstructorReference` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:828` `RuntimeReference` (value/const) missing=@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:857` `RuntimeReference` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:860` `DiagnosticKind` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:878` `DiagnosticKind` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:880` `OptionalShortCircuit` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:882` `supportedSyntaxMessage` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:891` `InterpreterRuntimeError` (value/class) missing=@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:938` `InterpreterFailure` (value/const) missing=@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:953` `InterpreterFailure` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:957` `tryInterpreter` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:973` `unsupportedSyntax` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:981` `isRecord` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:983` `asNode` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:991` `getArray` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:1000` `getString` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:1009` `getBoolean` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:1018` `getOptionalNode` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:1024` `getNode` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:1026` `sourceLocation` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.model.ts:1034` `formatLocation` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:49` `PromiseRuntime` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:138` `selfResolutionError` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:141` `PromiseIdentity` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:144` `resolvePromiseValue` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:181` `resolvePromise` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:196` `invokePromiseMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:325` `invokePromiseInstanceMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.promises.ts:373` `constructPromise` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.references.ts:22` `RuntimeReferenceValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/interpreter/Interpreter.references.ts:35` `RuntimeReferenceValue` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/interpreter/Interpreter.references.ts:37` `isRuntimeReference` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.references.ts:65` `containsRuntimeReference` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.references.ts:86` `containsOpaqueReference` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.references.ts:109` `rejectCircularInsertion` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.references.ts:134` `typeofValue` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.runtime.ts:417` `Interpreter` (value/class) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/interpreter/Interpreter.scope.ts:13` `ScopeStack` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.runtime.ts:912` `invoke` (value/const) missing=@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:58` `ParameterLocation` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:67` `ParameterLocation` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:76` `SchemaDirection` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:83` `SchemaDirection` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:107` `isRecord` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:110` `nonEmptyString` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:114` `own` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:176` `resolve` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:232` `hasDirectionalSchemas` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:476` `componentDefinitions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1000` `operationInput` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1064` `inputSchema` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1121` `operationOutput` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1297` `operationPath` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1354` `validateBaseUrl` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1378` `specServerUrl` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1403` `securityRequirements` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1443` `operationSecurityRequirements` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.specification.ts:1504` `securitySchemes` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:31` `Document` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:39` `Document` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:42` `JsonSchema` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:50` `JsonSchema` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:53` `OperationId` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:62` `OperationId` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:65` `HttpMethod` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:84` `HttpMethod` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:87` `ApiPath` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:97` `ApiPath` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:100` `Operation` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:129` `ApiKeyHeader` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:141` `ApiKeyQuery` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:153` `ApiKeyCookie` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:165` `ApiKeyCarrier` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:177` `ApiKeyCarrier` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:180` `SecuritySchemeApiKey` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:194` `SecuritySchemeHttp` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:208` `SecuritySchemeOAuth2` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:222` `SecuritySchemeOpenIdConnect` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:236` `SecurityScheme` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:249` `SecurityScheme` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:252` `CredentialBearer` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:266` `CredentialBasic` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:286` `CredentialApiKey` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:300` `CredentialHeader` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:320` `Credential` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:333` `Credential` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:336` `AuthContext` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:365` `AuthResolver` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:374` `AuthConfig` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:399` `Options` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:433` `Skipped` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:451` `InputLocation` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:463` `InputLocation` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:466` `InputStyle` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:473` `InputStyle` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:476` `InputField` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:515` `BodyMode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:522` `BodyMode` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:525` `Body` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:548` `OperationInput` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:568` `SecurityRequirement` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:584` `Plan` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:624` `AppliedAuth` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:640` `InvalidOpenApiOptions` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:662` `GeneratedToolkit` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:665` `GeneratedHandlersLayer` (type/type) missing=@category|@since findings=missing-required-tags
+- `codemode/openapi/OpenAPI.types.ts:681` `FromSpecResult` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/openapi/index.ts:447` `fromSpec` (value/const) missing=@example findings=missing-required-tags
+- `codemode/stdlib/StdLib.console.ts:23` `ConsoleMethod` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.console.ts:29` `formatConsoleMessage` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.date.ts:28` `invokeDateStatic` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.date.ts:34` `dateSetterArgumentCount` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.date.ts:40` `invokeDateMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.json.ts:35` `invokeJsonMethod` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `codemode/stdlib/StdLib.math.ts:23` `mathConstants` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.math.ts:31` `invokeMathMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.math.ts:87` `invokeMathSumPrecise` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.number.ts:21` `numberConstants` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.number.ts:33` `invokeNumberMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.number.ts:60` `invokeNumberStatic` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.object.ts:19` `objectMethodsPreservingIdentity` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.object.ts:31` `invokeObjectMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.object.ts:93` `invokeObjectFromEntries` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.regexp.ts:30` `regexpProperties` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.regexp.ts:46` `regexFailureReason` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.regexp.ts:49` `escapeRegexHint` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.regexp.ts:53` `toHostRegex` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.regexp.ts:73` `matchToValue` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.regexp.ts:88` `invokeRegExpStatic` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.regexp.ts:96` `invokeRegExpMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.string.ts:13` `invokeStringStatic` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.url.ts:23` `urlProperties` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.url.ts:37` `urlWritableProperties` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.url.ts:42` `uriArgument` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.url.ts:45` `invokeUriFunction` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.url.ts:79` `urlArgument` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.url.ts:83` `invokeURLStatic` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.url.ts:96` `invokeURLMethod` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:24` `valueConstructors` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:35` `BinaryOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:60` `BinaryOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:62` `AppliedBinaryOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:66` `AppliedBinaryOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:68` `CompoundOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:83` `CompoundAssignmentOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:85` `LogicalOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:86` `LogicalOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:88` `UnaryOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:89` `UnaryOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:91` `LogicalAssignmentOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:92` `LogicalAssignmentOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:94` `AssignmentOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:99` `AssignmentOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:101` `UpdateOperator` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:105` `UpdateOperator` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:110` `createErrorValue` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:117` `createAggregateErrorValue` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:120` `errorBrandName` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:127` `boundedData` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:129` `coerceToString` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:157` `coerceToNumber` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `codemode/stdlib/StdLib.value.ts:167` `invokeCoercion` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags

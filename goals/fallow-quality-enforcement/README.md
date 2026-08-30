@@ -2,6 +2,8 @@
 
 ## Status
 
+Lifecycle: `completed-retained`
+
 **COMPLETED-RETAINED** — P3 blocking promotion landed (fqe-006 closed via
 goals/fallow-zero-dead-code on 2026-06-11). Current posture: `fallow:dead-code`
 is blocking in `quality github-checks pre-push`; `fallow:audit` was later

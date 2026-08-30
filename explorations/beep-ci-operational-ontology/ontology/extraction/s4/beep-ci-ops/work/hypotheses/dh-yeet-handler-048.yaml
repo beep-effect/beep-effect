@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:048"
+observation_refs:
+  - "so:sha256:a266aadf5055018d043fe54ebf079206757f989a3f97e49338a199b21b0123ae"
+cq_warrants: []
+proposed_referent:
+  label: "YeetMergeReadyEncoded schema"
+  description: "No domain-ontology referent is proposed for the YeetMergeReadyEncoded schema; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "encoded merge-readiness record"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

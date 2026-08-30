@@ -1,0 +1,24 @@
+id: so:sha256:99201d01890b61ec3cf4eee407d375fe1e22f3d0873ebb35db5315720fe34249
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 554
+  end_line: 576
+  content_sha256: c75611a9a9f4219c402527ed1d7f144f5bdf95e233ffadd51d6e615df024388f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::renderPackageVerifyReportForTesting
+  lexical_name: renderPackageVerifyReportForTesting
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: renderPackageVerifyReportForTesting
+source_excerpt: 'export const renderPackageVerifyReportForTesting = (report: PackageVerifyReport): ReadonlyArray<string>
+  => {'
+epistemic_status: parser_derived

@@ -194,69 +194,76 @@ class RuleSetBase extends S.Class<RuleSetBase>($I`RuleSetBase`)(
   })
 ) {
   /**
-   *  Returns static rules followed by ontology-derived rules.
+   * Returns static rules followed by ontology-derived rules.
    *
-   * **Example** (Inspect rule set.all rules)
+   * **Example** (List every mention rule)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.allRules.length > 0) // true
    * ```
    *
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   get allRules(): ReadonlyArray<ExtractionRule> {
     return A.appendAll(this.staticRules, this.dynamicRules);
   }
 
   /**
-   *  Returns only schema-enforced rules.
+   * Returns only schema-enforced hard rules.
    *
-   * **Example** (Inspect rule set.error rules)
+   * **Example** (Count hard mention rules)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.errorRules.length > 0) // true
    * ```
    *
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   get errorRules(): ReadonlyArray<ExtractionRule> {
     return A.filter(this.allRules, (rule) => RuleSeverity.is.error(rule.severity));
   }
 
   /**
-   *  Returns only prompt-level preferences.
+   * Returns only prompt-level preference rules.
    *
-   * **Example** (Inspect rule set.warning rules)
+   * **Example** (Count soft mention rules)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.warningRules.length > 0) // true
    * ```
    *
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   get warningRules(): ReadonlyArray<ExtractionRule> {
     return A.filter(this.allRules, (rule) => RuleSeverity.is.warning(rule.severity));
   }
 
   /**
-   *  Returns rules belonging to the requested behavioral category.
+   * Returns rules belonging to the requested behavioral category.
    *
-   * **Example** (Inspect rule set.get rules by category)
+   * **Example** (Filter mention id-format rules)
    *
    * ```ts
-   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
    *
-   * console.log(RuleSet)
+   * const rules = makeMentionRuleSet()
+   * console.log(rules.getRulesByCategory("id_format").length > 0) // true
    * ```
    *
-   * @param category - Input consumed by this operation.
-   * @returns Result produced by this operation.
+   * @category getters
+   * @since 0.0.0
    */
   getRulesByCategory(category: RuleCategory): ReadonlyArray<ExtractionRule> {
     return A.filter(
@@ -355,6 +362,17 @@ const previewValues = <Value>(values: ReadonlyArray<Value>, render: (value: Valu
   pipe(values, A.take(5), A.map(render), A.join(", "));
 
 const previewSuffix = (values: ReadonlyArray<unknown>): string => (A.length(values) > 5 ? "..." : "");
+
+const optionalDefinitionRule = <Value>(
+  values: ReadonlyArray<Value>,
+  render: (value: Value) => string,
+  build: (definitions: A.NonEmptyReadonlyArray<Value>, preview: string, suffix: string) => ExtractionRule
+): O.Option<ExtractionRule> =>
+  A.match(values, {
+    onEmpty: O.none<ExtractionRule>,
+    onNonEmpty: (definitions) =>
+      O.some(build(definitions, previewValues(definitions, render), previewSuffix(definitions))),
+  });
 
 // =============================================================================
 // Static Rules - Entity Extraction
@@ -848,51 +866,43 @@ export const RELATION_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
  */
 export const makeEntityRuleSet = dual2(
   (classes: ReadonlyArray<ClassDefinition>, datatypeProperties: ReadonlyArray<PropertyDefinition>): RuleSet => {
-    const classRule = A.match(classes, {
-      onEmpty: O.none<ExtractionRule>,
-      onNonEmpty: (definitions) => {
-        const preview = previewValues(definitions, (definition) => definition.id);
-        const suffix = previewSuffix(definitions);
-        return O.some(
-          makeExtractionRule({
-            id: "entity-allowed-classes",
-            category: "type_mapping",
-            severity: "error",
-            instruction: `Types MUST be from allowed classes: ${preview}${suffix}`,
-            example: RuleExample.make({
-              input: "Selecting entity type",
-              output: A.headNonEmpty(definitions).id,
-              explanation: "Use IRI from the ontology schema",
-            }),
-            schemaDescription: `Allowed classes: ${preview}${suffix}`,
-            validationTemplate: "Type '{value}' is not in allowed classes",
-          })
-        );
-      },
-    });
+    const classRule = optionalDefinitionRule(
+      classes,
+      (definition) => definition.id,
+      (definitions, preview, suffix) =>
+        makeExtractionRule({
+          id: "entity-allowed-classes",
+          category: "type_mapping",
+          severity: "error",
+          instruction: `Types MUST be from allowed classes: ${preview}${suffix}`,
+          example: RuleExample.make({
+            input: "Selecting entity type",
+            output: A.headNonEmpty(definitions).id,
+            explanation: "Use IRI from the ontology schema",
+          }),
+          schemaDescription: `Allowed classes: ${preview}${suffix}`,
+          validationTemplate: "Type '{value}' is not in allowed classes",
+        })
+    );
 
-    const datatypeRule = A.match(datatypeProperties, {
-      onEmpty: O.none<ExtractionRule>,
-      onNonEmpty: (definitions) => {
-        const preview = previewValues(definitions, (definition) => definition.id);
-        const suffix = previewSuffix(definitions);
-        return O.some(
-          makeExtractionRule({
-            id: "entity-allowed-attributes",
-            category: "property_usage",
-            severity: "error", // Error - attributes are important for entity value
-            instruction: `Extract entity attributes using property keys. REQUIRED when text contains relevant data. Use: ${preview}${suffix}`,
-            example: RuleExample.make({
-              input: "CEO John Mitchell of Acme Corporation, founded in 2018",
-              output: '{ "name": "John Mitchell", "title": "CEO", "foundedDate": "2018" }',
-              explanation: "Extract all available attributes from text - names, titles, dates, quantities",
-            }),
-            schemaDescription: "Entity attributes capture literal values. Extract ALL available data.",
-            validationTemplate: "Entity should have attributes extracted from text",
-          })
-        );
-      },
-    });
+    const datatypeRule = optionalDefinitionRule(
+      datatypeProperties,
+      (definition) => definition.id,
+      (_definitions, preview, suffix) =>
+        makeExtractionRule({
+          id: "entity-allowed-attributes",
+          category: "property_usage",
+          severity: "error", // Error - attributes are important for entity value
+          instruction: `Extract entity attributes using property keys. REQUIRED when text contains relevant data. Use: ${preview}${suffix}`,
+          example: RuleExample.make({
+            input: "CEO John Mitchell of Acme Corporation, founded in 2018",
+            output: '{ "name": "John Mitchell", "title": "CEO", "foundedDate": "2018" }',
+            explanation: "Extract all available attributes from text - names, titles, dates, quantities",
+          }),
+          schemaDescription: "Entity attributes capture literal values. Extract ALL available data.",
+          validationTemplate: "Entity should have attributes extracted from text",
+        })
+    );
 
     const dynamicRules = A.getSomes([classRule, datatypeRule]);
 
@@ -938,74 +948,62 @@ export const makeRelationRuleSet = dual2(
     const objectProperties = A.filter(properties, (property) => property.rangeType === "object");
     const datatypeProperties = A.filter(properties, (property) => property.rangeType === "datatype");
 
-    const entityRule = A.match(entityIds, {
-      onEmpty: O.none<ExtractionRule>,
-      onNonEmpty: (ids) => {
-        const preview = previewValues(ids, (id) => id);
-        const suffix = previewSuffix(ids);
-        return O.some(
-          makeExtractionRule({
-            id: "relation-valid-entities",
-            category: "reference_integrity",
-            severity: "error",
-            instruction: `Use ONLY these entity IDs from Stage 1: ${preview}${suffix}`,
-            example: RuleExample.make({
-              input: "Selecting subject/object",
-              output: A.headNonEmpty(ids),
-              explanation: "Use exact ID from Stage 1",
-            }),
-            schemaDescription: `Valid entity IDs: ${preview}${suffix}`,
-            validationTemplate: "Entity ID '{value}' is not from Stage 1",
-          })
-        );
-      },
-    });
+    const entityRule = optionalDefinitionRule(
+      entityIds,
+      (id) => id,
+      (ids, preview, suffix) =>
+        makeExtractionRule({
+          id: "relation-valid-entities",
+          category: "reference_integrity",
+          severity: "error",
+          instruction: `Use ONLY these entity IDs from Stage 1: ${preview}${suffix}`,
+          example: RuleExample.make({
+            input: "Selecting subject/object",
+            output: A.headNonEmpty(ids),
+            explanation: "Use exact ID from Stage 1",
+          }),
+          schemaDescription: `Valid entity IDs: ${preview}${suffix}`,
+          validationTemplate: "Entity ID '{value}' is not from Stage 1",
+        })
+    );
 
-    const objectPropertyRule = A.match(objectProperties, {
-      onEmpty: O.none<ExtractionRule>,
-      onNonEmpty: (definitions) => {
-        const preview = previewValues(definitions, (definition) => definition.id);
-        const suffix = previewSuffix(definitions);
-        return O.some(
-          makeExtractionRule({
-            id: "relation-allowed-object-props",
-            category: "property_usage",
-            severity: "error",
-            instruction: `Object properties (link entities): ${preview}${suffix}`,
-            example: RuleExample.make({
-              input: "Entity-to-entity relation",
-              output: A.headNonEmpty(definitions).id,
-              explanation: "Object property → object must be entity ID",
-            }),
-            schemaDescription: `Object properties: ${preview}${suffix}`,
-            validationTemplate: "Property '{value}' is not in allowed object properties",
-          })
-        );
-      },
-    });
+    const objectPropertyRule = optionalDefinitionRule(
+      objectProperties,
+      (definition) => definition.id,
+      (definitions, preview, suffix) =>
+        makeExtractionRule({
+          id: "relation-allowed-object-props",
+          category: "property_usage",
+          severity: "error",
+          instruction: `Object properties (link entities): ${preview}${suffix}`,
+          example: RuleExample.make({
+            input: "Entity-to-entity relation",
+            output: A.headNonEmpty(definitions).id,
+            explanation: "Object property → object must be entity ID",
+          }),
+          schemaDescription: `Object properties: ${preview}${suffix}`,
+          validationTemplate: "Property '{value}' is not in allowed object properties",
+        })
+    );
 
-    const datatypePropertyRule = A.match(datatypeProperties, {
-      onEmpty: O.none<ExtractionRule>,
-      onNonEmpty: (definitions) => {
-        const preview = previewValues(definitions, (definition) => definition.id);
-        const suffix = previewSuffix(definitions);
-        return O.some(
-          makeExtractionRule({
-            id: "relation-allowed-datatype-props",
-            category: "property_usage",
-            severity: "error",
-            instruction: `Datatype properties (literal values): ${preview}${suffix}`,
-            example: RuleExample.make({
-              input: "Entity-to-literal relation",
-              output: A.headNonEmpty(definitions).id,
-              explanation: "Datatype property → object must be literal",
-            }),
-            schemaDescription: `Datatype properties: ${preview}${suffix}`,
-            validationTemplate: "Property '{value}' is not in allowed datatype properties",
-          })
-        );
-      },
-    });
+    const datatypePropertyRule = optionalDefinitionRule(
+      datatypeProperties,
+      (definition) => definition.id,
+      (definitions, preview, suffix) =>
+        makeExtractionRule({
+          id: "relation-allowed-datatype-props",
+          category: "property_usage",
+          severity: "error",
+          instruction: `Datatype properties (literal values): ${preview}${suffix}`,
+          example: RuleExample.make({
+            input: "Entity-to-literal relation",
+            output: A.headNonEmpty(definitions).id,
+            explanation: "Datatype property → object must be literal",
+          }),
+          schemaDescription: `Datatype properties: ${preview}${suffix}`,
+          validationTemplate: "Property '{value}' is not in allowed datatype properties",
+        })
+    );
 
     const dynamicRules = A.getSomes([entityRule, objectPropertyRule, datatypePropertyRule]);
 

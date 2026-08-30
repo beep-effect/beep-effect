@@ -1,0 +1,27 @@
+id: "dh:turbo-cache:005"
+observation_refs:
+  - "so:sha256:a7c1470ca5cd5327a37fda51b630e08762d99ca775d0675a522aff158c300217"
+  - "po:sha256:44c310154131b260393f08adc870140dc2fc86eae4798722eea5551c63993b4e"
+  - "po:sha256:aa78705de82167a6cc019222b39d250e05dd92a632078932325b43131f321bd9"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named test"
+  description: "A repeatable task specification carrying a pass-through environment declaration; not a test execution."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A test verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "An implementation-only configuration grouping"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A root turbo.json grouping can carry passThroughEnv for inheritance by package tasks while remaining ordinary build configuration; the cited entry shows neither a governed specification nor a single operational test lane."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

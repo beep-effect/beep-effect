@@ -1,0 +1,23 @@
+id: so:sha256:e9e70e88674d1f85b64e1f04da48fdf952a70af876566e016f1dea8ab8611a21
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 480
+  end_line: 480
+  content_sha256: 93ad8cd5a5e961f6e486ae281b3254ecc56ed08187419ba9239a93f091ccbc6d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::GIT_PUSH_STEP_ID
+  lexical_name: GIT_PUSH_STEP_ID
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: GIT_PUSH_STEP_ID
+source_excerpt: export const GIT_PUSH_STEP_ID = "publish:01-git-push" as const;
+epistemic_status: parser_derived

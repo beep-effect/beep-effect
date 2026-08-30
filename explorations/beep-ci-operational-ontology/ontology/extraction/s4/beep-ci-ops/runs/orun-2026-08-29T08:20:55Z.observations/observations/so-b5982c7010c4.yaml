@@ -1,0 +1,24 @@
+id: so:sha256:b5982c7010c411cc2b5b2c630736e321012d396119f5ecad15e3df356fbac4f7
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 406
+  end_line: 410
+  content_sha256: 33c9c9f6ec753bd8236dc91bae194b953aa38bed9c5e3c3cccab27efbe60f903
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::collectText
+  lexical_name: collectText
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: collectText
+source_excerpt: 'export const collectText = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<string,
+  E, R> =>'
+epistemic_status: parser_derived

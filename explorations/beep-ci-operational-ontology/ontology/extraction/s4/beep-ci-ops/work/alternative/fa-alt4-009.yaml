@@ -1,0 +1,20 @@
+id: fa:alt4:009
+hypothesis_ref: dh:sched-core:021
+identity_card_ref: ic:alt4:009
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "kind: origin-scoped full-proof lock as a contended resource"
+    still_viable: true
+  - label: "relator: hold-relationship between origin and current claimant (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: "information object: the AdmissionOriginGate interface only"
+    still_viable: true
+  - label: generic acquisition plumbing with no origin resource
+    still_viable: false
+strongest_counterexample: The quotations jointly name a per-origin full-proof lock underneath machine-wide admission, and tryAcquire returning none when busy is coordination of that resource rather than a free-floating interface.
+verdict: analyzed
+needed_evidence: A persisted origin-lock lease object with its own lifecycle distinct from the gate interface, or two origins sharing one lock, would discriminate Kind from relator from interface.

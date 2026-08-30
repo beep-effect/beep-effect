@@ -1,0 +1,24 @@
+id: "dh:yeet-planner:012"
+observation_refs:
+  - "so:sha256:7cc25801062b40a09ed3ba2aedf00a7ad4dfacf5d0516a4bd4bb8f10b76bfb7b"
+  - "so:sha256:e9d6ef3d146c9616ae431d91760ccac714a44223e933e448ec02e62fac1a086c"
+cq_warrants: []
+proposed_referent:
+  label: "Yeet run-mode labels"
+  description: "Source labels for closeout, monitor, pre-push-hook, publish, repair, status, and verify modes."
+representation_status: lexical_alias
+alternatives:
+  - label: "Operational procedure selections"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Command-dispatch tokens only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish a literal vocabulary and its source alias but contain no quoted mapping from any member to an operational procedure or occurrence."
+epistemic_status: proposed
+confidence:
+  value: 0.68
+  use_for_acceptance: false

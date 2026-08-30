@@ -1,0 +1,10 @@
+id: po:sha256:8719ca78bfb189d92f0013582af164aaa9206f715bad8caee214eabaad8cd954
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 408
+  end_line: 435
+quote: 'description: "The resolved local Turbo cache decision for one invocation."'
+epistemic_status: quoted_prose

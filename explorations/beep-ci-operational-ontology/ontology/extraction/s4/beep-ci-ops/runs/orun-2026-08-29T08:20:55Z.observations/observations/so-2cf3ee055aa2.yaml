@@ -1,0 +1,23 @@
+id: so:sha256:2cf3ee055aa243dab2a450beb1552810240c46b7614eea520e6fde1cc7932dda
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 422
+  end_line: 431
+  content_sha256: e2f33ceaed05d42c8384f6511b7240042be080f4a846927017a9b212e811c546
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::writeFileAtomic
+  lexical_name: writeFileAtomic
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const writeFileAtomic = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

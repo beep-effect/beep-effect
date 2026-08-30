@@ -1,0 +1,10 @@
+id: po:sha256:80b71faf086e5efcdb18231930cf275173ecfd30db6183ff5478f8fc2e167682
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 13
+  end_line: 13
+quote: '@beep/mcp-kit 12'
+epistemic_status: quoted_prose

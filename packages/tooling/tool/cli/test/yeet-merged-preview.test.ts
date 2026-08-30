@@ -5,6 +5,7 @@ import {
   RepoRunContext,
   renderYeetMergePreviewConflict,
   validateMonitorGuards,
+  YEET_MERGED_PREVIEW_COMMIT_MESSAGE,
   YEET_MERGED_PREVIEW_DIR_NAME,
   YeetMergePreview,
   YeetMergeTreeConflicted,
@@ -126,6 +127,11 @@ describe("yeet merge-tree parsing", () => {
 });
 
 describe("yeet merged preview context", () => {
+  it("uses a conventional subject for the synthetic preview commit", () => {
+    expect(YEET_MERGED_PREVIEW_COMMIT_MESSAGE).toBe("chore(yeet): verify merged preview");
+    expect(YEET_MERGED_PREVIEW_COMMIT_MESSAGE.length).toBeLessThanOrEqual(100);
+  });
+
   it("isolates the preview directory by process", () => {
     expect(YEET_MERGED_PREVIEW_DIR_NAME).toBe(`merged-preview-${process.pid}`);
   });
@@ -181,6 +187,30 @@ describe("yeet merged tier guards", () => {
       );
 
       expect(Exit.isSuccess(exit)).toBe(true);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("accepts --ci-parity on a full verify", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, mode: "verify", tier: "full" }))
+      );
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("refuses --ci-parity outside full verify", () =>
+    Effect.gen(function* () {
+      const publishExit = yield* Effect.exit(
+        validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, mode: "publish" }))
+      );
+      const mergedExit = yield* Effect.exit(
+        validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, merged: true, mode: "verify" }))
+      );
+
+      expect(Exit.isFailure(publishExit)).toBe(true);
+      expect(Exit.isFailure(mergedExit)).toBe(true);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 });

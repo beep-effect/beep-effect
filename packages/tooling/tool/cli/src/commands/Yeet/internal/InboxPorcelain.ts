@@ -25,7 +25,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Console, DateTime, Effect } from "effect";
+import { Console, DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -39,9 +39,10 @@ import {
   YeetAckFixResolution,
   YeetAckReceipt,
   YeetAckThreadResolution,
+  YeetAckWaiveResolution,
   YeetAckWontfixResolution,
 } from "./Ack.ts";
-import { appendYeetInboxRow, YeetInboxRowJson, yeetInboxRowId } from "./Inbox.ts";
+import { appendYeetInboxRow, describeYeetInboxRow, YeetInboxRowJson, yeetInboxExpectedRowId } from "./Inbox.ts";
 import { loadYeetInboxView, YeetInboxView, YeetInboxViewJson } from "./InboxView.ts";
 import type { FileSystem, Path } from "effect";
 import type { YeetAckResolution, YeetAckState } from "./Ack.ts";
@@ -51,8 +52,6 @@ import type { YeetInboxEntry } from "./InboxView.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/InboxPorcelain");
 
 const isoNow = DateTime.now.pipe(Effect.map(DateTime.formatIso));
-
-const shortSha = Str.slice(0, 7);
 
 const locateRepoRoot = (): Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> =>
   findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
@@ -82,9 +81,13 @@ interface YeetInboxListOptions extends YeetInboxListFilter {
  * proves exactly one resolution was requested.
  */
 interface YeetAckResolutionFlags {
+  readonly actor: string;
+  readonly expiresAt: string;
   readonly fixSha: string;
   readonly reason: string;
+  readonly shard: string;
   readonly threadUrl: string;
+  readonly waive: boolean;
   readonly wontfix: boolean;
 }
 
@@ -186,7 +189,7 @@ const renderAckPhrase = (ack: YeetAckState): string =>
  * @since 0.0.0
  */
 export const renderYeetInboxEntryLine = (entry: YeetInboxEntry): string =>
-  `  ${entry.row.severity} ${entry.liveness} ${renderAckPhrase(entry.ack)} — ${entry.row.capsule.lane} [${entry.row.id}] (pr #${entry.row.capsule.prNumber} @ ${shortSha(entry.row.capsule.headSha)})`;
+  `  ${entry.row.severity} ${entry.liveness} ${renderAckPhrase(entry.ack)} — ${describeYeetInboxRow(entry.row)} [${entry.row.id}]`;
 
 /**
  * Render one inbox view as the operator listing.
@@ -247,25 +250,56 @@ export const parseYeetAckResolution = Effect.fn("Yeet.parseYeetAckResolution")(f
   if (O.isSome(reasonRule)) {
     return yield* YeetCommandError.make({ message: reasonRule.value });
   }
+  if (flags.waive) {
+    const expiresAt = DateTime.make(flags.expiresAt);
+    if (O.isNone(expiresAt)) {
+      return yield* YeetCommandError.make({
+        message: "yeet inbox ack --waive requires a valid --expires-at timestamp.",
+      });
+    }
+    const now = yield* DateTime.now;
+    if (DateTime.toEpochMillis(expiresAt.value) <= DateTime.toEpochMillis(now)) {
+      return yield* YeetCommandError.make({
+        message: "yeet inbox ack --waive requires a future --expires-at timestamp.",
+      });
+    }
+  }
   const candidates = yeetAckResolutionCandidates(flags);
   if (!A.isReadonlyArrayNonEmpty(candidates) || A.length(candidates) !== 1) {
     return yield* YeetCommandError.make({
       message:
-        "yeet inbox ack requires exactly one of --fix-sha <sha>, --wontfix --reason <text>, or --thread-url <url>.",
+        "yeet inbox ack requires exactly one of --fix-sha <sha>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry.",
     });
   }
   return A.headNonEmpty(candidates);
 });
 
-const yeetAckReasonRuleViolation = (flags: YeetAckResolutionFlags): O.Option<string> => {
-  if (flags.wontfix && Str.isEmpty(flags.reason)) {
-    return O.some("yeet inbox ack --wontfix requires --reason.");
+const yeetAckReasonFlagViolation = (flags: YeetAckResolutionFlags): O.Option<string> => {
+  if ((flags.wontfix || flags.waive) && Str.isEmpty(flags.reason)) {
+    return O.some("yeet inbox ack --wontfix/--waive requires --reason.");
   }
-  if (!flags.wontfix && Str.isNonEmpty(flags.reason)) {
-    return O.some("yeet inbox ack --reason only applies with --wontfix.");
+  if (!flags.wontfix && !flags.waive && Str.isNonEmpty(flags.reason)) {
+    return O.some("yeet inbox ack --reason only applies with --wontfix or --waive.");
   }
   return O.none();
 };
+
+const yeetAckWaiverAttributionViolation = (flags: YeetAckResolutionFlags): O.Option<string> => {
+  const attribution = [flags.actor, flags.expiresAt, flags.shard];
+  if (flags.waive && A.some(attribution, Str.isEmpty)) {
+    return O.some("yeet inbox ack --waive requires --actor, --expires-at, and --shard.");
+  }
+  if (!flags.waive && A.some(attribution, Str.isNonEmpty)) {
+    return O.some("yeet inbox ack --actor, --expires-at, and --shard only apply with --waive.");
+  }
+  return O.none();
+};
+
+const yeetAckReasonRuleViolation = (flags: YeetAckResolutionFlags): O.Option<string> =>
+  pipe(
+    yeetAckReasonFlagViolation(flags),
+    O.orElse(() => yeetAckWaiverAttributionViolation(flags))
+  );
 
 // Callers run the reason rule first, so a wontfix candidate never sees an
 // empty reason here.
@@ -274,6 +308,16 @@ const yeetAckResolutionCandidates = (flags: YeetAckResolutionFlags): ReadonlyArr
     Str.isNonEmpty(flags.fixSha) ? O.some(YeetAckFixResolution.make({ sha: flags.fixSha })) : O.none(),
     flags.wontfix ? O.some(YeetAckWontfixResolution.make({ reason: flags.reason })) : O.none(),
     Str.isNonEmpty(flags.threadUrl) ? O.some(YeetAckThreadResolution.make({ url: flags.threadUrl })) : O.none(),
+    flags.waive
+      ? O.some(
+          YeetAckWaiveResolution.make({
+            actor: flags.actor,
+            expiresAt: flags.expiresAt,
+            reason: flags.reason,
+            shard: flags.shard,
+          })
+        )
+      : O.none(),
   ]);
 
 /**
@@ -391,10 +435,10 @@ export const appendYeetInboxRowFromText = Effect.fn("Yeet.appendYeetInboxRowFrom
   const row = yield* YeetInboxRowJson.decode(Str.trim(text)).pipe(
     Effect.mapError(YeetCommandError.new("Failed to decode the inbox row document."))
   );
-  const expected = yeetInboxRowId(row.capsule);
+  const expected = yeetInboxExpectedRowId(row);
   if (row.id !== expected) {
     return yield* YeetCommandError.make({
-      message: `Inbox row id "${row.id}" does not match the deterministic id "${expected}" for (pr #${row.capsule.prNumber}, head ${row.capsule.headSha}, lane "${row.capsule.lane}"). Row ids are the dedup and ack join key; derive them with yeetInboxRowId.`,
+      message: `Inbox row id "${row.id}" does not match the deterministic id "${expected}" for ${describeYeetInboxRow(row)}. Row ids are the dedup and ack join key; derive them with the row variant's id helper.`,
     });
   }
   yield* appendYeetInboxRow(repoRoot, row);
@@ -487,7 +531,10 @@ export const runYeetInboxList = Effect.fn("Yeet.runInboxListCommand")(function* 
  * import { runYeetInboxAck } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  *
- * const program = runYeetInboxAck({ fixSha: "2817f28", id: "coverage-abc", reason: "", threadUrl: "", wontfix: false })
+ * const program = runYeetInboxAck({
+ *   actor: "", expiresAt: "", fixSha: "2817f28", id: "coverage-abc", reason: "", shard: "",
+ *   threadUrl: "", waive: false, wontfix: false
+ * })
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -533,7 +580,5 @@ export const runYeetInboxAppend = Effect.fn("Yeet.runInboxAppendCommand")(functi
   const text = yield* readYeetInboxStdin(options.fromStdin);
   const repoRoot = yield* locateRepoRoot();
   const row = yield* appendYeetInboxRowFromText(repoRoot, text);
-  yield* Console.log(
-    `[yeet] appended ${row.id} (${row.severity} ${row.capsule.lane}) for pr #${row.capsule.prNumber} @ ${shortSha(row.capsule.headSha)}`
-  );
+  yield* Console.log(`[yeet] appended ${row.id} (${row.severity} ${describeYeetInboxRow(row)})`);
 });

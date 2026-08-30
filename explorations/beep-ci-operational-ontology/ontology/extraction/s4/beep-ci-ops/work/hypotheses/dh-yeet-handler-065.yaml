@@ -1,0 +1,26 @@
+id: "dh:yeet-handler:065"
+observation_refs:
+  - "so:sha256:0fd0abf7cb302f4f763b3a58aa6af6407d41aed5e9405aeb5ac6b97970e90ff4"
+  - "so:sha256:57b75e9390407feffb1d5da66359ddf1a5be31249295ff9eceb9698dc63a21dd"
+  - "so:sha256:cd7765aadf2af4d0764d33623bd15e44f0052b381e6e235565dab25c0e4c8958"
+  - "po:sha256:7b9e1b59cb9fc7b104034c01453654a7477c36f848673ec924f1c4039fbdb554"
+  - "po:sha256:a8757840abf082cf2d3622dc431f79e8a9c66aa38728cafd325c609c3856a27d"
+  - "po:sha256:fba9735d9ec0b7c541bbfc2ff30b0a3dd19d8e4b8e37874547ce6a0768b5e4d5"
+cq_warrants: ["CQ-022", "CQ-025"]
+proposed_referent:
+  label: "WorkUnitExecution occurrence"
+  description: "A candidate dated execution of one planned verification work unit, kept distinct from both the reusable work-unit specification and its verdict-lane record."
+representation_status: unresolved
+alternatives:
+  - label: "verdict-lane summary record"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "reusable WorkUnitSpecification"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The cited record vocabulary also covers planned lanes marked not-run or skipped, and the class declaration does not establish the identity or time interval of an actual execution occurrence."
+epistemic_status: proposed
+confidence: {value: 0.43, use_for_acceptance: false}

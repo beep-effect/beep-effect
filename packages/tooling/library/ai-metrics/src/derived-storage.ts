@@ -8,7 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -21,7 +21,22 @@ import { AiMetricsPrivacyCheckResult, hashPublicTextSha256 } from "./privacy.ts"
 import type { DuckDbClient, DuckDbError } from "@beep/duckdb";
 
 const $I = $RepoAiMetricsId.create("derived-storage");
-const DERIVED_TABLES = [
+
+/**
+ * DuckDB tables exported by the derived-storage Parquet projection.
+ *
+ * **Example** (Inspect an exported table name)
+ *
+ * ```ts
+ * import { AiMetricsDerivedTable } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsDerivedTable.Enum.ai_metrics_turns)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AiMetricsDerivedTable = LiteralKit([
   "ai_metrics_ingest_runs",
   "ai_metrics_source_files",
   "ai_metrics_raw_archive_objects",
@@ -34,7 +49,28 @@ const DERIVED_TABLES = [
   "ai_metrics_benchmark_cases",
   "ai_metrics_benchmark_runs",
   "ai_metrics_scorecards",
-] as const;
+]).pipe(
+  $I.annoteSchema("AiMetricsDerivedTable", {
+    description: "Derived DuckDB tables exported to AI metrics Parquet snapshots.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiMetricsDerivedTable}.
+ *
+ * **Example** (Type a derived table name)
+ *
+ * ```ts
+ * import type { AiMetricsDerivedTable } from "@beep/repo-ai-metrics"
+ *
+ * const table: AiMetricsDerivedTable = "ai_metrics_turns"
+ * console.log(table)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsDerivedTable = typeof AiMetricsDerivedTable.Type;
 
 /**
  * Parquet export behavior for one derived AI metrics write.
@@ -726,7 +762,7 @@ export class AiMetricsDerivedStorageError extends S.TaggedError<AiMetricsDerived
  *     }),
  *     sanitized: AiMetricsSanitizedTranscript.make({
  *       acceptedEvents: 1,
- *       eventNames: ["codex.event_msg"],
+ *       eventNames: ["event_msg"],
  *       rawEventEnvelopes: [],
  *       rejectedLines: 0,
  *       sourceKind: "codex",
@@ -804,7 +840,7 @@ export class AiMetricsDerivedStorageWriteInput extends S.Class<AiMetricsDerivedS
     ),
     records: S.Array(AiMetricsDerivedTranscriptRecord),
     repoRootHash: S.String,
-    startedAtEpochMillis: S.Finite,
+    startedAtEpochMillis: S.Natural,
     storage: AiMetricsStorageLayout,
     target: AiMetricsDeployTarget,
   },
@@ -840,14 +876,14 @@ export class AiMetricsDerivedStorageWriteResult extends S.Class<AiMetricsDerived
   $I`AiMetricsDerivedStorageWriteResult`
 )(
   {
-    archiveObjectCount: S.Finite,
+    archiveObjectCount: S.Natural,
     duckDbPath: S.String,
     ingestRunId: S.String,
-    parquetExportDir: S.optionalKey(S.String),
+    parquetExportDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     parquetExportMode: AiMetricsParquetExportMode,
-    parquetTables: S.Array(S.String),
-    sourceFileCount: S.Finite,
-    turnCount: S.Finite,
+    parquetTables: S.Array(AiMetricsDerivedTable),
+    sourceFileCount: S.Natural,
+    turnCount: S.Natural,
   },
   $I.annote("AiMetricsDerivedStorageWriteResult", {
     description: "Safe counts and export paths produced by one DuckDB derived storage write.",
@@ -870,23 +906,6 @@ const rowId = Effect.fn("AiMetrics.derivedStorage.rowId")(function* (
   return `${prefix}-${digest}`;
 });
 
-const addColumnIfMissing: (input: MigrationColumn) => Effect.Effect<void, DuckDbError, DuckDb> = Effect.fn(
-  "AiMetrics.derivedStorage.addColumnIfMissing"
-)(function* ({ columnDefinition, columnName, tableName }) {
-  const duckdb = yield* DuckDb;
-  const rows = yield* duckdb.query(
-    `SELECT column_name AS "columnName"
-     FROM information_schema.columns
-      WHERE table_name = $tableName AND column_name = $columnName`,
-    { columnName, tableName }
-  );
-  if (A.isReadonlyArrayNonEmpty(rows)) {
-    return;
-  }
-
-  yield* duckdb.run(`ALTER TABLE ${tableName} ADD COLUMN ${columnDefinition}`);
-});
-
 const migrationColumnExists: (
   input: Pick<MigrationColumn, "columnName" | "tableName">
 ) => Effect.Effect<boolean, DuckDbError, DuckDb> = Effect.fn("AiMetrics.derivedStorage.migrationColumnExists")(
@@ -902,6 +921,18 @@ const migrationColumnExists: (
     return A.isReadonlyArrayNonEmpty(rows);
   }
 );
+
+const addColumnIfMissing: (input: MigrationColumn) => Effect.Effect<void, DuckDbError, DuckDb> = Effect.fn(
+  "AiMetrics.derivedStorage.addColumnIfMissing"
+)(function* ({ columnDefinition, columnName, tableName }) {
+  const exists = yield* migrationColumnExists({ columnName, tableName });
+  if (exists) {
+    return;
+  }
+
+  const duckdb = yield* DuckDb;
+  yield* duckdb.run(`ALTER TABLE ${tableName} ADD COLUMN ${columnDefinition}`);
+});
 
 const migrationHasRequiredColumns: (migration: DerivedStorageMigration) => Effect.Effect<boolean, DuckDbError, DuckDb> =
   Effect.fn("AiMetrics.derivedStorage.migrationHasRequiredColumns")(function* (migration) {
@@ -995,9 +1026,6 @@ export const ensureAiMetricsDerivedStorage: Effect.Effect<void, AiMetricsDerived
     Effect.mapError((cause) => derivedFailure("Failed to ensure AI metrics derived DuckDB schema.", cause))
   );
 
-const optionalStringOrNull = (value: string | undefined): string | null => value ?? null;
-const optionalBooleanOrNull = (value: boolean | undefined): boolean | null => value ?? null;
-
 const epochMillisParam = (value: number): string => globalThis.String(value);
 
 const countCreatedArchiveObjects = (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>): number =>
@@ -1043,7 +1071,7 @@ const exportDerivedTablesToParquet = Effect.fn("AiMetrics.derivedStorage.exportD
   const pathApi = yield* Path.Path;
   const duckdb = yield* DuckDb;
   yield* Effect.forEach(
-    DERIVED_TABLES,
+    AiMetricsDerivedTable.Options,
     (tableName) =>
       duckdb.copyTableToParquet(
         DuckDbParquetExport.make({
@@ -1153,8 +1181,8 @@ const upsertAgentTask = Effect.fn("AiMetrics.derivedStorage.upsertAgentTask")(fu
       agentTaskId,
       configSnapshotId: input.configSnapshot.snapshotId,
       createdAtEpochMillis: epochMillisParam(input.startedAtEpochMillis),
-      firstSeenAt: optionalStringOrNull(sanitized.firstTimestamp),
-      lastSeenAt: optionalStringOrNull(sanitized.lastTimestamp),
+      firstSeenAt: O.getOrNull(sanitized.firstTimestamp),
+      lastSeenAt: O.getOrNull(sanitized.lastTimestamp),
       repoRootHash: input.repoRootHash,
       sourceKind: sanitized.sourceKind,
       sourcePathHash: sanitized.sourcePathHash,
@@ -1221,24 +1249,24 @@ const upsertSourceFile = Effect.fn("AiMetrics.derivedStorage.upsertSourceFile")(
     )`,
     {
       acceptedEvents: sanitized.acceptedEvents,
-      agentNicknameHash: optionalStringOrNull(sanitized.agentNicknameHash),
-      agentRoleHash: optionalStringOrNull(sanitized.agentRoleHash),
+      agentNicknameHash: O.getOrNull(sanitized.agentNicknameHash),
+      agentRoleHash: O.getOrNull(sanitized.agentRoleHash),
       configSnapshotId: input.configSnapshot.snapshotId,
       eventNamesJson,
-      firstTimestamp: optionalStringOrNull(sanitized.firstTimestamp),
-      forkedFromIdHash: optionalStringOrNull(sanitized.forkedFromIdHash),
+      firstTimestamp: O.getOrNull(sanitized.firstTimestamp),
+      forkedFromIdHash: O.getOrNull(sanitized.forkedFromIdHash),
       ingestRunId: input.ingestRunId,
-      lastTimestamp: optionalStringOrNull(sanitized.lastTimestamp),
-      parentSessionIdHash: optionalStringOrNull(sanitized.parentSessionIdHash),
-      parentThreadIdHash: optionalStringOrNull(sanitized.parentThreadIdHash),
+      lastTimestamp: O.getOrNull(sanitized.lastTimestamp),
+      parentSessionIdHash: O.getOrNull(sanitized.parentSessionIdHash),
+      parentThreadIdHash: O.getOrNull(sanitized.parentThreadIdHash),
       redactionSafeForDerivedUi: record.privacy.redaction.safeForDerivedUi,
       rejectedLines: sanitized.rejectedLines,
-      sessionIdHash: optionalStringOrNull(sanitized.sessionIdHash),
+      sessionIdHash: O.getOrNull(sanitized.sessionIdHash),
       sourceFileId,
       sourceKind: sanitized.sourceKind,
       sourcePathHash: sanitized.sourcePathHash,
       sourceRole: sanitized.sourceRole,
-      threadSpawn: optionalBooleanOrNull(sanitized.threadSpawn),
+      threadSpawn: O.getOrNull(sanitized.threadSpawn),
       totalLines: sanitized.totalLines,
     }
   );
@@ -1336,19 +1364,19 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
     {
       agentSessionId,
       agentTaskId,
-      agentNicknameHash: optionalStringOrNull(sanitized.agentNicknameHash),
-      agentRoleHash: optionalStringOrNull(sanitized.agentRoleHash),
+      agentNicknameHash: O.getOrNull(sanitized.agentNicknameHash),
+      agentRoleHash: O.getOrNull(sanitized.agentRoleHash),
       configSnapshotId: input.configSnapshot.snapshotId,
-      forkedFromIdHash: optionalStringOrNull(sanitized.forkedFromIdHash),
+      forkedFromIdHash: O.getOrNull(sanitized.forkedFromIdHash),
       ingestRunId: input.ingestRunId,
-      parentSessionIdHash: optionalStringOrNull(sanitized.parentSessionIdHash),
-      parentThreadIdHash: optionalStringOrNull(sanitized.parentThreadIdHash),
-      sessionIdHash: optionalStringOrNull(sanitized.sessionIdHash),
+      parentSessionIdHash: O.getOrNull(sanitized.parentSessionIdHash),
+      parentThreadIdHash: O.getOrNull(sanitized.parentThreadIdHash),
+      sessionIdHash: O.getOrNull(sanitized.sessionIdHash),
       sourceKind: sanitized.sourceKind,
       sourcePathHash: sanitized.sourcePathHash,
       sourceRole: sanitized.sourceRole,
-      startedAt: optionalStringOrNull(sanitized.firstTimestamp),
-      threadSpawn: optionalBooleanOrNull(sanitized.threadSpawn),
+      startedAt: O.getOrNull(sanitized.firstTimestamp),
+      threadSpawn: O.getOrNull(sanitized.threadSpawn),
     }
   );
 
@@ -1405,7 +1433,7 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
           sourceKind: envelope.sourceKind,
           sourcePathHash: envelope.sourcePathHash,
           sourceRole: envelope.sourceRole,
-          timestamp: optionalStringOrNull(envelope.timestamp),
+          timestamp: O.getOrNull(envelope.timestamp),
           turnId,
         }
       );
@@ -1418,6 +1446,25 @@ const recordTurnCount: (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>
   A.map((record) => record.privacy.sanitized.rawEventEnvelopes.length),
   A.reduce(0, (left, right) => left + right)
 );
+
+const writeDerivedRows = Effect.fn("AiMetrics.derivedStorage.writeRows")(function* (
+  input: AiMetricsDerivedStorageWriteInput,
+  completedAtEpochMillis: number,
+  turnCount: number
+) {
+  yield* ensureAiMetricsDerivedStorageRaw();
+  yield* upsertRun(input, completedAtEpochMillis, turnCount);
+  yield* Effect.forEach(
+    input.records,
+    Effect.fnUntraced(function* (record) {
+      const agentTaskId = yield* upsertAgentTask(input, record);
+      yield* upsertSourceFile(input, record);
+      yield* upsertArchiveObject(input, record);
+      yield* upsertSessionAndTurns(input, agentTaskId, record);
+    }),
+    { discard: true }
+  );
+});
 
 /**
  * Project sanitized AI metrics records into DuckDB and export Parquet snapshots.
@@ -1487,20 +1534,9 @@ export const writeAiMetricsDerivedStorage = Effect.fn("AiMetrics.writeAiMetricsD
 
     yield* duckdb
       .withTransaction(
-        Effect.fn(function* (transaction) {
-          yield* ensureAiMetricsDerivedStorageRaw().pipe(Effect.provideService(DuckDb, transaction));
-          yield* upsertRun(input, completedAtEpochMillis, turnCount).pipe(Effect.provideService(DuckDb, transaction));
-          yield* Effect.forEach(
-            input.records,
-            Effect.fnUntraced(function* (record) {
-              const agentTaskId = yield* upsertAgentTask(input, record).pipe(
-                Effect.provideService(DuckDb, transaction)
-              );
-              yield* upsertSourceFile(input, record).pipe(Effect.provideService(DuckDb, transaction));
-              yield* upsertArchiveObject(input, record).pipe(Effect.provideService(DuckDb, transaction));
-              yield* upsertSessionAndTurns(input, agentTaskId, record).pipe(Effect.provideService(DuckDb, transaction));
-            }),
-            { discard: true }
+        Effect.fn("AiMetrics.derivedStorage.writeTransaction")(function* (transaction: DuckDbClient) {
+          yield* writeDerivedRows(input, completedAtEpochMillis, turnCount).pipe(
+            Effect.provideService(DuckDb, transaction)
           );
         })
       )
@@ -1514,9 +1550,9 @@ export const writeAiMetricsDerivedStorage = Effect.fn("AiMetrics.writeAiMetricsD
       archiveObjectCount,
       duckDbPath: input.storage.duckDbPath,
       ingestRunId: input.ingestRunId,
-      ...O.getSomesStruct({ parquetExportDir }),
+      parquetExportDir,
       parquetExportMode: input.parquetExportMode,
-      parquetTables: O.isSome(parquetExportDir) ? DERIVED_TABLES : [],
+      parquetTables: O.isSome(parquetExportDir) ? AiMetricsDerivedTable.Options : [],
       sourceFileCount: input.records.length,
       turnCount,
     });

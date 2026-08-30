@@ -1,0 +1,26 @@
+id: "dh:cilane:025"
+observation_refs:
+  - "so:sha256:41d707f343527c4cee7ccc977c64afe733b9101c9362c80a147b3219fa467841"
+  - "so:sha256:a3b5320d89d75a2dbeaba3091f18efc3aea75b729dd32a43949c48c1ed480e22"
+  - "so:sha256:a8e5afcbed259a4b11c69d09254565f4a7de559a55c53a956a037c22dd6b4e56"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "CiLaneClass source vocabulary"
+  description: "The code-level literal set, schema value, and derived alias for classifying lane representations."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification-lane parity classification scheme"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "operational lane-kind domain"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Literal members plus exported schema and alias declarations are sufficient for an implementation enum. The observations do not assign the values to independently observed lanes or establish that they answer CQ-001's operational kind distinction."
+epistemic_status: proposed
+confidence:
+  value: 0.83
+  use_for_acceptance: false

@@ -1,0 +1,26 @@
+# IdentityCard — what makes a commitment ontologically coherent. Proposal authority
+# only. `unresolved` is a LEGAL, SUCCESSFUL value everywhere below — epistemic
+# deferral is distinct from the substantive ruling `none`.
+# File layout: one record per file, work/foundational/ic-<slug>-<nnn>.yaml.
+id: "ic:<slug>:<nnn>"
+hypothesis_ref: "dh:..."
+identity:
+  supplies_identity: true | false | unresolved
+  identity_criterion: ""          # what makes two individuals the SAME — or "unresolved: <missing evidence>"
+  reidentification_key: []        # technical keys are evidence, never the criterion
+ontoclean:
+  rigidity: rigid | anti_rigid | semi_rigid | unresolved
+  carries_identity: true | false | unresolved
+  supplies_identity: true | false | unresolved
+  unity: ""
+  dependence: none | relational | intrinsic | unresolved
+ufo_analysis:
+  candidate_category: kind | subkind | role | phase | relator | quality | mode | event | process | situation | information_object | none | unresolved
+  alternatives: []
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true | false | unresolved
+  may_change_state_without_losing_identity: true | false | unresolved
+  terminal_states: []
+counterexamples: [{description: ""}]   # at least one attempted
+status: proposed

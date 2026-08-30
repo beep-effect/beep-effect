@@ -1,0 +1,28 @@
+id: ic:alt4:048
+hypothesis_ref: dh:turbo-cache:009
+identity:
+  supplies_identity: true
+  identity_criterion: Two Turbo serial-integration task specifications are the same when they occupy the same pipeline slot with the same upstream build dependency and cache-disabled posture; the key spelling is evidence, never the criterion.
+  reidentification_key:
+    - test:integration:serial
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The serial-integration pipeline slot together with its upstream build dependency compose one task prescription.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+    - subkind
+  existential_dependencies:
+    - turbo pipeline
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: test:integration:parallel shares an upstream build dependency but is a different pipeline slot.
+  - description: The lexical suffix serial alone, without the dependsOn prescription, would not determine this task.
+status: proposed

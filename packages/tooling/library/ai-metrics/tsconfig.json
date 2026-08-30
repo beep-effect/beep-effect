@@ -27,6 +27,9 @@
       "path": "../../../foundation/modeling/utils/tsconfig.json"
     },
     {
+      "path": "../../test-kit/fc-runs/tsconfig.json"
+    },
+    {
       "path": "../../test-kit/test-utils/tsconfig.json"
     }
   ]

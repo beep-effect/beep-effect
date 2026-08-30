@@ -1,0 +1,9 @@
+id: rat:20
+proposal_ref: otp:hard-floor-engaged-situation:001
+proposal_sha256: 8b1c727f7f40d19fbe085962f4f507df735a20b458c7736809c5e830836ef4e0
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept StarvationException — ratified with the declared-not-enforced bound honesty intact.

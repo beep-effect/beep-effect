@@ -1,0 +1,57 @@
+target: "otp:architecture-boundary-obligation:001"
+target_sha256: "8b6eb25cada1982222f7ac2c0ca3d90fd1a5e41794bd0726700c6987aaf10e08"
+chain_sha256: "13650cecf9662eec5ec45da60f33c15e9416c293320131c435083f0829b9fe65"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: activation-continuity-deferred
+    counterexample: >-
+      One bearer can discharge an architecture contradiction and later incur
+      the same kind of contradiction under the same rule version. The criterion
+      now requires one continuing normative position and openly defers token
+      reidentification pending case provenance, so it does not merge the two
+      activations merely by equal participant fields.
+    outcome: survived
+  - surface: identity
+    rule: relational-mode-alignment-conflict
+    counterexample: >-
+      The proposed obligation cannot exist without an obligated bearer, a
+      governing norm, and a triggering contradiction. The proposal accordingly
+      declares relational dependence, yet aligns the class to gufo:IntrinsicMode;
+      an intrinsic mode cannot encode that externally dependent normative unity.
+    outcome: landed
+  - surface: warrant
+    rule: support-warrant-self-contradiction
+    counterexample: >-
+      VerificationEvidence can record the generic obligation, producing
+      procedure, and provenance needed by CQ-006 without instantiating an
+      ArchitectureBoundaryObligation. The revised definition and open issue
+      concede that this specialized class is unnecessary while the warrant
+      continues to assert necessary support for VerificationEvidence.
+    outcome: landed
+  - surface: null_discriminator
+    rule: normative-prose-discriminator
+    counterexample: >-
+      A passive label or DTO cannot require correction of a contradicting
+      proposal or amendment of the governing architecture. The quoted rule
+      imposes exactly that normative consequence, so the obligation is not
+      exhausted by its textual carrier.
+    outcome: survived
+rival_models_still_viable:
+  - "Model only the architecture-policy information object."
+  - "Model a normative relator connecting authority, bearer, contradiction, and correction."
+evidence:
+  - "po:sha256:a8f45d7aff5dac863717489999e1c1b730d1b57612435ac657d3bab1a0f533ea"
+  - "po:sha256:18ce6572b69bdaf8e3e4542f8b754842f0a93567e33c7d48d0a9f2b3a0bc95f3"
+  - "CQ-006"

@@ -1,0 +1,31 @@
+id: "dh:yeet-planner:009"
+observation_refs:
+  - "so:sha256:1adbba90ffeca74bb7274f9ac7af8f6887553ab1344981fdce3e7ab86aaa9f4f"
+  - "so:sha256:82a07ab0edbc59f82a4a3bd5ed6791d927df50a924aeb2a8898636b1d7c344aa"
+  - "po:sha256:df2d4797ee69893a15a3519ee92e6b1b3612ee21d681769dc857b59731ffdd05"
+  - "po:sha256:b02625e819c18f6ce0cc4929cf88b362f425ea749edbaab94740640f607012c7"
+  - "po:sha256:7cacd0e5f48529a570a3e35ebb2738ce20cd32fb003937a34630edb3058509b9"
+cq_warrants: []
+proposed_referent:
+  label: "Review-fix verification procedure specification"
+  description: "A repeatable repair-loop proof-plan specification that binds base and head inputs while selecting no GitHub-check lanes."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Review-fix operational procedure kind"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Literal planner selector token"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+  - label: "Assurance tier itself"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The planner-DTO counterexample wins: the review-fix enum branch can emit base/head arguments and an empty hosted-check array without a separately governed, reidentifiable plan specification."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

@@ -1,6 +1,8 @@
 /**
  * Plugin directory scanning and loading.
  *
+ * **Details**
+ *
  * Complements `Plugin.write` with the inverse operations for existing plugin
  * directories: `scan` inspects canonical component locations and infers a
  * normalized manifest, `load` parses the discovered files into a typed
@@ -8,20 +10,17 @@
  * filling in the default paths that `Plugin.write` uses when a manifest field
  * is omitted.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
+import { Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { PluginLoadError } from "../Errors.ts";
 import { parseCommandFile, parseOutputStyleFile, parseSkillFile, parseSubagentFile } from "../Frontmatter.ts";
 import { loadJson as loadMcpJson, McpJsonFile } from "../Mcp.ts";
@@ -30,7 +29,7 @@ import {
   define,
   type PluginAgentEntry,
   type PluginCommandEntry,
-  type PluginDefinition,
+  PluginDefinition,
   type PluginOutputStyleEntry,
   type PluginSkillEntry,
 } from "./Define.ts";
@@ -46,40 +45,67 @@ const $I = $ScratchpadId.create("claudecode/Plugin/Load");
 /**
  * Paths discovered during a plugin directory scan.
  *
- * @category models
- * @since 0.0.0
- */
-export interface PluginScan {
-  readonly rootDir: string;
-  readonly manifestPath: O.Option<string>;
-  readonly sourceManifest: O.Option<PluginManifest>;
-  readonly commandPaths: ReadonlyArray<string>;
-  readonly agentPaths: ReadonlyArray<string>;
-  readonly skillPaths: ReadonlyArray<string>;
-  readonly outputStylePaths: ReadonlyArray<string>;
-  readonly hooksPaths: ReadonlyArray<string>;
-  readonly inlineHooksConfig: O.Option<HooksSection>;
-  readonly mcpPaths: ReadonlyArray<string>;
-  readonly inlineMcpConfig: O.Option<McpJsonFile>;
-  readonly lspPaths: ReadonlyArray<string>;
-  readonly themePaths: ReadonlyArray<string>;
-  readonly monitorPaths: ReadonlyArray<string>;
-  readonly binPaths: ReadonlyArray<string>;
-  readonly settingsPath: O.Option<string>;
-  readonly inferredManifest: PluginManifest;
-}
-
-/**
- * A fully loaded plugin directory.
+ * **Example** (Name a scan result)
+ *
+ * ```ts
+ * import type { Plugin } from "effect-claudecode"
+ *
+ * type Scan = Plugin.PluginScan
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface LoadedPlugin extends PluginDefinition {
-  readonly rootDir: string;
-  readonly sourceManifest: O.Option<PluginManifest>;
-  readonly inferredManifest: PluginManifest;
-}
+export class PluginScan extends S.Class<PluginScan>($I`PluginScan`)(
+  {
+    rootDir: S.String,
+    manifestPath: S.Option(S.String),
+    sourceManifest: S.Option(PluginManifest),
+    commandPaths: S.Array(S.String),
+    agentPaths: S.Array(S.String),
+    skillPaths: S.Array(S.String),
+    outputStylePaths: S.Array(S.String),
+    hooksPaths: S.Array(S.String),
+    inlineHooksConfig: S.Option(HooksSection),
+    mcpPaths: S.Array(S.String),
+    inlineMcpConfig: S.Option(McpJsonFile),
+    lspPaths: S.Array(S.String),
+    themePaths: S.Array(S.String),
+    monitorPaths: S.Array(S.String),
+    binPaths: S.Array(S.String),
+    settingsPath: S.Option(S.String),
+    inferredManifest: PluginManifest,
+  },
+  $I.annote("PluginScan", {
+    description: "Normalized paths and optional inline configuration discovered during a plugin directory scan.",
+  })
+) {}
+
+/**
+ * A fully loaded plugin directory.
+ *
+ * **Example** (Name a loaded plugin)
+ *
+ * ```ts
+ * import type { Plugin } from "effect-claudecode"
+ *
+ * type Loaded = Plugin.LoadedPlugin
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LoadedPlugin extends S.Class<LoadedPlugin>($I`LoadedPlugin`)(
+  {
+    ...PluginDefinition.fields,
+    rootDir: S.String,
+    sourceManifest: S.Option(PluginManifest),
+    inferredManifest: PluginManifest,
+  },
+  $I.annote("LoadedPlugin", {
+    description: "Validated plugin definition paired with its source root and manifest provenance.",
+  })
+) {}
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -574,15 +600,25 @@ const mergeMcpConfigs = (configs: ReadonlyArray<McpJsonFile>): McpJsonFile =>
  * Inspect a plugin directory and infer the canonical manifest paths for the
  * discovered component files.
  *
- * **Example** (Inspect a plugin scan Effect)
+ * **Example** (Scan a plugin written in memory)
  *
  * ```ts
- * import { Plugin } from "effect-claudecode"
+ * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * const program = Plugin.scan("./my-plugin")
+ * const definition = Plugin.define({
+ *   manifest: { name: "review-tools" },
+ *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
+ * })
+ * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
+ * const scanned = await Effect.runPromise(
+ *   Effect.provide(Plugin.scan("/plugin"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(scanned.inferredManifest.name) // "review-tools"
+ * console.log(O.isSome(scanned.manifestPath)) // true
+ * console.log(scanned.commandPaths) // ["/plugin/commands/hi.md"]
  * ```
  *
  * @effects Reads the plugin manifest and component directories through `FileSystem.FileSystem` and resolves paths with `Path.Path`.
@@ -683,7 +719,7 @@ export const scan = Effect.fn("Plugin.scan")(function* (
     onSome: (manifest) => manifest.name,
   });
 
-  return {
+  return PluginScan.make({
     rootDir,
     manifestPath: O.isSome(sourceManifest) ? O.some(manifestPath) : O.none(),
     sourceManifest,
@@ -722,21 +758,30 @@ export const scan = Effect.fn("Plugin.scan")(function* (
       hasThemes: A.isReadonlyArrayNonEmpty(themePaths),
       hasMonitors: A.isReadonlyArrayNonEmpty(monitorPaths),
     }),
-  };
+  });
 });
 
 /**
  * Load an existing plugin directory into a typed `PluginDefinition`.
  *
- * **Example** (Inspect a plugin load Effect)
+ * **Example** (Load a plugin written in memory)
  *
  * ```ts
- * import { Plugin } from "effect-claudecode"
+ * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const program = Plugin.load("./my-plugin")
+ * const definition = Plugin.define({
+ *   manifest: { name: "review-tools" },
+ *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
+ * })
+ * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
+ * const loaded = await Effect.runPromise(
+ *   Effect.provide(Plugin.load("/plugin"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(loaded.manifest.name) // "review-tools"
+ * console.log(loaded.commands.length) // 1
+ * console.log(loaded.skills.length) // 0
  * ```
  *
  * @effects Reads and decodes the plugin manifest and referenced components through `FileSystem.FileSystem` and `Path.Path`.
@@ -782,27 +827,38 @@ export const load = Effect.fn("Plugin.load")(function* (
     })
   );
 
-  return {
+  return LoadedPlugin.make({
     ...definition,
     rootDir,
     sourceManifest: scanned.sourceManifest,
     inferredManifest: scanned.inferredManifest,
-  };
+  });
 });
 
 /**
  * Normalize a plugin definition's manifest by preserving explicit layout
  * choices and filling in default paths for missing component/config entries.
  *
- * **Example** (Use sync)
+ * **Example** (Preserve custom command paths and collapse multi-file hooks)
  *
  * ```ts
  * import { Plugin } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
  * const normalized = Plugin.sync(
- *   Plugin.define({ manifest: { name: "example-plugin" } })
+ *   Plugin.define({
+ *     manifest: {
+ *       name: "review-tools",
+ *       commands: "./slash",
+ *       hooks: ["./hooks/a.json", "./hooks/b.json"]
+ *     },
+ *     commands: [Plugin.command({ name: "hi", body: "# /hi\n" })],
+ *     hooksConfig: { PostToolUse: [] }
+ *   })
  * )
- * console.log(normalized.manifest.name)
+ *
+ * console.log(O.getOrUndefined(normalized.manifest.commands)) // "./slash"
+ * console.log(O.getOrUndefined(normalized.manifest.hooks)) // "./hooks/hooks.json"
  * ```
  *
  * @category normalization

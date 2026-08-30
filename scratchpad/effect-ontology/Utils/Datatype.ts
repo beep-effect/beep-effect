@@ -39,7 +39,7 @@ const $I = $ScratchpadId.create("effect-ontology/Utils/Datatype");
  * console.log(normalized.value) // "42"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class NormalizedValue extends S.Class<NormalizedValue>($I`NormalizedValue`)(

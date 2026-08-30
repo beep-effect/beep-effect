@@ -1,0 +1,39 @@
+id: "ic:alt1:052"
+hypothesis_ref: "dh:turbo-cache:023"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two local-only cache postures are the same iff they characterize the same
+    Turbo invocation (or the same resolved cache plan for that invocation) as fail-closed to
+    local:rw, on the same grounds of incomplete or unsanctioned remote-read configuration. The
+    LocalOnly enumeration member and the --cache= argument are reidentification evidence, never
+    the sameness criterion."
+  reidentification_key:
+    - "local:rw"
+    - "LocalOnly"
+    - "local-only"
+    - "--cache="
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: false
+  supplies_identity: false
+  unity: "one characterizing mode of one invocation/plan; missing env names are parts of the plan
+    record, not of the posture as such"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "mode"
+  alternatives:
+    - "information_object"
+    - "quality"
+  existential_dependencies:
+    - "the Turbo invocation or its resolved cache plan"
+    - "the remote-read environment quad"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "A later invocation of the same checkout after the remote-read quad is completed is
+      not local-only; if local-only were a rigid kind of checkout, completing TURBO_API would
+      destroy the checkout. If the posture were only the CLI argument string,
+      CallerControlledTurboCache (no injected flag) could not be distinguished from local-only."
+status: "proposed"

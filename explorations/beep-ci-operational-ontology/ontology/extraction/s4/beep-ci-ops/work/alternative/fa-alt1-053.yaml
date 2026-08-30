@@ -1,0 +1,21 @@
+id: "fa:alt1:053"
+hypothesis_ref: "dh:worktree-config:007"
+identity_card_ref: "ic:alt1:053"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: false
+rival_models:
+  - label: "review-thread resolution obligation (normative relator or social object)"
+    still_viable: true
+  - label: "the review thread as an information object, with unresolved merely a property"
+    still_viable: true
+strongest_counterexample: "The quotation makes unresolved review-thread state a hard merge gate.
+  That is a policy about a phase, not proof that the obligation and the phase are one
+  individual: an obligation could persist as a standing rule even when no thread is unresolved."
+verdict: "analyzed"
+needed_evidence: "Whether merge-ready checks quantify over thread individuals that change phase,
+  over a standing resolution obligation, or over thread records. The AGENTS.md sentence is
+  observationally compatible with all three; a GitHub thread payload with a resolved/unresolved
+  flag on a stable thread key would favor phase of an information object."

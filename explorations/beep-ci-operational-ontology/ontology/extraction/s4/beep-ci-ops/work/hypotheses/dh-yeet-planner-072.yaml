@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:072"
+observation_refs:
+  - "so:sha256:d4d6c27eec971144fa5bc98d719e5d524ea5f0bd3952571b15aa593f02a8cf87"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for proofArgsForTier in Planner.ts"
+  description: "No separate domain referent is established for the proofArgsForTier declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::proofArgsForTier"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

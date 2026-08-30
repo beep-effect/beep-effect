@@ -12,6 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, DateTime, Duration, Effect, Inspectable, Layer, Queue, Ref, Stream } from "effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -24,7 +25,6 @@ import * as SqlEventJournal from "effect/unstable/eventlog/SqlEventJournal";
 import * as PersistedQueue from "effect/unstable/persistence/PersistedQueue";
 import { SqlClient, SqlSchema } from "effect/unstable/sql";
 import { EventBusError } from "../Domain/Error/EventBus.ts";
-import type { OntologyEventEntry as OntologyEventEntryValue } from "../Domain/Schema/EventSchema.ts";
 import { CurationEventGroup, ExtractionEventGroup, OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
@@ -35,19 +35,35 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
 // =============================================================================
 
 /**
- * Job with metadata for processing
- *
+ * Background job paired with queue identity and non-negative retry attempts.
  *
  * **Example** (Attach queue metadata)
  *
  * ```ts
+ * import { DateTime } from "effect"
  * import * as S from "effect/Schema"
+ * import { OntologyName } from "@effect-ontology/Identity"
+ * import { BackgroundJobId, PromptCacheJob } from "@effect-ontology/Schema/JobSchema"
  * import { JobWithMetadata } from "@effect-ontology/Service/EventBus"
  *
- * console.log(S.is(JobWithMetadata)({ id: "queue-1", attempts: -1 })) // false
+ * const job = PromptCacheJob.make({
+ *   id: BackgroundJobId.make("job-abc123def456"),
+ *   ontologyId: OntologyName.make("football"),
+ *   exampleId: "example-1",
+ *   isNegative: false,
+ *   createdAt: DateTime.makeUnsafe("2026-07-25T12:00:00.000Z")
+ * })
+ * const queued = JobWithMetadata.make({
+ *   job,
+ *   id: "queue-1",
+ *   attempts: 0
+ * })
+ * console.log(queued.attempts) // 0
+ * console.log(queued.job._tag) // "PromptCacheJob"
+ * console.log(S.is(JobWithMetadata)({ job, id: "queue-1", attempts: -1 })) // false
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata`)(
@@ -61,36 +77,58 @@ export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata
   })
 ) {}
 
+type EventEntryCodec = S.Codec<OntologyEventEntry>;
+
 /**
  * Runtime schema for a canonical event entry from the journal.
  *
- *
- * **Example** (Inspect the event entry schema)
+ * **Example** (Decode a ClaimCorrected journal row)
  *
  * ```ts
+ * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
  * import { EventEntry } from "@effect-ontology/Service/EventBus"
- * console.log(EventEntry)
+ *
+ * const entry = S.decodeUnknownOption(OntologyEventEntry)({
+ *   id: "evt-claim-corrected-1",
+ *   primaryKey: "football:correction:claim-abc123def456",
+ *   createdAt: DateTime.makeUnsafe("2026-07-25T12:00:00.000Z"),
+ *   event: "ClaimCorrected",
+ *   payload: {
+ *     ontologyId: "football",
+ *     originalClaimId: "claim-abc123def456",
+ *     newClaimId: "claim-def456abc123",
+ *     correctionId: "corr-1",
+ *     timestamp: "2026-07-25T12:00:00.000Z"
+ *   }
+ * })
+ * console.log(O.exists(entry, EventEntry.is)) // true
+ * console.log(O.map(entry, (value) => value.event)) // Some("ClaimCorrected")
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const EventEntry: S.Codec<EventEntry, unknown> = S.toType(OntologyEventEntry);
+export const EventEntry: ReturnType<typeof SchemaUtils.withEffectCodecStatics<EventEntryCodec>> = S.toType(
+  OntologyEventEntry
+).pipe(
+  $I.annoteSchema("EventEntry", {
+    description: "Canonical journal event payload consumed by EventBus subscribers.",
+  }),
+  SchemaUtils.withEffectCodecStatics
+);
 
 /**
  * Runtime event entry paired with its canonical EventGroup payload.
  *
- * **Example** (Use the EventEntry contract)
- * ```ts
- * import type { EventEntry } from "@effect-ontology/Service/EventBus"
- * const eventName = (entry: EventEntry) => entry.event
- * console.log(eventName)
- * ```
+ * @see {@link EventEntry} for the runtime schema and decoding behavior.
  *
  * @category type-level
  * @since 0.0.0
  */
-export type EventEntry = OntologyEventEntryValue;
+export type EventEntry = typeof EventEntry.Type;
 
 // =============================================================================
 // Service Interface
@@ -178,12 +216,19 @@ export interface EventBusServiceMethods {
 /**
  * EventBusService context tag
  *
- * **Example** (Inspect event bus service)
+ * **Example** (Read pending jobs from memory)
  *
  * ```ts
- * import { EventBusService } from "@effect-ontology/Service/EventBus"
+ * import { Effect } from "effect"
+ * import { EventBusService, EventBusServiceMemory } from "@effect-ontology/Service/EventBus"
  *
- * console.log(EventBusService)
+ * const count = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const bus = yield* EventBusService
+ *     return yield* bus.pendingJobCount
+ *   }).pipe(Effect.provide(EventBusServiceMemory), Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category services
@@ -287,9 +332,16 @@ const decodeEventPayload = Effect.fn("EventBus.decodeEventPayload")(function* (e
  * **Example** (Inspect event bus service memory)
  *
  * ```ts
- * import { EventBusServiceMemory } from "@effect-ontology/Service/EventBus"
+ * import { Effect } from "effect"
+ * import { EventBusService, EventBusServiceMemory } from "@effect-ontology/Service/EventBus"
  *
- * console.log(EventBusServiceMemory)
+ * const count = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const bus = yield* EventBusService
+ *     return yield* bus.pendingJobCount
+ *   }).pipe(Effect.provide(EventBusServiceMemory), Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category layers
@@ -309,7 +361,7 @@ export const EventBusServiceMemory = Layer.effect(
       Effect.gen(function* () {
         const now = yield* DateTime.now;
         const sequence = yield* Ref.getAndUpdate(eventIdCounter, (value) => value + 1);
-        const entry = yield* S.decodeEffect(EventEntry)({
+        const entry = yield* EventEntry.decodeUnknownEffect({
           id: `evt_${yield* Clock.currentTimeMillis}_${sequence}`,
           event: prepared.event,
           primaryKey: prepared.primaryKey,
@@ -498,12 +550,14 @@ const JOBS_QUEUE_NAME = "ontology_jobs";
  * - effect_event_remotes: Remote sync tracking
  * - effect_queue: Durable job queue with retry semantics
  *
- * **Example** (Inspect event bus service sql)
+ * **Example** (Compose SQL persistence)
  *
  * ```ts
- * import { EventBusServiceSql } from "@effect-ontology/Service/EventBus"
+ * import { Layer } from "effect"
+ * import { EventBusServiceSql, EventBusServiceSqlLayers } from "@effect-ontology/Service/EventBus"
  *
- * console.log(EventBusServiceSql)
+ * const layer = Layer.provide(EventBusServiceSql, EventBusServiceSqlLayers)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -624,7 +678,7 @@ export const EventBusServiceSql = Layer.effect(
         Stream.mapEffect((entry) =>
           Effect.gen(function* () {
             const payload = yield* decodeEventPayload(entry.event, entry.payload);
-            return yield* S.decodeEffect(EventEntry)({
+            return yield* EventEntry.decodeUnknownEffect({
               id: entry.idString,
               event: entry.event,
               primaryKey: entry.primaryKey,
@@ -699,12 +753,14 @@ export const EventBusServiceSql = Layer.effect(
  * Requires SqlClient.SqlClient in context.
  * Auto-creates tables: effect_event_journal, effect_event_remotes, effect_queue
  *
- * **Example** (Inspect event bus service sql layers)
+ * **Example** (Provide SQL journal layers)
  *
  * ```ts
- * import { EventBusServiceSqlLayers } from "@effect-ontology/Service/EventBus"
+ * import { Layer } from "effect"
+ * import { EventBusServiceSql, EventBusServiceSqlLayers } from "@effect-ontology/Service/EventBus"
  *
- * console.log(EventBusServiceSqlLayers)
+ * const layer = Layer.provide(EventBusServiceSql, EventBusServiceSqlLayers)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -731,12 +787,18 @@ export const EventBusServiceSqlLayers = Layer.mergeAll(
  *
  * Requires SqlClient.SqlClient in context.
  *
- * **Example** (Inspect event bus service sql live)
+ * **Example** (Compose the SQL live layer)
  *
  * ```ts
- * import { EventBusServiceSqlLive } from "@effect-ontology/Service/EventBus"
+ * import { Effect } from "effect"
+ * import { EventBusService, EventBusServiceSqlLive } from "@effect-ontology/Service/EventBus"
  *
- * console.log(EventBusServiceSqlLive)
+ * const program = Effect.gen(function* () {
+ *   const bus = yield* EventBusService
+ *   return yield* bus.pendingJobCount
+ * }).pipe(Effect.provide(EventBusServiceSqlLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -751,12 +813,19 @@ export const EventBusServiceSqlLive = EventBusServiceSql.pipe(Layer.provide(Even
 /**
  * Default EventBusService layer (Memory implementation)
  *
- * **Example** (Inspect event bus service default)
+ * **Example** (Use the default memory bus)
  *
  * ```ts
- * import { EventBusServiceDefault } from "@effect-ontology/Service/EventBus"
+ * import { Effect } from "effect"
+ * import { EventBusService, EventBusServiceDefault } from "@effect-ontology/Service/EventBus"
  *
- * console.log(EventBusServiceDefault)
+ * const count = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const bus = yield* EventBusService
+ *     return yield* bus.pendingJobCount
+ *   }).pipe(Effect.provide(EventBusServiceDefault), Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category layers

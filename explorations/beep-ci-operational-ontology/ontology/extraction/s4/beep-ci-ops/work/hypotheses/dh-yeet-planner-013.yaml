@@ -1,0 +1,24 @@
+id: "dh:yeet-planner:013"
+observation_refs:
+  - "so:sha256:a9b1143682020b235d90148d8bcd767d3cb3d359572e94b00d517ec7fffbfe8c"
+  - "so:sha256:39e789a3f9bd5249b2c7c006ab925578a63733d48340bc37a65d562f0797a9ae"
+cq_warrants: []
+proposed_referent:
+  label: "Feedback-task labels"
+  description: "Source labels for build, check, lint, and test feedback selections."
+representation_status: lexical_alias
+alternatives:
+  - label: "Verification lane specifications"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Implementation task whitelist"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An exported array and an indexed source alias do not establish whether these labels denote stable verification lanes, commands, package scripts, or only dispatch values."
+epistemic_status: proposed
+confidence:
+  value: 0.62
+  use_for_acceptance: false

@@ -1,0 +1,23 @@
+id: so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 866
+  end_line: 909
+  content_sha256: 3e2bd5af8da9130aad6e4b067baf34842c9b4844b68cf0e6348b279abaa7272d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::stageSelfLease
+  lexical_name: stageSelfLease
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const stageSelfLease = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

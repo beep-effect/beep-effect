@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 
-import type { IRI } from "@beep/rdf";
 import { NodeIndex } from "@beep/schema/Graph";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -24,7 +23,6 @@ import {
   MutableHashMap,
   MutableHashSet,
   Number as N,
-  Order,
 } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -50,6 +48,7 @@ import {
 import { EntityId } from "../Domain/Model/shared.ts";
 import { EmbeddingService } from "../Service/Embedding.ts";
 import { dual2, dual3 } from "../Utils/Dual.ts";
+import { mergeEntityFields } from "../Utils/Entity.ts";
 import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } from "../Utils/Similarity.ts";
 import { simpleTokenize } from "../Utils/String.ts";
 
@@ -69,15 +68,42 @@ import { simpleTokenize } from "../Utils/String.ts";
  * 4. Call Graph.connectedComponents() to find clusters
  * 5. Each component = one resolved entity cluster
  *
- * **Example** (Use clusterEntities)
+ * **Example** (Cluster two similar people without embeddings)
  *
  * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { Effect, HashMap, Layer } from "effect"
+ * import * as O from "effect/Option"
+ * import { EmbeddingError } from "@effect-ontology/Error/Embedding"
+ * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
  * import { clusterEntities } from "@effect-ontology/Workflow/EntityResolutionGraph"
- * import * as Effect from "effect/Effect"
  *
- * const clusters = clusterEntities([], [], EntityResolutionConfig.default())
- * console.log(Effect.isEffect(clusters)) // true
+ * const UnavailableEmbeddings = Layer.succeed(
+ *   EmbeddingService,
+ *   EmbeddingService.of({
+ *     embed: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     embedBatch: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     cosineSimilarity: () => 0,
+ *     getProviderMetadata: Effect.succeed({ providerId: "nomic", modelId: "test", dimension: 1 })
+ *   })
+ * )
+ * const clusterCount = Effect.runPromise(
+ *   clusterEntities(
+ *     [
+ *       Entity.make({ id: EntityId.make("alice"), mention: "Alice", types: [IRI.make("https://schema.org/Person")] }),
+ *       Entity.make({ id: EntityId.make("alicia"), mention: "Alicia", types: [IRI.make("https://schema.org/Person")] })
+ *     ],
+ *     [],
+ *     EntityResolutionConfig.default()
+ *   ).pipe(
+ *     Effect.provide(UnavailableEmbeddings),
+ *     Effect.map((result) => HashMap.size(result.embeddingMap))
+ *   )
+ * )
+ * console.log(clusterCount)
  * ```
  *
  * @param entities - Entities to cluster
@@ -362,47 +388,13 @@ export const clusterEntities = dual3(
  * @internal
  */
 const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
-  const entities = cluster.entities;
-
-  // Select canonical entity (prefer longest mention - usually most complete)
-  const sorted = A.sort(
-    entities,
-    Order.mapInput(Order.flip(Order.Number), (entity: Entity) => entity.mention.length)
-  );
-  const canonical = sorted[0];
-
-  // Merge types using frequency voting
-  const typeFreq = MutableHashMap.empty<IRI, number>();
-  for (const entity of entities) {
-    for (const type of entity.types) {
-      MutableHashMap.set(typeFreq, type, O.getOrElse(MutableHashMap.get(typeFreq, type), () => 0) + 1);
-    }
-  }
-
-  // Select types appearing in at least half the entities (or all if single entity)
-  const threshold = Math.max(1, Math.ceil(entities.length / 2));
-  const mergedTypes = A.fromIterable(typeFreq)
-    .filter(([_, count]) => count >= threshold)
-    .map(([type]) => type);
-
-  const finalTypes: ResolvedEntity["types"] =
-    mergedTypes.length > 0 ? [canonical.types[0], ...mergedTypes] : canonical.types;
-
-  // Merge attributes (prefer values from longer mentions)
-  const mergedAttrs: Record<string, string | number | boolean> = {};
-  for (const entity of sorted) {
-    for (const [key, value] of R.toEntries(entity.attributes)) {
-      if (!(key in mergedAttrs)) {
-        mergedAttrs[key] = value;
-      }
-    }
-  }
+  const merged = mergeEntityFields(cluster.entities);
 
   return ResolvedEntity.make({
-    canonicalId: canonical.id,
-    mention: canonical.mention,
-    types: finalTypes,
-    attributes: mergedAttrs,
+    canonicalId: merged.canonical.id,
+    mention: merged.canonical.mention,
+    types: merged.types,
+    attributes: merged.attributes,
   });
 };
 
@@ -413,16 +405,43 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
  *
  * Pipeline: KnowledgeGraph → MentionRecords → Clustering → ResolvedEntities → ERG
  *
- * **Example** (Use buildEntityResolutionGraph)
+ * **Example** (Build a resolution graph from two people)
  *
  * ```ts
- * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { IRI } from "@beep/rdf"
+ * import { Effect, Layer } from "effect"
+ * import * as O from "effect/Option"
+ * import { EmbeddingError } from "@effect-ontology/Error/Embedding"
+ * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
  * import { buildEntityResolutionGraph } from "@effect-ontology/Workflow/EntityResolutionGraph"
- * import * as Effect from "effect/Effect"
  *
- * const resolution = buildEntityResolutionGraph(KnowledgeGraph.make({}), EntityResolutionConfig.default())
- * console.log(Effect.isEffect(resolution)) // true
+ * const UnavailableEmbeddings = Layer.succeed(
+ *   EmbeddingService,
+ *   EmbeddingService.of({
+ *     embed: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     embedBatch: () => Effect.fail(EmbeddingError.make({ message: "unavailable", provider: "test", cause: O.none() })),
+ *     cosineSimilarity: () => 0,
+ *     getProviderMetadata: Effect.succeed({ providerId: "nomic", modelId: "test", dimension: 1 })
+ *   })
+ * )
+ * const nodeCount = Effect.runPromise(
+ *   buildEntityResolutionGraph(
+ *     KnowledgeGraph.make({
+ *       entities: [
+ *         Entity.make({ id: EntityId.make("alice"), mention: "Alice", types: [IRI.make("https://schema.org/Person")] }),
+ *         Entity.make({ id: EntityId.make("alicia"), mention: "Alicia", types: [IRI.make("https://schema.org/Person")] })
+ *       ]
+ *     }),
+ *     EntityResolutionConfig.default()
+ *   ).pipe(
+ *     Effect.provide(UnavailableEmbeddings),
+ *     Effect.map((graph) => graph.stats.clusterCount)
+ *   )
+ * )
+ * console.log(nodeCount)
  * ```
  *
  * @param kg - Input knowledge graph

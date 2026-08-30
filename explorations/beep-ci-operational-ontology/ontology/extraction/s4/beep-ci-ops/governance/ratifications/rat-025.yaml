@@ -1,0 +1,9 @@
+id: rat:25
+proposal_ref: otp:split-stream-captured-subprocess-result:001
+proposal_sha256: ce12b64642b0c5446e57b09bee72857ffb18568a8a3a27158a5957ad6b47c829
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept VerificationResultArtifact — ratified with the retained-record deferral on the record.

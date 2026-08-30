@@ -3,7 +3,7 @@ import { $RunpodId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, Struct } from "@beep/utils";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
-import { Effect, Match, Order, pipe } from "effect";
+import { Effect, flow, Match, Order, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -972,15 +972,13 @@ const renderAuthentication = Match.type<string>().pipe(
   Match.orElse(() => "true")
 );
 
-const renderRequestBodyKind = (requestFields: readonly RequestField[]): string =>
-  pipe(
-    requestFields,
-    A.some((field) => field.name === "body"),
-    Bool.match({
-      onFalse: () => JSON.stringify(OperationRequestBodyKind.Enum.none),
-      onTrue: () => JSON.stringify(OperationRequestBodyKind.Enum.json),
-    })
-  );
+const renderRequestBodyKind: (requestFields: readonly RequestField[]) => string = flow(
+  A.some((field: RequestField) => field.name === "body"),
+  Bool.match({
+    onFalse: () => JSON.stringify(OperationRequestBodyKind.Enum.none),
+    onTrue: () => JSON.stringify(OperationRequestBodyKind.Enum.json),
+  })
+);
 
 const renderOperationDescriptor = (operation: Operation): string => {
   const pathParams = pipe(

@@ -5,17 +5,88 @@
  * @since 0.0.0
  */
 
+import { HashSet } from "effect";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { dual2 } from "./Dual.ts";
 
+const BlockingTokenStopWords = HashSet.make(
+  "the",
+  "a",
+  "an",
+  "and",
+  "or",
+  "but",
+  "in",
+  "on",
+  "at",
+  "to",
+  "for",
+  "of",
+  "with",
+  "by",
+  "from",
+  "as",
+  "is",
+  "was",
+  "are",
+  "were",
+  "been",
+  "be",
+  "have",
+  "has",
+  "had",
+  "do",
+  "does",
+  "did",
+  "will",
+  "would",
+  "could",
+  "should",
+  "may",
+  "might",
+  "must",
+  "shall",
+  "can",
+  "this",
+  "that",
+  "these",
+  "those",
+  "i",
+  "you",
+  "he",
+  "she",
+  "it",
+  "we",
+  "they",
+  "inc",
+  "corp",
+  "llc",
+  "ltd",
+  "co",
+  "company"
+);
+
 /**
- * Text Processing Utilities
+ * Tokenize an entity mention for blocking-index lookup.
  *
- * Pure text transformation functions for search enhancement.
- * These are domain-agnostic string operations.
+ * **Example** (Build blocking tokens)
  *
- * @packageDocumentation
+ * ```ts
+ * import { tokenizeMentionForBlocking } from "@effect-ontology/Utils/Text"
+ *
+ * console.log(tokenizeMentionForBlocking("The Acme Research Group"))
+ * // ["acme", "research", "group"]
+ * ```
+ *
+ * @category utilities
  * @since 0.0.0
  */
+export const tokenizeMentionForBlocking = (mention: string): Array<string> =>
+  A.filter(
+    Str.split(/[\s\-_.,;:!?'"()[\]{}]+/)(Str.toLowerCase(mention)),
+    (token) => Str.length(token) > 2 && !HashSet.has(BlockingTokenStopWords, token)
+  );
 
 // =============================================================================
 // CamelCase Splitting
@@ -34,14 +105,10 @@ import { dual2 } from "./Dual.ts";
  * ```ts
  * import { splitCamelCase } from "@effect-ontology/Utils/Text"
  *
- * splitCamelCase("birthPlace")     // => "birth Place"
- * splitCamelCase("FirstName")       // => "First Name"
- * splitCamelCase("XMLHttpRequest") // => "XML Http Request"
- * splitCamelCase("already spaced") // => "already spaced"
+ * console.log(splitCamelCase("birthPlace")) // "birth Place"
+ * console.log(splitCamelCase("XMLHttpRequest")) // "XML Http Request"
  * ```
  *
- * @param text - Text possibly containing camelCase
- * @returns Space-separated words
  * @category utilities
  * @since 0.0.0
  */
@@ -68,16 +135,13 @@ export const splitCamelCase = (text: string): string =>
  * ```ts
  * import { generateNGrams } from "@effect-ontology/Utils/Text"
  *
- * generateNGrams(["birth", "place", "location"], 2)
- * // => ["birth place", "place location"]
- *
- * generateNGrams(["person", "name"], 3)
- * // => ["person name"] (only one trigram possible)
+ * console.log(generateNGrams(["birth", "place", "location"], 2))
+ * // ["birth place", "place location"]
+ * console.log(generateNGrams(["person", "name"], 3))
+ * // []
  * ```
  *
- * @param tokens - Array of tokens
- * @param n - N-gram size (default: 2 for bigrams)
- * @returns Array of n-gram strings
+ * @param n - Window size; must be supplied (no default).
  * @category utilities
  * @since 0.0.0
  */
@@ -110,13 +174,13 @@ export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): 
  * ```ts
  * import { enhanceTextForSearch } from "@effect-ontology/Utils/Text"
  *
- * enhanceTextForSearch("birthPlace location", 2)
- * // => "birthPlace location birth place location birth place place location"
+ * console.log(enhanceTextForSearch("birthPlace location", 2))
+ * // "birthPlace location birth Place location birth place place location"
  * ```
  *
- * @param text - Input text
- * @param ngramSize - Size of n-grams to generate (default: 2)
- * @returns Enhanced text with camelCase split and n-grams
+ * @param ngramSize - Window size passed to {@link generateNGrams}; must be supplied.
+ * @see {@link generateNGrams} for the n-gram constructor this calls.
+ * @see {@link splitCamelCase} for the camelCase split applied before tokenization.
  * @category utilities
  * @since 0.0.0
  */

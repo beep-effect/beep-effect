@@ -313,36 +313,37 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           const codexPath = path.join(tmpDir, ".codex/config.toml");
           const claudePath = path.join(tmpDir, ".claude/settings.json");
 
-          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          yield* writeText(codexPath, "");
           assert.strictEqual(
             (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
             "codex-config"
           );
           yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
 
+          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          const pinnedCodex = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(pinnedCodex.message, "approval_policy must be omitted");
+          assert.include(pinnedCodex.message, "sandbox_mode must be omitted");
+
           yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
-          const unsafeCodex = yield* Effect.flip(
+          const safePinnedCodex = yield* Effect.flip(
             validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
           );
-          assert.include(unsafeCodex.message, 'approval_policy must be "never"');
-          assert.include(unsafeCodex.message, 'sandbox_mode must be "danger-full-access"');
+          assert.include(safePinnedCodex.message, "approval_policy must be omitted");
+          assert.include(safePinnedCodex.message, "sandbox_mode must be omitted");
 
-          yield* writeText(codexPath, "");
-          const implicitCodex = yield* Effect.flip(
+          yield* writeText(codexPath, 'sandbox_mode = "workspace-write"\n');
+          const partialPinCodex = yield* Effect.flip(
             validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
           );
-          assert.include(implicitCodex.message, 'approval_policy must be explicitly set to "never"');
-          assert.include(implicitCodex.message, 'sandbox_mode must be explicitly set to "danger-full-access"');
-
-          yield* writeText(codexPath, 'approval_policy = "on-failure"\nsandbox_mode = "danger-full-access"\n');
-          const driftedCodexApproval = yield* Effect.flip(
-            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
-          );
-          assert.include(driftedCodexApproval.message, 'approval_policy must be "never"');
+          assert.include(partialPinCodex.message, "sandbox_mode must be omitted");
+          assert.notInclude(partialPinCodex.message, "approval_policy");
 
           yield* writeText(
             codexPath,
-            'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n\n[sandbox_workspace_write]\nnetwork_access = true\nwritable_roots = ["/tmp/outside"]\n'
+            '[sandbox_workspace_write]\nnetwork_access = true\nwritable_roots = ["/tmp/outside"]\n'
           );
           assert.strictEqual(
             (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
@@ -360,10 +361,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
             "sandbox_workspace_write.writable_roots must be empty or omitted"
           );
 
-          yield* writeText(
-            codexPath,
-            'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n\n[sandbox_workspace_write]\nnetwork_access = false\nwritable_roots = []\n'
-          );
+          yield* writeText(codexPath, "[sandbox_workspace_write]\nnetwork_access = false\nwritable_roots = []\n");
           yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
 
           yield* writeText(
@@ -465,7 +463,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
                 claudePath,
                 yield* encodeJson({
                   permissions: { ...repoSafeClaudePermissions, allow: [permission] },
-                  enabledMcpjsonServers: ["codegraph"],
+                  enabledMcpjsonServers: ["phoenix"],
                 })
               );
               assert.strictEqual(
@@ -501,7 +499,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
             { discard: true }
           );
 
-          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          yield* writeText(codexPath, "[features]\napps = false\n");
           yield* writeText(
             claudePath,
             yield* encodeJson({
@@ -583,7 +581,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           const path = yield* Path.Path;
           const codexPath = path.join(tmpDir, ".codex/config.toml");
           const claudePath = path.join(tmpDir, ".claude/settings.json");
-          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          yield* writeText(codexPath, "[features]\napps = false\n");
           yield* writeText(claudePath, yield* encodeJson({ permissions: repoSafeClaudePermissions }));
 
           const readPaths = yield* Ref.make(A.empty<string>());

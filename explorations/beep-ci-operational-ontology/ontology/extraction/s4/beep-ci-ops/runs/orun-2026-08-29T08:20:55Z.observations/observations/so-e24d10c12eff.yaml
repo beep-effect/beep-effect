@@ -1,0 +1,23 @@
+id: so:sha256:e24d10c12effe8bb304b998dc862af84eb0dfe4233402d58e7861386adac82fa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 230
+  end_line: 235
+  content_sha256: 2153075fc0c86d8e5305c51a4ee8f251aacf4fdd9a1fb8faf0dfa40795d0a6dd
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::docgen
+  lexical_name: docgen
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: transit
+source_excerpt: '"docgen": {'
+epistemic_status: parser_derived

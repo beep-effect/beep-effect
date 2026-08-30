@@ -1,0 +1,25 @@
+id: so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 157
+  end_line: 168
+  content_sha256: b9dca4af1d43a19ec5aaecca7b9ccc474da81947cc0aa657044fb164a8d1e25f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::CapturedStreams
+  lexical_name: CapturedStreams
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CapturedStreams
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams`)(
+epistemic_status: parser_derived

@@ -1,0 +1,25 @@
+id: so:sha256:cb3fb801af009d95f033957cf3855eb423cd89bc4221cc580ff01ed7e3099ccb
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 61
+  end_line: 61
+  content_sha256: 40fbee649c4ddba742ad53278bd37b8c22a72954d3123a907a3794a5424fd1f3
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetLaneStatus
+  lexical_name: YeetLaneStatus
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetLaneStatus
+- predicate: exports_symbol
+  object: YeetLaneStatus
+source_excerpt: export type YeetLaneStatus = typeof YeetLaneStatus.Type;
+epistemic_status: parser_derived

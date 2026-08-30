@@ -1,0 +1,43 @@
+id: "ic:reporun:013"
+hypothesis_ref: "dh:reporun:036"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two combined captured-subprocess result records are the same only when
+    they are the same result assertion produced by the same capture act about
+    the same subprocess execution; equal exitCode, output, and truncated
+    values from independent executions do not make the record tokens
+    identical.
+  reidentification_key:
+    - "capture-invocation provenance, which this record shape does not carry"
+    - "the subprocess execution occurrence recorded by the capture"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One record is unified by the exit observation and bounded combined-output
+    fold co-produced in one capture act.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "subprocess execution occurrence recorded by the values"
+    - "retained verification-evidence artifact"
+    - "transient return object with no retained operational role"
+  existential_dependencies:
+    - "at least one in-memory or persisted realization of the record"
+    - "the capture act as historical provenance, not as a continuing bearer"
+    - "the subprocess occurrence as recorded referent, not as an ongoing existential dependency"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "discarded"
+    - "superseded by a corrected record"
+counterexamples:
+  - description: >-
+      Two independent subprocess executions can both exit zero, emit the same
+      text, and remain untruncated; their equal field triples are nevertheless
+      two result records because they arise from different capture acts.
+status: proposed

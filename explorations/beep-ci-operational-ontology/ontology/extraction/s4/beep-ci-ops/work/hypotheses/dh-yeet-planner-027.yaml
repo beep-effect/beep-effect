@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:027"
+observation_refs:
+  - "so:sha256:2598216973badd4a6ab350b89f3bfb887b05fb76f08abe598a7756fbb43d0d72"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for YEET_TURBO_CONCURRENCY in Planner.ts"
+  description: "No separate domain referent is established for the YEET_TURBO_CONCURRENCY declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::YEET_TURBO_CONCURRENCY"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

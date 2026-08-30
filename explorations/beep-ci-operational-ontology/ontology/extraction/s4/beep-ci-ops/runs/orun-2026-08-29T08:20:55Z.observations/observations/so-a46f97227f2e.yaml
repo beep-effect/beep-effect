@@ -1,0 +1,24 @@
+id: so:sha256:a46f97227f2ede087411d5b80e85d9a51e538539fd6c1b1f15907c001e8b3343
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 726
+  end_line: 726
+  content_sha256: 322c2c3f62cde2d112813742fbbab303cf58638f325e739702d64c0aab746b5e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::hasRemoteTurboCacheArgs
+  lexical_name: hasRemoteTurboCacheArgs
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: hasRemoteTurboCacheArgs
+source_excerpt: 'export const hasRemoteTurboCacheArgs = (args: ReadonlyArray<string>): boolean => A.some(args,
+  isRemoteTurboCacheArg);'
+epistemic_status: parser_derived

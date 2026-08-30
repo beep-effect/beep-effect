@@ -1,0 +1,25 @@
+id: so:sha256:2f5dc50a838c53333bb757de36b4a666eff89757cb61ba1a56c91fec51c28f94
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 308
+  end_line: 321
+  content_sha256: 2628a2cfeeb01d4a0cd2f6a94ef17d9f039ab97a8ffd9117418736cceafb36c6
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts::AdmissionRequest
+  lexical_name: AdmissionRequest
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: AdmissionRequest
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class AdmissionRequest extends S.Class<AdmissionRequest>($I`AdmissionRequest`)(
+epistemic_status: parser_derived

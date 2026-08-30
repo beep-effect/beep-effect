@@ -1,5 +1,8 @@
 # Lane 5 — Package deletion prior art, residue, and `beep delete-package` requirements
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 **Lane:** 5 of 6. **Checkout:** `feat/experiment-apps-lifecycle` @ `343fc60735` (contains `#680` / `623392c2a7`).
 **Scope:** read-only git archaeology + live-tree residue + repo-cli surfaces.
 **In-tree companion:** `goals/speed-loop/research/r3-package-deletions.md` (2026-08-04). This lane field-tests that recipe against real deletion commits and today’s residue.

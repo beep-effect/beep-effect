@@ -1,0 +1,31 @@
+id: "ic:turbo-cache:015"
+hypothesis_ref: "dh:turbo-cache:016"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same development-service task specification only when they are the same authored persistent-service instruction in the same versioned configuration lineage with the same complete inherited dependency and lifecycle prescriptions; the dev key or persistent flag alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key dev"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The dependency and persistence declarations compose one reusable service-launch specification, not the service process it launches."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A persistent development-service procedure specification"
+    - "A running development-service process"
+    - "A verification lane"
+  existential_dependencies:
+    - "The versioned configuration and package scripts that complete the service-launch instruction"
+    - "At least one bearer of the specification content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "One persistent dev specification can launch, restart, and terminate many distinct server processes, so process duration and process identity cannot be inherited by the reusable specification."
+status: proposed

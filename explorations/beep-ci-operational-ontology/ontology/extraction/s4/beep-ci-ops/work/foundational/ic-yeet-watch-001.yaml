@@ -1,0 +1,61 @@
+id: "ic:yeet-watch:001"
+hypothesis_ref: "dh:yeet-watch:013"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Domain worksheet for the Yeet check-outcome classification-value domain:
+    two occurrences realize the same repeatable classification information
+    object only when they express the same normalized watch judgment under the
+    same classifier semantics, applicability context, and version lineage.
+    Separate assignments in check or snapshot records may carry that same
+    content without becoming the same record. Pass membership additionally
+    requires that failure, pending, and skip evidence lose precedence and that
+    the raw bucket is pass or the raw state is success; the literal spelling is
+    evidence, never the identity criterion.
+  reidentification_key:
+    - "normalized pass-classification content"
+    - "classifier rule order, applicability context, and version lineage"
+    - "raw bucket and state as supporting classification evidence"
+    - "snapshot assignment and pass literal as supporting record evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One repeatable normalized watch judgment under one classifier
+    interpretation; raw signals, check executions, snapshot records, and
+    copied literal tokens are not parts of the information object's unity.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: one snapshot-bound outcome assignment rather than the repeatable pass value"
+    - "phase: the successful terminal phase of a check execution"
+    - "situation: a watch context in which a check has accepted success evidence"
+    - "none: the pass token as only a lexical selector"
+  existential_dependencies:
+    - >-
+      The repeatable content generically depends on at least one faithful
+      digital or material bearer, but not on this particular source token.
+    - >-
+      Its interpretation as a Yeet check outcome depends relationally on a
+      classifier scheme, its rule ordering, and an applicability context.
+    - >-
+      A particular assignment depends on a check and snapshot record, while
+      the repeatable pass content need not depend on any one check execution.
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as historical classifier content"
+    - "ceased when no faithful bearer of the content remains"
+    - "replaced by a different value when defining classifier semantics change"
+counterexamples:
+  - description: >-
+      Two different checks in different snapshots can both carry pass while
+      remaining different check executions and different records, so neither
+      token equality nor a shared successful state identifies one assignment.
+  - description: >-
+      One continuing check can be pending in an earlier snapshot and pass in a
+      later snapshot; the bearer persists while the recorded value changes.
+status: proposed

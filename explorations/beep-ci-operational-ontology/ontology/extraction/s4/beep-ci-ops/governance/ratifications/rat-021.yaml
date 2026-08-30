@@ -1,0 +1,9 @@
+id: rat:21
+proposal_ref: otp:local-only:001
+proposal_sha256: 8aa57847195d65ff5a10fe4042e352215243b3e19431636a6606766774bdae23
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept LocalOnly — the fail-closed default posture.

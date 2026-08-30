@@ -1,0 +1,25 @@
+id: so:sha256:f992d1f4276f0d3ffc93a57eba1312336bd5949bac6139e0c4e53a8378065a8c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 628
+  end_line: 628
+  content_sha256: 4345b4c31c1fccf9f4964b0fe99dae1b6a890bd9549d26cd1df3a9625a784be6
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetCheckoutKind
+  lexical_name: FleetCheckoutKind
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: FleetCheckoutKind
+- predicate: exports_symbol
+  object: FleetCheckoutKind
+source_excerpt: export type FleetCheckoutKind = typeof FleetCheckoutKind.Type;
+epistemic_status: parser_derived

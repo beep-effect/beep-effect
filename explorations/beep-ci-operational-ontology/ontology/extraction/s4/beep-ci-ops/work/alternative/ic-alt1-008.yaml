@@ -1,0 +1,34 @@
+id: "ic:alt1:008"
+hypothesis_ref: "dh:sched-core:014"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two active admission-charge totals are the same iff they are the consumed
+    token aggregate of the same live lease collection at the same observation instant. The
+    numeric reduction result is evidence of the quality, never the sameness criterion."
+  reidentification_key:
+    - "activeTokens"
+    - "activeTokenTotal"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: false
+  supplies_identity: false
+  unity: "one aggregate quality inhering in the live lease collection at one instant; leases are
+    not parts of the total"
+  dependence: "intrinsic"
+ufo_analysis:
+  candidate_category: "quality"
+  alternatives:
+    - "information_object"
+  existential_dependencies:
+    - "the live admission lease collection"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "Adding or dropping a lease changes the sum; if the total were a continuant, it
+      would persist through those membership changes with a mutated value, but the observed
+      function recomputes from the current leases, so a different lease set is a different
+      quality occurrence. Storing the sum on AdmissionSnapshot does not make the snapshot field
+      the consumed charge."
+status: "proposed"

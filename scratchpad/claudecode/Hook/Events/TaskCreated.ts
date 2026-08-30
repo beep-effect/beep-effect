@@ -1,11 +1,10 @@
 /**
- * TaskCreated hook event.
+ * Fires when a task is created via `TaskCreate` in an agent-team
+ * context. A handler can block creation by exiting 2 with stderr
+ * feedback. Does not support a matcher. See
+ * https://code.claude.com/docs/en/hooks#taskcreated.
  *
- * Fires when a task is created via `TaskCreate` (agent-team context).
- * A handler can block task creation by exiting 2 with stderr feedback.
- * Does not support a matcher.
- * See https://code.claude.com/docs/en/hooks#taskcreated.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -20,18 +19,29 @@ import { type HookDefinition, type HookProcessOutput, stderrExit } from "../Runn
 const $I = $ScratchpadId.create("claudecode/Hook/Events/TaskCreated");
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a TaskCreated hook, including the new task id and
+ * subject.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a newly created task)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.TaskCreated.Input)
+ * const input = S.decodeUnknownSync(Hook.TaskCreated.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "TaskCreated",
+ *   task_id: "task-1",
+ *   task_subject: "Fix the failing test",
+ * })
+ *
+ * console.log(input.task_subject) // "Fix the failing test"
  * ```
  *
+ * @see {@link block} for refusing creation via exit 2.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`TaskCreatedInput`)(
@@ -50,18 +60,22 @@ export class Input extends S.Class<Input>($I`TaskCreatedInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a TaskCreated handler may return. Blocking creation is
+ * not done here; use {@link block} (`HookProcessOutput`) instead.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty JSON output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.TaskCreated.Output)
+ * const output = Hook.TaskCreated.Output.make()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link allow} for letting creation proceed.
+ * @see {@link stopTeammate} for JSON `continue: false`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`TaskCreatedOutput`)(
@@ -78,18 +92,21 @@ export class Output extends S.Class<Output>($I`TaskCreatedOutput`)(
 ) {}
 
 /**
- * Constructor for `allow`.
+ * Let task creation proceed. Equivalent to empty `Output.make()`.
  *
- * **Example** (Use allow)
+ * **Example** (Allow the new task)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.TaskCreated.allow)
+ * const output = Hook.TaskCreated.allow()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link block} for refusing creation via exit 2.
+ * @see {@link stopTeammate} for stopping the teammate with JSON.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const allow = (): Output => Output.make();
@@ -97,30 +114,48 @@ export const allow = (): Output => Output.make();
 /**
  * Block the task creation by exiting 2 with stderr feedback.
  *
- * **Example** (Inspect the documented API)
+ * **Gotchas**
+ *
+ * This is a process-exit protocol (`HookProcessOutput`), not JSON
+ * `decision: "block"`. Returning ConfigChange-style JSON will not
+ * prevent creation.
+ *
+ * **Example** (Refuse the new task)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.TaskCreated.block)
+ * const output = Hook.TaskCreated.block("duplicate of task-1")
+ * console.log(output._tag) // "HookProcessOutput"
+ * console.log(output.exitCode) // 2
+ * console.log(O.getOrUndefined(output.stderr)) // "duplicate of task-1"
  * ```
  *
+ * @see {@link allow} for letting creation proceed.
+ * @see {@link stopTeammate} for JSON `continue: false`.
  * @category constructors
  * @since 0.0.0
  */
 export const block = (reason: string): HookProcessOutput => stderrExit(reason);
 
 /**
- * Stop the teammate entirely after this hook runs.
+ * Stop the teammate entirely after this hook runs via JSON
+ * `continue: false`.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Stop the teammate)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.TaskCreated.stopTeammate)
+ * const output = Hook.TaskCreated.stopTeammate("no more tasks this session")
+ * console.log(O.getOrUndefined(output.continue)) // false
+ * console.log(O.getOrUndefined(output.stopReason)) // "no more tasks this session"
  * ```
  *
+ * @see {@link block} for refusing creation via exit 2 without stopping the teammate.
+ * @see {@link allow} for letting creation proceed.
  * @category constructors
  * @since 0.0.0
  */
@@ -128,18 +163,29 @@ export const stopTeammate = (reason: string): Output =>
   Output.make({ continue: O.some(false), stopReason: O.some(reason) });
 
 /**
- * Constructor for `define`.
+ * Build a runnable TaskCreated hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * The handler may return JSON {@link Output} or `HookProcessOutput`.
+ * Blocking creation requires {@link block} (exit 2), not JSON
+ * `decision: "block"`.
+ *
+ * **Example** (Define a TaskCreated hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.TaskCreated.define)
+ * const hook = Hook.TaskCreated.define({
+ *   handler: () => Effect.succeed(Hook.TaskCreated.allow()),
+ * })
+ *
+ * console.log(hook.event) // "TaskCreated"
  * ```
  *
+ * @see {@link block} for the process-exit refusal a handler may return.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {

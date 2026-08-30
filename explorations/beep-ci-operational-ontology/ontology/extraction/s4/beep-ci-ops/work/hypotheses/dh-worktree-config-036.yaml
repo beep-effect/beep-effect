@@ -1,0 +1,19 @@
+id: "dh:worktree-config:036"
+observation_refs:
+  - "so:sha256:66c52986d846fa3cb6dc033216560f1ef067ca2f29feb2f7b718c790aa2dc871"
+  - "so:sha256:ffff7b5f6c91f041a2144d688e307a1204abd76e12f23a4c64365b012fae97b5"
+cq_warrants: []
+proposed_referent:
+  label: "FleetConflictStatus code vocabulary"
+  description: "The source vocabulary of clean, conflict, and unknown codes together with its generated TypeScript alias."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet checkout conflict-state domain"
+    representation_status: unresolved
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show only literal codes and an alias; they do not establish the bearer, transition conditions, or whether these are domain phases rather than result encodings."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

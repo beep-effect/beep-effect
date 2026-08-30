@@ -1,0 +1,25 @@
+id: so:sha256:0623f0644b1df2e646ce612fcea5b0f75bacd1e10891eba8af5370b6ae710c07
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 46
+  end_line: 58
+  content_sha256: 614c10de014b7b906767eea39c28dcb843ca5f19daad55e89f91afc652764fea
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::WorktreeListEntry
+  lexical_name: WorktreeListEntry
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: WorktreeListEntry
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class WorktreeListEntry extends S.Class<WorktreeListEntry>($I`WorktreeListEntry`)(
+epistemic_status: parser_derived

@@ -4,23 +4,25 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-export * as CodeMode from "./Codemode.service.ts";
-export * as OpenAPI from "./openapi/index.ts";
-export * as Tool from "effect/unstable/ai/Tool";
-export * as ToolRuntime from "./Codemode.tool-runtime.ts";
-export * as Toolkit from "effect/unstable/ai/Toolkit";
 
+export * as Tool from "effect/unstable/ai/Tool";
+export * as Toolkit from "effect/unstable/ai/Toolkit";
+export * as CodeMode from "./Codemode.service.ts";
 export { ToolError } from "./Codemode.tool-error.ts";
+export * as ToolRuntime from "./Codemode.tool-runtime.ts";
 export {
+  SearchEntry,
   searchSignature,
-  toolExpression,
   ToolCall,
   ToolCallEnded,
   ToolCallStarted,
+  ToolCallSucceeded,
   ToolDescription,
+  toolExpression,
 } from "./Codemode.tool-runtime.ts";
 export {
   inputTypeScript,
   jsonSchemaToTypeScript,
   outputTypeScript,
 } from "./Codemode.tool-schema.ts";
+export * as OpenAPI from "./openapi/index.ts";

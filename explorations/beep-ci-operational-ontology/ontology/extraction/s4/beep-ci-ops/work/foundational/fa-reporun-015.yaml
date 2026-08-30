@@ -1,0 +1,21 @@
+id: "fa:reporun:015"
+hypothesis_ref: "dh:reporun:044"
+identity_card_ref: "ic:reporun:015"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "escaped-descendant process occurrence holding the write end"
+    still_viable: true
+  - label: "policy-relative deadline-violation event"
+    still_viable: true
+  - label: "tagged error information object reporting the condition"
+    still_viable: true
+strongest_counterexample: >-
+  A descendant that is merely slow can outlive the fixed grace windows and
+  close the pipe just afterward; the code establishes a policy-relative
+  still-open situation but does not establish the escaped-descendant causal
+  model asserted in the error message.
+verdict: analyzed

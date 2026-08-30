@@ -1,0 +1,27 @@
+id: "dh:yeet-watch:023"
+observation_refs:
+  - "so:sha256:e931fc8b69e9c72f2f382ba6835ae50ed773594333b915a075f1510603035efc"
+  - "so:sha256:98cbdf1184f9cba51246aa80f650640311ce755674f478e3faac85f89074ecda"
+  - "so:sha256:f737ae2f21a8eb7368b04f6ce9e542d721d3e3a962aa187dc211b65b37d88759"
+  - "so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f"
+  - "so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350"
+cq_warrants: []
+proposed_referent:
+  label: "comment-posted information record"
+  description: "A bounded watch-stream record derived from an observed issue or review comment."
+representation_status: unresolved
+alternatives:
+  - label: "pull-request comment posting event"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "comment mapping DTO"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The mapper and schema specify a bounded comment-row representation, but the lane observes neither an emitted row nor an admission warrant for that record kind; the posting event remains only an alternative interpretation."
+epistemic_status: proposed
+confidence:
+  value: 0.81
+  use_for_acceptance: false

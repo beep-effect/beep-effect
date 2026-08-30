@@ -1,5 +1,8 @@
 # 90 — Archaeology: The Pruned Repo-Intelligence Vehicle
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 _Synthesis date: 2026-06-17_
 _Method: read-only git history (`git log`, `--diff-filter=D`, `-S`), plus targeted
 Read/Grep over `standards/`, `explorations/`, `goals/`, and `packages/tooling/`._

@@ -1,0 +1,35 @@
+id: ic:alt3:008
+hypothesis_ref: dh:sched-core:016
+identity:
+  supplies_identity: false
+  identity_criterion: Two hard-floor-engaged states are the same situation iff they are the
+    same time-indexed machine condition in which available memory is below hardFloorGib and
+    admission capacity is forced to zero. The boolean snapshot flag is evidence rather than
+    the criterion.
+  reidentification_key:
+  - hardFloorEngaged
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: available memory, the configured floor, and zero capacity as one condition
+  dependence: relational
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+  - phase
+  - information_object
+  existential_dependencies:
+  - available memory
+  - AdmissionConfig.hardFloorGib
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - availableGib rises to or above hardFloorGib
+  - capacity becomes nonzero
+counterexamples:
+- description: A snapshot that records hardFloorEngaged false while capacity is still computed
+    from available memory is not this situation; engaging the floor is the joint condition
+    of the comparison and the forced-zero capacity.
+status: proposed

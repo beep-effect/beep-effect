@@ -1,0 +1,33 @@
+target: "otp:active-tokens:001"
+target_sha256: "fadd2c0d4d679ae735771300c0fefadd894d958ebab19948aa56562eaf9f32c9"
+chain_sha256: "4d62da7e8d90e3cc914a0074d302b11f8e8e3497173ea0224551a952261bfc1a"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; there is no candidate subsumption to test, and no valid subsumption relation is presumed."
+attacks:
+  - surface: identity
+    rule: "quality-bearer-individuation"
+    counterexample: "Machine A and machine B can each carry a total of five active tokens, and machine A can return to five after an intervening lease change. The revised criterion keys the quality to one admission context and one continuous interval, so equal numbers do not wrongly identify those distinct quality instances."
+    outcome: survived
+  - surface: warrant
+    rule: "support-term-not-necessary"
+    counterexample: "A graph can attach admissionChargeTokens and capacityAtAdmissionTokens directly to a SeatGrant and answer CQ-010's overrun test without any activeTokens triple. The revised proposal itself concedes that an opaque ETL remainder leaves CQ-010 answerable, so this property is not necessary semantic support."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-true-of-dto"
+    counterexample: "A pure scheduler/status helper can reduce live lease weights, compare the total plus a candidate charge against capacity, and expose the number in a status DTO. That implementation-only twin preserves every cited observation while no enduring aggregate-quality term exists."
+    outcome: landed
+rival_models_still_viable:
+  - "The ontology needs only the activeTokens value in a timestamped snapshot, not an enduring aggregate quality."
+  - "The referent is a time-indexed admission situation constituted by the live lease set."
+evidence:
+  - "so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f"
+  - "po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16"
+  - "CQ-010"

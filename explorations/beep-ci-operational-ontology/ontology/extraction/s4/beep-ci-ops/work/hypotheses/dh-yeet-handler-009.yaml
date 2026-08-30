@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:009"
+observation_refs:
+  - "so:sha256:12199c0b80ca83aedcc7ac5db410ea657f6d90cc0151a52199e065a3bf1df42b"
+cq_warrants: []
+proposed_referent:
+  label: "renderPlan helper"
+  description: "No domain-ontology referent is proposed for the renderPlan helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "rendered schedule-plan information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

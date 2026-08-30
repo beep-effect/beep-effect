@@ -1,0 +1,51 @@
+target: "otp:split-stream-captured-subprocess-result:001"
+target_sha256: "ce12b64642b0c5446e57b09bee72857ffb18568a8a3a27158a5957ad6b47c829"
+chain_sha256: "ea1dce513f515fecc0e0620d7ff14470fd6e20145bc4769298dd4b3b00913571"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: result-content-vs-record-token
+    counterexample: >-
+      Two executions can produce byte-equal results, while one result content
+      can be copied into several carriers. The generic VerificationResultArtifact
+      commits only to information content, carries rather than supplies identity,
+      and openly defers the choice between content identity and issued record-token
+      identity.
+    outcome: survived
+  - surface: warrant
+    rule: evidence-role-requires-result-bearer
+    counterexample: >-
+      If every result artifact is identified with VerificationEvidence, a
+      diagnostic result with no applicability or provenance can discharge an
+      obligation. CQ-005 and CQ-006 require an evidence record with result
+      content, while the adopted bearer class permits non-evidentiary results;
+      that role-bearer distinction is necessary semantic support.
+    outcome: survived
+  - surface: null_discriminator
+    rule: transient-carrier-does-not-erase-result-content
+    counterexample: >-
+      The structural observations alone do not establish retention or evidence
+      use, and the revision makes neither claim. A transient split-stream value
+      can nevertheless carry information about an execution outcome; the term
+      now denotes that generic result content and treats evidentiary status as a
+      contingent role rather than inferring it from the DTO shape.
+    outcome: survived
+rival_models_still_viable:
+  - "VerificationResultArtifact identity may follow result content or an issued record-token lineage."
+  - "A result artifact bears VerificationEvidence only under policy, applicability, and provenance context."
+evidence:
+  - "so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d"
+  - "so:sha256:ca5e01bb598282d204b571b9567ae92a62782dc0dea487b412200725b31fde49"
+  - "CQ-005"
+  - "CQ-006"

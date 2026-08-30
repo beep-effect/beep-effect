@@ -22,6 +22,7 @@ import {
 import { makeDrizzleLayer } from "@beep/postgres";
 import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
@@ -59,7 +60,11 @@ const makeInProcessPgliteLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const makeAcceptanceLayer = () =>
-  ExecutionLedgerDrizzle.pipe(Layer.provideMerge(makeDrizzleLayer()), Layer.provideMerge(makeInProcessPgliteLayer()));
+  ExecutionLedgerDrizzle.pipe(
+    Layer.provideMerge(makeDrizzleLayer()),
+    Layer.provideMerge(makeInProcessPgliteLayer()),
+    Layer.provideMerge(BunCrypto.layer)
+  );
 
 const rawSql = Effect.map(SqlClient.SqlClient, (client) => client.withoutTransforms());
 

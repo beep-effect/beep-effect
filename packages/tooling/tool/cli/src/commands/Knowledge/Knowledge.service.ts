@@ -27,6 +27,8 @@ import {
   resolveGitMergeBase,
   writeGitArchive,
 } from "../../internal/repo-run/GitExec.ts";
+import { EXPLORATION_ATLAS_PATH } from "../Explore/Atlas.ts";
+import { PORTFOLIO_INDEX_PATH } from "../Goals/PortfolioIndex.ts";
 import { KnowledgeCommandSurface } from "./Knowledge.command-surface.ts";
 import {
   KNOWLEDGE_HISTORY_REMEDIATION,
@@ -88,7 +90,8 @@ export type { KnowledgeTreeOracle } from "./Knowledge.refs.ts";
 
 const NORMALIZATION_VERSION = "knowledge-normalization/v1";
 const FINDING_ID_PREFIX = "knowledge-finding/v1:";
-const INDEX_PATH = "goals/INDEX.md";
+const INDEX_PATH = PORTFOLIO_INDEX_PATH;
+const DERIVED_PROJECTION_PATHS = HashSet.make(EXPLORATION_ATLAS_PATH, PORTFOLIO_INDEX_PATH);
 const COMMAND_PREFIX = "bun run beep";
 const COMMAND_INPUT_ROW_PREFIX = "command/v1";
 const SEMANTIC_DELTA_DIGEST_FAILURE = "Failed to compute a semantic-delta SHA-256 digest.";
@@ -322,10 +325,13 @@ const isScannerMarkdownPath = (repoPath: string): boolean =>
 
 const isRegularBlob = (entry: KnowledgeTrackedEntry): boolean => entry.mode === "100644" || entry.mode === "100755";
 
-const trackedPathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPath: string): boolean => {
+const trackedTreePathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPath: string): boolean => {
   const directoryPrefix = `${repoPath}/`;
   return A.some(entries, (entry) => entry.path === repoPath || Str.startsWith(directoryPrefix)(entry.path));
 };
+
+const knowledgePathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPath: string): boolean =>
+  HashSet.has(DERIVED_PROJECTION_PATHS, repoPath) || trackedTreePathExists(entries, repoPath);
 
 const decodeUtf8 = (bytes: Uint8Array, repoPath: string): Effect.Effect<string, KnowledgeOperationalError> =>
   decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked Markdown file "${repoPath}".`);
@@ -412,7 +418,7 @@ const brokenPathAt = (
 ): O.Option<string> =>
   pipe(
     normalizeKnowledgeRepoPath(documentPath, raw),
-    O.filter((repoPath) => !trackedPathExists(entries, repoPath))
+    O.filter((repoPath) => !knowledgePathExists(entries, repoPath))
   );
 
 const assertionCandidate = (
@@ -561,6 +567,9 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
   oracle: KnowledgeArchiveOracle,
   documentId: string
 ) {
+  if (!trackedTreePathExists(oracle.trackedEntries, INDEX_PATH)) {
+    return O.none<KnowledgeFindingCandidate>();
+  }
   const bytes = yield* oracle.indexBytes;
   if (bytesEquivalent(bytes.expected, bytes.archived)) {
     return O.none<KnowledgeFindingCandidate>();
@@ -1290,7 +1299,9 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
       envFilePath
     );
     const expected = textEncoder.encode(result.stdout);
-    const archived = trackedPathExists(trackedEntries, INDEX_PATH) ? yield* readBytes(INDEX_PATH) : new Uint8Array();
+    const archived = trackedTreePathExists(trackedEntries, INDEX_PATH)
+      ? yield* readBytes(INDEX_PATH)
+      : new Uint8Array();
     return KnowledgeIndexBytes.make({ expected, archived });
   }).pipe(Effect.provide(runtime));
 

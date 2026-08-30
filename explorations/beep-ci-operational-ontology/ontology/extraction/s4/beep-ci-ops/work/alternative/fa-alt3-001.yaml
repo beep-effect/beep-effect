@@ -1,0 +1,23 @@
+id: fa:alt3:001
+hypothesis_ref: dh:reporun:004
+identity_card_ref: ic:alt3:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'situation: install-failed-before-any-lane job-history configuration'
+  still_viable: true
+- label: 'event: the unfolding install-failure job occurrence itself'
+  still_viable: true
+- label: 'information_object: the install-failure class assigned to a GithubJobRecord'
+  still_viable: true
+strongest_counterexample: detectGithubJobShapeClass refuses an empty step list rather than
+  classifying it, which is missing evidence about the world job, not proof the world lacked
+  an install-before-lane history. The models stay observationally equivalent until a job whose
+  real step history and stored record diverge is observed.
+verdict: analyzed
+needed_evidence: A hosted job whose live step history and GithubJobRecord payload disagree
+  on whether install failed before any lane, or an independent causal observation (lockfile
+  versus network) that would split the pattern from its recorded class.

@@ -1,0 +1,23 @@
+id: so:sha256:97b4e05057709fd3aad77a9eb247c19b9acf9a626d65f918844722d568448e74
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 262
+  end_line: 284
+  content_sha256: 07607c746227e749a6a9a0676f63e016eb2b7a5bec31acb345ec1b8efd581b93
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::repairSteps
+  lexical_name: repairSteps
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => ['
+epistemic_status: parser_derived

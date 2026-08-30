@@ -1,0 +1,22 @@
+id: fa:alt2:056
+hypothesis_ref: dh:yeet-handler:007
+identity_card_ref: ic:alt2:056
+tests:
+  spec_vs_execution: merged
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: verdict-lane summary record'
+  still_viable: true
+- label: 'process: WorkUnitExecution occurrence'
+  still_viable: true
+- label: 'kind: planned WorkUnitSpecification'
+  still_viable: false
+strongest_counterexample: >-
+  The same schema is populated from executed-step, planned-step, and GitHub-lane inputs, so the record merges specification
+  and execution slots; calling the summary an execution fails for the not-run constructor.
+verdict: analyzed
+needed_evidence: >-
+  A split schema that cannot be constructed from planned-only inputs, or a separate execution record referenced by the summary,
+  would unmerge spec from execution.

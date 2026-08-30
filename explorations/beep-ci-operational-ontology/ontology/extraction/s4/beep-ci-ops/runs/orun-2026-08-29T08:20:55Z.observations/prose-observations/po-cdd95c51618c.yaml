@@ -1,0 +1,10 @@
+id: po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 648
+  end_line: 664
+quote: activeTokenTotal(state) + ticket.weightTokens <= capacityTokens
+epistemic_status: quoted_prose

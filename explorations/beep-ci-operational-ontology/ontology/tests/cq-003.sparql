@@ -1,0 +1,9 @@
+# CQ-003: What is the measured cost estimate (P50/P95 wall ms, memory class, provenance) of a WorkUnit?
+# Expected: non_empty | priority: must_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?workUnit ?p50 ?p95 ?mem ?prov WHERE {
+  ?workUnit ciops:hasCostEstimate ?c .
+  ?c ciops:p50Ms ?p50 ; ciops:p95Ms ?p95 ;
+     ciops:hasMemoryClass ?mem ; ciops:hasCostProvenance ?prov .
+}

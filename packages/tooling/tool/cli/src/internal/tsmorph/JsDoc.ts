@@ -5,10 +5,9 @@
  * @since 0.0.0
  */
 
-import { A, pipe, Str } from "@beep/utils";
+import { Str } from "@beep/utils";
 import * as O from "effect/Option";
-import { Node } from "ts-morph";
-import type { SourceFile } from "ts-morph";
+import type { Node, SourceFile } from "ts-morph";
 
 /**
  * Extract leading JSDoc text attached to a declaration node.
@@ -32,34 +31,6 @@ export const leadingJsDocText = (node: Node): string =>
     .map((range) => range.getText())
     .filter((text: string) => Str.startsWith("/**")(text))
     .at(-1) ?? "";
-
-/**
- * Concatenate the structured JSDoc blocks attached to a JSDocable node.
- *
- * **Example** (Read a function's structured JSDoc)
- *
- * ```ts
- * import { createInMemoryTsMorphProject, jsDocTextForNode } from "@beep/repo-cli/internal/tsmorph"
- *
- * const project = createInMemoryTsMorphProject()
- * const source = project.createSourceFile("fixture.ts", "/** @category utilities *\/\nexport function f() {}")
- * console.log(jsDocTextForNode(source.getFunctionOrThrow("f")).includes("@category utilities"))
- * ```
- *
- * @category parsing
- * @since 0.0.0
- */
-export const jsDocTextForNode = (node: Node): string => {
-  if (!Node.isJSDocable(node)) {
-    return "";
-  }
-
-  return pipe(
-    node.getJsDocs(),
-    A.map((jsDoc) => jsDoc.getText()),
-    A.join("\n")
-  );
-};
 
 /**
  * Return the top-level file overview JSDoc block, when one exists.

@@ -1,0 +1,24 @@
+id: "dh:topology:113"
+observation_refs:
+  - "po:sha256:f95bc32b9528f87c258fc40b01ce7104f00a6b2ef8ee4f94066990ca38381283"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/runpod workspace package"
+  description: "The workspace software package information artifact identified by @beep/runpod in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/runpod as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort DTO row can contain @beep/runpod and feed affected-package closure code while remaining only an implementation record; the sole cited quote does not establish enduring package-reference information content or a package bearer."
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

@@ -1,0 +1,6 @@
+# Falsifiability (seat D / partner): a subject trusting a fail-open affected set
+# must violate.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:c-failopen a ciops:AffectedComputation ; ciops:hasAffectedOutcome ciops:fo-x .
+ciops:fo-x a ciops:FailOpenOutcome .
+ciops:proof-trusting ciops:scopedByComputation ciops:c-failopen .

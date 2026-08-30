@@ -1,0 +1,24 @@
+id: fa:alt2:010
+hypothesis_ref: dh:sched-core:023
+identity_card_ref: ic:alt2:010
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: 'phase: active-while-charging then released'
+  still_viable: true
+- label: 'relator: the grant itself rather than its lifecycle state'
+  still_viable: true
+- label: 'role: being a current charger in the capacity pool'
+  still_viable: true
+- label: 'information_object: lease-presence assertion in a state snapshot'
+  still_viable: true
+strongest_counterexample: >-
+  runAdmitted's release arm removes the lease file after use, which is equally a phase end, a relator ceasing, and a snapshot
+  assertion flipping; those models are observationally equivalent on current evidence.
+verdict: analyzed
+needed_evidence: >-
+  An observation of grant properties that persist across active and released (a grant history) versus a role that can be re-acquired
+  by the same owner would split phase from relator from role.

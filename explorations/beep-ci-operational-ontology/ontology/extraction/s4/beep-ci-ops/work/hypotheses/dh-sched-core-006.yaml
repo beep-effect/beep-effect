@@ -1,0 +1,28 @@
+id: "dh:sched-core:006"
+observation_refs:
+  - "so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf"
+  - "so:sha256:5e87f57f7f30cab771a4bc15b4510264f4a086fed36480da3266357386f66124"
+  - "so:sha256:6e399c3569812e74daffcb4563c47f47164fae6163546e154e5b8f1d966c3e04"
+  - "so:sha256:cc210ff6b14ef1eb8550f22d4a3c3447b3062cc78e49cede4ed5f2a349c289bf"
+  - "po:sha256:91f1ef683802bbf4e9c429116ffd8272c8ba4c597f563223da81c9e74c1600a6"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "po:sha256:aa6a7b217122be466e63cfd890c480ef082f6f9d5b24c97731d889dd3a80886b"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "admission priority and ranking specification"
+  description: "An information artifact defining the request-priority vocabulary and the time-sensitive rank used to order queued requests."
+representation_status: information_artifact
+alternatives:
+  - label: "priority role borne temporarily by a queued request"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "sorting codes and comparator implementation only"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The two literals and comparator declarations could be local sorting machinery without an operational priority referent."
+  discriminator: "The observed rank expression promotes an aged verify ticket to the same rank as publish priority, so recorded priority and elapsed queue time govern which request is considered first."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

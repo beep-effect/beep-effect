@@ -1,0 +1,26 @@
+id: "dh:sched-core:020"
+observation_refs:
+  - "so:sha256:00c7d05354f3798ed7ce481fb1029252a480eead748647ffe035a256e000efc1"
+  - "so:sha256:7ed5d7ab988de72117c954ccac2060e758502fa1c727b6f5a725f4e2293e61e8"
+  - "po:sha256:378550b64782f683d9b6674900e4970c3c0ff0c84fa9b5dc7d2b9bd736c27e24"
+  - "po:sha256:f719857b22f5984f418254c5510db92356ee23b61401d2cea0085ac2b43a70c4"
+  - "po:sha256:f8f14a0473581e87db5e3ebad3ad76e114817e74d721a2a7c294aae7b5a900d7"
+cq_warrants: []
+proposed_referent:
+  label: "recent origin-busy observation"
+  description: "A timestamped information artifact recording that a queued request recently found its origin-scoped gate busy."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "request phase of being blocked on its origin"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "retry-loop timestamp only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The retry-ticket DTO counterexample wins: mutable state can refresh this timestamp and apply the three-heartbeat freshness test without a reidentifiable busy-observation artifact or established blocked phase."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

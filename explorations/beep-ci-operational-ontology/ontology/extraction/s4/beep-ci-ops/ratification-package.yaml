@@ -1,0 +1,485 @@
+- file: otp-active-tokens-001.yaml
+  id: otp:active-tokens:001
+  sha256: 260751bc63ae5a3bc1d9354a1c0f0c7cdd7f76997e954209597784d9f9a7bdd6
+  name: activeTokens
+  kind: data_property
+  cat: none
+  verdict: PASS
+  warrant: 'supports: capacity-at-admission-tokens'
+  rigidity: unresolved
+  identity: none
+  defn: A data relation from a machine-wide admission context, as captured at an immediately pre-grant AdmissionSnapshot boundary,
+    to the sum of admission charges borne by its live SeatGrants under the governing token convention. The capacityAtAdmissionTokens
+    decision value is computed from that same snapshot as capacityTokens minus activeTokens. Without this named operand, CQ-010
+    can still compare a stored remainder, but cannot check from the AdmissionSnapshot whether that value is the deployed pre-grant
+    remainder rather than a post-grant or otherwise miscomputed ETL value.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-admission-charge-tokens-001.yaml
+  id: otp:admission-charge-tokens:001
+  sha256: 1b0e23435746cde4103d63ec898ae30d8c1b8238b499fc972b750afd9157dcb5
+  name: admissionChargeTokens
+  kind: data_property
+  cat: none
+  verdict: PASS
+  warrant: 'CQs: CQ-010, CQ-021'
+  rigidity: unresolved
+  identity: none
+  defn: A data relation that assigns a SeatRequest or SeatGrant the policy-defined token charge used by the live admission
+    gate. CQ-021 requires the charge on each queued request, and CQ-010 requires the copied charge on the admitted grant to
+    test whether that WorkUnit exceeded its immediately pre-grant capacity.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-admission-policy-001.yaml
+  id: otp:admission-policy:001
+  sha256: 31b6cfc9bb65b0c624917ebfa7e57b889a741026bb477137255b94045ef45d30
+  name: AdmissionPolicy
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-023'
+  rigidity: rigid
+  identity: supplies
+  defn: A governed policy-specification information artifact that declares the starvation bound and weighted-admission rules
+    for SeatRequests. CQ-023 requires the governing policy and its bound; the chartered defaults, priority-aging branch, and
+    review-fix class-cap branch establish the operative rule content rather than merely the shape of AdmissionConfig.
+  open_issues: 2
+  status_fa: analyzed
+- file: otp-admission-priority-class-001.yaml
+  id: otp:admission-priority-class:001
+  sha256: cb66ccde925f2aa4005807ef3f01c1cda6cd1ade9860418e57ace3529ecf9c7d
+  name: AdmissionPriorityClass
+  kind: class
+  cat: information_object
+  verdict: INDETERMINATE
+  warrant: 'CQs: CQ-021'
+  rigidity: unresolved
+  identity: unresolved
+  defn: A governed closed-vocabulary specification whose publish and verify values classify the priority recorded on a queued
+    SeatRequest for CQ-021. The elapsed-time effective-rank procedure is a separate specification candidate, so changing its
+    aging threshold does not silently change the identity of this vocabulary.
+  open_issues: 3
+  status_fa: explicitly_deferred
+- file: otp-admission-snapshot-001.yaml
+  id: otp:admission-snapshot:001
+  sha256: 10da4feaa1e52d265317232d0f32d20a01aa2fb44204b3e036778ef3fb49a060
+  name: AdmissionSnapshot
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'supports: capacity-at-admission-tokens'
+  rigidity: rigid
+  identity: unresolved
+  defn: An admission-state capture information artifact that groups capacity, active charges, live leases, queued tickets,
+    memory availability, and exceptional records at one observation boundary. It is necessary semantic support for capacityAtAdmissionTokens
+    because CQ-010 defines that value as remaining capacity immediately before the new charge; the co-temporal capacity and
+    active-charge content of the pre-grant capture distinguishes that value from a post-grant or otherwise mis-scoped remainder.
+    The term denotes the point-in-time information content whether its carrier is transient or retained and does not claim
+    that equal response values identify one durable capture token.
+  open_issues: 3
+  status_fa: explicitly_deferred
+- file: otp-admission-work-kind-001.yaml
+  id: otp:admission-work-kind:001
+  sha256: f11744eec5780d82d58eed6a04bcbba43dba6030cecf770fd83c41a2d8656710
+  name: AdmissionWorkKind
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-021'
+  rigidity: rigid
+  identity: supplies
+  defn: A governed closed-vocabulary specification whose full-proof, merged-preview, review-fix, and publish values classify
+    queued admission work for CQ-021 and carry the deployed charge mapping of three, five, one, and one tokens respectively.
+    Publish remains a reserved value even though current heavy publish proof requests use the full-proof kind.
+  open_issues: 1
+  status_fa: analyzed
+- file: otp-admitted-by-001.yaml
+  id: otp:admitted-by:001
+  sha256: 8093615c5f57f8285587155b97480f58380c0cd4bfcb5591a1c55bc00114a617
+  name: admittedBy
+  kind: object_property
+  cat: none
+  verdict: PASS
+  warrant: 'CQs: CQ-010'
+  rigidity: unresolved
+  identity: none
+  defn: 'An object relation from a reusable WorkUnit specification to the SeatGrant under which an execution realizing that
+    specification is admitted and remains capacity-charged. The binary assertion is the CQ-010 projection: an admission occurrence
+    may witness it by connecting the specification, its execution, and the grant, but the property''s declared subject remains
+    the WorkUnit specification used by CQ-002 and CQ-010.'
+  open_issues: 1
+  status_fa: analyzed
+- file: otp-agent-001.yaml
+  id: otp:agent:001
+  sha256: 423d346e2647f038d764902349eb01702a6276356d18d0fa49151a5681ff9871
+  name: Agent
+  kind: class
+  cat: role
+  verdict: PASS
+  warrant: 'CQs: CQ-021'
+  rigidity: anti_rigid
+  identity: carries
+  defn: An admission-owner role borne by one causally continuous operating-system process while that process owns a queued
+    SeatRequest or active SeatGrant. CQ-021 requires the owner of each queued request; pid and process-start values are reidentification
+    evidence, while scheduler liveness checks against the operating-system process establish the world-side bearer.
+  open_issues: 2
+  status_fa: analyzed
+- file: otp-architecture-boundary-obligation-001.yaml
+  id: otp:architecture-boundary-obligation:001
+  sha256: ea08ddaa3a2f8bd02f8665f23bd12b07ab04f38156efe90fc333b5e0fc4dd1f8
+  name: VerificationObligation
+  kind: class
+  cat: mode
+  verdict: PASS
+  warrant: 'supports: verification-evidence'
+  rigidity: rigid
+  identity: none
+  defn: A relationally dependent normative mode requiring a bearer to obtain or supply verification under a governing policy.
+    CQ-006 necessarily distinguishes the obligation to be discharged from the verification procedure that realizes it; an
+    architecture-boundary rule may activate one such generic obligation without requiring an architecture-specific subclass.
+  open_issues: 2
+  status_fa: explicitly_deferred
+- file: otp-cache-posture-001.yaml
+  id: otp:cache-posture:001
+  sha256: adf9f0758b925e41b7b3504717a85db7eff15abff3ffcb390e55afe7ea5ca3aa
+  name: CachePosture
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'supports: caller-controlled, local-only, local-write-remote-read'
+  rigidity: rigid
+  identity: supplies
+  defn: A class of governed cache-posture specifications used to classify the effective local and remote cache authority of
+    a WorkUnit execution as caller-controlled, local-only, or local-write-remote-read. Without this class, the three CQ-024
+    posture values have no common operational semantics or closed range and can be confused with transient resolver DTO tags
+    rather than the effective posture asserted for the execution.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-caller-controlled-001.yaml
+  id: otp:caller-controlled:001
+  sha256: 6fb3a0cc7a1cb3bc9e0a5debbf76ea14d8e0be45ce247606dc8074d54e736286
+  name: CallerControlled
+  kind: individual
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-024'
+  rigidity: rigid
+  identity: carries
+  defn: The reusable CachePosture individual whose normative content leaves effective Turbo cache arguments under CI or explicit
+    caller control and injects no local cache override. CQ-024 requires this named execution posture; the two resolver reasons
+    are evidence for when the same governed value applies, not separate posture identities.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-capacity-at-admission-tokens-001.yaml
+  id: otp:capacity-at-admission-tokens:001
+  sha256: b1007dbe40d0ea8e3e8527c67a42981b790836c70832a9746908cdb6a665be18
+  name: capacityAtAdmissionTokens
+  kind: data_property
+  cat: none
+  verdict: PASS
+  warrant: 'CQs: CQ-010'
+  rigidity: unresolved
+  identity: none
+  defn: A data relation from a SeatGrant admission occurrence to the token capacity remaining immediately before the candidate
+    charge is added, reconstructed as computed capacity minus active admission charges under the same token convention. CQ-010
+    requires this pre-grant value; using a post-grant snapshot would change the intension and falsely report a compliant admission
+    as an overrun.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-docgen-affected-work-unit-001.yaml
+  id: otp:docgen-affected-work-unit:001
+  sha256: 0cbd359266c8e6005d2d2fef7bb703e61aea8662fa834ae09fd5a399b3c3b127
+  name: DocgenAffectedWorkUnit
+  kind: individual
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-002'
+  rigidity: rigid
+  identity: supplies
+  defn: The WorkUnitSpecification individual that prescribes docgen:local for edit loops over origin/main through HEAD plus
+    current dirty files. CQ-002 asks which lane-by-scope WorkUnits are admissible, so a complete answer for the affected-docgen
+    context must identify this governed prescription rather than substituting a lint, test, or full-docgen work unit. Concrete
+    base, target, and dirty-tree bindings belong to an execution-bound realization of this reusable specification.
+  open_issues: 1
+  status_fa: analyzed
+- file: otp-enqueued-at-001.yaml
+  id: otp:enqueued-at:001
+  sha256: 71ba4e63cbea2b3037e195019dea2372d43d2d55d0bf52b582625dbd9ac4beb6
+  name: enqueuedAt
+  kind: data_property
+  cat: none
+  verdict: PASS
+  warrant: 'CQs: CQ-021'
+  rigidity: unresolved
+  identity: none
+  defn: A data relation from a SeatRequest to the instant at which its durable admission ticket enters the shared queue and
+    from which elapsed waiting and priority aging are measured. CQ-021 requires this enqueue instant for every queued request;
+    equal millisecond values do not identify enqueue events or request individuals.
+  open_issues: 1
+  status_fa: analyzed
+- file: otp-fallow-audit-lane-001.yaml
+  id: otp:fallow-audit-lane:001
+  sha256: d5429a33ec39fc23bab9331de3e8885859cccf7ae78c912b5da50abe1e553d97
+  name: FallowAuditLane
+  kind: individual
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-001'
+  rigidity: rigid
+  identity: supplies
+  defn: The reusable verification-lane procedure specification that invokes Fallow against a selected base with the new-only
+    finding gate and produces a gate verdict. CQ-001 requires the governed VerificationLane inventory, and the distinct Fallow
+    audit command, base selection, and new-only gate make this named lane part of a complete inventory rather than an optional
+    example. Dated audit runs realize the reusable prescription without changing its identity.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-fallow-health-lane-001.yaml
+  id: otp:fallow-health-lane:001
+  sha256: 969df00a552d007dab339adf248e497a852092cc1f9f1cdaa1a6e8f36461fc69
+  name: FallowHealthLane
+  kind: individual
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-001'
+  rigidity: rigid
+  identity: unresolved
+  defn: The VerificationLane procedure-specification individual denoted by the inventory's invocable Fallow health diagnostic.
+    CQ-001 requires the governed lane inventory, so this named diagnostic lane is part of a complete answer. The inventory
+    command entry is a carrier of that prescription; separately configured complexity ceilings belong to a threshold-policy
+    specification and are not asserted as inputs to this lane without dataflow or execution evidence.
+  open_issues: 1
+  status_fa: explicitly_deferred
+- file: otp-full-verification-plan-specification-001.yaml
+  id: otp:full-verification-plan-specification:001
+  sha256: e8f5ff4d68e838e2f04aabb0f77be51cd60e36850d93b57138710e147643d0d2
+  name: VerificationPlanSpecification
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'supports: schedule-proposal'
+  rigidity: rigid
+  identity: carries
+  defn: A repeatable information object prescribing an ordered verification WorkUnit sequence and its applicable scope. CQ-020
+    requires that plan content to distinguish an episode's current ScheduleProposal from the dated execution that realizes
+    it. A full-proof selection, its cheap-gates and pre-push members, and context-bound plan steps are accommodated as plans
+    or constituent specifications; a transient dispatcher DTO may carry the content without changing its denotation.
+  open_issues: 2
+  status_fa: explicitly_deferred
+- file: otp-grant-state-001.yaml
+  id: otp:grant-state:001
+  sha256: 76fe9c2a40cda4360a68828cffaab10555de4e9fb34a90a76cc5b438af744d87
+  name: GrantState
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-008, CQ-009'
+  rigidity: rigid
+  identity: supplies
+  defn: A governed grant-state vocabulary specification whose deployed ActiveGrant value classifies a live SeatGrant lease
+    while it is heartbeated and charged against capacity. CQ-008 and CQ-009 require that active classification; queued contenders
+    are SeatRequests, and lease deletion ends the deployed grant record rather than supplying evidence for a ReleasedGrant
+    phase.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-hard-floor-engaged-situation-001.yaml
+  id: otp:hard-floor-engaged-situation:001
+  sha256: 8b1c727f7f40d19fbe085962f4f507df735a20b458c7736809c5e830836ef4e0
+  name: StarvationException
+  kind: class
+  cat: situation
+  verdict: PASS
+  warrant: 'CQs: CQ-023'
+  rigidity: rigid
+  identity: unresolved
+  defn: A time-indexed admission situation recorded for a queued SeatRequest that policy recognizes as an exception to the
+    declared starvation bound. CQ-023 directly requires this generic class and a closed HardFloorException member derived
+    per request from the snapshot-global hardFloorEngaged assertion. The exception is scoped to that observation and does
+    not reify or claim identity for a continuous below-floor interval across snapshots.
+  open_issues: 1
+  status_fa: explicitly_deferred
+- file: otp-has-origin-key-001.yaml
+  id: otp:has-origin-key:001
+  sha256: c2bff6e624e5dd1da7cce66efe7cb9fb5992cdf612e1a83c3752028dac460d0d
+  name: hasOriginKey
+  kind: data_property
+  cat: none
+  verdict: PASS
+  warrant: 'CQs: CQ-009'
+  rigidity: unresolved
+  identity: none
+  defn: A data relation from a SeatRequest or SeatGrant to the nonempty, scheme-scoped origin key compared by the scheduler
+    for concurrent-grant exclusion. CQ-009 requires this relation to detect two active grants sharing an origin; lexical equality
+    is operational join evidence and does not identify the repository origin or a separate key object.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-hosted-required-check-merge-obligation-001.yaml
+  id: otp:hosted-required-check-merge-obligation:001
+  sha256: b16234e5c85b5d4db24ad4550a41fc7a0c588e3a22f2100b5a40fd648e5d02f7
+  name: RequiredCheckDesignation
+  kind: class
+  cat: mode
+  verdict: PASS
+  warrant: 'supports: verification-evidence'
+  rigidity: rigid
+  identity: unresolved
+  defn: A relationally dependent normative mode borne by a check relative to a governed target, designating successful evidence
+    from that check as mandatory before the target transition may occur. CQ-006 needs this generic required-versus-optional
+    distinction when determining unmet obligations; a hosted merge check is one bearer, not a separate hosted-check-specific
+    obligation kind. Discharge and waiver concern the associated generic VerificationObligation, not the designation's identity.
+  open_issues: 2
+  status_fa: explicitly_deferred
+- file: otp-local-only-001.yaml
+  id: otp:local-only:001
+  sha256: 8aa57847195d65ff5a10fe4042e352215243b3e19431636a6606766774bdae23
+  name: LocalOnly
+  kind: individual
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-024'
+  rigidity: rigid
+  identity: carries
+  defn: The reusable CachePosture individual whose normative content permits local cache reads and writes and forbids remote
+    cache access, operationalized by the local:rw argument. CQ-024 requires this named effective execution posture; resolver
+    records and repeated invocations are evidence for assignments of the same governed value rather than new value identities.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-local-write-remote-read-001.yaml
+  id: otp:local-write-remote-read:001
+  sha256: d0260cd01355438a4591fa0036b92cead67fce8457ac2d758ea5045c12fde970
+  name: LocalWriteRemoteRead
+  kind: individual
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-024'
+  rigidity: rigid
+  identity: carries
+  defn: The reusable CachePosture individual whose normative content permits local cache reads and writes plus remote reads
+    while forbidding remote writes, operationalized by local:rw,remote:r. CQ-024 requires this named effective execution posture;
+    the remote-read tag and cache string are evidence for its authority semantics rather than its identity criterion.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-machine-proof-lock-001.yaml
+  id: otp:machine-proof-lock:001
+  sha256: b075d75f871046de37e8993511b07ee8ea4e7b0568df0842d3a62a73ede02464
+  name: ContendedResource
+  kind: class
+  cat: role
+  verdict: PASS
+  warrant: 'CQs: CQ-008'
+  rigidity: anti_rigid
+  identity: carries
+  defn: An anti-rigid resource role borne by a coordination target while multiple agents or executions can compete for its
+    exclusive or capacity-limited use. CQ-008 directly requires this generic class so SeatGrants can identify which resource
+    they hold. A repository-origin proof lock is one grounded bearer identified by originKey; holder changes leave the resource
+    role intact and do not require a MachineProofLock subclass.
+  open_issues: 2
+  status_fa: analyzed
+- file: otp-observed-queue-wait-ms-001.yaml
+  id: otp:observed-queue-wait-ms:001
+  sha256: 70422af10d32a3043d3cb559d087bffe8e6f8143fe70b457474d4bdbf729bb64
+  name: observedQueueWaitMs
+  kind: data_property
+  cat: none
+  verdict: PASS
+  warrant: 'CQs: CQ-023'
+  rigidity: unresolved
+  identity: none
+  defn: A data relation from a queued SeatRequest at a specified observation boundary to the elapsed milliseconds since its
+    enqueue boundary. CQ-023 requires this time-indexed operational fact so starvation analysis can compare the request's
+    wait with the applicable bound; equal numeric values or duplicate collector records do not introduce distinct quality
+    tokens.
+  open_issues: 0
+  status_fa: analyzed
+- file: otp-schedule-proposal-001.yaml
+  id: otp:schedule-proposal:001
+  sha256: 4cc92149ded4fbeb74b1479d2fd4441def778a4bbce05f074ca7f07c98d3ef9c
+  name: ScheduleProposal
+  kind: class
+  cat: information_object
+  verdict: INDETERMINATE
+  warrant: 'CQs: CQ-020'
+  rigidity: rigid
+  identity: carries
+  defn: An ordered schedule information artifact that, when materialized for a VerificationEpisode, is linked as that episode's
+    current proposal and prescribes the applicable WorkUnit sequence and scope. CQ-020 requires this current ordered prescription;
+    the present closure does not settle whether deployed RepoRunPlan values are retained as its A-Box instances.
+  open_issues: 1
+  status_fa: analyzed
+- file: otp-seat-grant-001.yaml
+  id: otp:seat-grant:001
+  sha256: 2b49c69278f1e614e931768eb86ad692dc07ecae53dcc227ecc7425faf0a79c7
+  name: SeatGrant
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-008, CQ-009, CQ-010'
+  rigidity: rigid
+  identity: supplies
+  defn: An active admission-lease information artifact created by one successful promotion and counted against machine-wide
+    capacity while its lease is live, heartbeated, and owned. Cleanup, owner reaping, or overshoot rollback terminates that
+    active lease; whether it records a distinct world-side grant relator remains a steward choice.
+  open_issues: 1
+  status_fa: analyzed
+- file: otp-seat-request-001.yaml
+  id: otp:seat-request:001
+  sha256: a5bcff26d4a14de7330a7e909ad8b88ea6ed75308427a388e725119c4fd42a10
+  name: SeatRequest
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-021, CQ-023'
+  rigidity: rigid
+  identity: supplies
+  defn: A durable queued admission-ticket information artifact created by one enqueue act, ordered and aged while its Agent-owned
+    contender waits for machine-wide admission, and removed when a grant is staged or the wait ends. CQ-021 and CQ-023 require
+    this queued operational record; whether a distinct world-side request is also modeled remains a steward choice.
+  open_issues: 1
+  status_fa: analyzed
+- file: otp-split-stream-captured-subprocess-result-001.yaml
+  id: otp:split-stream-captured-subprocess-result:001
+  sha256: ce12b64642b0c5446e57b09bee72857ffb18568a8a3a27158a5957ad6b47c829
+  name: VerificationResultArtifact
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'supports: verification-evidence'
+  rigidity: rigid
+  identity: carries
+  defn: An information object recording the outcome of a verification execution in a form that may bear the contingent VerificationEvidence
+    role when policy-required applicability and provenance are present. CQ-005 and CQ-006 require an evidence record to have
+    such result content, while allowing diagnostic result artifacts that do not bear the role. A transient or retained split-stream
+    carrier containing exit status, bounded stdout and stderr, and truncation state is one accommodated representation; this
+    proposal makes no unobserved retention or evidence-use claim.
+  open_issues: 1
+  status_fa: explicitly_deferred
+- file: otp-verification-evidence-001.yaml
+  id: otp:verification-evidence:001
+  sha256: a6a83fa9aca75d11d8429264f6fa95dba5dc310c3e23b3ec8f686061e6cf742f
+  name: VerificationEvidence
+  kind: class
+  cat: information_object
+  verdict: INDETERMINATE
+  warrant: 'CQs: CQ-005, CQ-006'
+  rigidity: unresolved
+  identity: unresolved
+  defn: An information artifact bearing an evidentiary role under a verification policy by recording a result together with
+    the tree state, cache epoch, procedure, and provenance needed to determine applicability and discharge a verification
+    obligation. CQ-005 and CQ-006 require the evidence record; its content-versus-token identity and custody semantics remain
+    unresolved.
+  open_issues: 2
+  status_fa: explicitly_deferred
+- file: otp-work-unit-specification-001.yaml
+  id: otp:work-unit-specification:001
+  sha256: 518ab5e27715d8f21041f8b91e248bf6d43158ae9d20c763f51e47b8e436c433
+  name: WorkUnitSpecification
+  kind: class
+  cat: information_object
+  verdict: PASS
+  warrant: 'CQs: CQ-002'
+  rigidity: rigid
+  identity: supplies
+  defn: A reusable verification prescription whose identity-bearing content fixes one lane, scope rule, parameters, ordering-relevant
+    semantics, completion criteria, and failure semantics, independently of any dated execution or carrier copy. CQ-002 requires
+    this lane-by-scope scheduling object; an unrelated governing-policy revision is provenance, not an identity change.
+  open_issues: 0
+  status_fa: analyzed

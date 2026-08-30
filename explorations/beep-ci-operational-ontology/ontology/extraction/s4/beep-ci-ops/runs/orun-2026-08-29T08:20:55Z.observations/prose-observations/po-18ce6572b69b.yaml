@@ -1,0 +1,10 @@
+id: po:sha256:18ce6572b69bdaf8e3e4542f8b754842f0a93567e33c7d48d0a9f2b3a0bc95f3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: standards/ARCHITECTURE.md
+source_span:
+  start_line: 255
+  end_line: 270
+quote: Forbidden by default
+epistemic_status: quoted_prose

@@ -1,0 +1,44 @@
+id: "ic:reporun:010"
+hypothesis_ref: "dh:reporun:020"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two Turbo telemetry-entry records are the same only when they are the same
+    observation token produced within the same Turbo snapshot acquisition
+    about the same task at the same source point; equality of taskId or of all
+    serialized field values across separate acquisitions does not make the
+    record tokens identical.
+  reidentification_key:
+    - "containing snapshot provenance and acquisition event"
+    - "task subject plus source point within that snapshot"
+    - "taskId as lookup evidence, not as the identity criterion"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One entry is unified by fields co-captured about one Turbo task in one
+    snapshot acquisition rather than by an arbitrary bundle of equal values.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "WorkUnitSpecification represented by the task entry"
+    - "execution-telemetry observation about a WorkUnitExecution"
+    - "transient lookup DTO with no retained domain role"
+  existential_dependencies:
+    - "the containing TurboPlanSnapshot information object"
+    - "the snapshot acquisition that establishes record provenance"
+    - "a digital realization in memory or storage"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "snapshot superseded"
+    - "record discarded"
+counterexamples:
+  - description: >-
+      Two Turbo snapshots can contain byte-identical entries with the same
+      taskId while being distinct observations made at different times, and
+      one task can acquire different hashes or cache states across snapshots.
+status: proposed

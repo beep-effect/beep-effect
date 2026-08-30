@@ -1,0 +1,40 @@
+id: "dh:reporun:004"
+observation_refs:
+  - "so:sha256:34b48a9193cc6492f7d9dc29870607f32b095b278c89c94ca42778403c80271d"
+  - "so:sha256:d04af36f48e323964940f6af826755a579e49fadfd4f88d1bec812dbacc5bab6"
+  - "po:sha256:fa61728f315583616a5f480898459fd11490e806fb3e45aa9d494ab6d4d4291d"
+  - "so:sha256:0277f1c842a57e6b4661bcb5c4322652755a4f40781e23e26013fc13dcbffb6f"
+  - "so:sha256:393aa76baec79587745218d551a7847a929f7b6289d65373194454f4a59a3061"
+  - "so:sha256:5649dea54bba487c6416a8f922feeaaf4231cdf94a85a0e77450c0aa19c26844"
+  - "so:sha256:8af5f33d82d9abddf82d12b528a4d62ae7f70b8bd48721c480913f6af5b10d44"
+  - "so:sha256:800c2cca278c275a2a9a053bc05d6a67f4f76d94fed64af9b4a92c4d071e0dae"
+  - "so:sha256:c4609511021730abce805c627e8ac39fb16a03089ebf2edff20a186e2f2c05af"
+  - "so:sha256:ea329cb5510b6ad06009763914bde9b3dd6435eab42788392feaa58f19f2ef92"
+  - "so:sha256:d92f1f3689184ae0e4858c15e5e11b94f2767fd446f1a618312e5703ac8483f8"
+  - "so:sha256:c5cd20e449a0a8741100fb53e7bf20429d1693c14bca97d50c6ac026b2646c77"
+  - "so:sha256:0e80d676e52c56b59dd8ea000f3f88c70c6909505051e24cb53897f2aa66cef0"
+  - "so:sha256:1f683086a8f3d62635b93bd05ecc2c2c67a6b96894eb14b86059bf79a7b873e4"
+cq_warrants: ["CQ-013"]
+proposed_referent:
+  label: "install-before-lane failure pattern"
+  description: "A GitHub job in which an installation step failed and no consequential repository lane step ran afterward."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Deterministic dependency or lockfile failure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Infrastructure or network installation failure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Classification label recorded about a GitHub job"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A pure classifier over GitHub job DTOs can recognize the same failed-install step shape and emit install-failure; the cited declarations and helpers do not establish a separately occurring failure situation."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

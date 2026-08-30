@@ -1,0 +1,28 @@
+id: ic:alt4:051
+hypothesis_ref: dh:turbo-cache:022
+identity:
+  supplies_identity: true
+  identity_criterion: Two caller-controlled cache postures are the same when they are the resolved cache-plan record of one Turbo invocation under the same reason branch, ci or explicit-cache-arg; the tag spelling is evidence, never the criterion.
+  reidentification_key:
+    - caller-controlled
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The tagged plan record together with its reason compose one posture; ci and explicit-cache-arg are distinct reason-qualified individuals of the same posture type.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - role
+    - quality
+  existential_dependencies:
+    - Turbo invocation
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: LocalOnlyTurboCache is a different resolved plan produced by other branches of the same resolver.
+  - description: A CLI flag string that never reaches resolveTurboCachePlan is not this posture.
+status: proposed

@@ -244,6 +244,32 @@ const sortedKinds = (findings: ReadonlyArray<KnowledgeFinding>): ReadonlyArray<K
   );
 
 describe("knowledge semantic-delta golden paired fixtures", () => {
+  it.effect("treats retired deterministic projections as virtual targets and skips index drift", () =>
+    Effect.gen(function* () {
+      const files = {
+        "docs/guide.md": "Use `goals/INDEX.md` and `explorations/ATLAS.md`.\n",
+      };
+      const head = makeOracle(files, {
+        indexExpected: "# Goals Index\nnew projection\n",
+        indexArchived: "# Goals Index\nold projection\n",
+      });
+      const report = yield* scan({
+        base: makeOracle(files),
+        head: {
+          ...head,
+          trackedEntries: A.filter(head.trackedEntries, (entry) => entry.path !== "goals/INDEX.md"),
+          indexBytes: Effect.die("an untracked projection must not be probed for drift"),
+        },
+        probePolicy: "enabled",
+        renames: [],
+      });
+
+      expect(report.introduced).toEqual([]);
+      expect(report.resolved).toEqual([]);
+      expect(report.unchanged).toEqual([]);
+    })
+  );
+
   it.effect("content edit introduces only the new broken tracked path", () =>
     Effect.gen(function* () {
       const report = yield* scan(

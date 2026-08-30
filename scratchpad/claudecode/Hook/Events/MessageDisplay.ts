@@ -1,11 +1,10 @@
 /**
- * MessageDisplay hook event.
- *
  * Fires while assistant message text is displayed. Display-only: the
- * transcript and Claude's context keep the original text. Does not
- * support a matcher.
- * See https://code.claude.com/docs/en/hooks#messagedisplay.
+ * transcript and Claude's context keep the original `delta`. Does not
+ * support a matcher. See
+ * https://code.claude.com/docs/en/hooks#messagedisplay.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -20,18 +19,32 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/MessageDisplay");
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a MessageDisplay hook, including the streamed
+ * `delta` and whether this chunk is `final`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a display chunk)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.MessageDisplay.Input)
+ * const input = S.decodeUnknownSync(Hook.MessageDisplay.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "MessageDisplay",
+ *   turn_id: "turn-1",
+ *   message_id: "msg-1",
+ *   index: 0,
+ *   final: false,
+ *   delta: "Hello",
+ * })
+ *
+ * console.log(input.delta) // "Hello"
  * ```
  *
+ * @see {@link display} for replacing what the TUI shows.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`MessageDisplayInput`)(
@@ -50,18 +63,24 @@ export class Input extends S.Class<Input>($I`MessageDisplayInput`)(
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that can replace TUI text via `displayContent`.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Build a display replacement)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.MessageDisplay.HookSpecificOutput)
+ * const specific = Hook.MessageDisplay.HookSpecificOutput.make({
+ *   hookEventName: "MessageDisplay",
+ *   displayContent: O.some("[redacted]"),
+ * })
+ *
+ * console.log(O.getOrUndefined(specific.displayContent)) // "[redacted]"
  * ```
  *
+ * @see {@link display} for the constructor that wraps this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`MessageDisplayHookSpecificOutput`)(
@@ -75,18 +94,21 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`MessageDi
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a MessageDisplay handler returns. Only
+ * `hookSpecificOutput.displayContent` changes the TUI.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.MessageDisplay.Output)
+ * const output = Hook.MessageDisplay.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link passthrough} for leaving the TUI unchanged.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`MessageDisplayOutput`)(
@@ -104,35 +126,45 @@ export class Output extends S.Class<Output>($I`MessageDisplayOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Leave the streamed text unchanged in the TUI.
  *
- * **Example** (Use passthrough)
+ * **Example** (Pass the original delta through)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.MessageDisplay.passthrough)
+ * const output = Hook.MessageDisplay.passthrough()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link display} for replacing TUI text.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `display`.
+ * Replace the text shown in the TUI for this chunk.
  *
- * **Example** (Use display)
+ * **Gotchas**
+ *
+ * `displayContent` affects the TUI only. The transcript and Claude's
+ * context keep the original `delta`.
+ *
+ * **Example** (Redact TUI text)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.MessageDisplay.display)
+ * const output = Hook.MessageDisplay.display("[redacted]")
+ * const shown = O.flatMap(output.hookSpecificOutput, (specific) => specific.displayContent)
+ * console.log(O.getOrUndefined(shown)) // "[redacted]"
  * ```
  *
+ * @see {@link passthrough} for leaving the original text on screen.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const display = (displayContent: string): Output =>
@@ -146,18 +178,23 @@ export const display = (displayContent: string): Output =>
   });
 
 /**
- * Constructor for `define`.
+ * Build a runnable MessageDisplay hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a MessageDisplay hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.MessageDisplay.define)
+ * const hook = Hook.MessageDisplay.define({
+ *   handler: () => Effect.succeed(Hook.MessageDisplay.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "MessageDisplay"
  * ```
  *
+ * @see {@link display} for replacing TUI text from the handler.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {

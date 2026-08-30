@@ -1,0 +1,24 @@
+id: "dh:quality:021"
+observation_refs:
+  - "so:sha256:1cb8d4e2b4635df071ce9f58a6465718c1536825bf45fc3927bce758959976a1"
+cq_warrants: []
+proposed_referent:
+  label: "Possible work-unit specification denoted by PackageVerifyStepSpec"
+  description: "The lexical form suggests a repeatable procedure specification. It is kept separate from both any obligation it might discharge and any execution occurrence, but the supplied facts establish only a schema declaration."
+representation_status: unresolved
+alternatives:
+  - label: "A WorkUnitExecution occurrence corresponding to PackageVerifyStepSpec"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "PackageVerifyStepSpec schema or DTO only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records an exported schema declaration extending S.Class, but no repeatability, obligation relation, execution event, persistence, or exchange fact. The implementation-only interpretation therefore remains viable."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.54
+  use_for_acceptance: false

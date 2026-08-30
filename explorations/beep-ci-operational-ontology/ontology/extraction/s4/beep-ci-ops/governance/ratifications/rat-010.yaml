@@ -1,0 +1,9 @@
+id: rat:10
+proposal_ref: otp:admitted-by:001
+proposal_sha256: 8093615c5f57f8285587155b97480f58380c0cd4bfcb5591a1c55bc00114a617
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept admittedBy — attribution is total, human or automated.

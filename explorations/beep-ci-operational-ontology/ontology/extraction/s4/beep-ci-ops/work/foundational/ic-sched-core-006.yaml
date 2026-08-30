@@ -1,0 +1,32 @@
+id: "ic:sched-core:006"
+hypothesis_ref: "dh:sched-core:006"
+identity:
+  supplies_identity: "unresolved"
+  identity_criterion: "If a unified priority-and-ranking specification exists, its sameness requires one governance and revision lineage covering both priority-member meanings and the time-sensitive ranking rule; the source does not establish that unity."
+  reidentification_key:
+    - "priority vocabulary version"
+    - "ranking algorithm version"
+    - "aging-policy version"
+ontoclean:
+  rigidity: "unresolved"
+  carries_identity: "unresolved"
+  supplies_identity: "unresolved"
+  unity: "Unresolved: the priority vocabulary, ranking function, and configurable aging threshold have independent declarations and potentially independent revision criteria."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "a priority-class controlled vocabulary"
+    - "a separate queue-ranking procedure"
+    - "a temporary priority role borne by a queued request"
+  existential_dependencies:
+    - "the queue-ordering policy and its governance"
+    - "the request vocabulary and aging configuration"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded when either member semantics or ranking semantics change"
+counterexamples:
+  - description: "Changing publishAgingSeconds alters effective ranking without changing the publish and verify vocabulary, so the alleged single specification has at least two independent change criteria."
+status: "proposed"

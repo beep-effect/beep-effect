@@ -1,0 +1,22 @@
+id: fa:alt2:002
+hypothesis_ref: dh:reporun:009
+identity_card_ref: ic:alt2:002
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: repeatable review-fix command specification'
+  still_viable: true
+- label: 'kind: review-fix verification lane as an identity-supplying operational sortal'
+  still_viable: true
+- label: 'process: a repair execution performed after review'
+  still_viable: false
+strongest_counterexample: >-
+  Interpreting the surface token as a dated repair run fails because repoProofStepDefinition always returns the same args/label
+  bundle for review-fix, with no occurrence timestamp.
+verdict: analyzed
+needed_evidence: >-
+  An observation that the review-fix lane is reidentified independently of this command bundle (for example a lane registry
+  with its own persistence) would keep the kind-of-lane rival alive as a second identity provider.

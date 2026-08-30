@@ -1,0 +1,10 @@
+id: po:sha256:5f28a425ea60165fe183d20c2dd424090c2d9d8e3885384ac72d49c224211a7d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 38
+  end_line: 38
+quote: '"inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.env*", "!.beep/**"],'
+epistemic_status: quoted_prose

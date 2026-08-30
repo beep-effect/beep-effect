@@ -1,0 +1,50 @@
+target: "otp:machine-proof-lock:001"
+target_sha256: "11b9e9e272bc65a86526e6bccabd5a31a549f50131e425406e9d0c1f4340f5a0"
+chain_sha256: "f34d302550a35f5f81169005351d4dd9fc5c27123f8aec758b9c08279c5e8953"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; no subsumption relation is proposed, so no valid subsumption relation is available to test."
+attacks:
+  - surface: identity
+    rule: individual-identity-underdetermined
+    counterexample: "The beep-effect origin and an unrelated repository origin each have a distinct origin-scoped full-proof resource satisfying the definition; one unqualified named individual MachineProofLock cannot be both, while the card's criterion explicitly separates resources by origin."
+    outcome: landed
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: "Two recreated gate service objects can coordinate the same origin resource; the card correctly treats originKey or lock path as supporting evidence and reidentifies the resource by the underlying coordination target and regime."
+    outcome: survived
+  - surface: identity
+    rule: identity-card-consistency
+    counterexample: "A resource-role individual that supplied identity would conflict with the card; both records instead say carries identity."
+    outcome: survived
+  - surface: identity
+    rule: foundational-status-mismatch
+    counterexample: "Both proposal and foundational analysis say analyzed."
+    outcome: survived
+  - surface: identity
+    rule: rival-model-hidden
+    counterexample: "A gate service or lock artifact and an acquisition relator have identity criteria different from an origin resource role; both rivals are named in open_issues."
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: "CQ-008 asks which ContendedResource instances exist and which grants hold them, but it does not require the globally named MachineProofLock individual; a graph with origin-specific resource instances answers the CQ without it."
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-service-abstraction
+    counterexample: "An AdmissionOriginGate interface and comments can describe origin-scoped acquisition beneath machine-wide admission while remaining only a service abstraction; those facts do not distinguish a domain resource individual from implementation plumbing."
+    outcome: landed
+rival_models_still_viable:
+  - "The referent is the gate service or lock artifact rather than a contended-resource role borne by an origin target."
+  - "Each held proof lock is a relator mediating a holder process and repository origin."
+evidence:
+  - "so:sha256:35e4fb37b45559b198eb68bd4a8c1f339456c7505089a9baeacc2af4658ef5e0"
+  - "po:sha256:8dddff995d4175e482cb81b4ecb5bbeac10bb64ef9b504432cddbd7c9e3ed5b1"
+  - "po:sha256:9cff923770c88f07abedd29fe1a4b5a700805f3fab2234902793d907998339ba"
+  - "CQ-008"

@@ -1,0 +1,53 @@
+id: "ic:yeet-watch:004"
+hypothesis_ref: "dh:yeet-watch:016"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Membership check against the Yeet check-outcome classification-value
+    domain in ic:yeet-watch:001: two occurrences realize the same skip member
+    only when they preserve the same normalized skipped-or-neutral judgment
+    under the same classifier semantics, applicability context, and version
+    lineage. Membership requires a skipping, skipped, or neutral bucket, or a
+    skipped state, after failure and pending evidence have had precedence.
+    Equal tokens in separate snapshots do not identify one record.
+  reidentification_key:
+    - "normalized skip-classification content"
+    - "classifier precedence and skip-rule version lineage"
+    - "raw skipped or neutral evidence"
+    - "bearing check and snapshot assignment as supporting record evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One normalized skip judgment in the closed watch scheme; skipped
+    nonexecution, neutral conclusions, check occurrences, and snapshot records
+    are not merged into the information object's unity.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a snapshot-bound skip assignment in one watched-check record"
+    - "phase: a terminal skipped-or-neutral phase borne by a check"
+    - "event: a particular nonexecution or cancellation occurrence"
+    - "none: the skip token as only a lexical selector"
+  existential_dependencies:
+    - "At least one faithful bearer of the normalized skip content, generically rather than this token"
+    - "The Yeet classifier interpretation and version under which skipped and neutral signals are grouped"
+    - "For a particular assignment, the classified check and snapshot record that carries it"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as historical classifier content"
+    - "ceased when no faithful bearer of the content remains"
+    - "replaced when the defining skip-classification rule changes"
+counterexamples:
+  - description: >-
+      A neutral check conclusion and a check that never executed can both map
+      to skip even though one may have run and the other did not, so the member
+      is not identical to one nonexecution event or homogeneous world phase.
+  - description: >-
+      Distinct skipped checks can carry equal skip content in the same snapshot
+      without becoming the same check occurrence or assignment record.
+status: proposed

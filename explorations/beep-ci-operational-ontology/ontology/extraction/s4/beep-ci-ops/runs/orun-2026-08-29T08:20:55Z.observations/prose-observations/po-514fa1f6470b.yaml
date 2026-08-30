@@ -1,0 +1,10 @@
+id: po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 925
+  end_line: 925
+quote: 'One promotion attempt: admit self when first in the shared order and the'
+epistemic_status: quoted_prose

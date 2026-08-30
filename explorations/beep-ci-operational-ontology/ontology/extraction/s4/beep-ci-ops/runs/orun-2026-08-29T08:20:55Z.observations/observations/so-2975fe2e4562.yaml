@@ -1,0 +1,23 @@
+id: so:sha256:2975fe2e45627eb97e7af5ea72a530ff21d505c5c8a741c088f460836ded59da
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 811
+  end_line: 814
+  content_sha256: 74f60b3bd7cd2db33de564a006226403a23b00bdb36da70779fc33230f514f4f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::rerunGuidanceSuffix
+  lexical_name: rerunGuidanceSuffix
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const rerunGuidanceSuffix = (snapshot: YeetStatusSnapshot): string =>'
+epistemic_status: parser_derived

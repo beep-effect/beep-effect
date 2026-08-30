@@ -1,0 +1,10 @@
+id: po:sha256:bde32fa6682e1b0c1117452303772e61fe6b20fc29764c45ffae977106fd9eaf
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 170
+  end_line: 179
+quote: export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
+epistemic_status: quoted_prose

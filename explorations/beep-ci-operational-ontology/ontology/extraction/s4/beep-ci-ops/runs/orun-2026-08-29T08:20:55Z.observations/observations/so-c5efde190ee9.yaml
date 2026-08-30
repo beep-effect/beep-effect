@@ -1,0 +1,25 @@
+id: so:sha256:c5efde190ee92ca63e6e934eb78e8deb7bec01d061e7f60a251c65bc458a5eee
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 362
+  end_line: 371
+  content_sha256: 869d1285eaa727ae2eff0434663662ca86fda4f47fd7eba80c1d4e47ad6e7ce0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::LocalOnlyTurboCache
+  lexical_name: LocalOnlyTurboCache
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: LocalOnlyTurboCache
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class LocalOnlyTurboCache extends S.Class<LocalOnlyTurboCache>($I`LocalOnlyTurboCache`)(
+epistemic_status: parser_derived

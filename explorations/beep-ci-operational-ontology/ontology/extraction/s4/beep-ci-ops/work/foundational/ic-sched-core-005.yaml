@@ -1,0 +1,32 @@
+id: "ic:sched-core:005"
+hypothesis_ref: "dh:sched-core:005"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two token-weight mapping specifications are the same only when one governed rule lineage assigns the same admission-charge function over the same work-kind domain under the same policy version; matching one input-output pair is insufficient."
+  reidentification_key:
+    - "policy authority and version"
+    - "work-kind domain version"
+    - "complete kind-to-charge mapping"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One complete mapping rule whose domain, token unit, values, and governance change together as a policy revision."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "a normative admission-charge rule"
+    - "the intrinsic physical resource cost of each work kind"
+    - "a scheduler-local switch with no separately governed specification"
+  existential_dependencies:
+    - "the admission work-kind vocabulary"
+    - "a policy authority and token-unit convention"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a changed mapping or token convention"
+counterexamples:
+  - description: "Two mappings may both charge full-proof three tokens yet disagree for merged-preview; the shared output does not make them the same specification."
+status: "proposed"

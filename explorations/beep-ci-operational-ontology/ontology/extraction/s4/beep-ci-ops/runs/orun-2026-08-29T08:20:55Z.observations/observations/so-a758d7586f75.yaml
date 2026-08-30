@@ -1,0 +1,27 @@
+id: so:sha256:a758d7586f756394f084665ae8e1708658b53accffcf96ab257558a9547b2652
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 934
+  end_line: 938
+  content_sha256: d532b24f2d7a0562c1bade5f6d634ab97d87a6d3fa6e63151d1f4dd589a8920e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::PromotionTick
+  lexical_name: PromotionTick
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: admitted
+- predicate: declares_field
+  object: info
+- predicate: declares_field
+  object: originBusy
+source_excerpt: interface PromotionTick<OriginLease> {
+epistemic_status: parser_derived

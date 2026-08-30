@@ -1,0 +1,25 @@
+id: so:sha256:7f7a8c8336d864c351c0af447fd1b8527bdcf64e32abbbf3d9b37fe478205d2e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 96
+  end_line: 96
+  content_sha256: de0134a7fc8edfac5f4ce36c9b9e7625497325f892693cfdc1870e1f78cd430f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::YeetCheckOutcome
+  lexical_name: YeetCheckOutcome
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetCheckOutcome
+- predicate: exports_symbol
+  object: YeetCheckOutcome
+source_excerpt: export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
+epistemic_status: parser_derived

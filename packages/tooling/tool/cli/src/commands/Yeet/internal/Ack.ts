@@ -29,7 +29,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, Match } from "effect";
+import { DateTime, Effect, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readContainedFileStringNoFollow, writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
@@ -132,7 +132,38 @@ export class YeetAckThreadResolution extends S.Class<YeetAckThreadResolution>($I
 ) {}
 
 /**
- * What was done about an inbox row: the ack protocol's three closing moves.
+ * A temporary, attributed waiver for one named shard.
+ *
+ * **Example** (Build a one-hour waiver)
+ *
+ * ```ts
+ * import { YeetAckWaiveResolution } from "@beep/repo-cli/test/Yeet"
+ *
+ * const resolution = YeetAckWaiveResolution.make({
+ *   actor: "operator", expiresAt: "2026-08-27T01:00:00Z",
+ *   reason: "hosted dependency service is unavailable", shard: "Security"
+ * })
+ * console.log(resolution.kind) // "waive"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetAckWaiveResolution extends S.Class<YeetAckWaiveResolution>($I`YeetAckWaiveResolution`)(
+  {
+    kind: S.tag("waive"),
+    actor: S.NonEmptyString,
+    expiresAt: S.NonEmptyString,
+    reason: S.NonEmptyString,
+    shard: S.NonEmptyString,
+  },
+  $I.annote("YeetAckWaiveResolution", {
+    description: "A temporary, attributed waiver for one named local or hosted shard.",
+  })
+) {}
+
+/**
+ * What was done about an inbox row: three permanent closing moves or a temporary waiver.
  *
  * **Details**
  *
@@ -149,10 +180,11 @@ export const YeetAckResolution = S.Union([
   YeetAckFixResolution,
   YeetAckWontfixResolution,
   YeetAckThreadResolution,
+  YeetAckWaiveResolution,
 ]).pipe(
   $I.annoteSchema("YeetAckResolution", {
     title: "Yeet Ack Resolution",
-    description: "What was done about one inbox row: a fix commit, a reasoned wontfix, or a review thread.",
+    description: "What was done about one inbox row: a fix, wontfix, review thread, or expiring waiver.",
   })
 );
 
@@ -185,6 +217,7 @@ export const renderYeetAckResolution = (resolution: YeetAckResolution): string =
     Match.discriminatorsExhaustive("kind")({
       "fix-sha": (fix) => `fix-sha ${fix.sha}`,
       "thread-url": (thread) => `thread ${thread.url}`,
+      waive: (waive) => `waive ${waive.shard} by ${waive.actor} until ${waive.expiresAt}: ${waive.reason}`,
       wontfix: (wontfix) => `wontfix: ${wontfix.reason}`,
     })
   );
@@ -307,10 +340,15 @@ export const readYeetAckState = Effect.fn("Yeet.readYeetAckState")(function* (
   if (O.isNone(guardedRead) || !guardedRead.value.exists) {
     return YeetAckState.make({ acked: false, receipt: null });
   }
-  return YeetAckState.make({
-    acked: true,
-    receipt: O.getOrNull(O.flatMap(guardedRead.value.contents, YeetAckReceiptJson.decodeOption)),
-  });
+  const receipt = O.flatMap(guardedRead.value.contents, YeetAckReceiptJson.decodeOption);
+  if (O.isSome(receipt) && receipt.value.resolution.kind === "waive") {
+    const expiresAt = DateTime.make(receipt.value.resolution.expiresAt);
+    const now = yield* DateTime.now;
+    if (O.isNone(expiresAt) || DateTime.toEpochMillis(expiresAt.value) <= DateTime.toEpochMillis(now)) {
+      return YeetAckState.make({ acked: false, receipt: receipt.value });
+    }
+  }
+  return YeetAckState.make({ acked: true, receipt: O.getOrNull(receipt) });
 });
 
 /**

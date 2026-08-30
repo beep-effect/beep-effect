@@ -1,0 +1,23 @@
+id: "fa:alt1:003"
+hypothesis_ref: "dh:reporun:018"
+identity_card_ref: "ic:alt1:003"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: false
+rival_models:
+  - label: "quality or mode inhering in a RepoPlanStep (the step's resume policy)"
+    still_viable: true
+  - label: "a WorkUnitExecution that was not resumed"
+    still_viable: false
+  - label: "uninterpreted planner enumeration member"
+    still_viable: false
+strongest_counterexample: "A feedback/package/readonly step may keep fingerprint-match after
+  enforcement, so never is not identical with 'this step was not resumed' and is not an
+  execution phase of the step."
+verdict: "analyzed"
+needed_evidence: "Whether operational questions ask which designation a plan step carries
+  (information object) or treat resume policy as a quality inhering in the step. Observationally
+  equivalent on current evidence until a step is observed changing resume without being
+  replaced, or a query that attributes never without a bearer step."

@@ -1,0 +1,35 @@
+target: "otp:fallow-health-lane:001"
+target_sha256: "2303a50e5dfc9161f073ea2aa244112b4e15dcd6e495f767475aa998d31611d7"
+chain_sha256: "b87798c5eab138361a561ba78b406881191ba066de3d09da500cceceec0cb42e"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a relation to test."
+attacks:
+  - surface: identity
+    rule: "unresolved-takes-precedence"
+    counterexample: "One health command can emit measurements while an external gate applies the ceilings, whereas another version can consume the same ceilings internally. Equal command and threshold text then do not settle whether there is one prescription or two; the card and proposal correctly retain unresolved identity pending the named execution evidence."
+    outcome: survived
+  - surface: warrant
+    rule: "listing-cq-warrant"
+    counterexample: "CQ-001 asks which verification lanes exist and their kinds, but it does not require a threshold-bearing FallowHealthLane individual. The command inventory and a separate complexity-ceiling file can populate a diagnostic command and policy without the merged term proposed here."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-true-of-config-pair"
+    counterexample: "A pure CLI inventory can list a health command while a separate configuration file lists complexity ceilings, even when the command never reads that file and no unified threshold-governed procedure exists. The FA explicitly says this dataflow is unobserved, so the implementation-only twin preserves every cited fact."
+    outcome: landed
+rival_models_still_viable:
+  - "A threshold-bearing Fallow health procedure specification"
+  - "A health diagnostic procedure plus a separate threshold policy"
+  - "An inventory command-entry information object"
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:e111144fd959c0d5a1d7f8caf1d62ed2e8b5ea12c9346adfd60c22001c7d26d4"
+  - "po:sha256:38ed56de8a68cd967d27668d420a8c5f46209fa8ecefd523ce74676362c611a6"
+  - "CQ-001"

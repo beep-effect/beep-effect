@@ -1,6 +1,7 @@
 /**
  * Schema for `.claude-plugin/marketplace.json` plugin catalogs.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -205,9 +206,9 @@ export declare namespace GitSubdirPluginSource {
  * ```ts
  * import { Plugin } from "effect-claudecode"
  *
- * const source = Plugin.NpmPluginSource.make({ package: "@example/plugin" })
+ * const source = Plugin.NpmPluginSource.make({ package: "@acme/plugin" })
  *
- * console.log(source.package) // "@example/plugin"
+ * console.log(source.package) // "@acme/plugin"
  * ```
  *
  * @category schemas
@@ -235,7 +236,7 @@ export class NpmPluginSource extends S.Class<NpmPluginSource>($I`NpmPluginSource
  *
  * const input = {
  *   source: "npm",
- *   package: "@example/plugin"
+ *   package: "@acme/plugin"
  * } satisfies Plugin.NpmPluginSource.Encoded
  * console.log(input.package)
  * ```

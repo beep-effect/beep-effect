@@ -154,9 +154,15 @@ export interface ImageStoreService {
  * **Example** (Inspect image store)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ImageStore } from "@effect-ontology/Service/ImageStore"
  *
- * console.log(ImageStore)
+ * const program = Effect.gen(function* () {
+ *   const store = yield* ImageStore
+ *   return store
+ * }).pipe(Effect.provide(ImageStore.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -245,7 +251,7 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
               totalCount: 1,
               updatedAt,
             };
-            const json = yield* S.encodeEffect(S.fromJsonString(ImageManifest, { space: 2 }))(newManifest);
+            const json = yield* ImageManifest.encodeEffectFromJsonStringFormatted(newManifest);
             yield* storage.setIfGenerationMatch(manifestPath, json, "0");
           }
         }),

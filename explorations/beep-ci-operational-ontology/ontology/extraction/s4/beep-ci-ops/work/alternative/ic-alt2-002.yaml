@@ -1,0 +1,34 @@
+id: ic:alt2:002
+hypothesis_ref: dh:reporun:009
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two review-fix procedure specifications are the same iff they prescribe the same repeatable proof operation: the review-fix
+    surface bound to the command sequence quality, github-checks, review-fix; the surface token is evidence rather than the
+    criterion.
+  reidentification_key:
+  - RepoProofSurface.review-fix
+  - RepoProofStepDefinition id full:01-review-fix
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One specification per distinct prescribed review-fix proof operation.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    A particular review-fix repair run is not this specification: the constructor yields command metadata, not a dated execution.
+- description: >-
+    The cheap-gates and quality surfaces prescribe different argument sequences, so they are different specifications even
+    though they share the quality/github-checks prefix.
+status: proposed

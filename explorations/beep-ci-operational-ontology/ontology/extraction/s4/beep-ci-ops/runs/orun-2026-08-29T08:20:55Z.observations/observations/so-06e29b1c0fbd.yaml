@@ -1,0 +1,24 @@
+id: so:sha256:06e29b1c0fbd875c464799b1e9ffe8f021428e7be763022aaaff27b9c01a31a4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 695
+  end_line: 704
+  content_sha256: 7dcfa6a2c421c1ba7c1cb8d2873909a543280510eba5cd63cc7fde2fa742c2d9
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::withTurboForce
+  lexical_name: withTurboForce
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const withTurboForce = (steps: ReadonlyArray<RepoPlanStep>, forceTurbo: boolean): ReadonlyArray<RepoPlanStep>
+  =>'
+epistemic_status: parser_derived

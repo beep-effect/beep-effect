@@ -75,7 +75,7 @@ project entity models with `toPgTable`.
 - **Rejected homes:**
   - Owning slice - the audit and identity meaning is deliberately identical across all product slices, so no one slice can own it.
   - Foundation - organization scope, principals, source facets, public ids, and entity-type identity are Beep product language rather than domain-agnostic schema substrate.
-- **Surface:** `ProductEntity.make`, `ProductEntity.fields`, and `ProductEntity.ProductEntityKit` from `@beep/shared-domain/entity/ProductEntity`; consolidated ids from `@beep/shared-domain/identity/*`.
+- **Surface:** `ProductEntity.make`, `ProductEntity.fields`, and `ProductEntity.ProductEntityKit` from `@beep/shared-domain/entity/ProductEntity`; consolidated ids from `@beep/shared-domain/identity/*`. Every `EntityId.factory` id also carries the canonical codec statics and the Effect codec group (`EntityIdCodecStatics` from `@beep/shared-domain/entity/EntityId`), with the factory's plain `equivalence` as the canonical equivalence static.
 - **Runtime limits:** no live Layers; effect-drizzle use is limited to executable schema, column, index, and table metadata.
 - **Coupling acceptors:** Entity-stack migration accepted the shared contract across all current slice consumers; PR review sign-off pending.
 - **Removal trigger:** retire when persisted product entities no longer share a common audit/identity contract or a replacement promotion record moves that contract to a different shared owner.

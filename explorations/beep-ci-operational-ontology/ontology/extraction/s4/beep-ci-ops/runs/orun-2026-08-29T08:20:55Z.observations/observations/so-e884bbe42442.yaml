@@ -1,0 +1,24 @@
+id: so:sha256:e884bbe42442e949ef93c7303bcc3dcb55bff89ba074062b8ebd1b78b0ddbe77
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 465
+  end_line: 507
+  content_sha256: a2f3c286aed08ce640f430f968bbf7b6af40f7f6261aadae25edee0e5baf88d4
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::shouldSkipCommitForReusablePublish
+  lexical_name: shouldSkipCommitForReusablePublish
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const shouldSkipCommitForReusablePublish = Effect.fn("Yeet.shouldSkipCommitForReusablePublish")(function*
+  (
+epistemic_status: parser_derived

@@ -1,0 +1,124 @@
+# beep-ci-ops — predicate closure contract (final-grill round 2 ruling, seeded 2026-08-27)
+# LAW: a FILTER-NOT-EXISTS (or closed-membership) conclusion may be trusted ONLY over a
+# predicate whose closure is DECLARED here for the snapshot being queried. The
+# OperationalSnapshot ingestion asserts completeForPredicate per this contract; SHACL
+# shapes VALIDATE the declaration before any negation-as-failure conclusion is trusted
+# (enforcement shapes = S6). The projection's fail-safe law keys on it: an INCOMPLETE
+# predicate forces the conservative schedule, never a filtered one. The suite's
+# non-vacuity antecedent ASKs (run_cq_suite.py) were the first installment of this
+# discipline; this file is the systematic form.
+#
+# world: closed = the snapshot enumerates EVERY edge of this predicate within
+#   closure_scope (absence is evidence of absence); open = absence licenses nothing.
+# complete_within: the boundary inside which closure holds.
+# source: the vein the snapshot ingests the predicate from.
+# freshness: what instant the closure is relative to.
+
+- predicate: invalidates
+  world: closed
+  complete_within: "one OperationalSnapshot (tree x epoch ledger at snapshot instant)"
+  source: "epoch/invalidation ledger derived from hash-surface change events (turbo inputs + config landings)"
+  freshness: snapshot_instant
+  negations: [CQ-005, CQ-006]
+  note: "an un-ingested invalidation makes stale evidence look valid — the ingestion contract, not the query, carries this risk"
+
+- predicate: dischargesObligation
+  world: closed
+  complete_within: "one OperationalSnapshot (evidence records for the queried tree x epoch)"
+  source: ".beep/yeet/runs verdicts + attempt journals for the queried tree"
+  freshness: snapshot_instant
+  negations: [CQ-006]
+
+- predicate: validInEpoch
+  world: closed
+  complete_within: "one OperationalSnapshot"
+  source: "evidence ingestion (verdicts x epoch ledger)"
+  freshness: snapshot_instant
+  negations: [CQ-006]
+
+- predicate: provesTree
+  world: closed
+  complete_within: "one OperationalSnapshot"
+  source: "evidence ingestion"
+  freshness: snapshot_instant
+  negations: [CQ-006]
+
+- predicate: requiresLane
+  world: closed
+  complete_within: "the T-Box projection configuration (tier obligation sets are fully declared)"
+  source: "tier definitions (S4 extraction of lane assembly + CI required contexts)"
+  freshness: tbox_version
+  negations: [CQ-006, CQ-017]
+
+- predicate: surfacedByLane
+  world: closed
+  complete_within: "one OperationalSnapshot (signature->lane map as ratified at S6)"
+  source: "KPI ETL signature attribution"
+  freshness: snapshot_instant
+  negations: [CQ-013]
+  note: "the argmin's inner NOT EXISTS also assumes every candidate lane carries a cost estimate — hasCostEstimate closure below"
+
+- predicate: hasCostEstimate
+  world: closed
+  complete_within: "one OperationalSnapshot (every lane under scheduling consideration carries an estimate — census/default provenance fills gaps, never absence)"
+  source: "cost census ETL (measured | census | default)"
+  freshness: snapshot_instant
+  negations: [CQ-013]
+
+- predicate: hasStarvationException
+  world: closed
+  complete_within: "one admission-store snapshot (the single member HardFloorException is ETL-derived from the snapshot-GLOBAL hardFloorEngaged flag — round-3 J-B1/J-W5: quarantine is corrupt-record isolation, never an owner state)"
+  source: "AdmissionSnapshot (deployed QualityScheduler)"
+  freshness: snapshot_instant
+  negations: [CQ-023]
+  note: "an un-modeled legal degradation reads as starvation (false red) — fail-safe direction, acceptable; CQ-023 pins the negation to the closed member so invented exceptions cannot suppress (round-3 H-12)"
+
+- predicate: scopedByComputation
+  world: closed
+  complete_within: "one OperationalSnapshot — CLOSED SCOPE-PROVENANCE: the emitter contract guarantees every evidence/schedule with a narrowed hasScope records its trust edge at emission"
+  source: "projection emitter + evidence ingestion (raw turbo query output, not the plan snapshot — TurboQuery.ts drops reason __typename)"
+  freshness: snapshot_instant
+  negations: [CQ-019]
+  note: "this closure is what makes CQ-019 arm 2 non-circular (seat G); it is a contract on WRITERS, validated by SHACL at S6"
+
+- predicate: hasOriginKey
+  world: closed
+  complete_within: "one admission-store snapshot (every active lease's originKey present)"
+  source: "deployed lease records (originKey — proof-lock basename of remote.origin.url; round-3 H-04/J-B3 correction from checkoutRoot)"
+  freshness: snapshot_instant
+  negations: [CQ-009]
+  note: "closed-membership (uniqueness) rather than negation: the pair-detection is only sound if every active lease is present; empty originKey = origin-exempt work (review-fix)"
+
+- predicate: p50Ms
+  world: closed
+  complete_within: "one OperationalSnapshot (every surfaced candidate lane's estimate carries a P50 — census/default provenance fills gaps, never absence; round-3 H-11)"
+  source: "cost census ETL"
+  freshness: snapshot_instant
+  negations: [CQ-013]
+  note: "CQ-013's argmin NOT-EXISTS silently drops an unpriced competitor lane — closure is the writer contract; SHACL-shaped at S6"
+
+- predicate: hasAffectedOutcome
+  world: closed
+  complete_within: "one OperationalSnapshot (every AffectedComputation carries exactly one typed outcome — the closed-enum ruling)"
+  source: "raw turbo query output ingestion (never the plan snapshot)"
+  freshness: snapshot_instant
+  negations: [CQ-019]
+  note: "CQ-019 arm 4 flags a scopedByComputation target with NO typed outcome as dangling provenance (round-3 H W-02) — sound only under this closure"
+
+# --- OPEN-WORLD DECLARATIONS (retention-bounded telemetry; negations FORBIDDEN) ------
+
+- predicate: episodeStartedAt
+  world: open
+  complete_within: "the attempt-journal retention window ONLY (ring buffer, newest ~50 attempts/branch — AttemptJournal.ts)"
+  source: ".beep/yeet/runs/*/attempts.ndjson"
+  freshness: retention_window
+  negations: []
+  note: "history beyond retention is EVICTED, not absent; window aggregates (CQ-012) are retained-window-relative and say so; no NOT-EXISTS may run over episode history"
+
+- predicate: occurredAt
+  world: open
+  complete_within: "the ingested event-window only"
+  source: "invalidation-event ingestion (git landings, config bumps)"
+  freshness: ingestion_window
+  negations: []
+  note: "CQ-011 windows enumerate what was ingested; absence of an event in a window is not evidence it did not happen unless the window's ingestion is separately declared complete"

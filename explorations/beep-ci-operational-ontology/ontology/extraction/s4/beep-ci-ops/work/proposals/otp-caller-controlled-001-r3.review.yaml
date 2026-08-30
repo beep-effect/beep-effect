@@ -1,0 +1,59 @@
+target: "otp:caller-controlled:001"
+target_sha256: "aee60005ac5f7a7b45cd964cad872718ef11d12c7f0b07d5b2c7f7ce7d13de54"
+chain_sha256: "b88be440c8459c8482eee16392879538b41e52aea56ac53a7525cc53ed407357"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists
+    to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: identifier-is-not-content-identity
+    counterexample: >-
+      A CI resolution and an explicit-cache-argument resolution produce
+      different records and reasons, while both preserve the same rule that
+      the CLI injects no override and leaves authority with the caller. The
+      revised card identifies that governed content rather than the shared tag
+      or either record token.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-domain-member
+    counterexample: >-
+      Removing CallerControlled leaves CQ-024 unable to classify CI and
+      explicit-cache-argument executions in the required three-arm posture
+      domain. LocalOnly and LocalWriteRemoteRead do not cover those runs.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A source tag by itself is implementation-only, but it cannot preserve the
+      cited effective behavior that CI and explicit cache arguments prevent CLI
+      rewriting and leave the actual Turbo arguments under caller control. The
+      invocation-level authority allocation defeats the tag-only null twin.
+    outcome: survived
+  - surface: null_discriminator
+    rule: prior-landed-attack-not-retired
+    counterexample: >-
+      The immediately preceding review of proposal digest
+      982940acd25576c1992ea6a8676e2450987678b8c4270a61a92a89ea51ca04b2
+      landed discriminator-true-of-tagged-dto. The current bytes add a runtime
+      interpretation, but revision_log names only the earlier
+      f3762d40c1dcce3aba6a922e22b7b92a5a4004524d43f0d4016bcf27702c2643
+      digest. Consequently the artifact chain does not attest that synthesis
+      answered the later landed discriminator, and a PASS would erase that
+      evidentiary break.
+    outcome: landed
+rival_models_still_viable:
+  - "The governed posture is supported on the merits but its last landed discriminator is not retired in revision history."
+evidence:
+  - "so:sha256:5455a88353a08e19104c4f4ed27714d39b682fb71f40c78b8067c3133c293860"
+  - "po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5"
+  - "po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a"
+  - "CQ-024"

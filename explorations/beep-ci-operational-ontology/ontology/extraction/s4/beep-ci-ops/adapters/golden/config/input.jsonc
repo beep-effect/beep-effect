@@ -1,0 +1,18 @@
+{
+  // golden fixture for adapter-config — jsonc comments must strip
+  "$schema": "https://example.invalid/golden.json",
+  "futureFlags": {
+    "goldenEngine": true
+  },
+  "tasks": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build", "codegen"],
+      "outputs": ["dist/**"]
+    },
+    "codegen": {
+      "cache": false,
+      "timeout": 300 /* block comment */
+    }
+  }
+}

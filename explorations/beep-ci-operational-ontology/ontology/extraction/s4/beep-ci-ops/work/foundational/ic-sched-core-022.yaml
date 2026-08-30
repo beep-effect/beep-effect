@@ -1,0 +1,35 @@
+id: ic:sched-core:022
+hypothesis_ref: dh:sched-core:023
+identity:
+  supplies_identity: true
+  identity_criterion: Two grant-state vocabulary specifications are the same information content exactly when they contain
+    the same governed state values with the same classification conditions; the active label, lease filename, and serialized
+    row are evidence, not identity.
+  reidentification_key:
+  - governed state-member set
+  - member classification conditions
+  - grant-state vocabulary version
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One controlled vocabulary that classifies a live capacity-charging lease as ActiveGrant and makes no unsupported
+    ReleasedGrant continuity claim.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a phase universal borne by a grant that survives lease deletion
+  - a lease-presence DTO field
+  existential_dependencies:
+  - the grant-state governance contract
+  - at least one policy or software carrier
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - superseded when the governed member set or classification conditions change
+counterexamples:
+- description: A second vocabulary can reuse the word active while also treating queued tickets as grants; lexical equality
+    does not make it the same state specification, and deletion of one lease supplies no ReleasedGrant bearer continuity.
+status: proposed

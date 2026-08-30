@@ -49,4 +49,5 @@ export class Message extends ProductEntity.Entity<Message>()(WorkspaceIdentity.M
   })
 ) {
   static readonly decodeUnknownSync = S.decodeUnknownSync(Message);
+  static readonly encodeSync = S.encodeSync(Message);
 }

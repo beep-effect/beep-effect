@@ -1,0 +1,9 @@
+id: rat:11
+proposal_ref: otp:admission-charge-tokens:001
+proposal_sha256: 1b0e23435746cde4103d63ec898ae30d8c1b8238b499fc972b750afd9157dcb5
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept admissionChargeTokens — charge equals token weight as a ratified definitional semantic.

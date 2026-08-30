@@ -1,0 +1,23 @@
+id: so:sha256:bad56663a003aa7051c44ac97314da969e4902eaf2f08dad9c0bbbded61d7be4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 155
+  end_line: 159
+  content_sha256: 7bc1dbba2273e3287e827c3b54f3950ca895920b119d71095957db77386ebc00
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheSecretEnvName
+  lexical_name: TurboCacheSecretEnvName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: TurboCacheSecretEnvName
+source_excerpt: export const TurboCacheSecretEnvName = LiteralKit(TurboCacheEnvName.omitOptions(["TURBO_CACHE"])).pipe(
+epistemic_status: parser_derived

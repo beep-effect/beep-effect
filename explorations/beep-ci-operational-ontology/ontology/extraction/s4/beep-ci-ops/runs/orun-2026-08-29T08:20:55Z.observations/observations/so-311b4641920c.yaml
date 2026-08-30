@@ -1,0 +1,23 @@
+id: so:sha256:311b4641920cea66e976df9fe3edf4a7a468a611d4cfe80ce92744f39ec1e826
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1492
+  end_line: 1591
+  content_sha256: f6d6cf6153fc96aed82263e5388f2dac2a45de92e0f3f88f7893b6c79d112dec
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::ciLaneCommand
+  lexical_name: ciLaneCommand
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: ciLaneCommand
+source_excerpt: export const ciLaneCommand = Command.make(
+epistemic_status: parser_derived

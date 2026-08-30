@@ -1,0 +1,28 @@
+id: "dh:sched-core:001"
+observation_refs:
+  - "so:sha256:3e8c52e70d0dfe96bccb840e61a4691e1d3f08801b3892ea976c3123f93d1f61"
+  - "so:sha256:406c216dc233619297fa1281dcf64ead5e9510e6753613a373fb0473d9a00bc8"
+  - "po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807"
+  - "po:sha256:07350ed24a5ad10ca9a6a0af85ae646487c62e7c63e760eeb8305d395e223b25"
+  - "po:sha256:2d8b36c6bb7afb7cda727640a5656328452253def711c0a1cfdb43848de709a9"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:bef24461115ca5af988461aed9aedd081401c061710538fa444c2bc5e7e8e233"
+cq_warrants: ["CQ-021", "CQ-023"]
+proposed_referent:
+  label: "queued admission-request record"
+  description: "A durable information artifact recording a contender that is currently waiting for machine-wide admission."
+representation_status: information_artifact
+alternatives:
+  - label: "the queued admission request itself"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "queue DTO with no referent beyond serialization"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The enriched evidence identifies a durable queued contender whose effective priority ages and whose position in the shared order governs admission. That supports an operational queue-record information artifact while leaving a distinct world-side request as a viable foundational alternative."
+  discriminator: "The deployed scheduler promotes the first fitting ticket in shared order and raises a waiting verify ticket to publish priority after the configured aging window."
+epistemic_status: proposed
+confidence: {value: 0.93, use_for_acceptance: false}

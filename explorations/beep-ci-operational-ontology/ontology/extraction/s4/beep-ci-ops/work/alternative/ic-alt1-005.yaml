@@ -1,0 +1,41 @@
+id: "ic:alt1:005"
+hypothesis_ref: "dh:sched-core:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two queued admission-request records are the same iff they are the durable
+    ticket of the same waiting-contender episode. Process id, process start time, and nonce are
+    reidentification evidence, never the sameness criterion: pid reuse is why start time is
+    observed alongside pid."
+  reidentification_key:
+    - "YeetAdmissionTicket"
+    - "nonce"
+    - "pid"
+    - "procStart"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one durable ticket record as a single information object for one wait episode"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "relator"
+    - "role"
+  existential_dependencies:
+    - "the waiting contender process"
+    - "the machine-wide admission pool"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "promoted into a lease"
+    - "removed on interrupt"
+    - "reaped as dead"
+counterexamples:
+  - description: "Heartbeat refresh rewrites heartbeatAtMillis on the same ticket; treating each
+      heartbeat as a new request would fragment one wait. After promotion the ticket file is
+      removed and a lease is staged, so identifying the ticket with the admission
+      request-as-relator would either destroy the request at promotion or keep a ticket that the
+      runtime deletes."
+status: "proposed"

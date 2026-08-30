@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:055"
+observation_refs:
+  - "so:sha256:d9d185b9d6c50f91b8f290bfdb7d0341025004e8f63f92f7aae8a5dbc2171f05"
+cq_warrants: []
+proposed_referent:
+  label: "runStatusMode helper"
+  description: "No domain-ontology referent is proposed for the runStatusMode helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "status-reporting procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

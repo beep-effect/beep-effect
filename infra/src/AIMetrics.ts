@@ -433,11 +433,11 @@ export const makeAIMetricsStackArgsFromConfigValues = ({
   return AIMetricsStackArgs.new(
     AiMetricsInstallInput.make({
       ...O.getSomesStruct({ defaultTool: toolFromPulumiConfig(defaultTool) }),
-      ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(dataRoot) }),
-      ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(hashSaltSecretRef) }),
+      dataRoot: O.fromUndefinedOr(dataRoot),
+      hashSaltSecretRef: O.fromUndefinedOr(hashSaltSecretRef),
       ...O.getSomesStruct({ phoenixImage: O.fromUndefinedOr(phoenixImage) }),
-      ...O.getSomesStruct({ publicBaseUrl: resolvedPublicBaseUrl }),
-      ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(rawArchiveKeySecretRef) }),
+      publicBaseUrl: resolvedPublicBaseUrl,
+      rawArchiveKeySecretRef: O.fromUndefinedOr(rawArchiveKeySecretRef),
       ...O.getSomesStruct({ target: resolvedTarget }),
     }),
     remote

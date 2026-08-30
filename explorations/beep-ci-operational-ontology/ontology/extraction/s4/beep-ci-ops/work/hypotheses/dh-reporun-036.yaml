@@ -1,0 +1,26 @@
+id: "dh:reporun:036"
+observation_refs:
+  - "so:sha256:56bfbf644f84217d5ff86ec029692ae986ac22b83caa00e32001758242a3da8c"
+  - "so:sha256:a15fec578e749ffbda17c61769214c914dcf401352c2c923f89cf6c5d3eebad9"
+  - "so:sha256:3fe634d179764022e4532b463821a31aec3a8975d33b8b49dde3254217a86e5d"
+cq_warrants: []
+proposed_referent:
+  label: "combined captured-subprocess result record"
+  description: "A produced information record containing a subprocess exit code, combined output, and truncation state."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Subprocess execution occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Transient return object with no retained operational role"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The transient return-DTO counterexample wins: a function-local object can hold the exit code, captured output, and truncation flag and be discarded immediately without any retained information artifact."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.75
+  use_for_acceptance: false

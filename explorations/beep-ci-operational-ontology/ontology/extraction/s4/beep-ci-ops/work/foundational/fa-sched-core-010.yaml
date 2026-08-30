@@ -1,0 +1,16 @@
+id: "fa:sched-core:010"
+hypothesis_ref: "dh:sched-core:011"
+identity_card_ref: "ic:sched-core:010"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The referent is the machine's memory-availability quality, and the returned number is merely a measurement value."
+    still_viable: true
+  - label: "MemoryStats is only a live adapter service and never creates independently identifiable observation records."
+    still_viable: true
+strongest_counterexample: "availableGib and totalGib are effects that may be evaluated separately, so the source does not even guarantee that a returned pair belongs to one atomic observation act."
+verdict: "explicitly_deferred"
+needed_evidence: "A measurement record carrying machine scope, one capture time, method provenance, and atomicity for available and total readings would decide whether observation individuals exist."

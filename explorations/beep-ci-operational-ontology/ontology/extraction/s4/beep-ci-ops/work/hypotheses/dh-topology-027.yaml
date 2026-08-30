@@ -1,0 +1,24 @@
+id: "dh:topology:027"
+observation_refs:
+  - "po:sha256:48688f7e29d2a88756ecca576799f17db6a2ae3bb6c56cfb722f073d072397c1"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/colors workspace package"
+  description: "The workspace software package information artifact identified by @beep/colors in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "lexical_alias"
+alternatives:
+  - label: "@beep/colors as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort row containing @beep/colors can feed the affected-package query while remaining serialized implementation data, so the cited observation establishes only the package-name token."
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

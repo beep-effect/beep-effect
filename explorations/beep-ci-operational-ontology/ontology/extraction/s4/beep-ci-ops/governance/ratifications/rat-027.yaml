@@ -1,0 +1,9 @@
+id: rat:27
+proposal_ref: otp:hosted-required-check-merge-obligation:001
+proposal_sha256: b16234e5c85b5d4db24ad4550a41fc7a0c588e3a22f2100b5a40fd648e5d02f7
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept RequiredCheckDesignation — the branch-protection designation fact, procedure-free.

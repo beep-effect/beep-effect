@@ -1,0 +1,22 @@
+id: fa:alt2:047
+hypothesis_ref: dh:turbo-cache:002
+identity_card_ref: ic:alt2:047
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Turbo build work-unit specification'
+  still_viable: true
+- label: 'kind: verification lane realized by the build task'
+  still_viable: true
+- label: 'process: a particular build execution'
+  still_viable: false
+strongest_counterexample: >-
+  The build entry jointly declares dependsOn, inputs, env, outputs, cache true, and persistent false, which is a reusable
+  work prescription, not one dated compilation.
+verdict: analyzed
+needed_evidence: >-
+  An observation that 'build' is treated as a Yeet verification lane with its own proof-surface mapping, independent of turbo.json,
+  would keep the lane-kind rival as a second identity provider.

@@ -1,0 +1,28 @@
+id: ic:alt3:048
+hypothesis_ref: dh:turbo-cache:008
+identity:
+  supplies_identity: true
+  identity_criterion: Two such task specifications are the same iff they prescribe the same
+    repeatable Turbo task named test:integration:parallel with its upstream build dependency.
+    The lexical suffix parallel is reidentification evidence rather than the criterion.
+  reidentification_key:
+  - test:integration:parallel
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one Turbo task prescription for parallel integration tests
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: The serial integration task is a different prescription even though it also
+    depends on build; sharing an upstream selector does not identify this parallel task.
+status: proposed

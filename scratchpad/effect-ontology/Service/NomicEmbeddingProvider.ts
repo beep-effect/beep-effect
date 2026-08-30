@@ -40,9 +40,16 @@ const mapTaskType = Match.type<string>().pipe(
  * **Example** (Inspect nomic embedding provider live)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { NomicEmbeddingProviderLive } from "@effect-ontology/Service/NomicEmbeddingProvider"
  *
- * console.log(NomicEmbeddingProviderLive)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(NomicEmbeddingProviderLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -99,9 +106,16 @@ export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, N
  * **Example** (Inspect nomic embedding provider default)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { NomicEmbeddingProviderDefault } from "@effect-ontology/Service/NomicEmbeddingProvider"
  *
- * console.log(NomicEmbeddingProviderDefault)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(NomicEmbeddingProviderDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

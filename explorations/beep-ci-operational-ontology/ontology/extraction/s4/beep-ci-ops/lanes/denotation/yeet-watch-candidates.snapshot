@@ -1,0 +1,248 @@
+- candidate: AffectedComputation
+  kind: class
+  definition: One execution of Turbo affected-set determination whose raw query result is decoded for
+    Yeet planning.
+  admission_kind: decision
+  cq_justification:
+  - CQ-019
+  decision_relevance: Identifies the computation whose affected-set provenance must be checked before
+    narrowed verification scope is trusted.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts:254-262 — 'turbo query affected'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-affected-typenames
+- candidate: chatgpt
+  kind: literal-domain-member
+  source_domain: PrCloseoutGateName
+  definition: The chatgpt PR closeout gate represented in durable Yeet state.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a collected verification gate for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — 'LiteralKit(["hosted-checks",
+    "review-threads", "greptile", "coderabbit", "chatgpt"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: coderabbit
+  kind: literal-domain-member
+  source_domain: PrCloseoutGateName
+  definition: The coderabbit PR closeout gate represented in durable Yeet state.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a collected verification gate for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — 'LiteralKit(["hosted-checks",
+    "review-threads", "greptile", "coderabbit", "chatgpt"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: greptile
+  kind: literal-domain-member
+  source_domain: PrCloseoutGateName
+  definition: The greptile PR closeout gate represented in durable Yeet state.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a collected verification gate for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — 'LiteralKit(["hosted-checks",
+    "review-threads", "greptile", "coderabbit", "chatgpt"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: hosted-checks
+  kind: literal-domain-member
+  source_domain: PrCloseoutGateName
+  definition: The hosted-checks PR closeout gate represented in durable Yeet state.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a collected verification gate for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — 'LiteralKit(["hosted-checks",
+    "review-threads", "greptile", "coderabbit", "chatgpt"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: review-threads
+  kind: literal-domain-member
+  source_domain: PrCloseoutGateName
+  definition: The review-threads PR closeout gate represented in durable Yeet state.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a collected verification gate for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — 'LiteralKit(["hosted-checks",
+    "review-threads", "greptile", "coderabbit", "chatgpt"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: fail
+  kind: literal-domain-member
+  source_domain: YeetCheckOutcome
+  definition: The fail closed classification of one PR check state in a Yeet watch snapshot.
+  admission_kind: semantic-support
+  supports:
+  - CommittedFailure
+  - WorkUnitExecution
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: pass
+  kind: literal-domain-member
+  source_domain: YeetCheckOutcome
+  definition: The pass closed classification of one PR check state in a Yeet watch snapshot.
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  - WorkUnitExecution
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: pending
+  kind: literal-domain-member
+  source_domain: YeetCheckOutcome
+  definition: The pending closed classification of one PR check state in a Yeet watch snapshot.
+  admission_kind: semantic-support
+  supports:
+  - WorkUnitExecution
+  - ExecutionState
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: skip
+  kind: literal-domain-member
+  source_domain: YeetCheckOutcome
+  definition: The skip closed classification of one PR check state in a Yeet watch snapshot.
+  admission_kind: semantic-support
+  supports:
+  - WorkUnitExecution
+  - ExecutionState
+  decision_relevance: Provides a source carrier for execution, evidence, or failure state used by verification
+    stopping and obligation decisions.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — 'LiteralKit(["pending",
+    "pass", "fail", "skip"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: ci-timeout
+  kind: literal-domain-member
+  source_domain: YeetMonitorFlakeClass
+  definition: The ci-timeout environment-only failure signature the merge loop may rerun once per job
+    per head SHA.
+  admission_kind: decision
+  cq_justification:
+  - CQ-013
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:138 — '"ci-timeout",'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
+    = LiteralKit(['
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: install-failure
+  kind: literal-domain-member
+  source_domain: YeetMonitorFlakeClass
+  definition: The install-failure environment-only failure signature the merge loop may rerun once per
+    job per head SHA.
+  admission_kind: decision
+  cq_justification:
+  - CQ-013
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:141 — '"install-failure",'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
+    = LiteralKit(['
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: runner-loss
+  kind: literal-domain-member
+  source_domain: YeetMonitorFlakeClass
+  definition: The runner-loss environment-only failure signature the merge loop may rerun once per job
+    per head SHA.
+  admission_kind: decision
+  cq_justification:
+  - CQ-013
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:140 — '"runner-loss",'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
+    = LiteralKit(['
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: setup-5xx
+  kind: literal-domain-member
+  source_domain: YeetMonitorFlakeClass
+  definition: The setup-5xx environment-only failure signature the merge loop may rerun once per job per
+    head SHA.
+  admission_kind: decision
+  cq_justification:
+  - CQ-013
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:139 — '"setup-5xx",'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
+    = LiteralKit(['
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: ts2589-no-location
+  kind: literal-domain-member
+  source_domain: YeetMonitorFlakeClass
+  definition: The ts2589-no-location environment-only failure signature the merge loop may rerun once
+    per job per head SHA.
+  admission_kind: decision
+  cq_justification:
+  - CQ-013
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:137 — '"ts2589-no-location",'
+  - packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — 'export const YeetMonitorFlakeClass
+    = LiteralKit(['
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits

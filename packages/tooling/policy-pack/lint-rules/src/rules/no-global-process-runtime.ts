@@ -8,6 +8,7 @@
 
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashMap, MutableHashSet } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import {
   getPropertyName,
@@ -23,14 +24,21 @@ import type { ESTree } from "@oxlint/plugins";
 import type { MaybeNode, MemberAccess } from "./utils.ts";
 
 const RUNTIME_PROPERTIES = HashSet.fromIterable(["platform", "arch"]);
-// The sole beep file allowed to read host runtime platform/architecture directly.
-// Everything else must inject the runtime reference (Effect code) or provide it
-// explicitly (tests). Repoint this if the canonical host-process module moves.
-const HOST_PROCESS_REFERENCE_FILE = "packages/foundation/capability/chalk/src/internal/SupportsColor.ts";
+// The only beep files allowed to read host runtime platform/architecture
+// directly: the shared HostProcess reference module (everything else injects
+// HostProcessPlatform / HostProcessArchitecture in Effect code or imports the
+// current* constants in sync code and tests), the vendored chalk color-support
+// probe, and the pre-runtime tsgo bootstrap shim, which has no Effect runtime
+// to inject into.
+const HOST_PROCESS_REFERENCE_FILES = HashSet.fromIterable([
+  "packages/foundation/modeling/utils/src/HostProcess.ts",
+  "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+  "tools/tsgo-shim/tsgo.js",
+]);
 const NODE_OS_MODULES = HashSet.fromIterable(["node:os", "os"]);
 
 const isHostProcessReferenceFile = (filename: string, cwd: string): boolean =>
-  pathMatchesSuffix(toRepoPath(filename, cwd), HOST_PROCESS_REFERENCE_FILE);
+  HashSet.some(HOST_PROCESS_REFERENCE_FILES, (file) => pathMatchesSuffix(toRepoPath(filename, cwd), file));
 
 const hostProcessTarget = (property: string): string =>
   property === "arch" ? "HostProcessArchitecture" : "HostProcessPlatform";
@@ -87,7 +95,7 @@ export default defineRule({
     const currentScope = (): { shadowed: boolean } => scopeStack[scopeStack.length - 1] ?? { shadowed: false };
 
     const paramShadowsProcess = (params: ReadonlyArray<ESTree.ParamPattern>): boolean =>
-      params.some((param) => param.type === "Identifier" && param.name === "process");
+      A.some(params, (param) => param.type === "Identifier" && param.name === "process");
 
     const pushScope = (params: ReadonlyArray<ESTree.ParamPattern>) => {
       scopeStack.push({ shadowed: paramShadowsProcess(params) });

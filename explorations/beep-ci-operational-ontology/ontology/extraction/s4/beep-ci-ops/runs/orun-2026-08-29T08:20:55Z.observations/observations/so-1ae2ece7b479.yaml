@@ -1,0 +1,23 @@
+id: so:sha256:1ae2ece7b47920c2d583e24e3e0e2e7962ab14a433a27c85ff5bb664150b166a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 373
+  end_line: 379
+  content_sha256: 6af9d68414bd32974a3fe6f0e090ea66deaec0099f433b6644dec04c829cb7ba
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::validateAdmissionDirectory
+  lexical_name: validateAdmissionDirectory
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const validateAdmissionDirectory = (directory: string) =>'
+epistemic_status: parser_derived

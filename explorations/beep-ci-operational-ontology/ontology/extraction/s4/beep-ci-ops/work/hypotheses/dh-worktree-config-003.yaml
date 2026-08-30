@@ -1,0 +1,19 @@
+id: "dh:worktree-config:003"
+observation_refs:
+  - "po:sha256:a4f64e891a25a6cc469a3659587b1addf85901093769fbbb58ce0529735417c8"
+  - "po:sha256:2b64e2142eac08b9cd7f1d655caa43c80b1393910f15ac892f734e341dad3f7f"
+cq_warrants: []
+proposed_referent:
+  label: "boundary-violation diagnostic"
+  description: "A possible diagnostic category represented by an error-severity setting and an inventory count."
+representation_status: unresolved
+alternatives:
+  - label: "boundary-violation configuration and metric keys"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotations establish only a configuration label and a count key; they do not establish diagnostic occurrence semantics or a CQ-relevant referent beyond those representations."
+epistemic_status: proposed
+confidence: {value: 0.45, use_for_acceptance: false}

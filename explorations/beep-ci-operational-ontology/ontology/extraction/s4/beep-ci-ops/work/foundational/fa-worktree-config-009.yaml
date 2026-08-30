@@ -1,0 +1,20 @@
+id: "fa:worktree-config:009"
+hypothesis_ref: "dh:worktree-config:013"
+identity_card_ref: "ic:worktree-config:009"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Reusable symbolic affected-scope plan information content"
+    still_viable: true
+  - label: "Execution-bound plan with concrete base, target, and dirty snapshot resolved"
+    still_viable: true
+  - label: "Affected docgen execution"
+    still_viable: false
+strongest_counterexample: >-
+  The same origin/main-to-HEAD plus dirty-files prescription can resolve to
+  different concrete files before and after main advances. The symbolic plan
+  persists, while each bound context and execution is distinct.
+verdict: analyzed

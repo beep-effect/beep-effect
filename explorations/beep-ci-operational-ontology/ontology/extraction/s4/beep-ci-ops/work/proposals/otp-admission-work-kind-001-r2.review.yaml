@@ -1,0 +1,38 @@
+target: "otp:admission-work-kind:001"
+target_sha256: "31390c860bc9316062ce616505d31e073f5dfa7f85de7043b86a9c7c4a21d6a7"
+chain_sha256: "7f44014693a2f13304ceef5c36e17726e853f3c125849848589912de2c5631e4"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a edge to test; no valid subsumption relation is asserted."
+attacks:
+  - surface: identity
+    rule: "identifier-is-not-vocabulary-identity"
+    counterexample: "Two schedulers can reuse the four literal spellings while assigning different meanings and policy versions. The criterion relies on governed lineage, stipulated meanings, and versioned authority rather than the strings, so it separates those vocabularies and survives the identifier attack."
+    outcome: survived
+  - surface: warrant
+    rule: "cq-required-term"
+    counterexample: "Without an AdmissionWorkKind domain, CQ-021 cannot type or return the work kind of each queued SeatRequest. The CQ explicitly lists the class and uses hasWorkKind, so this is not a mere lexical mention."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-not-in-observations"
+    counterexample: "The closure records the four LiteralKit members and the declaration of admissionTokenWeight, but no branch values. A function that returns one for every member satisfies every cited observation while making the claimed differential treatment false."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-true-of-dto"
+    counterexample: "Even if different branch values were later observed, a pure enum used only as a scheduler switch key can assign different numbers without becoming an independently governed information object. The claimed behavior is therefore also true in a DTO-only null world."
+    outcome: landed
+rival_models_still_viable:
+  - "Controlled lexical aliases for operational work categories"
+  - "A pure enum used as a scheduler switch key"
+evidence:
+  - "so:sha256:52812cd00f245efb47e28b49b04b48f05de8a7fae89b4f413ebf61b3fc57cb86"
+  - "so:sha256:ebee067e625c3a5650da8dd8f45209c9f1ecba5607feb53883b955501198153c"
+  - "po:sha256:1df4ac671a4779bf2519466b2ecb2dcc2b23e9ba22e02ad5cebe87366eca3566"
+  - "CQ-021"

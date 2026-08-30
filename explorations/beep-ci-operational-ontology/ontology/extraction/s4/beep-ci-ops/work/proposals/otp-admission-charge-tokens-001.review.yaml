@@ -1,0 +1,59 @@
+target: "otp:admission-charge-tokens:001"
+target_sha256: "afb11ada490bdb5a6dc128c67de1aeda74aedc2d80bfee8ca34bee14e401f8b6"
+chain_sha256: "a78be7d18c8d57841150392c9cc1c6066a172481bf0bf8fb9996bb11d86baac0"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; no is-a edge or valid subsumption relation is proposed to test."
+attacks:
+  - surface: identity
+    rule: entity-kind-analysis-mismatch
+    counterexample: >-
+      The proposal is a data property, but the IdentityCard individuates dependent
+      admission-charge quality instances. Two requests can each bear a distinct
+      three-token quality while producing indistinguishable data-property values;
+      the card therefore does not state the identity criterion of the proposed
+      entity kind and cannot decide whether the ticket-to-lease copy preserves one
+      quality or creates another.
+    outcome: landed
+  - surface: identity
+    rule: identity-and-foundational-record-agreement
+    counterexample: >-
+      A proposal marked `none` whose IdentityCard supplied or carried identity despite the proposal declaring none, or a
+      proposal marked `analyzed` over an FA with a different verdict, would
+      launder an unresolved identity decision. Here the card records
+      supplies_identity=false and carries_identity=false, and the FA
+      verdict is `analyzed`; both agree with the proposal, so this
+      consistency attack is survived.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-term
+    counterexample: >-
+      Remove admissionChargeTokens from the model: CQ-010 can no longer compare a
+      grant's charge with remaining capacity, and CQ-021 can no longer return each
+      queued request's charge. Both CQs explicitly require this property, so the
+      attempted warrant attack does not defeat it.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      In a pure-DTO scheduler, weightTokens is an integer field copied from a ticket
+      record to a lease record and used in an arithmetic capacity guard. Every cited
+      fact remains true even if no admission-charge quality is reified and the symbol
+      is only an implementation field.
+    outcome: landed
+rival_models_still_viable:
+  - "The ontology needs only the numeric weightTokens record field and no individual admission-charge quality."
+  - "An admission charge is a reified policy assignment relating a subject, policy version, unit, and magnitude."
+evidence:
+  - "so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5"
+  - "po:sha256:7133fd16712631ed47e3cc1618eb4043126bbb8ad13ddcc94dd120afebb1c174"
+  - "po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f"
+  - "CQ-010"
+  - "CQ-021"
