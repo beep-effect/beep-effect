@@ -1,9 +1,6 @@
 /**
- * Telemetry Module Exports
- *
- * **Details**
- *
- * OpenTelemetry tracing, LLM attributes, and cost calculation.
+ * OTLP tracing, LLM span attributes, Prometheus metrics, and token-cost
+ * telemetry for effect-ontology extraction.
  *
  * @packageDocumentation
  * @since 0.0.0

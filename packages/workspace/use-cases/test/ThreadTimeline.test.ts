@@ -112,7 +112,7 @@ describe("ThreadTimeline", () => {
   );
 
   it("union-derived guards discriminate timeline items by kind", () => {
-    const content = S.encodeSync(Document)(Document.make({ children: [] }));
+    const content = Document.encodeSync(Document.make({ children: [] }));
     const message = S.decodeSync(Thread.TimelineMessageItem)({ kind: "message", role: "user", content });
     const toolCall = S.decodeSync(Thread.TimelineToolCallItem)({ kind: "tool_call", name: "search" });
 

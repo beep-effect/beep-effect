@@ -579,21 +579,14 @@ const lossForMetricSubset = (subset: MetricSubset): Option.Option<LossDeclaratio
 const unsupportedMetricIsDeclared = (score: MetricScore): boolean =>
   score.status !== "unsupported" ||
   lossForMetricSubset(score.subset).pipe(
-    Option.match({
-      onNone: () => false,
-      onSome: (loss) => {
-        const method = ExtractionLane.$match(score.lane, {
-          hosted: () => "hosted-langextract" as const,
-          pattern: () => "pattern-wink" as const,
-        });
-        return HashMap.get(declaredLosses, method).pipe(
-          Option.match({
-            onNone: () => false,
-            onSome: (losses) => HashSet.has(losses, loss),
-          })
-        );
-      },
-    })
+    Option.flatMap((loss) => {
+      const method = ExtractionLane.$match(score.lane, {
+        hosted: () => "hosted-langextract" as const,
+        pattern: () => "pattern-wink" as const,
+      });
+      return HashMap.get(declaredLosses, method).pipe(Option.map((losses) => HashSet.has(losses, loss)));
+    }),
+    Option.getOrElse(() => false)
   );
 
 const fixtureParseIsExpected = (document: DocumentOutcome): boolean =>

@@ -19,19 +19,21 @@ import {
   validationRequirementsForGoalDoctorFinding,
 } from "@beep/repo-cli/test/Goals";
 import { findRepoRoot } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import type { Path } from "effect";
 
 const FIXTURES_ROOT = new URL("./fixtures/goals-plan", import.meta.url).pathname;
+// biome-ignore lint/suspicious/noUndeclaredEnvVars: Local golden regeneration is an explicit uncached test-authoring mode.
 const REGEN = Bun.env.REGEN_GOLDENS === "1";
 const PILOT_SLUG = "knowledge-surface-automation";
 
@@ -114,6 +116,21 @@ describe("goals bootstrap --plan determinism", () => {
         expect(secondBytes).toBe(firstBytes);
       })
     ));
+
+  it("property: schema-generated inputs compile deterministic schema-valid plans", () => {
+    const BootstrapInputArbitrary = S.toArbitrary(BootstrapInput)(fc);
+    const isMaterializationPlan = S.is(MaterializationPlan);
+    fc.assert(
+      fc.property(BootstrapInputArbitrary, (input) => {
+        const first = compileMaterializationPlan(input, []);
+        const second = compileMaterializationPlan(input, []);
+        expect(isMaterializationPlan(first)).toBe(true);
+        expect(second.planId).toBe(first.planId);
+        expect(second.entries).toStrictEqual(first.entries);
+      }),
+      fcRuns(32)
+    );
+  });
 });
 
 describe("goals bootstrap --plan input rejection", () => {

@@ -17,6 +17,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
@@ -150,7 +151,19 @@ const validateOntologyConsistency = Effect.fn("validateOntologyConsistency")(fun
 });
 
 type BatchWorkflowPayloadType = BatchWorkflowPayload;
-type PipelineStage = "pending" | "preprocessing" | "extracting" | "resolving" | "validating" | "ingesting";
+const PipelineStage = LiteralKit([
+  "pending",
+  "preprocessing",
+  "extracting",
+  "resolving",
+  "validating",
+  "ingesting",
+]).pipe(
+  $I.annoteSchema("PipelineStage", {
+    description: "Durable batch extraction stages reported while polling a workflow.",
+  })
+);
+type PipelineStage = typeof PipelineStage.Type;
 
 // -----------------------------------------------------------------------------
 // Workflow Definition
@@ -172,12 +185,24 @@ type PipelineStage = "pending" | "preprocessing" | "extracting" | "resolving" | 
  * completed activity on restart. Preprocessing has graceful fallback -
  * if classification fails, the workflow continues with default metadata.
  *
- * **Example** (Inspect batch extraction workflow)
+ * **Gotchas**
+ *
+ * SHACL policy enforcement is fail-closed: `failOnViolation` defaults to
+ * `true`, so non-conforming graphs fail the workflow with
+ * `ValidationPolicyError` instead of continuing to ingestion.
+ *
+ * **Example** (Compose a start call)
  *
  * ```ts
- * import { BatchExtractionWorkflow } from "@effect-ontology/Service/WorkflowOrchestrator"
+ * import { Effect } from "effect"
+ * import { WorkflowOrchestrator, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
- * console.log(BatchExtractionWorkflow)
+ * const program = Effect.gen(function* () {
+ *   const orchestrator = yield* WorkflowOrchestrator
+ *   return orchestrator.poll
+ * }).pipe(Effect.provide(WorkflowOrchestratorLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category schemas
@@ -293,17 +318,19 @@ const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflo
 );
 
 /**
- * Validates and represents poll to batch state values at runtime.
+ * Poll a batch-extraction execution and project the engine result to BatchState.
  *
- * **Example** (Inspect poll to batch state)
+ * **Example** (Compose a poll)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { pollToBatchState } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
- * console.log(pollToBatchState)
+ * const program = pollToBatchState("batch-deadbeefcafe")
+ * console.log(program)
  * ```
  *
- * @category schemas
+ * @category utilities
  * @since 0.0.0
  */
 export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState")(function* (executionId: string) {
@@ -335,12 +362,14 @@ export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState
 /**
  * Layer that registers the batch extraction workflow with WorkflowEngine
  *
- * **Example** (Inspect batch extraction workflow layer)
+ * **Example** (Register the workflow with the engine)
  *
  * ```ts
- * import { BatchExtractionWorkflowLayer } from "@effect-ontology/Service/WorkflowOrchestrator"
+ * import { Layer } from "effect"
+ * import { BatchExtractionWorkflowLayer, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
- * console.log(BatchExtractionWorkflowLayer)
+ * const layer = Layer.merge(WorkflowOrchestratorLive, BatchExtractionWorkflowLayer)
+ * console.log(layer)
  * ```
  *
  * @category layers
@@ -992,10 +1021,12 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
  *
  * **Details**
  *
- * High-level API for batch workflow operations.
+ * High-level API for batch workflow operations. This remains a behavioral
+ * interface because every member starts, polls, interrupts, or resumes live
+ * durable workflow effects; payload and state data are schema-backed upstream.
  *
  *
- * @category type-level
+ * @category services
  * @since 0.0.0
  */
 export interface WorkflowOrchestratorMethods {
@@ -1041,12 +1072,18 @@ export interface WorkflowOrchestratorMethods {
 /**
  * Provides the workflow orchestrator service capability.
  *
- * **Example** (Inspect workflow orchestrator)
+ * **Example** (Poll through the orchestrator)
  *
  * ```ts
- * import { WorkflowOrchestrator } from "@effect-ontology/Service/WorkflowOrchestrator"
+ * import { Effect } from "effect"
+ * import { WorkflowOrchestrator, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
- * console.log(WorkflowOrchestrator)
+ * const program = Effect.gen(function* () {
+ *   const orchestrator = yield* WorkflowOrchestrator
+ *   return yield* orchestrator.poll("batch-deadbeefcafe")
+ * }).pipe(Effect.provide(WorkflowOrchestratorLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -1067,12 +1104,17 @@ export class WorkflowOrchestrator extends Context.Service<WorkflowOrchestrator, 
  *
  * Requires WorkflowEngine to be provided (via ClusterWorkflowEngine or memory layer)
  *
- * **Example** (Inspect make workflow orchestrator)
+ * **Example** (Construct the orchestrator)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { makeWorkflowOrchestrator } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
- * console.log(makeWorkflowOrchestrator)
+ * const program = Effect.gen(function* () {
+ *   const orchestrator = yield* makeWorkflowOrchestrator()
+ *   return yield* orchestrator.poll("batch-deadbeefcafe")
+ * })
+ * console.log(program)
  * ```
  *
  * @category constructors
@@ -1118,12 +1160,18 @@ export const makeWorkflowOrchestrator = Effect.fn("WorkflowOrchestrator.make")(f
  * Requires:
  * - WorkflowEngine (from ClusterWorkflowEngine or memory)
  *
- * **Example** (Inspect workflow orchestrator live)
+ * **Example** (Provide the live orchestrator)
  *
  * ```ts
- * import { WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
+ * import { Effect } from "effect"
+ * import { WorkflowOrchestrator, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
- * console.log(WorkflowOrchestratorLive)
+ * const program = Effect.gen(function* () {
+ *   const orchestrator = yield* WorkflowOrchestrator
+ *   return yield* orchestrator.poll("batch-deadbeefcafe")
+ * }).pipe(Effect.provide(WorkflowOrchestratorLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -1145,12 +1193,18 @@ export const WorkflowOrchestratorLive = Layer.effect(WorkflowOrchestrator, makeW
  * - RelationExtractor (for Activities.ts extraction)
  * - OntologyService (for Activities.ts ontology lookup)
  *
- * **Example** (Inspect workflow orchestrator full live)
+ * **Example** (Merge orchestrator and workflow registration)
  *
  * ```ts
- * import { WorkflowOrchestratorFullLive } from "@effect-ontology/Service/WorkflowOrchestrator"
+ * import { Effect } from "effect"
+ * import { WorkflowOrchestrator, WorkflowOrchestratorFullLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
- * console.log(WorkflowOrchestratorFullLive)
+ * const program = Effect.gen(function* () {
+ *   const orchestrator = yield* WorkflowOrchestrator
+ *   return yield* orchestrator.poll("batch-deadbeefcafe")
+ * }).pipe(Effect.provide(WorkflowOrchestratorFullLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

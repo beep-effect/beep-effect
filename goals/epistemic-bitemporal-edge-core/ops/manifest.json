@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/epistemic-bitemporal-edge-core",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 452,
   "mission": "Deliver the Postgres bitemporal claim/edge authority with durable disposition, atomic supersession, two-axis history, and restart-safe migration proof.",
   "statusNote": "CLOSED 2026-07-25 (completed-retained): P0 spike PROCEED, P1 vertical slice landed, P2 yeet verify SUCCESS with real-Postgres race determinism and restart proof, P3 reflection + Graphiti retirement record in the closing PR (history/2026-07-25-p1-implementation.md).",
   "executionCapable": true,

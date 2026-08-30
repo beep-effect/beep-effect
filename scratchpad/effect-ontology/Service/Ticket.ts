@@ -10,10 +10,21 @@
  * @since 0.0.0
  */
 
-import { randomBytes } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, DateTime, Duration, Effect, HashSet, Layer, Number as N, Schedule } from "effect";
+import {
+  Clock,
+  Context,
+  Crypto,
+  DateTime,
+  Duration,
+  Effect,
+  Encoding,
+  HashSet,
+  Layer,
+  Number as N,
+  Schedule,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -25,7 +36,11 @@ import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ticket");
 
-const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"]);
+const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"]).pipe(
+  $I.annoteSchema("TicketStorageOperation", {
+    description: "Ticket persistence operations that can fail with TicketStorageError.",
+  })
+);
 
 /**
  * Reports an infrastructure failure while storing or consuming a one-time ticket.
@@ -35,7 +50,12 @@ const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"])
  * ```ts
  * import { TicketStorageError } from "@effect-ontology/Service/Ticket"
  *
- * console.log(TicketStorageError)
+ * const error = TicketStorageError.make({
+ *   message: "Ticket store is unavailable",
+ *   operation: "persist",
+ *   cause: new Error("disk full")
+ * })
+ * console.log(error._tag) // "TicketStorageError"
  * ```
  *
  * @category errors
@@ -59,8 +79,6 @@ const DEFAULT_TTL = Duration.minutes(5);
 /** Cleanup interval for expired tickets */
 const CLEANUP_INTERVAL = Duration.minutes(1);
 
-const generateSecureToken = Effect.sync(() => randomBytes(32).toString("base64url"));
-
 const ticketStorageKey = (ticket: string) => `ws-tickets/${ticket}`;
 
 const ticketStorageError = (operation: typeof TicketStorageOperation.Type) => (cause: unknown) =>
@@ -72,6 +90,11 @@ const ticketStorageError = (operation: typeof TicketStorageOperation.Type) => (c
 
 const makeTicketService = Effect.gen(function* () {
   const storage = yield* StorageService;
+  const crypto = yield* Crypto.Crypto;
+
+  const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
+    return Encoding.encodeBase64Url(yield* crypto.randomBytes(32));
+  });
 
   const TicketRecordJson = S.fromJsonString(TicketRecord);
 
@@ -133,7 +156,7 @@ const makeTicketService = Effect.gen(function* () {
     apiKey: string,
     ttl: Duration.Duration = DEFAULT_TTL
   ) {
-    const ticket = yield* generateSecureToken;
+    const ticket = yield* generateSecureToken();
     const now = yield* Clock.currentTimeMillis;
     const expiresAt = now + Duration.toMillis(ttl);
     const record = yield* S.decodeEffect(TicketRecord)({ ticket, ontologyId, apiKey, createdAt: now, expiresAt }).pipe(
@@ -215,12 +238,21 @@ const makeTicketService = Effect.gen(function* () {
 /**
  * Provides the ticket service service capability.
  *
- * **Example** (Inspect ticket service)
+ * **Example** (Count active tickets)
  *
  * ```ts
+ * import { BunCrypto } from "@effect/platform-bun"
+ * import { Effect } from "effect"
  * import { TicketService } from "@effect-ontology/Service/Ticket"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
- * console.log(TicketService)
+ * const count = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const tickets = yield* TicketService
+ *     return yield* tickets.getActiveCount
+ *   }).pipe(Effect.provide(TicketService.Default), Effect.provide(StorageServiceTest), Effect.provide(BunCrypto.layer), Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category layers
@@ -235,12 +267,21 @@ export class TicketService extends Context.Service<TicketService>()($I`TicketSer
 /**
  * Provides the Effect layer for ticket service live dependencies.
  *
- * **Example** (Inspect ticket service live)
+ * **Example** (Provide live ticket storage)
  *
  * ```ts
- * import { TicketServiceLive } from "@effect-ontology/Service/Ticket"
+ * import { BunCrypto } from "@effect/platform-bun"
+ * import { Effect } from "effect"
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
+ * import { TicketService, TicketServiceLive } from "@effect-ontology/Service/Ticket"
  *
- * console.log(TicketServiceLive)
+ * const count = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const tickets = yield* TicketService
+ *     return yield* tickets.getActiveCount
+ *   }).pipe(Effect.provide(TicketServiceLive), Effect.provide(StorageServiceTest), Effect.provide(BunCrypto.layer), Effect.orDie)
+ * )
+ * console.log(count) // 0
  * ```
  *
  * @category layers

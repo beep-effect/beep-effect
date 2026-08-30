@@ -198,7 +198,8 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": true,
+    "grandfatheredNote": "The topology migration completed on 2026-05-22 in commit 0ceefb484f, before the 2026-06-30 completion gate; the 2026-07-11 packet edit was administrative closeout only."
   },
   "lifecycle": "completed-retained",
   "packetPath": "goals/beep-schema-topology"

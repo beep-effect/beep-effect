@@ -1,0 +1,6 @@
+# Regression (round-3 H-10): a bare SeatRequest wearing a grant state must NOT satisfy
+# the Must grant query — the ticket/lease split is query semantics now. Oracle: 0 rows.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:resource a ciops:ContendedResource .
+ciops:waiting-ticket a ciops:SeatRequest ; ciops:contendsFor ciops:resource ;
+    ciops:hasGrantState ciops:ActiveGrant .

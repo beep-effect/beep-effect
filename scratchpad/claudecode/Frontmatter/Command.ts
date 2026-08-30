@@ -16,6 +16,8 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Command");
 /**
  * Runtime model for the YAML frontmatter of a legacy slash-command file.
  *
+ * **Details**
+ *
  * Claude Code merged custom commands into skills, but files under `commands/`
  * still accept the same optional metadata and tool-policy keys. Every optional
  * wire key decodes to `Option`.
@@ -28,13 +30,13 @@ const $I = $ScratchpadId.create("claudecode/Frontmatter/Command");
  * import * as S from "effect/Schema"
  * import { Frontmatter } from "effect-claudecode"
  *
- * const program = Effect.gen(function* () {
- *   const command = yield* S.decodeUnknownEffect(Frontmatter.CommandFrontmatter)({
+ * const command = Effect.runSync(
+ *   S.decodeUnknownEffect(Frontmatter.CommandFrontmatter)({
  *     description: "Review staged changes",
  *     model: "sonnet"
  *   })
- *   console.log(O.getOrNull(command.model)) // "sonnet"
- * })
+ * )
+ * console.log(O.getOrNull(command.model)) // "sonnet"
  * ```
  *
  * @category models

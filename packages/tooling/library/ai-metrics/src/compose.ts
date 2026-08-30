@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
@@ -13,9 +12,6 @@ import { stringify as stringifyYaml } from "yaml";
 import { AiMetricsInstallConfigurationError } from "./install.ts";
 import { AiMetricsDeployTarget, AiMetricsTool } from "./models.ts";
 import type { AiMetricsInstallSpec, AiMetricsServiceSpec } from "./install.ts";
-
-const $I = $RepoAiMetricsId.create("compose");
-void $I;
 
 const composeFailure = (message: string, cause: unknown): AiMetricsInstallConfigurationError =>
   AiMetricsInstallConfigurationError.make({ cause, message });

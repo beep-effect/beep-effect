@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/ai-metrics-stack",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 647,
   "reflectionRequired": true,
   "currentSourceOfTruth": "SPEC.md",
   "currentTargetPhase": null,

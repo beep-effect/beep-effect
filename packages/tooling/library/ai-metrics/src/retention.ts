@@ -7,12 +7,11 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import {
   AiMetricsRawArchiveKey,
@@ -29,31 +28,47 @@ import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "./duckdb.ts";
 import { listAiMetricsDirectoryFileInfo } from "./file-inventory.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
+import { modifiedAtMillis } from "./internal/file-info.ts";
+import { normalizedRelativePath } from "./internal/transcript-utils.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource, ConfigSnapshot } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("retention");
-const retentionSchemaVersion = "beep.ai_metrics.retention_inventory.v1";
-const retentionMutationSchemaVersion = "beep.ai_metrics.retention_mutation.v1";
-const retentionEnforcementSchemaVersion = "beep.ai_metrics.retention_enforcement.v1";
-const restoreDrillSchemaVersion = "beep.ai_metrics.retention_restore_drill.v1";
-const AiMetricsRetentionMutationMode = LiteralKit(["delete", "compact"]).pipe(
+
+/**
+ * Mutation applied to retained AI metrics artifacts.
+ *
+ * **Example** (Select delete mode)
+ *
+ * ```ts
+ * import { AiMetricsRetentionMutationMode } from "@beep/repo-ai-metrics"
+ *
+ * console.log(AiMetricsRetentionMutationMode.Enum.delete)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiMetricsRetentionMutationMode = LiteralKit(["delete", "compact"]).pipe(
   $I.annoteSchema("AiMetricsRetentionMutationMode", {
     description: "Mutation operation recorded by AI metrics retention delete and compact workflows.",
   })
 );
-const RawArchiveObjectIdPattern = /^raw-[a-f0-9]{64}$/u;
-const isAiMetricsTranscriptSource = (value: string): value is AiMetricsTranscriptSource =>
-  AiMetricsTranscriptSource.is.claude(value) ||
-  AiMetricsTranscriptSource.is.codex(value) ||
-  AiMetricsTranscriptSource.is.openclaw(value);
 
+/**
+ * Runtime type for {@link AiMetricsRetentionMutationMode}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiMetricsRetentionMutationMode = typeof AiMetricsRetentionMutationMode.Type;
+const RawArchiveObjectIdPattern = /^raw-[a-f0-9]{64}$/u;
 class RawArchivePlanItem extends S.Class<RawArchivePlanItem>($I`RawArchivePlanItem`)(
   {
     archiveObjectId: S.String,
     archivePath: S.String,
     archiveRunObjectId: S.String,
-    encryptedAtEpochMillis: S.Finite,
+    encryptedAtEpochMillis: S.Natural,
     ingestRunId: S.String,
     plaintextContentHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
@@ -64,10 +79,76 @@ class RawArchivePlanItem extends S.Class<RawArchivePlanItem>($I`RawArchivePlanIt
   })
 ) {}
 
+class RawArchiveObjectRow extends S.Class<RawArchiveObjectRow>($I`RawArchiveObjectRow`)(
+  {
+    archiveObjectId: S.String,
+    archivePath: S.String,
+    archiveRunObjectId: S.String,
+    encryptedAtEpochMillis: S.Natural,
+    ingestRunId: S.String,
+    plaintextContentHash: S.String,
+    sourceKind: AiMetricsTranscriptSource,
+    sourcePathHash: S.String,
+  },
+  $I.annote("RawArchiveObjectRow", {
+    description: "Decoded DuckDB row for one retained raw archive object.",
+  })
+) {
+  static readonly decodeUnknownArrayEffect = S.decodeUnknownEffect(S.Array(RawArchiveObjectRow));
+}
+
+class IngestRunRow extends S.Class<IngestRunRow>($I`IngestRunRow`)(
+  {
+    completedAtEpochMillis: S.Natural,
+    ingestRunId: S.String,
+  },
+  $I.annote("IngestRunRow", {
+    description: "Decoded DuckDB row for one retained ingest run.",
+  })
+) {
+  static readonly decodeUnknownArrayEffect = S.decodeUnknownEffect(S.Array(IngestRunRow));
+}
+
+class OutcomeLabelRow extends S.Class<OutcomeLabelRow>($I`OutcomeLabelRow`)(
+  {
+    labelId: S.String,
+    labeledAtEpochMillis: S.OptionFromNullOr(S.Natural),
+  },
+  $I.annote("OutcomeLabelRow", {
+    description: "Decoded DuckDB row for one outcome label with a nullable legacy timestamp.",
+  })
+) {
+  static readonly decodeUnknownArrayEffect = S.decodeUnknownEffect(S.Array(OutcomeLabelRow));
+}
+
+class BenchmarkRunRow extends S.Class<BenchmarkRunRow>($I`BenchmarkRunRow`)(
+  {
+    benchmarkRunId: S.String,
+    recordedAtEpochMillis: S.OptionFromNullOr(S.Natural),
+  },
+  $I.annote("BenchmarkRunRow", {
+    description: "Decoded DuckDB row for one benchmark run with a nullable legacy timestamp.",
+  })
+) {
+  static readonly decodeUnknownArrayEffect = S.decodeUnknownEffect(S.Array(BenchmarkRunRow));
+}
+
+class ScorecardRow extends S.Class<ScorecardRow>($I`ScorecardRow`)(
+  {
+    scorecardId: S.String,
+    windowEndEpochMillis: S.OptionFromNullOr(S.Natural),
+  },
+  $I.annote("ScorecardRow", {
+    description: "Decoded DuckDB row for one scorecard with a nullable legacy window end.",
+  })
+) {
+  static readonly decodeUnknownArrayEffect = S.decodeUnknownEffect(S.Array(ScorecardRow));
+}
+
 class PathPlanItem extends S.Class<PathPlanItem>($I`PathPlanItem`)(
   {
     absolutePath: S.String,
-    modifiedAtEpochMillis: S.Finite,
+    modifiedAtEpochMillis: S.Natural,
     relativePath: S.String,
   },
   $I.annote("PathPlanItem", {
@@ -96,42 +177,28 @@ const retentionFailure = (message: string, cause: unknown): AiMetricsRetentionEr
     message,
   });
 
-const numberValue = (value: unknown): number => {
-  const parsed = globalThis.Number(value);
-  return globalThis.Number.isFinite(parsed) ? parsed : 0;
-};
-
-const stringValue = (value: unknown): string => (P.isString(value) ? value : globalThis.String(value ?? ""));
-
-const optionalModifiedAtMillis = (info: FileSystem.File.Info): number =>
-  pipe(
-    info.mtime,
-    O.map((mtime) => mtime.getTime()),
-    O.getOrElse(() => 0)
-  );
-
 const inWindow =
   (input: AiMetricsRetentionSelector) =>
   (epochMillis: number): boolean => {
     const lower = input.sinceEpochMillis;
-    const upper = input.beforeEpochMillis ?? input.untilEpochMillis;
-    return (lower === undefined || epochMillis >= lower) && (upper === undefined || epochMillis < upper);
+    const upper = O.orElse(input.beforeEpochMillis, () => input.untilEpochMillis);
+    return (
+      O.getOrElse(
+        O.map(lower, (value) => epochMillis >= value),
+        () => true
+      ) &&
+      O.getOrElse(
+        O.map(upper, (value) => epochMillis < value),
+        () => true
+      )
+    );
   };
 
 const hasExplicitWindow = (input: AiMetricsRetentionSelector): boolean =>
-  input.beforeEpochMillis !== undefined || input.sinceEpochMillis !== undefined || input.untilEpochMillis !== undefined;
-
-const retentionWindowUpper = (input: AiMetricsRetentionSelector): number | undefined =>
-  input.beforeEpochMillis ?? input.untilEpochMillis;
+  O.isSome(input.beforeEpochMillis) || O.isSome(input.sinceEpochMillis) || O.isSome(input.untilEpochMillis);
 
 const hasBoundedMutationWindow = (input: AiMetricsRetentionSelector): boolean =>
-  input.beforeEpochMillis !== undefined ||
-  (input.sinceEpochMillis !== undefined && input.untilEpochMillis !== undefined);
-
-const hasOrderedMutationWindow = (input: AiMetricsRetentionSelector): boolean => {
-  const upper = retentionWindowUpper(input);
-  return input.sinceEpochMillis === undefined || upper === undefined || input.sinceEpochMillis < upper;
-};
+  O.isSome(input.beforeEpochMillis) || (O.isSome(input.sinceEpochMillis) && O.isSome(input.untilEpochMillis));
 
 const relativeToDataRoot = (dataRoot: string, absolutePath: string): string =>
   Str.startsWith(`${dataRoot}/`)(absolutePath) ? pipe(absolutePath, Str.slice(dataRoot.length + 1)) : absolutePath;
@@ -140,11 +207,8 @@ const quoteSqlString = flow(Str.replace(/'/gu, "''"), (value) => `'${value}'`);
 
 const sqlStringList: (values: ReadonlyArray<string>) => string = flow(A.map(quoteSqlString), A.join(", "));
 
-const normalizedRelativePath = (path: Path.Path, root: string, filePath: string): string =>
-  pipe(path.relative(root, filePath), Str.replace(/\\/gu, "/"));
-
 const isStrictChildPath = (path: Path.Path, root: string, filePath: string): boolean => {
-  const relativePath = normalizedRelativePath(path, root, filePath);
+  const relativePath = normalizedRelativePath(filePath, { pathApi: path, root });
   return (
     Str.isNonEmpty(relativePath) &&
     relativePath !== ".." &&
@@ -244,12 +308,28 @@ export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionErr
  * @since 0.0.0
  */
 export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelector>($I`AiMetricsRetentionSelector`)(
-  {
-    beforeEpochMillis: S.optionalKey(S.Finite),
+  S.Struct({
+    beforeEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
     dataRoot: S.String,
-    sinceEpochMillis: S.optionalKey(S.Finite),
-    untilEpochMillis: S.optionalKey(S.Finite),
-  },
+    sinceEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+    untilEpochMillis: S.OptionFromOptionalKey(S.Natural).pipe(SchemaUtils.withNoneDefault),
+  }).check(
+    S.makeFilter(
+      (selector) => {
+        const upper = O.orElse(selector.beforeEpochMillis, () => selector.untilEpochMillis);
+        return O.getOrElse(
+          O.zipWith(selector.sinceEpochMillis, upper, (lower, upperBound) => lower < upperBound),
+          () => true
+        );
+      },
+      {
+        identifier: $I`OrderedRetentionWindowCheck`,
+        title: "Ordered retention window",
+        description: "Requires a retention window lower bound to precede its upper bound when both are present.",
+        message: "Retention window lower bound must be before its upper bound",
+      }
+    )
+  ),
   $I.annote("AiMetricsRetentionSelector", {
     description: "Local data root and optional explicit time window for AI metrics retention operations.",
   })
@@ -277,7 +357,7 @@ export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelect
  *   ingestRunId: "ingest-1",
  *   plaintextContentHash: "content-hash",
  *   sourceKind: "codex",
- *   sourcePathHash: "source-hash"
+ *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111"
  * })
  *
  * console.log(item.sourceKind) // "codex"
@@ -292,7 +372,7 @@ export class AiMetricsRetentionRawArchiveItem extends S.Class<AiMetricsRetention
 )(
   {
     archiveObjectId: S.String,
-    encryptedAtEpochMillis: S.Finite,
+    encryptedAtEpochMillis: S.Natural,
     ingestRunId: S.String,
     plaintextContentHash: S.String,
     sourceKind: AiMetricsTranscriptSource,
@@ -330,7 +410,7 @@ export class AiMetricsRetentionRawArchiveItem extends S.Class<AiMetricsRetention
  */
 export class AiMetricsRetentionFileItem extends S.Class<AiMetricsRetentionFileItem>($I`AiMetricsRetentionFileItem`)(
   {
-    modifiedAtEpochMillis: S.Finite,
+    modifiedAtEpochMillis: S.Natural,
     relativePath: S.String,
   },
   $I.annote("AiMetricsRetentionFileItem", {
@@ -372,7 +452,7 @@ export class AiMetricsRetentionFileItem extends S.Class<AiMetricsRetentionFileIt
  *       ingestRunId: "ingest-1",
  *       plaintextContentHash: "content-hash",
  *       sourceKind: "codex",
- *       sourcePathHash: "source-hash"
+ *       sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111"
  *     })
  *   ],
  *   reports: [],
@@ -395,15 +475,21 @@ export class AiMetricsRetentionInventory extends S.Class<AiMetricsRetentionInven
     explicitWindow: S.Boolean,
     rawArchiveObjects: S.Array(AiMetricsRetentionRawArchiveItem),
     reports: S.Array(AiMetricsRetentionFileItem),
-    schemaVersion: S.String,
-    selectedDerivedExportCount: S.Finite,
-    selectedRawArchiveObjectCount: S.Finite,
-    selectedReportCount: S.Finite,
+    schemaVersion: S.Literal("beep.ai_metrics.retention_inventory.v1").pipe(
+      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_inventory.v1")
+    ),
+    selectedDerivedExportCount: S.Natural,
+    selectedRawArchiveObjectCount: S.Natural,
+    selectedReportCount: S.Natural,
   },
   $I.annote("AiMetricsRetentionInventory", {
     description: "Path-safe retained AI metrics raw, derived, and report inventory for one selector.",
   })
-) {}
+) {
+  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
+    S.fromJsonString(AiMetricsRetentionInventory)
+  );
+}
 
 /**
  * What a delete or compaction run removed, or would have removed.
@@ -441,18 +527,24 @@ export class AiMetricsRetentionMutationResult extends S.Class<AiMetricsRetention
   $I`AiMetricsRetentionMutationResult`
 )(
   {
-    deletedDerivedExportCount: S.Finite,
-    deletedRawArchiveObjectCount: S.Finite,
-    deletedReportCount: S.Finite,
+    deletedDerivedExportCount: S.Natural,
+    deletedRawArchiveObjectCount: S.Natural,
+    deletedReportCount: S.Natural,
     dryRun: S.Boolean,
     explicitWindow: S.Boolean,
     mode: AiMetricsRetentionMutationMode,
-    schemaVersion: S.String,
+    schemaVersion: S.Literal("beep.ai_metrics.retention_mutation.v1").pipe(
+      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_mutation.v1")
+    ),
   },
   $I.annote("AiMetricsRetentionMutationResult", {
     description: "Summary for an AI metrics retention delete or compaction run.",
   })
-) {}
+) {
+  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
+    S.fromJsonString(AiMetricsRetentionMutationResult)
+  );
+}
 
 /**
  * Policy for preventive local AI metrics retention enforcement.
@@ -487,7 +579,7 @@ export class AiMetricsRetentionEnforcementPolicy extends S.Class<AiMetricsRetent
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultKey(Effect.succeed(true))
     ),
-    maxSnapshotExports: S.Finite.pipe(
+    maxSnapshotExports: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
       S.withConstructorDefault(Effect.succeed(0)),
       S.withDecodingDefaultKey(Effect.succeed(0))
     ),
@@ -533,16 +625,22 @@ export class AiMetricsRetentionEnforcementResult extends S.Class<AiMetricsRetent
 )(
   {
     dataRoot: S.String,
-    deletedDerivedExportCount: S.Finite,
+    deletedDerivedExportCount: S.Natural,
     dryRun: S.Boolean,
-    keptDerivedExportCount: S.Finite,
-    maxSnapshotExports: S.Finite,
-    schemaVersion: S.String,
+    keptDerivedExportCount: S.Natural,
+    maxSnapshotExports: S.Natural,
+    schemaVersion: S.Literal("beep.ai_metrics.retention_enforcement.v1").pipe(
+      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_enforcement.v1")
+    ),
   },
   $I.annote("AiMetricsRetentionEnforcementResult", {
     description: "Summary for preventive AI metrics Parquet snapshot retention enforcement.",
   })
-) {}
+) {
+  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
+    S.fromJsonString(AiMetricsRetentionEnforcementResult)
+  );
+}
 
 /**
  * Request to replay selected archive objects into a disposable store and verify them.
@@ -567,7 +665,7 @@ export class AiMetricsRetentionEnforcementResult extends S.Class<AiMetricsRetent
  * import { Redacted } from "effect"
  *
  * const input = AiMetricsRetentionRestoreDrillInput.make({
- *   rawArchiveKey: Redacted.make("base64-32-byte-key"),
+ *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   restoreRoot: "/tmp/ai-metrics-restore",
  *   selector: AiMetricsRetentionSelector.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
  * })
@@ -583,8 +681,11 @@ export class AiMetricsRetentionRestoreDrillInput extends S.Class<AiMetricsRetent
   $I`AiMetricsRetentionRestoreDrillInput`
 )(
   {
-    hashSalt: S.optionalKey(S.String),
-    maxObjects: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(1)), S.withDecodingDefaultKey(Effect.succeed(1))),
+    hashSalt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    maxObjects: S.Int.check(S.isGreaterThan(0)).pipe(
+      S.withConstructorDefault(Effect.succeed(1)),
+      S.withDecodingDefaultKey(Effect.succeed(1))
+    ),
     rawArchiveKey: AiMetricsRawArchiveKey,
     restoreRoot: S.String,
     selector: AiMetricsRetentionSelector,
@@ -633,16 +734,22 @@ export class AiMetricsRetentionRestoreDrillResult extends S.Class<AiMetricsReten
   {
     derivedDuckDbPath: S.String,
     hashMatches: S.Boolean,
-    replayedObjectCount: S.Finite,
+    replayedObjectCount: S.Natural,
     restoreRoot: S.String,
-    schemaVersion: S.String,
+    schemaVersion: S.Literal("beep.ai_metrics.retention_restore_drill.v1").pipe(
+      SchemaUtils.withConstantDefault("beep.ai_metrics.retention_restore_drill.v1")
+    ),
     transcriptTextPrinted: S.Boolean,
   },
   $I.annote("AiMetricsRetentionRestoreDrillResult", {
     description:
       "Proof that retained encrypted archive objects can decrypt and replay into disposable derived storage.",
   })
-) {}
+) {
+  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
+    S.fromJsonString(AiMetricsRetentionRestoreDrillResult)
+  );
+}
 
 const listDirectoryFiles = Effect.fn("AiMetrics.retention.listDirectoryFiles")(function* (
   dataRoot: string,
@@ -675,7 +782,7 @@ const listDirectoryFiles = Effect.fn("AiMetrics.retention.listDirectoryFiles")(f
     A.map(
       ([absolutePath, info]): PathPlanItem => ({
         absolutePath,
-        modifiedAtEpochMillis: optionalModifiedAtMillis(info),
+        modifiedAtEpochMillis: modifiedAtMillis(info),
         relativePath: relativeToDataRoot(dataRoot, absolutePath),
       })
     ),
@@ -683,12 +790,58 @@ const listDirectoryFiles = Effect.fn("AiMetrics.retention.listDirectoryFiles")(f
   );
 });
 
-const readRetentionPlan = Effect.fn("AiMetrics.retention.readPlan")(function* (input: AiMetricsRetentionSelector) {
-  const duckdb = yield* DuckDb;
+const listParquetExportDirs = Effect.fn("AiMetrics.retention.listParquetExportDirs")(function* (
+  dataRoot: string,
+  keep: (item: PathPlanItem, entry: string) => boolean
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const derivedRoot = path.join(dataRoot, "derived/parquet");
+  const derivedRootExists = yield* fs
+    .exists(derivedRoot)
+    .pipe(
+      Effect.mapError((cause) => retentionFailure("Failed to inspect AI metrics Parquet export directory.", cause))
+    );
+  if (!derivedRootExists) {
+    return A.empty<PathPlanItem>();
+  }
+
+  const entries = yield* fs
+    .readDirectory(derivedRoot)
+    .pipe(Effect.mapError((cause) => retentionFailure("Failed to read AI metrics Parquet export directory.", cause)));
+  const items = yield* Effect.forEach(
+    entries,
+    Effect.fnUntraced(function* (entry): Effect.fn.Return<
+      O.Option<PathPlanItem>,
+      AiMetricsRetentionError,
+      FileSystem.FileSystem
+    > {
+      const absolutePath = path.join(derivedRoot, entry);
+      const stat = yield* fs
+        .stat(absolutePath)
+        .pipe(Effect.mapError((cause) => retentionFailure("Failed to inspect AI metrics Parquet export.", cause)));
+      if (stat.type !== "Directory") {
+        return O.none<PathPlanItem>();
+      }
+
+      const item = PathPlanItem.make({
+        absolutePath,
+        modifiedAtEpochMillis: modifiedAtMillis(stat),
+        relativePath: relativeToDataRoot(dataRoot, absolutePath),
+      });
+      return keep(item, entry) ? O.some(item) : O.none<PathPlanItem>();
+    }),
+    { concurrency: 8 }
+  );
+
+  return A.getSomes(items);
+});
+
+const readRetentionPlan = Effect.fn("AiMetrics.retention.readPlan")(function* (input: AiMetricsRetentionSelector) {
+  const duckdb = yield* DuckDb;
   const withinWindow = inWindow(input);
-  const rawRows = yield* duckdb.query(`SELECT archive_run_object_id  AS "archiveRunObjectId",
+  const rawRows = yield* duckdb
+    .query(`SELECT archive_run_object_id  AS "archiveRunObjectId",
                                               archive_object_id      AS "archiveObjectId",
                                               ingest_run_id          AS "ingestRunId",
                                               source_kind            AS "sourceKind",
@@ -697,104 +850,85 @@ const readRetentionPlan = Effect.fn("AiMetrics.retention.readPlan")(function* (i
                                               archive_path           AS "archivePath",
                                               encrypted_at_epoch_ms  AS "encryptedAtEpochMillis"
                                        FROM ai_metrics_raw_archive_objects
-                                       ORDER BY encrypted_at_epoch_ms ASC`);
+                                       ORDER BY encrypted_at_epoch_ms ASC`)
+    .pipe(
+      Effect.flatMap(RawArchiveObjectRow.decodeUnknownArrayEffect),
+      Effect.mapError((cause) => retentionFailure("AI metrics raw archive retention rows failed schema decode.", cause))
+    );
   const rawArchiveItems = pipe(
     rawRows,
-    A.map((row): RawArchivePlanItem => {
-      const sourceKind = stringValue(row.sourceKind);
-      return {
-        archiveObjectId: stringValue(row.archiveObjectId),
-        archivePath: stringValue(row.archivePath),
-        archiveRunObjectId: stringValue(row.archiveRunObjectId),
-        encryptedAtEpochMillis: numberValue(row.encryptedAtEpochMillis),
-        ingestRunId: stringValue(row.ingestRunId),
-        plaintextContentHash: stringValue(row.plaintextContentHash),
-        sourceKind: isAiMetricsTranscriptSource(sourceKind) ? sourceKind : AiMetricsTranscriptSource.Enum.codex,
-        sourcePathHash: stringValue(row.sourcePathHash),
-      };
-    }),
+    A.map((row) => RawArchivePlanItem.make(row)),
     A.filter((item) => withinWindow(item.encryptedAtEpochMillis))
   );
-  const runRows = yield* duckdb.query(`SELECT ingest_run_id         AS "ingestRunId",
+  const runRows = yield* duckdb
+    .query(`SELECT ingest_run_id         AS "ingestRunId",
                                               completed_at_epoch_ms AS "completedAtEpochMillis"
                                        FROM ai_metrics_ingest_runs
-                                       ORDER BY completed_at_epoch_ms ASC`);
+                                       ORDER BY completed_at_epoch_ms ASC`)
+    .pipe(
+      Effect.flatMap(IngestRunRow.decodeUnknownArrayEffect),
+      Effect.mapError((cause) => retentionFailure("AI metrics ingest-run retention rows failed schema decode.", cause))
+    );
   const windowIngestRunIds = pipe(
     runRows,
-    A.filter((row) => withinWindow(numberValue(row.completedAtEpochMillis))),
-    A.map((row) => stringValue(row.ingestRunId))
+    A.filter((row) => withinWindow(row.completedAtEpochMillis)),
+    A.map((row) => row.ingestRunId)
   );
   const ingestRunIds = pipe(
     windowIngestRunIds,
     A.appendAll(A.map(rawArchiveItems, (item) => item.ingestRunId)),
     A.dedupe
   );
-  const labelRows = yield* duckdb.query(`SELECT label_id            AS "labelId",
+  const labelRows = yield* duckdb
+    .query(`SELECT label_id            AS "labelId",
                                                 labeled_at_epoch_ms AS "labeledAtEpochMillis"
                                          FROM ai_metrics_outcome_labels
-                                         ORDER BY labeled_at_epoch_ms ASC`);
+                                         ORDER BY labeled_at_epoch_ms ASC`)
+    .pipe(
+      Effect.flatMap(OutcomeLabelRow.decodeUnknownArrayEffect),
+      Effect.mapError((cause) =>
+        retentionFailure("AI metrics outcome-label retention rows failed schema decode.", cause)
+      )
+    );
   const labelIds = pipe(
     labelRows,
-    A.filter((row) => withinWindow(numberValue(row.labeledAtEpochMillis))),
-    A.map((row) => stringValue(row.labelId))
+    A.filter((row) => O.exists(row.labeledAtEpochMillis, withinWindow)),
+    A.map((row) => row.labelId)
   );
-  const benchmarkRunRows = yield* duckdb.query(`SELECT benchmark_run_id     AS "benchmarkRunId",
+  const benchmarkRunRows = yield* duckdb
+    .query(`SELECT benchmark_run_id     AS "benchmarkRunId",
                                                        recorded_at_epoch_ms AS "recordedAtEpochMillis"
                                                 FROM ai_metrics_benchmark_runs
-                                                ORDER BY recorded_at_epoch_ms ASC`);
+                                                ORDER BY recorded_at_epoch_ms ASC`)
+    .pipe(
+      Effect.flatMap(BenchmarkRunRow.decodeUnknownArrayEffect),
+      Effect.mapError((cause) =>
+        retentionFailure("AI metrics benchmark-run retention rows failed schema decode.", cause)
+      )
+    );
   const benchmarkRunIds = pipe(
     benchmarkRunRows,
-    A.filter((row) => withinWindow(numberValue(row.recordedAtEpochMillis))),
-    A.map((row) => stringValue(row.benchmarkRunId))
+    A.filter((row) => O.exists(row.recordedAtEpochMillis, withinWindow)),
+    A.map((row) => row.benchmarkRunId)
   );
-  const scorecardRows = yield* duckdb.query(`SELECT scorecard_id        AS "scorecardId",
+  const scorecardRows = yield* duckdb
+    .query(`SELECT scorecard_id        AS "scorecardId",
                                                     window_end_epoch_ms AS "windowEndEpochMillis"
                                              FROM ai_metrics_scorecards
-                                             ORDER BY window_end_epoch_ms ASC`);
+                                             ORDER BY window_end_epoch_ms ASC`)
+    .pipe(
+      Effect.flatMap(ScorecardRow.decodeUnknownArrayEffect),
+      Effect.mapError((cause) => retentionFailure("AI metrics scorecard retention rows failed schema decode.", cause))
+    );
   const scorecardIds = pipe(
     scorecardRows,
-    A.filter((row) => withinWindow(numberValue(row.windowEndEpochMillis))),
-    A.map((row) => stringValue(row.scorecardId))
+    A.filter((row) => O.exists(row.windowEndEpochMillis, withinWindow)),
+    A.map((row) => row.scorecardId)
   );
-  const derivedRoot = path.join(input.dataRoot, "derived/parquet");
-  const derivedRootExists = yield* fs
-    .exists(derivedRoot)
-    .pipe(
-      Effect.mapError((cause) => retentionFailure("Failed to inspect AI metrics Parquet export directory.", cause))
-    );
-  let derivedExportItems = A.empty<PathPlanItem>();
-  if (derivedRootExists) {
-    const entries = yield* fs
-      .readDirectory(derivedRoot)
-      .pipe(Effect.mapError((cause) => retentionFailure("Failed to read AI metrics Parquet export directory.", cause)));
-    const items = yield* Effect.forEach(
-      entries,
-      Effect.fnUntraced(function* (entry): Effect.fn.Return<
-        O.Option<PathPlanItem>,
-        AiMetricsRetentionError,
-        FileSystem.FileSystem
-      > {
-        const absolutePath = path.join(derivedRoot, entry);
-        const stat = yield* fs
-          .stat(absolutePath)
-          .pipe(Effect.mapError((cause) => retentionFailure("Failed to inspect AI metrics Parquet export.", cause)));
-        if (stat.type !== "Directory") {
-          return O.none<PathPlanItem>();
-        }
-
-        const item = {
-          absolutePath,
-          modifiedAtEpochMillis: optionalModifiedAtMillis(stat),
-          relativePath: relativeToDataRoot(input.dataRoot, absolutePath),
-        };
-        return A.contains(ingestRunIds, entry) || withinWindow(item.modifiedAtEpochMillis)
-          ? O.some(item)
-          : O.none<PathPlanItem>();
-      }),
-      { concurrency: 8 }
-    );
-    derivedExportItems = A.getSomes(items);
-  }
+  const derivedExportItems = yield* listParquetExportDirs(
+    input.dataRoot,
+    (item, entry) => A.contains(ingestRunIds, entry) || withinWindow(item.modifiedAtEpochMillis)
+  );
   const reportItems = pipe(
     yield* listDirectoryFiles(input.dataRoot, "reports"),
     A.filter((item) => withinWindow(item.modifiedAtEpochMillis))
@@ -836,7 +970,6 @@ const planToInventory = (input: AiMetricsRetentionSelector, plan: RetentionPlan)
         relativePath: item.relativePath,
       })
     ),
-    schemaVersion: retentionSchemaVersion,
     selectedDerivedExportCount: plan.derivedExportItems.length,
     selectedRawArchiveObjectCount: plan.rawArchiveItems.length,
     selectedReportCount: plan.reportItems.length,
@@ -862,10 +995,11 @@ const planToInventory = (input: AiMetricsRetentionSelector, plan: RetentionPlan)
  * import { AiMetricsRetentionSelector, listAiMetricsRetentionInventory } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const program = listAiMetricsRetentionInventory(
  *   AiMetricsRetentionSelector.make({
- *     beforeEpochMillis: 1_717_086_400_000,
+ *     beforeEpochMillis: O.some(1_717_086_400_000),
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
  *   })
  * ).pipe(Effect.provide(NodeServices.layer))
@@ -891,68 +1025,49 @@ export const listAiMetricsRetentionInventory = Effect.fn("AiMetrics.listAiMetric
   return planToInventory(input, plan);
 });
 
-const deleteRowsForPlan = Effect.fn("AiMetrics.retention.deleteRowsForPlan")(function* (plan: RetentionPlan) {
-  const duckdb = yield* DuckDb;
-  if (
-    A.isReadonlyArrayEmpty(plan.ingestRunIds) &&
-    A.isReadonlyArrayEmpty(plan.rawArchiveItems) &&
-    A.isReadonlyArrayEmpty(plan.labelIds) &&
-    A.isReadonlyArrayEmpty(plan.benchmarkRunIds) &&
-    A.isReadonlyArrayEmpty(plan.scorecardIds)
-  ) {
+const deleteRowsWithIds = Effect.fn("AiMetrics.retention.deleteRowsWithIds")(function* (
+  ids: string,
+  statement: string
+) {
+  if (Str.isEmpty(ids)) {
     return;
   }
 
-  const runIds = sqlStringList(plan.ingestRunIds);
-  const archiveRunObjectIds = sqlStringList(A.map(plan.rawArchiveItems, (item) => item.archiveRunObjectId));
-  const labelIds = sqlStringList(plan.labelIds);
-  const benchmarkRunIds = sqlStringList(plan.benchmarkRunIds);
-  const scorecardIds = sqlStringList(plan.scorecardIds);
-  if (Str.isNonEmpty(labelIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_outcome_labels
-	                   WHERE label_id IN (${labelIds})`);
+  const duckdb = yield* DuckDb;
+  yield* duckdb.run(statement);
+});
+
+const deleteIngestRunRows = Effect.fn("AiMetrics.retention.deleteIngestRunRows")(function* (runIds: string) {
+  if (Str.isEmpty(runIds)) {
+    return;
   }
-  if (Str.isNonEmpty(benchmarkRunIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_benchmark_runs
-	                   WHERE benchmark_run_id IN (${benchmarkRunIds})`);
-  }
-  if (Str.isNonEmpty(scorecardIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_scorecards
-	                   WHERE scorecard_id IN (${scorecardIds})`);
-  }
-  if (Str.isNonEmpty(runIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_turns
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_source_files
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_model_calls
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_tool_invocations
-	                   WHERE ingest_run_id IN (${runIds})`);
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_ingest_runs
-	                   WHERE ingest_run_id IN (${runIds})`);
-    // Sessions are pruned last, and keyed on neither the prune set nor the run column.
-    // A session row is content-addressed and upserted OR REPLACE, so its `ingest_run_id`
-    // names the run that LAST saw the transcript, not the one that created it -- pruning by
-    // that column would delete a row whose turns from other runs survive, and the exporter
-    // joins sessions INNER, so those turns would leave every future export silently.
-    //
-    // Scoping it to the prune set instead leaks the mirror image: a row kept because it
-    // still had turns is tagged with an already-pruned run, so when the last of its turns
-    // goes in a later prune, no predicate matches it again and the empty row lives forever
-    // -- pinning its agent task alive through the GC below. Running after the ingest-run
-    // delete lets this ask the only two questions that matter: are there turns left, and
-    // does the run this row points at still exist. That also sweeps up rows already leaked
-    // by an earlier prune.
-    yield* duckdb.run(`DELETE
+
+  const duckdb = yield* DuckDb;
+  yield* Effect.forEach(
+    [
+      `DELETE FROM ai_metrics_turns WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_source_files WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_model_calls WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_tool_invocations WHERE ingest_run_id IN (${runIds})`,
+      `DELETE FROM ai_metrics_ingest_runs WHERE ingest_run_id IN (${runIds})`,
+    ],
+    (statement) => duckdb.run(statement),
+    { concurrency: 1, discard: true }
+  );
+  // Sessions are pruned last, and keyed on neither the prune set nor the run column.
+  // A session row is content-addressed and upserted OR REPLACE, so its `ingest_run_id`
+  // names the run that LAST saw the transcript, not the one that created it -- pruning by
+  // that column would delete a row whose turns from other runs survive, and the exporter
+  // joins sessions INNER, so those turns would leave every future export silently.
+  //
+  // Scoping it to the prune set instead leaks the mirror image: a row kept because it
+  // still had turns is tagged with an already-pruned run, so when the last of its turns
+  // goes in a later prune, no predicate matches it again and the empty row lives forever
+  // -- pinning its agent task alive through the GC below. Running after the ingest-run
+  // delete lets this ask the only two questions that matter: are there turns left, and
+  // does the run this row points at still exist. That also sweeps up rows already leaked
+  // by an earlier prune.
+  yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_sessions
 	                   WHERE NOT EXISTS (
 	                       SELECT 1
@@ -964,22 +1079,43 @@ const deleteRowsForPlan = Effect.fn("AiMetrics.retention.deleteRowsForPlan")(fun
 	                       FROM ai_metrics_ingest_runs
 	                       WHERE ai_metrics_ingest_runs.ingest_run_id = ai_metrics_sessions.ingest_run_id
 	                     )`);
+});
+
+const pruneAgentTasks = Effect.fn("AiMetrics.retention.pruneAgentTasks")(function* (runIds: string, labelIds: string) {
+  if (Str.isEmpty(runIds) && Str.isEmpty(labelIds)) {
+    return;
   }
-  if (Str.isNonEmpty(runIds) || Str.isNonEmpty(labelIds)) {
-    yield* duckdb.run(`DELETE
+
+  const duckdb = yield* DuckDb;
+  yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_agent_tasks AS task
 	                   WHERE NOT EXISTS (SELECT 1
 	                                     FROM ai_metrics_sessions AS session
 		                   WHERE session.agent_task_id = task.agent_task_id)
 		                 AND NOT EXISTS (SELECT 1
 		                                 FROM ai_metrics_outcome_labels AS label
-		                                 WHERE label.agent_task_id = task.agent_task_id)`);
-  }
-  if (Str.isNonEmpty(archiveRunObjectIds)) {
-    yield* duckdb.run(`DELETE
-	                   FROM ai_metrics_raw_archive_objects
-	                   WHERE archive_run_object_id IN (${archiveRunObjectIds})`);
-  }
+	                                 WHERE label.agent_task_id = task.agent_task_id)`);
+});
+
+const deleteRowsForPlan = Effect.fn("AiMetrics.retention.deleteRowsForPlan")(function* (plan: RetentionPlan) {
+  const runIds = sqlStringList(plan.ingestRunIds);
+  const labelIds = sqlStringList(plan.labelIds);
+
+  yield* deleteRowsWithIds(labelIds, `DELETE FROM ai_metrics_outcome_labels WHERE label_id IN (${labelIds})`);
+  const benchmarkRunIds = sqlStringList(plan.benchmarkRunIds);
+  yield* deleteRowsWithIds(
+    benchmarkRunIds,
+    `DELETE FROM ai_metrics_benchmark_runs WHERE benchmark_run_id IN (${benchmarkRunIds})`
+  );
+  const scorecardIds = sqlStringList(plan.scorecardIds);
+  yield* deleteRowsWithIds(scorecardIds, `DELETE FROM ai_metrics_scorecards WHERE scorecard_id IN (${scorecardIds})`);
+  yield* deleteIngestRunRows(runIds);
+  yield* pruneAgentTasks(runIds, labelIds);
+  const archiveRunObjectIds = sqlStringList(A.map(plan.rawArchiveItems, (item) => item.archiveRunObjectId));
+  yield* deleteRowsWithIds(
+    archiveRunObjectIds,
+    `DELETE FROM ai_metrics_raw_archive_objects WHERE archive_run_object_id IN (${archiveRunObjectIds})`
+  );
 });
 
 const removePlanPaths = Effect.fn("AiMetrics.retention.removePlanPaths")(function* (
@@ -1007,46 +1143,7 @@ const byModifiedDescending: Order.Order<PathPlanItem> = Order.mapInput(
 const listForwarderSnapshotExportDirs = Effect.fn("AiMetrics.retention.listForwarderSnapshotExportDirs")(function* (
   dataRoot: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const derivedRoot = path.join(dataRoot, "derived/parquet");
-  const derivedRootExists = yield* fs
-    .exists(derivedRoot)
-    .pipe(
-      Effect.mapError((cause) => retentionFailure("Failed to inspect AI metrics Parquet export directory.", cause))
-    );
-  if (!derivedRootExists) {
-    return A.empty<PathPlanItem>();
-  }
-
-  const entries = yield* fs
-    .readDirectory(derivedRoot)
-    .pipe(Effect.mapError((cause) => retentionFailure("Failed to read AI metrics Parquet export directory.", cause)));
-  const items = yield* Effect.forEach(
-    entries,
-    Effect.fnUntraced(function* (entry) {
-      if (!Str.startsWith("forwarder-")(entry)) {
-        return O.none<PathPlanItem>();
-      }
-
-      const absolutePath = path.join(derivedRoot, entry);
-      const stat = yield* fs
-        .stat(absolutePath)
-        .pipe(Effect.mapError((cause) => retentionFailure("Failed to inspect AI metrics Parquet export.", cause)));
-      if (stat.type !== "Directory") {
-        return O.none<PathPlanItem>();
-      }
-
-      return O.some({
-        absolutePath,
-        modifiedAtEpochMillis: optionalModifiedAtMillis(stat),
-        relativePath: relativeToDataRoot(dataRoot, absolutePath),
-      });
-    }),
-    { concurrency: 8 }
-  );
-
-  return A.getSomes(items);
+  return yield* listParquetExportDirs(dataRoot, (_item, entry) => Str.startsWith("forwarder-")(entry));
 });
 
 /**
@@ -1055,9 +1152,8 @@ const listForwarderSnapshotExportDirs = Effect.fn("AiMetrics.retention.listForwa
  * **Details**
  *
  * Snapshots are ordered newest first by modification time, the first
- * `maxSnapshotExports` are kept, and the remainder are removed. A negative
- * `maxSnapshotExports` is clamped to zero rather than treated as unbounded, so
- * a bad value can never mean "keep everything forever".
+ * `maxSnapshotExports` are kept, and the remainder are removed. The policy
+ * schema rejects negative and fractional limits before enforcement starts.
  *
  * **Gotchas**
  *
@@ -1070,6 +1166,7 @@ const listForwarderSnapshotExportDirs = Effect.fn("AiMetrics.retention.listForwa
  * import { AiMetricsRetentionEnforcementPolicy, enforceAiMetricsRetentionPolicy } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const program = enforceAiMetricsRetentionPolicy(
  *   AiMetricsRetentionEnforcementPolicy.make({
@@ -1092,9 +1189,8 @@ export const enforceAiMetricsRetentionPolicy = Effect.fn("AiMetrics.enforceAiMet
 ) {
   const snapshotItems = yield* listForwarderSnapshotExportDirs(policy.dataRoot);
   const sortedSnapshots = A.sort(snapshotItems, byModifiedDescending);
-  const keepCount = policy.maxSnapshotExports < 0 ? 0 : policy.maxSnapshotExports;
-  const keptItems = A.take(sortedSnapshots, keepCount);
-  const deletedItems = A.drop(sortedSnapshots, keepCount);
+  const keptItems = A.take(sortedSnapshots, policy.maxSnapshotExports);
+  const deletedItems = A.drop(sortedSnapshots, policy.maxSnapshotExports);
 
   if (!policy.dryRun) {
     yield* removePlanPaths(deletedItems);
@@ -1105,8 +1201,7 @@ export const enforceAiMetricsRetentionPolicy = Effect.fn("AiMetrics.enforceAiMet
     deletedDerivedExportCount: deletedItems.length,
     dryRun: policy.dryRun,
     keptDerivedExportCount: keptItems.length,
-    maxSnapshotExports: keepCount,
-    schemaVersion: retentionEnforcementSchemaVersion,
+    maxSnapshotExports: policy.maxSnapshotExports,
   });
 });
 
@@ -1137,7 +1232,7 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
 }: {
   readonly dryRun: boolean;
   readonly input: AiMetricsRetentionSelector;
-  readonly mode: "compact" | "delete";
+  readonly mode: AiMetricsRetentionMutationMode;
 }) {
   const duckDbPath = aiMetricsDerivedDuckDbPath(input.dataRoot);
   const plan = yield* withAiMetricsDuckDb(readRetentionPlan(input), duckDbPath).pipe(
@@ -1151,17 +1246,15 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
     );
   }
 
-  if (!dryRun && !hasOrderedMutationWindow(input)) {
-    return yield* retentionFailure(
-      "AI metrics retention mutation window lower bound must be before its upper bound.",
-      input
-    );
-  }
+  const deletesRawArchive = AiMetricsRetentionMutationMode.$match(mode, {
+    compact: () => false,
+    delete: () => true,
+  });
 
   if (!dryRun) {
     yield* removePlanPaths(plan.derivedExportItems);
     yield* removePlanPaths(plan.reportItems);
-    if (mode === "delete") {
+    if (deletesRawArchive) {
       yield* removeRawArchivePaths(input.dataRoot, plan.rawArchiveItems);
       yield* withAiMetricsDuckDb(deleteRowsForPlan(plan), duckDbPath).pipe(
         Effect.mapError((cause) => retentionFailure("Failed to delete selected AI metrics derived rows.", cause))
@@ -1171,12 +1264,11 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
 
   return AiMetricsRetentionMutationResult.make({
     deletedDerivedExportCount: plan.derivedExportItems.length,
-    deletedRawArchiveObjectCount: mode === "delete" ? plan.rawArchiveItems.length : 0,
+    deletedRawArchiveObjectCount: deletesRawArchive ? plan.rawArchiveItems.length : 0,
     deletedReportCount: plan.reportItems.length,
     dryRun,
     explicitWindow: hasExplicitWindow(input),
     mode,
-    schemaVersion: retentionMutationSchemaVersion,
   });
 });
 
@@ -1203,10 +1295,11 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
  * import { AiMetricsRetentionSelector, runAiMetricsRetentionDelete } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const program = runAiMetricsRetentionDelete(
  *   AiMetricsRetentionSelector.make({
- *     beforeEpochMillis: 1_717_086_400_000,
+ *     beforeEpochMillis: O.some(1_717_086_400_000),
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
  *   }),
  *   true
@@ -1237,7 +1330,7 @@ export const runAiMetricsRetentionDelete: {
   runRetentionMutation({
     dryRun,
     input,
-    mode: "delete",
+    mode: AiMetricsRetentionMutationMode.Enum.delete,
   })
 );
 
@@ -1261,10 +1354,11 @@ export const runAiMetricsRetentionDelete: {
  * import { AiMetricsRetentionSelector, runAiMetricsRetentionCompact } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const program = runAiMetricsRetentionCompact(
  *   AiMetricsRetentionSelector.make({
- *     beforeEpochMillis: 1_717_086_400_000,
+ *     beforeEpochMillis: O.some(1_717_086_400_000),
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
  *   }),
  *   true
@@ -1294,7 +1388,7 @@ export const runAiMetricsRetentionCompact: {
   runRetentionMutation({
     dryRun,
     input,
-    mode: "compact",
+    mode: AiMetricsRetentionMutationMode.Enum.compact,
   })
 );
 
@@ -1331,7 +1425,7 @@ export const runAiMetricsRetentionCompact: {
  *
  * const program = runAiMetricsRetentionRestoreDrill(
  *   AiMetricsRetentionRestoreDrillInput.make({
- *     rawArchiveKey: Redacted.make("base64-32-byte-key"),
+ *     rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *     restoreRoot: "/tmp/ai-metrics-restore",
  *     selector: AiMetricsRetentionSelector.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
  *   })
@@ -1370,7 +1464,7 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
     .pipe(Effect.mapError((cause) => retentionFailure("Failed to create AI metrics restore drill root.", cause)));
   const spec = yield* makeAiMetricsInstallSpec(
     AiMetricsInstallInput.make({
-      dataRoot: input.restoreRoot,
+      dataRoot: O.some(input.restoreRoot),
       target: AiMetricsDeployTarget.Enum.local,
     })
   ).pipe(Effect.mapError((cause) => retentionFailure("Failed to build restore drill storage layout.", cause)));
@@ -1384,67 +1478,68 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
   const repoRootHash = yield* hashPrivateIdentifier(input.restoreRoot, input.hashSalt).pipe(
     Effect.mapError((cause) => retentionFailure("Failed to hash restore drill root.", cause))
   );
-  let records: ReadonlyArray<AiMetricsDerivedTranscriptRecord> = A.empty();
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
-
-  for (const item of selected) {
-    const selectedArchivePath = yield* validateRawArchivePath(path, input.selector.dataRoot, item);
-    const envelope = yield* readEncryptedRawArchiveEnvelope(selectedArchivePath).pipe(
-      Effect.mapError((cause) =>
-        retentionFailure("Failed to read retained archive object during restore drill.", cause)
-      )
-    );
-    const plaintext = yield* decryptEncryptedRawArchiveEnvelope({
-      envelope,
-      rawArchiveKey: input.rawArchiveKey,
-    }).pipe(
-      Effect.mapError((cause) =>
-        retentionFailure("Failed to decrypt retained archive object during restore drill.", cause)
-      )
-    );
-    const contentHash = yield* hashPrivateIdentifier(plaintext, input.hashSalt).pipe(
-      Effect.mapError((cause) => retentionFailure("Failed to hash restored archive plaintext identity.", cause))
-    );
-    const legacyPublicContentHash = yield* hashPublicTextSha256(plaintext).pipe(
-      Effect.mapError((cause) => retentionFailure("Failed to hash restored archive plaintext legacy identity.", cause))
-    );
-    if (contentHash !== item.plaintextContentHash && legacyPublicContentHash !== item.plaintextContentHash) {
-      return yield* retentionFailure("Restored AI metrics archive object failed plaintext hash verification.", {
-        archiveObjectId: item.archiveObjectId,
-        expectedPlaintextContentHash: item.plaintextContentHash,
-        legacyRestoredPlaintextContentHash: legacyPublicContentHash,
-        restoredPlaintextContentHash: contentHash,
-      });
-    }
-    const restoreSourcePath = path.join(input.restoreRoot, "restore-source", `${item.archiveObjectId}.jsonl`);
-    const summary = yield* summarizeTranscriptText({
-      content: plaintext,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
-      sourceKind: item.sourceKind,
-      sourcePath: restoreSourcePath,
-    }).pipe(Effect.mapError((cause) => retentionFailure("Failed to summarize restored archive plaintext.", cause)));
-    const privacy = yield* makeAiMetricsPrivacyCheckResult({
-      content: plaintext,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
-      sourcePath: restoreSourcePath,
-      summary,
-    }).pipe(Effect.mapError((cause) => retentionFailure("Failed to sanitize restored archive plaintext.", cause)));
-    const archiveObject = yield* writeEncryptedRawArchiveObject({
-      content: plaintext,
-      ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(input.hashSalt) }),
-      rawArchiveDir: spec.storage.rawArchiveDir,
-      rawArchiveKey: input.rawArchiveKey,
-      sourceKind: item.sourceKind,
-      sourcePath: restoreSourcePath,
-    }).pipe(Effect.mapError((cause) => retentionFailure("Failed to write restore drill archive object.", cause)));
-    records = A.append(
-      records,
-      AiMetricsDerivedTranscriptRecord.make({
+  const records = yield* Effect.forEach(
+    selected,
+    Effect.fnUntraced(function* (item) {
+      const selectedArchivePath = yield* validateRawArchivePath(path, input.selector.dataRoot, item);
+      const envelope = yield* readEncryptedRawArchiveEnvelope(selectedArchivePath).pipe(
+        Effect.mapError((cause) =>
+          retentionFailure("Failed to read retained archive object during restore drill.", cause)
+        )
+      );
+      const plaintext = yield* decryptEncryptedRawArchiveEnvelope({
+        envelope,
+        rawArchiveKey: input.rawArchiveKey,
+      }).pipe(
+        Effect.mapError((cause) =>
+          retentionFailure("Failed to decrypt retained archive object during restore drill.", cause)
+        )
+      );
+      const contentHash = yield* hashPrivateIdentifier(plaintext, input.hashSalt).pipe(
+        Effect.mapError((cause) => retentionFailure("Failed to hash restored archive plaintext identity.", cause))
+      );
+      const legacyPublicContentHash = yield* hashPublicTextSha256(plaintext).pipe(
+        Effect.mapError((cause) =>
+          retentionFailure("Failed to hash restored archive plaintext legacy identity.", cause)
+        )
+      );
+      if (contentHash !== item.plaintextContentHash && legacyPublicContentHash !== item.plaintextContentHash) {
+        return yield* retentionFailure("Restored AI metrics archive object failed plaintext hash verification.", {
+          archiveObjectId: item.archiveObjectId,
+          expectedPlaintextContentHash: item.plaintextContentHash,
+          legacyRestoredPlaintextContentHash: legacyPublicContentHash,
+          restoredPlaintextContentHash: contentHash,
+        });
+      }
+      const restoreSourcePath = path.join(input.restoreRoot, "restore-source", `${item.archiveObjectId}.jsonl`);
+      const summary = yield* summarizeTranscriptText({
+        content: plaintext,
+        hashSalt: input.hashSalt,
+        sourceKind: item.sourceKind,
+        sourcePath: restoreSourcePath,
+      }).pipe(Effect.mapError((cause) => retentionFailure("Failed to summarize restored archive plaintext.", cause)));
+      const privacy = yield* makeAiMetricsPrivacyCheckResult({
+        content: plaintext,
+        hashSalt: input.hashSalt,
+        relativePath: O.none(),
+        sourcePath: restoreSourcePath,
+        summary,
+      }).pipe(Effect.mapError((cause) => retentionFailure("Failed to sanitize restored archive plaintext.", cause)));
+      const archiveObject = yield* writeEncryptedRawArchiveObject({
+        content: plaintext,
+        hashSalt: input.hashSalt,
+        rawArchiveDir: spec.storage.rawArchiveDir,
+        rawArchiveKey: input.rawArchiveKey,
+        sourceKind: item.sourceKind,
+        sourcePath: restoreSourcePath,
+      }).pipe(Effect.mapError((cause) => retentionFailure("Failed to write restore drill archive object.", cause)));
+      return AiMetricsDerivedTranscriptRecord.make({
         archiveObject,
         privacy,
-      })
-    );
-  }
+      });
+    })
+  );
 
   yield* withAiMetricsDuckDb(
     writeAiMetricsDerivedStorage(
@@ -1466,15 +1561,9 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
     hashMatches: true,
     replayedObjectCount: records.length,
     restoreRoot: input.restoreRoot,
-    schemaVersion: restoreDrillSchemaVersion,
     transcriptTextPrinted: false,
   });
 });
-
-const encodeInventoryJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionInventory));
-const encodeEnforcementJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionEnforcementResult));
-const encodeMutationJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionMutationResult));
-const encodeRestoreDrillJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsRetentionRestoreDrillResult));
 
 /**
  * Encode a retention inventory as the JSON the CLI emits under `--json`.
@@ -1515,7 +1604,7 @@ export const aiMetricsRetentionInventoryToJson: (
   result: AiMetricsRetentionInventory
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionInventoryToJson")(
   (result) =>
-    encodeInventoryJson(result).pipe(
+    AiMetricsRetentionInventory.encodeUnknownEffectFromJsonString(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics retention inventory JSON.", cause))
     )
 );
@@ -1556,7 +1645,7 @@ export const aiMetricsRetentionEnforcementToJson: (
   result: AiMetricsRetentionEnforcementResult
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionEnforcementToJson")(
   (result) =>
-    encodeEnforcementJson(result).pipe(
+    AiMetricsRetentionEnforcementResult.encodeUnknownEffectFromJsonString(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics retention enforcement JSON.", cause))
     )
 );
@@ -1598,7 +1687,7 @@ export const aiMetricsRetentionMutationToJson: (
   result: AiMetricsRetentionMutationResult
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionMutationToJson")(
   (result) =>
-    encodeMutationJson(result).pipe(
+    AiMetricsRetentionMutationResult.encodeUnknownEffectFromJsonString(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics retention mutation JSON.", cause))
     )
 );
@@ -1640,7 +1729,7 @@ export const aiMetricsRetentionRestoreDrillToJson: (
   result: AiMetricsRetentionRestoreDrillResult
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionRestoreDrillToJson")(
   (result) =>
-    encodeRestoreDrillJson(result).pipe(
+    AiMetricsRetentionRestoreDrillResult.encodeUnknownEffectFromJsonString(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics restore drill JSON.", cause))
     )
 );

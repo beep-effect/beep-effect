@@ -39,6 +39,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`beep-ci-operational-ontology`](./beep-ci-operational-ontology/README.md) —
+  research (2026-08-27): derive CI/yeet cheapening levers as projections of a
+  reasoned T-Box over the repo's verification & backpressure semantics; one
+  KPI — fleet-aggregated time-to-certainty per verification episode. Launch
+  proposal grilled same day (8 decisions locked: baseline-first, OWL 2 RL →
+  Datalog on the critical path, formal-first mining, CQ-gated admission, labs
+  incubation, quick levers as tagged control interventions). Graduation
+  target: the operational ontology pipeline itself. Next: fleet-wide S0
+  baseline, then ORSD/CQs + research fan-out.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited

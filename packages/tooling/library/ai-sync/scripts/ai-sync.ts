@@ -1,14 +1,30 @@
 #!/usr/bin/env bun
 
+import { $AiSyncId } from "@beep/identity/packages";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Console, Effect, Layer, Match } from "effect";
+import { Console, Effect, Layer, Match, Runtime } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import { checkGeneratedArtifacts, checkStrictDrift } from "../src/drift.ts";
 import { AiSyncHttpLayer, generateAiSyncArtifacts } from "../src/generator.ts";
 import { defaultRepoRoot, validateCurrentCheckoutDogfoodConfigs, validateRepoConfig } from "../src/validation.ts";
 
 const runtimeLayer = Layer.mergeAll(NodeServices.layer, AiSyncHttpLayer);
+const $I = $AiSyncId.create("scripts/ai-sync");
+
+class AiSyncExitError extends S.TaggedError<AiSyncExitError>($I`AiSyncExitError`)(
+  "AiSyncExitError",
+  {
+    exitCode: S.Finite,
+  },
+  $I.annoteError<AiSyncExitError>("AiSyncExitError", {
+    description: "Process exit requested after an AI sync command reports a nonzero status.",
+  })
+) {
+  override readonly [Runtime.errorExitCode] = this.exitCode;
+  override readonly [Runtime.errorReported] = false;
+}
 
 const readFlag = (name: string): string | undefined => {
   const index = process.argv.indexOf(name);
@@ -68,13 +84,7 @@ const main = Effect.scoped(
     Effect.flatMap((context) =>
       program.pipe(
         Effect.catchTag("AiSyncError", reportError),
-        Effect.flatMap((code) =>
-          code === 0
-            ? Effect.void
-            : Effect.sync(() => {
-                process.exitCode = code;
-              })
-        ),
+        Effect.flatMap((code) => (code === 0 ? Effect.void : Effect.fail(AiSyncExitError.make({ exitCode: code })))),
         Effect.provide(context)
       )
     )

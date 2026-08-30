@@ -1,20 +1,18 @@
 /**
- * PermissionRequest hook event.
+ * Fires when Claude Code is about to show a permission dialog for a
+ * tool. A handler can `allow` or `deny` the tool call directly,
+ * optionally rewriting the tool input and persisting new permission
+ * rules. Matcher is on `tool_name`. See
+ * https://code.claude.com/docs/en/hooks#permissionrequest.
  *
- * Fires when Claude Code is about to show a permission dialog for a tool.
- * A handler can `allow` or `deny` the tool call directly, optionally
- * rewriting the tool input and persisting new permission rules. Supports
- * a matcher on `tool_name`.
- * See https://code.claude.com/docs/en/hooks#permissionrequest.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";
@@ -29,14 +27,16 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/PermissionRequest");
  * A pending permission-rule change Claude Code suggests alongside the
  * prompt. The hook handler can accept these in its `updatedPermissions`.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Construct a suggested rule)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.PermissionRule)
+ * const rule = Hook.PermissionRequest.PermissionRule.make({ toolName: "Bash" })
+ * console.log(rule.toolName) // "Bash"
  * ```
  *
+ * @see {@link RulePermissionUpdate} for persisting a list of these rules.
  * @category schemas
  * @since 0.0.0
  */
@@ -89,18 +89,25 @@ const PermissionDecisionBehavior = LiteralKit(["allow", "deny"]).pipe(
 );
 
 /**
- * Schema for `PermissionSuggestion`.
+ * Permission update Claude Code suggests with the pending tool request.
  *
- * **Example** (Inspect the PermissionSuggestion schema)
+ * **Example** (Decode a permission suggestion)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PermissionRequest.PermissionSuggestion)
+ * const suggestion = S.decodeUnknownSync(Hook.PermissionRequest.PermissionSuggestion)({
+ *   type: "addRules",
+ *   behavior: "allow",
+ *   destination: "session",
+ * })
+ *
+ * console.log(suggestion.type) // "addRules"
  * ```
  *
+ * @see {@link Input} for the stdin payload that lists these suggestions.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class PermissionSuggestion extends S.Class<PermissionSuggestion>($I`PermissionSuggestion`)(
@@ -123,18 +130,30 @@ const PermissionSuggestions = PermissionSuggestion.pipe(
 );
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a PermissionRequest hook, including the pending
+ * `tool_name`, `tool_input`, and optional permission suggestions.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a pending Bash prompt)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PermissionRequest.Input)
+ * const input = S.decodeUnknownSync(Hook.PermissionRequest.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PermissionRequest",
+ *   tool_name: "Bash",
+ *   tool_input: { command: "ls" },
+ * })
+ *
+ * console.log(input.tool_name) // "Bash"
  * ```
  *
+ * @see {@link allow} for answering before the dialog.
+ * @see {@link deny} for refusing before the dialog.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`PermissionRequestInput`)(
@@ -158,14 +177,24 @@ export class Input extends S.Class<Input>($I`PermissionRequestInput`)(
  * A permission rule update the hook may persist. Mirrors the shape of
  * `permission_suggestions` on the input side.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Persist an allow rule)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.RulePermissionUpdate)
+ * const update = Hook.PermissionRequest.RulePermissionUpdate.make({
+ *   type: "addRules",
+ *   rules: [Hook.PermissionRequest.PermissionRule.make({ toolName: "Read" })],
+ *   behavior: "allow",
+ *   destination: "session",
+ * })
+ *
+ * console.log(update.type) // "addRules"
  * ```
  *
+ * @see {@link PermissionUpdate} for the union that includes this variant.
+ * @see {@link ModePermissionUpdate} for persisting a permission mode.
+ * @see {@link DirectoryPermissionUpdate} for persisting directories.
  * @category schemas
  * @since 0.0.0
  */
@@ -182,18 +211,25 @@ export class RulePermissionUpdate extends S.Class<RulePermissionUpdate>($I`RuleP
 ) {}
 
 /**
- * Schema for `ModePermissionUpdate`.
+ * Persist a permission mode (`setMode`) in a settings destination.
  *
- * **Example** (Inspect the ModePermissionUpdate schema)
+ * **Example** (Set acceptEdits for this session)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.ModePermissionUpdate)
+ * const update = Hook.PermissionRequest.ModePermissionUpdate.make({
+ *   type: "setMode",
+ *   mode: "acceptEdits",
+ *   destination: "session",
+ * })
+ *
+ * console.log(update.mode) // "acceptEdits"
  * ```
  *
+ * @see {@link PermissionUpdate} for the union that includes this variant.
+ * @see {@link RulePermissionUpdate} for persisting rule lists.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class ModePermissionUpdate extends S.Class<ModePermissionUpdate>($I`ModePermissionUpdate`)(
@@ -208,18 +244,25 @@ export class ModePermissionUpdate extends S.Class<ModePermissionUpdate>($I`ModeP
 ) {}
 
 /**
- * Schema for `DirectoryPermissionUpdate`.
+ * Persist allowed or removed directories in a settings destination.
  *
- * **Example** (Inspect the DirectoryPermissionUpdate schema)
+ * **Example** (Add a writable directory)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.DirectoryPermissionUpdate)
+ * const update = Hook.PermissionRequest.DirectoryPermissionUpdate.make({
+ *   type: "addDirectories",
+ *   directories: ["/tmp/build"],
+ *   destination: "session",
+ * })
+ *
+ * console.log(update.directories) // ["/tmp/build"]
  * ```
  *
+ * @see {@link PermissionUpdate} for the union that includes this variant.
+ * @see {@link RulePermissionUpdate} for persisting rule lists.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class DirectoryPermissionUpdate extends S.Class<DirectoryPermissionUpdate>($I`DirectoryPermissionUpdate`)(
@@ -234,18 +277,28 @@ export class DirectoryPermissionUpdate extends S.Class<DirectoryPermissionUpdate
 ) {}
 
 /**
- * Schema for `PermissionUpdate`.
+ * Discriminated union of permission updates a handler may persist:
+ * rules, mode, or directories.
  *
- * **Example** (Inspect the PermissionUpdate schema)
+ * **Example** (Decode a mode update)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PermissionRequest.PermissionUpdate)
+ * const update = S.decodeUnknownSync(Hook.PermissionRequest.PermissionUpdate)({
+ *   type: "setMode",
+ *   mode: "plan",
+ *   destination: "session",
+ * })
+ *
+ * console.log(update.type) // "setMode"
  * ```
  *
+ * @see {@link RulePermissionUpdate} for the rule-list variant.
+ * @see {@link ModePermissionUpdate} for the setMode variant.
+ * @see {@link DirectoryPermissionUpdate} for the directory-list variant.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const PermissionUpdate = S.Union([RulePermissionUpdate, ModePermissionUpdate, DirectoryPermissionUpdate]).pipe(
@@ -255,18 +308,10 @@ export const PermissionUpdate = S.Union([RulePermissionUpdate, ModePermissionUpd
 );
 
 /**
- * Type-level model for `PermissionUpdate`.
+ * Decoded value produced by {@link PermissionUpdate}.
  *
- * **Example** (Use PermissionUpdate as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PermissionRequest.PermissionUpdate
- * ```
- *
+ * @see {@link PermissionUpdate} for the runtime union and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type PermissionUpdate = typeof PermissionUpdate.Type;
@@ -279,18 +324,24 @@ const PermissionUpdates = PermissionUpdate.pipe(
 );
 
 /**
- * Schema for `PermissionDecision`.
+ * Allow or deny decision returned inside `hookSpecificOutput`,
+ * including optional rewritten input and persisted permission updates.
  *
- * **Example** (Inspect the PermissionDecision schema)
+ * **Example** (Construct an allow decision)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.PermissionDecision)
+ * const decision = Hook.PermissionRequest.PermissionDecision.make({
+ *   behavior: "allow",
+ * })
+ *
+ * console.log(decision.behavior) // "allow"
  * ```
  *
+ * @see {@link allow} for the constructor that wraps this decision.
+ * @see {@link deny} for the deny counterpart.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class PermissionDecision extends S.Class<PermissionDecision>($I`PermissionRequestDecision`)(
@@ -307,18 +358,25 @@ export class PermissionDecision extends S.Class<PermissionDecision>($I`Permissio
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that carries the {@link PermissionDecision}.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect a deny payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.HookSpecificOutput)
+ * const specific = Hook.PermissionRequest.HookSpecificOutput.make({
+ *   hookEventName: "PermissionRequest",
+ *   decision: Hook.PermissionRequest.PermissionDecision.make({
+ *     behavior: "deny",
+ *   }),
+ * })
+ *
+ * console.log(specific.decision.behavior) // "deny"
  * ```
  *
+ * @see {@link deny} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`PermissionRequestHookSpecificOutput`)(
@@ -332,18 +390,22 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Permissio
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a PermissionRequest handler returns. The allow/deny
+ * decision lives on `hookSpecificOutput.decision`.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PermissionRequest.Output)
+ * const output = Hook.PermissionRequest.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link passthrough} for showing the permission dialog.
+ * @see {@link allow} for answering before the dialog.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`PermissionRequestOutput`)(
@@ -365,18 +427,32 @@ export class Output extends S.Class<Output>($I`PermissionRequestOutput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `allow`.
+ * Allow the tool call before the dialog. Optionally rewrite `updatedInput`
+ * and persist `updatedPermissions` — the reason to pick this over
+ * {@link passthrough}.
  *
- * **Example** (Use allow)
+ * **Example** (Allow and persist a session mode)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PermissionRequest.allow)
+ * const output = Hook.PermissionRequest.allow({
+ *   updatedPermissions: [
+ *     Hook.PermissionRequest.ModePermissionUpdate.make({
+ *       type: "setMode",
+ *       mode: "acceptEdits",
+ *       destination: "session",
+ *     }),
+ *   ],
+ * })
+ *
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.decision.behavior) // "allow"
  * ```
  *
+ * @see {@link passthrough} for showing the dialog instead.
+ * @see {@link deny} for refusing the tool call.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const allow = (options?: {
@@ -397,37 +473,48 @@ export const allow = (options?: {
   });
 
 /**
- * No-op output — Claude Code proceeds with its normal permission request flow.
+ * No-op output — Claude Code proceeds with its normal permission request
+ * flow and shows the dialog.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Show the permission dialog)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PermissionRequest.passthrough)
+ * const output = Hook.PermissionRequest.passthrough()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link allow} for answering before the dialog.
+ * @see {@link deny} for refusing before the dialog.
  * @category constructors
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `deny`.
+ * Deny the tool call before the dialog. Optional `interrupt: true`
+ * cancels the rest of the turn.
  *
- * **Example** (Use deny)
+ * **Example** (Deny and interrupt)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PermissionRequest.deny)
+ * const output = Hook.PermissionRequest.deny("network is disabled", { interrupt: true })
+ * const decision = O.getOrUndefined(output.hookSpecificOutput)?.decision
+ * console.log(decision?.behavior) // "deny"
+ * console.log(O.getOrUndefined(decision?.interrupt ?? O.none())) // true
  * ```
  *
+ * @see {@link allow} for answering before the dialog.
+ * @see {@link passthrough} for showing the dialog instead.
  * @category constructors
- *
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- This denial constructor has no data operand; its optional flags only configure the new value.
 export const deny = (message: string, options?: { readonly interrupt?: boolean }): Output =>
   Output.make({
     hookSpecificOutput: O.some(
@@ -447,18 +534,23 @@ export const deny = (message: string, options?: { readonly interrupt?: boolean }
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable PermissionRequest hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a PermissionRequest hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.define)
+ * const hook = Hook.PermissionRequest.define({
+ *   handler: () => Effect.succeed(Hook.PermissionRequest.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PermissionRequest"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `tool_name`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -474,14 +566,22 @@ export const define = <E, R>(config: {
  * Build a PermissionRequest hook that only handles matching `tool_name`
  * values.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Allow matching Read calls)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PermissionRequest.onMatcher)
+ * const hook = Hook.PermissionRequest.onMatcher({
+ *   matcher: "Read",
+ *   handler: () => Effect.succeed(Hook.PermissionRequest.allow()),
+ * })
+ *
+ * console.log(hook.event) // "PermissionRequest"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
+ * @see {@link allow} for the matched-handler decision used here.
  * @category constructors
  * @since 0.0.0
  */

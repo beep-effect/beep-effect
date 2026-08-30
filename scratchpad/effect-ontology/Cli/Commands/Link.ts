@@ -18,8 +18,10 @@ import * as Str from "effect/String";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
 import { RdfBuilder } from "../../Service/Rdf.ts";
-import { WikidataClient } from "../../Service/WikidataClient.ts";
+import { WikidataApiError, WikidataClient, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import type { ParsingFailed, RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+import type { PlatformError } from "effect/PlatformError";
 
 // =============================================================================
 // Command Options
@@ -74,7 +76,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
   search: O.Option<string>,
   limit: number,
   dryRun: boolean
-) {
+): Effect.fn.Return<void, ParsingFailed | PlatformError | RdfError | SerializationFailed | WikidataApiError | WikidataRateLimitError, FileSystem.FileSystem | RdfBuilder | WikidataClient> {
   const wikidata = yield* WikidataClient;
   const rdf = yield* RdfBuilder;
   if (O.isSome(search)) {
@@ -167,14 +169,24 @@ To create a link, run:`);
 // =============================================================================
 
 /**
- * Exposes link command for composition by callers of this module.
+ * Creates `owl:sameAs` links between local entity IRIs and Wikidata identifiers.
  *
- * **Example** (Inspect link command)
+ * **Details**
+ *
+ * Provide `--entity-iri` plus `--wikidata-id`, or `--search` to look up
+ * candidates. `--dry-run` prints the triple without writing a graph.
+ *
+ * **Example** (Link a local entity to Wikidata)
  *
  * ```ts
  * import { linkCommand } from "@effect-ontology/Cli/Commands/Link"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(linkCommand)
+ * const argv = ["--entity-iri", "https://example.com/ada", "--wikidata-id", "Q7259"]
+ * const program = Command.runWith(linkCommand, { version: "0.0.0" })([...argv])
+ * console.log(linkCommand.name) // "link"
+ * console.log(argv.includes("--wikidata-id")) // true
+ * console.log(program)
  * ```
  *
  * @category cli-commands

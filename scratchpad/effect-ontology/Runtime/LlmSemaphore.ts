@@ -21,12 +21,17 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/LlmSemaphore");
 /**
  * Error thrown when semaphore permit acquisition times out
  *
- * **Example** (Inspect semaphore timeout error)
+ * **Example** (Construct a permit-timeout failure)
  *
  * ```ts
+ * import { Duration } from "effect"
  * import { SemaphoreTimeoutError } from "@effect-ontology/Runtime/LlmSemaphore"
  *
- * console.log(SemaphoreTimeoutError)
+ * const error = SemaphoreTimeoutError.make({
+ *   message: "LLM semaphore permit acquisition timed out after 300000ms",
+ *   waitDuration: Duration.seconds(5)
+ * })
+ * console.log(Duration.toMillis(error.waitDuration)) // 5000
  * ```
  *
  * @category errors
@@ -55,12 +60,22 @@ export class SemaphoreTimeoutError extends S.TaggedError<SemaphoreTimeoutError>(
  * Use this to wrap LLM calls for fine-grained concurrency control.
  * Works in conjunction with rate limiting.
  *
- * **Example** (Use LlmSemaphoreService)
+ * **Example** (Wrap a dummy LLM call with a permit)
  *
  * ```ts
+ * import { Effect, Layer } from "effect"
  * import { LlmSemaphoreService } from "@effect-ontology/Runtime/LlmSemaphore"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * console.log(LlmSemaphoreService)
+ * const result = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const semaphore = yield* LlmSemaphoreService
+ *     return yield* semaphore.withPermit(Effect.succeed("ok"))
+ *   }).pipe(
+ *     Effect.provide(LlmSemaphoreService.Default.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG))))
+ *   )
+ * )
+ * console.log(result) // "ok"
  * ```
  *
  * @category services

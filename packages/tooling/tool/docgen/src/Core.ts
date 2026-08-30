@@ -303,8 +303,10 @@ const isTypeScriptFence = (metadata: string): boolean =>
 
 const fencePattern = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
 
-const fenceMatches = (content: string): ReadonlyArray<RegExpMatchArray> =>
-  pipe(content, Str.matchAll(fencePattern), A.fromIterable);
+const fenceMatches: (content: string) => ReadonlyArray<RegExpMatchArray> = flow(
+  Str.matchAll(fencePattern),
+  A.fromIterable
+);
 
 const fenceWarnings = (content: string, matches: ReadonlyArray<RegExpMatchArray>): Array<string> =>
   pipe(
@@ -653,39 +655,36 @@ const getMarkdown = Effect.fn("getMarkdown")(function* (modules: ReadonlyArray<D
   return [homepage, index, yml, ...moduleFiles];
 });
 
-const getMarkdownHomepage = Effect.gen(function* () {
+const makeMarkdownFile = Effect.fn("makeMarkdownFile")(function* (
+  pathSegments: A.NonEmptyReadonlyArray<string>,
+  content: string
+) {
   const config = yield* Configuration.Configuration;
   const process = yield* Domain.Process;
   const cwd = yield* process.cwd;
   const path = yield* Path.Path;
-  return Domain.File.new(
-    path.join(cwd, config.outDir, "index.md"),
-    Str.stripMargin(`|---
+  return Domain.File.new(path.join(cwd, config.outDir, ...pathSegments), content, { isOverwritable: false });
+});
+
+const getMarkdownHomepage = makeMarkdownFile(
+  A.make("index.md"),
+  Str.stripMargin(`|---
        |title: Home
        |nav_order: 1
        |---
-       |`),
-    { isOverwritable: false }
-  );
-});
+       |`)
+);
 
-const getMarkdownIndex = Effect.gen(function* () {
-  const config = yield* Configuration.Configuration;
-  const process = yield* Domain.Process;
-  const cwd = yield* process.cwd;
-  const path = yield* Path.Path;
-  return Domain.File.new(
-    path.join(cwd, config.outDir, "modules", "index.md"),
-    Str.stripMargin(`|---
+const getMarkdownIndex = makeMarkdownFile(
+  A.make("modules", "index.md"),
+  Str.stripMargin(`|---
        |title: Modules
        |has_children: true
        |permalink: /docs/modules
        |nav_order: 2
        |---
-       |`),
-    { isOverwritable: false }
-  );
-});
+       |`)
+);
 
 const resolveConfigYML = Effect.fn("resolveConfigYML")(function* (content: string) {
   const config = yield* Configuration.Configuration;

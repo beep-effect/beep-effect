@@ -6,6 +6,7 @@ import * as S from "effect/Schema";
 import { ClassDefinition, PropertyDefinition } from "../../Domain/Model/Ontology.ts";
 import { makeEntitySchema } from "../../Schema/EntityFactory.ts";
 import { makeRelationSchema } from "../../Schema/RelationFactory.ts";
+import { makeLocalNameSchema } from "../../Utils/Iri.ts";
 
 const decodePerson = S.decodeEffect(ClassDefinition)({
   id: "https://schema.org/#Person",
@@ -26,6 +27,17 @@ const legacyEvidence = {
 };
 
 describe("extraction factory evidence", () => {
+  it.effect(
+    "shares case-insensitive local-name decoding with canonical IRI encoding",
+    Effect.fnUntraced(function* () {
+      const person = yield* decodePerson;
+      const typeName = makeLocalNameSchema([person.id], "Type", "Class");
+
+      expect(yield* S.decodeEffect(typeName)("person")).toBe("person");
+      expect(yield* S.encodeEffect(typeName)("person")).toBe("Person");
+    })
+  );
+
   it.effect(
     "models empty vocabularies as schemas with no valid members",
     Effect.fnUntraced(function* () {

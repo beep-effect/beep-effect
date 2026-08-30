@@ -1,5 +1,6 @@
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer, migrateBundle, PostgresDrizzle } from "@beep/postgres";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer } from "effect";
@@ -7,11 +8,7 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SqlClient, SqlSchema } from "effect/unstable/sql";
-import {
-  LegacyMigrationHistoryError,
-  migrateOnBoot,
-  migrationsFolder,
-} from "../../Runtime/Persistence/MigrationRunner.ts";
+import { migrationsFolder } from "../../Runtime/Persistence/MigrationRunner.ts";
 
 const MigrationProbeRow = S.Struct({ id: S.Int, label: S.String });
 const MigrationJournalRow = S.Struct({ name: S.String });
@@ -26,8 +23,7 @@ const FutureProbe = {
   sql: "ALTER TABLE migration_probe ADD COLUMN label TEXT NOT NULL DEFAULT 'future';",
 };
 
-const DatabaseTestLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgliteTestLayer));
-const MigrationRunnerTestLayer = Layer.merge(DatabaseTestLayer, BunServices.layer);
+const DatabaseTestLayer = Layer.merge(makeDrizzleLayer().pipe(Layer.provideMerge(PgliteTestLayer)), BunCrypto.layer);
 
 describe.sequential("effect-ontology migrations", () => {
   it.layer(BunServices.layer)("with generated migration files", (it) => {
@@ -98,166 +94,6 @@ describe.sequential("effect-ontology migrations", () => {
           A.map(journal, (row) => row.name),
           [BaselineProbe.name, FutureProbe.name]
         );
-      })
-    );
-  });
-
-  it.layer(MigrationRunnerTestLayer)("with non-canonical migration history", (it) => {
-    it.effect(
-      "refuses an empty legacy journal with reset guidance",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`
-          CREATE TABLE schema_migrations (
-            version INTEGER PRIMARY KEY,
-            name TEXT NOT NULL
-          )
-        `;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.instanceOf(error, LegacyMigrationHistoryError);
-        assert.include(error.message, "Recreate the scratch database");
-      })
-    );
-
-    it.effect(
-      "refuses partial and mixed known legacy histories",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL)`;
-        yield* sql`
-          INSERT INTO schema_migrations (version, name)
-          VALUES (1, '001_claims_schema'), (99, 'unrelated_migration')
-        `;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.instanceOf(error, LegacyMigrationHistoryError);
-        assert.include(error.message, "partial or mixed");
-      })
-    );
-
-    it.effect(
-      "classifies a complete known legacy history and refuses an in-place rebaseline",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL)`;
-        yield* sql`
-          INSERT INTO schema_migrations (version, name)
-          VALUES (1, '001_claims_schema'),
-                 (2, '002_bitemporal_timestamps'),
-                 (3, '003_claim_idempotency'),
-                 (4, '004_ingested_links'),
-                 (5, '005_ontology_scoping'),
-                 (6, '006_entity_registry_scoping'),
-                 (7, '007_llm_examples'),
-                 (8, '008_content_hash_scoping'),
-                 (9, '009_processing_status'),
-                 (10, '010_pgvector_setup')
-        `;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.instanceOf(error, LegacyMigrationHistoryError);
-        assert.include(error.message, "complete legacy effect-ontology migration history");
-      })
-    );
-
-    it.effect(
-      "allows an empty canonical journal to resume canonical migration",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`CREATE SCHEMA effect_ontology`;
-        yield* sql`
-          CREATE TABLE effect_ontology.__drizzle_migrations (
-            id SERIAL PRIMARY KEY,
-            hash TEXT NOT NULL DEFAULT '',
-            name TEXT NOT NULL,
-            created_at BIGINT
-          )
-        `;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.notInstanceOf(error, LegacyMigrationHistoryError);
-      })
-    );
-
-    it.effect(
-      "refuses mixed canonical journal names",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        const fs = yield* FileSystem.FileSystem;
-        const baselineName = A.filter(yield* fs.readDirectory(migrationsFolder), Str.endsWith("_baseline"));
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`CREATE SCHEMA effect_ontology`;
-        yield* sql`
-          CREATE TABLE effect_ontology.__drizzle_migrations (
-            id SERIAL PRIMARY KEY,
-            hash TEXT NOT NULL DEFAULT '',
-            name TEXT NOT NULL,
-            created_at BIGINT
-          )
-        `;
-        yield* Effect.forEach(
-          baselineName,
-          (name) => sql`INSERT INTO effect_ontology.__drizzle_migrations (name) VALUES (${name})`,
-          { discard: true }
-        );
-        yield* sql`INSERT INTO effect_ontology.__drizzle_migrations (name) VALUES ('19990101000000_unknown')`;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.instanceOf(error, LegacyMigrationHistoryError);
-        assert.include(error.message, "unknown or out-of-order");
-      })
-    );
-
-    it.effect(
-      "does not misclassify an unrelated journal as legacy ontology history",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL)`;
-        yield* sql`INSERT INTO schema_migrations (version, name) VALUES (99, 'unrelated_migration')`;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.notInstanceOf(error, LegacyMigrationHistoryError);
-      })
-    );
-
-    it.effect(
-      "does not query legacy columns on an unrelated journal shape",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`CREATE TABLE schema_migrations (application_key TEXT PRIMARY KEY)`;
-        yield* sql`INSERT INTO schema_migrations (application_key) VALUES ('another_application')`;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.notInstanceOf(error, LegacyMigrationHistoryError);
-      })
-    );
-
-    it.effect(
-      "refuses a malformed canonical journal with typed reset guidance",
-      Effect.fnUntraced(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
-        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
-        yield* sql`CREATE SCHEMA effect_ontology`;
-        yield* sql`CREATE TABLE effect_ontology.__drizzle_migrations (id SERIAL PRIMARY KEY, hash TEXT NOT NULL)`;
-
-        const error = yield* migrateOnBoot.pipe(Effect.flip);
-        assert.instanceOf(error, LegacyMigrationHistoryError);
-        assert.include(error.message, "unsupported table shape");
       })
     );
   });

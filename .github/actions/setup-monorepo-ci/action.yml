@@ -93,7 +93,7 @@ runs:
 
     - name: Setup Node.js
       if: ${{ inputs.use-node == 'true' }}
-      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
         node-version-file: .nvmrc
 
@@ -101,7 +101,7 @@ runs:
       if: ${{ steps.baked.outputs.hit != 'true' }}
       id: bun-cache-restore
       continue-on-error: true
-      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.bun/install/cache
         key: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}
@@ -111,7 +111,7 @@ runs:
       if: ${{ inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') }}
       id: turbo-cache-restore
       continue-on-error: true
-      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .turbo/cache
         key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
@@ -131,7 +131,7 @@ runs:
     - name: Save Bun dependencies cache
       if: ${{ inputs.cache-write == 'true' && steps.baked.outputs.hit != 'true' && steps.bun-cache-restore.outputs.cache-hit != 'true' }}
       continue-on-error: true
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.bun/install/cache
         key: bun-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ hashFiles('bun.lock') }}
@@ -139,7 +139,7 @@ runs:
     - name: Save Turbo cache (local fallback only)
       if: ${{ inputs.cache-write == 'true' && inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') && steps.turbo-cache-restore.outputs.cache-hit != 'true' }}
       continue-on-error: true
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .turbo/cache
         key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}

@@ -1,18 +1,17 @@
 /**
- * PreCompact hook event.
+ * Fires before Claude Code compacts the conversation. A handler can
+ * `block` compaction (it does not stop the session). Matcher is on
+ * `trigger` (`manual` or `auto`). See
+ * https://code.claude.com/docs/en/hooks#precompact.
  *
- * Fires before Claude Code compacts the conversation context. Supports
- * a matcher on `trigger` (`manual` or `auto`).
- * See https://code.claude.com/docs/en/hooks#precompact.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";
@@ -24,18 +23,21 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/PreCompact");
 
 /**
- * Schema for `Trigger`.
+ * Whether compaction is about to run because the user asked (`manual`)
+ * or because Claude Code decided to (`auto`).
  *
- * **Example** (Inspect the Trigger schema)
+ * **Example** (Decode a compact trigger)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PreCompact.Trigger)
+ * const trigger = S.decodeUnknownSync(Hook.PreCompact.Trigger)("manual")
+ * console.log(trigger) // "manual"
  * ```
  *
+ * @see {@link onMatcher} for filtering on this trigger.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const Trigger = LiteralKit(["manual", "auto"]).pipe(
@@ -45,35 +47,37 @@ export const Trigger = LiteralKit(["manual", "auto"]).pipe(
 );
 
 /**
- * Type-level model for `Trigger`.
+ * Decoded value produced by {@link Trigger}.
  *
- * **Example** (Use Trigger as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.PreCompact.Trigger
- * ```
- *
+ * @see {@link Trigger} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type Trigger = typeof Trigger.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a PreCompact hook, including `trigger` and optional
+ * custom instructions.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a manual compact)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.PreCompact.Input)
+ * const input = S.decodeUnknownSync(Hook.PreCompact.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "PreCompact",
+ *   trigger: "manual",
+ * })
+ *
+ * console.log(input.trigger) // "manual"
  * ```
  *
+ * @see {@link block} for preventing this compaction.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`PreCompactInput`)(
@@ -93,18 +97,22 @@ export class Input extends S.Class<Input>($I`PreCompactInput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Schema for `Output`.
+ * JSON response a PreCompact handler returns. `decision: "block"`
+ * prevents compaction; empty output lets it proceed.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreCompact.Output)
+ * const output = Hook.PreCompact.Output.make()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link passthrough} for letting compaction proceed.
+ * @see {@link block} for preventing compaction.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`PreCompactOutput`)(
@@ -127,35 +135,46 @@ export class Output extends S.Class<Output>($I`PreCompactOutput`)(
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `passthrough`.
+ * Let compaction proceed. Equivalent to empty `Output.make()`.
  *
- * **Example** (Use passthrough)
+ * **Example** (Allow compaction)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreCompact.passthrough)
+ * const output = Hook.PreCompact.passthrough()
+ * console.log(O.isNone(output.decision)) // true
  * ```
  *
+ * @see {@link block} for preventing compaction.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `block`.
+ * Prevent this compaction. The session continues with the current
+ * context; this is not a session stop.
  *
- * **Example** (Use block)
+ * **Gotchas**
+ *
+ * Unlike ConfigChange, this `block` only skips compaction. The turn
+ * keeps running.
+ *
+ * **Example** (Keep the long context)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.PreCompact.block)
+ * const output = Hook.PreCompact.block("keep the long context")
+ * console.log(O.getOrUndefined(output.decision)) // "block"
+ * console.log(O.getOrUndefined(output.reason)) // "keep the long context"
  * ```
  *
+ * @see {@link passthrough} for letting compaction proceed.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const block = (reason: string): Output => Output.make({ decision: O.some("block"), reason: O.some(reason) });
@@ -165,18 +184,23 @@ export const block = (reason: string): Output => Output.make({ decision: O.some(
 // ---------------------------------------------------------------------------
 
 /**
- * Constructor for `define`.
+ * Build a runnable PreCompact hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define a PreCompact hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PreCompact.define)
+ * const hook = Hook.PreCompact.define({
+ *   handler: () => Effect.succeed(Hook.PreCompact.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "PreCompact"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `trigger`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -191,14 +215,22 @@ export const define = <E, R>(config: {
 /**
  * Build a PreCompact hook that only handles matching `trigger` values.
  *
- * **Example** (Build PreCompact hook that only handles matching `trigger` values)
+ * **Example** (Block automatic compaction)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.PreCompact.onMatcher)
+ * const hook = Hook.PreCompact.onMatcher({
+ *   matcher: "auto",
+ *   handler: () => Effect.succeed(Hook.PreCompact.block("keep the long context")),
+ * })
+ *
+ * console.log(hook.event) // "PreCompact"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
+ * @see {@link block} for the matched-handler decision used here.
  * @category constructors
  * @since 0.0.0
  */

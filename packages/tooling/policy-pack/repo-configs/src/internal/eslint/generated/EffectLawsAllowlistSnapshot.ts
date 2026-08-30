@@ -6,6 +6,22 @@ export const ALLOWLIST_SNAPSHOT = {
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "scratchpad/codemode/Codemode.values.ts",
+      "kind": "object-method",
+      "reason": "CodeMode guest data objects require a null prototype so inherited host members and the Object.prototype __proto__ setter cannot become observable guest state. Effect Record.empty returns a plain object, so the schema-owned makeEmptySafeObject constructor intentionally centralizes Object.create(null) for object literals, destructuring, JSON, RegExp groups, Promise outcomes, and guest errors.",
+      "owner": "@beep/scratchpad",
+      "issue": "CODEMODE-NULL-PROTOTYPE-GUEST-DATA"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "scratchpad/codemode/Codemode.values.ts",
+      "kind": "new-map-set",
+      "reason": "CodeModeMap and CodeModeSet are explicit guest-language adapters that must preserve JavaScript object identity, SameValueZero key equality, insertion order, and live in-place mutation. Effect HashMap and HashSet use Effect equality and immutable updates, so substituting them would change observable guest JavaScript semantics.",
+      "owner": "@beep/scratchpad",
+      "issue": "CODEMODE-NATIVE-MAP-SET-GUEST-SEMANTICS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
       "kind": "object-method",
       "reason": "partitionWire is a wire trust boundary: effect's Record helpers build results with plain objects, so an own \"__proto__\" key from JSON.parse hits the Object.prototype setter, silently dropping the key and transiently installing attacker-controlled JSON as a prototype. Null-prototype accumulators via Object.create(null) + Object.entries iteration preserve hostile keys losslessly; property-tested by the __proto__ regression in test/JSONSchema.test.ts.",

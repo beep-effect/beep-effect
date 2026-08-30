@@ -1,0 +1,4299 @@
+{
+  "pack": "claudecode-runtime",
+  "modules": [
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 14,
+      "owningExportCount": 14,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 36,
+      "owningExportCount": 36,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 3,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 17,
+      "owningExportCount": 17,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 12,
+      "owningExportCount": 12,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 9,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 16,
+      "owningExportCount": 16,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 8,
+      "owningExportCount": 8,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Load.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 24,
+      "owningExportCount": 24,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 16,
+      "owningExportCount": 16,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 12,
+      "owningExportCount": 12,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 21,
+      "owningExportCount": 21,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/index.ts",
+      "pack": "claudecode-runtime",
+      "exportCount": 9,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    }
+  ],
+  "exports": [
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "ClaudeProjectOptions",
+      "line": 49,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "ClaudeProjectInvalidate",
+      "line": 69,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "Interface",
+      "line": 90,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "Service",
+      "line": 125,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "layer",
+      "line": 148,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "project",
+      "line": 229,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "settings",
+      "line": 249,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "mcp",
+      "line": 270,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeProject.ts",
+      "name": "plugin",
+      "line": 290,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "BaseServices",
+      "line": 47,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "LoggerKind",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "LoggerKind",
+      "line": 84,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "RuntimeOptions",
+      "line": 103,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "ProjectRuntimeOptions",
+      "line": 128,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "PluginRuntimeOptions",
+      "line": 155,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "Runtime",
+      "line": 175,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "baseLayer",
+      "line": 198,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "layer",
+      "line": 232,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "make",
+      "line": 309,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "defaultRuntime",
+      "line": 328,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "project",
+      "line": 353,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "plugin",
+      "line": 380,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/ClaudeRuntime.ts",
+      "name": "default",
+      "line": 399,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookStdinReadError",
+      "line": 56,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookInputDecodeError",
+      "line": 84,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookHandlerError",
+      "line": 112,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookOutputEncodeError",
+      "line": 137,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookStdoutWriteError",
+      "line": 162,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookControlledExit",
+      "line": 186,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookToolDecodeError",
+      "line": 215,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "TranscriptReadError",
+      "line": 247,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "SettingsReadError",
+      "line": 274,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "SettingsParseError",
+      "line": 297,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "SettingsDecodeError",
+      "line": 321,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "PluginWriteError",
+      "line": 349,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "PluginDefinitionError",
+      "line": 376,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "PluginLoadError",
+      "line": 404,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "FrontmatterReadError",
+      "line": 432,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "FrontmatterParseError",
+      "line": 457,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "FrontmatterDecodeError",
+      "line": 482,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "McpConfigError",
+      "line": 509,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookStdinReadError",
+      "line": 533,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookInputDecodeError",
+      "line": 566,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookHandlerError",
+      "line": 599,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookOutputEncodeError",
+      "line": 632,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookStdoutWriteError",
+      "line": 665,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookControlledExit",
+      "line": 698,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "HookToolDecodeError",
+      "line": 736,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "TranscriptReadError",
+      "line": 769,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "SettingsReadError",
+      "line": 802,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "SettingsParseError",
+      "line": 835,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "SettingsDecodeError",
+      "line": 868,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "PluginWriteError",
+      "line": 901,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "PluginDefinitionError",
+      "line": 938,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "PluginLoadError",
+      "line": 971,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "FrontmatterReadError",
+      "line": 1004,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "FrontmatterParseError",
+      "line": 1037,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "FrontmatterDecodeError",
+      "line": 1070,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Errors.ts",
+      "name": "McpConfigError",
+      "line": 1103,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp.ts",
+      "name": "HttpMcpServer, HttpMcpTransport, McpOAuth, McpServerConfig, StdioMcpServer, WsMcpServer",
+      "line": 21,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@since",
+        "@category"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp.ts",
+      "name": "EffectiveMcpLoadOptions, ManagedMcpLoadOptions",
+      "line": 40,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp.ts",
+      "name": "ClaudeJsonFile, ClaudeJsonProject, loadClaudeJson, loadEffective, loadJson, loadManagedMcp, McpJsonFile, managedMcpJsonPaths, mergeMcpJsonFiles, projectMcpJsonPath, toClaudeCodeJson, userClaudeJsonPath",
+      "line": 47,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "McpJsonFile",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "McpJsonFile",
+      "line": 63,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "ClaudeJsonProject",
+      "line": 98,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "ClaudeJsonProject",
+      "line": 113,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "ClaudeJsonFile",
+      "line": 152,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "ClaudeJsonFile",
+      "line": 168,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "EffectiveMcpLoadOptions",
+      "line": 204,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "ManagedMcpLoadOptions",
+      "line": 223,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "userClaudeJsonPath",
+      "line": 270,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "projectMcpJsonPath",
+      "line": 297,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "managedMcpJsonPaths",
+      "line": 335,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "mergeMcpJsonFiles",
+      "line": 441,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "toClaudeCodeJson",
+      "line": 518,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "loadJson",
+      "line": 557,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "loadClaudeJson",
+      "line": 587,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "loadManagedMcp",
+      "line": 626,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/JsonFile.ts",
+      "name": "loadEffective",
+      "line": 722,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "McpOAuth",
+      "line": 30,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "McpOAuth",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "StdioMcpServer",
+      "line": 81,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "StdioMcpServer",
+      "line": 101,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "HttpMcpTransport",
+      "line": 133,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "HttpMcpTransport",
+      "line": 145,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "HttpMcpServer",
+      "line": 170,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "HttpMcpServer",
+      "line": 187,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "WsMcpServer",
+      "line": 220,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "WsMcpServer",
+      "line": 236,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "McpServerConfig",
+      "line": 269,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Mcp/Schema.ts",
+      "name": "McpServerConfig",
+      "line": 281,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "AuthorInfo, ChannelSpec, ComponentPathSpec, DependencySpec, ExperimentalSpec, HooksSpec, PluginDependency, PluginManifest, ServerConfigSpec, UserConfigEntry, UserConfigRecord, UserConfigType",
+      "line": 23,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@since",
+        "@category"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "GithubPluginSource, GitSubdirPluginSource, MarketplaceFile, MarketplaceMetadata, MarketplacePluginEntry, MarketplacePluginSourceSpec, NpmPluginSource, UrlPluginSource",
+      "line": 48,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "PluginAgentConfig, PluginAgentEntry, PluginCommandConfig, PluginCommandEntry, PluginConfig, PluginDefinition, PluginOutputStyleConfig, PluginOutputStyleEntry, PluginSkillConfig, PluginSkillEntry",
+      "line": 69,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "agent, command, define, outputStyle, skill, write",
+      "line": 87,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "* as Layout",
+      "line": 102,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "LoadedPlugin, PluginScan",
+      "line": 110,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "load, scan, sync",
+      "line": 117,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "PluginDoctorReport",
+      "line": 125,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin.ts",
+      "name": "doctor, lint, PluginIssue, PluginIssueSeverity, PluginLintReport, PluginValidationError, validate",
+      "line": 132,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginCommandEntry",
+      "line": 76,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginAgentEntry",
+      "line": 89,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginSkillEntry",
+      "line": 102,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginOutputStyleEntry",
+      "line": 115,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginCommandConfig",
+      "line": 128,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginAgentConfig",
+      "line": 140,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginSkillConfig",
+      "line": 152,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginOutputStyleConfig",
+      "line": 164,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginConfig",
+      "line": 178,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "PluginDefinition",
+      "line": 195,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "command",
+      "line": 224,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "agent",
+      "line": 253,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "skill",
+      "line": 281,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "outputStyle",
+      "line": 309,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "define",
+      "line": 490,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Define.ts",
+      "name": "write",
+      "line": 776,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "normalizeManifestPath",
+      "line": 60,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "toManifestPath",
+      "line": 81,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "pathSpecs",
+      "line": 227,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "isSafePluginPath",
+      "line": 249,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "isMarkdownFilePath",
+      "line": 274,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "isJsonFilePath",
+      "line": 291,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "isSkillFilePath",
+      "line": 308,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Layout.ts",
+      "name": "syncManifest",
+      "line": 328,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Load.ts",
+      "name": "PluginScan",
+      "line": 52,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Load.ts",
+      "name": "LoadedPlugin",
+      "line": 78,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Load.ts",
+      "name": "scan",
+      "line": 592,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Load.ts",
+      "name": "load",
+      "line": 746,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Load.ts",
+      "name": "sync",
+      "line": 811,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "AuthorInfo",
+      "line": 30,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "AuthorInfo",
+      "line": 47,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ComponentPathSpec",
+      "line": 80,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ComponentPathSpec",
+      "line": 92,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "HooksSpec",
+      "line": 109,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "HooksSpec",
+      "line": 121,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ServerConfigSpec",
+      "line": 138,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ServerConfigSpec",
+      "line": 150,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "UserConfigType",
+      "line": 166,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "UserConfigType",
+      "line": 178,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "UserConfigEntry",
+      "line": 200,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "UserConfigEntry",
+      "line": 223,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "UserConfigRecord",
+      "line": 256,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "UserConfigRecord",
+      "line": 268,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ChannelSpec",
+      "line": 286,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ChannelSpec",
+      "line": 302,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "PluginDependency",
+      "line": 336,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "PluginDependency",
+      "line": 352,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "DependencySpec",
+      "line": 385,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "DependencySpec",
+      "line": 397,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ExperimentalSpec",
+      "line": 417,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "ExperimentalSpec",
+      "line": 433,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "PluginManifest",
+      "line": 467,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Manifest.ts",
+      "name": "PluginManifest",
+      "line": 503,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "GithubPluginSource",
+      "line": 30,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "GithubPluginSource",
+      "line": 60,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "UrlPluginSource",
+      "line": 96,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "UrlPluginSource",
+      "line": 126,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "GitSubdirPluginSource",
+      "line": 163,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "GitSubdirPluginSource",
+      "line": 182,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "NpmPluginSource",
+      "line": 216,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@example",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "NpmPluginSource",
+      "line": 246,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@example",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": true,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplacePluginSourceSpec",
+      "line": 293,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplacePluginSourceSpec",
+      "line": 305,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplacePluginEntry",
+      "line": 326,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplacePluginEntry",
+      "line": 373,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplaceMetadata",
+      "line": 409,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplaceMetadata",
+      "line": 424,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplaceFile",
+      "line": 462,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Marketplace.ts",
+      "name": "MarketplaceFile",
+      "line": 486,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginIssueSeverity",
+      "line": 43,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginIssueSeverity",
+      "line": 55,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginIssue",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginIssue",
+      "line": 95,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginValidationError",
+      "line": 129,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginValidationError",
+      "line": 143,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginLintReport",
+      "line": 181,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginLintReport",
+      "line": 198,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "PluginDoctorReport",
+      "line": 222,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "lint",
+      "line": 473,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "validate",
+      "line": 594,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Plugin/Validate.ts",
+      "name": "doctor",
+      "line": 621,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "makeMockHookContext",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "makeMockEnvelope",
+      "line": 114,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "makeMockStdioLayer",
+      "line": 142,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "RunHookResult",
+      "line": 245,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "runHookWithMockStdin",
+      "line": 293,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "fixtures",
+      "line": 376,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "expectAllowDecision",
+      "line": 589,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "expectDenyDecision",
+      "line": 616,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "expectAskDecision",
+      "line": 643,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "expectBlockDecision",
+      "line": 679,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "expectAddContext",
+      "line": 708,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "MockFileSystemOperation",
+      "line": 733,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "MockFileSystemOperation",
+      "line": 763,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "MockFileSystemOptions",
+      "line": 781,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "MockFileSystemSnapshot",
+      "line": 799,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "MockFileSystem",
+      "line": 818,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "makeMockFileSystem",
+      "line": 989,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "expectPluginTree",
+      "line": 1204,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "writePluginToMemory",
+      "line": 1246,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "PluginRoundTripResult",
+      "line": 1275,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Testing.ts",
+      "name": "roundTripPlugin",
+      "line": 1301,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as ClaudeProject",
+      "line": 16,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since",
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as ClaudeRuntime",
+      "line": 24,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as Hook",
+      "line": 40,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as Settings",
+      "line": 52,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as Plugin",
+      "line": 64,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as Frontmatter",
+      "line": 76,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as Mcp",
+      "line": 88,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "*",
+      "line": 100,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/index.ts",
+      "name": "* as Testing",
+      "line": 112,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-runtime",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    }
+  ]
+}

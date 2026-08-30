@@ -91,10 +91,14 @@ const getCandidateComments = (sourceCode: SourceCode, node: Rule.Node): Readonly
     A.flatMap((candidateNode) =>
       pipe(
         sourceCode.getCommentsBefore(candidateNode),
-        A.map((comment) =>
-          pipe(
-            decodeBlockCommentNode(comment),
-            O.filter((blockComment) => Str.startsWith("*")(blockComment.value)),
+        A.map(
+          flow(
+            decodeBlockCommentNode,
+            O.filter(
+              P.Struct({
+                value: Str.startsWith("*"),
+              })
+            ),
             O.map((blockComment) => blockComment.value)
           )
         ),
