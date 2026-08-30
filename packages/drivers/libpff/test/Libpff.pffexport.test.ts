@@ -410,7 +410,13 @@ describe("makePffexportFileProcessingEngine", () => {
         yield* fs.chmod(stubPath, 0o755);
         yield* fs.writeFileString(
           bwrapPath,
-          bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`)
+          bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`).replace(
+            'exec "$mapped_command" "${mapped[@]}"',
+            `if [ "$mapped_command" = "/usr/bin/env" ] && [ "\${mapped[0]}" = "-S" ]; then
+  exec /bin/bash "\${mapped[2]}" "\${mapped[@]:3}"
+fi
+exec "$mapped_command" "\${mapped[@]}"`
+          )
         );
         yield* fs.chmod(bwrapPath, 0o755);
         const engine = yield* makePffexportFileProcessingEngine(
