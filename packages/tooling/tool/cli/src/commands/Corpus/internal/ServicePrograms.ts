@@ -130,6 +130,10 @@ import type {
 
 const isCorpusProvenanceRecord = S.is(CorpusProvenanceRecord);
 
+const retainCorpusProvenanceRecords = (
+  records: ReadonlyArray<typeof CorpusLedgerRecordJson.Type>
+): ReadonlyArray<CorpusProvenanceRecord> => A.filter(records, isCorpusProvenanceRecord);
+
 const $I = $RepoCliId.create("commands/Corpus/internal/ServicePrograms");
 
 type CorpusCommandServiceRequirements =
@@ -391,7 +395,7 @@ const decodeProvenanceLines = Effect.fn("CorpusCommandService.decodeProvenanceLi
       CorpusCommandError.mapError(`Provenance manifest line ${index + 1} failed schema validation.`)
     )
   );
-  return A.filter(records, isCorpusProvenanceRecord);
+  return retainCorpusProvenanceRecords(records);
 });
 
 /** @category Testing */
