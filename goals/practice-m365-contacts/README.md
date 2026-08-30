@@ -36,9 +36,10 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P0 Research — operator-attended Entra app registration (certificate
-credential, admin consent, RBAC-for-Applications scoping to the attorney's
-mailbox), seeding-job home choice, and a headers/counts-only census of the
-salvaged contact CSVs.
+credential; mailbox access granted exclusively via the Exchange
+RBAC-for-Applications assignment scoped to the attorney's mailbox — never
+the unscoped tenant-wide contacts role), seeding-job home choice, and a
+headers/counts-only census of the salvaged contact CSVs.
 
 ## Latest Evidence
 
