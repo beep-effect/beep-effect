@@ -8,6 +8,12 @@
     "sha256": "11d6aee9b5927fbf29d92fbce6e502c712d3c7acd0a3ed736293d7100b1386f2",
     "refreshCommand": "bun run beep sync-data-to-ts --target reporters-db"
   },
+  "artifact": {
+    "version": "crv1:f353e51400a5:fad63b383b92",
+    "schemaVersion": "court-reporter-vocabulary/v1",
+    "projectionVersion": 1,
+    "vocabularyPath": "packages/law-practice/domain/src/internal/generated/free-law-project/reporters-vocabulary.data.json"
+  },
   "counts": {
     "caseNameAbbreviationKeys": 189,
     "caseNameExpansions": 239,
@@ -18,6 +24,7 @@
     "regexFamilies": 7,
     "reporterKeys": 1236,
     "reporterRecords": 1262,
+    "stableReporterIds": 1262,
     "stateAbbreviations": 50
   },
   "data": {

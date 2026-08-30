@@ -5,17 +5,17 @@
 Deliver one versioned court-and-reporter identity substrate from pinned
 courts-db and reporters-db commits. Add public `SyncDataToTs` targets that use
 HTTP and SHA-256 only; deterministically render package-private artifacts under
-law-practice domain internals; and, in a later increment, expose stable public
-IDs, canonical vocabulary, lookups, provenance, and a machine-readable artifact
-compatibility contract from law-practice domain values.
+law-practice domain internals; and expose stable public IDs, canonical
+vocabulary, lookups, provenance, and a machine-readable artifact compatibility
+contract from law-practice domain values.
 
-The 2026-07-25 implementation increment is ingestion substrate only. It includes
-the two targets, pinned archive validation, source-faithful assembly, internal
-generated modules/sidecars, attribution, and focused proof. Public court/reporter
-models, lookups, lifecycle APIs, drift classification, and citation-engine
-integration remain required for the full goal but are not acceptance gates for
-this increment. eyecite-js and eyecite-ts are research inputs only; their custom
-data overlays are not production truth.
+The 2026-08-27 completion combines the ingestion substrate and public domain
+contract in one delivery. It includes the two targets, pinned archive
+validation, source-faithful assembly, internal generated modules/sidecars,
+attribution, public court/reporter models and lookups, lifecycle APIs, drift
+classification, citation-consumer boundaries, and focused proof. eyecite-js
+and eyecite-ts are research inputs only; their custom data overlays are not
+production truth.
 
 Each artifact records source identity, pinned commit, retrieval date, checksum,
 refresh command, record/ID counts, and artifact version. Refresh detects and
@@ -60,7 +60,7 @@ pinned commits, and affected material.
    render deterministically, and prove source-record and stable-ID counts. Never
    freeze the artifact schema from stale historical counts.
 3. Raw artifacts remain package-private. Cross-package consumers use named
-   law-practice values/lookups only once that later public surface lands.
+   law-practice values/lookups only.
    Generated files have no barrel or package export.
 4. Public identities include stable `CourtId` and `ReporterId`. Court vocabulary
    preserves courts-db jurisdiction/system/type/level source-faithfully with

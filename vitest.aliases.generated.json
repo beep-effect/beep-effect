@@ -1793,6 +1793,9 @@
   ],
   "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
   "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
+  "@beep/law-practice-domain/values/CourtReporterVocabulary": [
+    "./packages/law-practice/domain/src/values/CourtReporterVocabulary/index.ts"
+  ],
   "@beep/repo-cli/commands/Cache": [
     "./packages/tooling/tool/cli/src/commands/Cache/index.ts"
   ],
