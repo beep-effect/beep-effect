@@ -35,13 +35,22 @@ docket policy, and the seat-round rulings), the ratified 38-term
 `extraction/s5/TAXONOMY.yaml` passes the `--s5` gate at 0 blockers / 0 warns, and
 `apply_s5_dispositions.py` projected every ruling onto the generated S4 surfaces —
 nothing `candidate`/`open` remains.
-**NEXT: stage S6 — A-Box ratification & predicates** (the runtime ETL that
-enumerates ratified-class individuals: the deferred YeetWeightedAdmissionV1, the
-package census, the deployed LiteralKit members) plus auditor run 2's queue (163
-parked candidates, 76 parked ledger obligations, 4 waived constraints, the
-VerificationLane placement obligation). After S5: auditor run 2 (`first_run: false`, prior index
+**S6 IS COMPLETE AND RATIFIED** (2026-08-30): the binding contract is
+[`ontology/docs/s6-abox-contract.md`](./ontology/docs/s6-abox-contract.md), the two
+S6 sittings are scribed in DECISIONS.md, and
+[`ontology/extraction/s6/`](./ontology/extraction/s6/) carries the ratified A-Box
+(policy individual + 7 parameters, 4 token weights, 2 priority enumerations), the
+83-predicate registry (CQ coverage 1/25 — the ratified-vs-CQ vocabulary gap is
+machine-visible run-2 input), the provisional 138-package census graph, the pinned
+golden snapshot (79 redacted admission-journal events), SHACL closure+typing shapes,
+and the `--s6` gate at 0 blockers / 0 warns. The deferral is discharged
+(`apply_s6_dispositions.py`): historical rulings intact, S4 statuses accepted.
+**NEXT: auditor run 2** (`first_run: false`, prior index
 `orun-2026-08-29T08:20:55Z.index.yaml`) with the journal/verdict corpus extension and
-adapter v1.1.0. Do NOT rerun §4b.
+adapter v1.1.0 — its queue: 163 parked candidates, 76 parked ledger obligations,
+4 waived constraints, the VerificationLane placement obligation, and the six
+S6-surfaced vocabulary/telemetry gaps (DECISIONS.md, S6 sitting 2). Then S7
+projection function. Do NOT rerun §4b.
 
 **The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
 ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier
@@ -107,6 +116,22 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-08-30 (sixteenth stint): S6 COMPLETE — A-BOX RATIFIED. Design-first:
+  the binding `ontology/docs/s6-abox-contract.md` landed under two grill
+  rounds (seven sitting-1 rulings: S6 before run 2, real SHACL, one golden
+  snapshot, hybrid ratification, provisional census graph, collision-only IRI
+  qualification, closure+typing shapes). One codex lane built the mechanical
+  layer: `extraction/s6/` carries the predicate registry (83 predicates, CQ
+  coverage 1/25 — the ratified-vs-CQ vocabulary gap is now machine-visible
+  run-2 input), the zero-drift policy extraction, the 138-package census
+  (provisional `ciops-prov:` graph, open closure), a pinned golden snapshot
+  (79 real admission-journal events, redacted), `graphs/abox.ttl`, SHACL
+  closure+typing shapes (pyshacl PASS), and the `--s6` gate. Sitting 2
+  ratified all nine surfaces; `apply_s6_dispositions.py` discharged the
+  deferral (historical rulings intact, S4 statuses accepted). All gates 0/0;
+  CQ suite green with three ratified-vocabulary golden probes. NEXT: auditor
+  run 2, then S7 projection function.
 
 - 2026-08-30 (fifteenth stint): S5 COMPLETE — TAXONOMY RATIFIED. The six-seat
   round converged remarkably (blinded grok reproduced the identical 39-term

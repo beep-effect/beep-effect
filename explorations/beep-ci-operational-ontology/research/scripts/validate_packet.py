@@ -19,12 +19,17 @@ Run: uv run --with pyyaml,rdflib python validate_packet.py            (packet mo
 """
 import argparse
 import csv
+import importlib.util
 import io
+import os
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 import yaml
+from rdflib import Graph, RDF, URIRef
 from rdflib.plugins.sparql import prepareQuery
 
 PACKET = Path(__file__).resolve().parents[2]
@@ -48,6 +53,7 @@ def warn(msg):
 _parser = argparse.ArgumentParser(description="beep-ci-ops packet / S4-lane validator")
 _parser.add_argument("--s4-lane", metavar="FILE", help="validate one S4 lane output file instead of the packet")
 _parser.add_argument("--s5", action="store_true", help="validate the S5 dispositions surface against s5-taxonomy-contract.md")
+_parser.add_argument("--s6", action="store_true", help="validate the S6 A-Box, predicate, closure, and CQ-leg surface")
 _args = _parser.parse_args()
 
 if _args.s4_lane:
@@ -128,6 +134,375 @@ if _args.s4_lane:
             if m and not (repo_root / m.group(1)).exists():
                 blocker(f"evidence path missing from tree: {m.group(1)}")
     print(f"LANE {tel.get('lane')!r}: {len(cands)} candidates / {len(facts)} facts / {len(issues)} issues")
+    print(f"RESULT: {len(blockers)} blockers, {len(warns)} warns")
+    sys.exit(1 if blockers else 0)
+
+
+if _args.s6:
+    S6 = PACKET / "ontology/extraction/s6"
+    S5 = PACKET / "ontology/extraction/s5"
+    S4D = PACKET / "ontology/extraction/s4"
+    GRAPHS = S6 / "graphs"
+    CI_NS = "https://oip.law/ontology/ci-ops#"
+    PROV_NS = "https://oip.law/ontology/ci-ops-prov#"
+    MANIFEST_NS = "https://oip.law/ontology/ci-ops-s6-manifest#"
+    RDF_NS = str(RDF)
+    required_paths = [
+        S6 / "PREDICATES.yaml",
+        S6 / "POLICY.yaml",
+        S6 / "CENSUS.yaml",
+        S6 / "ABOX.yaml",
+        S6 / "snapshot/raw/MANIFEST.yaml",
+        GRAPHS / "abox.ttl",
+        GRAPHS / "census.ttl",
+        S6 / "shapes/closure.ttl",
+        S6 / "shapes/typing.ttl",
+        S6 / "scripts/run_shacl.py",
+    ]
+    for path in required_paths:
+        if not path.is_file():
+            blocker(f"S6 required artifact missing: {path.relative_to(PACKET)}")
+    snapshot_paths = sorted(GRAPHS.glob("snapshot-*.ttl"))
+    manifest_graph_paths = sorted(GRAPHS.glob("manifest-*.ttl"))
+    if len(snapshot_paths) != 1:
+        blocker(f"S6 expected one snapshot graph, found {[path.name for path in snapshot_paths]}")
+    if len(manifest_graph_paths) != 1:
+        blocker(f"S6 expected one manifest graph, found {[path.name for path in manifest_graph_paths]}")
+    if blockers:
+        print(f"RESULT: {len(blockers)} blockers, {len(warns)} warns")
+        sys.exit(1)
+
+    predicates_doc = yaml.safe_load((S6 / "PREDICATES.yaml").read_text())
+    policy = yaml.safe_load((S6 / "POLICY.yaml").read_text())
+    abox_doc = yaml.safe_load((S6 / "ABOX.yaml").read_text())
+    snapshot_manifest = yaml.safe_load((S6 / "snapshot/raw/MANIFEST.yaml").read_text())
+    taxonomy = yaml.safe_load((S5 / "TAXONOMY.yaml").read_text())
+    dispositions = yaml.safe_load((S5 / "DISPOSITIONS.yaml").read_text())
+    cq_manifest = yaml.safe_load((TESTS / "cq-test-manifest.yaml").read_text())
+
+    predicate_rows = predicates_doc.get("predicates") or []
+    predicate_names = [row.get("predicate") for row in predicate_rows]
+    if len(predicate_names) != len(set(predicate_names)):
+        blocker("PREDICATES.yaml contains duplicate predicate records")
+    allowed_statuses = {"ratified", "seed-only", "provisional", "parked-run-2"}
+    registry = {}
+    for row in predicate_rows:
+        predicate = row.get("predicate")
+        if row.get("status") not in allowed_statuses:
+            blocker(f"predicate {predicate}: illegal status {row.get('status')!r}")
+        for field in ("predicate", "status", "term_ref", "domain", "range", "closure", "used_by"):
+            if field not in row:
+                blocker(f"predicate {predicate}: missing registry field {field}")
+        registry[predicate] = row
+
+    def curie(value):
+        text = str(value)
+        if text == RDF_NS + "type":
+            return "rdf:type"
+        if text.startswith(CI_NS):
+            return "ciops:" + text.removeprefix(CI_NS)
+        if text.startswith(PROV_NS):
+            return "ciops-prov:" + text.removeprefix(PROV_NS)
+        if text.startswith(MANIFEST_NS):
+            return "manifest:" + text.removeprefix(MANIFEST_NS)
+        return text
+
+    graph_paths = {
+        "graphs/abox.ttl": GRAPHS / "abox.ttl",
+        "graphs/census.ttl": GRAPHS / "census.ttl",
+        "graphs/snapshot-<instant>.ttl": snapshot_paths[0],
+        "graphs/manifest-<instant>.ttl": manifest_graph_paths[0],
+        "tests/fixtures/seed.ttl": TESTS / "fixtures/seed.ttl",
+    }
+    parsed_graphs = {}
+    for label, path in graph_paths.items():
+        try:
+            parsed_graphs[label] = Graph().parse(path, format="turtle")
+        except Exception as exc:  # noqa: BLE001
+            blocker(f"{label} fails Turtle parse: {exc}")
+    if blockers:
+        print(f"RESULT: {len(blockers)} blockers, {len(warns)} warns")
+        sys.exit(1)
+
+    # Typing law and the provisional-namespace quarantine apply to the ratified
+    # A-Box/snapshot pair; the companion manifest is metadata, not a CI-ops A-Box.
+    ratified_classes = {
+        term["term"] for term in taxonomy.get("terms", []) if term.get("kind") == "class"
+    }
+    if len(ratified_classes) != 18:
+        blocker(f"S6 typing expected 18 ratified classes, found {len(ratified_classes)}")
+    for label in ("graphs/abox.ttl", "graphs/snapshot-<instant>.ttl"):
+        graph = parsed_graphs[label]
+        subjects = {subject for subject, _, _ in graph if isinstance(subject, URIRef)}
+        for subject in sorted(subjects, key=str):
+            types = {obj for obj in graph.objects(subject, RDF.type) if isinstance(obj, URIRef)}
+            ratified_types = {
+                str(obj).removeprefix(CI_NS)
+                for obj in types
+                if str(obj).startswith(CI_NS) and str(obj).removeprefix(CI_NS) in ratified_classes
+            }
+            if not ratified_types:
+                blocker(f"{label}: individual {curie(subject)} has no ratified-class rdf:type")
+            for obj in types:
+                if not str(obj).startswith(CI_NS) or str(obj).removeprefix(CI_NS) not in ratified_classes:
+                    blocker(f"{label}: individual {curie(subject)} has unratified type {curie(obj)}")
+    for label, graph in parsed_graphs.items():
+        if label == "graphs/census.ttl":
+            continue
+        for triple in graph:
+            for term in triple:
+                if isinstance(term, URIRef) and str(term).startswith(PROV_NS):
+                    blocker(f"{label}: ciops-prov term escaped the census graph ({curie(term)})")
+
+    # Predicate law covers every generated data graph, the seed graph, and every
+    # mechanically scanned CQ.  Only abox+snapshot are purity-constrained.
+    for label, graph in parsed_graphs.items():
+        for predicate in sorted({curie(pred) for pred in graph.predicates()}):
+            row = registry.get(predicate)
+            if row is None:
+                blocker(f"{label}: predicate {predicate} is absent from PREDICATES.yaml")
+            elif label in {"graphs/abox.ttl", "graphs/snapshot-<instant>.ttl"} and row.get("status") != "ratified":
+                blocker(f"{label}: predicate {predicate} has non-ratified status {row.get('status')}")
+
+    qname = r"(?:rdf:type|a|ciops:[A-Za-z_][A-Za-z0-9_-]*)"
+    variable_head_re = re.compile(rf"\?[A-Za-z_][A-Za-z0-9_]*\s+({qname})(?=\s)")
+    fixed_head_re = re.compile(
+        rf"[{{.}}]\s*ciops:[A-Za-z_][A-Za-z0-9_-]*\s+({qname})(?=\s)"
+    )
+    continuation_re = re.compile(rf";\s*({qname})(?=\s)")
+
+    def scan_cq(text):
+        stripped = re.sub(r"(?m)#.*$", "", text)
+        stripped = re.sub(r"(?mi)^\s*PREFIX\s+.*$", "", stripped)
+        stripped = re.sub(
+            r"(?is)\bVALUES\s+(?:\([^)]*\)|\?[A-Za-z_][A-Za-z0-9_]*)\s*\{[^{}]*\}",
+            "",
+            stripped,
+        )
+        found = (
+            set(variable_head_re.findall(stripped))
+            | set(fixed_head_re.findall(stripped))
+            | set(continuation_re.findall(stripped))
+        )
+        return sorted("rdf:type" if token == "a" else token for token in found)
+
+    coverage_rows = predicates_doc.get("coverage") or []
+    coverage_by_cq = {row.get("cq"): row for row in coverage_rows}
+    cq_paths = sorted(TESTS.glob("cq-*.sparql"))
+    for path in cq_paths:
+        cid = "CQ-" + path.stem.split("-")[1]
+        scanned = scan_cq(path.read_text())
+        for predicate in scanned:
+            if predicate not in registry:
+                blocker(f"{cid}: predicate {predicate} is absent from PREDICATES.yaml")
+        row = coverage_by_cq.get(cid)
+        if row is None:
+            blocker(f"{cid}: no PREDICATES coverage row")
+            continue
+        if row.get("predicates") != scanned:
+            blocker(f"{cid}: coverage predicate set disagrees with the mechanical gate scan")
+        ratified_count = sum(1 for predicate in scanned if registry[predicate].get("status") == "ratified")
+        if row.get("predicate_count") != len(scanned) or row.get("ratified_count") != ratified_count:
+            blocker(f"{cid}: coverage counts drifted from registry statuses")
+        if bool(row.get("full_predicate_set_ratified")) != (ratified_count == len(scanned)):
+            blocker(f"{cid}: full_predicate_set_ratified is inconsistent")
+    if set(coverage_by_cq) != {
+        "CQ-" + path.stem.split("-")[1] for path in cq_paths
+    }:
+        blocker("PREDICATES coverage rows are not a bijection with CQ files")
+
+    # Collision-qualified priority members and reserved bare publish.
+    abox_graph = parsed_graphs["graphs/abox.ttl"]
+    ci = lambda local: URIRef(CI_NS + local)
+    if (ci("publish"), RDF.type, ci("AdmissionWorkKind")) not in abox_graph:
+        blocker("IRI law: bare ciops:publish is not the AdmissionWorkKind member")
+    if (ci("publish"), RDF.type, ci("AdmissionPriorityClass")) in abox_graph:
+        blocker("IRI law: bare ciops:publish was reused as an AdmissionPriorityClass member")
+    for local in ("AdmissionPriority-publish", "AdmissionPriority-verify"):
+        if (ci(local), RDF.type, ci("AdmissionPriorityClass")) not in abox_graph:
+            blocker(f"IRI law: qualified priority member ciops:{local} is missing")
+    bare_verify = ci("verify")
+    if any(bare_verify in triple for triple in abox_graph):
+        blocker("IRI law: bare ciops:verify appears in the ratified A-Box")
+
+    # Drift must be empty or carry an explicit steward ruling reference.
+    drift = policy.get("drift") or []
+    for row in drift:
+        if not row.get("ruling_ref"):
+            blocker(
+                f"policy drift {row.get('subject')}.{row.get('predicate')} has no steward ruling_ref"
+            )
+
+    # Manifest leg metadata is mechanical: no per-CQ golden allowlist exists.
+    legs = cq_manifest.get("legs") or {}
+    seed_leg = legs.get("seed") or {}
+    golden_leg = legs.get("golden") or {}
+    if seed_leg.get("graphs") != ["tests/fixtures/seed.ttl"] or seed_leg.get("selection") != "all-manifest-tests":
+        blocker("CQ manifest seed leg is not the unchanged all-tests seed store")
+    if golden_leg.get("graphs") != [
+        "extraction/s6/graphs/abox.ttl",
+        "extraction/s6/graphs/snapshot-*.ttl",
+    ]:
+        blocker("CQ manifest golden graph list must be abox.ttl + snapshot-*.ttl")
+    if set(golden_leg.get("excludes") or []) != {
+        "extraction/s6/graphs/census.ttl",
+        "tests/fixtures/seed.ttl",
+    }:
+        blocker("CQ manifest golden exclusions must be census.ttl and seed.ttl")
+    if golden_leg.get("coverage") != "extraction/s6/PREDICATES.yaml#coverage":
+        blocker("CQ manifest golden coverage pointer is invalid")
+    if golden_leg.get("selection") != "full-predicate-set-ratified-and-non-vacuity-antecedent":
+        blocker("CQ manifest golden selection rule is invalid")
+    manifest_cqs = {row.get("cq") for row in cq_manifest.get("tests") or []}
+    if manifest_cqs != set(coverage_by_cq):
+        blocker("CQ manifest tests and PREDICATES coverage rows are not a bijection")
+
+    # A closure declaration is required for a negated predicate only when the
+    # CQ is status-covered and its non-vacuity ASK is true in the golden store.
+    golden_graph = Graph()
+    golden_graph += parsed_graphs["graphs/abox.ttl"]
+    golden_graph += parsed_graphs["graphs/snapshot-<instant>.ttl"]
+    antecedents = {
+        "CQ-009": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+            ASK { ?g a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+                     ciops:hasOriginKey ?o . FILTER(?o != \"\") }""",
+        "CQ-010": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+            ASK { ?wu ciops:admittedBy ?g .
+                  ?g ciops:admissionChargeTokens ?ch ; ciops:capacityAtAdmissionTokens ?cap . }""",
+        "CQ-019": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+            ASK { ?c a ciops:AffectedComputation ; ciops:hasAffectedOutcome ?o .
+                  ?o a ciops:FailOpenOutcome .
+                  VALUES ?stype { ciops:VerificationEvidence ciops:ScheduleProposal }
+                  ?s a ?stype ; ciops:hasScope ?scope . FILTER (?scope != ciops:FullRepoScope) }""",
+        "CQ-023": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+            ASK { ?r a ciops:SeatRequest ; ciops:observedQueueWaitMs ?w ; ciops:governedBy ?p .
+                  ?p ciops:starvationBoundMs ?b . }""",
+        "CQ-026": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+            ASK { ?g ciops:usedCostEstimate ?ce . ?ce ciops:p95Ms ?p .
+                  ?g ciops:hasBudget ?b . ?b ciops:softP95BudgetMs ?m . }""",
+    }
+    declared_closed = {
+        row.get("predicate")
+        for row in snapshot_manifest.get("completeForPredicate") or []
+        if row.get("world") == "closed"
+    }
+    active_golden = []
+    for cid, row in coverage_by_cq.items():
+        if not row.get("full_predicate_set_ratified"):
+            continue
+        antecedent = antecedents.get(cid)
+        if antecedent is None or not bool(golden_graph.query(antecedent)):
+            continue
+        active_golden.append(cid)
+        query_text = (TESTS / f"cq-{cid.split('-')[1]}.sparql").read_text()
+        negated = set()
+        for body in re.findall(r"(?is)FILTER\s+NOT\s+EXISTS\s*\{([^{}]*)\}", query_text):
+            negated.update(
+                predicate.removeprefix("ciops:")
+                for predicate in scan_cq(body)
+                if predicate.startswith("ciops:")
+            )
+        for predicate in sorted(negated - declared_closed):
+            blocker(f"{cid}: golden negation predicate {predicate} lacks snapshot closure declaration")
+
+    # Null refs are staged warnings.  Projection residue becomes blocking only
+    # after every individual/generator ratification reference is filled.
+    ratifications = [("policy", (abox_doc.get("policy") or {}).get("ratification"))]
+    for enumeration in abox_doc.get("enumerations") or []:
+        for member in enumeration.get("members") or []:
+            ratifications.append((member.get("individual"), member.get("ratification")))
+    ratifications.extend(
+        [
+            ("census", (abox_doc.get("census") or {}).get("ratification")),
+            ("snapshot", (abox_doc.get("snapshot") or {}).get("ratification")),
+        ]
+    )
+    pending_refs = []
+    for label, ratification in ratifications:
+        if not isinstance(ratification, dict) or ratification.get("mode") not in {"sitting", "generator-digest"}:
+            blocker(f"ABOX individual/artifact {label}: invalid ratification record")
+            continue
+        if ratification.get("ref") is None:
+            pending_refs.append(label)
+    all_refs_filled = not pending_refs and bool(ratifications)
+    if pending_refs:
+        warn(f"pending steward sitting: {len(pending_refs)} ABOX ratification refs are null")
+    if all_refs_filled:
+        # The historical S5 ruling stays deferred-s6 forever; discharge is the
+        # s6_ratification_ref recorded beside it by apply_s6_dispositions.
+        deferred_dispositions = [
+            f"candidate:{row.get('seq')}"
+            for row in dispositions.get("candidates") or []
+            if row.get("ruling") == "deferred-s6" and not row.get("s6_ratification_ref")
+        ] + [
+            f"fact:{row.get('predicate')}"
+            for row in dispositions.get("fact_classes") or []
+            if row.get("ruling") == "deferred-s6" and not row.get("s6_ratification_ref")
+        ]
+        s4_candidates = yaml.safe_load((S4D / "CANDIDATES.yaml").read_text())
+        s4_facts = yaml.safe_load((S4D / "FACTS.yaml").read_text())
+        deferred_projected = [
+            f"S4-candidate:{index}"
+            for index, row in enumerate(s4_candidates)
+            if row.get("status") == "deferred-s6"
+        ] + [
+            f"S4-fact:{index}"
+            for index, row in enumerate(s4_facts)
+            if row.get("status") == "deferred-s6"
+        ]
+        if deferred_dispositions or deferred_projected:
+            blocker(
+                "all ratification refs are filled but deferred-s6 residue remains: "
+                + ", ".join((deferred_dispositions + deferred_projected)[:20])
+            )
+
+    # Invoke the SHACL runner.  A current interpreter with pyshacl is preferred;
+    # otherwise use the contract command and downgrade only dependency/offline
+    # acquisition failures to WARN.
+    shacl_script = S6 / "scripts/run_shacl.py"
+    shacl_env = None
+    if importlib.util.find_spec("pyshacl") is not None:
+        shacl_cmd = [sys.executable, str(shacl_script)]
+    else:
+        user_uv = Path.home() / ".local/bin/uv"
+        uv_executable = str(user_uv) if user_uv.is_file() else (shutil.which("uv") or "uv")
+        shacl_cmd = [uv_executable, "run", "--with", "pyshacl,rdflib", "python", str(shacl_script)]
+        # `validate_packet.py --s6` itself commonly runs under `uv run`.  Clear
+        # uv's recursion/temporary-venv markers so the nested contract command
+        # resolves from the stable cache instead of the outer ephemeral overlay.
+        shacl_env = os.environ.copy()
+        shacl_env.pop("UV_RUN_RECURSION_DEPTH", None)
+        shacl_env.pop("VIRTUAL_ENV", None)
+    shacl_run = subprocess.run(
+        shacl_cmd,
+        cwd=PACKET,
+        capture_output=True,
+        text=True,
+        env=shacl_env,
+    )
+    if shacl_run.returncode == 0:
+        for line in shacl_run.stdout.splitlines():
+            print(f"SHACL: {line}")
+    else:
+        diagnostic = (shacl_run.stderr + "\n" + shacl_run.stdout).strip()
+        unavailable_markers = (
+            "No solution found",
+            "Failed to download",
+            "Network connectivity is disabled",
+            "Could not acquire lock",
+            "No module named 'pyshacl'",
+        )
+        if any(marker in diagnostic for marker in unavailable_markers):
+            warn("SHACL skipped: pyshacl unavailable in the offline/managed environment")
+        else:
+            tail = diagnostic.splitlines()[-1] if diagnostic else f"exit {shacl_run.returncode}"
+            blocker(f"SHACL runner failed: {tail}")
+
+    print(
+        f"S6: {len(predicate_rows)} predicates / {len(coverage_rows)} CQ coverage rows / "
+        f"{len(active_golden)} active golden legs / {len(drift)} drift rows / "
+        f"{len(pending_refs)} pending refs"
+    )
     print(f"RESULT: {len(blockers)} blockers, {len(warns)} warns")
     sys.exit(1 if blockers else 0)
 
