@@ -6,7 +6,8 @@
 # or prints a secret value, and the reference stays a reference on disk so
 # `op run` resolves it at spawn time.
 #
-# Idempotent: an already-present name is reported and left alone.
+# Idempotent: an already-present nonblank name is reported and left alone; blank placeholders are
+# repaired from the supplied reference-only configuration.
 # See standards/turbo-remote-cache.md.
 #
 # Usage (from any beep-effect checkout):
@@ -52,10 +53,26 @@ fi
 # The workstation posture is read-only by contract: no agent checkout ever
 # holds the trusted write token, and remote writes stay with the main-push CI
 # jobs. The CLI refuses any other posture, so do not hand-edit this value.
-append_name() {
-  local name="$1" value="$2" printable="$3"
+ensure_name() {
+  local name="$1" value="$2" printable="$3" current temporary
   if grep -Eq "^[[:space:]]*${name}=" "${ENV_FILE}"; then
-    log "${name} already present in .env — leaving it unchanged"
+    current="$(sed -n -E "s/^[[:space:]]*${name}=[[:space:]]*(.*)[[:space:]]*$/\\1/p" "${ENV_FILE}" | head -n 1)"
+    current="${current#\"}"
+    current="${current%\"}"
+    current="${current#\'}"
+    current="${current%\'}"
+    if [[ -n "${current//[[:space:]]/}" ]]; then
+      log "${name} already present in .env — leaving it unchanged"
+      return 0
+    fi
+    temporary="$(mktemp "${ENV_FILE}.XXXXXX")"
+    awk -v name="$name" -v replacement="${name}=${value}" '
+      BEGIN { pattern = "^[[:space:]]*" name "[[:space:]]*=" }
+      $0 ~ pattern { if (!replaced) print replacement; replaced = 1; next }
+      { print }
+    ' "${ENV_FILE}" >"${temporary}"
+    mv -f "${temporary}" "${ENV_FILE}"
+    log "repaired blank ${name}=${printable}"
     return 0
   fi
   printf '%s=%s\n' "${name}" "${value}" >>"${ENV_FILE}"
@@ -66,11 +83,11 @@ if ! grep -q 'Turbo remote cache' "${ENV_FILE}"; then
   printf '\n# Turbo remote cache (read-only; standards/turbo-remote-cache.md)\n' >>"${ENV_FILE}"
 fi
 
-append_name TURBO_API "${TURBO_API}" "${TURBO_API}"
-append_name TURBO_TOKEN "${TURBO_TOKEN_REF}" "<1Password reference>"
-append_name TURBO_TEAM "${TURBO_TEAM}" "${TURBO_TEAM}"
-append_name TURBO_CACHE "${CACHE_MODE}" "${CACHE_MODE}"
+ensure_name TURBO_API "${TURBO_API}" "${TURBO_API}"
+ensure_name TURBO_TOKEN "${TURBO_TOKEN_REF}" "<1Password reference>"
+ensure_name TURBO_TEAM "${TURBO_TEAM}" "${TURBO_TEAM}"
+ensure_name TURBO_CACHE "${CACHE_MODE}" "${CACHE_MODE}"
 
 log "done. Verify without executing a lane:"
-log "  cd ${REPO_ROOT} && bun run beep quality check --filter=@beep/types --dry=json"
+log "  cd ${REPO_ROOT} && bun run check --filter=@beep/types --dry=json"
 log "and confirm the logged turbo command carries --cache=${CACHE_MODE}."

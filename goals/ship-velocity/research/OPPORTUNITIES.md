@@ -87,6 +87,17 @@ session/machine ids.
 - **Would have prevented it:** make worktree bootstrap provision the read-only reference posture,
   reject present-but-blank fields, and run the sanitized dry plan before the first cacheable task.
 
+## 2026-08-30 — package-scoped coverage used the slow default worker profile
+
+- **Doing:** repairing the one introduced per-file coverage regression found by the baseline audit,
+  using the documented package-scoped ratchet instead of rerunning coverage for all 135 packages.
+- **Evidence:** `bun run coverage -- --filter=@beep/repo-cli --summarize` passed the ratchet but
+  took 10m53s to run 143 files and 2,702 tests. The full coverage fallback had completed the same
+  repo-cli suite in 5m49s with an explicit two-worker cap.
+- **Would have prevented it:** make scoped coverage reuse the weighted full lane's worker policy,
+  or print the selected Vitest worker profile so package-only verification does not become slower
+  than its full-shard counterpart.
+
 ## 2026-08-27 — C2 workflow posture outran credential provisioning
 
 - **Doing:** proving that the same-repository pull-request remote-read decision was live before
@@ -830,3 +841,71 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   `Unrecognized flag: --staged-only`; only the publish command exposes that isolation mode.
 - What would have prevented it: support the same staged-only worktree protection on `yeet verify`,
   or have it delegate to the publish isolation boundary without committing or pushing.
+
+## 2026-08-30 — The installed PR watcher observed only one checkout
+
+- What was happening: validating the automatic dead-owner takeover gate found the user service
+  disabled and its generated unit pinned to the checkout that happened to install it.
+- Evidence: the unit carried one `BEEP_YEET_WATCH_ROOTS` value, so leases created in sibling
+  checkouts and nested worktrees were outside the 30-second scan even after enabling the service.
+  A generic recursive repair peaked at 548.6 MiB; layout-bounded discovery still took 7.01 seconds
+  while waiting on fresh-lease mutexes. The final freshness prefilter reduced a full scan to 0.21
+  seconds and 3.7 MiB while retaining the locked stale-candidate recheck.
+- What would have prevented it: install the shared projects root and enumerate live leases only in
+  the sanctioned sibling-checkout and `*-worktrees/*` layouts. A generic recursive `find`, even
+  depth-bounded, traverses enough task scratch state to waste CPU and emit disappearance races.
+
+## 2026-08-30 — Remote-cache provisioning could not repair incomplete checkouts
+
+- What was happening: applying the sanctioned read-only cache template to active roots left six
+  older `.env` files local-only because `TURBO_TEAM` existed but was blank.
+- Evidence: the helper reported every existing name as unchanged; a metadata-only validation then
+  found five newly created complete quads and six incomplete existing quads with blank team fields.
+  Its documented dry-run command also targeted a nonexistent `quality check` subcommand.
+- What would have prevented it: distinguish valid existing values from blank placeholders, offer a
+  reference-preserving repair mode, and keep the verification example covered by a CLI smoke test.
+
+## 2026-08-30 — The scheduler contract makes the dual-verify gate unreachable
+
+- What was happening: two clean current-main `yeet verify` processes were submitted together to
+  prove the packet's required overlapping full-proof acceptance case.
+- Evidence: after a 58-minute upstream wait, `beep-effect7` acquired a three-token full-proof lease
+  with seven tokens still free, but `beep-effect6` remained queued. `QualityScheduler.ts` marks a
+  ticket skippable whenever any live lease has the same `originKey`, and `Handler.ts` also retains
+  the exclusive per-origin proof lock. Every sibling checkout of this repository has the same
+  origin key, so weighted capacity can never admit the required overlap. The admitted proof passed
+  every lane and released normally with a 32,089,321,472-byte peak; the next same-origin waiter was
+  admitted immediately after release, confirming serialization rather than capacity pressure.
+- What would have prevented it: make the scheduler the single current-version authority and design
+  an explicit shared/migrated legacy-lock protocol, or change the completion gate by an operator
+  decision. Removing either guard alone would only move the serialization boundary or weaken
+  mixed-version safety.
+- Resolution: current tickets and leases now carry an origin-coordination protocol. Legacy entries
+  decode distinctly and drain first; the first current contender then atomically installs a
+  persistent v4 retirement marker that old clients fail closed against. Current siblings share the
+  weighted scheduler, while below-envelope hosts retain a separate exclusive fallback lock. The
+  focused scheduler/coordinator suites pass 54 tests and the full Yeet unit file passes 130 tests;
+  a live dual-full-proof receipt remains the final runtime acceptance check.
+
+## 2026-08-30 — Package verification inherits a private temporary root
+
+- What was happening: the required `@beep/repo-cli` package verification failed 2 of 2,701 tests
+  after 442 seconds even though the touched scheduler and Yeet suites were green.
+- Evidence: both failures were unchanged AgentEffectiveness command fixtures. The default temporary
+  directory was below the private home path, so the production privacy guard correctly refused the
+  generated annotation and Phoenix-sync artifacts. Running the exact eight-test file with
+  `TMPDIR=/tmp` passed 8/8 without changing the guard or fixture assertions.
+- What would have prevented it: make the package verifier provide a public, disposable temporary
+  root to tests that intentionally exercise repository-path validation, or make those fixtures
+  request that root explicitly instead of inheriting the launching shell's home-scoped default.
+
+## 2026-08-30 — Yeet repair starts heavyweight feedback after a failed cheap gate
+
+- What was happening: the closeout repair was run while other admitted full proofs were queued,
+  with the expectation that its collected cheap-gate failure would stop before heavyweight work.
+- Evidence: `fallow:audit` reported three introduced blockers, but the same repair continued into
+  full repo docgen, affected build/check/lint, and the complete 2,701-test repo-cli suite. Those
+  feedback lanes passed, but they ran outside a scheduler lease while another full proof was live.
+- What would have prevented it: stop repair feedback before heavyweight lanes whenever the
+  collected cheap-gate wave is red, or admit the feedback phase through the same weighted
+  scheduler used by full verification.

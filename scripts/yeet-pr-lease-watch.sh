@@ -192,6 +192,7 @@ terminate_spawned_fixer() {
 take_over_checkout() {
   local root="$1" inbox lease failures acks lock_fd generation status session_id owner_pid owner_start head_branch
   local observed_start observed_state refreshed_at refreshed_epoch now_epoch age head_sha pr_number rows
+  local precheck_refreshed_at precheck_refreshed_epoch precheck_now_epoch precheck_age
   local prompt_path log_path spawned spawn_pid spawn_worktree='' spawn_branch='' takeover_mode next_generation next_start tmp
   local claim_generation claim_start claim_tmp original_lease
   local claim_group claim_group_start claim_worktree claim_branch recovered_tmp registered_tmp
@@ -203,6 +204,15 @@ take_over_checkout() {
   fi
   acks="${inbox}/acks"
   [[ -f "$lease" && ! -L "$lease" && -r "$lease" && -f "$failures" && ! -L "$failures" && -r "$failures" ]] || return 0
+
+  # Most leases are live. Avoid waiting on their hook mutex merely to rediscover that fact; a
+  # stale-looking lease is fully decoded and rechecked after the mutex is acquired below.
+  precheck_refreshed_at="$(jq -r '.refreshedAt // empty' "$lease" 2>/dev/null || true)"
+  precheck_refreshed_epoch="$(parse_timestamp_epoch "$precheck_refreshed_at" || true)"
+  [[ "$precheck_refreshed_epoch" =~ ^[0-9]+$ ]] || return 0
+  precheck_now_epoch="$(date +%s)"
+  precheck_age="$((precheck_now_epoch - precheck_refreshed_epoch))"
+  (( precheck_age >= stale_seconds )) || return 0
 
   mkdir -p "$inbox"
   exec {lock_fd}>"${inbox}/hook-mutex.lock"
@@ -398,15 +408,23 @@ take_over_checkout() {
 }
 
 scan_once() {
-  local roots=() root
+  local roots=() lease_paths=() root lease_path restore_nullglob=0
   if (( $# > 0 )); then
     roots=("$@")
   elif [[ -n "${BEEP_YEET_WATCH_ROOTS:-}" ]]; then
     IFS=: read -r -a roots <<<"$BEEP_YEET_WATCH_ROOTS"
   elif [[ -d "$projects_root" ]]; then
-    while IFS= read -r -d '' root; do roots+=("$root"); done < <(
-      find "$projects_root" -mindepth 1 -maxdepth 1 -type d -name 'beep-effect*' -print0
+    shopt -q nullglob || restore_nullglob=1
+    shopt -s nullglob
+    lease_paths=(
+      "$projects_root"/*/.beep/inbox/pr-lease.json
+      "$projects_root"/*-worktrees/*/.beep/inbox/pr-lease.json
     )
+    (( restore_nullglob == 0 )) || shopt -u nullglob
+    for lease_path in "${lease_paths[@]}"; do
+      root="${lease_path%/.beep/inbox/pr-lease.json}"
+      roots+=("$root")
+    done
   fi
   for root in "${roots[@]}"; do
     [[ -e "${root}/.git" ]] || continue

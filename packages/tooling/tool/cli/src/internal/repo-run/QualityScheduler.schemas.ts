@@ -81,6 +81,39 @@ export const AdmissionPriority = LiteralKit(["publish", "verify"]).pipe(
 export type AdmissionPriority = typeof AdmissionPriority.Type;
 
 /**
+ * Origin-coordination protocol understood by one scheduler ticket or lease.
+ *
+ * **Example** (Detect current scheduler coordination)
+ *
+ * ```ts
+ * import { AdmissionCoordinationProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(
+ *   AdmissionCoordinationProtocol.is["scheduler-origin-concurrency/v1"]("scheduler-origin-concurrency/v1")
+ * ) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionCoordinationProtocol = LiteralKit([
+  "legacy-origin-lock/v1",
+  "scheduler-origin-concurrency/v1",
+]).pipe(
+  $I.annoteSchema("AdmissionCoordinationProtocol", {
+    description: "Mixed-version coordination protocol used by one scheduler ticket or lease.",
+  })
+);
+
+/**
+ * Mixed-version coordination protocol used by one scheduler ticket or lease.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionCoordinationProtocol = typeof AdmissionCoordinationProtocol.Type;
+
+/**
  * Token weight for each admission kind, in 5 GiB token units (SPEC D1).
  *
  * The publish weight covers only the post-proof mutation phase; a publish's
@@ -118,6 +151,10 @@ const admissionOwnerFields = {
   originKey: S.String,
   checkoutRoot: S.String,
   branch: S.String,
+  coordinationProtocol: AdmissionCoordinationProtocol.pipe(
+    S.withConstructorDefault(Effect.succeed(AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"])),
+    S.withDecodingDefault(Effect.succeed(AdmissionCoordinationProtocol.Enum["legacy-origin-lock/v1"]))
+  ),
 };
 
 /**

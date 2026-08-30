@@ -87,7 +87,7 @@ describe("setup-effect-ref", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
-  it.effect("installs the watcher with the supplied checkout as an explicit scan root", () =>
+  it.effect("installs the watcher with the supplied checkout's projects root", () =>
     withTempDirectory((tempDir) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -132,7 +132,69 @@ describe("setup-effect-ref", () => {
         const unit = yield* fs.readFileString(
           path.join(configDir, "systemd", "user", "beep-yeet-pr-lease-watch.service")
         );
-        expect(unit).toContain(`BEEP_YEET_WATCH_ROOTS=${repoRoot}`);
+        expect(unit).toContain(`BEEP_YEET_PROJECTS_ROOT=${tempDir}`);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("repairs blank remote-cache placeholders without replacing configured values", () =>
+    withTempDirectory((tempDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const ambientPath = yield* Config.string("PATH");
+        const setupScriptPath = yield* path.fromFileUrl(
+          new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
+        );
+        const repoRoot = path.join(tempDir, "repo");
+        yield* fs.makeDirectory(repoRoot, { recursive: true });
+        yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
+        yield* fs.writeFileString(
+          path.join(repoRoot, ".env"),
+          [
+            "TURBO_API=https://existing.example.test",
+            "TURBO_TOKEN=op://existing/item/field",
+            'TURBO_TEAM=""',
+            "TURBO_CACHE=local:rw,remote:r",
+            "",
+          ].join("\n")
+        );
+
+        const result = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
+              cwd: tempDir,
+              env: {
+                PATH: ambientPath,
+                TURBO_API: "https://replacement.example.test",
+                TURBO_TEAM: "configured-team",
+                TURBO_TOKEN_REF: "op://replacement/item/field",
+              },
+              stdin: "ignore",
+              stderr: "pipe",
+              stdout: "pipe",
+            });
+            const [exitCode, stderr, stdout] = yield* Effect.all(
+              [
+                handle.exitCode,
+                handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
+                handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
+              ],
+              { concurrency: "unbounded" }
+            );
+            return { exitCode, stderr, stdout };
+          })
+        );
+
+        expect(result.exitCode, result.stderr).toBe(0);
+        expect(result.stdout).toContain("repaired blank TURBO_TEAM=configured-team");
+        expect(result.stdout).toContain("bun run check --filter=@beep/types --dry=json");
+        const configured = yield* fs.readFileString(path.join(repoRoot, ".env"));
+        expect(configured).toContain("TURBO_API=https://existing.example.test");
+        expect(configured).toContain("TURBO_TOKEN=op://existing/item/field");
+        expect(configured).toContain("TURBO_TEAM=configured-team");
+        expect(configured).not.toContain("replacement.example.test");
+        expect(configured).not.toContain("op://replacement/item/field");
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

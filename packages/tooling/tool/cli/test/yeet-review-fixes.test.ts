@@ -20,7 +20,7 @@ import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref } from "effect";
+import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
@@ -67,16 +67,19 @@ const runGit = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<str
   expect(result.exitCode).toBe(0);
 });
 
-const memoryStatsTestLayer = Layer.succeed(
-  MemoryStats,
-  MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) })
-);
+const memoryStatsTestLayer = (availableGib = 50, totalGib = 128) =>
+  Layer.succeed(
+    MemoryStats,
+    MemoryStats.of({ availableGib: Effect.succeed(availableGib), totalGib: Effect.succeed(totalGib) })
+  );
 
 const withProofCoordinatorRepo = <Success, Error, Requirements>(
   use: (repo: {
     readonly context: RepoRunContext;
     readonly lockPath: string;
-  }) => Effect.Effect<Success, Error, Requirements>
+  }) => Effect.Effect<Success, Error, Requirements>,
+  availableGib = 50,
+  totalGib = 128
 ) =>
   withTempDirectory((tmpDir) =>
     Effect.gen(function* () {
@@ -102,7 +105,7 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
       // Coordinator locks and admission leases both live under the temp
       // runtime root, so removing tmpDir cleans every artifact.
       provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: `${tmpDir}/runtime` })),
-      provideScopedLayer(memoryStatsTestLayer)
+      provideScopedLayer(memoryStatsTestLayer(availableGib, totalGib))
     )
   );
 
@@ -221,7 +224,7 @@ describe("yeet review fixes", () => {
       )
     ));
 
-  it("holds the coordinator across preflight and proof checkpoints and releases it on failure", () =>
+  it("installs a persistent scheduler-retirement marker across success and failure", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ context, lockPath }) =>
         Effect.gen(function* () {
@@ -239,7 +242,7 @@ describe("yeet review fixes", () => {
           );
 
           expect(checkpoints).toEqual({ preflight: true, proof: true });
-          expect(yield* fs.exists(lockPath)).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
 
           const failure = yield* runWithFullProofCoordinatorForTesting(
             context,
@@ -251,8 +254,94 @@ describe("yeet review fixes", () => {
           ).pipe(Effect.flip);
 
           expect(failure).toBe("expected proof failure");
-          expect(yield* fs.exists(lockPath)).toBe(false);
+          expect(yield* fs.readFileString(lockPath)).toContain('"coordination":"quality-scheduler/v1"');
         })
+      )
+    ));
+
+  it("allows two same-origin full proofs to overlap under weighted admission", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ context, lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
+          const firstEntered = yield* Deferred.make<void>();
+          const secondEntered = yield* Deferred.make<void>();
+          const first = yield* Effect.forkChild(
+            runWithFullProofCoordinatorForTesting(
+              context,
+              [plannedProof],
+              Effect.gen(function* () {
+                yield* Deferred.succeed(firstEntered, undefined);
+                yield* Deferred.await(secondEntered);
+                return "first";
+              })
+            )
+          );
+          yield* Deferred.await(firstEntered);
+          const second = yield* Effect.forkChild(
+            runWithFullProofCoordinatorForTesting(
+              context,
+              [plannedProof],
+              Effect.gen(function* () {
+                yield* Deferred.succeed(secondEntered, undefined);
+                return "second";
+              })
+            )
+          );
+
+          yield* Deferred.await(secondEntered).pipe(Effect.timeout("2 seconds"));
+          expect(yield* Fiber.join(first)).toBe("first");
+          expect(yield* Fiber.join(second)).toBe("second");
+          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+        })
+      )
+    ));
+
+  it("serializes same-origin proofs through the fallback lock below the scheduler envelope", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(
+        ({ context, lockPath }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
+            const firstEntered = yield* Deferred.make<void>();
+            const releaseFirst = yield* Deferred.make<void>();
+            const secondEntered = yield* Deferred.make<void>();
+            const first = yield* Effect.forkChild(
+              runWithFullProofCoordinatorForTesting(
+                context,
+                [plannedProof],
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(firstEntered, undefined);
+                  yield* Deferred.await(releaseFirst);
+                  return "first";
+                })
+              )
+            );
+            yield* Deferred.await(firstEntered);
+            const second = yield* Effect.forkChild(
+              runWithFullProofCoordinatorForTesting(
+                context,
+                [plannedProof],
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(secondEntered, undefined);
+                  return "second";
+                })
+              )
+            );
+
+            yield* Effect.sleep("100 millis");
+            expect(second.pollUnsafe()).toBeUndefined();
+            expect(yield* Deferred.isDone(secondEntered)).toBe(false);
+            yield* Deferred.succeed(releaseFirst, undefined);
+            expect(yield* Fiber.join(first)).toBe("first");
+            expect(yield* Fiber.join(second)).toBe("second");
+            expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+            expect(yield* fs.exists(`${lockPath}.scheduler-fallback`)).toBe(false);
+          }),
+        6,
+        8
       )
     ));
 

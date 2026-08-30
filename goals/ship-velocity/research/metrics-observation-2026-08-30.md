@@ -154,3 +154,84 @@ The intervals did not overlap. Scheduler status reported capacity 9, three activ
 58.87 GiB available, and no queued, dead, or quarantined row. This is valid single-lease memory
 evidence, but it does not prove the two-concurrent-verify gate or a terminal no-OOM result for the
 active lease.
+
+## Operator-authorized evidence-volume closeout
+
+On 2026-08-30 the operator accepted a closeout judgment from the observed production volume
+instead of requiring the original duration proxy to elapse. This does not relabel the sample as a
+seven-day interval. It records the operator's judgment that the concentrated merge and proof
+traffic is representative enough for this closeout and keeps every outcome condition mandatory.
+
+Snapshot time: `2026-08-30T16:50:03Z`.
+
+- 24 PRs merged in the rolling 24 hours;
+- 16 PRs merged after #874, including eight that were both opened and merged after the anchor;
+- median open-to-merge time for those eight PRs: 50.95 minutes (mean 85.31, range 21.82–192.18);
+- eight main-push Check runs after #892: seven successful and one failed;
+- the failure was #869's isolated T7 capacity-preflight fixture I/O mismatch on run
+  `33303853318`; its PR-head coverage run was green and the next six main-push Check runs were
+  green, so `parity-ledger.md` classifies it as nonrecurring rather than erasing it;
+- eight main-push Storybook runs after #892: six successful, two cancelled, and zero failed.
+
+### Backpressure and takeover refresh
+
+The corrected user service is enabled and active with a 30-second poll, 240-second stale lease,
+and therefore a 270-second worst-case takeover-detection bound. The installer now targets the
+shared projects root, while the watcher enumerates only sanctioned top-level checkouts and
+`*-worktrees/*` roots. After restart it completed multiple polls with zero restarts, no journal
+diagnostics, 13.4 MiB peak memory, and 0.161 seconds of CPU in its first minute. The prior generic
+recursive scan had peaked at 548.6 MiB and was rejected before closeout. A final full dry scan
+completed in 0.21 seconds at 3.7 MiB after fresh leases were filtered before mutex acquisition;
+stale-looking candidates still receive the full locked recheck.
+
+The focused watcher suite exercises stale P0 detection, CAS transfer, resume, retired-owner
+refusal, abandoned-claim recovery, and blank cache-placeholder repair; all seven focused tests
+pass. Two live optional
+Vercel P1 rows for #897 reached the inbox on their observing timestamp. No required P0 hosted red
+or dead-owner incident occurred, so there is no fabricated production takeover latency. The
+configured bound plus the executable takeover tests are the acceptance evidence for the absent
+incident class.
+
+### Cache provisioning refresh
+
+A post-repair activity scan found 11 checkout roots. All 11 now carry a git-ignored, reference-only
+remote-read quad. Five `.env` files were created from the sanctioned template; six older roots had
+blank `TURBO_TEAM` placeholders repaired. No secret value was read, printed, or written. The
+1Password MCP was unavailable and the local `op` CLI was signed out, so a dry plan correctly
+degraded to `--cache=local:rw`. Configuration coverage is complete, but a fresh remote-read probe
+remains required after the operator authorizes a 1Password CLI session.
+
+### Admission and hot-file refresh
+
+The live dual-verify trial was submitted from clean current-main `beep-effect6` and `beep-effect7`
+checkouts. After 58 minutes behind a valid merged-preview lease, `beep-effect7` was admitted at
+three tokens with seven tokens free. `beep-effect6` nevertheless remained queued because
+`QualityScheduler.ts` skips every same-origin ticket while a lease exists and `Handler.ts` retains
+the same exclusive per-origin proof lock. All sibling checkouts share that origin key, making the
+manifest's required overlap unreachable by construction. The redundant queued waiter was
+interrupted cleanly. The admitted `beep-effect7` proof then passed every cheap-gate and pre-push
+lane and released normally at `2026-08-30T18:03:41Z`. Its scheduler journal recorded a
+32,089,321,472-byte peak with no OOM, dead lease, or quarantine. The next same-origin waiter was
+admitted immediately after release despite seven capacity tokens having been free throughout,
+which separates the origin guard from machine-capacity pressure.
+
+The closeout repair retains the original concurrency outcome instead of weakening the gate. New
+tickets and leases identify the scheduler-origin-concurrency protocol; older entries decode as
+legacy and drain before migration. The first current contender then installs a persistent v4
+origin-lock retirement marker that older clients fail closed against. Current siblings may overlap
+under weighted admission, while below-envelope hosts serialize through a separate fallback lock.
+The focused scheduler/coordinator suites pass 54 tests, the full Yeet unit file passes all 130
+tests, and an untouched pre-change decoder accepts and discards the additive protocol field. A
+live dual-full-proof run on the repaired implementation remains required for the terminal no-OOM
+receipt.
+
+Across the 17 merged PRs from the #874 anchor through this snapshot, only #874 itself touched
+`goals/INDEX.md` or `explorations/ATLAS.md`. The 16 subsequent merges touched neither projection,
+and no sampled publish failure named either path as its retry cause.
+
+### Closeout state at this snapshot
+
+The evidence-volume ruling closes the calendar-duration question, not the operational gates. The
+packet remains active until an authorized 1Password session produces a fresh remote-read
+observation from every active root and two current-protocol sibling full proofs complete concurrently
+without OOM. Lifecycle and P5 status remain unchanged until both terminal receipts exist.

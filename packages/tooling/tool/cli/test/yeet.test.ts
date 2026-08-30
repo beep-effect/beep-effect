@@ -8,7 +8,9 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import {
+  acquireFullProofFallbackLockOrObserveAtPath,
   acquireFullProofLock,
+  acquireFullProofLockOrObserveAtPath,
   appendYeetAttemptJournalEvent,
   assessBaseFreshnessForTesting,
   attemptJournalPath,
@@ -65,6 +67,7 @@ import {
   repoProofStepDefinition,
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
+  retireFullProofLockOrObserveAtPath,
   retirePublishedPrLease,
   retirePublishedPrLeaseAtPathForTesting,
   retirePublishedPrLeaseReceipt,
@@ -284,11 +287,11 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const coordinatorDirectory = path.dirname(lockPath);
-          const reapPrefix = `${path.basename(lockPath)}.reap-`;
+          const coordinatorPrefix = path.basename(lockPath);
           yield* fs.remove(lockPath, { force: true });
           const entries = yield* fs.readDirectory(coordinatorDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
           yield* Effect.forEach(
-            A.filter(entries, Str.startsWith(reapPrefix)),
+            A.filter(entries, Str.startsWith(coordinatorPrefix)),
             (entry) => fs.remove(path.join(coordinatorDirectory, entry), { force: true }).pipe(Effect.ignore),
             { discard: true }
           );
@@ -3061,6 +3064,119 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
+  it("observes an absent proof coordinator as an acquired lease", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const lease = yield* acquireFullProofLockOrObserveAtPath(lockPath, tempContext, [prePushStep]);
+
+          expect(O.isSome(lease)).toBe(true);
+          if (O.isSome(lease)) {
+            expect(lease.value.lockPath).toBe(lockPath);
+            yield* releaseProofLock(lease.value);
+          }
+        })
+      )
+    ));
+
+  it("retires the origin coordinator idempotently and keeps the legacy acquisition fail closed", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+
+          const retired = yield* retireFullProofLockOrObserveAtPath(lockPath);
+          expect(O.isSome(retired)).toBe(true);
+          const markerText = yield* fs.readFileString(lockPath);
+          expect(markerText).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+          expect(markerText).toContain('"coordination":"quality-scheduler/v1"');
+
+          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe(markerText);
+
+          const legacyPathRefusal = yield* acquireFullProofLock(tempContext, [prePushStep]).pipe(Effect.flip);
+          expect(legacyPathRefusal.message).toContain("Another Yeet full proof for this repository is active.");
+          expect(yield* fs.readFileString(lockPath)).toBe(markerText);
+        })
+      )
+    ));
+
+  it("waits for a live v3 owner before installing the retirement marker", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const lease = yield* acquireFullProofLock(tempContext, [prePushStep]);
+
+          expect(O.isNone(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v3"');
+
+          yield* releaseProofLock(lease);
+          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+        })
+      )
+    ));
+
+  it("replaces a stale v3 owner with the retirement marker", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          yield* fs.writeFileString(lockPath, staleText);
+
+          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          const markerText = yield* fs.readFileString(lockPath);
+          expect(markerText).toContain('"schemaVersion":"yeet-proof-lock/v4"');
+          expect(markerText).not.toBe(staleText);
+        })
+      )
+    ));
+
+  it("serializes below-envelope proofs through the scheduler fallback lock", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
+          const first = yield* acquireFullProofFallbackLockOrObserveAtPath(
+            lockPath,
+            tempContext,
+            "bun run beep yeet verify"
+          );
+          expect(O.isSome(first)).toBe(true);
+          expect(
+            O.isNone(
+              yield* acquireFullProofFallbackLockOrObserveAtPath(lockPath, tempContext, "bun run beep yeet verify")
+            )
+          ).toBe(true);
+
+          if (O.isSome(first)) {
+            yield* releaseProofLock(first.value);
+          }
+          const next = yield* acquireFullProofFallbackLockOrObserveAtPath(
+            lockPath,
+            tempContext,
+            "bun run beep yeet verify"
+          );
+          expect(O.isSome(next)).toBe(true);
+          if (O.isSome(next)) {
+            yield* releaseProofLock(next.value);
+          }
+        })
+      )
+    ));
+
   it("refuses an active proof coordinator and preserves its owner metadata", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ lockPath, tempContext }) =>
@@ -3448,6 +3564,10 @@ describe("yeet publish scope helpers", () => {
           expect(refusal.message).toContain(lockPath);
           expect(refusal.message).toContain("will not reclaim it automatically");
           expect(refusal.message).toContain("confirming every sibling checkout is idle");
+          expect(yield* fs.readFileString(lockPath)).toBe(legacyText);
+
+          const retirementRefusal = yield* retireFullProofLockOrObserveAtPath(lockPath).pipe(Effect.flip);
+          expect(retirementRefusal.message).toContain("legacy v2 full-proof coordinator");
           expect(yield* fs.readFileString(lockPath)).toBe(legacyText);
         })
       )

@@ -37,19 +37,20 @@ TURBO_API=<endpoint> TURBO_TEAM=<team-slug> TURBO_TOKEN_REF=op://<vault>/<item>/
 ```
 
 Run it from the checkout you want to enable, or pass the checkout path as the
-first argument. It is idempotent: names already present in `.env` are reported
-and left alone. It refuses a `TURBO_TOKEN_REF` that is not an `op://`
-reference, so a resolved secret cannot be written to disk by accident.
+first argument. It is idempotent: nonblank names already present in `.env` are
+reported and left alone, while blank placeholders are repaired. It refuses a
+`TURBO_TOKEN_REF` that is not an `op://` reference, so a resolved secret cannot
+be written to disk by accident.
 
 Verify without executing a lane:
 
 ```sh
-bun run beep quality check --filter=@beep/types --dry=json
+bun run check --filter=@beep/types --dry=json
 ```
 
-The CLI prints the exact turbo command before spawning it. A configured
-checkout shows `--cache=local:rw,remote:r`; anything else shows
-`--cache=local:rw`.
+The CLI prints the exact turbo command before spawning it. A configured checkout with an
+authorized 1Password session shows `--cache=local:rw,remote:r`; an unavailable or unauthorized
+session fails closed and shows `--cache=local:rw`.
 
 Exported shell variables work too — the CLI reads the ambient environment, not
 only `.env` — but the per-checkout `.env` is the sanctioned path because it

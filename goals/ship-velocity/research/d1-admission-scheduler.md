@@ -110,6 +110,38 @@ just the single newest), the origin gate is released on any post-acquire failure
 surface, and the small-host bypass now requires the hard floor plus one slot to be
 attainable from installed memory (a 15-18 GiB host bypasses instead of waiting forever).
 
+## Closeout migration — 2026-08-30
+
+The first live acceptance trial exposed a contradiction in the original composition: the
+scheduler charged one full proof at three tokens, but both the scheduler's same-origin skip and
+the retained v3 origin lock prevented another sibling checkout from entering even when seven
+tokens were free. Because every checkout of this repository hashes to the same origin key, the
+required sibling overlap was unreachable by construction.
+
+The closeout repair makes the weighted scheduler the sole current-version concurrency authority
+without permitting a mixed-version race:
+
+- new tickets and leases identify `scheduler-origin-concurrency/v1`; entries written before this
+  repair decode as `legacy-origin-lock/v1`;
+- a current ticket stays queued while any same-origin legacy ticket or lease is live, so already
+  queued work drains instead of being stranded during rollout;
+- after legacy work drains, the first current contender atomically replaces the v3 owner file
+  with a persistent `yeet-proof-lock/v4` retirement marker;
+- older v3 clients cannot decode that marker and fail closed, while current clients recognize it
+  and admit same-origin work solely by priority, FIFO order, live capacity, and overshoot rollback;
+- hosts below the scheduler memory envelope first install the same retirement marker and then use
+  a distinct exclusive fallback lock, preserving one-proof execution rather than bypassing all
+  coordination.
+
+Compatibility and behavior proof covers: old-file decode defaults, an untouched pre-change
+decoder accepting and discarding the new field, current same-origin overlap, legacy-lease drain,
+live-v3 wait, stale-v3 CAS replacement, idempotent marker installation, old-client fail-closed
+behavior, low-memory fallback serialization, interruption, and release paths. The focused
+scheduler/coordinator suites pass 54 tests; the full Yeet unit file passes 131 tests. The
+authoritative scoped coverage run then passed all 143 repo-cli files and 2,702 tests, with the changed
+`ProofState.ts` at 83.39% statements, 59.82% branches, 80.00% functions, and 83.70% lines;
+the per-file coverage ratchet passed with epsilon 0.001.
+
 ## Follow-ups (tracked in PLAN P4)
 
 D2 adaptive lane concurrency (scheduler-selected turbo args); D3 remainder (PSI/load

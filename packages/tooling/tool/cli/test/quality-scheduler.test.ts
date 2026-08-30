@@ -613,22 +613,20 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("keeps a same-origin contender queued without blocking a different origin behind it", () =>
+  it("admits a same-origin contender when its weight fits beside the active lease", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
             yield* writeFakeLease(tempRoot, { weightTokens: 3, originKey: "origin-busy" });
-            const sameOrigin = yield* Effect.forkChild(
-              withQualityAdmission(
-                request({ originKey: "origin-busy", checkoutRoot: "/repo/busy" }),
-                noAdmissionOriginGate,
-                Effect.succeed("same"),
-                fastConfig
-              )
+            const sameOrigin = yield* withQualityAdmission(
+              request({ originKey: "origin-busy", checkoutRoot: "/repo/busy" }),
+              noAdmissionOriginGate,
+              Effect.succeed("same"),
+              fastConfig
             );
-            yield* Effect.sleep("80 millis");
+            expect(sameOrigin).toBe("same");
             const otherOrigin = yield* withQualityAdmission(
               request({ originKey: "origin-free", checkoutRoot: "/repo/free" }),
               noAdmissionOriginGate,
@@ -636,9 +634,52 @@ describe("quality-scheduler", () => {
               fastConfig
             );
             expect(otherOrigin).toBe("other");
-            // The same-origin contender is still waiting on its origin's lease.
-            expect(sameOrigin.pollUnsafe()).toBeUndefined();
-            yield* Fiber.interrupt(sameOrigin);
+          })
+        );
+      })
+    ));
+
+  it("keeps a current contender queued until a same-origin legacy lease drains", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const procStart = yield* ownProcStart();
+            yield* fs.makeDirectory(tempRoot.leases, { recursive: true, mode: 0o700 });
+            const legacyPath = path.join(tempRoot.leases, "legacy-origin.lease.json");
+            const legacyText = yield* encodeJsonObject({
+              schemaVersion: "yeet-admission-lease/v1",
+              pid: process.pid,
+              procStart,
+              kind: "full-proof",
+              weightTokens: 3,
+              priority: "verify",
+              originKey: "origin-legacy",
+              checkoutRoot: "/repo/legacy",
+              branch: "feat/legacy",
+              command: "bun run beep yeet verify",
+              startedAt: "2026-08-27T00:00:00Z",
+              admittedAtMillis: 0,
+              heartbeatAtMillis: 0,
+            });
+            yield* fs.writeFileString(legacyPath, `${legacyText}\n`);
+
+            expect((yield* decodeLease(`${legacyText}\n`)).coordinationProtocol).toBe("legacy-origin-lock/v1");
+            const current = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-legacy", checkoutRoot: "/repo/current" }),
+                noAdmissionOriginGate,
+                Effect.succeed("current"),
+                fastConfig
+              )
+            );
+            yield* Effect.sleep("100 millis");
+            expect(current.pollUnsafe()).toBeUndefined();
+            yield* fs.remove(legacyPath, { force: true });
+            expect(yield* Fiber.join(current)).toBe("current");
           })
         );
       })
@@ -749,10 +790,12 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const busy = yield* Ref.make(true);
             const releases = yield* Ref.make(0);
+            const tryAcquire = Effect.gen(function* () {
+              return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
+            });
             const gate = {
-              tryAcquire: Effect.gen(function* () {
-                return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
-              }),
+              tryAcquire,
+              tryAcquireFallback: tryAcquire,
               release: (_: string) => Ref.update(releases, (count) => count + 1),
             };
             const fiber = yield* Effect.forkChild(
@@ -1100,6 +1143,7 @@ describe("quality-scheduler", () => {
             // sibling checkout on the previous Yeet release).
             const stuckGate = {
               tryAcquire: Effect.succeed(O.none<string>()),
+              tryAcquireFallback: Effect.succeed(O.none<string>()),
               release: (_: string) => Effect.void,
             };
             const stuck = yield* Effect.forkChild(
@@ -1194,6 +1238,7 @@ describe("quality-scheduler", () => {
             const releases = yield* Ref.make(0);
             const gate = {
               tryAcquire: Effect.succeed(O.some("origin-lease")),
+              tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
               release: (_: string) => Ref.update(releases, (count) => count + 1),
             };
             // Materialize the directories, then make the leases dir unwritable
@@ -1266,6 +1311,7 @@ describe("quality-scheduler", () => {
               const releases = yield* Ref.make(0);
               const gate = {
                 tryAcquire: Effect.succeed(O.some("origin-lease")),
+                tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
                 release: (_: string) => Ref.update(releases, (count) => count + 1),
               };
               const result = yield* withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig);

@@ -9,9 +9,10 @@
  * owner pid is dead or its `/proc` start time no longer matches (pid reuse),
  * and malformed state is quarantined visibly instead of blocking forever.
  *
- * The per-origin full-proof lock (`Yeet/internal/ProofState.ts`) is retained:
- * callers pass an {@link AdmissionOriginGate} so a contender whose origin is
- * already proving stays queued without blocking unrelated origins.
+ * Current-version proofs use this scheduler as their sole weighted admission
+ * authority. The caller-supplied {@link AdmissionOriginGate} retires the old
+ * per-origin lock only after prior-version owners drain and retains a distinct
+ * exclusive fallback for hosts below the scheduler memory envelope.
  *
  * @since 0.0.0
  */
@@ -44,6 +45,7 @@ import * as Str from "effect/String";
 import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
 import {
   AdmissionConfig,
+  AdmissionCoordinationProtocol,
   AdmissionRequest,
   AdmissionSnapshot,
   QualitySchedulerError,
@@ -621,12 +623,34 @@ const ticketOrder = (nowMillis: number, config: AdmissionConfig): Order.Order<Ye
 const activeTokenTotal = (state: LiveAdmissionState): number =>
   A.reduce(state.leases, 0, (total, { lease }) => total + lease.weightTokens);
 
-// A ticket is skippable (stays queued without blocking later tickets) when
-// its origin is already proving under an admission lease, when it recently
-// reported its origin lock busy (held by a process without a lease, e.g. a
-// sibling checkout on the previous Yeet release), or when the review-fix
-// class cap is saturated. Stamps expire so a crashed holder cannot leave a
-// permanent skip.
+const hasLegacySameOriginLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  A.some(
+    state.leases,
+    ({ lease }) =>
+      lease.originKey === ticket.originKey &&
+      AdmissionCoordinationProtocol.is["legacy-origin-lock/v1"](lease.coordinationProtocol)
+  );
+
+const hasLegacySameOriginTicket = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  A.some(
+    state.tickets,
+    ({ ticket: queued }) =>
+      queued.nonce !== ticket.nonce &&
+      queued.originKey === ticket.originKey &&
+      AdmissionCoordinationProtocol.is["legacy-origin-lock/v1"](queued.coordinationProtocol)
+  );
+
+const hasLegacySameOriginOwner = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  AdmissionCoordinationProtocol.is["scheduler-origin-concurrency/v1"](ticket.coordinationProtocol) &&
+  Str.isNonEmpty(ticket.originKey) &&
+  (hasLegacySameOriginLease(state, ticket) || hasLegacySameOriginTicket(state, ticket));
+
+// A ticket is skippable (stays queued without blocking later tickets) when it
+// recently reported its origin migration gate busy (held by a process on the
+// previous Yeet release), or when the review-fix class cap is saturated.
+// Current-version same-origin proofs are capacity peers, so a live scheduler
+// lease never makes a sibling ticket skippable. Stamps expire so a crashed
+// holder cannot leave a permanent skip.
 const isTicketSkippable = (
   state: LiveAdmissionState,
   ticket: YeetAdmissionTicket,
@@ -634,7 +658,7 @@ const isTicketSkippable = (
   config: AdmissionConfig,
   ignoreOriginStamp: boolean
 ): boolean => {
-  if (Str.isNonEmpty(ticket.originKey) && A.some(state.leases, ({ lease }) => lease.originKey === ticket.originKey)) {
+  if (hasLegacySameOriginOwner(state, ticket)) {
     return true;
   }
   const stampFresh =
@@ -681,12 +705,13 @@ const selfMayAttempt = (
 };
 
 /**
- * Gate coordinating one origin-scoped resource (the per-origin full-proof
- * lock) underneath machine-wide admission.
+ * Gate coordinating origin-lock migration and the below-envelope fallback
+ * underneath machine-wide admission.
  *
- * `tryAcquire` succeeds with `None` when the origin is busy — the contender
- * then stays queued instead of failing. Corruption states keep failing
- * through the error channel.
+ * `tryAcquire` succeeds with `None` while a prior-version origin owner drains;
+ * the contender then stays queued instead of failing. `tryAcquireFallback`
+ * acquires the exclusive below-envelope resource. Corruption states keep
+ * failing through the error channel.
  *
  * @category admission
  * @since 0.0.0
@@ -694,6 +719,7 @@ const selfMayAttempt = (
 export interface AdmissionOriginGate<OriginLease, GateError, GateRequirements> {
   readonly release: (lease: OriginLease) => Effect.Effect<void, never, GateRequirements>;
   readonly tryAcquire: Effect.Effect<O.Option<OriginLease>, GateError, GateRequirements>;
+  readonly tryAcquireFallback: Effect.Effect<O.Option<OriginLease>, GateError, GateRequirements>;
 }
 
 /**
@@ -712,6 +738,7 @@ export interface AdmissionOriginGate<OriginLease, GateError, GateRequirements> {
  */
 export const noAdmissionOriginGate: AdmissionOriginGate<Record<string, never>, never, never> = {
   tryAcquire: Effect.succeed(O.some({})),
+  tryAcquireFallback: Effect.succeed(O.some({})),
   release: () => Effect.void,
 };
 
@@ -895,6 +922,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
     originKey: ticket.originKey,
     checkoutRoot: ticket.checkoutRoot,
     branch: ticket.branch,
+    coordinationProtocol: ticket.coordinationProtocol,
     command: request.command,
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
     admittedAtMillis: nowMillis,
@@ -1046,9 +1074,10 @@ const noteAdmissionWait = Effect.fnUntraced(function* (
   return O.isSome(escalation) ? { ...next, escalated: escalationLevelFor(waitedMillis) } : next;
 });
 
-// Interruption is masked around promotion (so a lease and origin lock can
-// never be created without their release installed) and restored across the
-// sleep, which is where a Ctrl-C lands and unwinds to the ticket finalizer.
+// Interruption is masked around promotion (so a scheduler lease and any
+// fallback origin lease can never be created without their release installed)
+// and restored across the sleep, which is where a Ctrl-C lands and unwinds to
+// the ticket finalizer.
 const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, GateRequirements>(
   directories: AdmissionDirectories,
   request: AdmissionRequest,
@@ -1155,9 +1184,9 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
  *
  * Enqueues a durable ticket, waits (with visible progress) until the request
  * is first in priority/FIFO order and its token weight fits live capacity,
- * acquires the caller's origin gate, then runs `use` while heartbeating the
- * lease. Ticket, lease, and origin lease are all released on success, failure,
- * and interruption — `Ctrl-C` removes the ticket.
+ * acquires the caller's migration gate, then runs `use` while heartbeating the
+ * lease. Ticket, lease, and any fallback origin lease are all released on
+ * success, failure, and interruption — `Ctrl-C` removes the ticket.
  *
  * **Example** (Reference the admission bracket)
  *
@@ -1236,6 +1265,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     originKey: admittedRequest.originKey,
     checkoutRoot: admittedRequest.checkoutRoot,
     branch: admittedRequest.branch,
+    coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
     nonce: randomUUID().slice(0, 8),
@@ -1288,10 +1318,10 @@ const bypassAdmission = Effect.fnUntraced(function* <
 ): Effect.fn.Return<Success, UseError | GateError | QualitySchedulerError, UseRequirements | GateRequirements> {
   return yield* Effect.uninterruptibleMask(
     Effect.fnUntraced(function* (restore) {
-      let origin = yield* gate.tryAcquire;
+      let origin = yield* gate.tryAcquireFallback;
       while (O.isNone(origin)) {
         yield* restore(Effect.sleep(Duration.millis(config.heartbeatSeconds * 1000)));
-        origin = yield* gate.tryAcquire;
+        origin = yield* gate.tryAcquireFallback;
       }
       return yield* Effect.acquireUseRelease(
         Effect.succeed(origin.value),
