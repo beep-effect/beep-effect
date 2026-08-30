@@ -88,7 +88,8 @@ without restating.
       a concurrent-refresh test.
 - [ ] Invoice-PDF retrieval is fixture-proven — or the fallback verdict is
       recorded and the verb is explicitly absent.
-- [ ] `bun run beep quality package-verify` passes for the new package.
+- [ ] `bun run beep quality package-verify @beep/freshbooks` passes (name
+      the package explicitly — auto-detection fails on a clean worktree).
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
@@ -99,7 +100,7 @@ without restating.
 | Manifest JSON | `jq . goals/freshbooks-driver/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/freshbooks-driver` | Passes |
 | Spike evidence | P0 report in `history/` | Recorded |
-| Package handoff | `bun run beep quality package-verify` on the new package | Passes |
+| Package handoff | `bun run beep quality package-verify @beep/freshbooks` | Passes |
 
 ## Stop Conditions
 

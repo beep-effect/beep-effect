@@ -46,8 +46,9 @@ Workflow:
    or docs.
 5. Fixtures carry no real client/invoice/payment data; live smoke is
    credential-gated and read-only.
-6. Run `bun run beep quality package-verify` for the new package before
-   handing back; expect the new-package first-CI governance gates
+6. Run `bun run beep quality package-verify @beep/freshbooks` before
+   handing back (the package argument is required — auto-detection fails on
+   a clean worktree); expect the new-package first-CI governance gates
    (changeset, docgen, knip/fallow).
 7. At P4 Close, write the reflection via `/reflect`;
    `bun run beep lint reflection-artifacts` must pass.
