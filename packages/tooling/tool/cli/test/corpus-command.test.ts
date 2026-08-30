@@ -128,72 +128,115 @@ describe("corpus restoration evidence invariants", () => {
           "full.jsonl"
         );
         const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
-        const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
-        const summary = A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"]));
-        if (O.isNone(summary)) return yield* Effect.die("Expected a real family summary fixture.");
-        const variants: Array<ReadonlyArray<TransformationLedgerRecord>> = [
-          records,
-          A.reverse(records),
-          A.drop(records, 1),
-          A.dropRight(records, 1),
-          A.appendAll(records, records),
-          [],
-        ];
-        for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
-          const record = records[recordIndex];
-          if (record === undefined) continue;
-          for (const [field, value] of Object.entries(record)) {
-            const mutated = structuredClone(records) as unknown as Array<Record<string, unknown>>;
-            const target = mutated[recordIndex];
-            if (target === undefined) continue;
-            if (typeof value === "string") target[field] = `${value}/mutated`;
-            else if (typeof value === "number") target[field] = value + 1;
-            else if (typeof value === "boolean") target[field] = !value;
-            else if (Array.isArray(value)) target[field] = A.append(value, value[0] ?? "mutated");
-            else if (value === undefined) target[field] = "mutated";
-            else continue;
-            variants.push(mutated as unknown as ReadonlyArray<TransformationLedgerRecord>);
-          }
-        }
+        const mailRecords = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+        const recycleFixture = yield* makeRecycleRestorationFixture();
+        yield* restoreRecycle(
+          RestorationRecycleOptions.make({
+            corpusRoot: recycleFixture.corpusRoot,
+            expectedMissingContentCount: NonNegativeInt.make(1),
+            expectedSurfaceCount: NonNegativeInt.make(3),
+            maxTotalElapsedMillis: PosInt.make(30_000),
+            maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
+            runLabel: "synthetic-recycle-restoration",
+          })
+        );
+        const recycleLines = A.filter(
+          Str.split(/\r?\n/u)(
+            yield* fs.readFileString(
+              path.join(
+                recycleFixture.corpusRoot,
+                "staging/restoration/runs/synthetic-recycle-restoration/ledgers/recycle/full.jsonl"
+              )
+            )
+          ),
+          Str.isNonEmpty
+        );
+        const recycleRecords = yield* Effect.forEach(recycleLines, decodeTransformationLedgerRecordJson);
+        const legacyFixture = yield* makeLegacyWordRestorationFixture();
+        yield* restoreLegacyWord(legacyWordRestorationOptions(legacyFixture));
+        const legacyLines = A.filter(
+          Str.split(/\r?\n/u)(
+            yield* fs.readFileString(
+              path.join(
+                legacyFixture.corpusRoot,
+                "staging/restoration/runs/synthetic-legacy-word-restoration/ledgers/legacy-word/full.jsonl"
+              )
+            )
+          ),
+          Str.isNonEmpty
+        );
+        const legacyRecords = yield* Effect.forEach(legacyLines, decodeTransformationLedgerRecordJson);
 
-        for (const variant of variants) {
-          const starts = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-start"]));
-          const interruptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-interrupted"]));
-          const passes = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-pass"]));
-          const exceptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-exception"]));
-          const warnings = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-warning"]));
-          const children = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-child-pass"]));
-          const repairs = A.filter(variant, S.is(TransformationLedgerRecord.cases["attachment-type-repair"]));
-          const terminals = RT.attemptTerminalBindings(variant);
-
-          for (const attemptId of [".", "..", "safe-attempt", "unsafe/attempt", "unsafe\\attempt"]) {
-            RT.safeAttemptId(attemptId);
+        for (const records of [mailRecords, recycleRecords, legacyRecords]) {
+          const summary = A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"]));
+          if (O.isNone(summary)) return yield* Effect.die("Expected a real family summary fixture.");
+          const variants: Array<ReadonlyArray<TransformationLedgerRecord>> = [
+            records,
+            A.reverse(records),
+            A.drop(records, 1),
+            A.dropRight(records, 1),
+            A.appendAll(records, records),
+            [],
+          ];
+          for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
+            const record = records[recordIndex];
+            if (record === undefined) continue;
+            for (const [field, value] of Object.entries(record)) {
+              const mutated = structuredClone(records) as unknown as Array<Record<string, unknown>>;
+              const target = mutated[recordIndex];
+              if (target === undefined) continue;
+              if (typeof value === "string") target[field] = `${value}/mutated`;
+              else if (typeof value === "number") target[field] = value + 1;
+              else if (typeof value === "boolean") target[field] = !value;
+              else if (Array.isArray(value)) target[field] = A.append(value, value[0] ?? "mutated");
+              else if (value === undefined) target[field] = "mutated";
+              else continue;
+              variants.push(mutated as unknown as ReadonlyArray<TransformationLedgerRecord>);
+            }
           }
-          for (const pass of passes) RT.mailPassReconciles(pass, children, warnings);
-          for (const exception of exceptions) RT.mailExceptionIsApproved(exception);
-          RT.attachmentRepairsReconcile(repairs, children, terminals);
-          RT.mailTerminalIdentitiesReconcile(A.appendAll(passes, exceptions));
-          RT.mailOwnedEvidenceReconciles(passes, exceptions, interruptions, children, warnings);
-          RT.mailTerminalCountsReconcile(summary.value, passes, exceptions);
-          RT.mailSegmentReconciles(summary.value, variant);
-          RT.recycleSegmentReconciles(summary.value, variant);
-          RT.legacySegmentReconciles(summary.value, variant);
-          RT.familyRunStartReconciles(summary.value, variant);
-          RT.attemptSettlementsReconcile(starts, interruptions, terminals);
-          RT.attemptBindingsReconcile(starts, interruptions, terminals);
-          RT.attemptRetryOrdinalsReconcile(starts);
-          RT.latestAttemptsAreTerminal(starts, terminals);
-          RT.resumableAttemptLifecycleReconciles(variant);
-          RT.transformationAttemptLifecycleReconciles(summary.value, variant);
-          RT.transformationSegmentReconciles(summary.value.family, summary.value, variant);
-          RT.strictEvidenceSha256(A.map(variant, (record) => JSON.stringify(record)));
-          yield* RT.requireStrictFamilyTerminalRows(
-            {
-              family: "mail",
-            },
-            variant
-          ).pipe(Effect.exit);
-          yield* RT.requireStrictFamilySegment({ family: "mail" }, variant).pipe(Effect.exit);
+
+          for (const variant of variants) {
+            const starts = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-start"]));
+            const interruptions = A.filter(
+              variant,
+              S.is(TransformationLedgerRecord.cases["family-attempt-interrupted"])
+            );
+            const passes = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-pass"]));
+            const exceptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-exception"]));
+            const warnings = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-warning"]));
+            const children = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-child-pass"]));
+            const repairs = A.filter(variant, S.is(TransformationLedgerRecord.cases["attachment-type-repair"]));
+            const terminals = RT.attemptTerminalBindings(variant);
+
+            for (const attemptId of [".", "..", "safe-attempt", "unsafe/attempt", "unsafe\\attempt"]) {
+              RT.safeAttemptId(attemptId);
+            }
+            for (const pass of passes) RT.mailPassReconciles(pass, children, warnings);
+            for (const exception of exceptions) RT.mailExceptionIsApproved(exception);
+            RT.attachmentRepairsReconcile(repairs, children, terminals);
+            RT.mailTerminalIdentitiesReconcile(A.appendAll(passes, exceptions));
+            RT.mailOwnedEvidenceReconciles(passes, exceptions, interruptions, children, warnings);
+            RT.mailTerminalCountsReconcile(summary.value, passes, exceptions);
+            RT.mailSegmentReconciles(summary.value, variant);
+            RT.recycleSegmentReconciles(summary.value, variant);
+            RT.legacySegmentReconciles(summary.value, variant);
+            RT.familyRunStartReconciles(summary.value, variant);
+            RT.attemptSettlementsReconcile(starts, interruptions, terminals);
+            RT.attemptBindingsReconcile(starts, interruptions, terminals);
+            RT.attemptRetryOrdinalsReconcile(starts);
+            RT.latestAttemptsAreTerminal(starts, terminals);
+            RT.resumableAttemptLifecycleReconciles(variant);
+            RT.transformationAttemptLifecycleReconciles(summary.value, variant);
+            RT.transformationSegmentReconciles(summary.value.family, summary.value, variant);
+            RT.strictEvidenceSha256(A.map(variant, (record) => JSON.stringify(record)));
+            yield* RT.requireStrictFamilyTerminalRows(
+              {
+                family: "mail",
+              },
+              variant
+            ).pipe(Effect.exit);
+            yield* RT.requireStrictFamilySegment({ family: "mail" }, variant).pipe(Effect.exit);
+          }
         }
       },
       Effect.scoped,
