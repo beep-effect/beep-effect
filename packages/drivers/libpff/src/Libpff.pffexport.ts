@@ -41,7 +41,7 @@ const $I = $LibpffId.create("Libpff.pffexport");
 
 const defaultPffexportPath = "pffexport";
 const defaultForceKillAfterMillis = 10_000;
-const sandboxRuntimeRoots: ReadonlyArray<string> = ["/usr", "/bin", "/lib", "/lib64", "/etc", "/var"];
+const sandboxRuntimeRoots: ReadonlyArray<string> = ["/usr", "/bin", "/sbin", "/lib", "/lib64", "/etc", "/var"];
 const PffexportModeBase = LiteralKit(["all", "items", "recovered"]);
 const PffexportFormatBase = LiteralKit(["all", "html", "rtf", "text"]);
 const PffexportExistingExportPolicyBase = LiteralKit(["fail", "replace"]);
@@ -652,6 +652,9 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     const runtimeCoversPffexport = sandboxRuntimeCovers(hostPffexportPath);
     const sandboxExecutable = hostPffexportPath;
     const executableRuntimePrefix = runtimePrefixFor(hostPffexportPath);
+    if (!runtimeCoversPffexport && executableRuntimePrefix === path.parse(executableRuntimePrefix).root) {
+      return yield* makeLibpffError("config", { cause: "sandbox executable bind cannot expose the host root" });
+    }
     const executableBind = runtimeCoversPffexport
       ? []
       : ["--ro-bind", executableRuntimePrefix, executableRuntimePrefix];
