@@ -148,6 +148,41 @@ describe("restoration archive boundary helpers", () => {
             2
           ).pipe(Effect.exit)
         ).toMatchObject({ _tag: "Failure" });
+
+        const collectorRecord = (name: string, size: number) =>
+          CollectorManifestRecord.cases.copied.make({
+            dst: `C:\\root\\${name}`,
+            size: NonNegativeInt.make(size),
+            src: `C:\\source\\${name}`,
+            status: "copied",
+          });
+        expect(yield* RA.reconcileCollectorRecord(collectorRecord("missing.bin", 4), sourceRoot, 2)).toEqual({
+          kind: "mutated",
+          recordedSize: 4,
+          relativePath: "missing.bin",
+        });
+        const presentPath = path.join(sourceRoot, "present.bin");
+        yield* fs.writeFileString(presentPath, "data");
+        expect(yield* RA.reconcileCollectorRecord(collectorRecord("present.bin", 4), sourceRoot, 2)).toEqual({
+          kind: "present",
+          recordedSize: 4,
+          relativePath: "present.bin",
+        });
+        expect(
+          yield* RA.reconcileCollectorRecord(collectorRecord("present.bin", 5), sourceRoot, 2).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        const directoryPath = path.join(sourceRoot, "directory");
+        yield* fs.makeDirectory(directoryPath);
+        expect(
+          yield* RA.reconcileCollectorRecord(collectorRecord("directory", 0), sourceRoot, 2).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        const outside = path.join(root, "outside.bin");
+        const symlink = path.join(sourceRoot, "symlink.bin");
+        yield* fs.writeFileString(outside, "data");
+        yield* fs.symlink(outside, symlink);
+        expect(
+          yield* RA.reconcileCollectorRecord(collectorRecord("symlink.bin", 4), sourceRoot, 2).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
         const availableBytes = yield* RA.availableRestorationBytesAt(root);
         expect(availableBytes).toBeGreaterThan(0);
         expect(yield* RA.availableRestorationBytesAt(path.join(root, "missing")).pipe(Effect.exit)).toMatchObject({
