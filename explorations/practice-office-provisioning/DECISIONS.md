@@ -163,3 +163,139 @@ client-portal/payment surface. No billing-platform change.
 **Rationale:** Box Sign is Box-native; e-billing is not. Rejected: reopening
 the billing platform (overturns a jointly-made decision without Tom's
 buy-in) and LEDES/UTBMS scope (no client trigger has fired since 2026-07-14).
+
+## 2026-08-30 — SKU preflight resolved (supersedes "SKU unknown" above)
+
+**Question:** The "M365 tenant authority" entry left the SKU unknown. What is
+it?
+
+**Answer:** Settled the same day by a live `subscribedSkus` Graph read: the
+tenant's only paid SKU is **Microsoft 365 Business Premium with Copilot for
+Business**, 2 seats, both assigned (the attorney and Benjamin). The
+licensing preflight from that entry is complete; align work must not reopen
+it.
+
+**Rationale:** Live tenant data beats research inference. Consequence
+(r2/r5/r7): archive + retention rights are covered; bulk PST-import user
+rights are not — see the EOP2 decision below.
+
+## 2026-08-30 — PST-import rights path (align)
+
+**Question:** Which license grants the mail backfill's PST-import rights on
+top of Business Premium?
+
+**Answer:** One Exchange Online Plan 2 seat assigned to the attorney's
+mailbox ($8/user/mo paid yearly, $96/yr list). Before purchase: obtain a
+CSP/New Commerce quote for true term options and dry-run the license
+assignment to verify service-plan coexistence beside Business Premium.
+
+**Rationale:** r7 verified the license belongs on the target mailbox user,
+and EOP2 is the cheapest verified entitlement. Rejected: Purview Suite for
+Business Premium ($10/mo promo — only if the compliance stack is wanted),
+E3 routes (overkill), defer-to-quote (blocks the import window needlessly).
+
+## 2026-08-30 — Box plan posture (align)
+
+**Question:** Upgrade Box before provisioning, or ship on Business?
+
+**Answer:** Stay on Business and ship now; the reconciler emits explicit
+`BlockedByEntitlement` plan entries for metadata templates and retention
+instead of skipping. The Box quote (Governance-on-Business eligibility and
+price, Business Plus, Enterprise Plus bundling, Shield) is gathered in
+parallel; any upgrade is a later ratified decision with real prices.
+
+**Rationale:** Structure, collaborations, versioning, and Box Sign work
+today; blocking visibly preserves honesty about what the plan lacks.
+Rejected: quote-first (delays Tom's go-live) and upgrade-now (spends before
+knowing whether metadata-driven filing beats folder conventions for a solo
+practice).
+
+## 2026-08-30 — matter-tree ownership topology (align)
+
+**Question:** Who owns the canonical client/matter folder tree in Box?
+
+**Answer:** A dedicated Box service identity owns the canonical tree; the
+attorney collaborates at client-folder level (co-owner/editor); Benjamin
+retains admin. The CCG platform-app approval flow on the Business plan is a
+verification item before build.
+
+**Rationale:** Stable owner for webhooks and Sign requests; survives
+personnel/device changes; matches r7 §F. The probed status quo (everything
+Benjamin-owned, zero collaborations, invisible to the attorney) is exactly
+what to migrate away from. Rejected: attorney-owned (automation rides a
+personal account) and Benjamin-owned (practice records under a non-attorney
+personal root).
+
+## 2026-08-30 — M365 document lane dropped (align)
+
+**Question:** Does any document egress to SharePoint survive?
+
+**Answer:** No. Box is the sole document store; the M365 Copilot → Box
+connector (enabled the same day) provides the cross-store search surface.
+The `@beep/m365` write-verbs goal shrinks to mail/contacts — no driveItem
+upload, no `Sites.Selected`.
+
+**Rationale:** R3 required a named site + purpose before provisioning
+`Sites.Selected`; no consumer existed. Rejected: handbook-site-only (the
+walkthroughs ship as Claude Artifacts) and capability-without-consumer.
+
+## 2026-08-30 — contacts import shape (align)
+
+**Question:** Where do extracted client/counsel entities land as contacts?
+
+**Answer:** A dedicated contact folder in the attorney's mailbox, app-only
+`Contacts.ReadWrite` scoped via RBAC for Applications, dedup key =
+normalized email (fallback name+company), never overwriting hand-edited
+contacts, reconciler-tagged for rollback. Seed source: the salvaged
+contact-export CSVs from the T7 salvage tree (whose 2026-07 copies already
+sit in Box); pipeline extraction enriches later. No GAL/org contacts.
+
+**Rationale:** Smallest correct surface (R3); GAL semantics add admin
+weight a two-seat tenant does not need. Rejected: both-mailboxes (duplicate
+upkeep) and org contacts.
+
+## 2026-08-30 — FreshBooks driver goal (align)
+
+**Question:** What shape does the FreshBooks integration graduate as?
+
+**Answer:** A `@beep/freshbooks` driver goal following the `@beep/hubspot`
+pattern (FetchHttpClient + Schema decode + LiteralKit errors + `S.Redacted`
+config): auth-code token helper with a local exact-match HTTPS redirect,
+clients/invoices/payments read verbs plus invoice-PDF retrieval for Box
+delivery; webhooks follow later. The existing all-scopes dev app stays
+dev-only; the production app is registered least-privilege at graduation.
+
+**Rationale:** Versioned-code decision needs a repo home for the
+invoice-to-Box flow. Rejected: MCP-only (no code home) and
+webhooks-in-first-goal (r7 flags retry/verification details unverified).
+
+## 2026-08-30 — walkthrough content plan (align)
+
+**Question:** Adopt R5's walkthrough outline?
+
+**Answer:** Yes — the 8-page outline (intake/conflicts, numbering, day-one
+matter file, email filing, versioning, Box Sign engagement letters,
+FreshBooks invoice delivery, close/retain) becomes the content plan,
+authored during the walkthrough goal and reviewed with the attorney
+page-by-page. Malpractice-carrier specifics stay out until the actual
+policy is read.
+
+**Rationale:** The outline already encodes the ratified system-of-record
+split. Rejected: merging to fewer pages (revisit during authoring if
+onboarding feels heavy).
+
+## 2026-08-30 — reconciler shape ratified (align)
+
+**Question:** Effect-native desired-state reconcile program or Pulumi
+Dynamic Provider (left open by "provisioning-as-code shape" above)?
+
+**Answer:** Effect-native reconcile program over `@beep/box` and
+`@beep/m365`: decode a versioned intent document, inventory live tenants
+through the drivers, emit a schema-validated plan artifact (dry-run is the
+normal planning mode), apply that exact plan with per-resource idempotency
+and preconditions, and surface `BlockedByEntitlement` entries.
+
+**Rationale:** Operator-ratified 2026-08-30 following R4's grounded
+recommendation. Pulumi (already in the repo for infra) rejected for this
+estate: a second state/reconciliation engine whose read/diff model fits
+poorly with live discovery, entitlement blockers, and resource adoption.

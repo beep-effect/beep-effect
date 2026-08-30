@@ -29,6 +29,12 @@ POLICY_RAT = "rat-017"  # resolved in main() via rat_for("admission-policy")
 
 def candidate_rule(row: dict, lock_rat: str, rcd_rat: str, vo_rat: str) -> dict:
     c, kind, bucket = row["candidate"], row["kind"], row["bucket"]
+    if c == "HardFloorException":
+        # sitting 4b: the leaf join onto the StarvationException SITUATION class
+        # was a domain-name-normalization artifact — a classifier value is not an
+        # instance of a situation class; parked with the exception-code domain.
+        return {"ruling": "parked-run-2", "join_ref": "DECISIONS.md S5 sitting 4b",
+                "justification": "category error in the mechanical join (adversary finding); exception-code vocabulary parks for run 2"}
     if bucket == "accepted-via":
         return {"ruling": "accepted-via", "join_ref": row["join_ref"],
                 "justification": f"exact-name join to ratified term {row['term']} (sitting rule: join pass)"}

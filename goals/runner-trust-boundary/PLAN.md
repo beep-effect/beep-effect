@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `completed-retained`. P0 was ratified on 2026-08-24 in
+Status: `active`. P0 was ratified on 2026-08-24 in
 [`research/P0-GRILL.md`](./research/P0-GRILL.md). `P1` and P2 completed on
 2026-08-24 with closure-ready evidence retained in
 [`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md) and
@@ -13,7 +13,9 @@ verification completed on 2026-08-25 with the final-head proof of record in
 [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md). P5 through P7 closed
 on 2026-08-25: every remediation PR is merged, the six exact Codex IDs are
 closed with the ledger in [`ops/closures.json`](./ops/closures.json), and the
-closeout reflection is retained under `history/reflections/`.
+closeout reflection is retained under `history/reflections/`. P8 was
+reactivated on 2026-08-30 because the retained post-release JIT replay
+exception contradicts the packet's completion gate.
 
 ## Phases
 
@@ -27,6 +29,7 @@ closeout reflection is retained under `history/reflections/`.
 | P5 Yeet publish, review, and merge gate | complete 2026-08-25 (all remediation PRs merged) | Publish through Yeet, close required checks and review threads, and merge with explicit operator authority. | Yeet reports `merge-ready: yes`, unresolved review threads are zero, and the remediation PR is merged. |
 | P6 Dashboard closure | complete 2026-08-25 (ledger retained) | Close the six exact Codex IDs only after the P5 merge gate. | All six IDs are closed as Already fixed with sanitized per-ID evidence, and the live dashboard reconciles to the allowlist. |
 | P7 Close | complete 2026-08-25 | Record final evidence, reflection, lifecycle, and packet relationships. | Closeout reflection validates and README, plan, manifest, and index update together. |
+| P8 Post-release JIT containment | pending | Remove the readable runner JIT configuration before job-controlled privilege can recover it, or prove post-release replay rejection from both the original and a second host. | Live proof records no recoverable argv/config credential after handoff and rejects replay after the original listener ends; lifecycle may then return to completed-retained. |
 
 ## P0 checklist
 
@@ -264,6 +267,18 @@ ratified in
 7. [x] Leave `ci-fleet-endgame` and `ci-fleet-residue` lifecycle state
    unchanged. The stale-image re-bake is handed to `ci-fleet-endgame` as a
    performance item, not a lifecycle change.
+
+## P8 Post-release JIT containment checklist
+
+1. [ ] Replace argv-based configuration handoff with a mechanism that does not
+   leave the one-use JIT value readable to job-controlled privilege, or prove
+   an equivalent containment boundary.
+2. [ ] Stop the original listener and attempt replay from the original host and
+   a second host without logging the credential value.
+3. [ ] Require server-side rejection, scoped deregistration, VM teardown, and a
+   sanitized exact-head evidence record.
+4. [ ] Close exception E1 only after those checks pass; update README, plan,
+   spec, manifest, reflection, and index in the same reviewed PR.
 
 ## Verification commands
 

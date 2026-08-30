@@ -2,14 +2,16 @@
 
 ## 2026-08-30 — five-lane sweep + live tenant probes
 
-Five research lanes ran against the ten pre-ratified decisions in
+Five research lanes ran against the pre-seeded decisions in
 [`DECISIONS.md`](./DECISIONS.md); full reports live in
 [`research/`](./research/) and the provenance ledger is
 [`research/SOURCES.md`](./research/SOURCES.md). Live tenant probes (Box MCP,
 M365 MCP, `az rest` Graph reads) grounded several questions in fact the same
 day. An operator-run Sol Pro gap session
 ([`research/sol-pro-oracle-prompt.md`](./research/sol-pro-oracle-prompt.md))
-is outstanding; its report lands as `research/r7-sol-pro-gap-report.md`.
+ran the same day; its report landed as
+[`research/r7-sol-pro-gap-report.md`](./research/r7-sol-pro-gap-report.md)
+and is distilled below.
 
 ### Live tenant ground truth (probed, not researched)
 
@@ -105,7 +107,7 @@ desired-state resources.
 ### Oracle gap report (same day —
 [`r7-sol-pro-gap-report.md`](./research/r7-sol-pro-gap-report.md))
 
-The operator-run Sol Pro session landed within hours: 26 cited sources,
+The operator-run Sol Pro session landed within hours: 48 numbered sources,
 CONFIRMED/LIKELY/UNVERIFIED tagging. Headlines:
 
 - **Licensing path settled to a default**: the PST-import license belongs on
@@ -133,6 +135,12 @@ CONFIRMED/LIKELY/UNVERIFIED tagging. Headlines:
 
 ### Residual frontier for align
 
+*(Resolved 2026-08-30: the align rounds closed every decidable item below —
+outcomes are logged as the align entries in [`DECISIONS.md`](./DECISIONS.md);
+the remaining verification tasks live in `ops/manifest.json`
+`openQuestions`. The list is retained as provenance for what align worked
+from.)*
+
 1. Confirm the EOP2-seat default (vs Purview-Suite-for-BP) and get the
    CSP quote for term length; dry-run the license assignment on a test
    basis before import day (r7 A, open items 1–2).
@@ -148,7 +156,8 @@ CONFIRMED/LIKELY/UNVERIFIED tagging. Headlines:
    GAL yes/no (R3).
 6. FreshBooks: driver goal shape, redirect URI for the dev app, scope
    tightening, invoice→Box delivery mechanics; live request-limit and
-   webhook-retry numbers still unverified (R6 + r7 D).
+   webhook-retry numbers still unverified (FreshBooks addenda in
+   [`CAPTURE.md`](./CAPTURE.md) + r7 §D).
 7. Walkthrough artifacts: adopt R5's 8-page outline; confirm audience
    framing with Tom. Malpractice-carrier specifics stay out of code until
    the actual policy is in hand (r7 open item 7).

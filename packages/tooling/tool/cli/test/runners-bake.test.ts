@@ -708,6 +708,71 @@ describe("runner bake planning and argv", () => {
     expect(script).not.toContain("AWS_SESSION_TOKEN");
   });
 
+  it.effect("keeps the cloud bootstrap on pinned archives and anchored signature status", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const script = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
+
+      expect(script).not.toContain("https://bun.sh/install");
+      expect(script).toContain(
+        "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
+      );
+      expect(script).toContain(".bun-linux-x64.sha256");
+      expect(script).toContain("sha256sum --check --strict -");
+      expect(script.indexOf("sha256sum --check --strict -")).toBeLessThan(
+        script.indexOf('install -m 0755 "${bun_work}/bun-linux-x64/bun"')
+      );
+      expect(script).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');
+      expect(script).not.toContain('grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"');
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("fails closed when the optional op work directory cannot be allocated", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-install-mktemp-failure-" });
+        const fakeBin = path.join(fixtureRoot, "bin");
+        const home = path.join(fixtureRoot, "home");
+        const curlCapture = path.join(fixtureRoot, "curl-called");
+        yield* fs.makeDirectory(fakeBin, { recursive: true });
+        yield* fs.makeDirectory(home, { recursive: true });
+        const writeExecutable = Effect.fnUntraced(function* (name: string, source: string) {
+          const filePath = path.join(fakeBin, name);
+          yield* fs.writeFileString(filePath, source);
+          yield* fs.chmod(filePath, 0o755);
+        });
+        const bunVersion = Str.trim(yield* fs.readFileString(path.join(repoRoot, ".bun-version")));
+        yield* writeExecutable(
+          "bun",
+          `#!/bin/sh\n[ "$1" = "--version" ] && { printf '%s\\n' '${bunVersion}'; exit 0; }\nexit 0\n`
+        );
+        yield* writeExecutable("portless", "#!/bin/sh\nexit 0\n");
+        yield* writeExecutable("sudo", "#!/bin/sh\nexit 0\n");
+        yield* writeExecutable("mktemp", "#!/bin/sh\nexit 1\n");
+        yield* writeExecutable("curl", `#!/bin/sh\nprintf 'called\\n' > '${curlCapture}'\nexit 1\n`);
+
+        const result = Bun.spawnSync(["bash", path.join(repoRoot, ".cursor/install.sh")], {
+          cwd: repoRoot,
+          env: {
+            HOME: home,
+            PATH: `${fakeBin}:/usr/bin:/bin`,
+            XDG_CACHE_HOME: path.join(fixtureRoot, "cache"),
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        });
+
+        expect(result.exitCode).not.toBe(0);
+        expect(yield* fs.exists(curlCapture)).toBe(false);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   it.effect(
     "authenticates baked Bun and restores only the sealed dependency cache",
     Effect.fnUntraced(function* () {

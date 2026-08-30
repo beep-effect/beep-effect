@@ -9,8 +9,10 @@
  * chain issues, never failures — while appends are guarded: a compare-and-set
  * against the folded revision, refused outright on integrity issues or an
  * unresolved fork. Digests are computed over the compact canonical encoding
- * of the raw parsed JSON, not the raw file bytes. Reformatting a file does not
- * change its identity, but every content key remains identity-bound.
+ * of the decoded event, not the raw file bytes. Reformatting a file does not
+ * change its identity. Unknown input keys are discarded by the event schema
+ * before identity is computed, so untrusted extension data cannot drive the
+ * recursive canonical encoder.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -24,12 +26,10 @@ import * as S from "effect/Schema";
 import { PacketCasConflictError, PacketStreamError } from "./PacketCore.errors.ts";
 import { PacketChainIssue, PacketEvent, PacketRoot, PacketSlug, StoredPacketEvent } from "./PacketCore.schemas.ts";
 import {
-  canonicalJsonText,
   packetEventDigest,
   packetEventFileName,
   parsePacketEventFileName,
   renderPacketEventFile,
-  sha256Hex,
 } from "./PacketDigest.ts";
 import { foldPacketEvents, upcastPacketEventJson } from "./PacketFold.ts";
 import type { PacketDerivedState } from "./PacketCore.schemas.ts";
@@ -297,12 +297,15 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     if (O.isNone(event)) {
       return issueOutcome(issue("event-invalid", fileName, "event file does not decode as PacketEvent."));
     }
-    const digest = sha256Hex(canonicalJsonText(raw.value));
-    const identity = storedEventIdentityIssue(locator, fileName, parts.value, digest, event.value);
+    const digest = yield* packetEventDigest(event.value).pipe(Effect.option);
+    if (O.isNone(digest)) {
+      return issueOutcome(issue("event-invalid", fileName, "decoded PacketEvent could not be canonically encoded."));
+    }
+    const identity = storedEventIdentityIssue(locator, fileName, parts.value, digest.value, event.value);
     if (O.isSome(identity)) {
       return issueOutcome(identity.value);
     }
-    return readOutcome(StoredPacketEvent.make({ id: digest, fileName, event: event.value }));
+    return readOutcome(StoredPacketEvent.make({ id: digest.value, fileName, event: event.value }));
   });
 
   const hasStream = Effect.fn("PacketEventStore.hasStream")(function* (packetPath: string) {
