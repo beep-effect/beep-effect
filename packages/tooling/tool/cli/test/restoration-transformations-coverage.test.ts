@@ -3,13 +3,22 @@ import { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import {
   ArchiveLedgerRecord,
+  CollectorManifestRecord,
+  CorpusCommandServiceLive,
+  decodeTransformationLedgerRecordJson,
   encodeArchiveLedgerRecordJson,
   encodeRestorationAcceptanceRecordJson,
   encodeTransformationLedgerRecordJson,
+  preserveRestorationArchive,
   RestorationAcceptanceRecord,
   RestorationLegacyWordOptions,
   RestorationMailOptions,
+  RestorationPreserveOptions,
   RestorationRecycleOptions,
+  reconcileRestorationAcceptance,
+  restoreLegacyWord,
+  restoreMail,
+  restoreRecycle,
   TransformationLedgerRecord,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
@@ -18,8 +27,9 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
+import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 const sha = RT.digestString;
 const identity = {
@@ -146,7 +156,12 @@ const familySummary = (
     unapprovedCount: NonNegativeInt.make(unapprovedCount),
   });
 
-layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation semantic helpers", (it) => {
+const testLayer = Layer.mergeAll(
+  CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  NodeServices.layer
+);
+
+layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpers", (it) => {
   it("classifies bounded mail failures and attachment signatures", () => {
     expect(RT.classifyMailFailure("PASSWORD protected")).toBe("password");
     expect(RT.classifyMailFailure("encrypted store")).toBe("password");
@@ -2796,4 +2811,190 @@ else exit 92; fi
     expect(RT.transformationSegmentReconciles("legacy-word", legacySummary, legacySegment)).toBe(true);
     expect(RT.legacySegmentReconciles(legacySummary, [...legacySegment, legacyPass])).toBe(false);
   });
+
+  it.effect("resumes a pending legacy summary and reconciles all four acceptance families", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "all-family-acceptance-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceRoot = path.join(root, "source");
+      const mailRoot = path.join(sourceRoot, "$Recycle.Bin", "surface-a");
+      const mailPath = path.join(mailRoot, "$Rstore.pst");
+      const rootArchive = path.join(root, "root-archive.zip");
+      const collectorManifest = path.join(root, "collector.jsonl");
+      const absentTree = path.join(root, "recorded-absent");
+      const pffexportPath = path.join(root, "pffexport");
+      const tikaPath = path.join(root, "tika");
+      const bwrapPath = path.join(root, "bwrap");
+      const converterPath = path.join(root, "converter");
+      yield* fs.makeDirectory(corpusRoot, { recursive: true });
+      yield* fs.makeDirectory(mailRoot, { recursive: true });
+      const mailBytes = new Uint8Array(1024 * 1024 + 31);
+      mailBytes.fill(0x42);
+      yield* fs.writeFile(mailPath, mailBytes);
+      yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
+      const collectorRow = yield* S.encodeEffect(S.fromJsonString(CollectorManifestRecord))(
+        CollectorManifestRecord.cases.copied.make({
+          dst: "F:\\salvage\\$Recycle.Bin\\surface-a\\$Rstore.pst",
+          size: NonNegativeInt.make(mailBytes.length),
+          src: "C:\\source\\mail-store.pst",
+          status: "copied",
+        })
+      );
+      yield* fs.writeFileString(collectorManifest, `${collectorRow}\n`);
+      const writeExecutable = Effect.fnUntraced(function* (filePath: string, script: string) {
+        yield* fs.writeFileString(filePath, script);
+        yield* fs.chmod(filePath, 0o755);
+      });
+      yield* writeExecutable(
+        bwrapPath,
+        `#!/usr/bin/env bash
+set -eu
+hosts=()
+targets=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --ro-bind|--bind) hosts+=("$2"); targets+=("$3"); shift 3 ;;
+    --) shift; break ;;
+    *) shift ;;
+  esac
+done
+command="$1"
+shift
+mapped_command="$command"
+for index in "\${!targets[@]}"; do
+  target="\${targets[$index]}"
+  host="\${hosts[$index]}"
+  if [ "$command" = "$target" ]; then mapped_command="$host";
+  elif [[ "$command" = "$target/"* ]]; then mapped_command="$host\${command#$target}"; fi
+done
+mapped=()
+for argument in "$@"; do
+  value="$argument"
+  for index in "\${!targets[@]}"; do
+    target="\${targets[$index]}"
+    host="\${hosts[$index]}"
+    if [ "$argument" = "$target" ]; then value="$host";
+    elif [[ "$argument" = "$target/"* ]]; then value="$host\${argument#$target}"; fi
+  done
+  mapped+=("$value")
+done
+exec "$mapped_command" "\${mapped[@]}"
+`
+      );
+      yield* writeExecutable(
+        pffexportPath,
+        `#!/usr/bin/env bash
+if [ "$1" = "-V" ]; then printf 'pffexport 20260608\n'; exit 0; fi
+target=""
+previous=""
+for argument in "$@"; do
+  if [ "$previous" = "-t" ]; then target="$argument"; fi
+  previous="$argument"
+done
+item="$target.export/Top of Personal Folders/Inbox/Message00001"
+mkdir -p "$item/Attachment00001"
+printf 'Subject:\tSynthetic\n' > "$item/OutlookHeaders.txt"
+printf 'synthetic mail body' > "$item/Message.txt"
+printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
+`
+      );
+      yield* writeExecutable(tikaPath, "#!/bin/sh\nprintf 'synthetic extracted attachment text\\n'\n");
+      yield* writeExecutable(
+        converterPath,
+        '#!/bin/sh\nif [ "${1:-}" = "--version" ]; then printf \'LibreOffice synthetic 1.0\\n\'; exit 0; fi\nexit 2\n'
+      );
+      const runLabel = "all-family";
+      yield* preserveRestorationArchive(
+        RestorationPreserveOptions.make({
+          absentRecycleTreePath: absentTree,
+          capacityCeilingBytes: PosInt.make(10 * 1024 * 1024),
+          chunkSizeBytes: PosInt.make(4_096),
+          collectorDestinationPrefixSegments: NonNegativeInt.make(2),
+          corpusRoot,
+          expectedCollectorCopiedCount: NonNegativeInt.make(1),
+          expectedCollectorErrorCount: NonNegativeInt.make(0),
+          expectedCollectorExcludedSecretCount: NonNegativeInt.make(0),
+          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
+          expectedCollectorResumedCount: NonNegativeInt.make(0),
+          expectedCollectorRowCount: NonNegativeInt.make(1),
+          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
+          expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
+          expectedMutatedDestinationCount: NonNegativeInt.make(0),
+          expectedRootArchiveBytes: NonNegativeInt.make("verbatim-root-archive".length),
+          expectedSourceDirectoryCount: NonNegativeInt.make(3),
+          expectedSourceFileCount: NonNegativeInt.make(1),
+          expectedSourceTreeBytes: NonNegativeInt.make(mailBytes.length),
+          minimumFreeAfterBytes: NonNegativeInt.make(0),
+          rootArchivePath: rootArchive,
+          runLabel,
+          sourceManifestPath: collectorManifest,
+          sourceRoot,
+        })
+      );
+      yield* restoreMail(
+        RestorationMailOptions.make({
+          bwrapPath,
+          corpusRoot,
+          expectedStoreCount: NonNegativeInt.make(1),
+          javaPath: tikaPath,
+          maxAmplificationRatio: 10,
+          maxElapsedMillis: PosInt.make(30_000),
+          maxTotalElapsedMillis: PosInt.make(30_000),
+          maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
+          pffexportPath,
+          runLabel,
+          scope: "full",
+          tikaJarPath: tikaPath,
+        })
+      );
+      yield* restoreRecycle(
+        RestorationRecycleOptions.make({
+          corpusRoot,
+          expectedMissingContentCount: NonNegativeInt.make(0),
+          expectedSurfaceCount: NonNegativeInt.make(1),
+          maxTotalElapsedMillis: PosInt.make(30_000),
+          maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
+          runLabel,
+        })
+      );
+      const legacyWordOptions = RestorationLegacyWordOptions.make({
+        comparePath: "/bin/true",
+        converterPath,
+        corpusRoot,
+        expectedConverterVersion: "LibreOffice synthetic 1.0",
+        expectedOccurrenceCount: NonNegativeInt.make(0),
+        maxElapsedMillis: PosInt.make(30_000),
+        maxTotalElapsedMillis: PosInt.make(30_000),
+        maxTotalOutputBytes: PosInt.make(1024 * 1024 * 1024),
+        maxVisualRmse: 0,
+        pdfinfoPath: "/bin/true",
+        pdftoppmPath: "/bin/true",
+        runLabel,
+        tikaJarPath: tikaPath,
+      });
+      yield* restoreLegacyWord(legacyWordOptions);
+      const legacyLedgerPath = path.join(
+        corpusRoot,
+        "staging/restoration/runs",
+        runLabel,
+        "ledgers/legacy-word/full.jsonl"
+      );
+      const legacyLines = (yield* fs.readFileString(legacyLedgerPath)).trimEnd().split("\n");
+      const lastLegacyLine = legacyLines.at(-1);
+      if (lastLegacyLine === undefined) return yield* Effect.die("Legacy ledger was unexpectedly empty.");
+      expect((yield* decodeTransformationLedgerRecordJson(lastLegacyLine)).recordType).toBe("family-acceptance-pass");
+      yield* fs.writeFileString(legacyLedgerPath, `${legacyLines.slice(0, -1).join("\n")}\n`);
+      yield* restoreLegacyWord(legacyWordOptions);
+      const acceptances = yield* reconcileRestorationAcceptance({ corpusRoot, runLabel });
+      expect(acceptances.map((acceptance) => acceptance.family)).toEqual([
+        "preservation",
+        "mail",
+        "recycle",
+        "legacy-word",
+      ]);
+      expect(acceptances.every((acceptance) => acceptance.status === "pass")).toBe(true);
+    })
+  );
 });
