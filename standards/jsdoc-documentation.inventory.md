@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-30T11:19:29.667Z
+Generated: 2026-08-30T18:45:48.902Z
 
 ## Scope
 
@@ -14,9 +14,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 73 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 58 |
-| publicModules | 2950 |
-| publicExports | 20563 |
-| openModules | 347 |
+| publicModules | 2951 |
+| publicExports | 20573 |
+| openModules | 348 |
 | openExports | 99 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
@@ -73,7 +73,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 221 | 1758 | 46 | 10 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 221 | 1765 | 46 | 10 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -101,7 +101,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 44 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 15 | 0 | 0 |
 | 45 | `@beep/openclaw` | `packages/drivers/openclaw` | needs-remediation | 9 | 130 | 7 | 15 |
 | 46 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 89 | 1 | 0 |
-| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 35 | 1 | 0 |
+| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 7 | 38 | 2 | 0 |
 | 48 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 12 | 0 | 0 |
 | 49 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 86 | 0 | 0 |
 | 50 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
@@ -524,6 +524,7 @@ Path: `packages/tooling/test-kit/test-utils`
 
 Module findings:
 - `src/FastCheckRuns.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+- `src/SystemTemp.ts:1` (none) - missing summary; missing @since
 
 ### @beep/exiftool
 
@@ -606,7 +607,7 @@ Module findings:
 - `src/Libpff.pffexport.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Libpff.pffexport.ts:464` `makePffexportFileProcessingEngine` (const) - 1 documentation section/link violation(s)
+- `src/Libpff.pffexport.ts:498` `makePffexportFileProcessingEngine` (const) - 1 documentation section/link violation(s)
 
 ### @beep/graph-3d
 

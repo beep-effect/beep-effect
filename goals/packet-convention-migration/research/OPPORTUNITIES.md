@@ -725,3 +725,46 @@
   artifact diff and rely on the immediate green standalone reruns plus a fresh
   cheap-gate pass after the changeset commit.
 - **Owner:** goal-index and exploration-atlas check determinism and diagnostics.
+
+## 2026-08-30 — Green local lanes leave six closeout baselines marked stale
+
+- **What happened:** after package checks, cheap gates, and the authoritative
+  affected CI lane all passed, the first hosted closeout status still declared
+  six local proof inputs stale because changed tests and the opportunity ledger
+  postdated their generated baselines or inventory.
+- **Evidence:** `bun run beep yeet status --remote` at
+  `97e98b5634c126fe505094575861aef8e82b40b9` listed stale
+  `coverage-regression`, `jsdoc-totals-ratchet`, `knip-ratchet`,
+  `test-typecheck-blindspot`, `goals-doctor`, and
+  `jsdoc-documentation-inventory`, while the preceding cheap-gate run and
+  affected lane both exited 0.
+- **What would have prevented it:** include the closeout staleness audit before
+  publication, have the relevant canonical writers participate in repair, or
+  allow an exact-head green gate to refresh an unchanged baseline's provenance
+  without requiring a late hosted-head reset.
+- **Disposition:** actionable closeout repair; run only the canonical writers
+  named by status, inspect their byte diffs, and publish one reviewed generated
+  update if needed.
+- **Owner:** Yeet pre-publication completeness and generated-baseline lifecycle.
+
+## 2026-08-30 — Timestamp staleness repair triggers workspace-wide baseline recomputation
+
+- **What happened:** clearing closeout's stale-baseline markers required
+  workspace-wide coverage and JSDoc inventory recomputation even though the
+  review fix added one small test helper and two fixture call sites.
+- **Evidence:** `bun run coverage:baseline:write` prebuilt 134 packages, ran ten
+  uncached weighted coverage shards, and completed in 5 minutes 53 seconds; the
+  repo-cli shard alone ran 143 files and 2,694 cases. The writer changed 304
+  lines in the coverage baseline. `bun run beep quality jsdoc-inventory` used
+  more than one CPU core for about five minutes without progress output and
+  changed 411 JSON inventory lines plus its Markdown projection.
+- **What would have prevented it:** key staleness to semantic input digests and
+  refresh only affected package rows; do not require a workspace-wide remeasure
+  merely because a source file's commit or mtime is newer. Cache inventory and
+  coverage results by exact tree and emit shard/package progress for silent
+  writers.
+- **Disposition:** completed canonical baseline repair; retain the generated
+  diffs, rerun the fast ratchet checks, and avoid another full workspace
+  coverage pass unless a metric gate actually fails.
+- **Owner:** coverage/JSDoc baseline provenance, affected recomputation, and
+  writer progress telemetry.
