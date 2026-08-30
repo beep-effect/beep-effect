@@ -14,6 +14,7 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as O from "effect/Option";
+import type { Sha256Hex } from "@beep/schema";
 
 const sha = RT.digestString;
 const identity = {
@@ -71,6 +72,60 @@ const archivedFile = (objectId: string, sourceRelativePath: string, sizeBytes = 
     sizeBytes: NonNegativeInt.make(sizeBytes),
     sourceLabel: "tree",
     sourceRelativePath,
+  });
+
+const familyRunStart = (
+  family: "legacy-word" | "mail" | "recycle",
+  expectedCount: number,
+  maxTotalElapsedMillis = 100,
+  maxTotalOutputBytes = 100
+) =>
+  TransformationLedgerRecord.cases["family-run-start"].make({
+    ...identity,
+    expectedCount: NonNegativeInt.make(expectedCount),
+    family,
+    ...(family === "mail" ? { mailScope: "full" as const } : {}),
+    maxTotalElapsedMillis: PosInt.make(maxTotalElapsedMillis),
+    maxTotalOutputBytes: PosInt.make(maxTotalOutputBytes),
+    policySha256: sha(`policy-${family}`),
+    recordType: "family-run-start",
+  });
+
+const familyAttemptStart = (family: "legacy-word" | "mail" | "recycle", sourceId: string, sourceSha256: Sha256Hex) =>
+  TransformationLedgerRecord.cases["family-attempt-start"].make({
+    ...identity,
+    attemptId: RT.familyAttemptId(family, sourceId, 0),
+    family,
+    inputBytes: NonNegativeInt.make(3),
+    ...(family === "mail" ? { mailScope: "full" as const } : {}),
+    recordType: "family-attempt-start",
+    retryOrdinal: NonNegativeInt.make(0),
+    sourceId,
+    sourceSha256,
+  });
+
+const familySummary = (
+  family: "legacy-word" | "mail" | "recycle",
+  passCount: number,
+  exceptionCount: number,
+  sourceCount: number,
+  unapprovedCount = 0
+) =>
+  TransformationLedgerRecord.cases["family-run-summary"].make({
+    ...identity,
+    elapsedMillis: NonNegativeInt.make(1),
+    exceptionCount: NonNegativeInt.make(exceptionCount),
+    family,
+    inputBytes: NonNegativeInt.make(3),
+    ...(family === "mail" ? { mailScope: "full" as const } : {}),
+    maxTotalElapsedMillis: PosInt.make(100),
+    maxTotalOutputBytes: PosInt.make(100),
+    outputBytes: NonNegativeInt.make(3),
+    outputTreeSha256: sha(`output-${family}`),
+    passCount: NonNegativeInt.make(passCount),
+    recordType: "family-run-summary",
+    sourceCount: NonNegativeInt.make(sourceCount),
+    unapprovedCount: NonNegativeInt.make(unapprovedCount),
   });
 
 layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation semantic helpers", (it) => {
@@ -886,6 +941,10 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         acceptance,
         summary,
       });
+      expect(yield* RT.requireStrictFamilyTerminalRows(context, [runStart, summary, failure])).toEqual({
+        acceptance: failure,
+        summary,
+      });
       expect(
         O.isNone(yield* RT.requireStrictFamilyTerminalRows(context, [runStart, acceptance]).pipe(Effect.option))
       ).toBe(true);
@@ -897,4 +956,234 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       ).toBe(true);
     })
   );
+
+  it("reconciles complete mail evidence and rejects malformed ownership or accounting", () => {
+    const objectId = "mail-object";
+    const start = familyAttemptStart("mail", objectId, sha("mail-source"));
+    const runStart = familyRunStart("mail", 1);
+    const pass = TransformationLedgerRecord.cases["mail-store-pass"].make({
+      ...identity,
+      accountedChildCount: NonNegativeInt.make(1),
+      attemptId: start.attemptId,
+      childCount: NonNegativeInt.make(1),
+      elapsedMillis: NonNegativeInt.make(1),
+      family: "mail",
+      inputBytes: NonNegativeInt.make(3),
+      mailScope: "full",
+      objectId,
+      outputBytes: NonNegativeInt.make(3),
+      postProcessSha256: sha("mail-source"),
+      recordType: "mail-store-pass",
+      sha256: sha("mail-output"),
+      warningCount: NonNegativeInt.make(0),
+    });
+    const child = TransformationLedgerRecord.cases["mail-child-pass"].make({
+      ...identity,
+      attemptId: start.attemptId,
+      childRelativePath: "messages/one.eml",
+      engineReported: true,
+      family: "mail",
+      mailScope: "full",
+      recordType: "mail-child-pass",
+      sha256: sha("mail-child"),
+      sizeBytes: NonNegativeInt.make(3),
+      sourceObjectId: objectId,
+    });
+    const summary = familySummary("mail", 1, 0, 1);
+    const segment = [runStart, start, child, pass];
+
+    expect(RT.safeAttemptId(start.attemptId)).toBe(true);
+    expect(RT.safeAttemptId(".")).toBe(false);
+    expect(RT.safeAttemptId("..")).toBe(false);
+    expect(RT.safeAttemptId("bad/name")).toBe(false);
+    expect(RT.safeAttemptId("bad\\name")).toBe(false);
+    expect(RT.mailPassReconciles(pass, [child], [])).toBe(true);
+    expect(RT.mailPassReconciles({ ...pass, childCount: NonNegativeInt.make(0) }, [child], [])).toBe(false);
+    expect(RT.mailPassReconciles(pass, [{ ...child, childRelativePath: "duplicate" }, child], [])).toBe(false);
+    expect(RT.mailTerminalCountsReconcile(summary, [pass], [])).toBe(true);
+    expect(RT.mailTerminalIdentitiesReconcile([pass])).toBe(true);
+    expect(RT.mailTerminalIdentitiesReconcile([pass, { ...pass }])).toBe(false);
+    expect(RT.mailOwnedEvidenceReconciles([pass], [], [], [child], [])).toBe(true);
+    expect(RT.mailOwnedEvidenceReconciles([], [], [], [child], [])).toBe(false);
+    expect(RT.attemptTerminalBindings([pass])).toEqual([{ attemptId: start.attemptId, sourceId: objectId }]);
+    expect(RT.familyRunStartReconciles(summary, segment)).toBe(true);
+    expect(RT.transformationAttemptLifecycleReconciles(summary, segment)).toBe(true);
+    expect(RT.mailSegmentReconciles(summary, segment)).toBe(true);
+    expect(RT.transformationSegmentReconciles("mail", summary, segment)).toBe(true);
+    expect(RT.transformationSegmentReconciles("mail", familySummary("mail", 1, 0, 1, 1), segment)).toBe(false);
+
+    const exception = TransformationLedgerRecord.cases["mail-store-exception"].make({
+      ...identity,
+      approved: true,
+      attemptId: start.attemptId,
+      disposition: "quarantine",
+      exceptionKind: "password",
+      family: "mail",
+      mailScope: "full",
+      message: "Password protected",
+      objectId,
+      recordType: "mail-store-exception",
+      retainedOutputBytes: NonNegativeInt.make(0),
+      retainedOutputSha256: sha(""),
+      sourceFamily: "pst",
+    });
+    const { disposition: _disposition, ...exceptionWithoutDisposition } = exception;
+    expect(RT.mailExceptionIsApproved(exception)).toBe(true);
+    expect(RT.mailExceptionIsApproved(exceptionWithoutDisposition)).toBe(false);
+    expect(RT.mailExceptionIsApproved({ ...exception, approved: false })).toBe(false);
+
+    const warning = TransformationLedgerRecord.cases["mail-warning"].make({
+      ...identity,
+      attemptId: exception.attemptId,
+      family: "mail",
+      mailScope: "full",
+      message: "bounded warning",
+      objectId,
+      recordType: "mail-warning",
+    });
+    const interrupted = TransformationLedgerRecord.cases["family-attempt-interrupted"].make({
+      ...identity,
+      attemptId: "interrupted-attempt",
+      disposition: "retained-for-retry",
+      family: "mail",
+      mailScope: "full",
+      recordType: "family-attempt-interrupted",
+      retainedOutputBytes: NonNegativeInt.make(0),
+      retainedOutputRelativePath: "attempts/interrupted.partial",
+      retainedOutputSha256: sha(""),
+      retryOrdinal: NonNegativeInt.make(0),
+      sourceId: "interrupted-object",
+    });
+    expect(RT.mailOwnedEvidenceReconciles([], [exception], [], [], [warning])).toBe(true);
+    expect(
+      RT.mailOwnedEvidenceReconciles(
+        [],
+        [],
+        [interrupted],
+        [],
+        [{ ...warning, attemptId: interrupted.attemptId, objectId: interrupted.sourceId }]
+      )
+    ).toBe(true);
+    expect(RT.mailOwnedEvidenceReconciles([], [], [], [], [{ ...warning, attemptId: "unowned" }])).toBe(false);
+  });
+
+  it("reconciles attachment repair identities with copied and Tika derivatives", () => {
+    const attemptId = RT.familyAttemptId("mail", "mail-object", 0);
+    const digest = sha("derived");
+    const repair = TransformationLedgerRecord.cases["attachment-type-repair"].make({
+      ...identity,
+      attemptId,
+      detectedExtension: "pdf",
+      derivedRelativePath: `derived/${digest}.pdf`,
+      derivedSha256: digest,
+      derivedSizeBytes: PosInt.make(3),
+      family: "mail",
+      mailScope: "full",
+      originalRelativePath: "Attachment.bin",
+      recordType: "attachment-type-repair",
+      repairStatus: "repaired",
+      sourceObjectId: "mail-object",
+    });
+    const child = (childRelativePath: string, childSha256: Sha256Hex, engineReported = false) =>
+      TransformationLedgerRecord.cases["mail-child-pass"].make({
+        ...identity,
+        attemptId,
+        childRelativePath,
+        engineReported,
+        family: "mail",
+        mailScope: "full",
+        recordType: "mail-child-pass",
+        sha256: childSha256,
+        sizeBytes: NonNegativeInt.make(3),
+        sourceObjectId: "mail-object",
+      });
+    const copied = child(repair.derivedRelativePath, digest);
+    const tika = child(`derived/${digest}.tika.txt`, sha("text"));
+    const owners = [{ attemptId, sourceId: "mail-object" }];
+    const { derivedSha256: _derivedSha256, ...repairWithoutDigest } = repair;
+    const { derivedSha256: _unchangedDigest, derivedSizeBytes: _unchangedSize, ...repairWithoutDerived } = repair;
+
+    expect(RT.attachmentRepairsReconcile([repair], [copied, tika], owners)).toBe(true);
+    expect(RT.attachmentRepairsReconcile([repair, repair], [copied, tika], owners)).toBe(false);
+    expect(RT.attachmentRepairsReconcile([{ ...repair, attemptId: "../escape" }], [copied, tika], owners)).toBe(false);
+    expect(RT.attachmentRepairsReconcile([repair], [copied], owners)).toBe(false);
+    expect(RT.attachmentRepairsReconcile([repairWithoutDigest], [copied, tika], owners)).toBe(false);
+    expect(RT.attachmentRepairsReconcile([{ ...repairWithoutDerived, repairStatus: "unchanged" }], [], owners)).toBe(
+      true
+    );
+  });
+
+  it("reconciles recycle and legacy terminal segments against their durable attempts", () => {
+    const recycleStart = familyAttemptStart("recycle", "content-object", sha("content"));
+    const recycleRunStart = familyRunStart("recycle", 1);
+    const mapping = TransformationLedgerRecord.cases["recycle-mapping"].make({
+      ...identity,
+      attemptId: recycleStart.attemptId,
+      contentObjectId: "content-object",
+      digest: sha("content"),
+      family: "recycle",
+      metadataObjectId: "metadata-object",
+      originalPath: "C:/restored.txt",
+      recordType: "recycle-mapping",
+      restoredRelativePath: "restored.txt",
+      surfaceId: "surface-1",
+    });
+    const join = TransformationLedgerRecord.cases["recycle-join"].make({
+      ...identity,
+      count: NonNegativeInt.make(1),
+      family: "recycle",
+      joinClass: "valid-pair",
+      recordType: "recycle-join",
+      sourceObjectIds: ["metadata-object", "content-object"],
+      surfaceId: "surface-1",
+    });
+    const recycleSummary = familySummary("recycle", 1, 0, 1);
+    const recycleSegment = [recycleRunStart, recycleStart, join, mapping];
+    expect(RT.attemptTerminalBindings([mapping])).toEqual([
+      { attemptId: recycleStart.attemptId, sourceId: "content-object" },
+    ]);
+    expect(RT.recycleSegmentReconciles(recycleSummary, recycleSegment)).toBe(true);
+    expect(RT.transformationSegmentReconciles("recycle", recycleSummary, recycleSegment)).toBe(true);
+    expect(
+      RT.recycleSegmentReconciles(recycleSummary, [
+        recycleRunStart,
+        recycleStart,
+        { ...join, count: NonNegativeInt.make(2) },
+        mapping,
+      ])
+    ).toBe(false);
+    expect(
+      RT.recycleSegmentReconciles(recycleSummary, [
+        recycleRunStart,
+        recycleStart,
+        join,
+        { ...mapping, metadataObjectId: "content-object" },
+      ])
+    ).toBe(false);
+
+    const originalSha256 = sha("legacy-source");
+    const legacyStart = familyAttemptStart("legacy-word", originalSha256, originalSha256);
+    const legacyRunStart = familyRunStart("legacy-word", 1);
+    const legacyPass = TransformationLedgerRecord.cases["legacy-word-pass"].make({
+      ...identity,
+      attemptId: legacyStart.attemptId,
+      convertedSha256: sha("converted"),
+      engineVersion: "LibreOffice test",
+      family: "legacy-word",
+      normalizedTextSha256: sha("normalized"),
+      originalSha256,
+      pageCountDelta: 0,
+      postProcessOriginalSha256: originalSha256,
+      recordType: "legacy-word-pass",
+      visualRmse: 0,
+    });
+    const legacySummary = familySummary("legacy-word", 1, 0, 1);
+    const legacySegment = [legacyRunStart, legacyStart, legacyPass];
+    expect(RT.attemptTerminalBindings([legacyPass])).toEqual([
+      { attemptId: legacyStart.attemptId, sourceId: originalSha256 },
+    ]);
+    expect(RT.legacySegmentReconciles(legacySummary, legacySegment)).toBe(true);
+    expect(RT.transformationSegmentReconciles("legacy-word", legacySummary, legacySegment)).toBe(true);
+    expect(RT.legacySegmentReconciles(legacySummary, [...legacySegment, legacyPass])).toBe(false);
+  });
 });
