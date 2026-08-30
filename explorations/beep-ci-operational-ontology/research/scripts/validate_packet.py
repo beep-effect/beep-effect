@@ -47,6 +47,7 @@ def warn(msg):
 
 _parser = argparse.ArgumentParser(description="beep-ci-ops packet / S4-lane validator")
 _parser.add_argument("--s4-lane", metavar="FILE", help="validate one S4 lane output file instead of the packet")
+_parser.add_argument("--s5", action="store_true", help="validate the S5 dispositions surface against s5-taxonomy-contract.md")
 _args = _parser.parse_args()
 
 if _args.s4_lane:
@@ -127,6 +128,123 @@ if _args.s4_lane:
             if m and not (repo_root / m.group(1)).exists():
                 blocker(f"evidence path missing from tree: {m.group(1)}")
     print(f"LANE {tel.get('lane')!r}: {len(cands)} candidates / {len(facts)} facts / {len(issues)} issues")
+    print(f"RESULT: {len(blockers)} blockers, {len(warns)} warns")
+    sys.exit(1 if blockers else 0)
+
+
+if _args.s5:
+    S5 = PACKET / "ontology/extraction/s5"
+    S4D = PACKET / "ontology/extraction/s4"
+    BC = S4D / "beep-ci-ops"
+    RULINGS = {"accepted-via", "merged-into", "rejected", "parked-run-2", "deferred-s6"}
+    disp = yaml.safe_load((S5 / "DISPOSITIONS.yaml").read_text())
+    join = yaml.safe_load((S5 / "JOIN.yaml").read_text())
+    cands = yaml.safe_load((S4D / "CANDIDATES.yaml").read_text())
+    facts = yaml.safe_load((S4D / "FACTS.yaml").read_text())
+    ledger = yaml.safe_load((S4D / "LEDGER.yaml").read_text())
+    cons = yaml.safe_load((S5 / "CONSTRAINTS.yaml").read_text())
+    index = yaml.safe_load((BC / "runs/orun-2026-08-29T08:20:55Z.index.yaml").read_text())
+    rats = {f.stem for f in (BC / "governance/ratifications").glob("rat-*.yaml")}
+    con_ids = {c["id"] for c in cons.get("constraints", [])}
+    ledger_ids = {e["id"] for e in ledger}
+    # constraints reference real ledger entries
+    for c in cons.get("constraints", []):
+        if c.get("source") not in ledger_ids:
+            blocker(f"constraint {c.get('id')} sources unknown ledger entry {c.get('source')}")
+    # candidate totality: seq bijection with CANDIDATES.yaml, rulings in vocab
+    rows = disp.get("candidates") or []
+    seqs = [r.get("seq") for r in rows]
+    if sorted(seqs) != list(range(len(cands))):
+        blocker(f"candidate rows are not a seq-bijection with CANDIDATES.yaml ({len(rows)} rows / {len(cands)} candidates)")
+    jrows = {r["seq"]: r for r in join.get("rows", [])}
+    for r in rows:
+        if r.get("ruling") not in RULINGS:
+            blocker(f"candidate seq={r.get('seq')} has unknown ruling {r.get('ruling')!r}")
+        j = jrows.get(r.get("seq"))
+        if j is None or j.get("candidate") != r.get("candidate"):
+            blocker(f"candidate seq={r.get('seq')} does not match JOIN row identity")
+        if r.get("ruling") == "deferred-s6" and r.get("kind") != "individual":
+            blocker(f"candidate seq={r.get('seq')}: deferred-s6 is legal only for individuals")
+        if r.get("ruling") == "merged-into" and not r.get("merged_into"):
+            blocker(f"candidate seq={r.get('seq')}: merged-into without a target term")
+        jr = str(r.get("join_ref") or "")
+        if jr.startswith("rat-") and jr not in rats:
+            blocker(f"candidate seq={r.get('seq')} join_ref {jr} is not a ratification on disk")
+    # ledger totality
+    lrows = disp.get("ledger") or []
+    if {r.get("entry") for r in lrows} != ledger_ids or len(lrows) != len(ledger):
+        blocker(f"ledger rows are not a bijection with LEDGER.yaml ({len(lrows)} vs {len(ledger)})")
+    for r in lrows:
+        if r.get("ruling") not in RULINGS:
+            blocker(f"ledger {r.get('entry')}: unknown ruling {r.get('ruling')!r}")
+        jr = str(r.get("join_ref") or "")
+        if jr.startswith("con:") and jr not in con_ids:
+            blocker(f"ledger {r.get('entry')} join_ref {jr} is not in CONSTRAINTS.yaml")
+    # archived unresolved observations: exact set, parked-run-2 only
+    unresolved = {x["observation"] for x in index if x.get("outcome") == "unresolved"}
+    orows = disp.get("observations") or []
+    if {r.get("observation") for r in orows} != unresolved or len(orows) != len(unresolved):
+        blocker(f"observation rows are not the archived unresolved set ({len(orows)} vs {len(unresolved)})")
+    for r in orows:
+        if r.get("ruling") != "parked-run-2":
+            blocker(f"observation {str(r.get('observation'))[:24]}: only parked-run-2 is legal (ratified waiver)")
+    # fact classes partition all facts
+    seen = set()
+    for r in disp.get("fact_classes") or []:
+        if r.get("ruling") not in RULINGS:
+            blocker(f"fact class {r.get('predicate')}/{r.get('subject_disposition')}: unknown ruling {r.get('ruling')!r}")
+        for i in r.get("covers") or []:
+            if i in seen:
+                blocker(f"fact index {i} covered twice")
+            seen.add(i)
+    if seen != set(range(len(facts))):
+        blocker(f"fact classes cover {len(seen)} of {len(facts)} facts")
+    # taxonomy (present only after the seat round)
+    tax_path = S5 / "TAXONOMY.yaml"
+    if not tax_path.exists():
+        warn("TAXONOMY.yaml absent — pre-seat stage; the completion gate requires it")
+    else:
+        tax = yaml.safe_load(tax_path.read_text())
+        terms = {t.get("term"): t for t in tax.get("terms", [])}
+        accepted_terms = set(terms)
+        for t in tax.get("terms", []):
+            kind = t.get("kind")
+            for parent in t.get("parents") or []:
+                if parent not in accepted_terms:
+                    blocker(f"taxonomy {t.get('term')}: parent {parent} is not an accepted term")
+                if kind != "class" or terms[parent].get("kind") != "class":
+                    blocker(f"taxonomy {t.get('term')}: parents is class-subsumption only")
+            io = t.get("instance_of")
+            if kind in ("individual", "literal-domain-member") and not io:
+                blocker(f"taxonomy {t.get('term')}: individuals need instance_of")
+            if io and io not in accepted_terms:
+                blocker(f"taxonomy {t.get('term')}: instance_of {io} is not accepted")
+            for prm in t.get("parameters") or []:
+                name = str(prm.get("property") or "")
+                if (name.endswith("Ms") or name.endswith("Millis") or "token" in name.lower())                         and prm.get("range_kind") not in ("recorded-value",):
+                    blocker(f"taxonomy {t.get('term')}.{name}: measurement parameters are recorded-value data properties (ratified precedent)")
+        # acyclicity
+        color = {}
+        def dfs(n, stack):
+            if n in stack:
+                blocker(f"taxonomy subsumption cycle through {n}")
+                return
+            if color.get(n):
+                return
+            stack.add(n)
+            for parent in (terms.get(n, {}).get("parents") or []):
+                dfs(parent, stack)
+            stack.discard(n)
+            color[n] = True
+        for t in terms:
+            dfs(t, set())
+        referenced = set()
+        for t in tax.get("terms", []):
+            referenced.update(t.get("constraint_refs") or [])
+        for cid in con_ids - referenced - set(tax.get("waived_constraints") or []):
+            blocker(f"constraint {cid} is neither referenced by TAXONOMY nor explicitly waived")
+    print(f"S5: {len(rows)} candidates / {len(lrows)} ledger / {len(orows)} observations / "
+          f"{len(disp.get('fact_classes') or [])} fact classes / {len(con_ids)} constraints")
     print(f"RESULT: {len(blockers)} blockers, {len(warns)} warns")
     sys.exit(1 if blockers else 0)
 

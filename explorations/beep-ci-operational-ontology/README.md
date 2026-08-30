@@ -105,6 +105,16 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-08-30 (fourteenth stint): S5 DISPOSITIONS SURFACE COMPLETE. Sitting 3
+  ratified the four-ruling LEDGER docket policy (76 run-2 / 20 constraints / 7
+  taxonomy-inputs / 1 moot; classifier + `s5/CONSTRAINTS.yaml` committed), the
+  DISPOSITIONS builder landed (`s5/DISPOSITIONS.yaml`: 337 candidates, 104
+  ledger, 149 archived observations, 31 fact classes covering all 1,038 facts,
+  zero orphans), and `validate_packet.py --s5` gates it all (0 blockers; one
+  expected pre-seat warn until TAXONOMY.yaml exists). Next: the six-seat
+  TAXONOMY round over the 33 accepted terms + constraints, then ratification
+  and `apply_s5_dispositions.py`.
+
 - 2026-08-30 (thirteenth stint): S5 SCAFFOLDING LANDED. The locked eight-ruling
   design became [`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md)
   plus the committed mechanical join pass
