@@ -441,11 +441,15 @@ if _args.s6:
     census_ttl = S6 / "graphs/census.ttl"
     if not census_doc.get("graph_sha256_12"):
         blocker("CENSUS.yaml carries no census graph digest (graph_sha256_12)")
-    elif census_ttl.is_file() and _sha12(census_ttl) != census_doc["graph_sha256_12"]:
+    elif not census_ttl.is_file():
+        blocker("graphs/census.ttl is missing while CENSUS.yaml records its digest")
+    elif _sha12(census_ttl) != census_doc["graph_sha256_12"]:
         blocker(
             f"graphs/census.ttl bytes ({_sha12(census_ttl)}) do not match the recorded "
             f"digest {census_doc['graph_sha256_12']} in CENSUS.yaml"
         )
+    if census_rec.get("sha256_12") and not census_file.is_file():
+        blocker("CENSUS.yaml is missing while ABOX.yaml records its ratified digest")
     if census_file.is_file() and census_rec.get("sha256_12"):
         if _sha12(census_file) != census_rec["sha256_12"]:
             blocker(
@@ -455,12 +459,16 @@ if _args.s6:
     snapshot_rec = abox_doc.get("snapshot") or {}
     manifest_file = S6 / "snapshot/raw/MANIFEST.yaml"
     raw_file = S6 / "snapshot/raw/journal.ndjson"
+    if snapshot_rec.get("manifest_sha256_12") and not manifest_file.is_file():
+        blocker("snapshot MANIFEST.yaml is missing while ABOX.yaml records its ratified digest")
     if manifest_file.is_file() and snapshot_rec.get("manifest_sha256_12"):
         if _sha12(manifest_file) != snapshot_rec["manifest_sha256_12"]:
             blocker(
                 f"snapshot MANIFEST.yaml bytes ({_sha12(manifest_file)}) do not match the "
                 f"ratified digest {snapshot_rec['manifest_sha256_12']} in ABOX.yaml"
             )
+    if snapshot_rec.get("redacted_sha256_12") and not raw_file.is_file():
+        blocker("redacted journal is missing while ABOX.yaml records its ratified digest")
     if raw_file.is_file() and snapshot_rec.get("redacted_sha256_12"):
         if _sha12(raw_file) != snapshot_rec["redacted_sha256_12"]:
             blocker(
@@ -473,7 +481,9 @@ if _args.s6:
     abox_ttl = S6 / "graphs/abox.ttl"
     if not graphs_rec.get("abox_sha256_12"):
         blocker("ABOX.yaml carries no abox graph digest (graphs.abox_sha256_12)")
-    elif abox_ttl.is_file() and _sha12(abox_ttl) != graphs_rec["abox_sha256_12"]:
+    elif not abox_ttl.is_file():
+        blocker("graphs/abox.ttl is missing while ABOX.yaml records its digest")
+    elif _sha12(abox_ttl) != graphs_rec["abox_sha256_12"]:
         blocker(
             f"graphs/abox.ttl bytes ({_sha12(abox_ttl)}) do not match the recorded "
             f"digest {graphs_rec['abox_sha256_12']} in ABOX.yaml"
@@ -486,11 +496,22 @@ if _args.s6:
             blocker(f"snapshot MANIFEST carries no {sha_key} digest")
             continue
         gpath = S6 / rel if rel else None
-        if gpath is not None and gpath.is_file() and _sha12(gpath) != recorded:
+        # A missing referenced graph is a blocker in its own right — skipping the
+        # comparison would accept a stale differently-named graph on disk
+        # (PR #919 review).
+        if gpath is None or not gpath.is_file():
+            blocker(f"snapshot MANIFEST references missing graph {rel!r}")
+        elif _sha12(gpath) != recorded:
             blocker(
                 f"{rel} bytes ({_sha12(gpath)}) do not match the recorded digest {recorded} "
                 f"in the snapshot MANIFEST"
             )
+    # Exactly the referenced timestamped graphs may exist — a stray snapshot or
+    # manifest graph is unverified evidence.
+    referenced = {manifest_doc.get("graph"), manifest_doc.get("manifest_graph")}
+    for stray in sorted(GRAPHS.glob("snapshot-*.ttl")) + sorted(GRAPHS.glob("manifest-*.ttl")):
+        if f"graphs/{stray.name}" not in referenced:
+            blocker(f"stray unreferenced graph on disk: graphs/{stray.name}")
     if all_refs_filled:
         # The historical S5 ruling stays deferred-s6 forever; discharge is the
         # s6_ratification_ref recorded beside it by apply_s6_dispositions.
