@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "canonical-proof-reconciliation",
+    "packetId": "goal-packet/v1:1e26b01f06413e3cbb9e5bc393d8f1dcdff169e506a49572b9455ad4dd3dc283",
+    "title": "Canonical Proof Reconciliation",
+    "status": "active",
+    "created": "2026-08-30",
+    "updated": "2026-08-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/canonical-proof-reconciliation",
+  "lifecycle": "active",
+  "mission": "Bring the CLI accepted proof and the eight live slices onto the amended grammar: manifest + architecture-lab first, then one codemod PR per slice proven by an audit baseline delta",
+  "statusNote": "Graduated 2026-08-30 from explorations/v3-consistency-audit; waits for architecture/slice-audit (audit command, baseline and required check on main) before any codemod PR.",
+  "blockedBy": ["goals/slice-topology-audit"],
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/v3-consistency-audit",
+    "graduated": "2026-08-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/canonical-proof-reconciliation/README.md",
+    "goals/canonical-proof-reconciliation/SPEC.md",
+    "goals/canonical-proof-reconciliation/PLAN.md",
+    "goals/canonical-proof-reconciliation/GOAL.md",
+    "goals/canonical-proof-reconciliation/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/canonical-proof-reconciliation/GOAL.md"
+    }
+  ],
+  "provides": ["architecture/proof-reconciled"],
+  "requires": ["architecture/slice-audit"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/canonical-proof-reconciliation/GOAL.md)\" -le 4000",
+    "jq . goals/canonical-proof-reconciliation/ops/manifest.json",
+    "rg -n \"canonical-proof-reconciliation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/canonical-proof-reconciliation",
+    "git diff --check -- goals/canonical-proof-reconciliation",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
