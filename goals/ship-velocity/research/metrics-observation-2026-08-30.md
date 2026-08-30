@@ -1,6 +1,6 @@
 # Ship velocity representative observation
 
-Status: candidate window failed; parity repair in progress.
+Status: fresh repair observation active; first current-main validation green.
 
 ## Window
 
@@ -12,6 +12,13 @@ The first post-merge sample found a recurring locally catchable required-check f
 candidate interval therefore cannot satisfy the completion gate. A later 168-hour interval must
 run after the repair reaches `main` without the cause recurring. P5, lifecycle, and initiative
 status remain open; this receipt makes no goal migration.
+
+### Fresh repair interval
+
+PR #892 merged at `2026-08-30T08:47:00Z`. The replacement observation interval is
+`[2026-08-30T08:47:00Z, 2026-09-06T08:47:00Z)`. Its first current-main Check run is
+`33302435645`; it completed successfully, including Test Unit, Coverage Regression, and Property
+Laws. The packet remains active and no goal migration is included.
 
 ## Implementation PR anchor
 
@@ -115,5 +122,35 @@ The observation window cannot close until every condition is proven across a fre
 The repair models the event and ref through the active Effect `ConfigProvider`, gives pull-request
 and main-push postures separate test layers, and asserts semantic lane inclusion rather than a
 shared ambient command count. The focused 170-test CLI suite and the mandatory
-`@beep/repo-cli` package verification passed locally. Hosted proof and the fresh observation
-interval remain pending.
+`@beep/repo-cli` package verification passed locally.
+
+PR #892 passed every required hosted context, including Test Unit and Coverage Regression, at
+head `fde3afad1c2d8b34b91c5811891b9571e89cb6b9`. It merged as
+`a35e8cc3c6e688a8689de8b0227b73d9bbff6d54` at the fresh interval start. The first current-main
+run `33302435645` completed successfully. The remaining 168-hour interval and non-parity gates
+remain pending.
+
+## Fresh interval gate status
+
+- Zero recurring locally catchable required-check failures: first post-repair main-push sample
+  green; continue observing through `2026-09-06T08:47:00Z`.
+- Attached watch p95 under 60 seconds: pending fresh-interval events.
+- Dead-owner takeover under 5 minutes: pending fresh-interval incidents.
+- Every active sibling checkout reads the remote cache: repair and fresh sample pending.
+- Two concurrent verifies without OOM: live trial pending.
+- No hot-file publish rework: continue counting through the interval.
+
+### Fresh scheduler sample
+
+Snapshot time: `2026-08-30T09:12:23Z`.
+
+The machine-wide journal recorded three admissions after the fresh interval opened:
+
+- one released full proof, with a 90-second queue wait, 117-second lease, and 2.25 GiB peak;
+- one released merged preview, with no queue wait, 263-second lease, and 12.49 GiB peak;
+- one full proof still active at the snapshot, with no queue wait and a 29.72 GiB peak so far.
+
+The intervals did not overlap. Scheduler status reported capacity 9, three active tokens,
+58.87 GiB available, and no queued, dead, or quarantined row. This is valid single-lease memory
+evidence, but it does not prove the two-concurrent-verify gate or a terminal no-OOM result for the
+active lease.
