@@ -27,6 +27,7 @@ import {
   requiredQualityWorkerRunpodEvalModel,
   runDocgenLocal,
   runDocgenQualityWorkerRunpodEval,
+  selectDirectDocgenPackagesForTesting,
   selectDocgenLocalPackagesForTesting,
   selectQualityWorkerRunpodTemplate,
 } from "@beep/repo-cli/test/Docgen";
@@ -646,6 +647,12 @@ describe("Docgen operations", () => {
             "packages/foundation/modeling/schema/src/index.ts",
           ]);
           expect(selected[1]?.reasons).toEqual(["packages/foundation/modeling/utils/README.md"]);
+          expect(A.map(selectDirectDocgenPackagesForTesting(packages, [selected[0]!]), (pkg) => pkg.name)).toEqual([
+            "@beep/schema",
+          ]);
+          expect(A.map(selectDirectDocgenPackagesForTesting([selected[0]!])(packages), (pkg) => pkg.name)).toEqual([
+            "@beep/schema",
+          ]);
         })
       )
     ));
