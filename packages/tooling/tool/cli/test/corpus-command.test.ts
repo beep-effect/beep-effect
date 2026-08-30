@@ -1892,10 +1892,50 @@ describe("corpus restoration preservation", () => {
           records,
           (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
         );
+        const fileTerminal = A.findFirst(records, (record) => record.recordType === "archive-file-pass");
+        const directoryTerminal = A.findFirst(records, (record) => record.recordType === "archive-directory-pass");
         const preflight = A.findFirst(records, (record) => record.recordType === "archive-preflight");
-        if (O.isNone(seal) || O.isNone(terminal) || O.isNone(preflight)) {
-          return yield* Effect.die("Expected sealed preflight and terminal fixture rows.");
+        if (
+          O.isNone(seal) ||
+          O.isNone(terminal) ||
+          O.isNone(fileTerminal) ||
+          O.isNone(directoryTerminal) ||
+          O.isNone(preflight)
+        ) {
+          return yield* Effect.die("Expected sealed preflight, file, and directory terminal fixture rows.");
         }
+        const archiveRoot = path.join(fixture.corpusRoot, "raw", "synthetic-restoration");
+        const fileDestination = path.join(archiveRoot, fileTerminal.value.destinationRelativePath);
+        const originalFileBytes = yield* fs.readFile(fileDestination);
+        yield* fs.writeFileString(fileDestination, "corrupt-terminal-bytes");
+        expect(
+          (yield* RA.verifyArchiveFile(fileTerminal.value.objectId, fileTerminal.value, fileDestination)).record
+        ).toMatchObject({ _tag: "Some", value: { failureKind: "digest-mismatch" } });
+        yield* fs.writeFile(fileDestination, originalFileBytes);
+        yield* fs.remove(fileDestination);
+        expect(
+          (yield* RA.verifyArchiveTerminal(archiveRoot, fileTerminal.value.objectId, fileTerminal.value)).record
+        ).toMatchObject({ _tag: "Some", value: { failureKind: "missing-destination" } });
+        yield* fs.writeFile(fileDestination, originalFileBytes);
+        expect(
+          (yield* RA.verifyArchiveDirectory(directoryTerminal.value.objectId, directoryTerminal.value, fileDestination))
+            .record
+        ).toMatchObject({ _tag: "Some", value: { failureKind: "missing-destination" } });
+        const failureTerminal = ArchiveLedgerRecord.cases["archive-failure"].make({
+          approved: false,
+          failureKind: "unreadable",
+          message: "synthetic terminal failure",
+          objectId: fileTerminal.value.objectId,
+          recordedAt: fileTerminal.value.recordedAt,
+          recordType: "archive-failure",
+          runId: fileTerminal.value.runId,
+          schemaVersion: fileTerminal.value.schemaVersion,
+          sourceLabel: fileTerminal.value.sourceLabel,
+          sourceRelativePath: fileTerminal.value.sourceRelativePath,
+        });
+        expect(
+          (yield* RA.verifyArchiveTerminal(archiveRoot, failureTerminal.objectId, failureTerminal)).record
+        ).toMatchObject({ _tag: "Some", value: { failureKind: "unapproved-terminal" } });
         const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
         const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (
           unsealed: ReadonlyArray<ArchiveLedgerRecord>

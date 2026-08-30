@@ -870,12 +870,9 @@ export const appendRestorationTextDurably = Effect.fn("CorpusRestoration.appendT
       if (!sameSourceIdentity(sourceIdentity(openedInfo), sourceIdentity(currentInfo))) {
         return yield* archiveError("Durable restoration append destination changed before its first write.");
       }
-      yield* file
-        .writeAll(textEncoder.encode(text))
-        .pipe(
-          Effect.andThen(file.sync),
-          CorpusCommandError.mapError("Failed writing durable restoration append destination.")
-        );
+      yield* (
+        Str.isEmpty(text) ? file.sync : file.writeAll(textEncoder.encode(text)).pipe(Effect.andThen(file.sync))
+      ).pipe(CorpusCommandError.mapError("Failed writing durable restoration append destination."));
     })
   );
   yield* syncRestorationDirectory(directory);
@@ -2365,21 +2362,14 @@ const validateCurrentArchiveRun = Effect.fn("CorpusRestoration.validateCurrentRu
 > {
   const currentRecords = A.filter(records, (record) => record.runId === seal.runId);
   const currentPreflights = A.filter(currentRecords, (record) => record.recordType === "archive-preflight");
-  if (currentPreflights.length !== 1) {
+  if (!A.isReadonlyArrayNonEmpty(currentPreflights) || currentPreflights.length !== 1) {
     return yield* failArchiveVerification(
       archiveRoot,
       "manifest-corrupt",
       "Current sealed run must contain exactly one capacity preflight row."
     );
   }
-  const currentPreflight = currentPreflights[0];
-  if (currentPreflight === undefined) {
-    return yield* failArchiveVerification(
-      archiveRoot,
-      "manifest-corrupt",
-      "Current sealed run capacity preflight is missing after reconciliation."
-    );
-  }
+  const currentPreflight = A.headNonEmpty(currentPreflights);
   if (!currentPreflight.approved) {
     return yield* failArchiveVerification(
       archiveRoot,
@@ -2642,31 +2632,52 @@ const resolveVerificationArchiveRoot = Effect.fn("CorpusRestoration.resolveVerif
  * @category testing
  */
 export const restorationArchiveTesting = {
+  acquireObservedRestorationWriterClaim,
   archiveInventorySignature,
   availableRestorationBytesAt,
   collectorRelativePath,
+  currentBootId,
+  decodeObservedWriterClaim,
   filesystemRootFor,
   indexArchiveTerminals,
   inspectCanonicalPath,
   isArchiveTerminalRecord,
   isContainedPath,
   maybeCrash,
+  moveObservedCoordinationFile,
   nonNegative,
   objectIdFor,
   parseProcStatStartTime,
   partialArchiveOpenFlag,
   pathsOverlap,
+  persistVerificationReport,
   prefixMatches,
+  processStartTime,
+  readCanonicalCoordinationFile,
   reconcileCollectorRecord,
   reapedCoordinationPath,
+  releaseArchiveWriterClaim,
   requireContainedPath,
+  requireArchivePayloadOwned,
   sameDeviceAndInode,
   sameSourceIdentity,
   sameSourceIdentityExceptMtime,
   sourceIdentity,
   sourceIdentityToken,
   sourceStat,
+  tryClaimWriterReapClaim,
+  tryMoveObservedWriterClaim,
+  tryRecoverObservedWriterReapClaim,
+  tryReplaceStaleWriterClaim,
+  tryWriteExclusiveCoordinationFile,
+  validateArchiveManifestSeal,
+  validateArchiveTerminalIndex,
   validateCanonicalArchivePaths,
+  validateCurrentArchiveRun,
+  verifyArchiveDirectory,
+  verifyArchiveFile,
+  verifyArchiveTerminal,
+  writerClaimOwnerIsAlive,
   writerReapClaimPath,
   writerReapClaimTombstonePath,
 } as const;

@@ -4,7 +4,8 @@ import { NonNegativeInt, PosInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, HashMap, Path } from "effect";
+import * as O from "effect/Option";
 
 const provideTestLayer = provideScopedLayer(NodeServices.layer);
 
@@ -229,6 +230,92 @@ describe("restoration archive boundary helpers", () => {
         const reapClaim = RA.writerReapClaimPath("/tmp/claim", "observed");
         expect(reapClaim).toContain(".reap-");
         expect(RA.writerReapClaimTombstonePath(reapClaim, "observed")).toContain(".claim.reap-");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "reclaims dead writer generations and rejects ambiguous verification artifacts",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-coordination-coverage-" });
+        const bootId = yield* RA.currentBootId();
+        const procStart = yield* RA.processStartTime(process.pid);
+        if (O.isNone(procStart)) return yield* Effect.die("Expected the current process identity.");
+        const claimText = `${JSON.stringify({
+          bootId,
+          pid: process.pid,
+          procStart: procStart.value,
+          schemaVersion: "oppold-preservation-writer/v2",
+          startedAt: new Date().toISOString(),
+          token: "live-claim-token",
+        })}\n`;
+        const liveClaim = yield* RA.decodeObservedWriterClaim(claimText, "claim decode failed");
+        expect(yield* RA.writerClaimOwnerIsAlive(liveClaim)).toBe(true);
+        expect(yield* RA.writerClaimOwnerIsAlive({ ...liveClaim, bootId: "different-boot" })).toBe(false);
+        expect(yield* RA.writerClaimOwnerIsAlive({ ...liveClaim, pid: 2_147_483_647 })).toBe(false);
+
+        const claimPath = path.join(root, "writer.claim");
+        expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(true);
+        expect(yield* RA.tryWriteExclusiveCoordinationFile(claimPath, claimText)).toBe(false);
+        expect(yield* RA.readCanonicalCoordinationFile(claimPath)).toEqual(O.some(claimText));
+        expect(yield* RA.moveObservedCoordinationFile(claimPath, "wrong-generation")).toBe(false);
+        expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
+        expect(yield* RA.readCanonicalCoordinationFile(claimPath)).toEqual(O.none());
+
+        const deadText = `${JSON.stringify({ ...liveClaim, bootId: "dead-boot", token: "dead-claim-token" })}\n`;
+        yield* fs.writeFileString(claimPath, deadText);
+        expect(yield* RA.tryClaimWriterReapClaim(claimPath, claimText)).toBe(true);
+        expect(yield* RA.moveObservedCoordinationFile(claimPath, claimText)).toBe(true);
+
+        const acquiredPath = path.join(root, "acquired.claim");
+        const lease = { claimPath: acquiredPath, claimText };
+        expect(yield* RA.acquireObservedRestorationWriterClaim(lease)).toEqual(lease);
+        yield* RA.releaseArchiveWriterClaim(lease);
+
+        const validationRoot = path.join(root, "validation-root");
+        yield* fs.makeDirectory(validationRoot);
+        expect(yield* RA.validateArchiveManifestSeal(validationRoot, [], []).pipe(Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
+        expect(
+          yield* RA.validateArchiveManifestSeal(validationRoot, ["synthetic-line"], []).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
+        const reportRoot = path.join(root, "report-root");
+        yield* fs.makeDirectory(reportRoot);
+        yield* RA.persistVerificationReport(reportRoot, []);
+        yield* RA.persistVerificationReport(reportRoot, []);
+        const reportDirectory = path.join(reportRoot, "verification");
+        const reportName = (yield* fs.readDirectory(reportDirectory))[0];
+        if (reportName === undefined) return yield* Effect.die("Expected a verification report.");
+        const reportPath = path.join(reportDirectory, reportName);
+        yield* fs.writeFileString(reportPath, "drift");
+        expect(yield* RA.persistVerificationReport(reportRoot, []).pipe(Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
+        yield* fs.writeFileString(reportPath, "");
+        yield* fs.rename(reportPath, `${reportPath}.partial`);
+        yield* RA.persistVerificationReport(reportRoot, []);
+        yield* fs.rename(reportPath, `${reportPath}.partial`);
+        yield* fs.writeFileString(`${reportPath}.partial`, "drift");
+        expect(yield* RA.persistVerificationReport(reportRoot, []).pipe(Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
+
+        const payloadRoot = path.join(root, "payload-root");
+        yield* fs.makeDirectory(path.join(payloadRoot, "payload"), { recursive: true });
+        yield* RA.requireArchivePayloadOwned(payloadRoot, HashMap.empty());
+        const outside = path.join(root, "outside-payload.bin");
+        yield* fs.writeFileString(outside, "outside");
+        yield* fs.symlink(outside, path.join(payloadRoot, "payload", "alias.bin"));
+        expect(yield* RA.requireArchivePayloadOwned(payloadRoot, HashMap.empty()).pipe(Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
       },
       Effect.scoped,
       provideTestLayer
