@@ -20497,15 +20497,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 78.86,
-      "statements": 78.65,
-      "branches": 68.04,
-      "functions": 72.55,
+      "lines": 78.84,
+      "statements": 78.62,
+      "branches": 67.89,
+      "functions": 72.56,
       "uncovered": {
         "lines": 8387,
         "statements": 8871,
-        "branches": 4804,
-        "functions": 3247
+        "branches": 4810,
+        "functions": 3246
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21985,10 +21985,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts": {
-          "lines": 98.9,
-          "statements": 98.9,
-          "branches": 85.18,
-          "functions": 94.11,
+          "lines": 98.79,
+          "statements": 98.79,
+          "branches": 84,
+          "functions": 93.75,
           "uncovered": {
             "lines": 1,
             "statements": 1,
@@ -22369,8 +22369,8 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/FileTransaction.ts": {
-          "lines": 91.66,
-          "statements": 91.89,
+          "lines": 91.42,
+          "statements": 91.66,
           "branches": 87.5,
           "functions": 81.81,
           "uncovered": {
@@ -22753,9 +22753,9 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts": {
-          "lines": 94.04,
-          "statements": 93.33,
-          "branches": 93.75,
+          "lines": 93.9,
+          "statements": 93.18,
+          "branches": 93.33,
           "functions": 78.94,
           "uncovered": {
             "lines": 5,
@@ -23989,15 +23989,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts": {
-          "lines": 98.87,
-          "statements": 97.97,
-          "branches": 97.36,
-          "functions": 97.29,
+          "lines": 97.75,
+          "statements": 94.94,
+          "branches": 92.1,
+          "functions": 94.59,
           "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 1,
-            "functions": 1
+            "lines": 2,
+            "statements": 5,
+            "branches": 3,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts": {
@@ -25383,12 +25383,12 @@
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts": {
           "lines": 89.51,
           "statements": 90,
-          "branches": 98.64,
+          "branches": 91.89,
           "functions": 81.94,
           "uncovered": {
             "lines": 13,
             "statements": 13,
-            "branches": 1,
+            "branches": 6,
             "functions": 13
           }
         },
@@ -25527,7 +25527,7 @@
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": {
           "lines": 63.6,
           "statements": 63.6,
-          "branches": 59.37,
+          "branches": 58.51,
           "functions": 55.1,
           "uncovered": {
             "lines": 91,
@@ -26305,14 +26305,14 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 89.82,
-          "statements": 89.63,
-          "branches": 84.96,
-          "functions": 83.45,
+          "lines": 89.66,
+          "statements": 89.47,
+          "branches": 83.03,
+          "functions": 83.33,
           "uncovered": {
-            "lines": 41,
-            "statements": 43,
-            "branches": 20,
+            "lines": 40,
+            "statements": 42,
+            "branches": 19,
             "functions": 23
           }
         },
@@ -26365,14 +26365,14 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.ts": {
-          "lines": 98.59,
-          "statements": 98.64,
-          "branches": 94.28,
+          "lines": 97.29,
+          "statements": 97.4,
+          "branches": 90.9,
           "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 2,
+            "lines": 2,
+            "statements": 2,
+            "branches": 3,
             "functions": 0
           }
         },
@@ -26413,15 +26413,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
-          "lines": 94.94,
-          "statements": 94.06,
-          "branches": 88.46,
-          "functions": 93.2,
+          "lines": 94.89,
+          "statements": 94.34,
+          "branches": 87.76,
+          "functions": 94.26,
           "uncovered": {
-            "lines": 25,
-            "statements": 31,
-            "branches": 24,
-            "functions": 11
+            "lines": 24,
+            "statements": 28,
+            "branches": 23,
+            "functions": 9
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {
