@@ -2,7 +2,7 @@
 # Source-pinned extraction from QualityScheduler.schemas.ts at corpus_commit.
 # Any S4/live divergence remains in drift until a steward ruling supplies ruling_ref.
 generated_by: scripts/etl_policy.py
-corpus_commit: 2c5bc5974742ef982a808826dea589422cf7a52e
+corpus_commit: 5d3933b65fefb5c8a4c7704f8921b60b152e3e17
 source_file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
 counts:
   parameters: 7

@@ -178,14 +178,6 @@ def main() -> None:
             "ratification": {"mode": "generator-digest", "ref": SITTING_2},
         },
     }
-    write_generated_yaml(
-        S6 / "ABOX.yaml",
-        out,
-        "build_abox.py",
-        "RATIFIED by the steward 2026-08-30 (DECISIONS.md, S6 sitting 2) — every ref cites the sitting.",
-        "Census and snapshot enter this surface by generator/output digest, not by copied triples.",
-    )
-
     graph_predicates = {
         "rdf:type",
         "ciops:admissionTokenWeight",
@@ -225,8 +217,19 @@ def main() -> None:
             f"{PRIORITY_IRI[member['value']]} rdf:type ciops:AdmissionPriorityClass ."
         )
     abox_path = S6 / "graphs/abox.ttl"
-    abox_path.write_text("\n".join(lines).rstrip() + "\n")
+    abox_text = "\n".join(lines).rstrip() + "\n"
+    abox_path.write_text(abox_text)
     Graph().parse(abox_path, format="turtle")
+    # The ratified graph is digest-bound to the ratification surface: the gate
+    # byte-verifies graphs/abox.ttl against this record (PR #919 review).
+    out["graphs"] = {"abox": "graphs/abox.ttl", "abox_sha256_12": sha256_12(abox_text.encode())}
+    write_generated_yaml(
+        S6 / "ABOX.yaml",
+        out,
+        "build_abox.py",
+        "RATIFIED by the steward 2026-08-30 (DECISIONS.md, S6 sitting 2) — every ref cites the sitting.",
+        "Census and snapshot enter this surface by generator/output digest, not by copied triples.",
+    )
     print(
         f"abox: 1 policy / {len(work_members)} work kinds / {len(priority_members)} priorities; "
         f"census digest={out['census']['sha256_12']}; snapshot digest={out['snapshot']['manifest_sha256_12']}"

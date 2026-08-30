@@ -458,6 +458,30 @@ if _args.s6:
                 f"redacted journal bytes ({_sha12(raw_file)}) do not match the ratified "
                 f"digest {snapshot_rec['redacted_sha256_12']} in ABOX.yaml"
             )
+    # The emitted graphs are digest-bound too: a hand-edited or stale graph with
+    # valid shapes must still fail the gate (PR #919 review).
+    graphs_rec = abox_doc.get("graphs") or {}
+    abox_ttl = S6 / "graphs/abox.ttl"
+    if not graphs_rec.get("abox_sha256_12"):
+        blocker("ABOX.yaml carries no abox graph digest (graphs.abox_sha256_12)")
+    elif abox_ttl.is_file() and _sha12(abox_ttl) != graphs_rec["abox_sha256_12"]:
+        blocker(
+            f"graphs/abox.ttl bytes ({_sha12(abox_ttl)}) do not match the recorded "
+            f"digest {graphs_rec['abox_sha256_12']} in ABOX.yaml"
+        )
+    manifest_doc = yaml.safe_load(manifest_file.read_text()) if manifest_file.is_file() else {}
+    for name_key, sha_key in (("graph", "graph_sha256_12"), ("manifest_graph", "manifest_graph_sha256_12")):
+        rel = manifest_doc.get(name_key)
+        recorded = manifest_doc.get(sha_key)
+        if not recorded:
+            blocker(f"snapshot MANIFEST carries no {sha_key} digest")
+            continue
+        gpath = S6 / rel if rel else None
+        if gpath is not None and gpath.is_file() and _sha12(gpath) != recorded:
+            blocker(
+                f"{rel} bytes ({_sha12(gpath)}) do not match the recorded digest {recorded} "
+                f"in the snapshot MANIFEST"
+            )
     if all_refs_filled:
         # The historical S5 ruling stays deferred-s6 forever; discharge is the
         # s6_ratification_ref recorded beside it by apply_s6_dispositions.

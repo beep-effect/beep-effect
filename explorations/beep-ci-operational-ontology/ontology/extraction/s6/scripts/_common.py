@@ -52,11 +52,13 @@ def assert_sources_clean(pathspecs: list[str], script_name: str) -> None:
 
     corpus_commit() pins HEAD, but the generators read worktree files — a dirty
     input would emit facts falsely attributed to the pin (PR #919 review).
-    Pathspecs are repo-relative; only tracked modifications count.
+    Pathspecs are repo-relative; tracked modifications AND untracked files count.
     """
 
     status = subprocess.run(
-        ["git", "-C", str(REPO), "status", "--porcelain", "-uno", "--", *pathspecs],
+        # No -uno: an UNTRACKED manifest under a workspace glob would otherwise
+        # enter the census without existing at the pin (PR #919 review).
+        ["git", "-C", str(REPO), "status", "--porcelain", "--", *pathspecs],
         check=True,
         capture_output=True,
         text=True,
