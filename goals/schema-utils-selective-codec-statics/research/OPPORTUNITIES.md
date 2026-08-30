@@ -71,7 +71,10 @@
 - **Evidence:** The aggregate import graph exposed two load-time failures:
   `withStatics` attempted to replace a rebuilt, non-configurable selected
   static after `S.toTaggedUnion`, and `S.make(RawLexicalNode.ast)` had erased
-  the runtime `members` required by `S.toTaggedUnion`.
+  the runtime `members` required by `S.toTaggedUnion`. A follow-up aggregate
+  run also found that the same generic rebuild had removed
+  `FilingOutcome.guards`; the focused server test passed after rebuilding from
+  the union and reapplying `S.toTaggedUnion` after codec selection.
 - **What would have prevented it:** Add a focused compatibility test for
   selected statics carried through legacy wrappers and annotations, and avoid
   generic `S.make(ast)` rebuilds when a schema combinator requires specialized
