@@ -1,4 +1,9 @@
-import { detectRunScopeSupport, enterRunScope, readRunScopeTelemetry } from "@beep/repo-cli/test/RepoRun";
+import {
+  detectRunScopeSupport,
+  enterRunScope,
+  readRunScopeTelemetry,
+  runScopeCleanupHint,
+} from "@beep/repo-cli/test/RepoRun";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -100,6 +105,24 @@ describe("run scope", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("records a failed scope when busctl disappears after the support probe", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const fakePath = path.join(root, "busctl");
+        yield* writeExecutable(
+          fakePath,
+          `#!/bin/sh\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && { /bin/rm -- '${fakePath}'; exit 0; }\ndone\nexit 0\n`
+        );
+        const record = yield* enterRunScope("d0a7b0dc").pipe(configured({ PATH: root }));
+        expect(record.support).toBe("failed");
+        expect(O.getOrElse(O.fromUndefinedOr(record.warning), () => "")).toContain(
+          "Could not start the transient systemd run scope."
+        );
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("parses systemctl telemetry values", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
@@ -123,4 +146,22 @@ describe("run scope", () => {
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
+
+  it.effect("treats a failing systemctl show as absent telemetry", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nexit 5\n");
+        const telemetry = yield* readRunScopeTelemetry("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
+        expect(telemetry.memoryPeakBytes).toBeUndefined();
+        expect(telemetry.tasksPeak).toBeUndefined();
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it("describes scope cleanup ownership in the operator hint", () => {
+    const hint = runScopeCleanupHint("agent-run-d0a7b0dc.scope");
+    expect(hint).toContain("agent-run-d0a7b0dc.scope");
+    expect(hint).toContain("scheduler reap --apply");
+  });
 });
