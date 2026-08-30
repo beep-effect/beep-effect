@@ -22,12 +22,38 @@
     "writer": "grok-bot",
     "publisher": "cursor-cloud-agent"
   },
-  "refutationQuota": { "attempted": 0, "standingClaims": 0, "note": "First run; exclusion digest empty." },
+  "refutationQuota": {
+    "attempted": 0,
+    "standingClaims": 0,
+    "note": "First run; exclusion digest empty."
+  },
   "frictions": [
-    { "id": "x-client-not-enrolled", "severity": "source-gap", "detail": "user-X MCP is connected but X API v2 search returns client-not-enrolled / Client Forbidden (developer App not attached to a Project). No x.com posts in this packet. Do not treat silence as absence of X traffic." },
-    { "id": "no-cross-provider-verify", "severity": "process-gap", "detail": "SPEC verify seats (Sol/Luna) are not available here. Writer used structured records only; no second-provider refutation pass." },
-    { "id": "github-mcp-dcr", "severity": "auth", "detail": "GitHub MCP failed dynamic client registration. Publisher uses gh + cloud agent instead." }
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "user-X MCP is connected but X API v2 search returns client-not-enrolled / Client Forbidden (developer App not attached to a Project). No x.com posts in this packet. Do not treat silence as absence of X traffic."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "SPEC verify seats (Sol/Luna) are not available here. Writer used structured records only; no second-provider refutation pass."
+    },
+    {
+      "id": "github-mcp-dcr",
+      "severity": "auth",
+      "detail": "GitHub MCP failed dynamic client registration. Publisher uses gh + cloud agent instead."
+    }
   ],
-  "resume": { "retry": ["x-search"], "cursor": "enroll X developer App in a Project, then re-search window 2026-08-25T22:22-05:00/2026-08-26T22:22-05:00" },
-  "repoReplay": { "merged": [849, 850, 848, 847, 846, 845, 844, 843, 842, 841, 840, 839, 838, 837, 836, 835], "open": [853, 852, 851], "blockingResearchPr": null }
+  "resume": {
+    "retry": ["x-search"],
+    "cursor": "enroll X developer App in a Project, then re-search window 2026-08-25T22:22-05:00/2026-08-26T22:22-05:00"
+  },
+  "repoReplay": {
+    "merged": [
+      849, 850, 848, 847, 846, 845, 844, 843, 842, 841, 840, 839, 838, 837, 836,
+      835
+    ],
+    "open": [853, 852, 851],
+    "blockingResearchPr": null
+  }
 }

@@ -314,19 +314,23 @@ export const resolveCaptureTarget = Effect.fn("QaSession.resolveCaptureTarget")(
   cwd: string,
   options: CaptureTargetRequest
 ): Effect.fn.Return<CaptureTarget, QaCommandError, FileSystem.FileSystem | Path.Path> {
-  const raw = yield* O.match(options.url, {
-    onNone: () =>
-      O.match(options.app, {
-        onNone: () =>
-          Effect.fail(
-            QaCommandError.make({
-              message: "qa record needs a capture target: pass --url <absolute-url> or --app <portless-app-name>.",
-            })
-          ),
-        onSome: (app) => Effect.map(resolveAppHostTarget(cwd, app), portlessUrlForApp),
-      }),
-    onSome: Effect.succeed,
-  });
+  const raw = yield* pipe(
+    options.url,
+    O.map(Effect.succeed),
+    O.orElse(() =>
+      pipe(
+        options.app,
+        O.map((app) => Effect.map(resolveAppHostTarget(cwd, app), portlessUrlForApp))
+      )
+    ),
+    O.getOrElse(() =>
+      Effect.fail(
+        QaCommandError.make({
+          message: "qa record needs a capture target: pass --url <absolute-url> or --app <portless-app-name>.",
+        })
+      )
+    )
+  );
   const url = yield* Effect.try({
     try: () => new URL(raw),
     catch: (cause) => QaCommandError.new(cause, `qa record could not parse "${raw}" as an absolute URL.`),

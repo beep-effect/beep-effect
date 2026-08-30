@@ -9,6 +9,11 @@ import {
   doctestStepForTesting,
   runCiLane,
 } from "@beep/repo-cli/commands/Ci";
+import {
+  readTurboCacheEnvironment,
+  resolveTurboCachePlan,
+  turboCachePlanArgs,
+} from "@beep/repo-cli/test/SharedInternals";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
@@ -35,6 +40,9 @@ const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A
     else Bun.env[name] = previous;
   }
 };
+
+const expectedTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" }));
 
 const commandHandle = (output = "", exitCode = 0) =>
   ChildProcessSpawner.makeHandle({
@@ -264,6 +272,7 @@ describe("ciLaneStepsForTesting", () => {
       "turbo",
       "run",
       "lint",
+      ...expectedTurboCacheArgs(["--concurrency=2", "--filter=!./apps/labs/**", "--affected", "--summarize"]),
       "--concurrency=2",
       "--filter=!./apps/labs/**",
       "--affected",
@@ -274,7 +283,14 @@ describe("ciLaneStepsForTesting", () => {
 
   it("builds the push-shape lint lane with the hosted-runner turbo cap", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint", baseOptions));
-    expect([...step.args]).toEqual(["turbo", "run", "lint", "--concurrency=2", "--filter=!./apps/labs/**"]);
+    expect([...step.args]).toEqual([
+      "turbo",
+      "run",
+      "lint",
+      ...expectedTurboCacheArgs(["--concurrency=2", "--filter=!./apps/labs/**"]),
+      "--concurrency=2",
+      "--filter=!./apps/labs/**",
+    ]);
     expect(step.env).toBeUndefined();
   });
 
@@ -293,6 +309,7 @@ describe("ciLaneStepsForTesting", () => {
       "check",
       "lint",
       "test",
+      ...expectedTurboCacheArgs(["--filter=./apps/labs/**", "--concurrency=2"]),
       "--filter=./apps/labs/**",
       "--concurrency=2",
     ]);
@@ -305,6 +322,7 @@ describe("ciLaneStepsForTesting", () => {
       "check",
       "lint",
       "test",
+      ...expectedTurboCacheArgs(["--filter=./apps/labs/**", "--concurrency=2"]),
       "--filter=./apps/labs/**",
       "--concurrency=2",
       "--summarize",
@@ -514,7 +532,15 @@ describe("ciLaneStepsForTesting", () => {
   it("builds the property lane with the 400-run floor, fixed seed, and cache-partitioning env", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "property", prShapeOptions));
     expect(step.command).toBe("bunx");
-    expect([...step.args]).toEqual(["turbo", "run", "test:property", "--concurrency=4", "--affected", "--summarize"]);
+    expect([...step.args]).toEqual([
+      "turbo",
+      "run",
+      "test:property",
+      ...expectedTurboCacheArgs(["--concurrency=4", "--affected", "--summarize"]),
+      "--concurrency=4",
+      "--affected",
+      "--summarize",
+    ]);
     expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400", BEEP_FC_SEED: "20260708", TURBO_SCM_BASE: "origin/main" });
 
     const deep = firstOf(

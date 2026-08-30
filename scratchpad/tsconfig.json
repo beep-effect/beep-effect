@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../tsconfig.base.json",
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"],
+  "exclude": [".jsdoc-loop", "**/docs", "node_modules"],
   "compilerOptions": {
     "types": ["node", "bun"],
     "rootDir": "..",

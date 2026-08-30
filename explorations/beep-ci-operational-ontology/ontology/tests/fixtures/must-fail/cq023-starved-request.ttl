@@ -1,0 +1,9 @@
+# Falsifiability (starvation hard invariant): an eligible request waiting beyond the
+# declared bound with NO modeled exception must violate — review 2's 96-fast/4-starved
+# counterexample (good P95 does not imply no starvation).
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+ciops:req-starved rdf:type ciops:SeatRequest ;
+    ciops:observedQueueWaitMs 300000 ;
+    ciops:governedBy ciops:policy-x .
+ciops:policy-x ciops:starvationBoundMs 120000 .

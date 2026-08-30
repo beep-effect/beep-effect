@@ -142,15 +142,18 @@ const markerIndexOnce = (content: string, marker: string): Effect.Effect<number,
     Str.indexOf(marker)(content),
     O.match({
       onNone: () => Effect.fail(markerError("is missing", marker)),
-      onSome: (first) =>
-        pipe(
+      onSome: (first) => {
+        const uniqueMarker = pipe(
           Str.lastIndexOf(marker)(content),
           O.filter((last) => last === first),
-          O.match({
-            onNone: () => Effect.fail(markerError("appears more than once", marker)),
-            onSome: () => Effect.succeed(first),
-          })
-        ),
+          O.map(() => first)
+        );
+        return pipe(
+          uniqueMarker,
+          O.map(Effect.succeed),
+          O.getOrElse(() => Effect.fail(markerError("appears more than once", marker)))
+        );
+      },
     })
   );
 

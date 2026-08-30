@@ -13,10 +13,10 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import type { PostgresDrizzle } from "@beep/postgres";
-import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
-import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import type { Quad } from "@beep/rdf";
+import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
 import type { Config } from "effect";
 import { Context, DateTime, Effect, Layer, Random } from "effect";
@@ -27,38 +27,12 @@ import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimInsertRow, ClaimRow } from "../Repository/schema.ts";
+import { canonicalLiteral, canonicalQuad } from "../Utils/Rdf.ts";
 import type { RdfStore } from "./Rdf.ts";
 import { RdfBuilder, rdfStoreAddQuad } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Claim");
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
-
-const canonicalNamedNode = (value: IRI | NamedNode): NamedNode => (P.isString(value) ? makeNamedNode(value) : value);
-
-const canonicalLiteral = (input: {
-  readonly value: string;
-  readonly language?: O.Option<string>;
-  readonly datatype?: O.Option<IRI | NamedNode>;
-}): Literal => {
-  const datatype = O.getOrElse(input.datatype ?? O.none(), () => XSD_STRING);
-  const language = O.getOrUndefined(input.language ?? O.none());
-  return makeLiteral(input.value, canonicalNamedNode(datatype).value, P.isUndefined(language) ? {} : { language });
-};
-
-const canonicalQuad = (input: {
-  readonly subject: IRI | Subject;
-  readonly predicate: IRI | NamedNode;
-  readonly object: IRI | ObjectTerm;
-  readonly graph: O.Option<IRI | GraphTerm>;
-}): Quad => {
-  const subject = P.isString(input.subject) ? makeNamedNode(input.subject) : input.subject;
-  const predicate = canonicalNamedNode(input.predicate);
-  const object = P.isString(input.object) ? makeNamedNode(input.object) : input.object;
-  const graph = O.map(input.graph, (value) => (P.isString(value) ? makeNamedNode(value) : value));
-  return O.isSome(graph)
-    ? makeQuad(subject, predicate, { object, graph: graph.value })
-    : makeQuad(subject, predicate, object);
-};
 
 const randomUuid = Effect.all([
   Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
@@ -79,17 +53,25 @@ const randomUuid = Effect.all([
 /**
  * Input for creating a new claim
  *
- *
- * **Example** (Use the CreateClaimInput contract)
+ * **Example** (Create a claim payload)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { CreateClaimInput } from "@effect-ontology/Service/Claim"
  *
- * console.log(S.is(CreateClaimInput)({})) // false
+ * const input = CreateClaimInput.make({
+ *   subjectIri: "https://example.org/Ada",
+ *   predicateIri: "https://example.org/founded",
+ *   objectValue: "https://example.org/Acme",
+ *   objectType: "iri",
+ *   articleId: "article-ada",
+ *   ontologyId: "core",
+ *   confidence: Confidence.make(0.91)
+ * })
+ * console.log(input.objectType) // "iri"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimInput`)(
@@ -119,17 +101,20 @@ export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimIn
 /**
  * Result of deprecating a claim
  *
- *
- * **Example** (Use the DeprecationResult contract)
+ * **Example** (Record a deprecation)
  *
  * ```ts
- * import * as S from "effect/Schema"
  * import { DeprecationResult } from "@effect-ontology/Service/Claim"
  *
- * console.log(S.is(DeprecationResult)({})) // false
+ * const result = DeprecationResult.make({
+ *   claimId: "claim-ada-founded",
+ *   deprecatedAt: new Date("2026-01-01T00:00:00.000Z"),
+ *   reason: "Superseded by a curated triple"
+ * })
+ * console.log(result.claimId) // "claim-ada-founded"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class DeprecationResult extends S.Class<DeprecationResult>($I`DeprecationResult`)(
@@ -194,13 +179,29 @@ interface ClaimServiceShape {
  * - `getClaimHistory`: Get all claims for a subject+predicate over time
  * - `toReifiedTriples`: Convert claim to reified RDF quads
  *
- * **Example** (Inspect the claim-service layer)
+ * **Example** (Create a claim through the service)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { ClaimService } from "@effect-ontology/Service/Claim"
+ * import { Effect } from "effect"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { ClaimService, CreateClaimInput } from "@effect-ontology/Service/Claim"
  *
- * console.log(Layer.isLayer(ClaimService.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const claims = yield* ClaimService
+ *   return yield* claims.createClaim(
+ *     CreateClaimInput.make({
+ *       subjectIri: "https://example.org/Ada",
+ *       predicateIri: "https://example.org/founded",
+ *       objectValue: "https://example.org/Acme",
+ *       objectType: "iri",
+ *       articleId: "article-ada",
+ *       ontologyId: "core",
+ *       confidence: Confidence.make(0.91)
+ *     })
+ *   )
+ * }).pipe(Effect.provide(ClaimService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services

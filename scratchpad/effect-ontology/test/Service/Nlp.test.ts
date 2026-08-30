@@ -74,6 +74,35 @@ describe("NlpService canonical Wink adapter", () => {
     );
 
     it.effect(
+      "uses the shared boundary chunker for section and speaker strategies",
+      Effect.fnUntraced(function* () {
+        const nlp = yield* NlpService;
+        const sectionText = "Preface.\n## First\nAlpha.\n## Second\nBeta.";
+        const speakerText = "SPEAKER 1: Hello.\nSPEAKER 2: Hi.";
+
+        const sectionChunks = yield* nlp.chunkText(sectionText, {
+          strategy: "section_aware",
+          maxChunkSize: 100,
+        });
+        const speakerChunks = yield* nlp.chunkText(speakerText, {
+          strategy: "speaker_aware",
+          maxChunkSize: 100,
+        });
+
+        assert.deepEqual(
+          sectionChunks.map((chunk) => chunk.text),
+          ["Preface.", "## First\nAlpha.", "## Second\nBeta."]
+        );
+        assert.deepEqual(
+          speakerChunks.map((chunk) => chunk.text),
+          ["SPEAKER 1: Hello.", "SPEAKER 2: Hi."]
+        );
+        assert.strictEqual(sectionChunks[1].startOffset, sectionText.indexOf("## First"));
+        assert.strictEqual(speakerChunks[1].startOffset, speakerText.indexOf("SPEAKER 2"));
+      })
+    );
+
+    it.effect(
       "ranks documents without exposing a Wink runtime index",
       Effect.fnUntraced(function* () {
         const nlp = yield* NlpService;

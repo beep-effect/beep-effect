@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/epistemic-contradiction-triage",
   "lifecycle": "active",
+  "statusNote": "P0-P1 are complete and P2 verification remains in progress; the formal quality-review loop and authoritative Yeet verification are the next recorded work.",
   "mission": "Deliver evidence-backed reviewable CONTRADICTS candidates and a human-approval path resolving as atomic SUPERSEDES, with detection never mutating authority.",
   "executionCapable": true,
   "reflectionRequired": true,

@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/openai-driver",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 864,
   "statusNote": "P0-P4 completed 2026-08-27: PR #864 contains the full goal, exact-head Yeet verification passed all 25 lanes, package coverage is 100%, full docgen passed, and the quality review has zero required blockers.",
   "mission": "Ship @beep/openai, a thin driver mirroring @beep/anthropic that composes @effect/ai-openai's shipped OpenAiClient, OpenAiLanguageModel, and OpenAiEmbeddingModel behind typed config and errors and exposes Layer factories for both model kinds; no engine code.",
   "executionCapable": true,

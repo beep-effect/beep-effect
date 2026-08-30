@@ -1555,7 +1555,7 @@ const collectCoverageBaselineChangeSet = Effect.fn("CoverageRegression.collectCo
     pathspecs: A.empty(),
     onProbeFailure: "fail",
   }).pipe(
-    Effect.map((files) => pipe(files, A.dedupe, A.sort(Order.String))),
+    Effect.map(flow(A.dedupe, A.sort(Order.String))),
     QualityTaskConfigurationError.mapError("Failed to collect dirty-worktree files for coverage baseline planning.")
   );
   return yield* coverageBaselineChangeSetFromChangedFiles(repoRoot, changedFiles, "dirty worktree only");

@@ -1,24 +1,23 @@
 /**
  * Schemas and loaders for Claude Code MCP configuration files.
  *
+ * **Details**
+ *
  * Project scope uses `.mcp.json`; user and local scopes live in
  * `~/.claude.json`; enterprise deployments may provide a system
  * `managed-mcp.json`. Loaders read through the Effect `FileSystem`
  * service and decode JSON with Effect Schema.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as O from "@beep/utils/Option";
+import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
-import * as Config from "effect/Config";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
-import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-
 import { McpConfigError } from "../Errors.ts";
 import { HttpMcpServer, McpOAuth, McpServerConfig, StdioMcpServer } from "./Schema.ts";
 
@@ -131,6 +130,8 @@ export declare namespace ClaudeJsonProject {
 /**
  * Tolerant schema for the MCP-related portions of `~/.claude.json`.
  *
+ * **Details**
+ *
  * User-scope servers live at top-level `mcpServers`; local-scope
  * servers live under `projects[projectPath].mcpServers`. Other
  * Claude Code keys are intentionally ignored.
@@ -198,34 +199,55 @@ const ClaudeJsonFileJson = S.fromJsonString(ClaudeJsonFile).pipe(
 /**
  * Overrides used while resolving all MCP configuration scopes.
  *
- * @category configuration
- * @since 0.0.0
- */
-export interface EffectiveMcpLoadOptions {
-  /** Override the `~/.claude.json` path, mainly for tests. */
-  readonly claudeJsonPath?: string;
-  /** Override the project `.mcp.json` path. */
-  readonly projectMcpPath?: string;
-  /** Plugin-provided MCP configs, lowest precedence in normal loading. */
-  readonly pluginMcpConfigs?: ReadonlyArray<McpJsonFile>;
-  /** Override the managed MCP directory, mainly for tests. */
-  readonly managedMcpRoot?: string;
-  /** Override all candidate managed MCP directories. */
-  readonly managedMcpRoots?: ReadonlyArray<string>;
-}
-
-/**
- * Overrides used while discovering enterprise-managed MCP configuration.
+ * **Example** (Override the project MCP path)
+ *
+ * ```ts
+ * import { Mcp } from "effect-claudecode"
+ *
+ * const options = Mcp.EffectiveMcpLoadOptions.make({ projectMcpPath: "/repo/.mcp.json" })
+ * console.log(options.projectMcpPath) // /repo/.mcp.json
+ * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface ManagedMcpLoadOptions {
-  /** Override the managed MCP directory, mainly for tests. */
-  readonly managedMcpRoot?: string;
-  /** Override all candidate managed MCP directories. */
-  readonly managedMcpRoots?: ReadonlyArray<string>;
-}
+export class EffectiveMcpLoadOptions extends S.Class<EffectiveMcpLoadOptions>($I`EffectiveMcpLoadOptions`)(
+  {
+    claudeJsonPath: S.String.pipe(S.optionalKey),
+    projectMcpPath: S.String.pipe(S.optionalKey),
+    pluginMcpConfigs: S.Array(McpJsonFile).pipe(S.optionalKey),
+    managedMcpRoot: S.String.pipe(S.optionalKey),
+    managedMcpRoots: S.Array(S.String).pipe(S.optionalKey),
+  },
+  $I.annote("EffectiveMcpLoadOptions", {
+    description: "Optional path and plugin overrides used while resolving every MCP configuration scope.",
+  })
+) {}
+
+/**
+ * Overrides used while discovering enterprise-managed MCP configuration.
+ *
+ * **Example** (Override managed roots)
+ *
+ * ```ts
+ * import { Mcp } from "effect-claudecode"
+ *
+ * const options = Mcp.ManagedMcpLoadOptions.make({ managedMcpRoots: ["/managed"] })
+ * console.log(options.managedMcpRoots?.[0]) // /managed
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export class ManagedMcpLoadOptions extends S.Class<ManagedMcpLoadOptions>($I`ManagedMcpLoadOptions`)(
+  {
+    managedMcpRoot: S.String.pipe(S.optionalKey),
+    managedMcpRoots: S.Array(S.String).pipe(S.optionalKey),
+  },
+  $I.annote("ManagedMcpLoadOptions", {
+    description: "Optional directory overrides for enterprise-managed MCP configuration discovery.",
+  })
+) {}
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -302,31 +324,38 @@ export const projectMcpJsonPath = (cwd: string): Effect.Effect<string, never, Pa
 
 /** @internal */
 const managedRoots = (options: O.Option<ManagedMcpLoadOptions>): ReadonlyArray<string> =>
-  O.match(options, {
-    onNone: () => defaultManagedMcpRoots,
-    onSome: (value) =>
-      O.match(O.fromNullishOr(value.managedMcpRoots), {
-        onNone: () =>
-          O.match(O.fromNullishOr(value.managedMcpRoot), {
-            onNone: () => defaultManagedMcpRoots,
-            onSome: (root) => [root],
-          }),
-        onSome: (roots) => roots,
-      }),
-  });
+  options.pipe(
+    O.flatMap((value) => O.fromNullishOr(value.managedMcpRoots)),
+    O.orElse(() =>
+      options.pipe(
+        O.flatMap((value) => O.fromNullishOr(value.managedMcpRoot)),
+        O.map(A.make)
+      )
+    ),
+    O.getOrElse(() => defaultManagedMcpRoots)
+  );
 
 /**
  * Resolve candidate system `managed-mcp.json` paths.
  *
- * **Example** (Inspect managed mcp json paths)
+ * **Example** (Resolve managed MCP candidate paths)
  *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
  *
- * const program = Mcp.managedMcpJsonPaths({
- *   managedMcpRoots: ["/etc/claude-code"]
- * })
- * console.log(program)
+ * const paths = Effect.runSync(
+ *   Effect.provide(
+ *     Mcp.managedMcpJsonPaths({
+ *       managedMcpRoots: ["/etc/claude-code", "/opt/claude-code"]
+ *     }),
+ *     Path.layer
+ *   )
+ * )
+ *
+ * console.log(paths)
+ * // ["/etc/claude-code/managed-mcp.json", "/opt/claude-code/managed-mcp.json"]
  * ```
  *
  * @category configuration
@@ -383,11 +412,11 @@ const loadOptionalJson = <A>(
   });
 
 /** @internal */
-const serverEndpointKey = (server: McpServerConfig): O.Option<string> => {
+const serverEndpointKey = (server: McpServerConfig): string => {
   if (S.is(StdioMcpServer)(server)) {
-    return O.some(`command:${server.command}\u0000${A.join(O.getOrElse(server.args, A.empty<string>), "\u0000")}`);
+    return `command:${server.command}\u0000${A.join(O.getOrElse(server.args, A.empty<string>), "\u0000")}`;
   }
-  return O.some(`url:${server.url}`);
+  return `url:${server.url}`;
 };
 
 /** @internal */
@@ -395,16 +424,7 @@ const removeEndpointDuplicates = (
   servers: Readonly<Record<string, McpServerConfig>>,
   server: McpServerConfig
 ): Record<string, McpServerConfig> =>
-  O.match(serverEndpointKey(server), {
-    onNone: () => ({ ...servers }),
-    onSome: (endpoint) =>
-      R.filter(servers, (candidate) =>
-        O.match(serverEndpointKey(candidate), {
-          onNone: () => true,
-          onSome: (candidateEndpoint) => candidateEndpoint !== endpoint,
-        })
-      ),
-  });
+  R.filter(servers, (candidate) => serverEndpointKey(candidate) !== serverEndpointKey(server));
 
 /** @internal */
 const mergeServerRecords = (
@@ -420,19 +440,49 @@ const mergeServerRecords = (
 /**
  * Merge MCP config files in increasing precedence order.
  *
+ * **Details**
+ *
  * Later files replace earlier files by server name and also remove any
  * lower-precedence server with the same URL or stdio command/arguments.
  * Fields inside an individual server entry are never merged.
  *
- * **Example** (Create merge mcp json files)
+ * **Example** (Later files win by name and endpoint)
  *
  * ```ts
  * import { Mcp } from "effect-claudecode"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const merged = Mcp.mergeMcpJsonFiles([
- *   Mcp.McpJsonFile.make({ mcpServers: {} })
- * ])
- * console.log(merged.mcpServers)
+ * const user = Mcp.McpJsonFile.make({
+ *   mcpServers: {
+ *     filesystem: Mcp.StdioMcpServer.make({
+ *       command: "npx",
+ *       args: O.some(["-y", "@modelcontextprotocol/server-filesystem"])
+ *     }),
+ *     docs: Mcp.HttpMcpServer.make({
+ *       type: "http",
+ *       url: "https://mcp.example.test/docs"
+ *     })
+ *   }
+ * })
+ * const project = Mcp.McpJsonFile.make({
+ *   mcpServers: {
+ *     filesystem: Mcp.StdioMcpServer.make({
+ *       command: "npx",
+ *       args: O.some(["-y", "@modelcontextprotocol/server-filesystem", "/repo"])
+ *     }),
+ *     docsV2: Mcp.HttpMcpServer.make({
+ *       type: "http",
+ *       url: "https://mcp.example.test/docs"
+ *     })
+ *   }
+ * })
+ * const merged = Mcp.mergeMcpJsonFiles([user, project])
+ * const filesystem = merged.mcpServers.filesystem
+ *
+ * console.log(Object.keys(merged.mcpServers).sort()) // ["docsV2", "filesystem"]
+ * console.log(S.is(Mcp.StdioMcpServer)(filesystem) ? filesystem.args : undefined)
+ * // { _tag: "Some", value: ["-y", "@modelcontextprotocol/server-filesystem", "/repo"] }
  * ```
  *
  * @category combinators
@@ -498,6 +548,8 @@ const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<
 /**
  * Convert an MCP config into the current Claude Code JSON shape.
  *
+ * **Details**
+ *
  * The result contains only fields represented by the current MCP transport
  * schemas and omits the reserved `workspace` server name.
  *
@@ -534,20 +586,32 @@ const projectClaudeJsonEntry = (file: ClaudeJsonFile, cwd: string, resolvedCwd: 
 /**
  * Read a `.mcp.json` or `managed-mcp.json` file from disk.
  *
+ * **Details**
+ *
  * Missing files are errors for this strict loader; use `loadEffective`
  * or `loadManagedMcp` for optional discovery. A server named
  * `workspace` is skipped with a warning because Claude Code reserves
  * that name internally.
  *
- * **Example** (Inspect the strict loader Effect)
+ * **Example** (Load a project MCP file and skip reserved names)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const program = Mcp.loadJson("/workspace/.mcp.json")
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/workspace/.mcp.json": JSON.stringify({
+ *     mcpServers: {
+ *       docs: { command: "npx", args: ["-y", "docs-mcp"] },
+ *       workspace: { command: "reserved" }
+ *     }
+ *   })
+ * })
+ * const file = await Effect.runPromise(
+ *   Effect.provide(Mcp.loadJson("/workspace/.mcp.json"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(Object.keys(file.mcpServers)) // ["docs"]
  * ```
  *
  * @effects Reads and decodes the file through `FileSystem.FileSystem`, logging reserved names and failing with `McpConfigError` on read or decode errors.
@@ -569,15 +633,25 @@ export const loadJson = Effect.fn("Mcp.loadJson")(function* (
 /**
  * Read a `~/.claude.json` file and decode the MCP-related sections.
  *
- * **Example** (Inspect the Claude JSON loader Effect)
+ * **Example** (Decode MCP sections from user Claude JSON)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * const program = Mcp.loadClaudeJson("/home/user/.claude.json")
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/home/user/.claude.json": JSON.stringify({
+ *     theme: "dark",
+ *     mcpServers: { docs: { command: "user-docs" } }
+ *   })
+ * })
+ * const file = await Effect.runPromise(
+ *   Effect.provide(Mcp.loadClaudeJson("/home/user/.claude.json"), fileSystem.layer)
+ * )
  *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(O.map(file.mcpServers, (servers) => Object.keys(servers)))
+ * // { _tag: "Some", value: ["docs"] }
  * ```
  *
  * @effects Reads the file through `FileSystem.FileSystem` and fails with `McpConfigError` when reading or decoding fails.
@@ -606,18 +680,39 @@ const loadManagedMcpWithOptions = Effect.fn("Mcp.loadManagedMcp")(function* (
 /**
  * Discovers the first system `managed-mcp.json` file that exists.
  *
+ * **Details**
+ *
  * Claude Code treats this file as exclusive enterprise control: when it
  * exists, user, project, local, and plugin MCP configs are suppressed.
  *
- * **Example** (Run loadManagedMcp)
+ * **Example** (Discover the first managed MCP file)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * const program = Mcp.loadManagedMcp({
- *   managedMcpRoots: ["/etc/claude-code"]
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/etc/claude-code/managed-mcp.json": JSON.stringify({
+ *     mcpServers: { enterprise: { command: "enterprise-mcp" } }
+ *   })
  * })
- * console.log(program)
+ * const managed = await Effect.runPromise(
+ *   Effect.provide(
+ *     Mcp.loadManagedMcp({ managedMcpRoots: ["/etc/claude-code"] }),
+ *     fileSystem.layer
+ *   )
+ * )
+ * const missing = await Effect.runPromise(
+ *   Effect.provide(
+ *     Mcp.loadManagedMcp({ managedMcpRoots: ["/no-such-root"] }),
+ *     fileSystem.layer
+ *   )
+ * )
+ *
+ * console.log(O.map(managed, (file) => Object.keys(file.mcpServers)))
+ * // { _tag: "Some", value: ["enterprise"] }
+ * console.log(O.isNone(missing)) // true
  * ```
  *
  * @category decoding
@@ -637,10 +732,12 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
   const path = yield* Path.Path;
   const resolvedCwd = path.resolve(cwd);
   const managed = yield* loadOptions.pipe(
-    O.map((value) => ({
-      ...(value.managedMcpRoot !== undefined ? { managedMcpRoot: value.managedMcpRoot } : {}),
-      ...(value.managedMcpRoots !== undefined ? { managedMcpRoots: value.managedMcpRoots } : {}),
-    })),
+    O.map((value) =>
+      O.getSomesStruct({
+        managedMcpRoot: O.fromUndefinedOr(value.managedMcpRoot),
+        managedMcpRoots: O.fromUndefinedOr(value.managedMcpRoots),
+      })
+    ),
     O.getOrUndefined,
     loadManagedMcp
   );
@@ -680,25 +777,21 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
     onSome: (file) => mcpFileFromServers(file.mcpServers, claudePath),
   });
   const projectMcp = yield* loadOptionalJson(projectPath, loadJson);
-  const localMcp = yield* O.match(claudeJson, {
-    onNone: () => Effect.succeed(O.none<McpJsonFile>()),
-    onSome: (file) =>
-      O.match(projectClaudeJsonEntry(file, cwd, resolvedCwd), {
-        onNone: () => Effect.succeed(O.none<McpJsonFile>()),
-        onSome: (project) => mcpFileFromServers(project.mcpServers, `${claudePath}:projects.${resolvedCwd}`),
-      }),
-  });
+  const localMcp = yield* O.match(
+    claudeJson.pipe(O.flatMap((file) => projectClaudeJsonEntry(file, cwd, resolvedCwd))),
+    {
+      onNone: () => Effect.succeed(O.none<McpJsonFile>()),
+      onSome: (project) => mcpFileFromServers(project.mcpServers, `${claudePath}:projects.${resolvedCwd}`),
+    }
+  );
 
-  return mergeMcpJsonFiles([
-    ...sanitizedPluginConfigs,
-    ...(O.isSome(userMcp) ? [userMcp.value] : []),
-    ...(O.isSome(projectMcp) ? [projectMcp.value] : []),
-    ...(O.isSome(localMcp) ? [localMcp.value] : []),
-  ]);
+  return mergeMcpJsonFiles([...sanitizedPluginConfigs, ...A.getSomes([userMcp, projectMcp, localMcp])]);
 });
 
 /**
  * Loads the effective MCP configuration for a Claude Code project.
+ *
+ * **Details**
  *
  * Normal precedence is local (`~/.claude.json` project entry) > project
  * (`.mcp.json`) > user (`~/.claude.json` top-level) > plugins. Whole
@@ -706,19 +799,50 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
  * system `managed-mcp.json` exists, it has exclusive control and the
  * returned config contains only managed servers.
  *
- * **Example** (Run loadEffective)
+ * **Example** (Merge local over project over user MCP servers)
  *
  * ```ts
- * import { Mcp } from "effect-claudecode"
+ * import { Mcp, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
  *
- * const program = Mcp.loadEffective("/workspace")
- * console.log(program)
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/home/user/.claude.json": JSON.stringify({
+ *     mcpServers: {
+ *       docs: { command: "user-docs" },
+ *       search: { command: "user-search" }
+ *     },
+ *     projects: {
+ *       "/workspace": {
+ *         mcpServers: { docs: { command: "local-docs" } }
+ *       }
+ *     }
+ *   }),
+ *   "/workspace/.mcp.json": JSON.stringify({
+ *     mcpServers: { search: { command: "project-search" } }
+ *   })
+ * })
+ * const effective = await Effect.runPromise(
+ *   Effect.provide(
+ *     Mcp.loadEffective("/workspace", {
+ *       claudeJsonPath: "/home/user/.claude.json",
+ *       managedMcpRoots: ["/no-managed-mcp"]
+ *     }),
+ *     fileSystem.layer
+ *   )
+ * )
+ * const docs = effective.mcpServers.docs
+ * const search = effective.mcpServers.search
+ *
+ * console.log(Object.keys(effective.mcpServers).sort()) // ["docs", "search"]
+ * console.log(S.is(Mcp.StdioMcpServer)(docs) ? docs.command : undefined) // "local-docs"
+ * console.log(S.is(Mcp.StdioMcpServer)(search) ? search.command : undefined) // "project-search"
  * ```
  *
  * @category decoding
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The required cwd plus optional scope overrides make a one-argument direct call indistinguishable from a curried overload.
 export const loadEffective = (
   cwd: string,
   options?: EffectiveMcpLoadOptions

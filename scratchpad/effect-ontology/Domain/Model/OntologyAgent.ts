@@ -109,13 +109,6 @@ export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
 /**
  * Runtime value decoded by {@link OntologyAgentConfig}.
  *
- * **Example** (Select the concurrency policy)
- * ```ts
- * import type { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof OntologyAgentConfig = "concurrency"
- * console.log(field) // "concurrency"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -202,6 +195,28 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionM
  * console.log(S.is(ExtractionResult)({})) // false
  * ```
  *
+ * **Example** (Decode an empty extraction result)
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+ *
+ * const result = S.decodeUnknownOption(ExtractionResult)({
+ *   graph: {},
+ *   metrics: {
+ *     entityCount: 0,
+ *     relationCount: 0,
+ *     chunkCount: 1,
+ *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+ *     duration: 5
+ *   }
+ * })
+ * console.log(O.map(result, (value) => value.entities.length)) // Some(0)
+ * console.log(O.map(result, (value) => value.isEmpty)) // Some(true)
+ * console.log(O.map(result, (value) => value.isValid)) // Some(true)
+ * console.log(O.map(result, (value) => value.hasTurtle)) // Some(false)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -225,11 +240,23 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
   /**
    * Extracted entities.
    *
-   * **Example** (Use OntologyAgent)
+   * **Example** (Count extracted entities)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const entityCount = (result: ExtractionResult): number => result.entities.length
+   * const result = S.decodeUnknownOption(ExtractionResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   }
+   * })
+   * console.log(O.map(result, (value) => value.entities.length)) // Some(0)
    * ```
    *
    * @returns Immutable entities owned by the result's knowledge graph.
@@ -241,11 +268,23 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
   /**
    * Extracted relations.
    *
-   * **Example** (Use OntologyAgent)
+   * **Example** (Count extracted relations)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const relationCount = (result: ExtractionResult): number => result.relations.length
+   * const result = S.decodeUnknownOption(ExtractionResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   }
+   * })
+   * console.log(O.map(result, (value) => value.relations.length)) // Some(0)
    * ```
    *
    * @returns Immutable relations owned by the result's knowledge graph.
@@ -257,11 +296,23 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
   /**
    * Whether no entities were extracted.
    *
-   * **Example** (Use onNone)
+   * **Example** (Detect an empty extraction)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const hasNoEntities = (result: ExtractionResult): boolean => result.isEmpty
+   * const result = S.decodeUnknownOption(ExtractionResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   }
+   * })
+   * console.log(O.map(result, (value) => value.isEmpty)) // Some(true)
    * ```
    *
    * @returns `true` when the graph's entity collection is empty.
@@ -273,11 +324,23 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
   /**
    * Whether validation passed, treating an absent report as not yet invalid.
    *
-   * **Example** (Use onNone)
+   * **Example** (Treat a missing report as valid)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const accepted = (result: ExtractionResult): boolean => result.isValid
+   * const result = S.decodeUnknownOption(ExtractionResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   }
+   * })
+   * console.log(O.map(result, (value) => value.isValid)) // Some(true)
    * ```
    *
    * @returns Report conformance when present; otherwise `true`.
@@ -292,11 +355,23 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
   /**
    * Whether non-empty Turtle output is available.
    *
-   * **Example** (Use ExtractionResult)
+   * **Example** (Detect missing Turtle)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const serialized = (result: ExtractionResult): boolean => result.hasTurtle
+   * const result = S.decodeUnknownOption(ExtractionResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   }
+   * })
+   * console.log(O.map(result, (value) => value.hasTurtle)) // Some(false)
    * ```
    *
    * @returns `true` when the optional Turtle serialization is populated.
@@ -375,13 +450,6 @@ export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
 /**
  * Runtime value decoded by {@link ExtractWithClaimsOptions}.
  *
- * **Example** (Select the article identifier)
- * ```ts
- * import type { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof ExtractWithClaimsOptions = "articleId"
- * console.log(field) // "articleId"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -395,6 +463,27 @@ export type ExtractWithClaimsOptions = typeof ExtractWithClaimsOptions.Type;
  * import * as S from "effect/Schema"
  * import { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
  * console.log(S.is(ExtractWithClaimsResult)({})) // false
+ * ```
+ *
+ * **Example** (Decode an empty claim extraction result)
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
+ *
+ * const result = S.decodeUnknownOption(ExtractWithClaimsResult)({
+ *   graph: {},
+ *   metrics: {
+ *     entityCount: 0,
+ *     relationCount: 0,
+ *     chunkCount: 1,
+ *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+ *     duration: 5
+ *   },
+ *   claimCount: 0,
+ *   articleId: "article-001"
+ * })
+ * console.log(O.map(result, (value) => value.hasClaims)) // Some(false)
  * ```
  *
  * @invariant Claim count is non-negative and article identity is non-empty.
@@ -418,11 +507,25 @@ export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I
   /**
    * Extracted entities.
    *
-   * **Example** (Use OntologyAgent)
+   * **Example** (Count claim-extraction entities)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const entityCount = (result: ExtractWithClaimsResult): number => result.entities.length
+   * const result = S.decodeUnknownOption(ExtractWithClaimsResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   },
+   *   claimCount: 0,
+   *   articleId: "article-001"
+   * })
+   * console.log(O.map(result, (value) => value.entities.length)) // Some(0)
    * ```
    *
    * @returns Immutable entities owned by the result's knowledge graph.
@@ -434,11 +537,25 @@ export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I
   /**
    * Extracted relations.
    *
-   * **Example** (Use OntologyAgent)
+   * **Example** (Count claim-extraction relations)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const relationCount = (result: ExtractWithClaimsResult): number => result.relations.length
+   * const result = S.decodeUnknownOption(ExtractWithClaimsResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   },
+   *   claimCount: 0,
+   *   articleId: "article-001"
+   * })
+   * console.log(O.map(result, (value) => value.relations.length)) // Some(0)
    * ```
    *
    * @returns Immutable relations owned by the result's knowledge graph.
@@ -450,11 +567,25 @@ export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I
   /**
    * Whether no entities were extracted.
    *
-   * **Example** (Use OntologyAgent)
+   * **Example** (Detect an empty claim extraction)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const hasNoEntities = (result: ExtractWithClaimsResult): boolean => result.isEmpty
+   * const result = S.decodeUnknownOption(ExtractWithClaimsResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   },
+   *   claimCount: 0,
+   *   articleId: "article-001"
+   * })
+   * console.log(O.map(result, (value) => value.isEmpty)) // Some(true)
    * ```
    *
    * @returns `true` when the graph's entity collection is empty.
@@ -466,11 +597,25 @@ export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I
   /**
    * Whether one or more claims were created.
    *
-   * **Example** (Use ExtractWithClaimsResult)
+   * **Example** (Detect missing claims)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const producedClaims = (result: ExtractWithClaimsResult): boolean => result.hasClaims
+   * const result = S.decodeUnknownOption(ExtractWithClaimsResult)({
+   *   graph: {},
+   *   metrics: {
+   *     entityCount: 0,
+   *     relationCount: 0,
+   *     chunkCount: 1,
+   *     usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
+   *     duration: 5
+   *   },
+   *   claimCount: 0,
+   *   articleId: "article-001"
+   * })
+   * console.log(O.map(result, (value) => value.hasClaims)) // Some(false)
    * ```
    *
    * @returns `true` when the non-negative claim count is greater than zero.
@@ -518,13 +663,6 @@ export const QueryBinding = QueryBindingModel.pipe(
 
 /**
  * Runtime value decoded by {@link QueryBinding}.
- *
- * **Example** (Select the binding map)
- * ```ts
- * import type { QueryBinding } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof QueryBinding = "bindings"
- * console.log(field) // "bindings"
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -608,13 +746,6 @@ export const QueryResult = QueryResultModel.annotate({
 /**
  * Runtime value decoded by {@link QueryResult}.
  *
- * **Example** (Select the answer field)
- * ```ts
- * import type { QueryResult } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof QueryResult = "answer"
- * console.log(field) // "answer"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -663,13 +794,6 @@ export const ReasoningResult = ReasoningResultModel.annotate({
 
 /**
  * Runtime value decoded by {@link ReasoningResult}.
- *
- * **Example** (Select inferred triples)
- * ```ts
- * import type { ReasoningResult } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof ReasoningResult = "inferredTripleCount"
- * console.log(field) // "inferredTripleCount"
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -768,13 +892,6 @@ export const ViolationsByLevel = ViolationsByLevelModel.annotate({
 /**
  * Runtime value decoded by {@link ViolationsByLevel}.
  *
- * **Example** (Select blocking violations)
- * ```ts
- * import type { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof ViolationsByLevel = "violations"
- * console.log(field) // "violations"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -838,13 +955,6 @@ export const ViolationExplanation = ViolationExplanationModel.annotate({
 /**
  * Runtime value decoded by {@link ViolationExplanation}.
  *
- * **Example** (Select the explanation)
- * ```ts
- * import type { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof ViolationExplanation = "explanation"
- * console.log(field) // "explanation"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -899,11 +1009,19 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
   /**
    * Whether standards-level validation conforms.
    *
-   * **Example** (Use OntologyAgent)
+   * **Example** (Read report conformance)
    * ```ts
-   * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const accepted = (report: EnhancedValidationReport): boolean => report.isValid
+   * const report = S.decodeUnknownOption(EnhancedValidationReport)({
+   *   conforms: true,
+   *   duration: 5,
+   *   dataGraphTripleCount: 42,
+   *   shapesCount: 3
+   * })
+   * console.log(O.map(report, (value) => value.isValid)) // Some(true)
    * ```
    *
    * @returns The standards-level conformance decision.
@@ -977,13 +1095,6 @@ export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
 
 /**
  * Runtime value decoded by {@link EnhancedValidationReport}.
- *
- * **Example** (Select the conformance field)
- * ```ts
- * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof EnhancedValidationReport = "conforms"
- * console.log(field) // "conforms"
- * ```
  *
  * @category type-level
  * @since 0.0.0

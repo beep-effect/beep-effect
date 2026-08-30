@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/voice-composer-slice",
   "lifecycle": "active",
+  "statusNote": "P0 remains the only authorized execution phase: run the bounded Linux Tauri/WebKitGTK spike and record an explicit proceed, reshape, or stop decision before P1.",
   "mission": "Add all-device push-to-talk Moonshine dictation and manual, interruptible Kokoro read-aloud to the professional-desktop composer, gated by a five-day Linux Tauri spike.",
   "executionCapable": true,
   "reflectionRequired": true,

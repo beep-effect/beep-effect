@@ -1,0 +1,2343 @@
+{
+  "pack": "claudecode-hook",
+  "modules": [
+    {
+      "file": "claudecode/Hook.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 10,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Bus.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 13,
+      "owningExportCount": 13,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Hook/Matcher.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 12,
+      "owningExportCount": 12,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 63,
+      "owningExportCount": 63,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    },
+    {
+      "file": "claudecode/Hook/Transcript.ts",
+      "pack": "claudecode-hook",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "DispatchMap, dispatch, HookDefinition, hookTeardown, runDispatchProgram, runHookProgram, runMain",
+      "line": 30,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "* as Context",
+      "line": 51,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "agentId, agentType, cwd, effort, hookEventName, permissionMode, promptId, sessionId, transcriptPath",
+      "line": 59,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "EffortLevel, envelopeFields, HookEffort, HookEnvelope, HookPermissionMode",
+      "line": 82,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "matchTool, testTool",
+      "line": 101,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "readTranscript",
+      "line": 114,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "* as Bus",
+      "line": 127,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "bus, publish",
+      "line": 135,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "* as Tool",
+      "line": 148,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook.ts",
+      "name": "ConfigChange, CwdChanged, Elicitation, ElicitationResult, FileChanged, HookEventName, HookInput, HookInputEncoded, InstructionsLoaded, MessageDisplay, Notification, PermissionDenied, PermissionRequest, PostCompact, PostToolBatch, PostToolUse, PostToolUseFailure, PreCompact, PreToolUse, SessionEnd, SessionStart, Setup, Stop, StopFailure, SubagentStart, SubagentStop, TaskCompleted, TaskCreated, TeammateIdle, UserPromptExpansion, UserPromptSubmit, WorktreeCreate, WorktreeRemove",
+      "line": 161,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Bus.ts",
+      "name": "Interface",
+      "line": 39,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Bus.ts",
+      "name": "Service",
+      "line": 65,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Bus.ts",
+      "name": "layer",
+      "line": 99,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Bus.ts",
+      "name": "bus",
+      "line": 123,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Bus.ts",
+      "name": "publish",
+      "line": 147,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "Interface",
+      "line": 39,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "Service",
+      "line": 69,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "fromEnvelope",
+      "line": 86,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "layer",
+      "line": 114,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "sessionId",
+      "line": 140,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "transcriptPath",
+      "line": 163,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "cwd",
+      "line": 186,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "permissionMode",
+      "line": 209,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "promptId",
+      "line": 232,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "hookEventName",
+      "line": 255,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "effort",
+      "line": 278,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "agentId",
+      "line": 301,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Context.ts",
+      "name": "agentType",
+      "line": 324,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "EffortLevel",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "EffortLevel",
+      "line": 57,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "HookPermissionMode",
+      "line": 76,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "HookPermissionMode",
+      "line": 104,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "HookEffort",
+      "line": 122,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "envelopeFields",
+      "line": 159,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "HookEnvelope",
+      "line": 196,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "HookEffort",
+      "line": 219,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Envelope.ts",
+      "name": "HookEnvelope",
+      "line": 257,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Matcher.ts",
+      "name": "matchValue",
+      "line": 49,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Matcher.ts",
+      "name": "testValue",
+      "line": 79,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Matcher.ts",
+      "name": "handleMatcher",
+      "line": 104,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@internal",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Matcher.ts",
+      "name": "matchTool",
+      "line": 129,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Matcher.ts",
+      "name": "matchFileName",
+      "line": 152,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Matcher.ts",
+      "name": "testTool",
+      "line": 178,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "HookProcessOutput",
+      "line": 63,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "processOutput",
+      "line": 91,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "stderrExit",
+      "line": 119,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "rawStdout",
+      "line": 137,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "HookDefinition",
+      "line": 163,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "DispatchMap",
+      "line": 188,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "runHookProgram",
+      "line": 340,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "runDispatchProgram",
+      "line": 374,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "hookTeardown",
+      "line": 433,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "runMain",
+      "line": 468,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "dispatch",
+      "line": 506,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Runner.ts",
+      "name": "HookProcessOutput",
+      "line": 530,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "PreToolAdapter",
+      "line": 32,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "PostToolAdapter",
+      "line": 44,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "definePreAdapter",
+      "line": 63,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "definePostAdapter",
+      "line": 83,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "BashToolInput",
+      "line": 108,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "BashToolResponse",
+      "line": 135,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ReadToolInput",
+      "line": 162,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ReadToolResponse",
+      "line": 188,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WriteToolInput",
+      "line": 210,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "EditToolInput",
+      "line": 232,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GlobToolInput",
+      "line": 259,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GrepOutputMode",
+      "line": 281,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GrepOutputMode",
+      "line": 294,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GrepToolInput",
+      "line": 311,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WebFetchToolInput",
+      "line": 340,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WebSearchToolInput",
+      "line": 369,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AgentToolInput",
+      "line": 395,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AgentToolResponse",
+      "line": 435,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AskUserQuestionOption",
+      "line": 468,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AskUserQuestionQuestion",
+      "line": 490,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AskUserQuestionToolInput",
+      "line": 517,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ExitPlanAllowedPrompt",
+      "line": 542,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ExitPlanModeToolInput",
+      "line": 571,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ExitPlanModeToolResponse",
+      "line": 597,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "BashAdapter",
+      "line": 627,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ReadAdapter",
+      "line": 648,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WriteAdapter",
+      "line": 669,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "EditAdapter",
+      "line": 690,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GlobAdapter",
+      "line": 711,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GrepAdapter",
+      "line": 732,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WebFetchAdapter",
+      "line": 753,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WebSearchAdapter",
+      "line": 774,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AgentAdapter",
+      "line": 795,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AskUserQuestionAdapter",
+      "line": 816,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ExitPlanModeAdapter",
+      "line": 837,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "SupportedToolName",
+      "line": 858,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "SupportedToolName",
+      "line": 883,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "DecodedPreToolUseWith",
+      "line": 985,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "DecodedPreToolUse",
+      "line": 997,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "DecodedPostToolUseWith",
+      "line": 1006,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "DecodedPostToolUse",
+      "line": 1019,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "decodePreToolUseWith",
+      "line": 1087,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "decodePostToolUseWith",
+      "line": 1135,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "decodePreToolUse",
+      "line": 1196,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "decodePostToolUse",
+      "line": 1230,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effects",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "BashToolInput",
+      "line": 1255,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "BashToolResponse",
+      "line": 1289,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ReadToolInput",
+      "line": 1323,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ReadToolResponse",
+      "line": 1357,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WriteToolInput",
+      "line": 1391,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "EditToolInput",
+      "line": 1425,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GlobToolInput",
+      "line": 1459,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "GrepToolInput",
+      "line": 1493,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WebFetchToolInput",
+      "line": 1527,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "WebSearchToolInput",
+      "line": 1561,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AgentToolInput",
+      "line": 1595,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AgentToolResponse",
+      "line": 1629,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AskUserQuestionOption",
+      "line": 1663,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AskUserQuestionQuestion",
+      "line": 1697,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "AskUserQuestionToolInput",
+      "line": 1731,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ExitPlanAllowedPrompt",
+      "line": 1765,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ExitPlanModeToolInput",
+      "line": 1799,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Tool.ts",
+      "name": "ExitPlanModeToolResponse",
+      "line": 1833,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "claudecode/Hook/Transcript.ts",
+      "name": "readTranscript",
+      "line": 63,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "claudecode-hook",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    }
+  ]
+}

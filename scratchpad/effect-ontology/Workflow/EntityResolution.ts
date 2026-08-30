@@ -11,36 +11,37 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect, MutableHashMap, MutableHashSet, Order } from "effect";
+import { Effect, MutableHashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
+import { mergeEntityFields } from "../Utils/Entity.ts";
 import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/EntityResolution");
 
 /**
- * Configuration for entity resolution
+ * Mention similarity and type-overlap thresholds used by {@link resolveEntities}.
  *
- *
- * **Example** (Use the EntityResolutionConfig contract)
+ * **Example** (Construct a resolution config)
  *
  * ```ts
- * import type { EntityResolutionConfig } from "@effect-ontology/Workflow/EntityResolution"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { EntityResolutionConfig } from "@effect-ontology/Workflow/EntityResolution"
  *
- * const acceptsEntityResolutionConfig = (_value: EntityResolutionConfig): void => undefined
- *
- * console.log(acceptsEntityResolutionConfig)
+ * const config = EntityResolutionConfig.make({
+ *   mentionSimilarityThreshold: UnitInterval.make(0.7),
+ *   requireTypeOverlap: true
+ * })
+ * console.log(config.requireTypeOverlap) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`EntityResolutionConfig`)(
@@ -57,29 +58,21 @@ export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`E
 /**
  * Constructor input accepted by {@link EntityResolutionConfig}.
  *
- * **Example** (Configure entity resolution)
- *
- * ```ts
- * import type { EntityResolutionConfigInput } from "@effect-ontology/Workflow/EntityResolution"
- *
- * const config: EntityResolutionConfigInput = { requireTypeOverlap: false }
- * console.log(config)
- * ```
- *
+ * @see {@link EntityResolutionConfig} for the runtime class and {@link resolveEntities} for applying it.
  * @category type-level
  * @since 0.0.0
  */
 export type EntityResolutionConfigInput = (typeof EntityResolutionConfig)["~type.make.in"];
 
 /**
- * Exposes default config for composition by callers of this module.
+ * Schema-defaulted {@link EntityResolutionConfig} used when callers omit thresholds.
  *
- * **Example** (Inspect default config)
+ * **Example** (Read the default mention threshold)
  *
  * ```ts
  * import { DEFAULT_CONFIG } from "@effect-ontology/Workflow/EntityResolution"
  *
- * console.log(DEFAULT_CONFIG)
+ * console.log(DEFAULT_CONFIG.mentionSimilarityThreshold) // 0.7
  * ```
  *
  * @category constants
@@ -177,48 +170,21 @@ const mergeEntityCluster = (
 ): O.Option<Entity> => {
   const entities = A.getSomes(A.map(clusterIds, (id) => MutableHashMap.get(entityMap, id)));
 
-  if (entities.length === 0) return O.none();
-  if (entities.length === 1) return O.some(entities[0]);
-
-  // Select canonical entity (prefer longest mention - usually most complete)
-  const sorted = A.sort(
-    entities,
-    Order.mapInput(Order.flip(Order.Number), (entity: Entity) => entity.mention.length)
-  );
-  const canonical = sorted[0];
-
-  // Merge types using frequency voting
-  const typeFreq = MutableHashMap.empty<IRI, number>();
-  for (const entity of entities) {
-    for (const type of entity.types) {
-      MutableHashMap.set(typeFreq, type, O.getOrElse(MutableHashMap.get(typeFreq, type), () => 0) + 1);
-    }
-  }
-
-  // Select types appearing in at least half the entities
-  const threshold = Math.ceil(entities.length / 2);
-  const mergedTypes = A.fromIterable(typeFreq)
-    .filter(([_, count]) => count >= threshold)
-    .map(([type]) => type);
-
-  const finalTypes: Entity["types"] = mergedTypes.length > 0 ? [canonical.types[0], ...mergedTypes] : canonical.types;
-
-  // Merge attributes (prefer values from longer mentions)
-  const mergedAttrs: Record<string, string | number | boolean> = {};
-  for (const entity of sorted) {
-    for (const [key, value] of R.toEntries(entity.attributes)) {
-      if (!(key in mergedAttrs)) mergedAttrs[key] = value;
-    }
-  }
-
-  return O.some(
-    Entity.make({
-      id: canonical.id,
-      mention: canonical.mention,
-      types: finalTypes,
-      attributes: mergedAttrs,
-    })
-  );
+  return A.match(entities, {
+    onEmpty: O.none<Entity>,
+    onNonEmpty: (values) => {
+      if (values.length === 1) return O.some(A.headNonEmpty(values));
+      const merged = mergeEntityFields(values);
+      return O.some(
+        Entity.make({
+          id: merged.canonical.id,
+          mention: merged.canonical.mention,
+          types: merged.types,
+          attributes: merged.attributes,
+        })
+      );
+    },
+  });
 };
 
 /**
@@ -229,19 +195,31 @@ const mergeEntityCluster = (
  * Identifies and merges duplicate entities based on mention similarity
  * and type compatibility. Updates relations to point to canonical entities.
  *
- * **Example** (Use resolveEntities)
+ * **Example** (Merge overlapping Person mentions)
  *
  * ```ts
- * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { IRI } from "@beep/rdf"
+ * import { Effect } from "effect"
+ * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  * import { resolveEntities } from "@effect-ontology/Workflow/EntityResolution"
- * import * as Effect from "effect/Effect"
  *
- * const resolved = resolveEntities(KnowledgeGraph.make({}), {
- *   mentionSimilarityThreshold: UnitInterval.make(0.7),
- *   requireTypeOverlap: true
+ * const graph = KnowledgeGraph.make({
+ *   entities: [
+ *     Entity.make({
+ *       id: EntityId.make("eze"),
+ *       mention: "Eze",
+ *       types: [IRI.make("https://schema.org/Person")]
+ *     }),
+ *     Entity.make({
+ *       id: EntityId.make("eberechi_eze"),
+ *       mention: "Eberechi Eze",
+ *       types: [IRI.make("https://schema.org/Person")]
+ *     })
+ *   ]
  * })
- * console.log(Effect.isEffect(resolved)) // true
+ * const resolved = Effect.runSync(resolveEntities(graph, {}))
+ * console.log(resolved.entities.length)
  * ```
  *
  * @param graph - Input knowledge graph

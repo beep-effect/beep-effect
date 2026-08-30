@@ -271,7 +271,7 @@ describe("CI runner security", () => {
       assert.include(workflow.getIn([...restorePath, "if"]), "github.event_name == 'pull_request'");
       assert.strictEqual(
         workflow.getIn([...restorePath, "uses"]),
-        "actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830"
+        "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9"
       );
       assert.strictEqual(workflow.getIn([...restorePath, "with", "path"]), ".turbo/cache");
       assert.strictEqual(
@@ -287,7 +287,7 @@ describe("CI runner security", () => {
       assert.include(workflow.getIn([...savePath, "if"]), "github.event_name == 'push'");
       assert.strictEqual(
         workflow.getIn([...savePath, "uses"]),
-        "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830"
+        "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9"
       );
       assert.strictEqual(workflow.getIn([...savePath, "with", "path"]), ".turbo/cache");
       assert.strictEqual(

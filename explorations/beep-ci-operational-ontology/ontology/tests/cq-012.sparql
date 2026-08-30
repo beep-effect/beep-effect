@@ -1,0 +1,29 @@
+# CQ-012: Within a given window, what fraction of total episode time is queue wait, lock contention, execution, repair, and CI wait? (Shares are void unless decomposedEpisodes = windowEpisodes.)
+# Expected: non_empty | priority: must_have | derivation: aggregation
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT (SUM(?queue)/SUM(?total) AS ?queueShare)
+       (SUM(?lock)/SUM(?total) AS ?lockShare)
+       (SUM(?exec)/SUM(?total) AS ?execShare)
+       (SUM(?repair)/SUM(?total) AS ?repairShare)
+       (SUM(?ci)/SUM(?total) AS ?ciShare)
+       (SUM(?total) AS ?grandTotalMs)
+       (COUNT(?ep) AS ?decomposedEpisodes)
+       (MAX(?windowN) AS ?windowEpisodes) WHERE {
+  VALUES (?since ?until) { ("2026-08-01T00:00:00Z"^^xsd:dateTime "2026-08-31T23:59:59Z"^^xsd:dateTime) }  # harness binds
+  {
+    SELECT (COUNT(?ep2) AS ?windowN) WHERE {
+      VALUES (?since2 ?until2) { ("2026-08-01T00:00:00Z"^^xsd:dateTime "2026-08-31T23:59:59Z"^^xsd:dateTime) }  # harness binds
+      ?ep2 ciops:episodeStartedAt ?at2 .
+      FILTER (?at2 >= ?since2 && ?at2 <= ?until2)
+    }
+  }
+  ?ep ciops:episodeStartedAt ?at .
+  FILTER (?at >= ?since && ?at <= ?until)
+  ?ep ciops:queueWaitMs ?queue ;
+      ciops:lockWaitMs ?lock ; ciops:executionMs ?exec ;
+      ciops:repairGapMs ?repair ; ciops:ciWaitMs ?ci ;
+      ciops:timeToCertaintyMs ?total .
+}
+HAVING (SUM(?total) > 0)

@@ -13,16 +13,19 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Unknown } from "@beep/schema/Unknown";
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
+import type { DrizzleError } from "drizzle-orm";
 import { Console, DateTime, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Argument from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
+import type { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../../Domain/Error/Jina.ts";
 import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
 import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
 import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
@@ -65,7 +68,7 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
   showMetadata: boolean,
   enrich: boolean,
   truncate: O.Option<number>
-) {
+): Effect.fn.Return<void, JinaApiError | JinaParseError | JinaRateLimitError | JinaTimeoutError, JinaReaderClient> {
   const jina = yield* JinaReaderClient;
   yield* Console.log(`Fetching: ${url}\n---`);
   const response = yield* jina.fetchUrl(url);
@@ -129,14 +132,24 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
 });
 
 /**
- * Retrieves fetch command data for downstream processing.
+ * Previews URL content through Jina Reader without writing it to storage.
  *
- * **Example** (Inspect fetch command)
+ * **Details**
+ *
+ * `--metadata` prints Jina title/site fields; `--enrich` runs the optional
+ * LLM enrichment pass; `--truncate` limits printed body length.
+ *
+ * **Example** (Fetch a URL for preview)
  *
  * ```ts
  * import { fetchCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(fetchCommand)
+ * const argv = ["https://example.com/ada", "--metadata"]
+ * const program = Command.runWith(fetchCommand, { version: "0.0.0" })([...argv])
+ * console.log(fetchCommand.name) // "fetch"
+ * console.log(argv.includes("--metadata")) // true
+ * console.log(program)
  * ```
  *
  * @category cli-commands
@@ -189,7 +202,7 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
   skipEnrich: boolean,
   sourceType: O.Option<string>,
   allowDuplicates: boolean
-) {
+): Effect.fn.Return<void, LinkIngestionError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
 
   yield* Console.log(`Ingesting: ${url} (ontology: ${ontologyId})`);
@@ -216,16 +229,27 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
 });
 
 /**
- * Exposes ingest link command for composition by callers of this module.
+ * Fetches a URL through Jina Reader and persists the document for extraction.
  *
- * **Example** (Inspect ingest link command)
+ * **Details**
+ *
+ * Unlike {@link fetchCommand}, this writes storage metadata. `--skip-enrich`
+ * stores the raw fetch; `--allow-duplicates` bypasses content-hash dedupe.
+ *
+ * **Example** (Ingest one URL into storage)
  *
  * ```ts
  * import { ingestLinkCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(ingestLinkCommand)
+ * const argv = ["https://example.com/ada", "--ontology-id", "people"]
+ * const program = Command.runWith(ingestLinkCommand, { version: "0.0.0" })([...argv])
+ * console.log(ingestLinkCommand.name) // "ingest-link"
+ * console.log(argv.includes("--ontology-id")) // true
+ * console.log(program)
  * ```
  *
+ * @see {@link fetchCommand} for a storage-free content preview of the same URL.
  * @category cli-commands
  * @since 0.0.0
  */
@@ -276,7 +300,7 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
   limit: number,
   offset: number,
   jsonOutput: boolean
-) {
+): Effect.fn.Return<void, DrizzleError | S.SchemaError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   const canonicalStatus = yield* O.match(status, {
     onNone: () => Effect.succeed(O.none()),
@@ -324,16 +348,23 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
 });
 
 /**
- * Exposes documents command for composition by callers of this module.
+ * Lists documents previously ingested from URLs, with optional status and
+ * source-type filters.
  *
- * **Example** (Inspect documents command)
+ * **Example** (List ingested documents)
  *
  * ```ts
  * import { documentsCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(documentsCommand)
+ * const argv = ["--status", "pending", "--limit", "20"]
+ * const program = Command.runWith(documentsCommand, { version: "0.0.0" })([...argv])
+ * console.log(documentsCommand.name) // "documents"
+ * console.log(argv.includes("--status")) // true
+ * console.log(program)
  * ```
  *
+ * @see {@link ingestLinkCommand} for the command that creates these documents.
  * @category cli-commands
  * @since 0.0.0
  */
@@ -367,7 +398,7 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
   ontologyId: string,
   concurrency: number,
   skipEnrich: boolean
-) {
+): Effect.fn.Return<void, LinkIngestionError | PlatformError, FileSystem.FileSystem | LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(file);
@@ -422,16 +453,22 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
 });
 
 /**
- * Exposes ingest batch command for composition by callers of this module.
+ * Bulk-ingests URLs from a file, one URL per line, into storage.
  *
- * **Example** (Inspect ingest batch command)
+ * **Example** (Ingest a URL list)
  *
  * ```ts
  * import { ingestBatchCommand } from "@effect-ontology/Cli/Commands/Fetch"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(ingestBatchCommand)
+ * const argv = ["urls.txt", "--ontology-id", "people", "--concurrency", "4"]
+ * const program = Command.runWith(ingestBatchCommand, { version: "0.0.0" })([...argv])
+ * console.log(ingestBatchCommand.name) // "ingest-batch"
+ * console.log(argv.includes("--ontology-id")) // true
+ * console.log(program)
  * ```
  *
+ * @see {@link ingestLinkCommand} for ingesting a single URL instead of a file.
  * @category cli-commands
  * @since 0.0.0
  */

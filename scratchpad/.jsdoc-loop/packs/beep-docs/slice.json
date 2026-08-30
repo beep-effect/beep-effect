@@ -1,0 +1,1965 @@
+{
+  "pack": "beep-docs",
+  "modules": [
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "pack": "beep-docs",
+      "exportCount": 18,
+      "owningExportCount": 18,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "pack": "beep-docs",
+      "exportCount": 12,
+      "owningExportCount": 12,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "pack": "beep-docs",
+      "exportCount": 11,
+      "owningExportCount": 11,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/DatasetPath.ts",
+      "pack": "beep-docs",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "pack": "beep-docs",
+      "exportCount": 8,
+      "owningExportCount": 8,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/index.ts",
+      "pack": "beep-docs",
+      "exportCount": 5,
+      "owningExportCount": 0,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "pack": "beep-docs",
+      "exportCount": 26,
+      "owningExportCount": 26,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "pack": "beep-docs",
+      "exportCount": 7,
+      "owningExportCount": 7,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "pack": "beep-docs",
+      "exportCount": 11,
+      "owningExportCount": 11,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": true,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    }
+  ],
+  "exports": [
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "DeclarationKind",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "DeclarationKind",
+      "line": 70,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "TypeKind",
+      "line": 88,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "TypeKind",
+      "line": 100,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "UnknownReflectionKind",
+      "line": 118,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "UnknownReflectionKind",
+      "line": 130,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "DeclarationKindName",
+      "line": 149,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "DeclarationKindName",
+      "line": 161,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "DeclarationAnchor",
+      "line": 199,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "DeclarationAnchor",
+      "line": 219,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "ApiCodeExample",
+      "line": 259,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "ApiDeclaration",
+      "line": 296,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "ApiDeclarationGroup",
+      "line": 331,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "ApiModule",
+      "line": 356,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "ModuleReference",
+      "line": 386,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "ApiReferenceOptions",
+      "line": 408,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "moduleView",
+      "line": 539,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReference.ts",
+      "name": "codeExamples",
+      "line": 1067,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "ApiReferenceDatasetEntry",
+      "line": 74,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "DatasetReadFailed",
+      "line": 99,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "DatasetDecodeFailed",
+      "line": 124,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "DatasetChannelMismatch",
+      "line": 151,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "PackageManifestMismatch",
+      "line": 178,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "PackageSlugCollision",
+      "line": 204,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "UnknownBarrel",
+      "line": 230,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "PackageSlugDerivationFailed",
+      "line": 256,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@other",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "ModulePathDerivationFailed",
+      "line": 283,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "LoadApiReferenceDatasetError",
+      "line": 310,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "LoadApiReferenceDatasetError",
+      "line": 333,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/ApiReferenceDataset.ts",
+      "name": "loadApiReferenceDataset",
+      "line": 556,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "CodeSnippetLanguageFromExtension",
+      "line": 41,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "CodeSnippetLanguageFromExtension",
+      "line": 72,
+      "kind": "value",
+      "exportKind": "namespace",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @example."
+        }
+      ]
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "CodeSnippetLanguageFromExtension",
+      "line": 82,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "CodeSnippetLanguage",
+      "line": 98,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "CodeSnippetLanguage",
+      "line": 110,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "CodeSnippetLanguageFromInfoString",
+      "line": 154,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "CodeSnippetLanguageFromInfoString",
+      "line": 171,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "languageFromInfoString",
+      "line": 190,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "BareTsPropertyName",
+      "line": 228,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "BareTsPropertyName",
+      "line": 240,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/CodeSnippet.ts",
+      "name": "typescriptPropertyName",
+      "line": 261,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/DatasetPath.ts",
+      "name": "PathEscapesDataset",
+      "line": 32,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/DatasetPath.ts",
+      "name": "resolveWithinDataset",
+      "line": 68,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "defaultBaseDirectory",
+      "line": 32,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "ReflectionOptions",
+      "line": 48,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "ReflectionReadFailed",
+      "line": 71,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "ReflectionDigestMismatch",
+      "line": 102,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "ReflectionDecodeFailed",
+      "line": 130,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "LoadReflectionError",
+      "line": 161,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "LoadReflectionError",
+      "line": 179,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/Reflection.ts",
+      "name": "loadReflection",
+      "line": 232,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/index.ts",
+      "name": "* as ApiReference",
+      "line": 1,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "beep-docs",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/index.ts",
+      "name": "* as ApiReferenceDataset",
+      "line": 2,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "beep-docs",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/index.ts",
+      "name": "* as CodeSnippet",
+      "line": 3,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "beep-docs",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/index.ts",
+      "name": "* as DatasetPath",
+      "line": 4,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "beep-docs",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/api-reference/index.ts",
+      "name": "* as Reflection",
+      "line": 5,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "beep-docs",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiChannel",
+      "line": 49,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiChannel",
+      "line": 69,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypedocSchemaVersion",
+      "line": 86,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypedocSchemaVersion",
+      "line": 98,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "PackageSlug",
+      "line": 115,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "PackageSlug",
+      "line": 135,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "PackageSlugFromPackageName",
+      "line": 159,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@effect",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "PackageSlugFromPackageName",
+      "line": 175,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ModulePath",
+      "line": 192,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ModulePath",
+      "line": 212,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ModulePathFromExportPath",
+      "line": 238,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ModulePathFromExportPath",
+      "line": 254,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiReferenceEntry",
+      "line": 289,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypeDocProjectReflection",
+      "line": 353,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypeDocProjectReflection",
+      "line": 368,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypeDocProjectReflectionFromJsonString",
+      "line": 386,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypeDocProjectReflectionFromJsonString",
+      "line": 398,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "Utf8TextFromBytes",
+      "line": 418,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "Utf8TextFromBytes",
+      "line": 434,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypeDocProjectReflectionFromBytes",
+      "line": 455,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "TypeDocProjectReflectionFromBytes",
+      "line": 469,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiReferenceDatasetPackage",
+      "line": 490,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiReferenceDatasetManifest",
+      "line": 526,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiReferenceBarrel",
+      "line": 556,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiReferenceModule",
+      "line": 587,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReference.ts",
+      "name": "ApiReferencePackageManifest",
+      "line": 627,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "name": "GitRevision",
+      "line": 28,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "name": "GitRevision",
+      "line": 48,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "name": "SnapshotDigest",
+      "line": 66,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "name": "SnapshotDigest",
+      "line": 86,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "name": "SnapshotChannel",
+      "line": 104,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "name": "SnapshotChannels",
+      "line": 132,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/ApiReferenceSnapshot.ts",
+      "name": "ApiReferenceSnapshotManifest",
+      "line": 165,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "SearchSection",
+      "line": 39,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "SearchContentSource",
+      "line": 70,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "SearchContentSource",
+      "line": 82,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "DocumentationStagedSearchMetadata",
+      "line": 108,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "BlogStagedSearchMetadata",
+      "line": 150,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "StagedSearchMetadata",
+      "line": 193,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "StagedSearchMetadata",
+      "line": 206,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "DocumentationSearchMetadata",
+      "line": 234,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "BlogSearchMetadata",
+      "line": 273,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "SearchMetadata",
+      "line": 308,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "beep-docs",
+      "tags": [
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": true,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "beep-docs/domain/SearchMetadata.ts",
+      "name": "SearchMetadata",
+      "line": 321,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "beep-docs",
+      "tags": [
+        "@link",
+        "@category",
+        "@since"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    }
+  ]
+}

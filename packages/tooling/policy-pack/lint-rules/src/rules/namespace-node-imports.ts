@@ -9,6 +9,8 @@
 import { Str } from "@beep/utils";
 import { defineRule } from "@oxlint/plugins";
 import { HashMap } from "effect";
+import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { identifierName, literalStringValue } from "./utils.ts";
 import type { ESTree } from "@oxlint/plugins";
@@ -33,13 +35,13 @@ const expectedNamespaceAlias = (source: string): string => {
 
   return O.match(HashMap.get(NODE_MODULE_ALIASES, moduleName), {
     onSome: (knownAlias) => `Node${knownAlias}`,
-    onNone: () => `Node${moduleName.split("/").map(segmentAlias).join("")}`,
+    onNone: () => `Node${pipe(moduleName, Str.split("/"), A.map(segmentAlias), A.join(""))}`,
   });
 };
 
 // The `node:`-prefixed string source of an import, or `None` for any other module.
 const nodeBuiltinSource = (node: ESTree.ImportDeclaration): O.Option<string> =>
-  O.filter(literalStringValue(node.source), (value) => value.startsWith("node:"));
+  O.filter(literalStringValue(node.source), Str.startsWith("node:"));
 
 // The sole specifier when the import is exactly one `* as <name>` namespace specifier.
 const soleNamespaceImport = (node: ESTree.ImportDeclaration): O.Option<ESTree.ImportNamespaceSpecifier> => {

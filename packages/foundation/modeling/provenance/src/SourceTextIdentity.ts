@@ -83,7 +83,9 @@ export class SourceTextExtractor extends S.Class<SourceTextExtractor>($I`SourceT
   $I.annote("SourceTextExtractor", {
     description: "The named and versioned extractor that produced an exact source-text manifestation.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeEffect(SourceTextExtractor);
+}
 
 /**
  * Matter-scoped identity for one exact extracted source-text manifestation.

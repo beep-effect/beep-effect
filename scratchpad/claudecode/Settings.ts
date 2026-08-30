@@ -2,6 +2,7 @@
  * Settings module hub — schemas and loader for Claude Code's
  * settings.json files.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 

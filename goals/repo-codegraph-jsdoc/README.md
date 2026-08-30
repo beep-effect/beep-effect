@@ -5,6 +5,8 @@
 
 ## Status
 
+Lifecycle: `reference`
+
 Exploratory
 
 ## Overview

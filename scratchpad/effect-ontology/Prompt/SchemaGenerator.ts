@@ -12,6 +12,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
+import * as Eq from "effect/Equal";
 import { dual2 } from "../Utils/Dual.ts";
 import type { ExtractionRule, RuleCategory } from "./ExtractionRule.ts";
 import type { RuleSet } from "./RuleSet.ts";
@@ -295,5 +297,5 @@ export const findRulesByCategory = dual2(
  */
 export const findRuleById = dual2(
   (ruleSet: RuleSet, ruleId: string): O.Option<ExtractionRule> =>
-    A.findFirst(ruleSet.allRules, (rule) => rule.id === ruleId)
+    A.findFirst(ruleSet.allRules, P.Struct({id: Eq.equals(ruleId)}))
 );

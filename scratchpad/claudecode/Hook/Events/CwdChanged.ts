@@ -1,13 +1,10 @@
 /**
- * CwdChanged hook event.
+ * Fires when the working directory changes (for example via `cd`).
+ * Observability-only: JSON output cannot steer the session. Persist
+ * environment updates through `$CLAUDE_ENV_FILE` instead. Does not
+ * support a matcher. See https://code.claude.com/docs/en/hooks#cwdchanged.
  *
- * Fires when the working directory changes (e.g. via a `cd` command).
- * Observability-only — no decision control. One common use-case is
- * persisting environment variables via `$CLAUDE_ENV_FILE`, which Claude
- * Code also exposes to SessionStart, Setup, and FileChanged hooks. Does
- * not support a matcher.
- * See https://code.claude.com/docs/en/hooks#cwdchanged.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -29,18 +26,29 @@ const WatchPaths = S.String.pipe(
 );
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a CwdChanged hook, carrying the previous and next
+ * working directories.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a directory change)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.CwdChanged.Input)
+ * const input = S.decodeUnknownSync(Hook.CwdChanged.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo/packages",
+ *   hook_event_name: "CwdChanged",
+ *   old_cwd: "/repo",
+ *   new_cwd: "/repo/packages",
+ * })
+ *
+ * console.log(input.new_cwd) // "/repo/packages"
  * ```
  *
+ * @see {@link Output} for the ignored JSON response shape.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`CwdChangedInput`)(
@@ -56,18 +64,27 @@ export class Input extends S.Class<Input>($I`CwdChangedInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a CwdChanged handler may return. Claude Code does not
+ * act on it; use `$CLAUDE_ENV_FILE` for persistence and
+ * {@link watchPaths} only to advertise extra filesystem watches.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * Setting `continue: false` does not cancel the directory change.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.CwdChanged.Output)
+ * const output = Hook.CwdChanged.Output.make()
+ * console.log(O.isNone(output.watchPaths)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
+ * @see {@link watchPaths} for advertising extra watch paths.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`CwdChangedOutput`)(
@@ -85,52 +102,71 @@ export class Output extends S.Class<Output>($I`CwdChangedOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Empty observability output. Claude Code ignores the JSON body.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * This is not a decision helper. Persist env vars via `$CLAUDE_ENV_FILE`.
+ *
+ * **Example** (Return empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.CwdChanged.passthrough)
+ * const output = Hook.CwdChanged.passthrough()
+ * console.log(O.isNone(output.watchPaths)) // true
  * ```
  *
+ * @see {@link watchPaths} for advertising extra filesystem watches.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `watchPaths`.
+ * Advertise extra filesystem paths for Claude Code to watch. This writes
+ * `Output.watchPaths`; it does not persist env vars.
  *
- * **Example** (Use watchPaths)
+ * **Example** (Watch a cache directory)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.CwdChanged.watchPaths)
+ * const output = Hook.CwdChanged.watchPaths(["/tmp/build-cache"])
+ * console.log(O.getOrUndefined(output.watchPaths)) // ["/tmp/build-cache"]
  * ```
  *
+ * @see {@link passthrough} for empty observability output.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const watchPaths = (paths: ReadonlyArray<string>): Output => Output.make({ watchPaths: O.some(paths) });
 
 /**
- * Constructor for `define`.
+ * Build a runnable CwdChanged hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * Claude Code ignores the JSON response. Use `$CLAUDE_ENV_FILE` for
+ * environment persistence.
+ *
+ * **Example** (Define a CwdChanged hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.CwdChanged.define)
+ * const hook = Hook.CwdChanged.define({
+ *   handler: () => Effect.succeed(Hook.CwdChanged.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "CwdChanged"
  * ```
  *
+ * @see {@link passthrough} for the typical handler result.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {

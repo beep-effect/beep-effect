@@ -1,20 +1,18 @@
 /**
- * ElicitationResult hook event.
- *
  * Fires after the user responds to an MCP elicitation dialog, before the
  * response is sent back to the MCP server. A handler can accept, decline,
- * or cancel the response — and may override the content. Supports a
- * matcher on `mcp_server_name`.
- * See https://code.claude.com/docs/en/hooks#elicitationresult.
+ * or cancel — and may override the collected content. Matcher is on
+ * `mcp_server_name`. See
+ * https://code.claude.com/docs/en/hooks#elicitationresult.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
 import type { HookDefinition } from "../Runner.ts";
@@ -22,18 +20,21 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/ElicitationResult");
 
 /**
- * Schema for `Action`.
+ * Override action applied to an already-collected user response
+ * (`accept`, `decline`, or `cancel`).
  *
- * **Example** (Inspect the Action schema)
+ * **Example** (Decode a result action)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.ElicitationResult.Action)
+ * const action = S.decodeUnknownSync(Hook.ElicitationResult.Action)("accept")
+ * console.log(action) // "accept"
  * ```
  *
+ * @see {@link accept} for overriding the collected content.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const Action = LiteralKit(["accept", "decline", "cancel"]).pipe(
@@ -43,35 +44,29 @@ export const Action = LiteralKit(["accept", "decline", "cancel"]).pipe(
 );
 
 /**
- * Type-level model for `Action`.
+ * Decoded value produced by {@link Action}.
  *
- * **Example** (Use Action as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.ElicitationResult.Action
- * ```
- *
+ * @see {@link Action} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type Action = typeof Action.Type;
 
 /**
- * Schema for `Mode`.
+ * Interaction mode used for the completed elicitation (`form` or `url`).
  *
- * **Example** (Inspect the Mode schema)
+ * **Example** (Decode a result mode)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.ElicitationResult.Mode)
+ * const mode = S.decodeUnknownSync(Hook.ElicitationResult.Mode)("form")
+ * console.log(mode) // "form"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this mode.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const Mode = LiteralKit(["form", "url"]).pipe(
@@ -81,35 +76,39 @@ export const Mode = LiteralKit(["form", "url"]).pipe(
 );
 
 /**
- * Type-level model for `Mode`.
+ * Decoded value produced by {@link Mode}.
  *
- * **Example** (Use Mode as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.ElicitationResult.Mode
- * ```
- *
+ * @see {@link Mode} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type Mode = typeof Mode.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for an ElicitationResult hook, including the user's
+ * original `action` and optional `content`.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a collected user response)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.ElicitationResult.Input)
+ * const input = S.decodeUnknownSync(Hook.ElicitationResult.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "ElicitationResult",
+ *   mcp_server_name: "docs-mcp",
+ *   action: "accept",
+ *   content: { project: "beep" },
+ * })
+ *
+ * console.log(input.action) // "accept"
  * ```
  *
+ * @see {@link Elicitation.Input} for the original prompt, before the user answers.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`ElicitationResultInput`)(
@@ -128,18 +127,25 @@ export class Input extends S.Class<Input>($I`ElicitationResultInput`)(
 ) {}
 
 /**
- * Schema for `HookSpecificOutput`.
+ * Event-specific payload that overrides the user's collected response.
  *
- * **Example** (Inspect the HookSpecificOutput schema)
+ * **Example** (Inspect an override payload)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ElicitationResult.HookSpecificOutput)
+ * const specific = Hook.ElicitationResult.HookSpecificOutput.make({
+ *   hookEventName: "ElicitationResult",
+ *   action: "accept",
+ *   content: O.some({ project: "beep-effect" }),
+ * })
+ *
+ * console.log(specific.action) // "accept"
  * ```
  *
+ * @see {@link accept} for the constructor that fills this payload.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`ElicitationResultHookSpecificOutput`)(
@@ -154,18 +160,21 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`Elicitati
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response an ElicitationResult handler returns. `hookSpecificOutput`
+ * overrides the already-collected user response.
  *
- * **Example** (Inspect the Output schema)
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ElicitationResult.Output)
+ * const output = Hook.ElicitationResult.Output.make()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link passthrough} for sending the user's original response unchanged.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`ElicitationResultOutput`)(
@@ -183,18 +192,24 @@ export class Output extends S.Class<Output>($I`ElicitationResultOutput`)(
 ) {}
 
 /**
- * Constructor for `accept`.
+ * Forward an accept, optionally replacing the user's collected `content`.
  *
- * **Example** (Use accept)
+ * **Example** (Override collected fields)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ElicitationResult.accept)
+ * const output = Hook.ElicitationResult.accept({ project: "beep-effect" })
+ * const specific = O.getOrUndefined(output.hookSpecificOutput)
+ * console.log(specific?.action) // "accept"
+ * console.log(O.getOrUndefined(specific?.content ?? O.none())) // { project: "beep-effect" }
  * ```
  *
+ * @see {@link decline} for converting the collected response into a decline.
+ * @see {@link cancel} for aborting after the user already answered.
+ * @see {@link passthrough} for sending the original response unchanged.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const accept = (content?: Readonly<Record<string, unknown>>): Output =>
@@ -209,18 +224,21 @@ export const accept = (content?: Readonly<Record<string, unknown>>): Output =>
   });
 
 /**
- * Constructor for `decline`.
+ * Replace the user's collected accept with a decline.
  *
- * **Example** (Use decline)
+ * **Example** (Override into a decline)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ElicitationResult.decline)
+ * const output = Hook.ElicitationResult.decline()
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.action) // "decline"
  * ```
  *
+ * @see {@link accept} for forwarding or rewriting accepted content.
+ * @see {@link cancel} for aborting after the user already answered.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const decline = (): Output =>
@@ -234,18 +252,21 @@ export const decline = (): Output =>
   });
 
 /**
- * Constructor for `cancel`.
+ * Replace the user's collected response with a cancel.
  *
- * **Example** (Use cancel)
+ * **Example** (Override into a cancel)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ElicitationResult.cancel)
+ * const output = Hook.ElicitationResult.cancel()
+ * console.log(O.getOrUndefined(output.hookSpecificOutput)?.action) // "cancel"
  * ```
  *
+ * @see {@link accept} for forwarding or rewriting accepted content.
+ * @see {@link decline} for converting the collected response into a decline.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const cancel = (): Output =>
@@ -259,34 +280,43 @@ export const cancel = (): Output =>
   });
 
 /**
- * No-op output — Claude Code continues the normal elicitation-result flow.
+ * No-op output — Claude Code sends the user's original elicitation
+ * response to the MCP server unchanged.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Keep the user's answer)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.ElicitationResult.passthrough)
+ * const output = Hook.ElicitationResult.passthrough()
+ * console.log(O.isNone(output.hookSpecificOutput)) // true
  * ```
  *
+ * @see {@link accept} for overriding the collected content.
  * @category constructors
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `define`.
+ * Build a runnable ElicitationResult hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Example** (Define an ElicitationResult hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.ElicitationResult.define)
+ * const hook = Hook.ElicitationResult.define({
+ *   handler: () => Effect.succeed(Hook.ElicitationResult.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "ElicitationResult"
  * ```
  *
+ * @see {@link onMatcher} for filtering on `mcp_server_name`.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -302,14 +332,21 @@ export const define = <E, R>(config: {
  * Build an ElicitationResult hook that only handles matching
  * `mcp_server_name` values.
  *
- * **Example** (Inspect the documented API)
+ * **Example** (Rewrite a trusted MCP server's result)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.ElicitationResult.onMatcher)
+ * const hook = Hook.ElicitationResult.onMatcher({
+ *   matcher: "docs-mcp",
+ *   handler: () => Effect.succeed(Hook.ElicitationResult.accept({ project: "beep-effect" })),
+ * })
+ *
+ * console.log(hook.event) // "ElicitationResult"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

@@ -6,9 +6,11 @@
  * @since 0.1.0
  */
 
+import { thunkFalse } from "@beep/utils/thunk";
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import {
   classifyImportSpecifier,
   getPropertyName,
@@ -118,7 +120,11 @@ export default defineRule({
     // Resolve a `<schemaBinding>.<method>` access to its compiler method name, if tracked.
     const compilerMethod = (callee: MaybeNode): O.Option<string> =>
       unwrapMemberExpression(callee).pipe(
-        O.filter((access) => isSchemaReceiver(access.object)),
+        O.filter(
+          P.Struct({
+            object: isSchemaReceiver,
+          })
+        ),
         O.flatMap((access) => getPropertyName(access.property)),
         O.filter((method) => HashSet.has(COMPILER_METHODS, method))
       );
@@ -139,7 +145,7 @@ export default defineRule({
 
     const isNestedStaticSchemaCall = (node: MaybeNode): boolean =>
       O.match(asSchemaMethodCall(node), {
-        onNone: () => false,
+        onNone: thunkFalse,
         onSome: ({ method, args }) => {
           if (!O.exists(method, (name) => name === "fromJsonString")) return true;
           const [firstArg] = args;

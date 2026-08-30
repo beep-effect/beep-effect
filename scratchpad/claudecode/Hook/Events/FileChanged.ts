@@ -1,18 +1,16 @@
 /**
- * FileChanged hook event.
+ * Fires when a watched file changes on disk. Observability-only: JSON
+ * output cannot steer the session. Matcher is applied to the basename of
+ * `file_path` (for example `.envrc` or `package.json`), not the full
+ * path. See https://code.claude.com/docs/en/hooks#filechanged.
  *
- * Fires when a watched file changes on disk. Observability-only — no
- * decision control. Supports a matcher on the basename of `file_path`
- * (e.g. `.envrc`, `package.json`).
- * See https://code.claude.com/docs/en/hooks#filechanged.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { flow } from "effect";
+import { Effect, flow } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -32,18 +30,21 @@ const WatchPaths = S.String.pipe(
 );
 
 /**
- * Schema for `FileChangedEvent`.
+ * Filesystem change kind Claude Code reports (`change`, `add`, or
+ * `unlink`).
  *
- * **Example** (Inspect the FileChangedEvent schema)
+ * **Example** (Decode a change kind)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.FileChanged.FileChangedEvent)
+ * const event = S.decodeUnknownSync(Hook.FileChanged.FileChangedEvent)("change")
+ * console.log(event) // "change"
  * ```
  *
+ * @see {@link Input} for the stdin payload that carries this kind.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const FileChangedEvent = LiteralKit(["change", "add", "unlink"]).pipe(
@@ -53,35 +54,38 @@ export const FileChangedEvent = LiteralKit(["change", "add", "unlink"]).pipe(
 );
 
 /**
- * Type-level model for `FileChangedEvent`.
+ * Decoded value produced by {@link FileChangedEvent}.
  *
- * **Example** (Use FileChangedEvent as a type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.FileChanged.FileChangedEvent
- * ```
- *
+ * @see {@link FileChangedEvent} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type FileChangedEvent = typeof FileChangedEvent.Type;
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a FileChanged hook, including the changed path and
+ * change kind.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a package.json change)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.FileChanged.Input)
+ * const input = S.decodeUnknownSync(Hook.FileChanged.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "FileChanged",
+ *   file_path: "/repo/package.json",
+ *   event: "change",
+ * })
+ *
+ * console.log(input.file_path) // "/repo/package.json"
  * ```
  *
+ * @see {@link onMatcher} for basename matching against `file_path`.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`FileChangedInput`)(
@@ -97,18 +101,25 @@ export class Input extends S.Class<Input>($I`FileChangedInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a FileChanged handler may return. Claude Code does not
+ * act on it; {@link watchPaths} only advertises extra filesystem watches.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * Setting `continue: false` does not undo the file change.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.FileChanged.Output)
+ * const output = Hook.FileChanged.Output.make()
+ * console.log(O.isNone(output.watchPaths)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`FileChangedOutput`)(
@@ -126,52 +137,69 @@ export class Output extends S.Class<Output>($I`FileChangedOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Empty observability output. Claude Code ignores the JSON body.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * This is not a decision helper.
+ *
+ * **Example** (Return empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.FileChanged.passthrough)
+ * const output = Hook.FileChanged.passthrough()
+ * console.log(O.isNone(output.watchPaths)) // true
  * ```
  *
+ * @see {@link watchPaths} for advertising extra filesystem watches.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `watchPaths`.
+ * Advertise extra filesystem paths for Claude Code to watch.
  *
- * **Example** (Use watchPaths)
+ * **Example** (Watch a lockfile)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.FileChanged.watchPaths)
+ * const output = Hook.FileChanged.watchPaths(["/repo/bun.lock"])
+ * console.log(O.getOrUndefined(output.watchPaths)) // ["/repo/bun.lock"]
  * ```
  *
+ * @see {@link passthrough} for empty observability output.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const watchPaths = (paths: ReadonlyArray<string>): Output => Output.make({ watchPaths: O.some(paths) });
 
 /**
- * Constructor for `define`.
+ * Build a runnable FileChanged hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * Claude Code ignores the JSON response.
+ *
+ * **Example** (Define a FileChanged hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.FileChanged.define)
+ * const hook = Hook.FileChanged.define({
+ *   handler: () => Effect.succeed(Hook.FileChanged.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "FileChanged"
  * ```
  *
+ * @see {@link onMatcher} for filtering on the file basename.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {
@@ -187,14 +215,27 @@ export const define = <E, R>(config: {
  * Build a FileChanged hook that only handles matching basenames from
  * `file_path`.
  *
- * **Example** (Inspect the documented API)
+ * **Gotchas**
+ *
+ * The matcher is applied to the basename only. Patterns such as
+ * `src/foo.ts` or a full path never match; use `package.json` or
+ * `.envrc`.
+ *
+ * **Example** (Match package.json by basename)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.FileChanged.onMatcher)
+ * const hook = Hook.FileChanged.onMatcher({
+ *   matcher: "package.json",
+ *   handler: () => Effect.succeed(Hook.FileChanged.watchPaths(["/repo/bun.lock"])),
+ * })
+ *
+ * console.log(hook.event) // "FileChanged"
  * ```
  *
+ * @see {@link passthrough} for the default mismatch output.
  * @category constructors
  * @since 0.0.0
  */

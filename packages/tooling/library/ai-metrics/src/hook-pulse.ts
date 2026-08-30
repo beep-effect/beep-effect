@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonNegNum, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegNum, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, SchemaIssue, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
@@ -71,6 +71,71 @@ export const agentEvidenceRoot = (stateHome: string): string => `${stateHome}/be
  * @since 0.0.0
  */
 export const hookPulseLedgerDir = (evidenceRoot: string): string => `${evidenceRoot}/hook-events`;
+
+/**
+ * Resolve the current disarm sentinel beneath an agent-evidence root.
+ *
+ * **Example** (Resolve the sentinel path)
+ *
+ * ```ts
+ * import { hookPulseDisarmSentinelPath } from "@beep/repo-ai-metrics"
+ *
+ * console.log(hookPulseDisarmSentinelPath("/var/lib/beep/agent-evidence"))
+ * ```
+ *
+ * @param evidenceRoot - Agent-evidence root containing the hook-pulse control files.
+ * @returns Absolute path to the current disarm sentinel.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hookPulseDisarmSentinelPath = (evidenceRoot: string): string => `${evidenceRoot}/hook-pulse.disarmed`;
+
+/**
+ * Resolve the append-only disarm-window ledger beneath an agent-evidence root.
+ *
+ * **Example** (Resolve the disarm-window ledger)
+ *
+ * ```ts
+ * import { hookPulseDisarmWindowsPath } from "@beep/repo-ai-metrics"
+ *
+ * console.log(hookPulseDisarmWindowsPath("/var/lib/beep/agent-evidence"))
+ * ```
+ *
+ * @param evidenceRoot - Agent-evidence root containing the hook-pulse control files.
+ * @returns Absolute path to the append-only disarm-window ledger.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hookPulseDisarmWindowsPath = (evidenceRoot: string): string =>
+  `${evidenceRoot}/hook-pulse-disarm-windows.ndjson`;
+
+/**
+ * Version tag stamped on every hook-pulse disarm-window row.
+ *
+ * **Example** (Read the disarm-window version)
+ *
+ * ```ts
+ * import { HookPulseDisarmWindowSchemaVersion } from "@beep/repo-ai-metrics"
+ *
+ * console.log(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"])
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseDisarmWindowSchemaVersion = LiteralKit(["hook-pulse-disarm-window/v1"]).pipe(
+  $I.annoteSchema("HookPulseDisarmWindowSchemaVersion", {
+    description: "Version identifiers accepted by the hook-pulse disarm-window ledger.",
+  })
+);
+
+/**
+ * Decoded version carried by a hook-pulse disarm-window row.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseDisarmWindowSchemaVersion = typeof HookPulseDisarmWindowSchemaVersion.Type;
 
 /**
  * Version tag stamped on every ledger row so a reader can refuse shards written by a contract it does not implement.
@@ -308,6 +373,81 @@ export const HookPulseEvidenceTier = LiteralKit(["observed", "derived", "heurist
 export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
 
 /**
+ * Current disarm state written by the hook-pulse operator switch.
+ *
+ * **Example** (Create a disarm sentinel)
+ *
+ * ```ts
+ * import { HookPulseDisarmSentinel } from "@beep/repo-ai-metrics"
+ *
+ * const sentinel = HookPulseDisarmSentinel.make({
+ *   disarmedAt: "2026-08-25T12:00:00.000Z",
+ *   evidenceTier: "unknown",
+ *   reason: "maintenance"
+ * })
+ * console.log(sentinel.reason)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseDisarmSentinel extends S.Class<HookPulseDisarmSentinel>($I`HookPulseDisarmSentinel`)(
+  {
+    disarmedAt: S.String,
+    evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
+    reason: S.String,
+  },
+  $I.annote("HookPulseDisarmSentinel", {
+    description: "Current hook-pulse disarm state written by the operator switch.",
+  })
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmSentinel));
+  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseDisarmSentinel));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(HookPulseDisarmSentinel));
+  static readonly encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(HookPulseDisarmSentinel));
+}
+
+/**
+ * Closed interval during which hook-pulse collection was disarmed.
+ *
+ * **Example** (Decode a disarm window)
+ *
+ * ```ts
+ * import { HookPulseDisarmWindow } from "@beep/repo-ai-metrics"
+ * import * as S from "effect/Schema"
+ *
+ * const window = S.decodeUnknownSync(HookPulseDisarmWindow)({
+ *   disarmedAt: "2026-08-25T12:00:00.000Z",
+ *   evidenceTier: "unknown",
+ *   reason: "maintenance",
+ *   rearmedAt: "2026-08-25T12:05:00.000Z",
+ *   schemaVersion: "hook-pulse-disarm-window/v1"
+ * })
+ * console.log(window.rearmedAt)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HookPulseDisarmWindow extends S.Class<HookPulseDisarmWindow>($I`HookPulseDisarmWindow`)(
+  {
+    disarmedAt: S.OptionFromNullOr(S.String),
+    evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
+    reason: S.OptionFromNullOr(S.String),
+    rearmedAt: S.String,
+    schemaVersion: HookPulseDisarmWindowSchemaVersion,
+  },
+  $I.annote("HookPulseDisarmWindow", {
+    description: "One closed interval during which hook-pulse collection was disarmed.",
+  })
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmWindow));
+  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseDisarmWindow));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(HookPulseDisarmWindow));
+  static readonly encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(HookPulseDisarmWindow));
+}
+
+/**
  * Attribution for why a session is blocked, so a stretch of wall-clock waiting can be charged to a cause.
  *
  * **Details**
@@ -436,9 +576,7 @@ export type HookPulseNotificationType = typeof HookPulseNotificationType.Type;
  * ```ts
  * import { HookPulseRawEvent } from "@beep/repo-ai-metrics"
  * import { Result } from "effect"
- * import * as S from "effect/Schema"
- *
- * const decode = S.decodeUnknownResult(HookPulseRawEvent)
+ * const decode = HookPulseRawEvent.decodeResult
  *
  * const event = Result.getOrThrow(
  *   decode({
@@ -486,7 +624,11 @@ export class HookPulseRawEvent extends S.Class<HookPulseRawEvent>($I`HookPulseRa
   $I.annote("HookPulseRawEvent", {
     description: "Whitelisted non-content fields forwarded from a coding-agent hook payload.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(HookPulseRawEvent);
+  static readonly decodeResult = S.decodeUnknownResult(HookPulseRawEvent);
+  static readonly encodeEffect = S.encodeUnknownEffect(HookPulseRawEvent);
+}
 
 class HookPulseRawEventInput extends S.Class<HookPulseRawEventInput>($I`HookPulseRawEventInput`)(
   {
@@ -546,7 +688,7 @@ const clampDerivedEvidenceTier = (evidenceTier: HookPulseEvidenceTier): HookPuls
 const isHookPulseNotificationType = S.is(HookPulseNotificationType);
 const areHookPulseEventsEquivalent = S.toEquivalence(HookPulseEvent);
 const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
-const sha256HexPattern = /^[0-9a-f]{64}$/u;
+const isSha256Hex = S.is(Sha256Hex);
 
 /**
  * Salt the hook-pulse codecs hash private identifiers with, resolved exactly as `.claude/hooks/hook-pulse.sh` resolves its own.
@@ -601,15 +743,13 @@ const sha256HexPattern = /^[0-9a-f]{64}$/u;
  * @category utilities
  * @since 0.0.0
  */
-export const hookPulseHashSalt: Config.Config<string | undefined> = Config.string("BEEP_HOOK_PULSE_HASH_SALT").pipe(
+export const hookPulseHashSalt: Config.Config<O.Option<string>> = Config.string("BEEP_HOOK_PULSE_HASH_SALT").pipe(
   Config.orElse(() => Config.string("BEEP_AI_METRICS_HASH_SALT")),
-  Config.withDefault(undefined)
+  Config.option
 );
 
-const privateReference = (value: string, hashSalt: string | undefined) =>
-  sha256HexPattern.test(value)
-    ? Effect.succeed(Sha256Hex.make(value))
-    : hashPrivateIdentifier(value, hashSalt).pipe(Effect.map(Sha256Hex.make));
+const privateReference = (value: string, hashSalt: O.Option<string>) =>
+  isSha256Hex(value) ? Effect.succeed(value) : hashPrivateIdentifier(value, hashSalt).pipe(Effect.map(Sha256Hex.make));
 
 // The salt is a per-decode constant, not a per-field one, so it is resolved once
 // here and threaded down. `.claude/hooks/hook-pulse.sh` walks the identical
@@ -669,7 +809,9 @@ const filterHookPulseEventOwnedField = <A>(
 // `Option`s that will not unify. The invariant below only asks whether a value is
 // present, so it reads through this presence-only accessor rather than widening
 // the union at each call site.
-type HookPulseEventOwnedFieldValues = { readonly [Field in HookPulseEventOwnedField]: O.Option<unknown> };
+type HookPulseEventOwnedFieldValues = {
+  readonly [Field in HookPulseEventOwnedField]: O.Option<unknown>;
+};
 
 const hookPulseEventOwnedFieldValue = (
   input: HookPulseEventOwnedFieldValues,
@@ -704,9 +846,7 @@ const hookPulseEventOwnedFieldValue = (
  * ```ts
  * import { HookPulseV1 } from "@beep/repo-ai-metrics"
  * import { Result } from "effect"
- * import * as S from "effect/Schema"
- *
- * const decode = S.decodeUnknownResult(HookPulseV1)
+ * const decode = HookPulseV1.decodeResult
  *
  * const row = {
  *   schemaVersion: "hook-pulse/v1",
@@ -812,7 +952,16 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
   $I.annote("HookPulseV1", {
     description: "Privacy-safe hook event used as first-class raw history for wait attribution and replay.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(HookPulseV1);
+  static readonly encodeEffect = S.encodeUnknownEffect(HookPulseV1);
+  static readonly decodeResult = S.decodeUnknownResult(HookPulseV1);
+  static readonly encodeResult = S.encodeResult(HookPulseV1);
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(HookPulseV1));
+  static readonly decodeJsonSync = S.decodeUnknownSync(S.fromJsonString(HookPulseV1));
+  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(HookPulseV1));
+}
 
 // Deliberately without `isInterrupt`, and the omission is a dating argument
 // rather than an oversight. "Legacy" here means exactly one thing: a row written
@@ -825,7 +974,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
 // what a pre-pseudonymization row actually contains, and this codec exists to
 // hash them on the way in.
 const HookPulseLegacyV1Record = S.Struct({
-  schemaVersion: S.Literal("hook-pulse/v1"),
+  schemaVersion: S.Literal(HookPulseSchemaVersion.Enum["hook-pulse/v1"]),
   ts: S.String,
   sessionId: S.String,
   agentKind: HookPulseAgentKind,
@@ -854,9 +1003,7 @@ const HookPulseLegacyV1Record = S.Struct({
  *
  * ```ts
  * import { HookPulseV1FromLegacyRecord } from "@beep/repo-ai-metrics"
- * import * as S from "effect/Schema"
- *
- * const migrate = S.decodeUnknownEffect(HookPulseV1FromLegacyRecord)
+ * const migrate = HookPulseV1FromLegacyRecord.decodeUnknownEffect
  * const pulse = migrate({
  *   schemaVersion: "hook-pulse/v1",
  *   ts: "2026-08-01T06:40:07.000Z",
@@ -903,7 +1050,8 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
   ),
   $I.annoteSchema("HookPulseV1FromLegacyRecord", {
     description: "Migration codec that pseudonymizes private identifiers in legacy hook-pulse/v1 ledger rows.",
-  })
+  }),
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**
@@ -938,9 +1086,7 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
  * ```ts
  * import { HookPulseV1FromRawEvent } from "@beep/repo-ai-metrics"
  * import { Result } from "effect"
- * import * as S from "effect/Schema"
- *
- * const decode = S.decodeUnknownResult(HookPulseV1FromRawEvent)
+ * const decode = HookPulseV1FromRawEvent.decodeUnknownResult
  *
  * const pulse = Result.getOrThrow(
  *   decode({
@@ -1099,7 +1245,9 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
   ),
   $I.annoteSchema("HookPulseV1FromRawEvent", {
     description: "Canonical hook-pulse codec that derives wait attribution from whitelisted raw event fields.",
-  })
+  }),
+  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withResultCodecStatics
 );
 
 /**

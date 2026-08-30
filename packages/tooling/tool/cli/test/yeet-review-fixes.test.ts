@@ -11,7 +11,7 @@ import {
   runWithFullProofCoordinatorForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
+import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -20,7 +20,7 @@ import * as A from "effect/Array";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 
 const contextAt = (repoRoot: string): RepoRunContext =>

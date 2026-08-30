@@ -6,11 +6,10 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Match, pipe } from "effect";
-import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { AiMetricsDataRootInput, resolveAiMetricsDataRoot } from "./data-root.ts";
@@ -27,11 +26,8 @@ import { shellQuote } from "./shell.ts";
 import { AiMetricsSourceDiscoveryResult, AiMetricsSourceStatus } from "./source-discovery.ts";
 
 const $I = $RepoAiMetricsId.create("install");
-const defaultCandidateTools = [
-  AiMetricsTool.Enum.langfuse,
-  AiMetricsTool.Enum.phoenix,
-  AiMetricsTool.Enum.opik,
-] as const;
+
+const defaultCandidateTools = [AiMetricsTool.Enum.langfuse, AiMetricsTool.Enum.phoenix, AiMetricsTool.Enum.opik];
 
 const defaultPhoenixImage = "arizephoenix/phoenix:latest";
 
@@ -48,17 +44,12 @@ const defaultPublicBaseUrl = (target: AiMetricsDeployTarget): string =>
 
 const childPath = (root: string, child: string): string => `${root}/${child}`;
 
-const nonEmptyString = (value: string | undefined): O.Option<string> =>
-  value === undefined || Str.isEmpty(Str.trim(value)) ? O.none() : O.some(value);
-
 const requireInstallDataRoot = Effect.fn("AiMetrics.requireInstallDataRoot")(function* (input: AiMetricsInstallInput) {
   const resolved = resolveAiMetricsDataRoot(
     AiMetricsDataRootInput.make({
-      ...O.getSomesStruct({
-        flagDataRoot: nonEmptyString(input.dataRoot),
-        homeDir: nonEmptyString(input.homeDir),
-        stateHome: nonEmptyString(input.stateHome),
-      }),
+      flagDataRoot: O.filter(input.dataRoot, flow(Str.trim, Str.isNonEmpty)),
+      homeDir: O.filter(input.homeDir, flow(Str.trim, Str.isNonEmpty)),
+      stateHome: O.filter(input.stateHome, flow(Str.trim, Str.isNonEmpty)),
       target: input.target,
     })
   );
@@ -74,36 +65,42 @@ const requireInstallDataRoot = Effect.fn("AiMetrics.requireInstallDataRoot")(fun
   return resolved.value.path;
 });
 
-const requireHashSaltSecretRef = Effect.fn("AiMetrics.requireHashSaltSecretRef")(function* (
+const requireSecretRef = Effect.fn("AiMetrics.requireSecretRef")(function* (
   target: AiMetricsDeployTarget,
-  hashSaltSecretRef: string | undefined
+  secretRef: O.Option<string>,
+  missingMessage: string
 ) {
-  const ref = nonEmptyString(hashSaltSecretRef);
+  const ref = O.filter(secretRef, flow(Str.trim, Str.isNonEmpty));
   if (target === AiMetricsDeployTarget.Enum.local || O.isSome(ref)) {
     return ref;
   }
 
   return yield* AiMetricsInstallConfigurationError.make({
     cause: { target },
-    message:
-      "AI metrics non-local installs require hashSaltSecretRef so private identifier hashing never uses the local smoke salt.",
+    message: missingMessage,
   });
+});
+
+const requireHashSaltSecretRef = Effect.fn("AiMetrics.requireHashSaltSecretRef")(function* (
+  target: AiMetricsDeployTarget,
+  hashSaltSecretRef: O.Option<string>
+) {
+  return yield* requireSecretRef(
+    target,
+    hashSaltSecretRef,
+    "AI metrics non-local installs require hashSaltSecretRef so private identifier hashing never uses the local smoke salt."
+  );
 });
 
 const requireRawArchiveKeySecretRef = Effect.fn("AiMetrics.requireRawArchiveKeySecretRef")(function* (
   target: AiMetricsDeployTarget,
-  rawArchiveKeySecretRef: string | undefined
+  rawArchiveKeySecretRef: O.Option<string>
 ) {
-  const ref = nonEmptyString(rawArchiveKeySecretRef);
-  if (target === AiMetricsDeployTarget.Enum.local || O.isSome(ref)) {
-    return ref;
-  }
-
-  return yield* AiMetricsInstallConfigurationError.make({
-    cause: { target },
-    message:
-      "AI metrics non-local installs require rawArchiveKeySecretRef so encrypted raw transcripts never depend on inline operator input.",
-  });
+  return yield* requireSecretRef(
+    target,
+    rawArchiveKeySecretRef,
+    "AI metrics non-local installs require rawArchiveKeySecretRef so encrypted raw transcripts never depend on inline operator input."
+  );
 });
 
 /**
@@ -166,8 +163,9 @@ export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsI
  *
  * ```ts
  * import { AiMetricsInstallInput } from "@beep/repo-ai-metrics"
+ * import * as O from "effect/Option"
  *
- * const input = AiMetricsInstallInput.make({ homeDir: "/home/dev" })
+ * const input = AiMetricsInstallInput.make({ homeDir: O.some("/home/dev") })
  *
  * console.log(input.target) // "local"
  * console.log(input.defaultTool) // "phoenix"
@@ -179,40 +177,21 @@ export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsI
  */
 export class AiMetricsInstallInput extends S.Class<AiMetricsInstallInput>($I`AiMetricsInstallInput`)(
   {
-    candidateTools: S.Array(AiMetricsTool).pipe(
-      S.withConstructorDefault(Effect.succeed(defaultCandidateTools)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultCandidateTools))
-    ),
-    dataRoot: S.optionalKey(S.String),
-    defaultTool: AiMetricsTool.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsTool.Enum.phoenix)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsTool.Enum.phoenix))
-    ),
-    hashSaltSecretRef: S.optionalKey(S.String),
-    homeDir: S.optionalKey(S.String),
-    litellmGatewayEnabled: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)),
-      S.withDecodingDefaultKey(Effect.succeed(true))
-    ),
-    phoenixImage: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(defaultPhoenixImage)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultPhoenixImage))
-    ),
+    candidateTools: S.Array(AiMetricsTool).pipe(SchemaUtils.withKeyDefaults(defaultCandidateTools)),
+    dataRoot: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    defaultTool: AiMetricsTool.pipe(SchemaUtils.withKeyDefaults(AiMetricsTool.Enum.phoenix)),
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    homeDir: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    litellmGatewayEnabled: SchemaUtils.BoolKeyDefaultTrue,
+    phoenixImage: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPhoenixImage)),
     privacyMode: AiMetricsPrivacyMode.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui))
+      SchemaUtils.withKeyDefaults(AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui)
     ),
-    publicBaseUrl: S.optionalKey(S.String),
-    rawArchiveKeySecretRef: S.optionalKey(S.String),
-    stateHome: S.optionalKey(S.String),
-    target: AiMetricsDeployTarget.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsDeployTarget.Enum.local)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsDeployTarget.Enum.local))
-    ),
-    tailnetOnly: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)),
-      S.withDecodingDefaultKey(Effect.succeed(true))
-    ),
+    publicBaseUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    stateHome: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    target: AiMetricsDeployTarget.pipe(SchemaUtils.withKeyDefaults(AiMetricsDeployTarget.Enum.local)),
+    tailnetOnly: SchemaUtils.BoolKeyDefaultTrue,
   },
   $I.annote("AiMetricsInstallInput", {
     description: "User-selectable inputs for the target-agnostic AI metrics install module.",
@@ -374,11 +353,11 @@ export class AiMetricsInstallSpec extends S.Class<AiMetricsInstallSpec>($I`AiMet
     candidateTools: S.Array(AiMetricsTool),
     defaultScoreWeights: AiMetricsScoreWeights,
     defaultTool: AiMetricsTool,
-    hashSaltSecretRef: S.optionalKey(S.String),
+    hashSaltSecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     litellmGatewayEnabled: S.Boolean,
     plannedCommands: S.Array(S.String),
     privacyMode: AiMetricsPrivacyMode,
-    rawArchiveKeySecretRef: S.optionalKey(S.String),
+    rawArchiveKeySecretRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     services: S.Array(AiMetricsServiceSpec),
     stackName: S.String,
     storage: AiMetricsStorageLayout,
@@ -442,6 +421,12 @@ export const AiMetricsInstallPlanStepKind = LiteralKit([
  */
 export type AiMetricsInstallPlanStepKind = typeof AiMetricsInstallPlanStepKind.Type;
 
+const AiMetricsInstallPlanStepOrder = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("AiMetricsInstallPlanStepOrder", {
+    description: "Positive integer ordering index for an AI metrics install plan step.",
+  })
+);
+
 /**
  * One ordered operation in an install plan, described before anything runs.
  *
@@ -478,14 +463,14 @@ export type AiMetricsInstallPlanStepKind = typeof AiMetricsInstallPlanStepKind.T
  */
 export class AiMetricsInstallPlanStep extends S.Class<AiMetricsInstallPlanStep>($I`AiMetricsInstallPlanStep`)(
   {
-    command: S.String,
-    description: S.String,
+    command: S.NonEmptyString,
+    description: S.NonEmptyString,
     mutatesHost: S.Boolean,
-    order: S.Finite,
-    required: S.Boolean,
+    order: AiMetricsInstallPlanStepOrder,
+    required: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
     requiresRemote: S.Boolean,
-    stepId: S.String,
-    title: S.String,
+    stepId: S.NonEmptyString,
+    title: S.NonEmptyString,
     kind: AiMetricsInstallPlanStepKind,
   },
   $I.annote("AiMetricsInstallPlanStep", {
@@ -550,7 +535,9 @@ export class AiMetricsInstallPlan extends S.Class<AiMetricsInstallPlan>($I`AiMet
   $I.annote("AiMetricsInstallPlan", {
     description: "Contract-first install plan consumed by P5a CLI plan, doctor, and dry-run apply workflows.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeEffect(S.fromJsonString(AiMetricsInstallPlan));
+}
 
 /**
  * Outcome of a single install doctor check.
@@ -658,12 +645,9 @@ export type AiMetricsInstallDoctorStatus = typeof AiMetricsInstallDoctorStatus.T
  */
 export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorCheck>($I`AiMetricsInstallDoctorCheck`)(
   {
-    checkId: S.String,
-    message: S.String,
-    metadata: S.Record(S.String, S.String).pipe(
-      S.withConstructorDefault(Effect.succeed({})),
-      S.withDecodingDefaultKey(Effect.succeed({}))
-    ),
+    checkId: S.NonEmptyString,
+    message: S.NonEmptyString,
+    metadata: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults({})),
     status: AiMetricsInstallDoctorCheckStatus,
   },
   $I.annote("AiMetricsInstallDoctorCheck", {
@@ -684,13 +668,14 @@ export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorC
  *
  * ```ts
  * import { AiMetricsInstallDoctorInput, AiMetricsInstallInput } from "@beep/repo-ai-metrics"
+ * import * as O from "effect/Option"
  *
  * const input = AiMetricsInstallDoctorInput.make({
- *   install: AiMetricsInstallInput.make({ homeDir: "/home/dev" })
+ *   install: AiMetricsInstallInput.make({ homeDir: O.some("/home/dev") })
  * })
  *
  * console.log(input.install.target) // "local"
- * console.log(input.sourceDiscovery) // undefined
+ * console.log(O.isNone(input.sourceDiscovery)) // true
  * ```
  *
  * @category models
@@ -698,11 +683,8 @@ export class AiMetricsInstallDoctorCheck extends S.Class<AiMetricsInstallDoctorC
  */
 export class AiMetricsInstallDoctorInput extends S.Class<AiMetricsInstallDoctorInput>($I`AiMetricsInstallDoctorInput`)(
   {
-    install: AiMetricsInstallInput.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsInstallInput.make({}))),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsInstallInput.make({})))
-    ),
-    sourceDiscovery: S.optionalKey(AiMetricsSourceDiscoveryResult),
+    install: AiMetricsInstallInput.pipe(SchemaUtils.withKeyDefaults(AiMetricsInstallInput.make({}))),
+    sourceDiscovery: S.OptionFromOptionalKey(AiMetricsSourceDiscoveryResult).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("AiMetricsInstallDoctorInput", {
     description: "Install spec and optional source discovery evidence consumed by the P5a doctor.",
@@ -764,7 +746,7 @@ export class AiMetricsInstallDoctorResult extends S.Class<AiMetricsInstallDoctor
   $I`AiMetricsInstallDoctorResult`
 )(
   {
-    availableSourceCount: S.Finite,
+    availableSourceCount: S.Natural,
     checks: S.Array(AiMetricsInstallDoctorCheck),
     plan: AiMetricsInstallPlan,
     status: AiMetricsInstallDoctorStatus,
@@ -773,7 +755,9 @@ export class AiMetricsInstallDoctorResult extends S.Class<AiMetricsInstallDoctor
   $I.annote("AiMetricsInstallDoctorResult", {
     description: "Aggregate P5a install doctor result with contract and source availability checks.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeEffect(S.fromJsonString(AiMetricsInstallDoctorResult));
+}
 
 /**
  * Proof that an apply listed its steps and changed nothing.
@@ -828,15 +812,17 @@ export class AiMetricsInstallApplyDryRunResult extends S.Class<AiMetricsInstallA
   $I`AiMetricsInstallApplyDryRunResult`
 )(
   {
-    dryRun: S.Literal(true),
-    message: S.String,
+    dryRun: S.Literal(true).pipe(SchemaUtils.withConstantDefault(true)),
+    message: S.NonEmptyString,
     plan: AiMetricsInstallPlan,
     target: AiMetricsDeployTarget,
   },
   $I.annote("AiMetricsInstallApplyDryRunResult", {
     description: "Dry-run-only P5a apply output that lists the install steps without mutating local or remote state.",
   })
-) {}
+) {
+  static readonly encodeJsonEffect = S.encodeEffect(S.fromJsonString(AiMetricsInstallApplyDryRunResult));
+}
 
 const makeStorageLayout = (dataRoot: string): AiMetricsStorageLayout =>
   AiMetricsStorageLayout.make({
@@ -945,45 +931,30 @@ const withInstallSecretRefFlags =
         })
     );
 
-const planStep = ({
-  command,
-  description,
-  kind,
-  mutatesHost,
-  order,
-  required = true,
-  requiresRemote,
-  stepId,
-  title,
-}: {
-  readonly command: string;
-  readonly description: string;
-  readonly kind: AiMetricsInstallPlanStepKind;
-  readonly mutatesHost: boolean;
-  readonly order: number;
-  readonly required?: boolean;
-  readonly requiresRemote: boolean;
-  readonly stepId: string;
-  readonly title: string;
-}): AiMetricsInstallPlanStep =>
-  AiMetricsInstallPlanStep.make({
-    command,
-    description,
-    kind,
-    mutatesHost,
-    order,
-    required,
-    requiresRemote,
-    stepId,
-    title,
-  });
-
 const deploymentRemoteFields = (
   target: AiMetricsDeployTarget
 ): Pick<AiMetricsInstallPlanStep, "mutatesHost" | "requiresRemote"> => ({
   mutatesHost: target === AiMetricsDeployTarget.Enum.dankserver,
   requiresRemote: target === AiMetricsDeployTarget.Enum.dankserver,
 });
+
+const deploymentCommandFlags = (
+  target: AiMetricsDeployTarget,
+  storage: AiMetricsStorageLayout,
+  defaultService: O.Option<AiMetricsServiceSpec>
+) =>
+  AiMetricsDeployTarget.$match(target, {
+    dankserver: () => ({
+      collectorDataRoot: ` --data-root ${storage.dataRoot}`,
+      otlp: " --otlp",
+      otlpBaseUrl: pipe(
+        defaultService,
+        O.map((service) => ` --otlp-base-url ${service.publicUrl}`),
+        O.getOrElse(() => "")
+      ),
+    }),
+    local: () => ({ collectorDataRoot: "", otlp: "", otlpBaseUrl: "" }),
+  });
 
 const makeInstallPlanSteps = (
   spec: AiMetricsInstallSpec,
@@ -996,18 +967,10 @@ const makeInstallPlanSteps = (
     spec.services,
     A.findFirst((service) => service.enabledByDefault)
   );
-  const otlpBaseUrlFlag = pipe(
-    defaultService,
-    O.map((service) =>
-      spec.target === AiMetricsDeployTarget.Enum.dankserver ? ` --otlp-base-url ${service.publicUrl}` : ""
-    ),
-    O.getOrElse(() => "")
-  );
-  const collectorDataRootFlag =
-    spec.target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${spec.storage.dataRoot}` : "";
+  const commandFlags = deploymentCommandFlags(spec.target, spec.storage, defaultService);
 
   return [
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: `mkdir -p ${spec.storage.rawArchiveDir} ${spec.storage.parquetDir}`,
       description: "Create raw archive and derived Parquet directories for the selected target.",
       kind: AiMetricsInstallPlanStepKind.Enum.storage,
@@ -1017,7 +980,7 @@ const makeInstallPlanSteps = (
       stepId: "storage.prepare",
       title: "Prepare AI metrics storage",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command:
         spec.target === AiMetricsDeployTarget.Enum.local
           ? "beep-cli ai-metrics install compose --target local"
@@ -1030,7 +993,7 @@ const makeInstallPlanSteps = (
       stepId: "backend.phoenix.plan",
       title: "Plan Phoenix backend",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: "beep-cli ai-metrics sources discover --target local",
       description: "Discover local Codex, Claude Code, and OpenClaw source availability without exposing paths.",
       kind: AiMetricsInstallPlanStepKind.Enum.source_discovery,
@@ -1040,7 +1003,7 @@ const makeInstallPlanSteps = (
       stepId: "sources.discover",
       title: "Discover local AI sources",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: "beep-cli ai-metrics config snapshot",
       description: "Hash repo-local agent-facing configuration for attribution.",
       kind: AiMetricsInstallPlanStepKind.Enum.config_snapshot,
@@ -1050,7 +1013,7 @@ const makeInstallPlanSteps = (
       stepId: "config.snapshot",
       title: "Create config snapshot",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: "beep-cli ai-metrics privacy check --source codex --input ~/.codex/sessions",
       description: "Run a redaction proof against local Codex transcript inputs before derived export.",
       kind: AiMetricsInstallPlanStepKind.Enum.privacy_check,
@@ -1060,17 +1023,17 @@ const makeInstallPlanSteps = (
       stepId: "privacy.check",
       title: "Run privacy proof",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: pipe(
         rawArchiveKeySecretRef,
         O.match({
           onNone: () =>
             withHashSaltSecret(hashSaltSecretRef)(
-              `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> beep-cli ai-metrics forwarder run --target ${spec.target}${collectorDataRootFlag}${spec.target === AiMetricsDeployTarget.Enum.dankserver ? " --otlp" : ""}${otlpBaseUrlFlag}`
+              `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> beep-cli ai-metrics forwarder run --target ${spec.target}${commandFlags.collectorDataRoot}${commandFlags.otlp}${commandFlags.otlpBaseUrl}`
             ),
           onSome: (rawRef) =>
             withHashSaltSecret(hashSaltSecretRef)(
-              `${rawArchiveKeyPrefix(rawRef)} beep-cli ai-metrics forwarder run --target ${spec.target}${collectorDataRootFlag} --raw-archive-key-secret-ref ${shellQuote(rawRef)}${spec.target === AiMetricsDeployTarget.Enum.dankserver ? " --otlp" : ""}${otlpBaseUrlFlag}`
+              `${rawArchiveKeyPrefix(rawRef)} beep-cli ai-metrics forwarder run --target ${spec.target}${commandFlags.collectorDataRoot} --raw-archive-key-secret-ref ${shellQuote(rawRef)}${commandFlags.otlp}${commandFlags.otlpBaseUrl}`
             ),
         })
       ),
@@ -1085,9 +1048,9 @@ const makeInstallPlanSteps = (
       stepId: "forwarder.run",
       title: "Run durable forwarder",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: installFlags(
-        `beep-cli ai-metrics forwarder timer --target ${spec.target}${collectorDataRootFlag}${otlpBaseUrlFlag}`
+        `beep-cli ai-metrics forwarder timer --target ${spec.target}${commandFlags.collectorDataRoot}${commandFlags.otlpBaseUrl}`
       ),
       description:
         "Render the workstation systemd user timer that owns repeated P6a collection with lock, retry, status, and journal evidence.",
@@ -1098,9 +1061,9 @@ const makeInstallPlanSteps = (
       stepId: "forwarder.timer",
       title: "Render forwarder timer",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: installFlags(
-        `beep-cli ai-metrics otlp export --target ${spec.target}${collectorDataRootFlag} --ingest-run latest${otlpBaseUrlFlag}`
+        `beep-cli ai-metrics otlp export --target ${spec.target}${commandFlags.collectorDataRoot} --ingest-run latest${commandFlags.otlpBaseUrl}`
       ),
       description: "Export redacted derived spans to the Phoenix OTLP trace endpoint.",
       kind: AiMetricsInstallPlanStepKind.Enum.otlp_export,
@@ -1110,9 +1073,9 @@ const makeInstallPlanSteps = (
       stepId: "otlp.export",
       title: "Export derived OTLP spans",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: installFlags(
-        `beep-cli ai-metrics label queue --target ${spec.target}${collectorDataRootFlag} --limit 20`
+        `beep-cli ai-metrics label queue --target ${spec.target}${commandFlags.collectorDataRoot} --limit 20`
       ),
       description: "Review real tasks that need outcome labels before weekly scoring.",
       kind: AiMetricsInstallPlanStepKind.Enum.label_queue,
@@ -1122,8 +1085,10 @@ const makeInstallPlanSteps = (
       stepId: "labels.queue",
       title: "Review outcome label queue",
     }),
-    planStep({
-      command: installFlags(`beep-cli ai-metrics report weekly --target ${spec.target}${collectorDataRootFlag}`),
+    AiMetricsInstallPlanStep.make({
+      command: installFlags(
+        `beep-cli ai-metrics report weekly --target ${spec.target}${commandFlags.collectorDataRoot}`
+      ),
       description: "Generate the weekly config-impact scorecard from derived data.",
       kind: AiMetricsInstallPlanStepKind.Enum.weekly_report,
       mutatesHost: false,
@@ -1132,17 +1097,17 @@ const makeInstallPlanSteps = (
       stepId: "report.weekly",
       title: "Generate weekly scorecard",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command: pipe(
         rawArchiveKeySecretRef,
         O.match({
           onNone: () =>
             withHashSaltSecret(hashSaltSecretRef)(
-              `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> ${installFlags(`beep-cli ai-metrics archive drill --target ${spec.target}${collectorDataRootFlag}`)}`
+              `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> ${installFlags(`beep-cli ai-metrics archive drill --target ${spec.target}${commandFlags.collectorDataRoot}`)}`
             ),
           onSome: (rawRef) =>
             `${rawArchiveKeyPrefix(rawRef)} ${withHashSaltSecret(hashSaltSecretRef)(
-              installFlags(`beep-cli ai-metrics archive drill --target ${spec.target}${collectorDataRootFlag}`)
+              installFlags(`beep-cli ai-metrics archive drill --target ${spec.target}${commandFlags.collectorDataRoot}`)
             )}`,
         })
       ),
@@ -1154,7 +1119,7 @@ const makeInstallPlanSteps = (
       stepId: "archive.drill",
       title: "Run archive drill",
     }),
-    planStep({
+    AiMetricsInstallPlanStep.make({
       command:
         spec.target === AiMetricsDeployTarget.Enum.local
           ? "curl -fsS http://127.0.0.1:6006"
@@ -1179,78 +1144,77 @@ const plannedCommands = (
   storage: AiMetricsStorageLayout,
   hashSaltSecretRef: O.Option<string>,
   rawArchiveKeySecretRef: O.Option<string>,
-  publicBaseUrl: string
-): ReadonlyArray<string> => [
-  `mkdir -p ${storage.rawArchiveDir} ${storage.parquetDir}`,
-  "beep-cli ai-metrics install compose --target local > ai-metrics.phoenix.compose.yaml",
-  withHashSaltSecret(hashSaltSecretRef)(`beep-cli ai-metrics sources discover --target ${target}`),
-  "beep-cli ai-metrics config snapshot",
-  withHashSaltSecret(hashSaltSecretRef)("beep-cli ai-metrics privacy check --source codex --input ~/.codex/sessions"),
-  pipe(
-    rawArchiveKeySecretRef,
-    O.match({
-      onNone: () =>
-        withHashSaltSecret(hashSaltSecretRef)(
-          `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> beep-cli ai-metrics forwarder run --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot} --otlp --otlp-base-url ${publicBaseUrl}` : ""}`
-        ),
-      onSome: (rawRef) =>
-        withHashSaltSecret(hashSaltSecretRef)(
-          `${rawArchiveKeyPrefix(rawRef)} beep-cli ai-metrics forwarder run --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""} --raw-archive-key-secret-ref ${shellQuote(rawRef)}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --otlp --otlp-base-url ${publicBaseUrl}` : ""}`
-        ),
-    })
-  ),
-  withInstallSecretRefFlags(
-    hashSaltSecretRef,
-    rawArchiveKeySecretRef
-  )(
-    `beep-cli ai-metrics forwarder timer --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot} --otlp-base-url ${publicBaseUrl}` : ""}`
-  ),
-  withInstallSecretRefFlags(
-    hashSaltSecretRef,
-    rawArchiveKeySecretRef
-  )(
-    `beep-cli ai-metrics otlp export --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""} --ingest-run latest${target === AiMetricsDeployTarget.Enum.dankserver ? ` --otlp-base-url ${publicBaseUrl}` : ""}`
-  ),
-  withInstallSecretRefFlags(
-    hashSaltSecretRef,
-    rawArchiveKeySecretRef
-  )(
-    `beep-cli ai-metrics label queue --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""} --limit 20`
-  ),
-  withInstallSecretRefFlags(
-    hashSaltSecretRef,
-    rawArchiveKeySecretRef
-  )(
-    `beep-cli ai-metrics report weekly --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""}`
-  ),
-  pipe(
-    rawArchiveKeySecretRef,
-    O.match({
-      onNone: () =>
-        withHashSaltSecret(hashSaltSecretRef)(
-          `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> ${withInstallSecretRefFlags(
-            hashSaltSecretRef,
-            rawArchiveKeySecretRef
-          )(
-            `beep-cli ai-metrics archive drill --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""}`
-          )}`
-        ),
-      onSome: (rawRef) =>
-        `${rawArchiveKeyPrefix(rawRef)} ${withHashSaltSecret(hashSaltSecretRef)(
-          withInstallSecretRefFlags(
-            hashSaltSecretRef,
-            rawArchiveKeySecretRef
-          )(
-            `beep-cli ai-metrics archive drill --target ${target}${target === AiMetricsDeployTarget.Enum.dankserver ? ` --data-root ${storage.dataRoot}` : ""}`
-          )
-        )}`,
-    })
-  ),
-];
+  services: ReadonlyArray<AiMetricsServiceSpec>
+): ReadonlyArray<string> => {
+  const commandFlags = deploymentCommandFlags(
+    target,
+    storage,
+    pipe(
+      services,
+      A.findFirst((service) => service.enabledByDefault)
+    )
+  );
 
-const encodeInstallPlanJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallPlan));
-const encodeInstallDoctorJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallDoctorResult));
-const encodeInstallApplyDryRunJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsInstallApplyDryRunResult));
+  return [
+    `mkdir -p ${storage.rawArchiveDir} ${storage.parquetDir}`,
+    "beep-cli ai-metrics install compose --target local > ai-metrics.phoenix.compose.yaml",
+    withHashSaltSecret(hashSaltSecretRef)(`beep-cli ai-metrics sources discover --target ${target}`),
+    "beep-cli ai-metrics config snapshot",
+    withHashSaltSecret(hashSaltSecretRef)("beep-cli ai-metrics privacy check --source codex --input ~/.codex/sessions"),
+    pipe(
+      rawArchiveKeySecretRef,
+      O.match({
+        onNone: () =>
+          withHashSaltSecret(hashSaltSecretRef)(
+            `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> beep-cli ai-metrics forwarder run --target ${target}${commandFlags.collectorDataRoot}${commandFlags.otlp}${commandFlags.otlpBaseUrl}`
+          ),
+        onSome: (rawRef) =>
+          withHashSaltSecret(hashSaltSecretRef)(
+            `${rawArchiveKeyPrefix(rawRef)} beep-cli ai-metrics forwarder run --target ${target}${commandFlags.collectorDataRoot} --raw-archive-key-secret-ref ${shellQuote(rawRef)}${commandFlags.otlp}${commandFlags.otlpBaseUrl}`
+          ),
+      })
+    ),
+    withInstallSecretRefFlags(
+      hashSaltSecretRef,
+      rawArchiveKeySecretRef
+    )(
+      `beep-cli ai-metrics forwarder timer --target ${target}${commandFlags.collectorDataRoot}${commandFlags.otlpBaseUrl}`
+    ),
+    withInstallSecretRefFlags(
+      hashSaltSecretRef,
+      rawArchiveKeySecretRef
+    )(
+      `beep-cli ai-metrics otlp export --target ${target}${commandFlags.collectorDataRoot} --ingest-run latest${commandFlags.otlpBaseUrl}`
+    ),
+    withInstallSecretRefFlags(
+      hashSaltSecretRef,
+      rawArchiveKeySecretRef
+    )(`beep-cli ai-metrics label queue --target ${target}${commandFlags.collectorDataRoot} --limit 20`),
+    withInstallSecretRefFlags(
+      hashSaltSecretRef,
+      rawArchiveKeySecretRef
+    )(`beep-cli ai-metrics report weekly --target ${target}${commandFlags.collectorDataRoot}`),
+    pipe(
+      rawArchiveKeySecretRef,
+      O.match({
+        onNone: () =>
+          withHashSaltSecret(hashSaltSecretRef)(
+            `BEEP_AI_METRICS_RAW_ARCHIVE_KEY=<base64-32-byte-key> ${withInstallSecretRefFlags(
+              hashSaltSecretRef,
+              rawArchiveKeySecretRef
+            )(`beep-cli ai-metrics archive drill --target ${target}${commandFlags.collectorDataRoot}`)}`
+          ),
+        onSome: (rawRef) =>
+          `${rawArchiveKeyPrefix(rawRef)} ${withHashSaltSecret(hashSaltSecretRef)(
+            withInstallSecretRefFlags(
+              hashSaltSecretRef,
+              rawArchiveKeySecretRef
+            )(`beep-cli ai-metrics archive drill --target ${target}${commandFlags.collectorDataRoot}`)
+          )}`,
+      })
+    ),
+  ];
+};
 
 const encodeInstallContractJson =
   <A>(encoder: (value: A) => Effect.Effect<string, S.SchemaError>) =>
@@ -1265,14 +1229,14 @@ const encodeInstallContractJson =
       )
     );
 
-const availableSourceCount = (result: AiMetricsSourceDiscoveryResult | undefined): number =>
-  result === undefined
-    ? 0
-    : pipe(
-        result.sources,
-        A.filter((source) => source.status === AiMetricsSourceStatus.Enum.available),
-        A.length
-      );
+const availableSourceCount = O.match({
+  onNone: () => 0,
+  onSome: flow(
+    (result: AiMetricsSourceDiscoveryResult) => result.sources,
+    A.filter((source) => AiMetricsSourceStatus.is.available(source.status)),
+    A.length
+  ),
+});
 
 const sourceStatusMetadata: (result: AiMetricsSourceDiscoveryResult) => Record<string, string> = flow(
   (result) => result.sources,
@@ -1280,43 +1244,20 @@ const sourceStatusMetadata: (result: AiMetricsSourceDiscoveryResult) => Record<s
   R.fromEntries
 );
 
-const hasFailedCheck: (checks: ReadonlyArray<AiMetricsInstallDoctorCheck>) => boolean = flow(
-  A.some((check) => check.status === AiMetricsInstallDoctorCheckStatus.Enum.failed)
-);
+const initialDoctorStatus: AiMetricsInstallDoctorStatus = AiMetricsInstallDoctorStatus.Enum.passed;
 
-const hasWarningCheck: (checks: ReadonlyArray<AiMetricsInstallDoctorCheck>) => boolean = flow(
-  A.some((check) => check.status === AiMetricsInstallDoctorCheckStatus.Enum.warning)
-);
-
-const doctorStatusFor = (checks: ReadonlyArray<AiMetricsInstallDoctorCheck>): AiMetricsInstallDoctorStatus => {
-  if (hasFailedCheck(checks)) {
-    return AiMetricsInstallDoctorStatus.Enum.failed;
-  }
-
-  if (hasWarningCheck(checks)) {
-    return AiMetricsInstallDoctorStatus.Enum.warning;
-  }
-
-  return AiMetricsInstallDoctorStatus.Enum.passed;
-};
-
-const check = ({
-  checkId,
-  message,
-  metadata = {},
-  status,
-}: {
-  readonly checkId: string;
-  readonly message: string;
-  readonly metadata?: Record<string, string>;
-  readonly status: AiMetricsInstallDoctorCheckStatus;
-}): AiMetricsInstallDoctorCheck =>
-  AiMetricsInstallDoctorCheck.make({
-    checkId,
-    message,
-    metadata,
-    status,
-  });
+const doctorStatusFor = (checks: ReadonlyArray<AiMetricsInstallDoctorCheck>): AiMetricsInstallDoctorStatus =>
+  A.reduce<AiMetricsInstallDoctorCheck, AiMetricsInstallDoctorStatus>(checks, initialDoctorStatus, (aggregate, check) =>
+    AiMetricsInstallDoctorCheckStatus.$match(check.status, {
+      failed: () => AiMetricsInstallDoctorStatus.Enum.failed,
+      passed: () => aggregate,
+      skipped: () => aggregate,
+      warning: () =>
+        AiMetricsInstallDoctorStatus.is.failed(aggregate)
+          ? AiMetricsInstallDoctorStatus.Enum.failed
+          : AiMetricsInstallDoctorStatus.Enum.warning,
+    })
+  );
 
 /**
  * Resolve an install spec for the requested AI metrics target.
@@ -1340,10 +1281,11 @@ const check = ({
  * ```ts
  * import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const spec = Effect.runSync(
  *   makeAiMetricsInstallSpec(
- *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *     AiMetricsInstallInput.make({ dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics") })
  *   )
  * )
  *
@@ -1362,7 +1304,7 @@ export const makeAiMetricsInstallSpec: (
   "AiMetrics.makeAiMetricsInstallSpec"
 )(function* (input: AiMetricsInstallInput = AiMetricsInstallInput.make({})) {
   const dataRoot = yield* requireInstallDataRoot(input);
-  const publicBaseUrl = input.publicBaseUrl ?? defaultPublicBaseUrl(input.target);
+  const publicBaseUrl = O.getOrElse(input.publicBaseUrl, () => defaultPublicBaseUrl(input.target));
   const hashSaltSecretRef = yield* requireHashSaltSecretRef(input.target, input.hashSaltSecretRef);
   const rawArchiveKeySecretRef = yield* requireRawArchiveKeySecretRef(input.target, input.rawArchiveKeySecretRef);
   const storage = makeStorageLayout(dataRoot);
@@ -1375,11 +1317,11 @@ export const makeAiMetricsInstallSpec: (
     candidateTools: input.candidateTools,
     defaultScoreWeights: AiMetricsScoreWeights.make({}),
     defaultTool: input.defaultTool,
-    ...(O.isSome(hashSaltSecretRef) ? { hashSaltSecretRef: hashSaltSecretRef.value } : {}),
+    hashSaltSecretRef,
     litellmGatewayEnabled: input.litellmGatewayEnabled,
-    plannedCommands: plannedCommands(input.target, storage, hashSaltSecretRef, rawArchiveKeySecretRef, publicBaseUrl),
+    plannedCommands: plannedCommands(input.target, storage, hashSaltSecretRef, rawArchiveKeySecretRef, services),
     privacyMode: input.privacyMode,
-    ...(O.isSome(rawArchiveKeySecretRef) ? { rawArchiveKeySecretRef: rawArchiveKeySecretRef.value } : {}),
+    rawArchiveKeySecretRef,
     services,
     stackName: `beep-ai-metrics-${input.target}`,
     storage,
@@ -1403,10 +1345,11 @@ export const makeAiMetricsInstallSpec: (
  * ```ts
  * import { AiMetricsInstallInput, makeAiMetricsInstallPlan } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const plan = Effect.runSync(
  *   makeAiMetricsInstallPlan(
- *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *     AiMetricsInstallInput.make({ dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics") })
  *   )
  * )
  *
@@ -1426,8 +1369,8 @@ export const makeAiMetricsInstallPlan: (
   "AiMetrics.makeAiMetricsInstallPlan"
 )(function* (input: AiMetricsInstallInput = AiMetricsInstallInput.make({})) {
   const spec = yield* makeAiMetricsInstallSpec(input);
-  const hashSaltSecretRef = nonEmptyString(spec.hashSaltSecretRef);
-  const rawArchiveKeySecretRef = nonEmptyString(spec.rawArchiveKeySecretRef);
+  const hashSaltSecretRef = O.filter(spec.hashSaltSecretRef, flow(Str.trim, Str.isNonEmpty));
+  const rawArchiveKeySecretRef = O.filter(spec.rawArchiveKeySecretRef, flow(Str.trim, Str.isNonEmpty));
   const steps = makeInstallPlanSteps(spec, hashSaltSecretRef, rawArchiveKeySecretRef);
 
   return AiMetricsInstallPlan.make({
@@ -1466,11 +1409,12 @@ export const makeAiMetricsInstallPlan: (
  *   makeAiMetricsInstallDoctorResult
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const result = Effect.runSync(
  *   makeAiMetricsInstallDoctorResult(
  *     AiMetricsInstallDoctorInput.make({
- *       install: AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *       install: AiMetricsInstallInput.make({ dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics") })
  *     })
  *   )
  * )
@@ -1490,15 +1434,51 @@ export const makeAiMetricsInstallDoctorResult: (
   "AiMetrics.makeAiMetricsInstallDoctorResult"
 )(function* (input: AiMetricsInstallDoctorInput = AiMetricsInstallDoctorInput.make({})) {
   const plan = yield* makeAiMetricsInstallPlan(input.install);
-  const sourceCount = availableSourceCount(input.sourceDiscovery);
+  const sourceDiscovery = input.sourceDiscovery;
+  const sourceCount = availableSourceCount(sourceDiscovery);
+  const sourceAvailability = pipe(
+    sourceDiscovery,
+    O.match({
+      onNone: () => ({
+        message: "Source discovery evidence was not provided to the install doctor.",
+        metadata: {},
+        status: AiMetricsInstallDoctorCheckStatus.Enum.warning,
+      }),
+      onSome: (result) =>
+        Match.value(sourceCount).pipe(
+          Match.when(
+            (count) => count === 0,
+            () => ({
+              message: "No local Codex, Claude Code, or OpenClaw sources are available.",
+              metadata: {
+                availableSourceCount: `${sourceCount}`,
+                ...sourceStatusMetadata(result),
+              },
+              status: AiMetricsInstallDoctorCheckStatus.Enum.failed,
+            })
+          ),
+          Match.orElse(() => ({
+            message: "At least one local AI source is available for live collection.",
+            metadata: {
+              availableSourceCount: `${sourceCount}`,
+              ...sourceStatusMetadata(result),
+            },
+            status:
+              sourceCount < A.length(result.sources)
+                ? AiMetricsInstallDoctorCheckStatus.Enum.warning
+                : AiMetricsInstallDoctorCheckStatus.Enum.passed,
+          }))
+        ),
+    })
+  );
   const checks = [
-    check({
+    AiMetricsInstallDoctorCheck.make({
       checkId: "install.spec",
       message: "Install spec resolved with schema-first target defaults.",
       metadata: { stackName: plan.stackName, target: plan.target },
       status: AiMetricsInstallDoctorCheckStatus.Enum.passed,
     }),
-    check({
+    AiMetricsInstallDoctorCheck.make({
       checkId: "secrets.refs",
       message:
         plan.target === AiMetricsDeployTarget.Enum.local
@@ -1509,52 +1489,25 @@ export const makeAiMetricsInstallDoctorResult: (
           ? AiMetricsInstallDoctorCheckStatus.Enum.skipped
           : AiMetricsInstallDoctorCheckStatus.Enum.passed,
     }),
-    check({
+    AiMetricsInstallDoctorCheck.make({
       checkId: "storage.layout",
       message: "Storage layout resolved for raw archive, derived DuckDB, and Parquet snapshots.",
       metadata: { dataRoot: plan.storage.dataRoot },
       status: AiMetricsInstallDoctorCheckStatus.Enum.passed,
     }),
-    check({
+    AiMetricsInstallDoctorCheck.make({
       checkId: "backend.phoenix",
       message: "Phoenix is the only concrete P5a deployment backend; other candidates remain contracts.",
       metadata: { defaultTool: plan.defaultTool },
-      status:
-        plan.defaultTool === AiMetricsTool.Enum.phoenix
-          ? AiMetricsInstallDoctorCheckStatus.Enum.passed
-          : AiMetricsInstallDoctorCheckStatus.Enum.failed,
+      status: AiMetricsTool.is.phoenix(plan.defaultTool)
+        ? AiMetricsInstallDoctorCheckStatus.Enum.passed
+        : AiMetricsInstallDoctorCheckStatus.Enum.failed,
     }),
-    check({
+    AiMetricsInstallDoctorCheck.make({
       checkId: "sources.available",
-      message: Match.value(input.sourceDiscovery).pipe(
-        Match.when(P.isUndefined, () => "Source discovery evidence was not provided to the install doctor."),
-        Match.when(
-          () => sourceCount === 0,
-          () => "No local Codex, Claude Code, or OpenClaw sources are available."
-        ),
-        Match.orElse(() => "At least one local AI source is available for live collection.")
-      ),
-      metadata:
-        input.sourceDiscovery === undefined
-          ? {}
-          : {
-              availableSourceCount: `${sourceCount}`,
-              ...sourceStatusMetadata(input.sourceDiscovery),
-            },
-      status: Match.value(input.sourceDiscovery).pipe(
-        Match.when(P.isUndefined, () => AiMetricsInstallDoctorCheckStatus.Enum.warning),
-        Match.when(
-          () => sourceCount === 0,
-          () => AiMetricsInstallDoctorCheckStatus.Enum.failed
-        ),
-        Match.when(
-          (sourceDiscovery) => sourceCount < A.length(sourceDiscovery.sources),
-          () => AiMetricsInstallDoctorCheckStatus.Enum.warning
-        ),
-        Match.orElse(() => AiMetricsInstallDoctorCheckStatus.Enum.passed)
-      ),
+      ...sourceAvailability,
     }),
-    check({
+    AiMetricsInstallDoctorCheck.make({
       checkId: "apply.mode",
       message: "CLI install apply remains dry-run-only; real dankserver mutation is owned by the Pulumi P5b stack.",
       status: AiMetricsInstallDoctorCheckStatus.Enum.passed,
@@ -1585,10 +1538,11 @@ export const makeAiMetricsInstallDoctorResult: (
  * ```ts
  * import { AiMetricsInstallInput, makeAiMetricsInstallApplyDryRunResult } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const result = Effect.runSync(
  *   makeAiMetricsInstallApplyDryRunResult(
- *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *     AiMetricsInstallInput.make({ dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics") })
  *   )
  * )
  *
@@ -1609,7 +1563,6 @@ export const makeAiMetricsInstallApplyDryRunResult: (
   const plan = yield* makeAiMetricsInstallPlan(input);
 
   return AiMetricsInstallApplyDryRunResult.make({
-    dryRun: true,
     message: "CLI install apply is dry-run-only; run the Pulumi P5b stack for real remote mutation.",
     plan,
     target: plan.target,
@@ -1634,10 +1587,11 @@ export const makeAiMetricsInstallApplyDryRunResult: (
  *   makeAiMetricsInstallPlan
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const json = Effect.runSync(
  *   makeAiMetricsInstallPlan(
- *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *     AiMetricsInstallInput.make({ dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics") })
  *   ).pipe(Effect.flatMap(aiMetricsInstallPlanToJson))
  * )
  *
@@ -1649,9 +1603,9 @@ export const makeAiMetricsInstallApplyDryRunResult: (
  */
 export const aiMetricsInstallPlanToJson: (
   result: AiMetricsInstallPlan
-) => Effect.Effect<string, AiMetricsInstallConfigurationError> = encodeInstallContractJson(encodeInstallPlanJson)(
-  "Failed to encode AI metrics install plan as JSON."
-);
+) => Effect.Effect<string, AiMetricsInstallConfigurationError> = encodeInstallContractJson(
+  AiMetricsInstallPlan.encodeJsonEffect
+)("Failed to encode AI metrics install plan as JSON.");
 
 /**
  * Encode a doctor result as the JSON a CI job can gate on.
@@ -1672,11 +1626,12 @@ export const aiMetricsInstallPlanToJson: (
  *   makeAiMetricsInstallDoctorResult
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const json = Effect.runSync(
  *   makeAiMetricsInstallDoctorResult(
  *     AiMetricsInstallDoctorInput.make({
- *       install: AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *       install: AiMetricsInstallInput.make({ dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics") })
  *     })
  *   ).pipe(Effect.flatMap(aiMetricsInstallDoctorToJson))
  * )
@@ -1689,9 +1644,9 @@ export const aiMetricsInstallPlanToJson: (
  */
 export const aiMetricsInstallDoctorToJson: (
   result: AiMetricsInstallDoctorResult
-) => Effect.Effect<string, AiMetricsInstallConfigurationError> = encodeInstallContractJson(encodeInstallDoctorJson)(
-  "Failed to encode AI metrics install doctor result as JSON."
-);
+) => Effect.Effect<string, AiMetricsInstallConfigurationError> = encodeInstallContractJson(
+  AiMetricsInstallDoctorResult.encodeJsonEffect
+)("Failed to encode AI metrics install doctor result as JSON.");
 
 /**
  * Encode a dry-run apply result as the JSON the CLI emits under `--json`.
@@ -1710,10 +1665,11 @@ export const aiMetricsInstallDoctorToJson: (
  *   makeAiMetricsInstallApplyDryRunResult
  * } from "@beep/repo-ai-metrics"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const json = Effect.runSync(
  *   makeAiMetricsInstallApplyDryRunResult(
- *     AiMetricsInstallInput.make({ dataRoot: "/home/dev/.local/state/beep/ai-metrics" })
+ *     AiMetricsInstallInput.make({ dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics") })
  *   ).pipe(Effect.flatMap(aiMetricsInstallApplyDryRunToJson))
  * )
  *
@@ -1726,5 +1682,5 @@ export const aiMetricsInstallDoctorToJson: (
 export const aiMetricsInstallApplyDryRunToJson: (
   result: AiMetricsInstallApplyDryRunResult
 ) => Effect.Effect<string, AiMetricsInstallConfigurationError> = encodeInstallContractJson(
-  encodeInstallApplyDryRunJson
+  AiMetricsInstallApplyDryRunResult.encodeJsonEffect
 )("Failed to encode AI metrics install dry-run result as JSON.");

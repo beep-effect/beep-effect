@@ -807,6 +807,29 @@ describe("quality task adapter", () => {
     ]);
   });
 
+  it("pins direct CI Turbo lanes to a requested local-only cache", () =>
+    withEnvVar("CI", undefined, () =>
+      withEnvVar("TURBO_CACHE", "local:rw", () => {
+        const options = CiLaneRunOptions.make({
+          affected: true,
+          base: "origin/main",
+          head: "HEAD",
+          summarize: true,
+          mode: "affected",
+          to: "HEAD",
+          last: false,
+          changesetStatus: false,
+          validateEnvelopes: false,
+        });
+
+        for (const lane of ["lint", "labs", "property"] as const) {
+          const args = O.getOrThrow(A.head(ciLaneStepsForTesting("/repo", lane, options))).args;
+          expect(args).toContain("--cache=local:rw");
+          expect(args).not.toContain("--cache=local:rw,remote:r");
+        }
+      })
+    ));
+
   it("keeps the ts2589 flake quarantine on the dispatched check lane", () => {
     const lanes = githubCheckQualityLanesForTesting("/repo");
     const quarantined = pipe(

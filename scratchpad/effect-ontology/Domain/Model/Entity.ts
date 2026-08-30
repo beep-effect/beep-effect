@@ -138,13 +138,6 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
 /**
  * Runtime value decoded by {@link EvidenceSpan}.
  *
- * **Example** (Select the quoted text)
- * ```ts
- * import type { EvidenceSpan } from "@effect-ontology/Model/Entity"
- * const field: keyof EvidenceSpan = "quote"
- * console.log(field) // "quote"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

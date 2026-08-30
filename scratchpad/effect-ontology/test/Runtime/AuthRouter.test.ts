@@ -1,6 +1,7 @@
+import { assert, describe, it } from "@effect/vitest";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
-import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Layer, Redacted } from "effect";
 import * as O from "effect/Option";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
@@ -34,7 +35,7 @@ const AuthConfig = Layer.succeed(ConfigService, {
   },
 });
 
-const InterruptedAuthDependencies = Layer.merge(InterruptedTicketService, AuthConfig);
+const InterruptedAuthDependencies = Layer.mergeAll(InterruptedTicketService, AuthConfig, BunCrypto.layer);
 
 const AnonymousAuthConfig = Layer.succeed(ConfigService, {
   ...DEFAULT_CONFIG,
