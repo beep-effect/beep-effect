@@ -1397,6 +1397,48 @@ export const ProofFixture = 1;
       )
     ));
 
+  it("aggregates private JSDoc loop output when a package emits it", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = process.cwd();
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["scratchpad"],
+            })
+          );
+
+          const packageDir = path.join(tmpDir, "scratchpad");
+          const privateModulesDir = path.join(packageDir, ".jsdoc-loop", "generated-docs", "modules");
+          yield* fs.makeDirectory(privateModulesDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(packageDir, "package.json"),
+            encodeJson({ name: "@beep/scratchpad", version: "0.0.0" })
+          );
+          yield* fs.writeFileString(
+            path.join(packageDir, "docgen.json"),
+            encodeJson({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
+          );
+          yield* fs.writeFileString(
+            path.join(privateModulesDir, "Scratchpad.md"),
+            `---\nparent: Modules\ntitle: Scratchpad\n---\n\ncontent\n`
+          );
+
+          const results = yield* aggregateGeneratedDocs();
+          const aggregatedPath = path.join(tmpDir, "docs", "generated", "scratchpad", "Scratchpad.md");
+          const aggregated = yield* fs.readFileString(aggregatedPath);
+
+          expect(results).toHaveLength(1);
+          expect(aggregated).toContain('parent: "@beep/scratchpad"');
+        })
+      )
+    ));
+
   it("skips symlinked docs entries during aggregation", () =>
     Effect.runPromise(
       withTempRepo(

@@ -29,7 +29,7 @@
     "claudecode:lint:fix": "biome check --write --config-path claudecode/biome.jsonc claudecode test/claudecode",
     "claudecode:test": "bunx --bun vitest run --config claudecode/vitest.config.ts",
     "claudecode:typecheck": "tsgo -p claudecode/tsconfig.json --noEmit",
-    "docgen": "bunx --bun --no-install docgen && bun run --cwd .. beep docgen generate -p scratchpad",
+    "docgen": "bunx --bun --no-install docgen",
     "docgen:claudecode": "bunx --bun --no-install docgen --config-file docgen.claudecode.json",
     "docgen:effect-ontology": "bunx --bun --no-install docgen --config-file docgen.effect-ontology.json",
     "generate:effect-ontology-migrations": "bun effect-ontology/scripts/generate-migrations.ts",
