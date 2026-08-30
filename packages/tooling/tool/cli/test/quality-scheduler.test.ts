@@ -888,6 +888,11 @@ describe("quality-scheduler", () => {
                 memoryPeakBytes: 16_384,
                 tasksCurrent: 7,
               });
+
+              yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
+              const unavailable = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
+              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("memoryPeakBytes");
+              expect(unavailable.leases[0]?.runScope).not.toHaveProperty("tasksCurrent");
             }),
           128,
           true
