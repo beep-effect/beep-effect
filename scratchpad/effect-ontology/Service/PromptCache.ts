@@ -1,10 +1,11 @@
 /**
- * Service: Prompt Cache Helper
+ * Two-message Prompt construction for extraction calls.
  *
  * **Details**
  *
- * Utilities for building Prompt objects with Anthropic prompt caching support.
- * Separates cacheable system messages from variable user messages.
+ * Builds a Prompt with a system instruction followed by a user text part.
+ * Caching flags are accepted for call-site compatibility and are currently
+ * ignored; these helpers do not attach Anthropic `cache_control` metadata.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -15,14 +16,20 @@ import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 import { dual2, dual3 } from "../Utils/Dual.ts";
 
 /**
- * Create a Prompt with cache control for Anthropic
+ * Build a two-message extraction Prompt from a system instruction and user text.
  *
  * **Details**
  *
- * When caching is enabled, the system message is marked with cache_control: "ephemeral"
- * to enable prompt caching. The user message remains variable and is not cached.
+ * The helper always emits a system message followed by a user text part. It does
+ * not currently attach Anthropic `cache_control` metadata.
  *
- * **Example** (Use makeCachedPrompt)
+ * **Gotchas**
+ *
+ * `enableCaching` is accepted for call-site compatibility and is ignored. Passing
+ * `true` does not mark the system message as ephemeral or otherwise enable
+ * provider prompt caching.
+ *
+ * **Example** (Build a two-message prompt)
  *
  * ```ts
  * import { makeCachedPrompt } from "@effect-ontology/Service/PromptCache"
@@ -32,13 +39,13 @@ import { dual2, dual3 } from "../Utils/Dual.ts";
  *   "Extract entities from: Ada wrote a program.",
  *   true
  * )
- * console.log(prompt)
+ * console.log(prompt.content.length) // 2
+ * console.log(JSON.stringify(prompt).includes("cache_control")) // false
  * ```
  *
- * @param systemMessage - Cacheable system message (ontology schema, rules, instructions)
- * @param userMessage - Variable user message (input text)
- * @param enableCaching - Whether to enable prompt caching
- * @returns Prompt object ready for LLM calls
+ * @param systemMessage - System instruction placed in the first prompt message
+ * @param userMessage - Variable user text placed in the second prompt message
+ * @param enableCaching - Reserved flag; currently unused by the runtime
  * @category constructors
  * @since 0.0.0
  */
@@ -55,23 +62,34 @@ export const makeCachedPrompt = dual3(
 );
 
 /**
- * Create a Prompt from StructuredPrompt
+ * Build a Prompt from a structured system/user pair.
  *
  * **Details**
  *
- * Convenience wrapper that extracts system and user messages from StructuredPrompt.
+ * Delegates to {@link makeCachedPrompt} after reading `systemMessage` and
+ * `userMessage` from the structured prompt.
  *
- * **Example** (Inspect make cached prompt from structured)
+ * **Gotchas**
+ *
+ * `enableCaching` is forwarded unchanged and is currently ignored by
+ * {@link makeCachedPrompt}.
+ *
+ * **Example** (Wrap a structured prompt)
  *
  * ```ts
+ * import { StructuredPrompt } from "@effect-ontology/Prompt/PromptGenerator"
  * import { makeCachedPromptFromStructured } from "@effect-ontology/Service/PromptCache"
  *
- * console.log(makeCachedPromptFromStructured)
+ * const structured = StructuredPrompt.make({
+ *   systemMessage: "You extract ontology-aligned entities.",
+ *   userMessage: "Extract entities from: Ada wrote a program."
+ * })
+ * const prompt = makeCachedPromptFromStructured(structured, false)
+ * console.log(prompt.content.length) // 2
  * ```
  *
  * @param structured - Structured prompt with system and user messages
- * @param enableCaching - Whether to enable prompt caching
- * @returns Prompt object ready for LLM calls
+ * @param enableCaching - Reserved flag; currently unused by the runtime
  * @category constructors
  * @since 0.0.0
  */

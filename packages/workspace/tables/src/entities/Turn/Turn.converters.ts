@@ -7,7 +7,6 @@
  */
 
 import { Turn } from "@beep/workspace-domain/entities/Turn";
-import * as S from "effect/Schema";
 import type { Table } from "./Turn.table.ts";
 
 /**
@@ -48,9 +47,6 @@ export type TurnRow = typeof Table.$inferSelect;
  */
 export type TurnInsert = typeof Table.$inferInsert;
 
-const encodeTurn = S.encodeSync(Turn);
-const decodeTurnRow = S.decodeUnknownSync(Turn);
-
 /**
  * Convert a Turn entity into its persistence insert row.
  *
@@ -66,10 +62,9 @@ const decodeTurnRow = S.decodeUnknownSync(Turn);
  * ```ts
  * import { Turn } from "@beep/workspace-domain/entities/Turn"
  * import { toTurnInsert } from "@beep/workspace-tables/entities/Turn"
- * import * as S from "effect/Schema"
  *
  * const principal = { component: "Runtime", kind: "System" }
- * const turn = S.decodeUnknownSync(Turn)({
+ * const turn = Turn.decodeUnknownSync({
  *   createdAt: 1,
  *   createdByPrincipal: principal,
  *   entityType: "WorkspaceTurn",
@@ -95,7 +90,7 @@ const decodeTurnRow = S.decodeUnknownSync(Turn);
  * @since 0.0.0
  */
 export const toTurnInsert = (turn: Turn): TurnInsert => {
-  const encoded = encodeTurn(turn);
+  const encoded = Turn.encodeSync(turn);
 
   return {
     createdAt: encoded.createdAt,
@@ -148,4 +143,4 @@ export const toTurnInsert = (turn: Turn): TurnInsert => {
  * @category tables
  * @since 0.0.0
  */
-export const fromTurnRow = (row: TurnRow): Turn => decodeTurnRow(row);
+export const fromTurnRow = (row: TurnRow): Turn => Turn.decodeUnknownSync(row);

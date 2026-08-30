@@ -10,24 +10,26 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
-import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
+import { Console, DateTime, Effect, FileSystem, Path, PlatformError, Random } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Argument from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
+import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
 import {
-  BatchId,
-  ContentHash,
-  DocumentId,
-  GcsBucket,
-  GcsUri,
-  Namespace,
-  OntologyName,
-  OntologyVersion,
+    BatchId,
+    ContentHash,
+    DocumentId,
+    GcsBucket,
+    GcsUri,
+    Namespace,
+    OntologyName,
+    OntologyVersion,
 } from "../../Domain/Identity.ts";
 import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
@@ -86,7 +88,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   output: O.Option<string>,
   batchId: O.Option<string>,
   prefix: O.Option<string>
-) {
+): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | S.SchemaError, ConfigService | FileSystem.FileSystem | Path.Path | StorageService> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const storage = yield* StorageService;
@@ -178,14 +180,25 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
 // =============================================================================
 
 /**
- * Exposes ingest command for composition by callers of this module.
+ * Uploads local documents from a directory into storage and writes a batch
+ * manifest for later extraction.
  *
- * **Example** (Inspect ingest command)
+ * **Details**
+ *
+ * This is filesystem ingest, not URL fetch. `--ontology` / `--ontology-id`
+ * scope the batch; `--output` writes the generated manifest JSON.
+ *
+ * **Example** (Ingest a local document directory)
  *
  * ```ts
  * import { ingestCommand } from "@effect-ontology/Cli/Commands/Ingest"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(ingestCommand)
+ * const argv = ["./articles", "--ontology", "ontologies/people.ttl", "--output", "manifest.json"]
+ * const program = Command.runWith(ingestCommand, { version: "0.0.0" })([...argv])
+ * console.log(ingestCommand.name) // "ingest"
+ * console.log(argv.includes("--ontology")) // true
+ * console.log(program)
  * ```
  *
  * @category cli-commands

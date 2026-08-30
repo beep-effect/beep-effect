@@ -1,10 +1,13 @@
 /**
  * MCP module hub — schemas and loader for `.mcp.json` files.
  *
+ * **Details**
+ *
  * Users import this as a namespace:
  * `import { Mcp } from 'effect-claudecode'` and access members as
  * `Mcp.McpServerConfig`, `Mcp.McpJsonFile`, `Mcp.loadJson`, etc.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -37,7 +40,6 @@ export {
  * @category configuration
  * @since 0.0.0
  */
-export type { EffectiveMcpLoadOptions, ManagedMcpLoadOptions } from "./Mcp/JsonFile.ts";
 /**
  * Re-exports MCP file schemas, paths, composition, serialization, and loaders.
  *
@@ -47,10 +49,12 @@ export type { EffectiveMcpLoadOptions, ManagedMcpLoadOptions } from "./Mcp/JsonF
 export {
   ClaudeJsonFile,
   ClaudeJsonProject,
+  EffectiveMcpLoadOptions,
   loadClaudeJson,
   loadEffective,
   loadJson,
   loadManagedMcp,
+  ManagedMcpLoadOptions,
   McpJsonFile,
   managedMcpJsonPaths,
   mergeMcpJsonFiles,

@@ -124,7 +124,9 @@ const admissionOwnerFields = {
  *
  * `pid` plus `procStart` (the `/proc/<pid>/stat` start time) identify the
  * owner across pid reuse; leases are reaped only when the pid is dead or the
- * recorded start time no longer matches.
+ * recorded start time no longer matches. The lease retains the originating
+ * ticket identity (`nonce`) and queue instant (`enqueuedAtMillis`); legacy
+ * lease files decode those fields with `""` and `0` sentinels.
  *
  * **Example** (Construct a lease value)
  *
@@ -144,7 +146,9 @@ const admissionOwnerFields = {
  *   command: "bun run beep yeet verify",
  *   startedAt: "2026-08-27T14:00:00Z",
  *   admittedAtMillis: 0,
- *   heartbeatAtMillis: 0
+ *   heartbeatAtMillis: 0,
+ *   enqueuedAtMillis: 0,
+ *   nonce: "d0a7b0dc"
  * })
  * console.log(lease.weightTokens) // 3
  * ```
@@ -160,6 +164,11 @@ export class YeetAdmissionLease extends S.Class<YeetAdmissionLease>($I`YeetAdmis
     startedAt: S.String,
     admittedAtMillis: S.Finite,
     heartbeatAtMillis: S.Finite,
+    enqueuedAtMillis: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefault(Effect.succeed(0))
+    ),
+    nonce: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
     hotPaths: S.Array(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<string>())),
       S.withDecodingDefault(Effect.succeed(A.empty<string>()))

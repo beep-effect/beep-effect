@@ -14,12 +14,15 @@ import { Subject } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
-import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
+import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, PlatformError } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
+import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
+import type { ParsingFailed, RdfError } from "../../Domain/Error/Rdf.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { StorageService } from "../../Service/Storage.ts";
@@ -101,7 +104,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   manifest: O.Option<string>,
   threshold: number,
   verbose: boolean
-) {
+): Effect.fn.Return<void, KeyValueStoreError | ParsingFailed | PlatformError.PlatformError | RdfError | S.SchemaError, FileSystem.FileSystem | RdfBuilder | StorageService> {
   const storage = yield* StorageService;
   const rdf = yield* RdfBuilder;
   yield* Console.log(`Analyzing entities for batch: ${batchId}`);
@@ -274,14 +277,25 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
 // =============================================================================
 
 /**
- * Exposes reconcile command for composition by callers of this module.
+ * Analyzes entities in a persisted batch for duplicate candidates and prints
+ * reconciliation statistics.
  *
- * **Example** (Inspect reconcile command)
+ * **Details**
+ *
+ * Identify the batch with `--batch-id` or `--manifest`. `--threshold` raises
+ * or lowers merge consideration; `--verbose` prints per-entity detail.
+ *
+ * **Example** (Reconcile persisted batch conflicts)
  *
  * ```ts
  * import { reconcileCommand } from "@effect-ontology/Cli/Commands/Reconcile"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(reconcileCommand)
+ * const argv = ["--batch-id", "batch-1234567890ab", "--threshold", "0.8"]
+ * const program = Command.runWith(reconcileCommand, { version: "0.0.0" })([...argv])
+ * console.log(reconcileCommand.name) // "reconcile"
+ * console.log(argv.includes("--batch-id")) // true
+ * console.log(program)
  * ```
  *
  * @category cli-commands

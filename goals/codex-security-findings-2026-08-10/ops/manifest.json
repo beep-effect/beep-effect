@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/codex-security-findings-2026-08-10",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 655,
   "statusNote": "Completed-retained after the bounded fixes merged in PR #655, with earlier current-HEAD fixes verified in PRs #649 and #650. Deferred duplicates CSF-011, CSF-012, and CSF-018 later landed through PRs #697, #688, and #712. CSF-001 through CSF-004 remain an explicit handoff to the runner-admission/workload-identity arc for external GitHub runner-group and AWS deployment proof; this packet does not claim dashboard closure for handed-off findings.",
   "mission": "Remediate and close the 18 Codex Cloud security findings captured on 2026-08-10.",
   "executionCapable": true,

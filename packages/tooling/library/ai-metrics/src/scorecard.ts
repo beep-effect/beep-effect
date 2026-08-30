@@ -7,16 +7,19 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { Defect, SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
-import { A, Str } from "@beep/utils";
+import { A, N, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ensureAiMetricsDerivedStorage } from "./derived-storage.ts";
 import {
+  AiMetricsCoverageGap,
   AiMetricsDeployTarget,
+  AiMetricsNonNegativeInteger,
   AiMetricsQualityGateStatus,
+  AiMetricsRating,
   AiMetricsScoreWeights,
   AiMetricsSourceRole,
   AiMetricsTranscriptSource,
@@ -28,21 +31,6 @@ import {
 import { hashPublicTextSha256, redactAiMetricsSensitiveText } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("scorecard");
-// Canonical coverage-gap code domain — one source of truth for the conditional detector
-// (coverageGapsFor) and the empty-scorecards fallback list.
-const AiMetricsCoverageGap = LiteralKit([
-  "no_tasks",
-  "no_labels",
-  "no_benchmark_runs",
-  "scorecard_completion_credit_blocked",
-  "model_call_metrics_unavailable_not_scored",
-  "tool_invocation_metrics_unavailable_not_scored",
-  "cost_metrics_unavailable_not_scored",
-]).pipe(
-  $I.annoteSchema("AiMetricsCoverageGap", {
-    description: "Canonical AI-metrics scorecard coverage-gap codes.",
-  })
-);
 
 /**
  * Error raised by AI metrics label, benchmark, or scorecard workflows.
@@ -113,7 +101,9 @@ export class AiMetricsLabelQueueItem extends S.Class<AiMetricsLabelQueueItem>($I
   $I.annote("AiMetricsLabelQueueItem", {
     description: "Deploy-safe task summary ready for human label review.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(AiMetricsLabelQueueItem));
+}
 
 /**
  * Input for reading unlabeled tasks from the label queue.
@@ -177,7 +167,10 @@ export class AiMetricsLabelQueueResult extends S.Class<AiMetricsLabelQueueResult
   $I.annote("AiMetricsLabelQueueResult", {
     description: "Deploy-safe list of tasks pending human outcome labels.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(AiMetricsLabelQueueResult));
+  static readonly encodeJsonEffect = S.encodeEffect(S.fromJsonString(AiMetricsLabelQueueResult));
+}
 
 /**
  * Input for adding or replacing the current label for one task.
@@ -193,7 +186,7 @@ export class AiMetricsLabelQueueResult extends S.Class<AiMetricsLabelQueueResult
  *   interventionCount: 1,
  *   passed: true,
  *   qualityGate: "passed",
- *   rating: 0.9
+ *   rating: 5
  * })
  * console.log(input.qualityGate)
  * ```
@@ -205,12 +198,12 @@ export class AiMetricsOutcomeLabelInput extends S.Class<AiMetricsOutcomeLabelInp
   {
     agentTaskId: S.String,
     followUpFix: S.Boolean,
-    interventionCount: S.Finite,
+    interventionCount: AiMetricsNonNegativeInteger,
     labeledAtEpochMillis: S.optionalKey(S.Finite),
-    note: S.optionalKey(S.String),
+    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
-    rating: S.Finite,
+    rating: AiMetricsRating,
   },
   $I.annote("AiMetricsOutcomeLabelInput", {
     description: "Structured human label command payload for one AI-agent task.",
@@ -242,7 +235,7 @@ export class AiMetricsBenchmarkCaseInput extends S.Class<AiMetricsBenchmarkCaseI
     benchmarkCaseId: S.String,
     expectedChecks: S.Array(S.String),
     promptHash: S.String,
-    promptRef: S.optionalKey(S.String),
+    promptRef: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     title: S.String,
   },
   $I.annote("AiMetricsBenchmarkCaseInput", {
@@ -283,7 +276,10 @@ export class AiMetricsBenchmarkCaseListResult extends S.Class<AiMetricsBenchmark
   $I.annote("AiMetricsBenchmarkCaseListResult", {
     description: "Deploy-safe benchmark case list.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(AiMetricsBenchmarkCaseListResult));
+  static readonly encodeJsonEffect = S.encodeEffect(S.fromJsonString(AiMetricsBenchmarkCaseListResult));
+}
 
 /**
  * Input for recording an observed benchmark result.
@@ -310,8 +306,8 @@ export class AiMetricsBenchmarkRunInput extends S.Class<AiMetricsBenchmarkRunInp
   {
     benchmarkCaseId: S.String,
     configSnapshotId: S.String,
-    elapsedMs: S.Finite,
-    note: S.optionalKey(S.String),
+    elapsedMs: AiMetricsNonNegativeInteger,
+    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     passed: S.Boolean,
     qualityGate: AiMetricsQualityGateStatus,
     recordedAtEpochMillis: S.optionalKey(S.Finite),
@@ -466,7 +462,52 @@ export class AiMetricsWeeklyReportResult extends S.Class<AiMetricsWeeklyReportRe
   $I.annote("AiMetricsWeeklyReportResult", {
     description: "Weekly report document plus durable Markdown and JSON artifact paths.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
+  static readonly encodeJsonEffect = S.encodeEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
+}
+
+const NonNegativeCount = S.Int.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`NonNegativeCountCheck`,
+    title: "Non-negative count",
+    description: "An integer count produced by a DuckDB aggregate.",
+    message: "Expected a non-negative integer count",
+  })
+).pipe(
+  $I.annoteSchema("NonNegativeCount", {
+    description: "Non-negative integer count decoded from a DuckDB aggregate row.",
+  })
+);
+
+const NonNegativeFinite = S.Finite.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`NonNegativeFiniteCheck`,
+    title: "Non-negative finite number",
+    description: "A finite aggregate value that cannot be negative.",
+    message: "Expected a non-negative finite number",
+  })
+).pipe(
+  $I.annoteSchema("NonNegativeFinite", {
+    description: "Non-negative finite value decoded from a DuckDB aggregate row.",
+  })
+);
+
+const UnitInterval = S.Finite.check(
+  S.isBetween(
+    { minimum: 0, maximum: 1 },
+    {
+      identifier: $I`UnitIntervalCheck`,
+      title: "Unit interval",
+      description: "A finite aggregate rate or score in the inclusive unit interval.",
+      message: "Expected a finite number between 0 and 1",
+    }
+  )
+).pipe(
+  $I.annoteSchema("UnitInterval", {
+    description: "Finite aggregate rate or score in the inclusive range from zero through one.",
+  })
+);
 
 class TaskPresenceRow extends S.Class<TaskPresenceRow>($I`TaskPresenceRow`)(
   {
@@ -475,97 +516,75 @@ class TaskPresenceRow extends S.Class<TaskPresenceRow>($I`TaskPresenceRow`)(
   $I.annote("TaskPresenceRow", {
     description: "DuckDB row proving an AI metrics task exists before labeling.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(TaskPresenceRow));
+}
 
 class BenchmarkCaseRow extends S.Class<BenchmarkCaseRow>($I`BenchmarkCaseRow`)(
   {
     benchmarkCaseId: S.String,
-    expectedChecksJson: S.String,
+    expectedChecks: S.Array(S.String).pipe(S.fromJsonString),
     promptHash: S.String,
-    promptRef: S.NullOr(S.String),
+    promptRef: S.OptionFromNullOr(S.String),
     title: S.String,
   },
   $I.annote("BenchmarkCaseRow", {
-    description: "DuckDB benchmark case row before JSON decoding.",
+    description: "DuckDB benchmark case row with JSON and nullable columns decoded at the row boundary.",
   })
-) {}
-
-class LabelQueueRow extends S.Class<LabelQueueRow>($I`LabelQueueRow`)(
-  {
-    agentTaskId: S.String,
-    configSnapshotId: S.String,
-    createdAtEpochMillis: S.Finite,
-    sourceKind: AiMetricsTranscriptSource,
-    sourcePathHash: S.String,
-    sourceRole: AiMetricsSourceRole.pipe(
-      S.withConstructorDefault(Effect.succeed(AiMetricsSourceRole.Enum.primary)),
-      S.withDecodingDefaultKey(Effect.succeed(AiMetricsSourceRole.Enum.primary))
-    ),
-    title: S.String,
-    turnCount: S.Finite,
-  },
-  $I.annote("LabelQueueRow", {
-    description: "DuckDB label queue row decoded from task/session/turn aggregates.",
-  })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(BenchmarkCaseRow));
+}
 
 class TaskAggregateRow extends S.Class<TaskAggregateRow>($I`TaskAggregateRow`)(
   {
-    averageInterventionCount: S.Finite,
-    averageQualityGateScore: S.Finite,
+    averageInterventionCount: NonNegativeFinite,
+    averageQualityGateScore: UnitInterval,
     averageRating: S.Finite,
     configSnapshotId: S.String,
-    followUpFixCount: S.Finite,
-    labelCount: S.Finite,
-    passRate: S.Finite,
-    taskCount: S.Finite,
+    followUpFixCount: NonNegativeCount,
+    labelCount: NonNegativeCount,
+    passRate: UnitInterval,
+    taskCount: NonNegativeCount,
   },
   $I.annote("TaskAggregateRow", {
     description: "Task and label aggregates grouped by AI metrics config snapshot.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(TaskAggregateRow));
+}
 
 class BenchmarkAggregateRow extends S.Class<BenchmarkAggregateRow>($I`BenchmarkAggregateRow`)(
   {
-    benchmarkPassRate: S.Finite,
-    benchmarkQualityGateScore: S.Finite,
-    benchmarkRunCount: S.Finite,
+    benchmarkPassRate: UnitInterval,
+    benchmarkQualityGateScore: UnitInterval,
+    benchmarkRunCount: NonNegativeCount,
     configSnapshotId: S.String,
   },
   $I.annote("BenchmarkAggregateRow", {
     description: "Benchmark aggregates grouped by AI metrics config snapshot.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(BenchmarkAggregateRow));
+}
 
 class CoverageCountsRow extends S.Class<CoverageCountsRow>($I`CoverageCountsRow`)(
   {
-    modelCallCount: S.Finite,
-    toolInvocationCount: S.Finite,
+    modelCallCount: NonNegativeCount,
+    toolInvocationCount: NonNegativeCount,
   },
   $I.annote("CoverageCountsRow", {
     description: "Derived metric coverage counts used by the weekly scorecard.",
   })
-) {}
+) {
+  static readonly decodeRowsEffect = S.decodeUnknownEffect(S.Array(CoverageCountsRow));
+}
 
-const decodeTaskPresenceRows = S.decodeUnknownEffect(S.Array(TaskPresenceRow));
-const decodeBenchmarkCaseRows = S.decodeUnknownEffect(S.Array(BenchmarkCaseRow));
-const decodeLabelQueueRows = S.decodeUnknownEffect(S.Array(LabelQueueRow));
-const decodeTaskAggregateRows = S.decodeUnknownEffect(S.Array(TaskAggregateRow));
-const decodeBenchmarkAggregateRows = S.decodeUnknownEffect(S.Array(BenchmarkAggregateRow));
-const decodeCoverageRows = S.decodeUnknownEffect(S.Array(CoverageCountsRow));
-const decodeExpectedChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.String)));
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
-const encodeLabelQueueJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsLabelQueueResult));
-const encodeOutcomeLabelJson = S.encodeUnknownEffect(S.fromJsonString(OutcomeLabel));
-const encodeBenchmarkCaseJson = S.encodeUnknownEffect(S.fromJsonString(BenchmarkCase));
-const encodeBenchmarkCaseListJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsBenchmarkCaseListResult));
-const encodeBenchmarkRunJson = S.encodeUnknownEffect(S.fromJsonString(BenchmarkRun));
-const encodeWeeklyReportJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsWeeklyReportResult));
 
 const scorecardFailure = (message: string, cause: unknown): AiMetricsScorecardError =>
   AiMetricsScorecardError.make({ cause, message });
 
-const boundedUnit = (value: number): number => globalThis.Math.min(1, globalThis.Math.max(0, value));
+const boundedUnit: (value: number) => number = N.clamp({ minimum: 0, maximum: 1 });
 
 const ensureScorecardStorage: Effect.Effect<void, AiMetricsScorecardError, DuckDb> = ensureAiMetricsDerivedStorage.pipe(
   Effect.mapError((cause) => scorecardFailure("Failed to ensure AI metrics scorecard storage.", cause))
@@ -587,32 +606,23 @@ const rowId = Effect.fn("AiMetrics.scorecard.rowId")(function* (
   return `${prefix}-${digest}`;
 });
 
-const validateRating = (rating: number): Effect.Effect<void, AiMetricsScorecardError> =>
-  rating >= 1 && rating <= 5
-    ? Effect.void
-    : Effect.fail(
-        scorecardFailure("AI metrics outcome labels require --rating between 1 and 5.", {
-          rating,
-        })
-      );
-
-const validateNonNegative = (fieldName: string, value: number): Effect.Effect<void, AiMetricsScorecardError> =>
-  value >= 0
-    ? Effect.void
-    : Effect.fail(
-        scorecardFailure(`AI metrics ${fieldName} must be greater than or equal to 0.`, {
-          [fieldName]: value,
-        })
-      );
-
-const noteOrNull = (note: string | undefined): string | null =>
-  note === undefined ? null : redactAiMetricsSensitiveText(note);
-
-const promptRefOrNull = (promptRef: string | undefined): string | null => promptRef ?? null;
-
-const optionalString = (value: string | null): O.Option<string> => O.fromNullishOr(value);
+const noteOrNull = O.match({ onNone: () => null, onSome: redactAiMetricsSensitiveText });
 
 const epochMillisParam = (value: number): string => globalThis.String(value);
+
+const queryWindowedAggregates = Effect.fn("AiMetrics.scorecard.queryWindowedAggregates")(function* (
+  input: AiMetricsWeeklyReportInput,
+  statement: string,
+  failureMessage: string
+) {
+  const duckdb = yield* DuckDb;
+  return yield* duckdb
+    .query(statement, {
+      windowEndEpochMillis: epochMillisParam(input.windowEndEpochMillis),
+      windowStartEpochMillis: epochMillisParam(input.windowStartEpochMillis),
+    })
+    .pipe(Effect.mapError((cause) => scorecardFailure(failureMessage, cause)));
+});
 
 const ensureTaskExists = Effect.fn("AiMetrics.scorecard.ensureTaskExists")(function* (agentTaskId: string) {
   const duckdb = yield* DuckDb;
@@ -625,7 +635,7 @@ const ensureTaskExists = Effect.fn("AiMetrics.scorecard.ensureTaskExists")(funct
       { agentTaskId }
     )
     .pipe(Effect.mapError((cause) => scorecardFailure("Failed to verify AI metrics task before labeling.", cause)));
-  const decoded = yield* decodeTaskPresenceRows(rows).pipe(
+  const decoded = yield* TaskPresenceRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics task lookup.", cause))
   );
 
@@ -646,14 +656,14 @@ const ensureBenchmarkCaseExists = Effect.fn("AiMetrics.scorecard.ensureBenchmark
               title AS "title",
               prompt_hash AS "promptHash",
               prompt_ref AS "promptRef",
-              expected_checks_json AS "expectedChecksJson"
+              expected_checks_json AS "expectedChecks"
        FROM ai_metrics_benchmark_cases
        WHERE benchmark_case_id = $benchmarkCaseId
        LIMIT 1`,
       { benchmarkCaseId }
     )
     .pipe(Effect.mapError((cause) => scorecardFailure("Failed to verify AI metrics benchmark case.", cause)));
-  const decoded = yield* decodeBenchmarkCaseRows(rows).pipe(
+  const decoded = yield* BenchmarkCaseRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics benchmark case lookup.", cause))
   );
 
@@ -729,7 +739,7 @@ export const queueAiMetricsLabels: (
         }
       )
       .pipe(Effect.mapError((cause) => scorecardFailure("Failed to read AI metrics label queue.", cause)));
-    const decoded = yield* decodeLabelQueueRows(rows).pipe(
+    const decoded = yield* AiMetricsLabelQueueItem.decodeRowsEffect(rows).pipe(
       Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics label queue.", cause))
     );
 
@@ -765,7 +775,7 @@ export const queueAiMetricsLabels: (
  *     interventionCount: 1,
  *     passed: true,
  *     qualityGate: "passed",
- *     rating: 0.9
+ *     rating: 5
  *   })
  * )
  * console.log(program)
@@ -780,11 +790,10 @@ export const addAiMetricsOutcomeLabel: (
 ) => Effect.Effect<OutcomeLabel, AiMetricsScorecardError, DuckDb> = Effect.fn("AiMetrics.addAiMetricsOutcomeLabel")(
   function* (input) {
     yield* ensureScorecardStorage;
-    yield* validateRating(input.rating);
-    yield* validateNonNegative("intervention count", input.interventionCount);
     yield* ensureTaskExists(input.agentTaskId);
 
     const labeledAtEpochMillis = input.labeledAtEpochMillis ?? (yield* Clock.currentTimeMillis);
+    const note = noteOrNull(input.note);
     const label = OutcomeLabel.make({
       agentTaskId: input.agentTaskId,
       followUpFix: input.followUpFix,
@@ -794,11 +803,7 @@ export const addAiMetricsOutcomeLabel: (
       passed: input.passed,
       qualityGate: input.qualityGate,
       rating: input.rating,
-      ...pipe(
-        O.fromNullishOr(noteOrNull(input.note)),
-        O.map((note) => ({ note })),
-        O.getOrElse(() => ({}))
-      ),
+      note: O.map(input.note, redactAiMetricsSensitiveText),
     });
     const duckdb = yield* DuckDb;
     yield* duckdb
@@ -830,7 +835,7 @@ export const addAiMetricsOutcomeLabel: (
           interventionCount: label.interventionCount,
           labelId: label.labelId,
           labeledAtEpochMillis: epochMillisParam(label.labeledAtEpochMillis),
-          note: noteOrNull(input.note),
+          note,
           passed: label.passed,
           qualityGate: label.qualityGate,
           rating: label.rating,
@@ -876,11 +881,7 @@ export const upsertAiMetricsBenchmarkCase: (
     expectedChecks: input.expectedChecks,
     promptHash: input.promptHash,
     title: input.title,
-    ...pipe(
-      O.fromNullishOr(input.promptRef),
-      O.map((promptRef) => ({ promptRef })),
-      O.getOrElse(() => ({}))
-    ),
+    promptRef: input.promptRef,
   });
   const duckdb = yield* DuckDb;
   yield* duckdb
@@ -905,7 +906,7 @@ export const upsertAiMetricsBenchmarkCase: (
         createdAtEpochMillis: epochMillisParam(yield* Clock.currentTimeMillis),
         expectedChecksJson,
         promptHash: benchmarkCase.promptHash,
-        promptRef: promptRefOrNull(input.promptRef),
+        promptRef: O.getOrNull(input.promptRef),
         title: benchmarkCase.title,
       }
     )
@@ -914,23 +915,14 @@ export const upsertAiMetricsBenchmarkCase: (
   return benchmarkCase;
 });
 
-const caseFromRow = Effect.fn("AiMetrics.scorecard.caseFromRow")(function* (row: BenchmarkCaseRow) {
-  const expectedChecks = yield* decodeExpectedChecks(row.expectedChecksJson).pipe(
-    Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics benchmark expected checks.", cause))
-  );
-
-  return BenchmarkCase.make({
+const caseFromRow = (row: BenchmarkCaseRow): BenchmarkCase =>
+  BenchmarkCase.make({
     benchmarkCaseId: row.benchmarkCaseId,
-    expectedChecks,
+    expectedChecks: row.expectedChecks,
     promptHash: row.promptHash,
     title: row.title,
-    ...pipe(
-      optionalString(row.promptRef),
-      O.map((promptRef) => ({ promptRef })),
-      O.getOrElse(() => ({}))
-    ),
+    promptRef: row.promptRef,
   });
-});
 
 /**
  * List deploy-safe benchmark cases.
@@ -963,15 +955,15 @@ export const listAiMetricsBenchmarkCases: Effect.Effect<
               title AS "title",
               prompt_hash AS "promptHash",
               prompt_ref AS "promptRef",
-              expected_checks_json AS "expectedChecksJson"
+              expected_checks_json AS "expectedChecks"
        FROM ai_metrics_benchmark_cases
        ORDER BY benchmark_case_id`
     )
     .pipe(Effect.mapError((cause) => scorecardFailure("Failed to list AI metrics benchmark cases.", cause)));
-  const decoded = yield* decodeBenchmarkCaseRows(rows).pipe(
+  const decoded = yield* BenchmarkCaseRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics benchmark cases.", cause))
   );
-  const cases = yield* Effect.forEach(decoded, caseFromRow, { concurrency: 8 });
+  const cases = A.map(decoded, caseFromRow);
   return AiMetricsBenchmarkCaseListResult.make({ cases });
 }).pipe(Effect.withSpan("AiMetrics.listAiMetricsBenchmarkCases"));
 
@@ -1003,10 +995,10 @@ export const recordAiMetricsBenchmarkRun: (
 ) => Effect.Effect<BenchmarkRun, AiMetricsScorecardError, DuckDb> = Effect.fn("AiMetrics.recordAiMetricsBenchmarkRun")(
   function* (input) {
     yield* ensureScorecardStorage;
-    yield* validateNonNegative("elapsed milliseconds", input.elapsedMs);
     yield* ensureBenchmarkCaseExists(input.benchmarkCaseId);
 
     const recordedAtEpochMillis = input.recordedAtEpochMillis ?? (yield* Clock.currentTimeMillis);
+    const note = noteOrNull(input.note);
     const run = BenchmarkRun.make({
       benchmarkCaseId: input.benchmarkCaseId,
       benchmarkRunId: yield* rowId("benchmark-run", [
@@ -1019,11 +1011,7 @@ export const recordAiMetricsBenchmarkRun: (
       passed: input.passed,
       qualityGate: input.qualityGate,
       recordedAtEpochMillis,
-      ...pipe(
-        O.fromNullishOr(noteOrNull(input.note)),
-        O.map((note) => ({ note })),
-        O.getOrElse(() => ({}))
-      ),
+      note: O.map(input.note, redactAiMetricsSensitiveText),
     });
     const duckdb = yield* DuckDb;
     yield* duckdb
@@ -1052,7 +1040,7 @@ export const recordAiMetricsBenchmarkRun: (
           benchmarkRunId: run.benchmarkRunId,
           configSnapshotId: run.configSnapshotId,
           elapsedMs: run.elapsedMs,
-          note: noteOrNull(input.note),
+          note,
           passed: run.passed,
           qualityGate: run.qualityGate,
           recordedAtEpochMillis: epochMillisParam(run.recordedAtEpochMillis),
@@ -1067,10 +1055,9 @@ export const recordAiMetricsBenchmarkRun: (
 const readTaskAggregates = Effect.fn("AiMetrics.scorecard.readTaskAggregates")(function* (
   input: AiMetricsWeeklyReportInput
 ) {
-  const duckdb = yield* DuckDb;
-  const rows = yield* duckdb
-    .query(
-      `SELECT
+  const rows = yield* queryWindowedAggregates(
+    input,
+    `SELECT
          t.config_snapshot_id AS "configSnapshotId",
          count(DISTINCT t.agent_task_id)::INTEGER AS "taskCount",
          count(DISTINCT labels.label_id)::INTEGER AS "labelCount",
@@ -1091,14 +1078,10 @@ const readTaskAggregates = Effect.fn("AiMetrics.scorecard.readTaskAggregates")(f
          AND t.created_at_epoch_ms < $windowEndEpochMillis
        GROUP BY t.config_snapshot_id
        ORDER BY t.config_snapshot_id`,
-      {
-        windowEndEpochMillis: epochMillisParam(input.windowEndEpochMillis),
-        windowStartEpochMillis: epochMillisParam(input.windowStartEpochMillis),
-      }
-    )
-    .pipe(Effect.mapError((cause) => scorecardFailure("Failed to read AI metrics task aggregates.", cause)));
+    "Failed to read AI metrics task aggregates."
+  );
 
-  return yield* decodeTaskAggregateRows(rows).pipe(
+  return yield* TaskAggregateRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics task aggregates.", cause))
   );
 });
@@ -1106,10 +1089,9 @@ const readTaskAggregates = Effect.fn("AiMetrics.scorecard.readTaskAggregates")(f
 const readBenchmarkAggregates = Effect.fn("AiMetrics.scorecard.readBenchmarkAggregates")(function* (
   input: AiMetricsWeeklyReportInput
 ) {
-  const duckdb = yield* DuckDb;
-  const rows = yield* duckdb
-    .query(
-      `SELECT
+  const rows = yield* queryWindowedAggregates(
+    input,
+    `SELECT
          config_snapshot_id AS "configSnapshotId",
          count(*)::INTEGER AS "benchmarkRunCount",
          COALESCE(avg(CASE WHEN passed THEN 1.0 ELSE 0.0 END), 0.5)::DOUBLE AS "benchmarkPassRate",
@@ -1125,14 +1107,10 @@ const readBenchmarkAggregates = Effect.fn("AiMetrics.scorecard.readBenchmarkAggr
          AND recorded_at_epoch_ms < $windowEndEpochMillis
        GROUP BY config_snapshot_id
        ORDER BY config_snapshot_id`,
-      {
-        windowEndEpochMillis: epochMillisParam(input.windowEndEpochMillis),
-        windowStartEpochMillis: epochMillisParam(input.windowStartEpochMillis),
-      }
-    )
-    .pipe(Effect.mapError((cause) => scorecardFailure("Failed to read AI metrics benchmark aggregates.", cause)));
+    "Failed to read AI metrics benchmark aggregates."
+  );
 
-  return yield* decodeBenchmarkAggregateRows(rows).pipe(
+  return yield* BenchmarkAggregateRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics benchmark aggregates.", cause))
   );
 });
@@ -1146,7 +1124,7 @@ const readCoverageCounts: Effect.Effect<CoverageCountsRow, AiMetricsScorecardErr
          (SELECT count(*)::INTEGER FROM ai_metrics_tool_invocations) AS "toolInvocationCount"`
     )
     .pipe(Effect.mapError((cause) => scorecardFailure("Failed to read AI metrics coverage counts.", cause)));
-  const decoded = yield* decodeCoverageRows(rows).pipe(
+  const decoded = yield* CoverageCountsRow.decodeRowsEffect(rows).pipe(
     Effect.mapError((cause) => scorecardFailure("Failed to decode AI metrics coverage counts.", cause))
   );
   const head = A.head(decoded);
@@ -1233,21 +1211,21 @@ const coverageGapsFor = ({
   readonly coverage: CoverageCountsRow;
   readonly labelCount: number;
   readonly taskCount: number;
-}): ReadonlyArray<string> =>
+}): ReadonlyArray<AiMetricsCoverageGap> =>
   pipe(
     [
-      taskCount === 0 ? O.some(AiMetricsCoverageGap.Enum.no_tasks) : O.none<string>(),
-      labelCount === 0 ? O.some(AiMetricsCoverageGap.Enum.no_labels) : O.none<string>(),
-      benchmarkRunCount === 0 ? O.some(AiMetricsCoverageGap.Enum.no_benchmark_runs) : O.none<string>(),
+      taskCount === 0 ? O.some(AiMetricsCoverageGap.Enum.no_tasks) : O.none<AiMetricsCoverageGap>(),
+      labelCount === 0 ? O.some(AiMetricsCoverageGap.Enum.no_labels) : O.none<AiMetricsCoverageGap>(),
+      benchmarkRunCount === 0 ? O.some(AiMetricsCoverageGap.Enum.no_benchmark_runs) : O.none<AiMetricsCoverageGap>(),
       labelCount === 0 || benchmarkRunCount === 0
         ? O.some(AiMetricsCoverageGap.Enum.scorecard_completion_credit_blocked)
-        : O.none<string>(),
+        : O.none<AiMetricsCoverageGap>(),
       coverage.modelCallCount === 0
         ? O.some(AiMetricsCoverageGap.Enum.model_call_metrics_unavailable_not_scored)
-        : O.none<string>(),
+        : O.none<AiMetricsCoverageGap>(),
       coverage.toolInvocationCount === 0
         ? O.some(AiMetricsCoverageGap.Enum.tool_invocation_metrics_unavailable_not_scored)
-        : O.none<string>(),
+        : O.none<AiMetricsCoverageGap>(),
       O.some(AiMetricsCoverageGap.Enum.cost_metrics_unavailable_not_scored),
     ],
     A.getSomes
@@ -1479,7 +1457,9 @@ export const generateAiMetricsWeeklyReport: (
       yield* Effect.forEach(scorecards, writeScorecard, { discard: true, concurrency: 8 });
       const coverageGaps = pipe(
         A.flatMap(scorecards, (scorecard) => scorecard.coverageGaps),
-        A.appendAll(A.isReadonlyArrayNonEmpty(scorecards) ? A.empty<string>() : [...AiMetricsCoverageGap.Options]),
+        A.appendAll(
+          A.isReadonlyArrayNonEmpty(scorecards) ? A.empty<AiMetricsCoverageGap>() : AiMetricsCoverageGap.Options
+        ),
         A.dedupe,
         A.sort(Order.String)
       );
@@ -1539,7 +1519,7 @@ export const aiMetricsLabelQueueToJson: (
   result: AiMetricsLabelQueueResult
 ) => Effect.Effect<string, AiMetricsScorecardError> = Effect.fn("AiMetrics.aiMetricsLabelQueueToJson")(
   function* (result) {
-    return yield* encodeLabelQueueJson(result).pipe(
+    return yield* AiMetricsLabelQueueResult.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => scorecardFailure("Failed to encode AI metrics label queue JSON.", cause))
     );
   }
@@ -1563,7 +1543,7 @@ export const aiMetricsLabelQueueToJson: (
  *       labeledAtEpochMillis: 1_717_000_000_000,
  *       passed: true,
  *       qualityGate: "passed",
- *       rating: 0.9
+ *       rating: 5
  *     })
  *   )
  * )
@@ -1576,7 +1556,7 @@ export const aiMetricsLabelQueueToJson: (
  */
 export const aiMetricsOutcomeLabelToJson: (result: OutcomeLabel) => Effect.Effect<string, AiMetricsScorecardError> =
   Effect.fn("AiMetrics.aiMetricsOutcomeLabelToJson")(function* (result) {
-    return yield* encodeOutcomeLabelJson(result).pipe(
+    return yield* OutcomeLabel.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => scorecardFailure("Failed to encode AI metrics outcome label JSON.", cause))
     );
   });
@@ -1608,7 +1588,7 @@ export const aiMetricsOutcomeLabelToJson: (result: OutcomeLabel) => Effect.Effec
  */
 export const aiMetricsBenchmarkCaseToJson: (result: BenchmarkCase) => Effect.Effect<string, AiMetricsScorecardError> =
   Effect.fn("AiMetrics.aiMetricsBenchmarkCaseToJson")(function* (result) {
-    return yield* encodeBenchmarkCaseJson(result).pipe(
+    return yield* BenchmarkCase.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => scorecardFailure("Failed to encode AI metrics benchmark case JSON.", cause))
     );
   });
@@ -1650,7 +1630,7 @@ export const aiMetricsBenchmarkCaseListToJson: (
   result: AiMetricsBenchmarkCaseListResult
 ) => Effect.Effect<string, AiMetricsScorecardError> = Effect.fn("AiMetrics.aiMetricsBenchmarkCaseListToJson")(
   function* (result) {
-    return yield* encodeBenchmarkCaseListJson(result).pipe(
+    return yield* AiMetricsBenchmarkCaseListResult.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => scorecardFailure("Failed to encode AI metrics benchmark case list JSON.", cause))
     );
   }
@@ -1686,7 +1666,7 @@ export const aiMetricsBenchmarkCaseListToJson: (
  */
 export const aiMetricsBenchmarkRunToJson: (result: BenchmarkRun) => Effect.Effect<string, AiMetricsScorecardError> =
   Effect.fn("AiMetrics.aiMetricsBenchmarkRunToJson")(function* (result) {
-    return yield* encodeBenchmarkRunJson(result).pipe(
+    return yield* BenchmarkRun.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => scorecardFailure("Failed to encode AI metrics benchmark run JSON.", cause))
     );
   });
@@ -1730,7 +1710,7 @@ export const aiMetricsWeeklyReportToJson: (
   result: AiMetricsWeeklyReportResult
 ) => Effect.Effect<string, AiMetricsScorecardError> = Effect.fn("AiMetrics.aiMetricsWeeklyReportToJson")(
   function* (result) {
-    return yield* encodeWeeklyReportJson(result).pipe(
+    return yield* AiMetricsWeeklyReportResult.encodeJsonEffect(result).pipe(
       Effect.mapError((cause) => scorecardFailure("Failed to encode AI metrics weekly report JSON.", cause))
     );
   }

@@ -41,10 +41,11 @@
     "title": "repo-quality-convergence",
     "status": "completed-retained"
   },
-  "reflectionRequired": false,
+  "reflectionRequired": true,
   "statusNote": "legacy status: local-proof-complete",
   "mission": "Bring the repository to a defensible **9/10 repo-health score** by closing current quality blockers, adding durable release and governance guardrails, and recording the evidence needed to prove the claim.",
   "schemaVersion": "initiative-manifest/v2",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 165,
   "packetPath": "goals/repo-quality-convergence"
 }

@@ -12,7 +12,7 @@ Five workstreams:
   splice+consume); Stop-hook + yeet poison-pill so sessions cannot wander off a red; PR leases
   with dead-owner takeover; package-scoped `audit` gates run by every sub-agent immediately
   after touching a package (and emitted by create-package).
-- **B Parity**: local green ⇒ 16/16 required remote green. Yeet lanes call `beep ci lane <id>`
+- **B Parity**: local green ⇒ 17/17 required remote green. Yeet lanes call `beep ci lane <id>`
   (same argv as CI); coverage runs locally with the baseline pinned from origin/main; missing
   cheap lanes (codegen, commitlint-range, desktop-ipc, base-pinned gitleaks) join default
   verify; `--ci-parity` runs `beep ci local --affected` inside the existing merged preview under
@@ -33,5 +33,6 @@ Five workstreams:
 Rules: schema-first (Effect v4, LiteralKit, `S.Class`); services via Context.Service; validate
 v4 APIs against `.repos/effect`; no webhook tunnel, no cgroup freezing, no blanket turbo c8, no
 `merge=union` on hotspots, no claim registry on derived files (all rejected with reasons in
-SPEC). Each item = its own yeet-published PR; update PLAN checkmarks and the parity ledger as
-you go; record friction receipts in `research/OPPORTUNITIES.md` at the moment it happens.
+SPEC). Update PLAN checkmarks and the parity ledger as work lands; record friction receipts in
+`research/OPPORTUNITIES.md` at the moment it happens. The operator-authorized 2026-08-27
+closeout bundles all remaining items into one Yeet-published PR.

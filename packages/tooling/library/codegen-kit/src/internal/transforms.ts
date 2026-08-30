@@ -1,4 +1,4 @@
-import { pipe } from "effect";
+import { flow, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -39,7 +39,7 @@ const singleRef = (node: JsonSchema.JsonSchema): O.Option<string> =>
     O.filter(P.isString)
   );
 
-const refName = (ref: string): O.Option<string> => pipe(ref, Str.split("/"), A.last, O.filter(Str.isNonEmpty));
+const refName: (ref: string) => O.Option<string> = flow(Str.split("/"), A.last, O.filter(Str.isNonEmpty));
 
 const refTarget = (definitions: JsonSchema.Definitions, ref: string): O.Option<JsonSchema.JsonSchema> =>
   pipe(

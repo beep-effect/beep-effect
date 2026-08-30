@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/gov-legal-data-driver-codegen",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 287,
   "statusNote": "Terminal packet: P0, P1, and P3 substrate scope is complete; P2 delivery scope now lives in goals/gov-legal-data-driver-delivery.",
   "executionCapable": true,
   "reflectionRequired": true,

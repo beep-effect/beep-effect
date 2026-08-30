@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/codex-security-findings-2026-08-13",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 712,
   "statusNote": "Completed-retained after repository-local findings landed through PRs #650, #655, #673, #681, #688, #696, #697, and #712; PR #712 merged on 2026-08-14 with CSF-012, CSF-015, CSF-016, CSF-017, CSF-018, and CSF-019. CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 remain an explicit handoff to the runner-admission/workload-identity arc for external GitHub runner-group and AWS deployment proof; this packet does not claim dashboard closure for those findings.",
   "mission": "Remediate and close the 19 Codex Cloud security findings captured on 2026-08-13.",
   "executionCapable": true,

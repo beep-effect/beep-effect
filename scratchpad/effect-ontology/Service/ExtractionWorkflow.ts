@@ -23,7 +23,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionWorkflow");
 /**
  * Describes the extraction workflow methods data exposed by this module.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -38,9 +37,14 @@ export interface ExtractionWorkflowMethods {
  * **Example** (Inspect extraction workflow)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
  *
- * console.log(ExtractionWorkflow)
+ * const program = Effect.gen(function* () {
+ *   const workflow = yield* ExtractionWorkflow
+ *   return workflow
+ * })
+ * console.log(program)
  * ```
  *
  * @category services

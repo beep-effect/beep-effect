@@ -1,5 +1,8 @@
 # Status-Token Census — P0 Ground Truth
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 Freshness: 2026-07-11, branch `feat/goals-doctor` (from `main` @ 53f5bb53a2).
 This census is the migration's ground truth per `SPEC.md`; it supersedes the
 approximate figures in `SOURCES.md`. Re-run by copying the script block below

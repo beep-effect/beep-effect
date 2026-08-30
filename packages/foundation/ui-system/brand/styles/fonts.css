@@ -1,7 +1,0 @@
-/*
- * Self-hosted brand fonts. Each import pulls the variable-weight @font-face rules and
- * woff2 files from the fontsource package, so every app renders the same glyphs.
- * Family names: "Inter Variable" and "JetBrains Mono Variable" (see brand.css).
- */
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";

@@ -1,0 +1,440 @@
+telemetry:
+  lane: s4-fallow-laws
+  runner: "codex exec"
+  model: gpt-5.6-sol
+  reasoning_effort: max
+  prompt_version: s4-lane-contract-v2
+  corpus_commit: 469136d2a872
+  started: "2026-08-27T23:31:23-05:00"
+  finished: "2026-08-27T23:44:43-05:00"
+  wall_seconds: 800
+  frozen_inputs:
+    - { path: ontology/docs/competency-questions.yaml, sha256_12: e06ec7fe12a6 }
+    - { path: ontology/docs/pre-glossary.csv, sha256_12: 9184cddcecc7 }
+    - { path: ontology/docs/literal-domains.md, sha256_12: 7f0cf3e79e7e }
+    - { path: ontology/docs/orsd.md, sha256_12: 2b0fd670129b }
+    - { path: ontology/docs/scope.md, sha256_12: 6c39b69481a3 }
+  candidate_count: 18
+  fact_count: 14
+  issue_count: 12
+
+issues:
+  - id: fallow-laws-I01
+    kind: assumption
+    claim: "The named sources do not declare frozen LaneKind mappings; command-shaped activities and aggregate gates are mapped below only as candidate interpretations."
+    evidence: "AGENTS.md:39-41 — 'Yeet is the canonical repo-quality path'"
+    suggested_disposition: "S5 should ratify or reject each ScriptLane and CollectedGateLane fact independently."
+    status: open
+
+  - id: fallow-laws-I02
+    kind: ambiguity
+    claim: "Fallow's new-only audit gate attributes findings against a base but does not explicitly say that the execution itself has AffectedScope."
+    evidence: "standards/fallow.pilot.inventory.jsonc:67-73 — '\"command\": \"bun run fallow:audit -- --base origin/main --gate new-only\"'"
+    suggested_disposition: "Distinguish result-attribution scope from execution scope when ratifying the candidate hasScope assertion."
+    status: open
+
+  - id: fallow-laws-I03
+    kind: assumption
+    claim: "The pilot inventory is a dated snapshot, so its tool version, issue counts, timings, and advisory status are not current-policy facts."
+    evidence: "standards/fallow.pilot.inventory.jsonc:2-7 — '\"recordedAt\": \"2026-06-08\"'"
+    suggested_disposition: "If retained in an A-Box, identify the snapshot by date and never project its measurements onto the pinned corpus as current state."
+    status: open
+
+  - id: fallow-laws-I04
+    kind: schema-conflict
+    claim: "The boundary-provenance schema validates two sourceClass and two enforcementScope values while its x-enumValues metadata advertises broader sets."
+    evidence: "standards/fallow.boundaries.provenance.schema.json:54-59,111-125 — '\"enum\": [\"manifest-derived\", \"doctrine-pinned\"] ... \"ruleSourceClass\": [ ... \"external-service\" ]'"
+    suggested_disposition: "Align validation enums and metadata before treating either list as the authoritative closed source domain."
+    status: open
+
+  - id: fallow-laws-I05
+    kind: missing-concept
+    claim: "The sourceClass and enforcementScope enum members have no corresponding frozen literal domain, so this lane cannot propose them as unqualified members."
+    evidence: "standards/fallow.boundaries.provenance.schema.json:54-59 — '\"sourceClass\": { \"enum\": [\"manifest-derived\", \"doctrine-pinned\"] }'"
+    suggested_disposition: "Use the R5 extend and re-run loop only if a Must or Should CQ, or a named semantic-support dependency, licenses qualified source domains."
+    status: open
+
+  - id: fallow-laws-I06
+    kind: ambiguity
+    claim: "Architecture enforcement lanes denote doctrine status and enforcement posture, not the executable VerificationLane/LaneKind domain."
+    evidence: "standards/ARCHITECTURE.md:1918-1925 — 'Architecture rules use four enforcement lanes'"
+    suggested_disposition: "Keep Doctrine, Generated Default, Review Gate, and Hard Check in a distinct source domain unless human ratification supplies an explicit mapping."
+    status: open
+
+  - id: fallow-laws-I07
+    kind: missing-cq
+    claim: "Fallow entry roots, exclusions, dependency waivers, health ceilings, audit mode, and suppression policy are configuration observations but no Must or Should CQ asks for them."
+    evidence: ".fallowrc.jsonc:302-312 — '\"maxCognitive\": 8'"
+    suggested_disposition: "Keep these values outside the T-Box and A-Box until a qualifying CQ or checkable support dependency requires them."
+    status: open
+
+  - id: fallow-laws-I08
+    kind: missing-cq
+    claim: "The required introduced/inherited/unrelated/environment-only failure attribution controls repair behavior, but no Must or Should CQ queries that attribution."
+    evidence: "AGENTS.md:49-51 — 'Attribute verification failures before repairing — introduced / inherited / unrelated / environment-only'"
+    suggested_disposition: "Add a decision CQ only if the schedule projection must choose repair, rebase, or report from this attribution; otherwise retain it as procedural law."
+    status: open
+
+  - id: fallow-laws-I09
+    kind: ambiguity
+    claim: "The allowed sources do not establish which AssuranceTier, if any, requires a Fallow lane."
+    evidence: "standards/fallow.pilot.inventory.jsonc:125-136 — '\"blockingQualityGate\": \"none-proven-in-live-pre-push\"'"
+    suggested_disposition: "Do not mint Fallow requiresLane facts here; reconcile tier obligations from the separately owned planner and scheduler evidence during S5."
+    status: open
+
+  - id: fallow-laws-I10
+    kind: missing-cq
+    claim: "Architecture promotion gates and migration buckets are binding governance laws, but no Must or Should CQ requires their taxonomy as CI-operations terms."
+    evidence: "standards/ARCHITECTURE.md:1939-1947 — 'The migration posture has five buckets'"
+    suggested_disposition: "Retain the laws as source evidence; admit ontology terms only after a CQ or checkable support dependency names the projection decision they serve."
+    status: open
+
+  - id: fallow-laws-I11
+    kind: ambiguity
+    claim: "The supplied boundary-provenance artifact is a schema pointing to a generated config, not an instance containing the concrete generated rule rows."
+    evidence: "standards/fallow.boundaries.provenance.schema.json:27-44 — '\"generatedConfigRef\": { \"const\": \"standards/fallow.boundaries.generated.jsonc\" }'"
+    suggested_disposition: "Treat only the provenance record shape as extractable; do not assert concrete boundary-rule A-Box values without an allowed instance source."
+    status: open
+
+  - id: fallow-laws-I12
+    kind: assumption
+    claim: "AGENTS.md names merge gates and merge-ready monitoring but not TierCiMergeGreen; the requiresLane fact below is a candidate frozen-vocabulary mapping."
+    evidence: "AGENTS.md:52-56 — 'run `bun run beep yeet monitor` until it reports `merge-ready: yes`'"
+    suggested_disposition: "S5 should ratify the mapping to TierCiMergeGreen or leave the source obligation unmapped."
+    status: open
+
+candidates:
+  - candidate: FallowDeadCodeLane
+    kind: individual
+    definition: "A command-invoked Fallow verification lane that reports dead-code and dependency-hygiene diagnostics, including boundary violations."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Lets the projection enumerate the Fallow dead-code validation surface and classify its lane kind."
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:31-46 — '\"command\": \"bunx fallow dead-code --format json --quiet\"'"
+      - ".fallowrc.jsonc:426-436 — '\"boundary-violation\": \"error\"'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: FallowAuditLane
+    kind: individual
+    definition: "A Fallow verification lane that audits a base-relative change and gates findings attributed as newly introduced."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Lets the projection enumerate the base-relative Fallow audit surface separately from dead-code and health probes."
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:67-82 — '\"command\": \"bun run fallow:audit -- --base origin/main --gate new-only\"'"
+      - ".fallowrc.jsonc:423-425 — '\"gate\": \"new-only\"'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: FallowHealthLane
+    kind: individual
+    definition: "A command-invoked Fallow verification lane that measures function health, maintainability, and threshold severity."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Lets the projection enumerate the Fallow health validation surface and classify its lane kind."
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:92-103 — '\"command\": \"bunx fallow health --format json --quiet\"'"
+      - ".fallowrc.jsonc:302-312 — 'Complexity ceilings'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: YeetVerifyLane
+    kind: individual
+    definition: "The canonical collected repository-quality verification activity executed by the Yeet verify command."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Lets the projection enumerate the repository's canonical aggregate verification surface."
+    evidence:
+      - "AGENTS.md:39-41 — 'Yeet is the canonical repo-quality path'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: YeetMonitorLane
+    kind: individual
+    definition: "The collected PR-closeout verification activity that monitors hosted state until merge readiness is reported."
+    admission_kind: decision
+    cq_justification: [CQ-001, CQ-006, CQ-017]
+    decision_relevance: "Supplies the collected merge-readiness lane whose unmet state prevents CI-merge assurance."
+    evidence:
+      - "AGENTS.md:52-56 — 'run `bun run beep yeet monitor` until it reports `merge-ready: yes`'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: DocgenLane
+    kind: individual
+    definition: "The documentation-generation verification lane invoked in affected edit-loop or full-repository proof scope."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Lets the projection enumerate doc generation once and schedule its affected or full-repository WorkUnit."
+    evidence:
+      - "AGENTS.md:46-48 — '`bun run docgen:local` for edit loops ... full `bun run docgen` only for the repo-wide proof'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: BrowserQaLane
+    kind: individual
+    definition: "A recorded gesture-bearing UI verification lane comprising record, extract, judge, and schema validation."
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: "Lets the projection enumerate the browser-QA validation surface when a gesture-bearing UI milestone is in scope."
+    evidence:
+      - "AGENTS.md:81-83 — 'recorded evidence via `bun run beep qa` (record → extract → judge)'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: WorkUnit
+    kind: class
+    definition: "A verification-lane specification paired with an execution scope, exemplified by affected and full-repository docgen invocations."
+    admission_kind: decision
+    cq_justification: [CQ-002]
+    decision_relevance: "Provides the scheduling quantum used to choose a lane and scope for an episode."
+    evidence:
+      - "AGENTS.md:46-48 — 'bounded to `origin/main...HEAD` + dirty files ... repo-wide proof'"
+      - "standards/fallow.pilot.inventory.jsonc:67-73 — '\"command\": \"bun run fallow:audit -- --base origin/main --gate new-only\"'"
+    already_in_glossary: true
+    status: candidate
+
+  - candidate: VerificationEvidence
+    kind: class
+    definition: "A recorded validation result used as proof, including schema-validated browser-QA evidence and repo-wide docgen proof."
+    admission_kind: decision
+    cq_justification: [CQ-005, CQ-006]
+    decision_relevance: "Lets the projection distinguish completed evidence from the lane or WorkUnit that produced it."
+    evidence:
+      - "AGENTS.md:46-48 — 'repo-wide proof'"
+      - "AGENTS.md:81-83 — 'recorded evidence'"
+    already_in_glossary: true
+    status: candidate
+
+  - candidate: FallowAuditOriginMainNewOnlyWorkUnit
+    kind: individual
+    definition: "The Fallow audit WorkUnit configured against origin/main with the new-only finding gate."
+    admission_kind: decision
+    cq_justification: [CQ-002]
+    decision_relevance: "Makes the named base-relative audit invocation available as a schedulable lane-by-scope unit."
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:67-73 — '\"command\": \"bun run fallow:audit -- --base origin/main --gate new-only\"'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: DocgenAffectedWorkUnit
+    kind: individual
+    definition: "The docgen WorkUnit bounded to the origin/main-to-HEAD change plus dirty files for edit loops."
+    admission_kind: decision
+    cq_justification: [CQ-002]
+    decision_relevance: "Allows the projection to choose affected documentation proof during repair loops."
+    evidence:
+      - "AGENTS.md:46-48 — '`bun run docgen:local` for edit loops (bounded to `origin/main...HEAD` + dirty files)'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: DocgenFullRepoWorkUnit
+    kind: individual
+    definition: "The docgen WorkUnit that runs the full repository documentation proof."
+    admission_kind: decision
+    cq_justification: [CQ-002]
+    decision_relevance: "Allows the projection to choose full-repository documentation proof when affected proof is insufficient."
+    evidence:
+      - "AGENTS.md:46-48 — 'full `bun run docgen` only for the repo-wide proof'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: HostedRequiredCheck
+    kind: class
+    definition: "A hosted check whose required status gates merge of a feature branch."
+    admission_kind: semantic-support
+    supports: [YeetMonitorLane]
+    decision_relevance: "Defines a hosted condition collected by YeetMonitorLane when evaluating merge readiness."
+    evidence:
+      - "AGENTS.md:42-45 — 'let hosted required checks gate the merge'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: UnresolvedReviewThread
+    kind: class
+    definition: "A PR review thread whose unresolved state is a hard merge gate."
+    admission_kind: semantic-support
+    supports: [YeetMonitorLane]
+    decision_relevance: "Defines a blocking condition collected by YeetMonitorLane before CI-merge assurance can hold."
+    evidence:
+      - "AGENTS.md:52-56 — 'Unresolved review threads are a hard merge gate'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: dependsOn
+    kind: property
+    definition: "Relates an importing PackageRef to the PackageRef it imports directly."
+    domain: PackageRef
+    range: PackageRef
+    admission_kind: semantic-support
+    supports: [dependsOnTransitive]
+    decision_relevance: "Supplies the direct package edges whose Datalog closure determines affected packages."
+    evidence:
+      - "standards/ARCHITECTURE.md:189-194 — 'Arrows point from the importing package to the imported package.'"
+    already_in_glossary: true
+    status: candidate
+
+  - candidate: BoundaryViolation
+    kind: class
+    definition: "A Fallow diagnostic that reports an enforced architecture-boundary rule violation."
+    admission_kind: semantic-support
+    supports: [FallowDeadCodeLane]
+    decision_relevance: "Defines the boundary-diagnostic outcome produced by the Fallow dead-code lane."
+    evidence:
+      - ".fallowrc.jsonc:426-436 — '\"boundary-violation\": \"error\"'"
+      - "standards/fallow.pilot.inventory.jsonc:37-47 — '\"boundaryViolations\": 0'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: ArchitectureBoundaryRule
+    kind: class
+    definition: "A binding normative constraint over package or import dependencies whose contradiction requires the proposal or rule to change."
+    admission_kind: semantic-support
+    supports: [FallowDeadCodeLane]
+    decision_relevance: "Defines the doctrine against which the Fallow dead-code lane can report a BoundaryViolation."
+    evidence:
+      - "standards/ARCHITECTURE.md:3-7 — 'If a proposed slice, package, adapter, or dependency contradicts this document, the proposal must change or this document must be amended.'"
+      - "standards/ARCHITECTURE.md:255-270 — 'Forbidden by default'"
+    already_in_glossary: false
+    status: candidate
+
+  - candidate: FallowBoundaryRuleProvenance
+    kind: class
+    definition: "An information artifact linking a generated Fallow boundary rule to its source, doctrine, catalog, and enforcement-scope references."
+    admission_kind: semantic-support
+    supports: [FallowDeadCodeLane]
+    decision_relevance: "Constrains which generated boundary rules may ground a boundary result from the Fallow dead-code lane."
+    evidence:
+      - "standards/fallow.boundaries.provenance.schema.json:4-13 — '\"title\": \"Fallow Boundary Rule Provenance\"'"
+      - "standards/fallow.boundaries.provenance.schema.json:35-44 — '\"sourceRefs\", \"doctrineRefs\", \"catalogRefs\", \"promotionEligible\"'"
+    already_in_glossary: false
+    status: candidate
+
+facts:
+  - subject: FallowDeadCodeLane
+    predicate: hasLaneKind
+    value: ScriptLane
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:31-33 — '\"command\": \"bunx fallow dead-code --format json --quiet\"'"
+    status: candidate
+
+  - subject: FallowAuditLane
+    predicate: hasLaneKind
+    value: ScriptLane
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:67-73 — '\"command\": \"bun run fallow:audit -- --base origin/main --gate new-only\"'"
+    status: candidate
+
+  - subject: FallowHealthLane
+    predicate: hasLaneKind
+    value: ScriptLane
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:92-95 — '\"command\": \"bunx fallow health --format json --quiet\"'"
+    status: candidate
+
+  - subject: YeetVerifyLane
+    predicate: hasLaneKind
+    value: CollectedGateLane
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "AGENTS.md:39-41 — 'Yeet is the canonical repo-quality path'"
+    status: candidate
+
+  - subject: YeetMonitorLane
+    predicate: hasLaneKind
+    value: CollectedGateLane
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "AGENTS.md:52-56 — 'run `bun run beep yeet monitor` until it reports `merge-ready: yes`'"
+    status: candidate
+
+  - subject: DocgenLane
+    predicate: hasLaneKind
+    value: ScriptLane
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "AGENTS.md:46-48 — '`bun run docgen:local` ... full `bun run docgen`'"
+    status: candidate
+
+  - subject: BrowserQaLane
+    predicate: hasLaneKind
+    value: CollectedGateLane
+    value_type: iri
+    cq_justification: [CQ-001]
+    evidence:
+      - "AGENTS.md:81-83 — '`bun run beep qa` (record → extract → judge)'"
+    status: candidate
+
+  - subject: FallowAuditOriginMainNewOnlyWorkUnit
+    predicate: executesLane
+    value: FallowAuditLane
+    value_type: iri
+    cq_justification: [CQ-002]
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:67-73 — '\"command\": \"bun run fallow:audit -- --base origin/main --gate new-only\"'"
+    status: candidate
+
+  - subject: FallowAuditOriginMainNewOnlyWorkUnit
+    predicate: hasScope
+    value: AffectedScope
+    value_type: iri
+    cq_justification: [CQ-002, CQ-019]
+    evidence:
+      - "standards/fallow.pilot.inventory.jsonc:67-73 — '\"changedFilesMinimum\": 90'"
+    status: candidate
+
+  - subject: DocgenAffectedWorkUnit
+    predicate: executesLane
+    value: DocgenLane
+    value_type: iri
+    cq_justification: [CQ-002]
+    evidence:
+      - "AGENTS.md:46-48 — '`bun run docgen:local` for edit loops'"
+    status: candidate
+
+  - subject: DocgenAffectedWorkUnit
+    predicate: hasScope
+    value: AffectedScope
+    value_type: iri
+    cq_justification: [CQ-002, CQ-019]
+    evidence:
+      - "AGENTS.md:46-48 — 'bounded to `origin/main...HEAD` + dirty files'"
+    status: candidate
+
+  - subject: DocgenFullRepoWorkUnit
+    predicate: executesLane
+    value: DocgenLane
+    value_type: iri
+    cq_justification: [CQ-002]
+    evidence:
+      - "AGENTS.md:46-48 — 'full `bun run docgen`'"
+    status: candidate
+
+  - subject: DocgenFullRepoWorkUnit
+    predicate: hasScope
+    value: FullRepoScope
+    value_type: iri
+    cq_justification: [CQ-002, CQ-019]
+    evidence:
+      - "AGENTS.md:46-48 — 'repo-wide proof'"
+    status: candidate
+
+  - subject: TierCiMergeGreen
+    predicate: requiresLane
+    value: YeetMonitorLane
+    value_type: iri
+    cq_justification: [CQ-006, CQ-017]
+    evidence:
+      - "AGENTS.md:42-56 — 'hosted required checks gate the merge ... Unresolved review threads are a hard merge gate'"
+    status: candidate

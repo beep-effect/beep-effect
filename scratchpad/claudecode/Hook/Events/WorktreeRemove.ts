@@ -1,10 +1,9 @@
 /**
- * WorktreeRemove hook event.
+ * Fires when Claude Code is about to remove a git worktree. Cleanup and
+ * observability only — JSON output is not acted on. Does not support a
+ * matcher. See https://code.claude.com/docs/en/hooks#worktreeremove.
  *
- * Fires when Claude Code is about to remove a git worktree. Observability
- * and cleanup only — output is not acted on. Does not support a matcher.
- * See https://code.claude.com/docs/en/hooks#worktreeremove.
- *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -17,18 +16,28 @@ import type { HookDefinition } from "../Runner.ts";
 const $I = $ScratchpadId.create("claudecode/Hook/Events/WorktreeRemove");
 
 /**
- * Schema for `Input`.
+ * Stdin payload for a WorktreeRemove hook, including the path about to
+ * be deleted.
  *
- * **Example** (Inspect the Input schema)
+ * **Example** (Decode a worktree removal)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * console.log(Hook.WorktreeRemove.Input)
+ * const input = S.decodeUnknownSync(Hook.WorktreeRemove.Input)({
+ *   session_id: "session-1",
+ *   transcript_path: "/tmp/transcript.jsonl",
+ *   cwd: "/repo",
+ *   hook_event_name: "WorktreeRemove",
+ *   worktree_path: "/tmp/feature-worktree",
+ * })
+ *
+ * console.log(input.worktree_path) // "/tmp/feature-worktree"
  * ```
  *
+ * @see {@link passthrough} for the ignored JSON response.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Input extends S.Class<Input>($I`WorktreeRemoveInput`)(
@@ -43,18 +52,25 @@ export class Input extends S.Class<Input>($I`WorktreeRemoveInput`)(
 ) {}
 
 /**
- * Schema for `Output`.
+ * JSON response a WorktreeRemove handler may return. Claude Code ignores
+ * it; use the handler body for cleanup.
  *
- * **Example** (Inspect the Output schema)
+ * **Gotchas**
+ *
+ * Setting `continue: false` does not keep the worktree.
+ *
+ * **Example** (Inspect empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.WorktreeRemove.Output)
+ * const output = Hook.WorktreeRemove.Output.make()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link passthrough} for the empty-output constructor.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class Output extends S.Class<Output>($I`WorktreeRemoveOutput`)(
@@ -71,35 +87,51 @@ export class Output extends S.Class<Output>($I`WorktreeRemoveOutput`)(
 ) {}
 
 /**
- * Constructor for `passthrough`.
+ * Empty observability output. Claude Code ignores the JSON body.
  *
- * **Example** (Use passthrough)
+ * **Gotchas**
+ *
+ * This is not a decision helper; the worktree is still removed.
+ *
+ * **Example** (Return empty output)
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as O from "effect/Option"
  *
- * console.log(Hook.WorktreeRemove.passthrough)
+ * const output = Hook.WorktreeRemove.passthrough()
+ * console.log(O.isNone(output.continue)) // true
  * ```
  *
+ * @see {@link define} for wrapping this result in a handler.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const passthrough = (): Output => Output.make();
 
 /**
- * Constructor for `define`.
+ * Build a runnable WorktreeRemove hook from a handler effect.
  *
- * **Example** (Use define)
+ * **Gotchas**
+ *
+ * Claude Code ignores the JSON response. Perform cleanup in the handler
+ * itself.
+ *
+ * **Example** (Define a WorktreeRemove hook)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Hook } from "effect-claudecode"
  *
- * console.log(Hook.WorktreeRemove.define)
+ * const hook = Hook.WorktreeRemove.define({
+ *   handler: () => Effect.succeed(Hook.WorktreeRemove.passthrough()),
+ * })
+ *
+ * console.log(hook.event) // "WorktreeRemove"
  * ```
  *
+ * @see {@link passthrough} for the typical handler result.
  * @category constructors
- *
  * @since 0.0.0
  */
 export const define = <E, R>(config: {

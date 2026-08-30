@@ -29,7 +29,7 @@
     "check": "bun run beep:check",
     "codegen": "bun run generate",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "generate": "bun run scripts/generate.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",

@@ -36,10 +36,10 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/TokenBudget"
  * ```ts
  * import { BudgetedStage } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(BudgetedStage)
+ * console.log(BudgetedStage.is.entity_extraction("entity_extraction")) // true
  * ```
  *
- * @category services
+ * @category schemas
  * @since 0.0.0
  */
 export const BudgetedStage = LiteralKit([
@@ -48,11 +48,14 @@ export const BudgetedStage = LiteralKit([
   "grounding",
   "property_scoping",
   "other",
-]);
+]).annotate(
+  $I.annote("BudgetedStage", {
+    description: "Pipeline stages that draw from the shared LLM token budget.",
+  })
+);
 
 /**
  * Describes the budgeted stage data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -64,28 +67,28 @@ const isBudgetedStage = S.is(BudgetedStage);
 /**
  * Token budget state tracking usage across stages
  *
- *
  * **Example** (Use the TokenBudgetState contract)
  *
  * ```ts
- * import type { TokenBudgetState } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { TokenBudgetState } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * const acceptsTokenBudgetState = (_value: TokenBudgetState): void => undefined
- *
- * console.log(acceptsTokenBudgetState)
+ * const state = TokenBudgetState.make({ total: 100_000, used: 0, byStage: {} })
+ * console.log(state.used) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface TokenBudgetState {
-  /** Total token budget for the request */
-  readonly total: number;
-  /** Total tokens used across all stages */
-  readonly used: number;
-  /** Tokens used per stage */
-  readonly byStage: Record<string, number>;
-}
+export class TokenBudgetState extends S.Class<TokenBudgetState>($I`TokenBudgetState`)(
+  {
+    total: S.Natural.annotateKey({ description: "Total token budget for the request." }),
+    used: S.Natural.annotateKey({ description: "Tokens used across all stages." }),
+    byStage: S.Record(S.String, S.Natural).annotateKey({ description: "Token usage indexed by stage name." }),
+  },
+  $I.annote("TokenBudgetState", {
+    description: "Total and per-stage token consumption for one request budget.",
+  })
+) {}
 
 /**
  * Budget allocation percentages by stage
@@ -116,9 +119,15 @@ const STAGE_ALLOCATIONS: Record<BudgetedStage, number> = {
  *
  * ```ts
  * import { Layer } from "effect"
- * import { TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { Effect } from "effect"
+ * import { TokenBudgetService, TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(Layer.isLayer(TokenBudgetServiceLive)) // true
+ * const program = Effect.gen(function* () {
+ *   const budget = yield* TokenBudgetService
+ *   return budget
+ * }).pipe(Effect.provide(TokenBudgetServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -190,12 +199,8 @@ const getStageBudget = (stage: string, total: number): number => {
 /**
  * Default implementation using Effect Ref for state
  */
-const make = Effect.gen(function* () {
-  const state = yield* Ref.make<TokenBudgetState>({
-    total: 4096,
-    used: 0,
-    byStage: {},
-  });
+const make = Effect.fn("TokenBudgetService.make")(function* (initialTotal: number = 4096) {
+  const state = yield* Ref.make(TokenBudgetState.make({ total: initialTotal, used: 0, byStage: {} }));
 
   return {
     canAfford: (stage: string, tokens: number) =>
@@ -208,14 +213,16 @@ const make = Effect.gen(function* () {
       ),
 
     recordUsage: (stage: string, tokens: number) =>
-      Ref.update(state, (s) => ({
-        ...s,
-        used: s.used + tokens,
-        byStage: {
-          ...s.byStage,
-          [stage]: (s.byStage[stage] ?? 0) + tokens,
-        },
-      })),
+      Ref.update(state, (s) =>
+        TokenBudgetState.make({
+          ...s,
+          used: s.used + tokens,
+          byStage: {
+            ...s.byStage,
+            [stage]: (s.byStage[stage] ?? 0) + tokens,
+          },
+        })
+      ),
 
     getRemaining: Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
 
@@ -230,7 +237,7 @@ const make = Effect.gen(function* () {
 
     getState: Ref.get(state),
 
-    reset: (total: number = 4096) => Ref.set(state, { total, used: 0, byStage: {} }),
+    reset: (total: number = 4096) => Ref.set(state, TokenBudgetState.make({ total, used: 0, byStage: {} })),
   };
 });
 
@@ -240,15 +247,21 @@ const make = Effect.gen(function* () {
  * **Example** (Inspect token budget service live)
  *
  * ```ts
- * import { TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { Effect } from "effect"
+ * import { TokenBudgetService, TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(TokenBudgetServiceLive)
+ * const program = Effect.gen(function* () {
+ *   const budget = yield* TokenBudgetService
+ *   return budget
+ * }).pipe(Effect.provide(TokenBudgetServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make);
+export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make());
 
 /**
  * Test layer with configurable initial state
@@ -256,58 +269,19 @@ export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make);
  * **Example** (Inspect token budget service test)
  *
  * ```ts
- * import { TokenBudgetServiceTest } from "@effect-ontology/Service/LlmControl/TokenBudget"
+ * import { Effect } from "effect"
+ * import { TokenBudgetService, TokenBudgetServiceTest } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
- * console.log(TokenBudgetServiceTest)
+ * const program = Effect.gen(function* () {
+ *   const budget = yield* TokenBudgetService
+ *   return budget
+ * }).pipe(Effect.provide(TokenBudgetServiceTest()))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
 export const TokenBudgetServiceTest = (initialTotal: number = 4096): Layer.Layer<TokenBudgetService> =>
-  Layer.effect(
-    TokenBudgetService,
-    Effect.gen(function* () {
-      const state = yield* Ref.make<TokenBudgetState>({
-        total: initialTotal,
-        used: 0,
-        byStage: {},
-      });
-
-      return {
-        canAfford: Effect.fn("TokenBudgetService.canAfford")((stage: string, tokens: number) =>
-          Ref.get(state).pipe(
-            Effect.map((s) => {
-              const stageLimit = getStageBudget(stage, s.total);
-              const stageUsed = s.byStage[stage] ?? 0;
-              return stageUsed + tokens <= stageLimit;
-            })
-          )
-        ),
-        recordUsage: Effect.fn("TokenBudgetService.recordUsage")((stage: string, tokens: number) =>
-          Ref.update(state, (s) => ({
-            ...s,
-            used: s.used + tokens,
-            byStage: {
-              ...s.byStage,
-              [stage]: (s.byStage[stage] ?? 0) + tokens,
-            },
-          }))
-        ),
-        getRemaining: Ref.get(state).pipe(Effect.map((s) => s.total - s.used)),
-        getStageRemaining: Effect.fn("TokenBudgetService.getStageRemaining")((stage: string) =>
-          Ref.get(state).pipe(
-            Effect.map((s) => {
-              const stageLimit = getStageBudget(stage, s.total);
-              const stageUsed = s.byStage[stage] ?? 0;
-              return stageLimit - stageUsed;
-            })
-          )
-        ),
-        getState: Ref.get(state),
-        reset: Effect.fn("TokenBudgetService.reset")((total: number = 4096) =>
-          Ref.set(state, { total, used: 0, byStage: {} })
-        ),
-      };
-    })
-  );
+  Layer.effect(TokenBudgetService, make(initialTotal));

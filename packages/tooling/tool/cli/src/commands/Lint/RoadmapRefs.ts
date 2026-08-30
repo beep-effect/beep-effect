@@ -20,7 +20,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { LiteralKit } from "@beep/schema";
 import { A, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, Number as N, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, flow, HashSet, Number as N, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -28,8 +28,10 @@ import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
+import { EXPLORATION_ATLAS_PATH } from "../Explore/Atlas.ts";
 import { decodeGoalManifest, GoalPhaseStatus } from "../Goals/Goals.schemas.ts";
 import { goalManifestPhases, parseGoalManifestText } from "../Goals/Inventory.ts";
+import { PORTFOLIO_INDEX_PATH } from "../Goals/PortfolioIndex.ts";
 import { knowledgeDocumentLines, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
 import type { KnowledgeDocumentLine, KnowledgeLinkDestination } from "../Knowledge/Knowledge.refs.ts";
 
@@ -39,6 +41,7 @@ const ROADMAP_PATH = "docs/ROADMAP.md";
 const ROADMAP_TARGET_PATTERN = /^(?:\.\.\/|\.\/)(?:goals|explorations)\//;
 const ROADMAP_LINK_DEFINITION_PATTERN = /^\s*\[[^\]]+\]:\s+((?:\.\.\/|\.\/)(?:goals|explorations)\/\S+)\s*$/;
 const PHASE_SNAPSHOT_PATTERN = /^\s*\((\d+)\/(\d+)\)/;
+const DERIVED_PROJECTION_PATHS = HashSet.make(EXPLORATION_ATLAS_PATH, PORTFOLIO_INDEX_PATH);
 
 class RoadmapReference extends S.Class<RoadmapReference>($I`RoadmapReference`)(
   {
@@ -303,7 +306,9 @@ export const runRoadmapRefsLint = Effect.fn(function* () {
 
   for (const reference of parseRoadmapReferences(raw)) {
     const resolvedTarget = path.resolve(path.dirname(roadmapPath), targetPath(reference.target));
-    if (!(yield* fs.exists(resolvedTarget))) {
+    const repoPath = path.relative(repoRoot, resolvedTarget);
+    const isDerivedProjection = HashSet.has(DERIVED_PROJECTION_PATHS, repoPath);
+    if (!(yield* fs.exists(resolvedTarget)) && !isDerivedProjection) {
       blocking.push(
         makeFinding(
           "error",

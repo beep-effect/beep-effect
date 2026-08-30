@@ -30,7 +30,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "readme": "bun run scripts/assemble-readme.ts",
     "lint": "bun run beep:lint",
     "test": "bun run beep:test",
@@ -64,7 +64,7 @@
   },
   "peerDependencies": {
     "drizzle-orm": "1.0.0-rc.5-ab785fc",
-    "effect": "4.0.0-rc.108"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/pglite": "workspace:^",
