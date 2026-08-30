@@ -54,7 +54,7 @@ export type RunScopeSupport = typeof RunScopeSupport.Type;
  * ```ts
  * import { RunScopeTelemetry } from "@beep/repo-cli/test/RepoRun"
  *
- * const telemetry = RunScopeTelemetry.make({ memoryPeakBytes: 4096, tasksPeak: 3 })
+ * const telemetry = RunScopeTelemetry.make({ memoryPeakBytes: 4096, tasksCurrent: 3 })
  * console.log(telemetry.memoryPeakBytes) // 4096
  * ```
  *
@@ -64,7 +64,7 @@ export type RunScopeSupport = typeof RunScopeSupport.Type;
 export class RunScopeTelemetry extends S.Class<RunScopeTelemetry>($I`RunScopeTelemetry`)(
   {
     memoryPeakBytes: S.optionalKey(S.Finite),
-    tasksPeak: S.optionalKey(S.Int),
+    tasksCurrent: S.optionalKey(S.Int),
   },
   $I.annote("RunScopeTelemetry", {
     description: "Optional accounting values read from one systemd run scope.",
@@ -98,7 +98,7 @@ export class RunScopeRecord extends S.Class<RunScopeRecord>($I`RunScopeRecord`)(
     attachedPid: S.Int,
     attachedAt: S.String,
     memoryPeakBytes: S.optionalKey(S.Finite),
-    tasksPeak: S.optionalKey(S.Int),
+    tasksCurrent: S.optionalKey(S.Int),
     warning: S.optionalKey(S.String),
   },
   $I.annote("RunScopeRecord", {

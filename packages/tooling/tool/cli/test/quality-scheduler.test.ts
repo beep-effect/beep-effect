@@ -380,8 +380,15 @@ describe("quality-scheduler", () => {
               const path = yield* Path.Path;
               const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
               yield* fs.makeDirectory(binDirectory, { recursive: true });
-              yield* writeExecutable(path.join(binDirectory, "busctl"), "#!/bin/sh\nexit 0\n");
-              yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nprintf '8192\\n5\\n'\n");
+              const unitStatePath = path.join(binDirectory, "busctl.unit");
+              yield* writeExecutable(
+                path.join(binDirectory, "busctl"),
+                `#!/bin/sh\nnext_is_unit=0\nfor argument do\n  [ "$next_is_unit" = 1 ] && { printf '%s' "$argument" > '${unitStatePath}'; next_is_unit=0; }\n  [ "$argument" = "ssa(sv)a(sa(sv))" ] && next_is_unit=1\ndone\nfor argument do\n  if [ "$argument" = "GetUnitByPID" ] && [ -f '${unitStatePath}' ]; then\n    printf 'o "/org/freedesktop/systemd1/unit/%s"\\n' "$(sed 's/-/_2d/g; s/\\./_2e/g' '${unitStatePath}')"\n  fi\ndone\nexit 0\n`
+              );
+              yield* writeExecutable(
+                path.join(binDirectory, "systemctl"),
+                "#!/bin/sh\nprintf 'MemoryPeak=8192\\nTasksCurrent=5\\n'\n"
+              );
 
               yield* withPrependedPath(
                 binDirectory,
@@ -881,7 +888,46 @@ describe("quality-scheduler", () => {
 
                 const applied = yield* reapAdmissionState({ apply: true });
                 expect(applied.dead).toStrictEqual([dead]);
-                expect(yield* fs.readFileString(capturePath)).toBe(`--user\nstop\n${unitName}\n`);
+                expect(yield* fs.readFileString(capturePath)).toBe(
+                  `--user\nlist-units\n--plain\n--no-legend\nagent-run-*.scope\n--user\nstop\n${unitName}\n`
+                );
+              })
+            );
+          })
+        );
+      })
+    ));
+
+  it("stops the derived scope for a dead lease without a persisted record", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const runtimeDirectory = path.dirname(path.dirname(tempRoot.root));
+            const binDirectory = path.join(runtimeDirectory, "bin");
+            const capturePath = path.join(runtimeDirectory, "systemctl.argv");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(
+              path.join(binDirectory, "systemctl"),
+              `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\nexit 0\n`
+            );
+            yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              weightTokens: 5,
+              originKey: "origin-dead-unpersisted",
+              nonce: "deadbeef",
+            });
+
+            yield* withPrependedPath(
+              binDirectory,
+              Effect.gen(function* () {
+                yield* reapAdmissionState({ apply: true });
+                expect(yield* fs.readFileString(capturePath)).toBe(
+                  "--user\nlist-units\n--plain\n--no-legend\nagent-run-*.scope\n--user\nstop\nagent-run-deadbeef.scope\n"
+                );
               })
             );
           })

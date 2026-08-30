@@ -74,7 +74,7 @@ describe("run scope", () => {
         const capturePath = path.join(root, "busctl.argv");
         yield* writeExecutable(
           path.join(root, "busctl"),
-          `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\nexit 0\n`
+          `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && printf 'o "/org/freedesktop/systemd1/unit/agent_2drun_2dticket_2dwith_2dspaces_2escope"\\n'\ndone\nexit 0\n`
         );
 
         const record = yield* enterRunScope("ticket with spaces").pipe(configured({ PATH: root }));
@@ -105,6 +105,21 @@ describe("run scope", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("records a failed scope when the accepted start job does not adopt this process", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* writeExecutable(
+          path.join(root, "busctl"),
+          '#!/bin/sh\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && printf \'o "/org/freedesktop/systemd1/unit/session_2d4_2escope"\\n\'\ndone\nexit 0\n'
+        );
+        const record = yield* enterRunScope("d0a7b0dc").pipe(configured({ PATH: root }));
+        expect(record.support).toBe("failed");
+        expect(O.getOrElse(O.fromUndefinedOr(record.warning), () => "")).toContain("did not adopt");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("records a failed scope when busctl disappears after the support probe", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
@@ -127,10 +142,25 @@ describe("run scope", () => {
     withTempDirectory((root) =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
-        yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nprintf '4096\\n7\\n'\n");
+        yield* writeExecutable(
+          path.join(root, "systemctl"),
+          "#!/bin/sh\nprintf 'TasksCurrent=7\\nMemoryPeak=4096\\n'\n"
+        );
         const telemetry = yield* readRunScopeTelemetry("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
         expect(telemetry.memoryPeakBytes).toBe(4096);
-        expect(telemetry.tasksPeak).toBe(7);
+        expect(telemetry.tasksCurrent).toBe(7);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("keeps telemetry names aligned when a property is omitted", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nprintf 'TasksCurrent=7\\n'\n");
+        const telemetry = yield* readRunScopeTelemetry("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
+        expect(telemetry.memoryPeakBytes).toBeUndefined();
+        expect(telemetry.tasksCurrent).toBe(7);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -139,10 +169,13 @@ describe("run scope", () => {
     withTempDirectory((root) =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
-        yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nprintf '[not set]\\n[not set]\\n'\n");
+        yield* writeExecutable(
+          path.join(root, "systemctl"),
+          "#!/bin/sh\nprintf 'MemoryPeak=[not set]\\nTasksCurrent=[not set]\\n'\n"
+        );
         const telemetry = yield* readRunScopeTelemetry("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
         expect(telemetry.memoryPeakBytes).toBeUndefined();
-        expect(telemetry.tasksPeak).toBeUndefined();
+        expect(telemetry.tasksCurrent).toBeUndefined();
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -154,7 +187,7 @@ describe("run scope", () => {
         yield* writeExecutable(path.join(root, "systemctl"), "#!/bin/sh\nexit 5\n");
         const telemetry = yield* readRunScopeTelemetry("agent-run-d0a7b0dc.scope").pipe(configured({ PATH: root }));
         expect(telemetry.memoryPeakBytes).toBeUndefined();
-        expect(telemetry.tasksPeak).toBeUndefined();
+        expect(telemetry.tasksCurrent).toBeUndefined();
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );

@@ -44,10 +44,65 @@ const runScopeCommand = Effect.fnUntraced(function* (
   return yield* runRepoCommandCapture(command, args, tmpdir(), yield* commandEnvironment()).pipe(Effect.option);
 });
 
-const runScopeUnitName = (ticketId: string): string => {
+/**
+ * Derive the deterministic scope unit name for one admission ticket nonce.
+ *
+ * The reaper recomputes this name for leases that died before their scope
+ * record was persisted, so leaked scopes stay stoppable.
+ *
+ * **Example** (Derive a unit name)
+ *
+ * ```ts
+ * import { runScopeUnitName } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(runScopeUnitName("ticket with spaces")) // "agent-run-ticket-with-spaces.scope"
+ * ```
+ *
+ * @param ticketId - Admission ticket nonce.
+ * @returns A systemd-safe transient scope unit name.
+ * @category admission
+ * @since 0.0.0
+ */
+export const runScopeUnitName = (ticketId: string): string => {
   const sanitized = pipe(ticketId, Str.replace(/[^a-zA-Z0-9:_.-]/gu, "-"), Str.slice(0, 200));
   return `agent-run-${Str.isEmpty(sanitized) ? "unknown" : sanitized}.scope`;
 };
+
+const getUnitByPidArguments = (...busctlFlags: ReadonlyArray<string>): ReadonlyArray<string> => [
+  "--user",
+  ...busctlFlags,
+  "call",
+  SYSTEMD_DESTINATION,
+  SYSTEMD_MANAGER_PATH,
+  SYSTEMD_MANAGER_INTERFACE,
+  "GetUnitByPID",
+  "u",
+  `${process.pid}`,
+];
+
+const escapeUnitNameForDbusPath = (unitName: string): string =>
+  pipe(
+    Str.split(unitName, ""),
+    A.map((char) => (/[A-Za-z0-9]/u.test(char) ? char : `_${char.charCodeAt(0).toString(16).padStart(2, "0")}`)),
+    A.join("")
+  );
+
+const verifyRunScopeAdoption = Effect.fnUntraced(function* (
+  unitName: string
+): Effect.fn.Return<RunScopeRecord, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const verified = yield* runScopeCommand("busctl", getUnitByPidArguments());
+  const adopted = O.exists(
+    verified,
+    (capture) => capture.exitCode === 0 && Str.includes(`/unit/${escapeUnitNameForDbusPath(unitName)}`)(capture.output)
+  );
+  return yield* adopted
+    ? makeRunScopeRecord(unitName, "active")
+    : makeRunScopeRecord(
+        unitName,
+        "failed",
+        O.some("systemd accepted the start job but did not adopt this process into the scope.")
+      );
+});
 
 const makeRunScopeRecord = Effect.fnUntraced(function* (
   unitName: string,
@@ -79,7 +134,7 @@ const makeRunScopeRecord = Effect.fnUntraced(function* (
  * ```
  *
  * @returns The current run-scope support state.
- * @category runtime
+ * @category admission
  * @since 0.0.0
  */
 export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")(function* (): Effect.fn.Return<
@@ -94,17 +149,7 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
   if (platform() !== "linux") {
     return "unsupported";
   }
-  const probe = yield* runScopeCommand("busctl", [
-    "--user",
-    "--timeout=2",
-    "call",
-    SYSTEMD_DESTINATION,
-    SYSTEMD_MANAGER_PATH,
-    SYSTEMD_MANAGER_INTERFACE,
-    "GetUnitByPID",
-    "u",
-    `${process.pid}`,
-  ]);
+  const probe = yield* runScopeCommand("busctl", getUnitByPidArguments("--timeout=2"));
   return O.exists(probe, (capture) => capture.exitCode === 0) ? "active" : "unsupported";
 });
 
@@ -112,8 +157,10 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
  * Adopt this CLI process into a transient systemd scope for one admitted run.
  *
  * A missing installed `agent-runs.slice` is acceptable. The user manager then
- * creates a transient slice with default accounting settings. Start failures
- * are retained as a warning and never fail the admitted command.
+ * creates a transient slice with default accounting settings. Because a
+ * successful `StartTransientUnit` reply only proves the job was accepted,
+ * adoption is verified with `GetUnitByPID` before reporting `active`. Start
+ * failures are retained as a warning and never fail the admitted command.
  *
  * **Example** (Reference scope entry)
  *
@@ -125,7 +172,7 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
  *
  * @param ticketId - Admission ticket nonce used to generate a safe unit name.
  * @returns The best-effort scope attachment record.
- * @category runtime
+ * @category admission
  * @since 0.0.0
  */
 export const enterRunScope = Effect.fn("RunScope.enterRunScope")(function* (
@@ -163,7 +210,7 @@ export const enterRunScope = Effect.fn("RunScope.enterRunScope")(function* (
     onNone: () => makeRunScopeRecord(unitName, "failed", O.some("Could not start the transient systemd run scope.")),
     onSome: (capture) =>
       capture.exitCode === 0
-        ? makeRunScopeRecord(unitName, "active")
+        ? verifyRunScopeAdoption(unitName)
         : makeRunScopeRecord(
             unitName,
             "failed",
@@ -180,11 +227,17 @@ const parseTelemetryValue = (value: O.Option<string>): O.Option<number> =>
     O.flatMap(N.parse)
   );
 
+const telemetryProperty = (lines: ReadonlyArray<string>, property: string): O.Option<number> =>
+  parseTelemetryValue(
+    pipe(A.findFirst(lines, Str.startsWith(`${property}=`)), O.map(Str.slice(Str.length(property) + 1)))
+  );
+
 /**
  * Read peak memory and current task accounting from one systemd scope.
  *
- * Missing properties, `[not set]`, command failures, and spawn failures all
- * become absent metrics.
+ * Properties are matched by name because `systemctl show` omits unset
+ * properties and prints in its own order. Missing properties, `[not set]`,
+ * command failures, and spawn failures all become absent metrics.
  *
  * **Example** (Reference the telemetry reader)
  *
@@ -196,28 +249,21 @@ const parseTelemetryValue = (value: O.Option<string>): O.Option<number> =>
  *
  * @param unitName - Recorded systemd scope unit name.
  * @returns Accounting values that systemd reported.
- * @category runtime
+ * @category admission
  * @since 0.0.0
  */
 export const readRunScopeTelemetry = Effect.fn("RunScope.readRunScopeTelemetry")(function* (
   unitName: string
 ): Effect.fn.Return<RunScopeTelemetry, never, ChildProcessSpawner.ChildProcessSpawner> {
-  const shown = yield* runScopeCommand("systemctl", [
-    "--user",
-    "show",
-    unitName,
-    "-p",
-    "MemoryPeak,TasksCurrent",
-    "--value",
-  ]);
+  const shown = yield* runScopeCommand("systemctl", ["--user", "show", unitName, "-p", "MemoryPeak,TasksCurrent"]);
   if (O.isNone(shown) || shown.value.exitCode !== 0) {
     return RunScopeTelemetry.make({});
   }
-  const values = Str.split(shown.value.output, "\n");
+  const lines = Str.split(shown.value.output, "\n");
   return RunScopeTelemetry.make(
     O.getSomesStruct({
-      memoryPeakBytes: parseTelemetryValue(A.get(values, 0)),
-      tasksPeak: parseTelemetryValue(A.get(values, 1)),
+      memoryPeakBytes: telemetryProperty(lines, "MemoryPeak"),
+      tasksCurrent: telemetryProperty(lines, "TasksCurrent"),
     })
   );
 });
@@ -238,13 +284,55 @@ export const readRunScopeTelemetry = Effect.fn("RunScope.readRunScopeTelemetry")
  *
  * @param unitName - Scope recorded by a dead admission lease.
  * @internal
- * @category runtime
+ * @category admission
  * @since 0.0.0
  */
 export const stopRunScopeForReap = Effect.fn("RunScope.stopRunScopeForReap")(function* (
   unitName: string
 ): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
   yield* runScopeCommand("systemctl", ["--user", "stop", unitName]);
+});
+
+/**
+ * List the run-scope units currently loaded by the systemd user manager.
+ *
+ * The reaper compares this census against live leases so scopes kept alive by
+ * detached descendants are stopped once no lease owns them. Spawn and command
+ * failures become an empty census.
+ *
+ * **Example** (Reference the scope census)
+ *
+ * ```ts
+ * import { listRunScopeUnits } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof listRunScopeUnits) // "function"
+ * ```
+ *
+ * @returns Loaded `agent-run-*.scope` unit names.
+ * @category admission
+ * @since 0.0.0
+ */
+export const listRunScopeUnits = Effect.fn("RunScope.listRunScopeUnits")(function* (): Effect.fn.Return<
+  ReadonlyArray<string>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
+  const listed = yield* runScopeCommand("systemctl", [
+    "--user",
+    "list-units",
+    "--plain",
+    "--no-legend",
+    "agent-run-*.scope",
+  ]);
+  if (O.isNone(listed) || listed.value.exitCode !== 0) {
+    return [];
+  }
+  return pipe(
+    Str.split(listed.value.output, "\n"),
+    A.map(Str.trim),
+    A.filter(Str.isNonEmpty),
+    A.map((line) => A.headNonEmpty(Str.split(line, /\s+/u)))
+  );
 });
 
 /**
@@ -260,7 +348,7 @@ export const stopRunScopeForReap = Effect.fn("RunScope.stopRunScopeForReap")(fun
  *
  * @param unitName - Scope owned by the current admitted CLI.
  * @returns A cleanup note for operators and diagnostics.
- * @category runtime
+ * @category admission
  * @since 0.0.0
  */
 export const runScopeCleanupHint = (unitName: string): string =>

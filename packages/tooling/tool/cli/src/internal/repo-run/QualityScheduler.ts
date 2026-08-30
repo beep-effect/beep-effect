@@ -15,6 +15,7 @@
  *
  * @since 0.0.0
  */
+
 import { randomUUID } from "node:crypto";
 import { freemem, tmpdir, totalmem, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
@@ -29,6 +30,7 @@ import {
   Fiber,
   FileSystem,
   Layer,
+  MutableHashSet,
   Order,
   Path,
   pipe,
@@ -50,7 +52,13 @@ import {
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
 import { RunScopeRecord, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
-import { enterRunScope, readRunScopeTelemetry, stopRunScopeForReap } from "./RunScope.ts";
+import {
+  enterRunScope,
+  listRunScopeUnits,
+  readRunScopeTelemetry,
+  runScopeUnitName,
+  stopRunScopeForReap,
+} from "./RunScope.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
@@ -1346,7 +1354,7 @@ const enrichLeaseRunScopeTelemetry = (
               ...scope,
               ...OptionUtils.getSomesStruct({
                 memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
-                tasksPeak: O.fromUndefinedOr(telemetry.tasksPeak),
+                tasksCurrent: O.fromUndefinedOr(telemetry.tasksCurrent),
               }),
             }),
           })
@@ -1388,21 +1396,34 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
   });
 });
 
-const stopDeadLeaseRunScopes = Effect.fnUntraced(function* (
+const derivedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
+  Str.isNonEmpty(lease.nonce) ? [runScopeUnitName(lease.nonce)] : A.empty();
+
+const recordedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
+  pipe(O.fromUndefinedOr(lease.runScope), O.match({ onNone: A.empty<string>, onSome: (scope) => [scope.unitName] }));
+
+const stopLeakedRunScopes = Effect.fnUntraced(function* (
   state: LiveAdmissionState
 ): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
-  yield* Effect.forEach(
-    state.deadLeases,
-    ({ lease }) =>
-      pipe(
-        O.fromUndefinedOr(lease.runScope),
-        O.match({
-          onNone: () => Effect.void,
-          onSome: (scope) => stopRunScopeForReap(scope.unitName),
-        })
-      ),
-    { concurrency: 4, discard: true }
+  // A live lease protects both its recorded unit and the nonce-derived unit,
+  // which covers the window before enterRunScope's record reaches the lease.
+  const liveUnits = MutableHashSet.fromIterable(
+    A.flatMap(state.leases, ({ lease }) => A.appendAll(derivedRunScopeUnitName(lease), recordedRunScopeUnitName(lease)))
   );
+  const deadTargets = A.flatMap(state.deadLeases, ({ lease }) =>
+    pipe(
+      recordedRunScopeUnitName(lease),
+      A.match({ onEmpty: () => derivedRunScopeUnitName(lease), onNonEmpty: (recorded) => recorded })
+    )
+  );
+  const listed = yield* listRunScopeUnits();
+  const targets = MutableHashSet.fromIterable(
+    A.appendAll(
+      deadTargets,
+      A.filter(listed, (unitName) => !MutableHashSet.has(liveUnits, unitName))
+    )
+  );
+  yield* Effect.forEach(targets, stopRunScopeForReap, { concurrency: 4, discard: true });
 });
 
 /**
@@ -1432,7 +1453,7 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
 > {
   const directories = yield* ensureAdmissionDirectories();
   if (options.apply) {
-    yield* stopDeadLeaseRunScopes(yield* scanAdmissionState(directories, false));
+    yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false));
   }
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply);
 });
