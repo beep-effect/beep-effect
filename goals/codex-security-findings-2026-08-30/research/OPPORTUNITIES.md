@@ -84,3 +84,15 @@
 - Prevention: snapshot the admitted base for every lane and recheck base
   freshness before starting expensive coverage, or cancel early when a newly
   fetched base overlaps the candidate diff.
+
+## 2026-08-30 — coverage depended on the parent Yeet environment
+
+- Work: reran the canonical exact-base publish proof after incorporating the
+  latest `origin/main` test corpus.
+- Evidence: all 2,700 repo-cli tests passed under the canonical two-worker
+  shard, but the coverage ratchet lost branches in `LaneProofReuse.ts` and
+  `Planner.ts` that a standalone run reached only through ambient proof
+  variables. The same deficit reproduced on consecutive Yeet runs.
+- Prevention: explicitly test default, disabled, and optional proof-planning
+  branches with scoped environment overrides so coverage is invariant across
+  standalone, CI, and nested Yeet invocations.

@@ -62,15 +62,18 @@ import {
   githubCheckQualityLanesForTesting,
   githubCheckRepoSanityLanesForTesting,
   KnipFinding,
+  LaneProofSession,
   lintFixChangedStepForTesting,
   mergeCoverageBaselinePackagesForTesting,
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
+  persistLaneProofs,
   planCoverageAffectedScope,
   planCoverageAffectedScopeWithBaseline,
   planCoverageBaselineWrite,
   planCoverageFullShards,
   planWorkspaceCoverageAffectedScope,
+  prepareLaneProofSession,
   promotedFallowGithubCheckLaneIdsForTesting,
   QualityTaskFailed,
   QualityTaskGroupFailed,
@@ -994,6 +997,38 @@ describe("quality task adapter", () => {
       const invalidated = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
       expect(A.map(invalidated.report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "isolates lane-proof defaults and persistence guards from the parent process environment",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-defaults-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(tempRoot, "proof:defaults", "preflight", "process.exit(0)");
+      const disabled = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", undefined, prepareLaneProofSession([lane]));
+      const invalid = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "invalid", prepareLaneProofSession([lane]));
+      const withDefaultBase = yield* withEnvVarEffect(
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "active",
+        withEnvVarEffect("BEEP_YEET_PROOF_BASE", undefined, prepareLaneProofSession([lane]))
+      );
+
+      expect(O.isNone(disabled)).toBe(true);
+      expect(O.isNone(invalid)).toBe(true);
+      expect(O.isSome(withDefaultBase)).toBe(true);
+
+      const emptySession = LaneProofSession.make({
+        mode: "active",
+        path: path.join(tempRoot, ".beep", "yeet", "lane-proofs.json"),
+        records: [],
+        identities: [],
+      });
+      yield* persistLaneProofs(emptySession, []);
+      yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", undefined, persistLaneProofs(emptySession, [[lane, 1]]));
     }, provideScopedLayer(PlatformLayer))
   );
 

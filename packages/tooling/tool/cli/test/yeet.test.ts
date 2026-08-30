@@ -24,6 +24,7 @@ import {
   decodeTurboPlanTasksFromQueryJsonForTesting,
   decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
+  emptyTurboPlanSnapshot,
   executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
   GhActor,
@@ -1096,6 +1097,46 @@ describe("yeet planner", () => {
       )
     ).toEqual(["publish:head-install-preflight", "publish:git:push", "monitor:pr-context", "monitor:pr-checks:watch"]);
     expect(findStep(plan.steps, "publish:git:push").args).toEqual(["push", "-u", "origin", "HEAD"]);
+  });
+
+  it("plans the opposite optional publish branches explicitly", () => {
+    const pushOnlyPr = buildYeetRunPlanForTesting({
+      context,
+      message: O.none(),
+      mode: "publish",
+      pr: true,
+      pushOnly: true,
+    });
+    expect(A.map(pushOnlyPr.steps, (step) => step.label)).toEqual([
+      "publish:head-install-preflight",
+      "publish:git:push",
+      "publish:pr-create",
+    ]);
+
+    const earlyWithoutMonitor = buildYeetRunPlanForTesting({
+      context,
+      message: O.some("feat(repo-cli): add yeet"),
+      startPrEarly: true,
+    });
+    expect(A.some(earlyWithoutMonitor.steps, (step) => step.phase === "monitor")).toBe(false);
+  });
+
+  it("plans proof defaults independently of ambient Yeet variables", () => {
+    const plan = withEnvVar("BEEP_YEET_LANE_PROOF_MODE", undefined, () =>
+      buildYeetRunPlanForTesting({ context, message: O.none(), mode: "verify" })
+    );
+
+    expect(findStep(plan.steps, "full:pre-push").env).toMatchObject({
+      BEEP_YEET_LANE_PROOF_MODE: "active",
+      BEEP_YEET_PROOF_BASE: "origin/main",
+    });
+  });
+
+  it("covers warning and main-branch plan variants", () => {
+    expect(emptyTurboPlanSnapshot(["cycle detected"]).graphHealthStatus).toBe("warning");
+    const mainContext = RepoRunContext.make({ ...context, branch: "main" });
+    const plan = buildYeetRunPlanForTesting({ context: mainContext, message: O.none(), mode: "verify" });
+    expect(findStep(plan.steps, "full:pre-push").waves?.[0]?.laneIds).not.toContain("quality:changeset-status");
   });
 
   it("requires a publish message unless the run is an amend that keeps the existing subject", () =>

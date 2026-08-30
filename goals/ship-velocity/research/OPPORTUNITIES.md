@@ -4,6 +4,17 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-30 — local publish proof changed base after the PR preview was fixed
+
+- **Doing:** running the exact-commit full proof after Yeet created PR #892 early to avoid more
+  queue-driven base churn.
+- **Evidence:** the hosted merge preview, based on `main@f1383148c6`, passed Coverage Regression.
+  The still-running local proof refreshed `origin/main` after another PR merged, then reported
+  coverage drops only in three untouched Yeet internals. All 2,583 CLI tests passed, and the
+  hosted coverage context on the published head was green.
+- **Would have prevented it:** pin every publish-proof comparison to the PR base OID captured at
+  publish start; refresh remote refs for visibility without changing the semantic base mid-run.
+
 ## 2026-08-30 — base fast-forward left the ignored goal projection stale
 
 - **Doing:** repeating the CLI package audit after merging the latest `origin/main`.

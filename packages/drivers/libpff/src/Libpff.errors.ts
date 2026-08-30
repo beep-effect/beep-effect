@@ -13,6 +13,11 @@ import * as S from "effect/Schema";
 
 const $I = $LibpffId.create("Libpff.errors");
 const LibpffErrorReasonBase = LiteralKit(["config", "engine-unavailable", "output-limit", "process", "timeout"]);
+const LibpffProcessClassification = LiteralKit(["codepage", "corrupt", "password"]).pipe(
+  $I.annoteSchema("LibpffProcessClassification", {
+    description: "Sanitized classification derived from bounded pffexport process diagnostics.",
+  })
+);
 
 /**
  * Technical libpff failure reasons.
@@ -76,6 +81,9 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
     exitCode: S.optionalKey(NonNegativeInt).annotateKey({
       description: "Process exit status associated with the libpff failure when one was available.",
     }),
+    processClassification: S.optionalKey(LibpffProcessClassification).annotateKey({
+      description: "Sanitized process-failure classification derived from bounded stderr without retaining raw output.",
+    }),
   },
   $I.annote("LibpffErrorOptions", {
     description: "Options for configuring LibpffError instances.",
@@ -115,6 +123,12 @@ export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
     reason: LibpffErrorReason.annotateKey({
       description: "Redacted technical error reason.",
     }),
+    processClassification: S.OptionFromOptionalKey(LibpffProcessClassification).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Sanitized process-failure classification derived from bounded stderr.",
+      })
+    ),
   },
   $I.annoteError<LibpffError>("LibpffError", {
     description: "Redacted technical failure raised inside the libpff driver boundary.",
@@ -133,6 +147,7 @@ export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
     LibpffError.make({
       cause: O.fromUndefinedOr(options.cause),
       exitCode: O.fromUndefinedOr(options.exitCode),
+      processClassification: O.fromUndefinedOr(options.processClassification),
       reason,
     });
 }
