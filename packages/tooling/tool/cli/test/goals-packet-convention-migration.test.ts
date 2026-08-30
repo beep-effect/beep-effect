@@ -2,6 +2,7 @@ import {
   applyPacketGenesisSeed,
   foldPacketEvents,
   GoalPacketRecord,
+  goalsCommand,
   goalsMigrateConventionsCommand,
   goalsRepairForkCommand,
   isJsonRecord,
@@ -50,6 +51,7 @@ const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const encodeJson = (value: unknown): string => Result.getOrThrow(encodeJsonResult(value));
 const runMigration = Command.runWith(goalsMigrateConventionsCommand, { version: "0.0.0" });
 const runRepair = Command.runWith(goalsRepairForkCommand, { version: "0.0.0" });
+const runGoals = Command.runWith(goalsCommand, { version: "0.0.0" });
 
 const record = (slug: string, manifest: Readonly<Record<string, unknown>>): GoalPacketRecord =>
   GoalPacketRecord.make({
@@ -2586,6 +2588,32 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
           expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("rollback failed");
           expect(yield* fs.readFileString(manifestPath)).toBe(foreignBytes);
           expect(yield* fs.exists("goals/demo/ops/events")).toBe(false);
+        })
+      );
+    })
+  );
+});
+
+layer(NodeServices.layer, { timeout: 30_000 })("registered migration command boundary", (it) => {
+  it.effect(
+    "provides PacketCore services through the goals command tree",
+    Effect.fnUntraced(function* () {
+      yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectFile(
+            "goals/demo/ops/manifest.json",
+            `${encodeJson({
+              schemaVersion: "initiative-manifest/v2",
+              initiative: { id: "demo", status: "active" },
+              lifecycle: "active",
+              packetPath: "goals/demo",
+              completionGate,
+            })}\n`
+          );
+          const exit = yield* Effect.exit(
+            runGoals(["migrate-conventions", "--preview", "--at", "2026-08-30T00:00:00.000Z"])
+          );
+          expect(Exit.isSuccess(exit)).toBe(true);
         })
       );
     })

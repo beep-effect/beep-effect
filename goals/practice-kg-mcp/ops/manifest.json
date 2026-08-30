@@ -10,10 +10,7 @@
   },
   "packetPath": "goals/practice-kg-mcp",
   "lifecycle": "active",
-  "blockedBy": [
-    "AC-2 remains unmet because shipped graph nodes lack provenance (defect B-2).",
-    "Tom's correctness calls on the G-1 through G-5 acceptance questions remain pending."
-  ],
+  "statusNote": "Acceptance remains open: AC-2 is unmet because shipped graph nodes lack provenance (defect B-2), and Tom's correctness calls on the G-1 through G-5 acceptance questions remain pending.",
   "mission": "Ship the first queryable IP-law knowledge graph over the Oppold corpus to Tom's Claude Desktop as a read-only, local-first, .mcpb-packaged stdio MCP server over a portable data bundle, taking live ownership of the orphaned knowledge-graph scope.",
   "executionCapable": true,
   "reflectionRequired": true,

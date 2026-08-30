@@ -117,5 +117,6 @@
     "A committed spec drifts beyond what the bespoke renderer can express; record the delta and fallback decision under research/ first.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Deliver the research foundation and first product-pulled driver on the substrate the predecessor proved: committed source/terms research plus `@beep/ecfr` at 15-operation parity. Federal Register, DOL, and CourtListener resume individually only when a product feature pulls that driver."
 }
