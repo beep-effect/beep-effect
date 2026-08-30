@@ -13,6 +13,12 @@ import { catalogCorpusImpl } from "./internal/Catalog.ts";
 import { enrichCorpusImpl } from "./internal/Enrich.ts";
 import { extractCorpusImpl } from "./internal/Extract.ts";
 import { organizeCorpusImpl } from "./internal/Organize.ts";
+import {
+  approveT7PreservationImpl,
+  preflightT7PreservationImpl,
+  runT7PreservationImpl,
+  verifyT7PreservationImpl,
+} from "./internal/Preservation.ts";
 import { preserveRestorationArchiveImpl, verifyRestorationArchiveImpl } from "./internal/Restoration.ts";
 import {
   reconcileRestorationAcceptanceImpl,
@@ -24,8 +30,9 @@ import { salvageCorpusImpl, verifySalvageImpl } from "./internal/Salvage.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { CorpusArchiveMoveError, CorpusCommandError } from "./Corpus.errors.ts";
+import type { CorpusArchiveMoveError, CorpusCommandError, PreservationCommandError } from "./Corpus.errors.ts";
 import type {
+  CapacityPreflight,
   CorpusArchiveMoveOptions,
   CorpusArchiveMoveSummary,
   CorpusCatalogOptions,
@@ -38,6 +45,8 @@ import type {
   CorpusOrganizeSummary,
   CorpusSalvageOptions,
   CorpusSalvageSummary,
+  PreservationRunSummary,
+  PreservationVerificationReport,
   RestorationAcceptanceRecord,
   RestorationLegacyWordOptions,
   RestorationMailOptions,
@@ -45,6 +54,7 @@ import type {
   RestorationRecycleOptions,
   RestorationRunSummary,
   RestorationVerifyOptions,
+  T7PreservationOptions,
 } from "./Corpus.schemas.ts";
 
 /**
@@ -89,6 +99,12 @@ type CorpusCommandServiceRequirements =
  * @since 0.0.0
  */
 export interface CorpusCommandServiceShape {
+  /** Approve a persisted preservation capacity measurement. @since 0.0.0 */
+  readonly approveT7Preservation: (
+    corpusRoot: string,
+    ceilingBytes: number,
+    approvedBy: string
+  ) => Effect.Effect<CapacityPreflight, PreservationCommandError>;
   /**
    * Move provenance-covered source files into an archive root after validating
    * every raw digest referenced by the supplied run manifests.
@@ -127,6 +143,11 @@ export interface CorpusCommandServiceShape {
    * @since 0.0.0
    */
   readonly organizeCorpus: (options: CorpusOrganizeOptions) => Effect.Effect<CorpusOrganizeSummary, CorpusCommandError>;
+
+  /** Measure and persist the proposed T7 preservation scope. @since 0.0.0 */
+  readonly preflightT7Preservation: (
+    options: T7PreservationOptions
+  ) => Effect.Effect<CapacityPreflight, PreservationCommandError>;
 
   /**
    * Preserve the ratified corpus state through the resumable archive boundary.
@@ -171,6 +192,11 @@ export interface CorpusCommandServiceShape {
     options: RestorationRecycleOptions
   ) => Effect.Effect<RestorationRunSummary, CorpusCommandError>;
 
+  /** Run the approved T7 preservation archive operation. @since 0.0.0 */
+  readonly runT7Preservation: (
+    options: T7PreservationOptions
+  ) => Effect.Effect<PreservationRunSummary, PreservationCommandError>;
+
   /**
    * Copy labeled source files into corpus raw storage and write provenance.
    *
@@ -193,6 +219,11 @@ export interface CorpusCommandServiceShape {
    * @since 0.0.0
    */
   readonly verifySalvage: (options: CorpusSalvageOptions) => Effect.Effect<CorpusSalvageSummary, CorpusCommandError>;
+
+  /** Reparse and independently verify the T7 destination manifest. @since 0.0.0 */
+  readonly verifyT7Preservation: (
+    corpusRoot: string
+  ) => Effect.Effect<PreservationVerificationReport, PreservationCommandError>;
 }
 
 /**
@@ -221,6 +252,10 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
   const runtimeContext = yield* Effect.context<CorpusCommandServiceRequirements>();
 
   return CorpusCommandService.of({
+    approveT7Preservation: Effect.fn("CorpusCommandService.approveT7Preservation")(
+      (corpusRoot, ceilingBytes, approvedBy) =>
+        approveT7PreservationImpl(corpusRoot, ceilingBytes, approvedBy).pipe(Effect.provide(runtimeContext))
+    ),
     archiveMove: Effect.fn("CorpusCommandService.archiveMove")((options) =>
       archiveMoveImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -251,6 +286,12 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
     restoreRecycle: Effect.fn("CorpusCommandService.restoreRecycle")((options) =>
       restoreRecycleImpl(options).pipe(Effect.provide(runtimeContext))
     ),
+    preflightT7Preservation: Effect.fn("CorpusCommandService.preflightT7Preservation")((options) =>
+      preflightT7PreservationImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    runT7Preservation: Effect.fn("CorpusCommandService.runT7Preservation")((options) =>
+      runT7PreservationImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     salvageCorpus: Effect.fn("CorpusCommandService.salvageCorpus")((options) =>
       salvageCorpusImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -259,6 +300,9 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
     ),
     verifyRestorationArchive: Effect.fn("CorpusCommandService.verifyRestorationArchive")((options) =>
       verifyRestorationArchiveImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    verifyT7Preservation: Effect.fn("CorpusCommandService.verifyT7Preservation")((corpusRoot) =>
+      verifyT7PreservationImpl(corpusRoot).pipe(Effect.provide(runtimeContext))
     ),
   });
 });
@@ -692,6 +736,92 @@ export const verifyRestorationArchive = Effect.fn("Corpus.verifyRestorationArchi
 });
 
 /**
+ * Persist a proposed T7 capacity preflight.
+ *
+ * **Example** (Build the preflight effect)
+ *
+ * ```ts
+ * import { preflightT7Preservation, T7PreservationOptions } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = preflightT7Preservation(T7PreservationOptions.make({ corpusRoot: "/tmp/archive", t7Root: "/tmp/t7" }))
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const preflightT7Preservation = Effect.fn("Corpus.preflightT7Preservation")(function* (
+  options: T7PreservationOptions
+): Effect.fn.Return<CapacityPreflight, PreservationCommandError, CorpusCommandService> {
+  return yield* (yield* CorpusCommandService).preflightT7Preservation(options);
+});
+
+/**
+ * Approve a persisted T7 capacity preflight.
+ *
+ * **Example** (Build the approval effect)
+ *
+ * ```ts
+ * import { approveT7Preservation } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = approveT7Preservation("/tmp/archive", 1024, "operator")
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const approveT7Preservation = Effect.fn("Corpus.approveT7Preservation")(function* (
+  corpusRoot: string,
+  ceilingBytes: number,
+  approvedBy: string
+): Effect.fn.Return<CapacityPreflight, PreservationCommandError, CorpusCommandService> {
+  return yield* (yield* CorpusCommandService).approveT7Preservation(corpusRoot, ceilingBytes, approvedBy);
+});
+
+/**
+ * Run the approved T7 preservation archive operation.
+ *
+ * **Example** (Build the archive-run effect)
+ *
+ * ```ts
+ * import { runT7Preservation, T7PreservationOptions } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = runT7Preservation(T7PreservationOptions.make({ corpusRoot: "/tmp/archive", t7Root: "/tmp/t7" }))
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runT7Preservation = Effect.fn("Corpus.runT7Preservation")(function* (
+  options: T7PreservationOptions
+): Effect.fn.Return<PreservationRunSummary, PreservationCommandError, CorpusCommandService> {
+  return yield* (yield* CorpusCommandService).runT7Preservation(options);
+});
+
+/**
+ * Independently reparse and verify the T7 destination manifest.
+ *
+ * **Example** (Build the verification effect)
+ *
+ * ```ts
+ * import { verifyT7Preservation } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const effect = verifyT7Preservation("/tmp/archive")
+ * console.log(effect.pipe !== undefined) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const verifyT7Preservation = Effect.fn("Corpus.verifyT7Preservation")(function* (
+  corpusRoot: string
+): Effect.fn.Return<PreservationVerificationReport, PreservationCommandError, CorpusCommandService> {
+  return yield* (yield* CorpusCommandService).verifyT7Preservation(corpusRoot);
+});
+
+/**
  * Print the corpus command index.
  *
  * **Example** (Print corpus command index)
@@ -715,4 +845,8 @@ export const printCorpusIndex = printLines([
   "- bun run beep corpus extract --corpus-root /path/to/corpus --tika-jar /path/to/tika-app.jar --export-children",
   "- bun run beep corpus organize --corpus-root /path/to/corpus",
   "- bun run beep corpus enrich --corpus-root /path/to/corpus",
+  "- bun run beep corpus preserve preflight --corpus-root /path/to/corpus --t7-root /path/to/t7",
+  "- BEEP_OPPOLD_CORPUS_ROOT=/path/to/corpus bun run beep corpus preserve approve --ceiling-bytes 400000000000 --approved-by operator",
+  "- BEEP_OPPOLD_CORPUS_ROOT=/path/to/corpus BEEP_T7_ROOT=/path/to/t7 bun run beep corpus preserve run",
+  "- BEEP_OPPOLD_CORPUS_ROOT=/path/to/corpus bun run beep corpus preserve verify",
 ]);

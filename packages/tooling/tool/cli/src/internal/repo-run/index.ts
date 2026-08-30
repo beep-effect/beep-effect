@@ -14,5 +14,7 @@ export * from "./RepoRun.models.ts";
 export * from "./RepoRun.proofs.ts";
 export * from "./RunScope.schemas.ts";
 export * from "./RunScope.ts";
+export * from "./RuntimeRoot.schemas.ts";
+export * from "./RuntimeRoot.ts";
 export * from "./TmpfsReap.schemas.ts";
 export * from "./TmpfsReap.ts";

@@ -519,27 +519,15 @@ describe("makePffexportFileProcessingEngine", () => {
         const interpreterPrefix = path.join(fixtureRoot, "interpreter");
         const commandName = `${path.basename(fixtureRoot)}-bash`;
         const interpreterPath = path.join(interpreterPrefix, "bin", commandName);
-        const commandDirectory = path.join(fixtureRoot, "command-bin");
+        const commandDirectory = path.dirname(process.execPath);
         const commandPath = path.join(commandDirectory, commandName);
         const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
         const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
         const bwrapArgumentsPath = path.join(fixtureRoot, "bwrap-arguments");
         yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
-        yield* fs.makeDirectory(commandDirectory, { recursive: true });
         yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
         yield* fs.copy("/bin/bash", interpreterPath);
         yield* fs.chmod(interpreterPath, 0o755);
-        yield* Effect.acquireRelease(
-          Effect.sync(() => {
-            const previousPath = process.env.PATH;
-            process.env.PATH = `${commandDirectory}:${previousPath ?? ""}`;
-            return previousPath;
-          }),
-          (previousPath) =>
-            Effect.sync(() => {
-              process.env.PATH = previousPath;
-            })
-        );
         yield* Effect.acquireRelease(fs.symlink(interpreterPath, commandPath), () =>
           fs.remove(commandPath).pipe(Effect.ignore)
         );

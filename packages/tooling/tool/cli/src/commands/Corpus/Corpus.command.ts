@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
+import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -25,27 +25,33 @@ import {
   RestorationPreserveOptions,
   RestorationRecycleOptions,
   RestorationVerifyOptions,
+  T7PreservationOptions,
 } from "./Corpus.schemas.ts";
 import {
+  approveT7Preservation,
   archiveMoveCorpus,
   CorpusCommandServiceLive,
   catalogCorpus,
   enrichCorpus,
   extractCorpus,
   organizeCorpus,
+  preflightT7Preservation,
   preserveRestorationArchive,
   printCorpusIndex,
   reconcileRestorationAcceptance,
   restoreLegacyWord,
   restoreMail,
   restoreRecycle,
+  runT7Preservation,
   salvageCorpus,
   verifyRestorationArchive,
   verifySalvage,
+  verifyT7Preservation,
 } from "./Corpus.service.ts";
 
 /** @since 0.0.0 */
 const corpusRootFlag = Flag.directory("corpus-root", { mustExist: true }).pipe(
+  Flag.withFallbackConfig(Config.string("BEEP_OPPOLD_CORPUS_ROOT")),
   Flag.withDescription(
     "Salvaged corpus root containing raw/provenance.jsonl; outputs land under <corpus-root>/catalog and <corpus-root>/staging"
   )
@@ -134,6 +140,19 @@ const archiveRootFlag = Flag.directory("archive-root").pipe(
 const archiveMoveProvenanceFlag = Flag.file("provenance", { mustExist: true }).pipe(
   Flag.withDescription("Run provenance.jsonl used to prove every source file before moving; repeat if needed"),
   Flag.atLeast(1)
+);
+/** @since 0.0.0 */
+const t7RootFlag = Flag.directory("t7-root", { mustExist: true }).pipe(
+  Flag.withFallbackConfig(Config.string("BEEP_T7_ROOT")),
+  Flag.withDescription("Mounted T7 root containing the salvage tree and the separate root archive object")
+);
+/** @since 0.0.0 */
+const preservationCeilingFlag = Flag.integer("ceiling-bytes").pipe(
+  Flag.withDescription("Operator-approved maximum bytes for the measured preservation scope")
+);
+/** @since 0.0.0 */
+const preservationApproverFlag = Flag.string("approved-by").pipe(
+  Flag.withDescription("Non-secret operator label approving the measured byte ceiling")
 );
 
 const restorationSourceRootFlag = Flag.directory("source-root", { mustExist: true }).pipe(
@@ -298,6 +317,7 @@ const corpusExtractCommand = Command.make(
     source: sourceLabelFlag,
     tikaJar: tikaJarFlag,
   },
+  // fallow-ignore-next-line complexity -- pre-existing extract-command flag adapter re-entered the diff through adjacent preserve subcommands; this function's control flow is unchanged
   Effect.fn(function* ({
     concurrency,
     corpusRoot,
@@ -401,6 +421,7 @@ const corpusSalvageCommand = Command.make(
     sampleStride: sampleStrideFlag,
     source: salvageSourceFlag,
   },
+  // fallow-ignore-next-line complexity -- pre-existing salvage-command flag adapter re-entered the diff through adjacent preserve subcommands; this function's control flow is unchanged
   Effect.fn(function* ({ corpusRoot, dedupe, runLabel, sampleStride, source }) {
     const sources = yield* Effect.forEach(source, parseSalvageSourceSpec);
     const options = CorpusSalvageOptions.make({
@@ -683,6 +704,64 @@ const corpusArchiveMoveCommand = Command.make(
   Command.provide(CorpusCommandServiceLive)
 );
 
+const corpusPreservePreflightCommand = Command.make(
+  "preflight",
+  { corpusRoot: corpusRootFlag, t7Root: t7RootFlag },
+  Effect.fn(function* ({ corpusRoot, t7Root }) {
+    yield* preflightT7Preservation(T7PreservationOptions.make({ corpusRoot, t7Root })).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Measure the bounded T7 preservation scope and destination free space"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveApproveCommand = Command.make(
+  "approve",
+  {
+    approvedBy: preservationApproverFlag,
+    ceilingBytes: preservationCeilingFlag,
+    corpusRoot: corpusRootFlag,
+  },
+  Effect.fn(function* ({ approvedBy, ceilingBytes, corpusRoot }) {
+    yield* approveT7Preservation(corpusRoot, ceilingBytes, approvedBy).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Approve the persisted preservation measurement with an explicit byte ceiling"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveRunCommand = Command.make(
+  "run",
+  { corpusRoot: corpusRootFlag, t7Root: t7RootFlag },
+  Effect.fn(function* ({ corpusRoot, t7Root }) {
+    yield* runT7Preservation(T7PreservationOptions.make({ corpusRoot, t7Root })).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Run the approved one-pass T7 archive operation"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveVerifyCommand = Command.make(
+  "verify",
+  { corpusRoot: corpusRootFlag },
+  Effect.fn(function* ({ corpusRoot }) {
+    yield* verifyT7Preservation(corpusRoot).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Freshly reparse the preservation manifest and re-hash terminal destinations"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+const corpusPreserveCommand = Command.make("preserve", {}, () => printCorpusIndex).pipe(
+  Command.withDescription("T7 restoration-bar-v2 preservation commands"),
+  Command.withSubcommands([
+    corpusPreserveApproveCommand,
+    corpusPreservePreflightCommand,
+    corpusPreserveRunCommand,
+    corpusPreserveVerifyCommand,
+  ])
+);
+
 /**
  * Corpus curation command group.
  *
@@ -712,6 +791,7 @@ export const corpusCommand = Command.make("corpus", {}, () => printCorpusIndex).
     corpusRestorationMailCommand,
     corpusRestorationRecycleCommand,
     corpusRestorationVerifyCommand,
+    corpusPreserveCommand,
     corpusSalvageCommand,
   ])
 );

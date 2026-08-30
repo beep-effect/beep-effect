@@ -41,7 +41,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../cli/EnvConfig.ts";
 import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
 import {
   AdmissionConfig,
@@ -60,7 +59,9 @@ import {
   runScopeUnitName,
   stopRunScopeForReap,
 } from "./RunScope.ts";
+import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { RuntimeRootKind } from "./RuntimeRoot.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -105,6 +106,44 @@ export interface MemoryStatsShape {
  * @since 0.0.0
  */
 export class MemoryStats extends Context.Service<MemoryStats, MemoryStatsShape>()($I`MemoryStats`) {}
+
+class LegacyAdmissionRootsTestOverride extends Context.Service<
+  LegacyAdmissionRootsTestOverride,
+  ReadonlyArray<string>
+>()($I`LegacyAdmissionRootsTestOverride`) {}
+
+/**
+ * Inject explicit legacy admission roots into an Effect for isolated migration tests.
+ *
+ * **Example** (Avoid host admission state in a migration test)
+ *
+ * ```ts
+ * import { provideLegacyAdmissionRootsForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed("isolated").pipe(provideLegacyAdmissionRootsForTesting(["/tmp/test-legacy"]))
+ * console.log(Effect.runSync(program)) // "isolated"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const provideLegacyAdmissionRootsForTesting: {
+  <Value, Error2, Requirements>(
+    roots: ReadonlyArray<string>
+  ): (self: Effect.Effect<Value, Error2, Requirements>) => Effect.Effect<Value, Error2, Requirements>;
+  <Value, Error2, Requirements>(
+    self: Effect.Effect<Value, Error2, Requirements>,
+    roots: ReadonlyArray<string>
+  ): Effect.Effect<Value, Error2, Requirements>;
+} = dual(
+  2,
+  <Value, Error2, Requirements>(
+    self: Effect.Effect<Value, Error2, Requirements>,
+    roots: ReadonlyArray<string>
+  ): Effect.Effect<Value, Error2, Requirements> => Effect.provideService(self, LegacyAdmissionRootsTestOverride, roots)
+);
 
 const parseMeminfoFieldGib = (meminfo: string, field: string): O.Option<number> =>
   pipe(
@@ -282,21 +321,19 @@ interface AdmissionDirectories {
   readonly quarantine: string;
   readonly queue: string;
   readonly root: string;
+  readonly runtimeKind: typeof RuntimeRootKind.Type;
 }
 
-const admissionRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Return<string, never, Path.Path> {
-  const path = yield* Path.Path;
-  const configured = yield* configStringOption("XDG_RUNTIME_DIR");
-  return pipe(
-    configured,
-    O.filter(Str.isNonEmpty),
-    O.filter(path.isAbsolute),
-    O.match({
-      // Shared tmpdir fallback gets a uid suffix; XDG_RUNTIME_DIR is per-user.
-      onNone: () => path.join(tmpdir(), `beep-admit-uid-${userInfo().uid}`),
-      onSome: (root) => path.join(root, "beep", "admit"),
-    })
-  );
+const admissionDirectoriesFor = (
+  path: Path.Path,
+  root: string,
+  runtimeKind: typeof RuntimeRootKind.Type
+): AdmissionDirectories => ({
+  root,
+  runtimeKind,
+  leases: path.join(root, "leases"),
+  queue: path.join(root, "queue"),
+  quarantine: path.join(root, "quarantine"),
 });
 
 /**
@@ -399,13 +436,10 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* admissionRuntimeRoot();
-  const directories: AdmissionDirectories = {
-    root,
-    leases: path.join(root, "leases"),
-    queue: path.join(root, "queue"),
-    quarantine: path.join(root, "quarantine"),
-  };
+  // The base root is shared with the proof-lock coordinator (RuntimeRoot.ts),
+  // so every session on the machine coordinates under one tree.
+  const choice = yield* perUserRuntimeRoot();
+  const directories = admissionDirectoriesFor(path, admissionRootFor(path, choice), choice.kind);
   yield* Effect.forEach(
     [directories.root, directories.leases, directories.queue, directories.quarantine],
     (directory) =>
@@ -1435,6 +1469,73 @@ const stopLeakedRunScopes = Effect.fnUntraced(function* (
   yield* Effect.forEach(targets, stopRunScopeForReap, { concurrency: 4, discard: true });
 });
 
+const reapLegacyAdmissionRoots = Effect.fnUntraced(function* (
+  roots: ReadonlyArray<string>
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* Effect.forEach(
+    roots,
+    (root) =>
+      Effect.gen(function* () {
+        if (!(yield* fs.exists(root))) {
+          return;
+        }
+        const directories = admissionDirectoriesFor(path, root, "tmpdir");
+        if (!(yield* fs.exists(directories.leases)) || !(yield* fs.exists(directories.queue))) {
+          return;
+        }
+        // A legacy root is only eligible after the same private-directory
+        // validation as the active root. If it is unreadable or unsafe, leave
+        // its scopes untouched rather than guessing ownership.
+        yield* validateAdmissionDirectory(root);
+        yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, true), root);
+      }).pipe(
+        Effect.catch((error) =>
+          Console.warn(`[yeet] legacy admission root ${root} could not be reconciled safely: ${error.message}`)
+        )
+      ),
+    { discard: true }
+  );
+});
+
+/**
+ * Reconcile run scopes recorded under explicit legacy admission roots.
+ *
+ * **Example** (Reference the migration seam)
+ *
+ * ```ts
+ * import { reapLegacyAdmissionRootsForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof reapLegacyAdmissionRootsForTesting) // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const reapLegacyAdmissionRootsForTesting = reapLegacyAdmissionRoots;
+
+const legacyAdmissionRootsFor: {
+  (path: Path.Path, currentRoot: string): ReadonlyArray<string>;
+  (currentRoot: string): (path: Path.Path) => ReadonlyArray<string>;
+} = dual(2, (path: Path.Path, currentRoot: string): ReadonlyArray<string> => {
+  const leaf = `beep-admit-uid-${userInfo().uid}`;
+  return pipe(
+    A.dedupe([path.join(tmpdir(), leaf), path.join("/tmp", leaf)]),
+    A.filter((root) => root !== currentRoot)
+  );
+});
+
+/**
+ * Derive the legacy tmpdir admission roots considered during migration.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const legacyAdmissionRootsForTesting = legacyAdmissionRootsFor;
+
 /**
  * Reap dead admission state (dead pid or `/proc` start-time mismatch).
  *
@@ -1463,6 +1564,15 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
   const directories = yield* ensureAdmissionDirectories();
   if (options.apply) {
     yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false), directories.root);
+    if (directories.runtimeKind === "run-user") {
+      const path = yield* Path.Path;
+      const override = yield* Effect.serviceOption(LegacyAdmissionRootsTestOverride);
+      const legacyRoots = pipe(
+        override,
+        O.getOrElse(() => legacyAdmissionRootsFor(path, directories.root))
+      );
+      yield* reapLegacyAdmissionRoots(legacyRoots);
+    }
   }
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply);
 });
