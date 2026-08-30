@@ -259,7 +259,7 @@ describe("LeJeune deterministic fixture bundle", () => {
     })
   );
 
-  it.effect(
+  it.live(
     "rebuilds identical query outputs from fresh PGlite, DuckDB, and Oxigraph stores",
     Effect.fnUntraced(function* () {
       const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
@@ -983,7 +983,7 @@ describe("LeJeune deterministic fixture bundle", () => {
     })
   );
 
-  it.effect(
+  it.live(
     "replays the same bundle identity with provider and network unavailable",
     Effect.fnUntraced(function* () {
       const recording = yield* S.decodeEffect(ProviderRecordingFromJsonString)(providerRecordingJson);
