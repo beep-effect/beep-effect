@@ -27,6 +27,7 @@ import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
@@ -788,7 +789,7 @@ describe("store read robustness", () => {
     });
 
   it(
-    "rejects an otherwise decodable event whose raw JSON carries an unknown key",
+    "discards unknown keys before computing event identity",
     () =>
       Effect.runPromise(
         Effect.gen(function* () {
@@ -796,8 +797,57 @@ describe("store read robustness", () => {
           const listing = yield* store.list(
             PacketStreamLocator.make({ packet: "golden-linear", root: "goals", packetPath: RAW_UNKNOWN_KEY_PATH })
           );
+          expect(A.length(listing.events)).toBe(1);
+          expect(listing.issues).toStrictEqual([]);
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "rejects a decoded event whose sequence disagrees with its file name",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const store = yield* PacketEventStore;
+          const packetPath = yield* fs.makeTempDirectory();
+          const events = `${packetPath}/ops/events`;
+          const event = genesisEvent("file-name-mismatch");
+          const { id, content } = yield* writeStoredEvent(events, event);
+          yield* fs.writeFileString(`${events}/00002-${event.body.type}-${id}.json`, content);
+          yield* fs.remove(`${events}/${packetEventFileName(event, id)}`);
+
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "file-name-mismatch", root: "goals", packetPath })
+          );
           expect(listing.events).toStrictEqual([]);
-          expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["digest-mismatch"]);
+          expect(A.map(listing.issues, (item) => item.kind)).toStrictEqual(["file-name-mismatch"]);
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "does not recursively canonicalize deeply nested unknown input",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const store = yield* PacketEventStore;
+          const packetPath = yield* fs.makeTempDirectory();
+          const events = `${packetPath}/ops/events`;
+          const event = genesisEvent("deep-unknown");
+          const { id, content } = yield* writeStoredEvent(events, event);
+          const deepUnknown = `${Str.repeat(20_000)("[")}null${Str.repeat(20_000)("]")}`;
+          const hostile = Str.replace("{\n", `{\n  "unknown": ${deepUnknown},\n`)(content);
+          yield* fs.writeFileString(`${events}/${packetEventFileName(event, id)}`, hostile);
+
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "deep-unknown", root: "goals", packetPath })
+          );
+          expect(A.length(listing.events)).toBe(1);
+          expect(listing.issues).toStrictEqual([]);
         }).pipe(provideScopedLayer(testLayer))
       ),
     20_000

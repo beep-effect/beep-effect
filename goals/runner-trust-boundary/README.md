@@ -2,8 +2,8 @@
 
 ## Status
 
-Lifecycle: `completed-retained`; P1 and P2 complete 2026-08-24, P3 through P7
-complete 2026-08-25
+Lifecycle: `active`; P1 and P2 complete 2026-08-24, P3 through P7 complete
+2026-08-25, P8 reactivated 2026-08-30
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,7 +37,8 @@ The complete identity transfer is in [`SPEC.md`](./SPEC.md#findings-transfer).
 
 ## Relationship to fleet packets
 
-This packet owns runner trust-boundary security. The active
+This packet owns runner trust-boundary security, including the post-release
+JIT replay residual. The active
 [`ci-fleet-endgame`](../ci-fleet-endgame/README.md) packet keeps fleet
 performance and architecture ownership and remains P6-gated. The
 completed-retained [`ci-fleet-residue`](../ci-fleet-residue/README.md) packet
@@ -91,7 +92,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Closed. P4 Boundary verification completed on 2026-08-25: the final-head red
+Active at P8 Post-release JIT containment. P4 Boundary verification completed
+on 2026-08-25: the final-head red
 team (run `32893112867` on `4764cdb4ba`) passed Gates A through J, L, and the
 new M JIT-replay gate exactly once each, with `AMI_PIN`, a live
 `METADATA_DISABLED (disabled applied)` sample, scoped deregistration, and EC2
@@ -101,6 +103,10 @@ replay only; post-release replay is exception E1). The live runner-group and
 AWS state were re-read and match the committed controller source. P5 through P7 closed the same day: every remediation PR is merged, the
 six exact Codex IDs are closed as Already fixed with the ledger in
 [`ops/closures.json`](./ops/closures.json), and the reflection is retained.
+The 2026-08-30 security review identified that the packet nevertheless closed
+while post-release replay and argv exposure remained unproved. P8 now owns
+that residual and prevents lifecycle closure until containment or server-side
+replay rejection is demonstrated live.
 Evidence: [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md).
 
 ## Latest Evidence
@@ -123,8 +129,8 @@ inert pre-cutover repository registrations.
 
 - Changing the ratified mechanism, moving heavy pull-request lanes to hosted
   runners, or making admission the primary boundary requires a new operator
-  decision. The packet is completed-retained; reopen it only for such a
-  decision or for a fleet change that invalidates the deployed proof.
+  decision. P8 is a correction to the existing trust-boundary acceptance gate,
+  not a change to the ratified fleet posture.
 - `P1` evidence is retained in `research/P1-EVIDENCE.md`. Every later lockfile
   change on `main` re-stales the image until a new bake is deployed.
 - Never store raw finding bodies, credentials, email addresses, machine IDs, or

@@ -11,7 +11,7 @@
 
 import { platform, tmpdir } from "node:os";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, Number as N, pipe } from "effect";
+import { DateTime, Effect, flow, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
@@ -233,14 +233,12 @@ const RUN_SCOPE_DESCRIPTION_PREFIX = "beep-yeet-lease";
 const runScopeDescription = (ticketId: string, ownerRoot: string): string =>
   `${RUN_SCOPE_DESCRIPTION_PREFIX} nonce=${ticketId} root=${ownerRoot}`;
 
-const ownerRootFromDescription = (description: string): O.Option<string> =>
-  pipe(
-    description,
-    Str.match(/^beep-yeet-lease nonce=.* root=(.+)$/u),
-    O.flatMap((matched) => O.fromUndefinedOr(matched[1])),
-    O.map(Str.trim),
-    O.filter(Str.isNonEmpty)
-  );
+const ownerRootFromDescription = flow(
+  Str.match(/^beep-yeet-lease nonce=.* root=(.+)$/u),
+  O.flatMap((matched) => O.fromUndefinedOr(matched[1])),
+  O.map(Str.trim),
+  O.filter(Str.isNonEmpty)
+);
 
 /**
  * Read the admission root recorded as the owner of one run scope.
@@ -278,13 +276,11 @@ export const readRunScopeOwnerRoot = Effect.fn("RunScope.readRunScopeOwnerRoot")
   );
 });
 
-const parseTelemetryValue = (value: O.Option<string>): O.Option<number> =>
-  pipe(
-    value,
-    O.map(Str.trim),
-    O.filter((text) => Str.isNonEmpty(text) && text !== "[not set]"),
-    O.flatMap(N.parse)
-  );
+const parseTelemetryValue = flow(
+  O.map(Str.trim),
+  O.filter((text) => Str.isNonEmpty(text) && text !== "[not set]"),
+  O.flatMap(N.parse)
+);
 
 const telemetryProperty = (lines: ReadonlyArray<string>, property: string): O.Option<number> =>
   parseTelemetryValue(
@@ -350,49 +346,6 @@ export const stopRunScopeForReap = Effect.fn("RunScope.stopRunScopeForReap")(fun
   unitName: string
 ): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
   yield* runScopeCommand("systemctl", ["--user", "stop", unitName]);
-});
-
-/**
- * List the run-scope units currently loaded by the systemd user manager.
- *
- * The reaper compares this census against live leases so scopes kept alive by
- * detached descendants are stopped once no lease owns them, after confirming
- * with {@link readRunScopeOwnerRoot} that the scope belongs to the reaper's own
- * admission root. Spawn and command failures become an empty census.
- *
- * **Example** (Reference the scope census)
- *
- * ```ts
- * import { listRunScopeUnits } from "@beep/repo-cli/test/RepoRun"
- *
- * console.log(typeof listRunScopeUnits) // "function"
- * ```
- *
- * @returns Loaded `agent-run-*.scope` unit names.
- * @category admission
- * @since 0.0.0
- */
-export const listRunScopeUnits = Effect.fn("RunScope.listRunScopeUnits")(function* (): Effect.fn.Return<
-  ReadonlyArray<string>,
-  never,
-  ChildProcessSpawner.ChildProcessSpawner
-> {
-  const listed = yield* runScopeCommand("systemctl", [
-    "--user",
-    "list-units",
-    "--plain",
-    "--no-legend",
-    "agent-run-*.scope",
-  ]);
-  if (O.isNone(listed) || listed.value.exitCode !== 0) {
-    return [];
-  }
-  return pipe(
-    Str.split(listed.value.output, "\n"),
-    A.map(Str.trim),
-    A.filter(Str.isNonEmpty),
-    A.map((line) => A.headNonEmpty(Str.split(line, /\s+/u)))
-  );
 });
 
 /**

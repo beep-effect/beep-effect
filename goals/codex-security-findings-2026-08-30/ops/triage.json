@@ -1,0 +1,367 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "security/codex-findings-2026-08-30",
+    "expectedCount": 11,
+    "capturedCount": 11,
+    "capturedAt": "2026-08-30",
+    "captureMethod": "signed-in-csv-export",
+    "note": "Current-HEAD validation is complete. Ten findings are remediated on this branch and one was already fixed on main by #876; repo proof remains in progress."
+  },
+  "lanes": {
+    "L1-agent-tool-boundaries": {
+      "status": "implemented",
+      "findings": ["CSF-001", "CSF-002"]
+    },
+    "L2-runtime-config-governance": {
+      "status": "implemented",
+      "findings": ["CSF-003", "CSF-004"]
+    },
+    "L3-bootstrap-integrity": {
+      "status": "implemented",
+      "findings": ["CSF-005", "CSF-010"]
+    },
+    "L4-bounded-runtime-behavior": {
+      "status": "implemented",
+      "findings": ["CSF-006", "CSF-007", "CSF-008", "CSF-011"]
+    },
+    "L5-docs-supply-chain": { "status": "implemented", "findings": ["CSF-009"] }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "4cd67192c1088191a93381516271f51e",
+      "title": "Page-controlled validation hook enables host command execution",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "80d16e50c8c3ed2d80bcd0d8afd0773d23869f20",
+      "ownerArea": "Impeccable live copy-edit host boundary",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-agent-tool-boundaries",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The page-visible token launched host-side agents, and post-apply checks executed a repository-defined script through a shell."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          ".claude/skills/impeccable/scripts/live/manual-edit-routes.mjs",
+          ".claude/skills/impeccable/scripts/live-copy-edit-agent.mjs",
+          ".claude/skills/impeccable/scripts/live-server.mjs",
+          ".github/skills/impeccable/scripts/live/manual-edit-routes.mjs",
+          ".github/skills/impeccable/scripts/live-copy-edit-agent.mjs",
+          ".github/skills/impeccable/scripts/live-server.mjs",
+          "packages/tooling/tool/cli/test/skills-provenance.test.ts"
+        ],
+        "verificationCommands": [
+          "targeted skill security regression test",
+          "bun run beep yeet verify"
+        ],
+        "summary": "A separate operator capability gates host mutation, and repository-defined validation commands are not executed."
+      }
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "84e157bd2ccc8191831738dfd18514fb",
+      "title": "Auditor executes repository-supplied adapters on the host",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "3506c59de3fba951e1a25237ddd89101bd7cedce",
+      "ownerArea": "ontology foundational auditor adapter execution",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L1-agent-tool-boundaries",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The skill executed an adapter stored in the audited repository with the host interpreter and ambient access."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          ".claude/skills/ontology-foundational-auditor/SKILL.md",
+          ".claude/skills/ontology-foundational-auditor/scripts/run_adapter_sandbox.sh",
+          "packages/tooling/tool/cli/test/skills-provenance.test.ts"
+        ],
+        "verificationCommands": [
+          "bash syntax validation",
+          "targeted skill security regression test"
+        ],
+        "summary": "Trusted adapters run outside the repository in a fail-closed read-only, no-network, resource-bounded sandbox."
+      }
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "0ba9252f73048191bc143b5732736004",
+      "title": "Codex sessions now run unsandboxed without approval",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "6041ec475aee0c82baa39548e04ada39fa8d9cb6",
+      "ownerArea": "repository Codex permission configuration",
+      "verdict": "already-fixed",
+      "disposition": "already-fixed",
+      "lane": "L2-runtime-config-governance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Current main commit 4ac6aa5cd6 removes both repository permission pins and rejects reintroduction."
+      },
+      "remediation": {
+        "status": "not-required",
+        "changedFiles": [
+          ".codex/config.toml",
+          "packages/tooling/library/ai-sync/src/validation.ts",
+          "packages/tooling/library/ai-sync/test/ai-sync.test.ts"
+        ],
+        "verificationCommands": [
+          "git merge-base --is-ancestor 4ac6aa5cd6 HEAD",
+          "bun run beep yeet verify"
+        ],
+        "summary": "Already fixed on main by #876; repository config inherits the user's permission policy."
+      }
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "8d271604a6888191aba0d2a8f31ef2b4",
+      "title": "Packet closes while runner JIT credential remains exposed",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "64281ea9986f3536255fff823850614e129a026b",
+      "ownerArea": "runner trust-boundary packet lifecycle",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L2-runtime-config-governance",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The packet closed with its post-release replay item unchecked, while the receiving fleet packet did not track the residual."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "goals/runner-trust-boundary/README.md",
+          "goals/runner-trust-boundary/GOAL.md",
+          "goals/runner-trust-boundary/PLAN.md",
+          "goals/runner-trust-boundary/SPEC.md",
+          "goals/runner-trust-boundary/ops/manifest.json"
+        ],
+        "verificationCommands": [
+          "packet manifest validation",
+          "bun run beep goals doctor",
+          "bun run beep goals index --check"
+        ],
+        "summary": "The runner packet is active at P8 and owns containment or post-release replay proof before closing."
+      }
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "022c47c20a1c81918bf8772c0581f88e",
+      "title": "Unanchored GPG status check permits forged op binary",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "2c0c8eb04699341b02890602a39b9caf522ac101",
+      "ownerArea": "Cursor cloud bootstrap signature verification",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L3-bootstrap-integrity",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The GPG parser accepted pinned VALIDSIG text anywhere in output."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          ".cursor/install.sh",
+          "packages/tooling/tool/cli/test/runners-bake.test.ts"
+        ],
+        "verificationCommands": [
+          "bash -n .cursor/install.sh",
+          "targeted bootstrap security regression test"
+        ],
+        "summary": "Verification requires an anchored GnuPG status record for the exact fingerprint."
+      }
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "0bdf89a067648191b422fe675dd0780a",
+      "title": "Empty folded quote causes infinite anchor search",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "2977c32e2524f4fe9966d9dcf561041aafe8f51e",
+      "ownerArea": "Semantica gold quote anchoring",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-bounded-runtime-behavior",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "A discretionary line-break quote folded to an empty, non-advancing search."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "apps/labs/semantica/src/canary/Gold.ts",
+          "apps/labs/semantica/test/Gold.test.ts"
+        ],
+        "verificationCommands": [
+          "Semantica Gold regression test",
+          "@beep/semantica package verification"
+        ],
+        "summary": "Empty raw and folded quotes fail closed before occurrence search."
+      }
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "5167e0476d4c8191bad46d2e7d96d96f",
+      "title": "Raw event digesting enables stack-exhaustion denial of service",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "80c5693d2a6bb7c25163d392839f1dfc80e1cf97",
+      "ownerArea": "repo-cli packet event store",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-bounded-runtime-behavior",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The read path recursively canonicalized schema-unknown nested input."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts",
+          "packages/tooling/tool/cli/test/goals-packet-core.test.ts"
+        ],
+        "verificationCommands": [
+          "packet-core deep unknown-key regression test",
+          "@beep/repo-cli package verification"
+        ],
+        "summary": "Identity is computed from the decoded event after unknown input is discarded."
+      }
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "8c5243aa119881919c825d3a0f142ecd",
+      "title": "Applied reap can race with admission and kill live work",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "48358da0367bda8c1fd865f63c9531883b00a97a",
+      "ownerArea": "repo-cli quality admission scheduler",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-bounded-runtime-behavior",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The reaper treated absence from one lease snapshot as authority to stop loaded scopes."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "AGENTS.md",
+          "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "packages/tooling/tool/cli/src/internal/repo-run/RunScope.ts",
+          "packages/tooling/tool/cli/test/quality-scheduler.test.ts"
+        ],
+        "verificationCommands": [
+          "quality scheduler race regression test",
+          "@beep/repo-cli package verification"
+        ],
+        "summary": "Only scopes backed by a verified dead lease may be stopped, and the loaded-scope census capability was removed."
+      }
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "995a450483d48191938dfeef27a75564",
+      "title": "Unpinned CDN script can steal credentials entered in docs UI",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "09bd930bbc173f2846b54585f60254a5ecbdfa44",
+      "ownerArea": "API docs committed-spec Scalar UI",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L5-docs-supply-chain",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The docs UI executed an unversioned third-party CDN script in its credential-bearing origin."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "apps/labs/api-docs/src/Docs.routes.ts",
+          "apps/labs/api-docs/test/Docs.routes.test.ts"
+        ],
+        "verificationCommands": [
+          "API docs route regression test",
+          "security advisory scan",
+          "@beep/api-docs package verification"
+        ],
+        "summary": "Effect's embedded Scalar 1.43.5 bundle is served same-origin and protected by a self-only script CSP without a new dependency."
+      }
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "e9660bfcc3e88191973971212b8131f0",
+      "title": "Cloud bootstrap executes a mutable remote installer",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "fa420919d3154a5f6ab21c64012c7cb5c16a670a",
+      "ownerArea": "Cursor cloud Bun bootstrap",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L3-bootstrap-integrity",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Bootstrap piped a mutable remote installer into a shell despite pinned local inputs."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          ".cursor/install.sh",
+          "packages/tooling/tool/cli/test/runners-bake.test.ts"
+        ],
+        "verificationCommands": [
+          "bash -n .cursor/install.sh",
+          "targeted bootstrap security regression test"
+        ],
+        "summary": "Bootstrap verifies the exact Bun release archive against the repository-pinned SHA-256."
+      }
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "fa191f71f5d48191aa9f31d544cee2e7",
+      "title": "Symlinked tmp entry deletes worktrees outside TMPDIR",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "fdf03d344df6f46452bc7a740d5b46ebc6a024a7",
+      "ownerArea": "repo-cli tmpfs reaper",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "lane": "L4-bounded-runtime-behavior",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Top-level discovery followed symlinks while removal retained the lexical path."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+          "packages/tooling/tool/cli/test/tmpfs-reap.test.ts"
+        ],
+        "verificationCommands": [
+          "tmpfs symlink-escape regression test",
+          "@beep/repo-cli package verification"
+        ],
+        "summary": "Discovery rejects symlinks and escapes, records each root, and revalidates before apply."
+      }
+    }
+  ]
+}

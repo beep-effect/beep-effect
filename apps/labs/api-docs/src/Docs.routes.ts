@@ -8,6 +8,7 @@
 import { escapeHtml } from "@beep/utils/Html";
 import { Effect, FileSystem, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { HttpApiScalar, OpenApi } from "effect/unstable/httpapi";
 import { ApiAudience } from "./Catalog.models.ts";
@@ -16,6 +17,16 @@ import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Cat
 
 const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
 const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;
+const SCALAR_SCRIPT_PATH = "/assets/scalar-api-reference-1.43.5.js";
+const ScalarScriptModuleUrl = new URL("./internal/httpApiScalar.js", import.meta.resolve("effect/unstable/httpapi"));
+const ScalarScriptModule = S.Struct({ javascript: S.String });
+const decodeScalarScriptModule = S.decodeUnknownEffect(ScalarScriptModule);
+const SPEC_DOCS_SECURITY_HEADERS = {
+  "content-security-policy":
+    "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https: http:; base-uri 'none'; frame-ancestors 'none'",
+  "referrer-policy": "no-referrer",
+  "x-content-type-options": "nosniff",
+};
 
 const rawSpecPath = (entry: CatalogEntry): HttpRouter.PathInput =>
   Match.value(entry.source).pipe(
@@ -107,6 +118,19 @@ const readSpecResponse = Effect.fn("ApiDocs.readSpecResponse")(function* (
   return HttpServerResponse.uint8Array(bytes, { contentType: contentType(source.format) });
 });
 
+const readScalarScriptResponse = Effect.fn("ApiDocs.readScalarScriptResponse")(function* () {
+  const scalarScriptModule = yield* Effect.tryPromise(() => import(ScalarScriptModuleUrl.href)).pipe(
+    Effect.flatMap(decodeScalarScriptModule)
+  );
+  return HttpServerResponse.text(scalarScriptModule.javascript, {
+    contentType: "text/javascript; charset=utf-8",
+    headers: {
+      "cache-control": "public, max-age=31536000, immutable",
+      "x-content-type-options": "nosniff",
+    },
+  });
+});
+
 const specDocsHtml = (entry: CatalogEntry): string => `<!doctype html>
 <html lang="en">
   <head>
@@ -116,9 +140,12 @@ const specDocsHtml = (entry: CatalogEntry): string => `<!doctype html>
   </head>
   <body>
     <script id="api-reference" data-url="${rawSpecPath(entry)}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <script src="${SCALAR_SCRIPT_PATH}"></script>
   </body>
 </html>`;
+
+const specDocsResponse = (entry: CatalogEntry): HttpServerResponse.HttpServerResponse =>
+  HttpServerResponse.html(specDocsHtml(entry)).pipe(HttpServerResponse.setHeaders(SPEC_DOCS_SECURITY_HEADERS));
 
 const contractLayer = (entry: CatalogEntry, source: Extract<CatalogSource, { readonly _tag: "ContractSource" }>) =>
   source.withApi((api) =>
@@ -137,7 +164,7 @@ const specLayer = (entry: CatalogEntry, source: Extract<CatalogSource, { readonl
   );
   const docsRoute = Match.value(source.dialect).pipe(
     Match.when("json-schema-2020-12", () => Layer.empty),
-    Match.orElse(() => HttpRouter.add("GET", docsPath(entry.meta.slug), HttpServerResponse.html(specDocsHtml(entry))))
+    Match.orElse(() => HttpRouter.add("GET", docsPath(entry.meta.slug), specDocsResponse(entry)))
   );
 
   return Layer.merge(rawRoute, docsRoute);
@@ -152,6 +179,7 @@ const entryLayer = (entry: CatalogEntry) =>
   );
 
 const IndexRoute = HttpRouter.add("GET", "/", HttpServerResponse.html(indexHtml()));
+const ScalarScriptRoute = HttpRouter.add("GET", SCALAR_SCRIPT_PATH, readScalarScriptResponse());
 
 /**
  * Router layer for the catalog index, Scalar documentation pages, and raw specifications.
@@ -172,4 +200,4 @@ const IndexRoute = HttpRouter.add("GET", "/", HttpServerResponse.html(indexHtml(
  * @category layers
  * @since 0.0.0
  */
-export const CatalogRoutes = Layer.mergeAll(IndexRoute, ...A.map(Catalog, entryLayer));
+export const CatalogRoutes = Layer.mergeAll(IndexRoute, ScalarScriptRoute, ...A.map(Catalog, entryLayer));

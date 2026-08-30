@@ -104,6 +104,19 @@ export function createManualEditRoutes({
         res.end("Unauthorized");
         return true;
       }
+      // The page-visible session token may stage edits, but it is not enough
+      // to launch a host-side agent or mutate repository files. An operator
+      // must provide a separate capability outside the inspected page.
+      const expectedCommitCapability = String(currentEnv().IMPECCABLE_LIVE_COMMIT_CAPABILITY || "").trim();
+      const providedCommitCapability = String(req.headers["x-impeccable-commit-capability"] || "").trim();
+      if (!expectedCommitCapability || providedCommitCapability !== expectedCommitCapability) {
+        sendJson(res, 403, {
+          error: "manual_edit_commit_requires_operator_capability",
+          message:
+            "Edits remain staged. Set IMPECCABLE_LIVE_COMMIT_CAPABILITY outside the page and submit the matching header from a trusted operator client.",
+        });
+        return true;
+      }
       const pageUrl = url.searchParams.get("pageUrl");
       const asyncMode = /^(1|true|yes)$/i.test(url.searchParams.get("async") || "");
       const repairOnly = /^(1|true|yes)$/i.test(url.searchParams.get("repair") || "");
@@ -162,7 +175,8 @@ export function createManualEditRoutes({
               transaction = existingTransaction;
             }
           }
-          const envValue = currentEnv();
+          const envValue = { ...currentEnv() };
+          delete envValue.IMPECCABLE_LIVE_COMMIT_CAPABILITY;
           const requestedMode = (envValue.IMPECCABLE_LIVE_COPY_AGENT || "auto").trim().toLowerCase();
           const useChatRoute = requestedMode === "chat" || (requestedMode === "auto" && chatAgentLikelyActive());
           if (useChatRoute) {

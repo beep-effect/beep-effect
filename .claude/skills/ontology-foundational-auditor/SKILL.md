@@ -250,22 +250,34 @@ MODEL="<model-id-recorded-in-manifest>"
 
 # Step 1 — create the manifest FROM the exemplar, then pin digests into it
 # (FULL sha256 for record ids; 12-hex short forms for manifest display fields).
-# Adapter scripts are PER-RUN artifacts you author at $ONT/adapters/ — one per
-# source language/format in scope (adapter-typescript.py is an EXAMPLE name;
-# a Python/Rust/protobuf/config corpus gets its own adapter, same contract).
+# Adapter scripts are PER-RUN artifacts, but repository copies are NEVER
+# executed. Author or audit each adapter in a fresh, user-owned 0700 directory
+# outside the audited repository. Adapters use the Python standard library so
+# the sandbox needs no package cache or writable environment.
+TRUSTED_ADAPTER_DIR=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/ontology-adapter.XXXXXX")
+chmod 700 "$TRUSTED_ADAPTER_DIR"
+TRUSTED_ADAPTER=$TRUSTED_ADAPTER_DIR/adapter-typescript.py  # author here; do not seed from $ONT/adapters
+RUN_ADAPTER="$SKILL/scripts/run_adapter_sandbox.sh"
 [ -e $WORK/run-manifest.yaml ] || cp $SHARED/schemas/run-manifest.schema.yaml $WORK/run-manifest.yaml   # NEVER overwrite an existing manifest — it is run provenance
 # then EDIT every field; find -type f (a bare glob hits the golden/ directory)
 sha256sum $ONT/docs/competency-questions.yaml $ONT/docs/scope.md $SKILL/prompts/*.md
 find $ONT/adapters -type f -exec sha256sum {} +
 
-# Step 2 — Observe: observations come from the committed per-run adapter;
-# prove it on its golden fixture FIRST, then run, then verify fidelity.
+# Step 2 — Observe: prove the trusted adapter on its golden fixture FIRST, then
+# run it in a read-only, no-network bubblewrap sandbox with a scrubbed
+# environment, bounded resources, and one dedicated writable output. The
+# runner rejects symlinked, repository-resident, foreign-owned, or
+# group/world-writable adapter locations and fails closed when isolation tools
+# are unavailable. Only after both runs succeed may its byte-identical snapshot
+# be installed as provenance under $ONT/adapters/.
 # (The dispositions index is a COMPLETION invariant — the validator does not
 # demand it until proposals exist, so this stage-boundary check is green on a
 # legitimate observe-stage tree.)
-ADAPTER=$ONT/adapters/adapter-typescript.py   # set to YOUR adapter for this corpus
-UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.uv-cache}" uv run --offline --with pyyaml python "$ADAPTER" --self-check $ONT/adapters/golden/
-UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.uv-cache}" uv run --offline --with pyyaml python "$ADAPTER" --repo . --out $WORK/observations
+ADAPTER=$ONT/adapters/adapter-typescript.py   # committed provenance copy; never execute this path
+"$RUN_ADAPTER" "$TRUSTED_ADAPTER" . self-check $ONT/adapters/golden/
+"$RUN_ADAPTER" "$TRUSTED_ADAPTER" . observe $WORK/observations
+install -m 0644 "$TRUSTED_ADAPTER" "$ADAPTER"
+cmp -s "$TRUSTED_ADAPTER" "$ADAPTER" || { echo "refusing: committed adapter differs from trusted bytes"; exit 1; }
 VAL $ONT --repo .
 #   record id = full digest, computed INSIDE the adapter with the CANONICAL
 #   serialization the validator RECOMPUTES (see source-observation.schema.yaml):
@@ -394,7 +406,7 @@ fi
 # IDS (filenames prove nothing — two runs can name files alike with different
 # content; the rerun tree is GENERATED here, it does not preexist)
 mkdir -p $WORK-rerun/observations
-UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.uv-cache}" uv run --offline --with pyyaml python "$ADAPTER" --repo . --out $WORK-rerun/observations
+"$RUN_ADAPTER" "$TRUSTED_ADAPTER" . observe $WORK-rerun/observations
 diff <(grep -h '^id:' $WORK/observations/*.yaml | sort) <(grep -h '^id:' $WORK-rerun/observations/*.yaml | sort)
 ```
 

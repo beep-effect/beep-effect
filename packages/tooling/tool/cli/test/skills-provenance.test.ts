@@ -26,6 +26,7 @@ import {
   SkillUpstreamContentFile,
   SkillUpstreamContentSource,
 } from "@beep/repo-cli/commands/Skills";
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
@@ -320,6 +321,37 @@ layer(TestLayer)("skills provenance service", (it) => {
       expect((yield* decodeSkillSnapshot(snapshot(1))).fileCount).toBe(1);
       expect(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(0))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(2))))).toBe(true);
+    })
+  );
+
+  it.effect("keeps browser-triggered skill workflows behind host trust boundaries", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const impeccableRoute = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/impeccable/scripts/live/manual-edit-routes.mjs")
+      );
+      const githubRoute = yield* fs.readFileString(
+        path.join(repoRoot, ".github/skills/impeccable/scripts/live/manual-edit-routes.mjs")
+      );
+      const copyAgent = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/impeccable/scripts/live-copy-edit-agent.mjs")
+      );
+      const adapterRunner = yield* fs.readFileString(
+        path.join(repoRoot, ".claude/skills/ontology-foundational-auditor/scripts/run_adapter_sandbox.sh")
+      );
+
+      expect(impeccableRoute).toBe(githubRoute);
+      expect(impeccableRoute).toContain("IMPECCABLE_LIVE_COMMIT_CAPABILITY");
+      expect(impeccableRoute).toContain("x-impeccable-commit-capability");
+      expect(impeccableRoute).toContain("delete envValue.IMPECCABLE_LIVE_COMMIT_CAPABILITY");
+      expect(copyAgent).not.toContain("impeccable:manual-edit-validate");
+      expect(copyAgent).not.toContain("spawnSync(script");
+      expect(adapterRunner).toContain("--unshare-all");
+      expect(adapterRunner).toContain('--ro-bind "${repo}" /repo');
+      expect(adapterRunner).toContain("--clearenv");
+      expect(adapterRunner).toContain("adapter must live outside the audited repository");
     })
   );
 });

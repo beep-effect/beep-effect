@@ -47,6 +47,7 @@ const isProcPidName = S.is(ProcPidName);
 
 type DiscoveredCandidate = {
   readonly path: string;
+  readonly discoveryRoot: string;
   readonly reapClass: TmpfsReapClass;
   readonly idleSinceMillis: number;
   readonly classified: boolean;
@@ -146,7 +147,8 @@ const parentRepoFromGitDir = (pathService: Path.Path, candidatePath: string, git
 
 const discoverGitWorktree = Effect.fnUntraced(function* (
   candidatePath: string,
-  idleSinceMillis: number
+  idleSinceMillis: number,
+  discoveryRoot: string
 ): Effect.fn.Return<O.Option<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
@@ -165,6 +167,7 @@ const discoverGitWorktree = Effect.fnUntraced(function* (
       const parentRepo = parentRepoFromGitDir(pathService, candidatePath, gitDir);
       return {
         path: candidatePath,
+        discoveryRoot,
         reapClass: "git-worktree",
         idleSinceMillis,
         classified: O.isSome(parentRepo),
@@ -211,6 +214,18 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const pathService = yield* Path.Path;
   const candidatePath = pathService.join(root, name);
+  const fs = yield* FileSystem.FileSystem;
+  if (O.isSome(yield* fs.readLink(candidatePath).pipe(Effect.option))) {
+    return O.none();
+  }
+  const canonicalPath = yield* fs.realPath(candidatePath).pipe(Effect.option);
+  if (
+    O.isNone(canonicalPath) ||
+    canonicalPath.value !== pathService.normalize(candidatePath) ||
+    !pathIsWithin(pathService, root, canonicalPath.value)
+  ) {
+    return O.none();
+  }
   if (!(yield* isDirectory(candidatePath))) {
     return O.none();
   }
@@ -218,6 +233,7 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
   if (Str.startsWith(HEAD_INSTALL_PREFIX)(name)) {
     return O.some({
       path: candidatePath,
+      discoveryRoot: root,
       reapClass: "head-install",
       idleSinceMillis: candidateMtime,
       classified: true,
@@ -227,6 +243,7 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
   if (Str.startsWith(FALLOW_CACHE_PREFIX)(name)) {
     return O.some({
       path: candidatePath,
+      discoveryRoot: root,
       reapClass: "fallow-cache",
       idleSinceMillis: yield* fallowIdleSinceMillis(candidatePath, candidateMtime, siblingNames),
       classified: true,
@@ -236,13 +253,14 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
   if (isScopedTempName(name)) {
     return O.some({
       path: candidatePath,
+      discoveryRoot: root,
       reapClass: "scoped-temp",
       idleSinceMillis: candidateMtime,
       classified: true,
       parentRepo: O.none(),
     });
   }
-  return yield* discoverGitWorktree(candidatePath, candidateMtime);
+  return yield* discoverGitWorktree(candidatePath, candidateMtime, root);
 });
 
 const discoverTopLevel = Effect.fnUntraced(function* (
@@ -259,8 +277,12 @@ const discoverCacheHeadInstalls = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
-  const configuredBase = pathService.join(cacheRoot, "beep", "head-install");
+  const canonicalCacheRoot = yield* fs.realPath(cacheRoot).pipe(Effect.orElseSucceed(() => cacheRoot));
+  const configuredBase = pathService.join(canonicalCacheRoot, "beep", "head-install");
   const base = yield* fs.realPath(configuredBase).pipe(Effect.orElseSucceed(() => configuredBase));
+  if (!pathIsWithin(pathService, canonicalCacheRoot, base)) {
+    return A.empty();
+  }
   const names = yield* directoryNames(base);
   const headNames = A.filter(names, Str.startsWith(HEAD_INSTALL_PREFIX));
   return A.getSomes(
@@ -274,10 +296,18 @@ const discoverExplicitGitWorktrees = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
+  const lexicalPaths = A.filter(A.dedupe(candidatePaths), (candidate) => pathIsWithin(pathService, tmpRoot, candidate));
   const canonicalPaths = A.getSomes(
-    yield* Effect.forEach(A.dedupe(candidatePaths), (candidate) => fs.realPath(candidate).pipe(Effect.option), {
-      concurrency: 16,
-    })
+    yield* Effect.forEach(
+      lexicalPaths,
+      Effect.fnUntraced(function* (candidate: string) {
+        if (O.isSome(yield* fs.readLink(candidate).pipe(Effect.option))) {
+          return O.none<string>();
+        }
+        return yield* fs.realPath(candidate).pipe(Effect.option);
+      }),
+      { concurrency: 16 }
+    )
   );
   const safePaths = A.filter(canonicalPaths, (candidate) => pathIsWithin(pathService, tmpRoot, candidate));
   return A.getSomes(
@@ -288,7 +318,7 @@ const discoverExplicitGitWorktrees = Effect.fnUntraced(function* (
           return O.none<DiscoveredCandidate>();
         }
         const mtime = O.getOrElse(yield* statMtimeMillis(candidatePath), () => 0);
-        return yield* discoverGitWorktree(candidatePath, mtime);
+        return yield* discoverGitWorktree(candidatePath, mtime, tmpRoot);
       }),
       { concurrency: 16 }
     )
@@ -488,7 +518,7 @@ const releaseNestedHeadInstallCheckout = Effect.fnUntraced(function* (
   }
   const pathService = yield* Path.Path;
   const checkout = pathService.join(candidate.path, "checkout");
-  const nested = yield* discoverGitWorktree(checkout, candidate.idleSinceMillis);
+  const nested = yield* discoverGitWorktree(checkout, candidate.idleSinceMillis, candidate.path);
   if (O.isNone(nested) || O.isNone(nested.value.parentRepo)) {
     return A.empty();
   }
@@ -551,11 +581,31 @@ const removeGitWorktreeCandidate = Effect.fnUntraced(function* (
   };
 });
 
+const candidatePathIsStillSafe = Effect.fnUntraced(function* (
+  candidate: DiscoveredCandidate
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  if (O.isSome(yield* fs.readLink(candidate.path).pipe(Effect.option))) {
+    return false;
+  }
+  return pipe(
+    yield* fs.realPath(candidate.path).pipe(Effect.option),
+    O.exists(
+      (canonicalPath) =>
+        canonicalPath === candidate.path && pathIsWithin(pathService, candidate.discoveryRoot, canonicalPath)
+    )
+  );
+});
+
 const applyCandidate = Effect.fnUntraced(function* (
   candidate: MeasuredCandidate
 ): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
   if (O.isSome(candidate.skipReason)) {
     return { reaped: false, warnings: [] };
+  }
+  if (!(yield* candidatePathIsStillSafe(candidate.discovered))) {
+    return emptyApplyOutcome(`Skipped ${candidate.discovered.path}: path changed or escaped its discovery root.`);
   }
   if (candidate.discovered.reapClass === "git-worktree") {
     return yield* removeGitWorktreeCandidate(candidate.discovered);

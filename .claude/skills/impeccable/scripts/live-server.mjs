@@ -1703,7 +1703,7 @@ Endpoints:
   /events              SSE stream (server→browser) + POST (browser→server)
   /poll                Long-poll for agent CLI
   /manual-edit-stash   Stage browser copy edits
-  /manual-edit-commit  Apply staged browser copy edits
+  /manual-edit-commit  Apply staged edits (requires an operator-only capability header)
   /manual-edit-discard Discard staged browser copy edits
   /source              Raw source file reader (no-HMR fallback)
   /status              Durable recovery status (token-protected)

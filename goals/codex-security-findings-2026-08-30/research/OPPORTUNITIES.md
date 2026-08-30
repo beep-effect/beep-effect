@@ -1,0 +1,75 @@
+# Opportunities
+
+## 2026-08-30 — focused V8 coverage cannot merge the hostile-depth fixture
+
+- Work: measured focused coverage after hardening packet-event identity against
+  deeply nested unknown input.
+- Evidence: the four-file focused Vitest coverage command reached coverage
+  aggregation, then failed while merging V8 ranges with `RangeError: Maximum
+  call stack size exceeded`. The canonical full CLI coverage run processed the
+  same 20,000-level fixture successfully.
+- Prevention: make focused coverage aggregation robust to adversarial nesting,
+  or provide a coverage-safe regression harness that preserves the hostile
+  input depth without recursively nested V8 range data.
+
+## 2026-08-30 — Yeet continues heavy work after deterministic index drift
+
+- Work: refreshed the branch onto the latest `origin/main`, then ran the
+  canonical Yeet repair lane.
+- Evidence: cheap preflight reported `bun run beep goals index --check` as
+  failed, but Yeet continued through full docgen, build, lint, and the 2,586
+  test CLI suite. The sole test failure was the same stale `goals/INDEX.md`
+  content; 2,585 tests passed.
+- Prevention: stop the heavy feedback phase when a deterministic generated
+  artifact check fails, or let repair regenerate the goal index before unit
+  tests begin.
+
+## 2026-08-30 — Fallow misses an `import.meta.resolve` dependency edge
+
+- Work: replaced the API docs CDN script with the exact installed Scalar
+  standalone browser asset.
+- Evidence: Fallow reported `@scalar/api-reference` as an introduced unused
+  dependency even though `Docs.routes.ts` resolves its exported asset with
+  `import.meta.resolve`. The subsequent security lane rejected that attempted
+  dependency-based design, so the branch now reuses Effect's existing bundle
+  and carries no detector exception.
+- Prevention: teach the dependency analyzer to recognize statically known
+  `import.meta.resolve` package specifiers.
+
+## 2026-08-30 — localizing Scalar initially expanded advisory exposure
+
+- Work: replaced a mutable CDN script with an exact local Scalar package.
+- Evidence: Yeet's OSV lane rejected the first implementation because the new
+  package added four medium or unknown transitive advisories through
+  `ts-deepmerge` and `unhead`; Bun's high-severity audit alone remained green.
+- Prevention: run the OSV lane immediately after dependency-graph changes, and
+  expose Effect's embedded Scalar asset through a supported public API so apps
+  do not need either a second Scalar dependency or a resolved internal module.
+
+## 2026-08-30 — package verification cannot isolate touched CLI surfaces
+
+- Work: required `@beep/repo-cli` package handoff after the scheduler, packet
+  store, tmpfs reaper, and security-regression changes.
+- Evidence: `bun run beep quality package-verify @beep/repo-cli` passed docgen
+  but its audit stopped during build on preexisting errors in
+  `src/commands/AIMetrics/**` and
+  `src/commands/AgentEffectiveness/internal/EvalRecord.ts`. Those paths have no
+  diff from `origin/main`; the scoped package check and focused touched-area
+  tests pass.
+- Prevention: add a package-verification mode that compares a clean
+  `origin/main` baseline and reports inherited build failures separately from
+  changed-path failures, while still running the full audit when the baseline
+  is green.
+
+## 2026-08-30 — dirty-tree coverage undercounts checkout-state branches
+
+- Work: ran the canonical full Yeet proof before publishing the staged
+  security remediations.
+- Evidence: the coverage ratchet undercounted branches in untouched
+  `LaneProofReuse.ts` and `Planner.ts` while the staged checkout was dirty. A
+  detached clean-HEAD control run measured both files at their committed
+  floors and passed the scoped ratchet.
+- Prevention: make checkout-state tests use isolated fixture repositories so
+  coverage is independent of whether the operator is proving a staged tree,
+  or have pre-publish verification measure the staged virtual tree from a
+  clean detached worktree.

@@ -41,10 +41,9 @@ workflows in skills.
   commands green.
 - Heavy admitted work runs in `agent-run-<ticket>.scope` under
   `agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
-  stops dead-lease scopes and any loaded `agent-run-*.scope` that records this
-  checkout's admission root as owner and no live lease owns. Scopes owned by
-  another admission root are never touched. Without the installed slice file,
-  systemd uses a transient slice with defaults.
+  stops scopes backed by dead leases. A loaded scope without a dead lease is
+  left alone because it may belong to an admission racing with the reaper.
+  Without the installed slice file, systemd uses a transient slice with defaults.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also

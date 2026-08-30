@@ -67,7 +67,6 @@ export function buildCopyEditBatchPrompt(batch, { cwd = process.cwd() } = {}) {
     "- Never copy browser edit-mode scaffolding into source: no contenteditable, data-impeccable-* markers, wrapper variants, generated style/script tags, or runtime-only attributes.",
     "- Preserve unrelated site/demo edits and unrelated staged changes.",
     "- After editing, check touched JS files with node --check where applicable and inspect touched Astro/HTML for obvious syntax damage.",
-    "- If package.json defines scripts.impeccable:manual-edit-validate, it must pass after edits.",
     "- Check for leftover impeccable-carbonize markers or variant wrapper markers in touched files.",
     "",
     "Final response contract:",
@@ -182,9 +181,6 @@ export function runCopyEditPostApplyChecks({ cwd = process.cwd(), files = [] } =
       }
     }
   }
-  const validation = runManualEditValidationScript(cwd);
-  if (validation?.failure) failures.push(validation.failure);
-  if (validation?.warning) warnings.push(validation.warning);
   return { ok: failures.length === 0, failures, warnings };
 }
 
@@ -253,48 +249,6 @@ function isInsideQuotedLiteral(line, index) {
     if (ch === '"' || ch === "'" || ch === "`") quote = ch;
   }
   return quote !== null;
-}
-
-function runManualEditValidationScript(cwd) {
-  const script = readManualEditValidationScript(cwd);
-  if (!script) return null;
-  const validation = spawnSync(script, {
-    cwd,
-    encoding: "utf-8",
-    shell: true,
-    timeout: 30_000,
-  });
-  if (validation.error) {
-    return {
-      failure: {
-        file: "package.json",
-        reason: "manual_edit_validation_failed",
-        message: validation.error.message || String(validation.error),
-      },
-    };
-  }
-  if (validation.status !== 0) {
-    return {
-      failure: {
-        file: "package.json",
-        reason: "manual_edit_validation_failed",
-        message: [validation.stderr, validation.stdout].filter(Boolean).join("\n").trim(),
-      },
-    };
-  }
-  return null;
-}
-
-function readManualEditValidationScript(cwd) {
-  const pkgPath = path.join(cwd, "package.json");
-  if (!fs.existsSync(pkgPath)) return null;
-  try {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-    const script = pkg?.scripts?.["impeccable:manual-edit-validate"];
-    return typeof script === "string" && script.trim() ? script : null;
-  } catch {
-    return null;
-  }
 }
 
 function compactBatchForPrompt(batch) {

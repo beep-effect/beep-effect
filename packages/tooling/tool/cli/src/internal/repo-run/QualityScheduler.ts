@@ -30,7 +30,6 @@ import {
   Fiber,
   FileSystem,
   Layer,
-  MutableHashSet,
   Order,
   Path,
   pipe,
@@ -51,14 +50,7 @@ import {
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
 import { RunScopeRecord, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
-import {
-  enterRunScope,
-  listRunScopeUnits,
-  readRunScopeOwnerRoot,
-  readRunScopeTelemetry,
-  runScopeUnitName,
-  stopRunScopeForReap,
-} from "./RunScope.ts";
+import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -1392,38 +1384,22 @@ const derivedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<strin
 const recordedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
   pipe(O.fromUndefinedOr(lease.runScope), O.match({ onNone: A.empty<string>, onSome: (scope) => [scope.unitName] }));
 
-// Only scopes that record this reaper's admission root as owner are candidates.
-// Production now has one invariant root; a scope from an isolated test fixture
-// is someone else's live work, never a leak from here.
-const ownedByRoot = (ownerRoot: string) =>
-  Effect.fnUntraced(function* (
-    unitName: string
-  ): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
-    const recorded = yield* readRunScopeOwnerRoot(unitName);
-    return O.exists(recorded, (root) => root === ownerRoot) ? O.some(unitName) : O.none();
-  });
-
 const stopLeakedRunScopes = Effect.fnUntraced(function* (
-  state: LiveAdmissionState,
-  ownerRoot: string
+  state: LiveAdmissionState
 ): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
-  // A live lease protects both its recorded unit and the nonce-derived unit,
-  // which covers the window before enterRunScope's record reaches the lease.
-  const liveUnits = MutableHashSet.fromIterable(
-    A.flatMap(state.leases, ({ lease }) => A.appendAll(derivedRunScopeUnitName(lease), recordedRunScopeUnitName(lease)))
-  );
-  const deadTargets = A.flatMap(state.deadLeases, ({ lease }) =>
-    pipe(
-      recordedRunScopeUnitName(lease),
-      A.match({ onEmpty: () => derivedRunScopeUnitName(lease), onNonEmpty: (recorded) => recorded })
+  // Only a dead lease is coordinated proof that its scope is no longer live.
+  // A loaded unit absent from this scan may belong to an admission racing with
+  // the reaper, so absence is never authority to stop it.
+  const targets = A.dedupe(
+    A.flatMap(state.deadLeases, ({ lease }) =>
+      pipe(
+        recordedRunScopeUnitName(lease),
+        A.match({ onEmpty: () => derivedRunScopeUnitName(lease), onNonEmpty: (recorded) => recorded })
+      )
     )
   );
-  const unowned = A.filter(yield* listRunScopeUnits(), (unitName) => !MutableHashSet.has(liveUnits, unitName));
-  const ownedTargets = A.getSomes(yield* Effect.forEach(unowned, ownedByRoot(ownerRoot), { concurrency: 4 }));
-  const targets = MutableHashSet.fromIterable(A.appendAll(deadTargets, ownedTargets));
   yield* Effect.forEach(targets, stopRunScopeForReap, { concurrency: 4, discard: true });
 });
-
 /**
  * Reap dead admission state (dead pid or `/proc` start-time mismatch).
  *
@@ -1451,7 +1427,7 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
 > {
   const directories = yield* ensureAdmissionDirectories();
   if (options.apply) {
-    yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false), directories.root);
+    yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false));
   }
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply);
 });
