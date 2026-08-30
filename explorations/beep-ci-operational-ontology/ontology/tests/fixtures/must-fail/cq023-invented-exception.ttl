@@ -1,0 +1,10 @@
+# Falsifiability (round-3 H-12, Oxigraph-proven): an INVENTED exception IRI suppressed
+# the starvation violation under the old unconstrained negation — the query now pins
+# the exception to the closed member, so this request must surface.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+ciops:req-invented rdf:type ciops:SeatRequest ;
+    ciops:observedQueueWaitMs 300000 ;
+    ciops:governedBy ciops:policy-x ;
+    ciops:hasStarvationException ciops:InventedException .
+ciops:policy-x ciops:starvationBoundMs 120000 .

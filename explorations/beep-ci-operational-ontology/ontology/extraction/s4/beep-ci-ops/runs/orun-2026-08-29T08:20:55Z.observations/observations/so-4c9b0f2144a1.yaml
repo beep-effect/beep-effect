@@ -1,0 +1,34 @@
+id: so:sha256:4c9b0f2144a18fd434148b352528c9afd321113b35de3a3ae4e8133fa0982b25
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 88
+  end_line: 93
+  content_sha256: 2263357fec7040901fde6f16efdad804f56ff9a225c0037dadd4afe2bb490950
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::GateArtifactKind
+  lexical_name: GateArtifactKind
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: baseline
+- predicate: declares_literal_member
+  object: inventory
+- predicate: declares_literal_member
+  object: manifest
+- predicate: declares_literal_member
+  object: snapshot
+- predicate: declares_literal_member
+  object: tsbuildinfo
+- predicate: exports_symbol
+  object: GateArtifactKind
+source_excerpt: export const GateArtifactKind = LiteralKit(["baseline", "inventory", "manifest", "snapshot",
+  "tsbuildinfo"]).pipe(
+epistemic_status: parser_derived

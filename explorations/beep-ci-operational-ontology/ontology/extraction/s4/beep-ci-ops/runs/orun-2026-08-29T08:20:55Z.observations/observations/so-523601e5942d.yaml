@@ -1,0 +1,23 @@
+id: so:sha256:523601e5942d9f65f9b7b977b30dc1f9dd2509255447f7b4a6a31b49e00bc2ad
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 675
+  end_line: 675
+  content_sha256: 20c88565c09f6b11d0233f63c19d3c753d81ef2338a831a1e58f42f77c3ea8d5
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::isGithubJobShapeClass
+  lexical_name: isGithubJobShapeClass
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const isGithubJobShapeClass = S.is(GithubJobShapeClass);
+epistemic_status: parser_derived

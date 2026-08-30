@@ -1,0 +1,25 @@
+id: so:sha256:9a050882c859fbe6a493e1313f31f1062c204cb96663c81dfcac83bef8f5d917
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 201
+  end_line: 209
+  content_sha256: e34db64f15fc55caca079de5071bb9e690c9a017e88341c9e8cc31068e1ae7ef
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::YeetWatchThread
+  lexical_name: YeetWatchThread
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetWatchThread
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetWatchThread extends S.Class<YeetWatchThread>($I`YeetWatchThread`)(
+epistemic_status: parser_derived

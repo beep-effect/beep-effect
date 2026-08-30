@@ -1,0 +1,19 @@
+id: "fa:alt1:049"
+hypothesis_ref: "dh:turbo-cache:010"
+identity_card_ref: "ic:alt1:049"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "a coverage verification lane as a process kind"
+    still_viable: true
+  - label: "a particular coverage execution"
+    still_viable: false
+strongest_counterexample: "A particular coverage execution is a dated run, not a second coverage
+  specification. The ^build dependency is ordering content of the specification, not evidence
+  that this individual is a build."
+verdict: "analyzed"
+needed_evidence: "An observed coverage run distinct from the turbo.json coverage entry. Current
+  evidence establishes declarative ordering, not an execution."

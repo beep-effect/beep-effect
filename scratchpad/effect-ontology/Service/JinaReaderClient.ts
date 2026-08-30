@@ -36,18 +36,16 @@ const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
 /**
  * Options for fetching URL content
  *
- *
  * **Example** (Use the FetchOptions contract)
  *
  * ```ts
- * import type { FetchOptions } from "@effect-ontology/Service/JinaReaderClient"
+ * import { FetchOptions } from "@effect-ontology/Service/JinaReaderClient"
  *
- * const acceptsFetchOptions = (_value: FetchOptions): void => undefined
- *
- * console.log(acceptsFetchOptions)
+ * const options = FetchOptions.make({ includeImages: true })
+ * console.log(options.includeImages) // true
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class FetchOptions extends S.Class<FetchOptions>($I`FetchOptions`)(
@@ -84,18 +82,24 @@ export type FetchOptionsInput = (typeof FetchOptions)["~type.make.in"];
 /**
  * Response from Jina Reader API with parsed content
  *
- *
- * **Example** (Use the JinaResponse contract)
+ * **Example** (Record a reader response)
  *
  * ```ts
- * import type { JinaResponse } from "@effect-ontology/Service/JinaReaderClient"
+ * import { URLStr } from "@beep/schema/URL"
+ * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
+ * import { JinaResponse } from "@effect-ontology/Service/JinaReaderClient"
  *
- * const acceptsJinaResponse = (_value: JinaResponse): void => undefined
- *
- * console.log(acceptsJinaResponse)
+ * const response = JinaResponse.make({
+ *   content: JinaContent.make({
+ *     url: URLStr.make("https://example.org/ada"),
+ *     title: "Ada Lovelace",
+ *     content: "Ada founded Acme."
+ *   })
+ * })
+ * console.log(response.content.title) // "Ada Lovelace"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class JinaResponse extends S.Class<JinaResponse>($I`JinaResponse`)(
@@ -125,7 +129,9 @@ const JinaApiResponse = S.Struct({
     image: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     links: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }),
-});
+}).pipe(
+  SchemaUtils.withEffectCodecStatics
+);
 
 // =============================================================================
 // Rate Limiting
@@ -161,14 +167,20 @@ const makeRateLimiter = (maxRequests: number, window: Duration.Duration = Durati
 // =============================================================================
 
 /**
- * Validates and represents jina reader client values at runtime.
+ * HTTP client for Jina Reader URL-to-markdown fetches.
  *
  * **Example** (Inspect jina reader client)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { JinaReaderClient } from "@effect-ontology/Service/JinaReaderClient"
  *
- * console.log(JinaReaderClient)
+ * const program = Effect.gen(function* () {
+ *   const client = yield* JinaReaderClient
+ *   return client
+ * }).pipe(Effect.provide(JinaReaderClient.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -207,7 +219,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       // Wait for rate limit
       yield* rateLimiter.acquire;
 
-      const targetUrl = yield* S.decodeEffect(URLStr)(url).pipe(
+      const targetUrl = yield* URLStr.decodeEffect(url).pipe(
         Effect.mapError((cause) =>
           JinaApiError.make({
             message: "Jina Reader target URL is invalid",
@@ -256,7 +268,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
           )
         ),
         Effect.mapError((error) => {
-          if (S.is(JinaTimeoutError)(error)) return error;
+          if (JinaTimeoutError.is(error)) return error;
           return JinaApiError.make({
             message: `Failed to fetch URL: ${error}`,
             url: O.some(targetUrl),
@@ -305,7 +317,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       );
 
       // Decode response
-      const parsed = yield* S.decodeUnknownEffect(JinaApiResponse)(json).pipe(
+      const parsed = yield* JinaApiResponse.decodeUnknownEffect(json).pipe(
         Effect.mapError((error) =>
           JinaParseError.make({
             message: `Invalid Jina response format: ${error}`,
@@ -316,7 +328,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       );
 
       // Build JinaContent
-      const content = yield* S.decodeEffect(JinaContent)({
+      const content = yield* JinaContent.decodeEffect({
         url: parsed.data.url,
         title: parsed.data.title,
         content: parsed.data.content,

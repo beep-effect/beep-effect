@@ -1,0 +1,24 @@
+id: so:sha256:9e9be3cb74b3424a9203b6a679463a1f423ae6727e7a871621d0cf0acd70f153
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 300
+  end_line: 331
+  content_sha256: 123fb5c156a057a69c686ea219ce6a85e6e4835660d0d2c5fa5fe27f1bbeb1a2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runWithFullProofCoordinator
+  lexical_name: runWithFullProofCoordinator
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator")(function*
+  <
+epistemic_status: parser_derived

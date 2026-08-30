@@ -1,0 +1,7 @@
+# Falsifiability (round-3 H-02, Oxigraph-proven): plain-string quantities compare
+# lexically ("10" > "8" is false) and made a real overrun green — a non-numeric
+# datatype is itself a violation under the isNumeric guard.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:wu-str ciops:admittedBy ciops:g-str .
+ciops:g-str ciops:admissionChargeTokens "10" ;
+    ciops:capacityAtAdmissionTokens "8" .

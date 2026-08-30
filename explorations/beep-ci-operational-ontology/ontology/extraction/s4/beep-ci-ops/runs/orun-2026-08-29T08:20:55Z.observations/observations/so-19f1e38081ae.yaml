@@ -1,0 +1,41 @@
+id: so:sha256:19f1e38081aee7b60aecde18430abd809861b1cf6eb9ebf7065e34305b7275be
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/drivers/hubspot/package.json
+source_span:
+  start_line: 1
+  end_line: 72
+  content_sha256: 68e2024379341f7d1610cdeedf99d62a5abce9366c611e9f48b98bd0d983d6e0
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: packages/drivers/hubspot/package.json::name
+  lexical_name: name
+  syntactic_kind: config_document
+observed_facts:
+- predicate: config_key_value
+  object: .=./dist/index.js
+- predicate: config_key_value
+  object: access=public
+- predicate: config_key_value
+  object: directory=packages/drivers/hubspot
+- predicate: config_key_value
+  object: family=drivers
+- predicate: config_key_value
+  object: license=MIT
+- predicate: config_key_value
+  object: name=@beep/hubspot
+- predicate: config_key_value
+  object: type=git
+- predicate: config_key_value
+  object: type=module
+- predicate: config_key_value
+  object: url=git@github.com:beep-effect/beep-effect.git
+- predicate: config_key_value
+  object: version=0.0.3
+source_excerpt: '{'
+epistemic_status: parser_derived

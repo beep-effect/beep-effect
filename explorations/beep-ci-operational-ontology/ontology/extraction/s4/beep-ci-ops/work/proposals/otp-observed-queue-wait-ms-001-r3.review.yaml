@@ -1,0 +1,50 @@
+target: "otp:observed-queue-wait-ms:001"
+target_sha256: "70422af10d32a3043d3cb559d087bffe8e6f8143fe70b457474d4bdbf729bb64"
+chain_sha256: "c81949c43b1e1e811b9584195122219b8bf592924fd6f389bcd1b48698c93ea5"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The data-property proposal asserts no parents edge; no is-a relation exists
+    to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: property-assertion-identity
+    counterexample: >-
+      Two collectors can compute the same duration for one request and one
+      observation boundary, while the same number observed for that request at
+      a later boundary is a different fact. The card correctly uses request,
+      enqueue boundary, observation boundary, and clock basis rather than a
+      technical record or numeric value as identity.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-time-indexed-wait
+    counterexample: >-
+      CQ-023 cannot decide whether a queued request is nearing or exceeding its
+      starvation bound from enqueue time alone. It requires the request's
+      elapsed wait at a stated observation boundary, which is precisely the
+      proposed data relation.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-aging-discriminator
+    counterexample: >-
+      A logging DTO could display elapsed milliseconds without affecting
+      scheduling. The cited deployed queue uses elapsed waiting to promote an
+      eligible verify request after the aging window, so the operational fact
+      changes ordering and is false in the logging-only twin.
+    outcome: survived
+rival_models_still_viable:
+  - "A reified queue-wait quality is possible but not required by the evidence."
+evidence:
+  - "so:sha256:aae98d5927e0b5760e2cd21c7eb757857be3c4a618f5c59c83191a9311cff21b"
+  - "po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807"
+  - "po:sha256:2d8b36c6bb7afb7cda727640a5656328452253def711c0a1cfdb43848de709a9"
+  - "po:sha256:452b4ed8ff3e6ac37d200a6c3d8a5737000078258fbde7864a0186d709407c89"
+  - "po:sha256:7a38addfdaf431d72a7cb4dec84da8da890034f021e7c3aa0e0d9a1885b27ee0"
+  - "CQ-023"

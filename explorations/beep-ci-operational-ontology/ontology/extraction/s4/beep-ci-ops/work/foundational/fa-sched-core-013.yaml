@@ -1,0 +1,13 @@
+id: fa:sched-core:013
+hypothesis_ref: dh:sched-core:014
+identity_card_ref: ic:sched-core:013
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: Reify an active-charge quality in addition to the warranted data relation.
+  still_viable: false
+strongest_counterexample: Equal totals across machines or disjoint live-grant intervals do not make one assertion or one quality.
+verdict: analyzed

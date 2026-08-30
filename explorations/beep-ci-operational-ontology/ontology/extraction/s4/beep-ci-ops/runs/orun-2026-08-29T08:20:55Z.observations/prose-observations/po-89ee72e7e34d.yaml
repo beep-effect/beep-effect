@@ -1,0 +1,10 @@
+id: po:sha256:89ee72e7e34d3ff81f38a757c83e962ea2152fe0f2e4fc1b2a3e3eac6c067cd1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: standards/fallow.pilot.inventory.jsonc
+source_span:
+  start_line: 31
+  end_line: 46
+quote: '"command": "bunx fallow dead-code --format json --quiet"'
+epistemic_status: quoted_prose

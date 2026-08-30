@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:009"
+hypothesis_ref: "dh:turbo-cache:010"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same coverage task specification only when they are the same authored repeatable coverage instruction in the same versioned configuration lineage with the same complete inherited dependency, environment, input, cache, and output prescriptions; the coverage key alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key coverage"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The declarations jointly prescribe one reusable coverage-producing task rather than any particular coverage run or report."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A coverage verification lane realized by the specification"
+    - "A root template for package-specific coverage specifications"
+  existential_dependencies:
+    - "The versioned configuration and package graph that resolve the task"
+    - "At least one bearer of the coverage instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A coverage task can complete without producing usable verification evidence, and separate package coverage tasks can share the same root declaration while remaining distinct specifications."
+status: proposed

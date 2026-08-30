@@ -1,0 +1,34 @@
+id: "ic:topology:001"
+hypothesis_ref: "dh:topology:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two workspace-package-identity information objects are the same when they carry the same package-designating semantic content under the same repository, namespace, and topology interpretation; a technical name is evidence, never the criterion."
+  reidentification_key:
+    - "repository identity"
+    - "package namespace"
+    - "package-designating semantic content"
+    - "topology interpretation context"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One repeatable package-designating content unit in a repository and namespace interpretation; distinct token copies may realize the same unit."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "kind: the workspace software package itself as an operational participant"
+    - "role: a package-name token functioning as a reference only in a topology context"
+    - "none: a query-vocabulary label with no admitted individual"
+  existential_dependencies:
+    - "At least one concrete digital or material bearer, generically rather than any particular file"
+    - "A repository, namespace, and topology interpretation in which the content designates a package"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "no realization of the information content remains"
+    - "designation content or interpretation changes, yielding a different information object"
+counterexamples:
+  - description: "A package can be renamed while its codebase continues, and a deleted name can later be reused for another package; the spelling alone cannot determine sameness."
+status: proposed

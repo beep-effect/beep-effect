@@ -10,31 +10,39 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { dual3 } from "./Dual.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Utils/Provenance");
 
 // =============================================================================
 // Provenance URI Schema
 // =============================================================================
 
 /**
- * Provenance URI pattern for named graphs
+ * Named-graph URN that locates extracted triples back to a batch document,
+ * optionally a chunk.
  *
  * **Details**
  *
  * Format: `urn:provenance:batch/{batchId}/doc/{documentId}[/chunk/{chunkIndex}]`
+ * with canonical `batch-[a-f0-9]{12}` and `doc-[a-f0-9]{12}` identifiers.
  *
- * **Example** (Validate provenance uri)
+ * **Example** (Accept a canonical provenance URN)
  *
  * ```ts
  * import { ProvenanceUri } from "@effect-ontology/Utils/Provenance"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(ProvenanceUri)({}))
+ * const uri = "urn:provenance:batch/batch-1234567890ab/doc/doc-abcdef123456"
+ * console.log(S.is(ProvenanceUri)(uri)) // true
+ * console.log(S.is(ProvenanceUri)("urn:provenance:batch/batch-123/doc/doc-456")) // false
  * ```
  *
+ * @see {@link makeProvenanceUri} for constructing a URI from branded identifiers.
  * @category schemas
  * @since 0.0.0
  */
@@ -45,26 +53,15 @@ export const ProvenanceUri = S.String.pipe(
     })
   ),
   S.brand("ProvenanceUri"),
-  S.annotate({
-    title: "Provenance URI",
-    description: "URN identifying the provenance of RDF triples",
+  $I.annoteSchema("ProvenanceUri", {
+    description: "URN identifying the provenance of RDF triples from a batch document or chunk.",
   })
 );
+
 /**
- * Describes the provenance uri data exposed by this module.
+ * Decoded provenance URN produced by {@link ProvenanceUri}.
  *
- * **Example** (Decode ProvenanceUri)
- *
- * ```ts
- * import { ProvenanceUri } from "@effect-ontology/Utils/Provenance"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeProvenanceUri = (_value: ProvenanceUri): string => "valid provenance uri"
- *
- * console.log(O.map(S.decodeUnknownOption(ProvenanceUri)({}), summarizeProvenanceUri))
- * ```
- *
+ * @see {@link ProvenanceUri} for the runtime schema and canonical identifier pattern.
  * @category type-level
  * @since 0.0.0
  */
@@ -99,10 +96,7 @@ export type ProvenanceUri = typeof ProvenanceUri.Type;
  * // "urn:provenance:batch/batch-1234567890ab/doc/doc-abcdef123456/chunk/0"
  * ```
  *
- * @param batchId - The batch identifier
- * @param documentId - The document identifier
- * @param chunkIndex - Optional chunk index for chunk-level provenance
- * @returns Provenance URI string
+ * @see {@link parseProvenanceUri} for splitting a URI back into its components.
  * @category constructors
  * @since 0.0.0
  */
@@ -115,19 +109,24 @@ export const makeProvenanceUri = dual3(
 );
 
 /**
- * Parse a provenance URI to extract its components
+ * Splits a provenance URI into canonical batch, document, and optional chunk
+ * components.
  *
- * **Example** (Use parseProvenanceUri)
+ * **Example** (Parse a canonical URI and reject a short id)
  *
  * ```ts
  * import { parseProvenanceUri } from "@effect-ontology/Utils/Provenance"
  *
- * parseProvenanceUri("urn:provenance:batch/batch-123/doc/doc-456/chunk/0")
- * // => { batchId: "batch-123", documentId: "doc-456", chunkIndex: 0 }
+ * console.log(
+ *   parseProvenanceUri("urn:provenance:batch/batch-1234567890ab/doc/doc-abcdef123456/chunk/0")
+ * )
+ * // { batchId: "batch-1234567890ab", documentId: "doc-abcdef123456", chunkIndex: 0 }
+ * console.log(parseProvenanceUri("urn:provenance:batch/batch-123/doc/doc-456/chunk/0")) // null
  * ```
  *
- * @param uri - The provenance URI to parse
- * @returns Object containing batchId, documentId, and optional chunkIndex
+ * @returns Component object, or `null` when the URI is not a canonical provenance URN.
+ * @see {@link makeProvenanceUri} for constructing the URI this parser accepts.
+ * @see {@link isProvenanceUri} for the boolean guard over the same pattern.
  * @category parsing
  * @since 0.0.0
  */
@@ -149,18 +148,18 @@ export const parseProvenanceUri = (
 };
 
 /**
- * Check if a string is a valid provenance URI
+ * Returns whether a string matches the canonical provenance URN pattern.
  *
- * **Example** (Inspect is provenance uri)
+ * **Example** (Guard a provenance URI)
  *
  * ```ts
  * import { isProvenanceUri } from "@effect-ontology/Utils/Provenance"
  *
- * console.log(isProvenanceUri)
+ * console.log(isProvenanceUri("urn:provenance:batch/batch-1234567890ab/doc/doc-abcdef123456")) // true
+ * console.log(isProvenanceUri("urn:provenance:batch/batch-123/doc/doc-456")) // false
  * ```
  *
- * @param uri - The string to check
- * @returns true if the string is a valid provenance URI
+ * @see {@link ProvenanceUri} for the schema that encodes the same pattern.
  * @category predicates
  * @since 0.0.0
  */

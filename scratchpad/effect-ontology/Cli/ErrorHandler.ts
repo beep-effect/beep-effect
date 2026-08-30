@@ -35,19 +35,26 @@ const formatCause = (cause: Cause.Cause<unknown>): string => {
 };
 
 /**
- * Wrap an effect with error handling for CLI output
+ * Prints a formatted Cause to stderr when the wrapped effect fails, without
+ * changing the typed error channel.
  *
- * **Example** (Inspect with error handler)
+ * **Details**
+ *
+ * Failures keep their original `E`. The handler only taps the Cause to
+ * `Console.error` so CLI callers still see a readable diagnostic.
+ *
+ * **Example** (Report a typed CLI failure)
  *
  * ```ts
  * import { withErrorHandler } from "@effect-ontology/Cli/ErrorHandler"
+ * import { Effect, Exit } from "effect"
  *
- * console.log(withErrorHandler)
+ * const handled = withErrorHandler(Effect.fail(new Error("ontology file not found")))
+ * const exit = Effect.runSync(Effect.exit(handled))
+ * console.log(Exit.isFailure(exit)) // true
  * ```
  *
- * @param effect - The effect to wrap
- * @returns The effect with error handler attached
- * @category errors
+ * @category error-handling
  * @since 0.0.0
  */
 export const withErrorHandler = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>

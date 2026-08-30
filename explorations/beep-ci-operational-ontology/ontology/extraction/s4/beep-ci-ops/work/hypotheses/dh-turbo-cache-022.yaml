@@ -1,0 +1,28 @@
+id: "dh:turbo-cache:022"
+observation_refs:
+  - "so:sha256:5455a88353a08e19104c4f4ed27714d39b682fb71f40c78b8067c3133c293860"
+  - "po:sha256:965ef702e781e4ac242a4c1c6de05ece748e16fb63340e1b37edaf87863cc6af"
+  - "po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5"
+  - "po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a"
+cq_warrants:
+  - "CQ-024"
+proposed_referent:
+  label: "Caller-controlled cache posture of a Turbo invocation"
+  description: "An invocation cache posture selected for the observed CI and explicit-cache-argument reasons."
+representation_status: domain_referent
+alternatives:
+  - label: "The caller-controlled tag as information content inside a resolved cache-plan record"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A lexical alias with no posture referent"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The records do more than expose the tag: they show the resolver producing this posture for two distinct invocation conditions."
+  discriminator: "The quoted resolver branches produce the caller-controlled outcome for CI and for an explicit cache argument, so the posture varies with invocation conditions rather than existing only as a source token."
+epistemic_status: proposed
+confidence:
+  value: 0.89
+  use_for_acceptance: false

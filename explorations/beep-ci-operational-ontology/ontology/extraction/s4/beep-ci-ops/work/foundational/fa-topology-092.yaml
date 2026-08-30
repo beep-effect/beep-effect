@@ -1,0 +1,17 @@
+id: "fa:topology:092"
+hypothesis_ref: "dh:topology:092"
+identity_card_ref: "ic:topology:092"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "@beep/openai-compat as a package-name lexical alias"
+    still_viable: true
+  - label: "The software package bearer designated by @beep/openai-compat"
+    still_viable: true
+  - label: "Generated topology-capture row with no repeatable information object"
+    still_viable: false
+strongest_counterexample: "The same spelling @beep/openai-compat can occur in another repository or after deletion and recreation for a different bearer, while a continuing package can be renamed; the captured name cannot by itself decide information-object, lexical-alias, or package-bearer identity."
+verdict: analyzed

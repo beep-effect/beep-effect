@@ -1,0 +1,10 @@
+id: po:sha256:1550f92bf5d6a0d1c0df07f887b25668fd7b2c3b53a0e4c2521b8478f65ccce3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 68
+  end_line: 69
+quote: "\"lint\": {\n      \"cache\": true,"
+epistemic_status: quoted_prose

@@ -1,0 +1,25 @@
+id: so:sha256:0277f1c842a57e6b4661bcb5c4322652755a4f40781e23e26013fc13dcbffb6f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 112
+  end_line: 120
+  content_sha256: 0e995d399c08819ad68fba9d749ab6bbf7cba52bfed3afedd9875669b59d23af
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/github/JobShape.ts::GithubJobStepRecord
+  lexical_name: GithubJobStepRecord
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: GithubJobStepRecord
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class GithubJobStepRecord extends S.Class<GithubJobStepRecord>($I`GithubJobStepRecord`)(
+epistemic_status: parser_derived

@@ -52,4 +52,6 @@ export class Workspace extends ProductEntity.Entity<Workspace>()(WorkspaceIdenti
   $I.annote("Workspace", {
     description: "User or team work area participating in a runtime scenario.",
   })
-) {}
+) {
+  static readonly decodeSync = S.decodeSync(Workspace);
+}

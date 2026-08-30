@@ -194,7 +194,9 @@ export class JinaTimeoutError extends S.TaggedError<JinaTimeoutError>($I`JinaTim
   $I.annote("JinaTimeoutError", {
     description: "Jina Reader request that exceeded its configured deadline.",
   })
-) {}
+) {
+  static readonly is = S.is(JinaTimeoutError)
+}
 
 const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParseError, JinaTimeoutError]).pipe(
   S.toTaggedUnion("_tag")

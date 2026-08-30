@@ -1,0 +1,10 @@
+id: po:sha256:75580936a4109c0d77f4a935dd73bb37bcda688defa33be669b738a3b32e72ca
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 170
+  end_line: 171
+quote: "\"docgen\",\n  \"doctest\","
+epistemic_status: quoted_prose

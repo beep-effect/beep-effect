@@ -14,7 +14,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
-import { MutableHashMap, MutableHashSet, Number as N } from "effect";
+import { MutableHashMap, MutableHashSet, Number as N, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -156,20 +156,19 @@ export const iriExistsCaseInsensitive: {
 // =============================================================================
 
 /**
- * Extract local name from an IRI (part after last / or #)
+ * Returns the IRI segment after the last `/` or `#`.
  *
- * **Example** (Inspect extract local name from iri)
+ * **Example** (Split hash and path local names)
  *
  * ```ts
  * import { extractLocalNameFromIri } from "@effect-ontology/Utils/Iri"
  *
- * extractLocalNameFromIri("https://ontology/Player") // => "Player"
- * extractLocalNameFromIri("https://www.w3.org/2001/XMLSchema#string") // => "string"
+ * console.log(extractLocalNameFromIri("https://ontology/Player")) // "Player"
+ * console.log(extractLocalNameFromIri("https://www.w3.org/2001/XMLSchema#string")) // "string"
  * ```
  *
- * @param iri - Full IRI string
- * @returns Local name portion
- * @category schemas
+ * @see {@link buildLocalNameToIriMapSafe} for indexing local names back to full IRIs.
+ * @category getters
  * @since 0.0.0
  */
 export const extractLocalNameFromIri = (iri: string): string => {
@@ -181,6 +180,65 @@ export const extractLocalNameFromIri = (iri: string): string => {
   );
   return N.isGreaterThanOrEqualTo(splitIndex, 0) ? Str.slice(splitIndex + 1)(iri) : iri;
 };
+
+/**
+ * Build a case-insensitive schema for local names derived from canonical IRIs.
+ *
+ * **Details**
+ *
+ * Decoding accepts any case-equivalent local name. Encoding restores the
+ * canonical spelling from the source IRI collection when a match exists.
+ * Identity annotations stay dynamic because the accepted vocabulary is
+ * supplied by the caller rather than a stable schema name.
+ *
+ * **Example** (Create a local-name codec)
+ *
+ * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { makeLocalNameSchema } from "@effect-ontology/Utils/Iri"
+ * import * as S from "effect/Schema"
+ *
+ * const TypeName = makeLocalNameSchema([IRI.make("https://schema.org/Person")], "Type", "Class")
+ * console.log(S.is(TypeName)("Person")) // true
+ * console.log(S.is(TypeName)("Place")) // false
+ * ```
+ *
+ * @see {@link buildLocalNameToIriMapSafe} for the lookup table this codec encodes against.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const makeLocalNameSchema: {
+  (iris: ReadonlyArray<IRI>, diagnosticNoun: string, descriptionNoun: string): S.Codec<string, string, never, never>;
+  (
+    diagnosticNoun: string,
+    descriptionNoun: string
+  ): (iris: ReadonlyArray<IRI>) => S.Codec<string, string, never, never>;
+} = dual(3, (iris: ReadonlyArray<IRI>, diagnosticNoun: string, descriptionNoun: string) => {
+  const { map: localNameMap } = buildLocalNameToIriMapSafe(iris);
+  const localNames = A.map(iris, extractLocalNameFromIri);
+  const preview = `${A.join(A.take(localNames, 10), ", ")}${A.length(localNames) > 10 ? "..." : ""}`;
+
+  return S.String.pipe(
+    S.decodeTo(S.String, {
+      decode: SchemaGetter.transform((canonical) => canonical),
+      encode: SchemaGetter.transform((input) =>
+        pipe(
+          expandLocalNameToIri(input, localNameMap),
+          O.map(extractLocalNameFromIri),
+          O.getOrElse(() => input)
+        )
+      ),
+    }),
+    S.check(
+      S.makeFilter((name) => MutableHashMap.has(localNameMap, Str.toLowerCase(name)), {
+        message: `${diagnosticNoun} must be one of: ${preview}`,
+      })
+    ),
+    S.annotate({
+      description: `${descriptionNoun} name (one of: ${A.join(localNames, ", ")})`,
+    })
+  );
+});
 
 /**
  * Result of building a local name to IRI map, including collision info
@@ -195,7 +253,7 @@ export const extractLocalNameFromIri = (iri: string): string => {
  * console.log(result.hasCollisions) // false
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class LocalNameMapResult extends S.Class<LocalNameMapResult>($I`LocalNameMapResult`)(
@@ -218,14 +276,16 @@ export class LocalNameMapResult extends S.Class<LocalNameMapResult>($I`LocalName
  *
  * **Details**
  *
- * Creates a Map where keys are lowercase local names and values are the full canonical IRIs.
- * This allows case-insensitive local name matching while providing the full IRI.
+ * Keys are lowercase local names and values are the full canonical IRIs, so
+ * matching can ignore case while still returning the original IRI.
  *
- * **IMPORTANT**: When multiple IRIs share the same local name (e.g., `org:member` and
- * `foaf:member`), this is a collision. The function tracks all collisions and returns
- * them in the result. The map will contain the LAST IRI for each colliding local name.
+ * **Gotchas**
  *
- * **Example** (Inspect build local name to iri map safe)
+ * When multiple IRIs share a local name (for example `org:member` and
+ * `foaf:member`), the map keeps the last IRI and records every colliding IRI
+ * on `collisions`.
+ *
+ * **Example** (Detect a local-name collision)
  *
  * ```ts
  * import { IRI } from "@beep/rdf"
@@ -248,8 +308,7 @@ export class LocalNameMapResult extends S.Class<LocalNameMapResult>($I`LocalName
  * }))
  * ```
  *
- * @param iris - Array of canonical IRIs
- * @returns LocalNameMapResult with map, collisions, and hasCollisions flag
+ * @see {@link expandLocalNameToIri} for looking up a local name in the returned map.
  * @category factories
  * @since 0.0.0
  */
@@ -301,9 +360,8 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
  * console.log(O.map(map, (value) => O.isNone(expandLocalNameToIri("Unknown", value))))
  * ```
  *
- * @param localName - Local name (e.g., "Player")
- * @param localNameMap - Case-insensitive local name to IRI map from buildLocalNameToIriMap
- * @returns Full IRI if found, undefined otherwise
+ * @returns `O.some(iri)` when the local name is in the map; `O.none()` otherwise.
+ * @see {@link buildLocalNameToIriMapSafe} for constructing the lookup map.
  * @category utilities
  * @since 0.0.0
  */

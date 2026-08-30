@@ -1,0 +1,27 @@
+id: so:sha256:c495d31259470046cae479195e2d33cc5f9d9060d01f169ae18f8ff2c382c478
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 397
+  end_line: 430
+  content_sha256: de91407ef90c95e62869a726902777ecf454f1d5cdd92fc85dedfec2510dad2c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts::QualitySchedulerError
+  lexical_name: QualitySchedulerError
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: declares_member
+  object: new
+- predicate: exports_symbol
+  object: QualitySchedulerError
+- predicate: extends_syntactically
+  object: S.TaggedError
+source_excerpt: export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError>($I`QualitySchedulerError`)(
+epistemic_status: parser_derived

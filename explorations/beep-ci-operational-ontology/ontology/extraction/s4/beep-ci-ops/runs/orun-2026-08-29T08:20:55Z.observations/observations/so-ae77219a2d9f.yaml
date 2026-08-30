@@ -1,0 +1,24 @@
+id: so:sha256:ae77219a2d9f38963575e7e3d6bc6d5e4f7de2f1527651bfa628218d862a197c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 797
+  end_line: 809
+  content_sha256: 4a25afa0a72e42be9a1a9dacc8e7905a3904743c5ada86ea491e6bcf471a9238
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::printOperatorStatusSummary
+  lexical_name: printOperatorStatusSummary
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const printOperatorStatusSummary = Effect.fn("Yeet.printOperatorStatusSummary")(function*
+  (
+epistemic_status: parser_derived

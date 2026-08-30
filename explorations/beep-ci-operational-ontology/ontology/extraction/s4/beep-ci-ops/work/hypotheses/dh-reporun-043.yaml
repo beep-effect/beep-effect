@@ -1,0 +1,23 @@
+id: "dh:reporun:043"
+observation_refs:
+  - "so:sha256:b853ddb1dcf919710b7e93e0438b43684fe84e697a1c0d951b154960409aec83"
+  - "so:sha256:cbf27d1fbd70a79203224741442aed02aacf73db035e38b4fff7cb45f5b4d2c6"
+  - "so:sha256:4ff1c137e2880d5ce4df9f2df10aa5d14b0ad9ce487dd43f3d240085d2b63bce"
+cq_warrants: []
+proposed_referent:
+  label: "captured-stream selection and decoding mechanism"
+  description: "The implementation helpers that choose and decode subprocess output streams according to a local capture-source option."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Execution output-channel specification"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "These observations concern library stream routing and decoding. They do not identify a log record, execution state, or domain-level channel required by the competency questions."
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false
+

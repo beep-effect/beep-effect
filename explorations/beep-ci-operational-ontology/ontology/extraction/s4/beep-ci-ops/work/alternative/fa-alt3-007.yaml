@@ -1,0 +1,20 @@
+id: fa:alt3:007
+hypothesis_ref: dh:sched-core:012
+identity_card_ref: ic:alt3:007
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: the repeatable capacity-token derivation'
+  still_viable: true
+- label: 'quality: current machine admission capacity as a magnitude'
+  still_viable: true
+strongest_counterexample: The function returns 0 below hardFloorGib and otherwise min(capacityMaxTokens,
+  floor((availableGib - reserveGib) / slotSizeGib)). That mapping can be inspected without
+  reading current memory, so it is not the live capacity quality.
+verdict: analyzed
+needed_evidence: A snapshot field used as the capacity-at-admission fact without re-running
+  the function would support the quality reading of the output as a distinct referent; current
+  observations still leave that output and this procedure separable.

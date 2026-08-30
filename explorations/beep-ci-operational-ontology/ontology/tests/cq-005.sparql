@@ -1,0 +1,10 @@
+# CQ-005: Which verification evidence records (vernacular: proofs) remain valid for a given tree state and cache epoch?
+# Expected: non_empty | priority: must_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?proof WHERE {
+  VALUES (?tree ?epoch) { (ciops:tree-example ciops:epoch-example) }  # harness binds
+  ?proof ciops:validInEpoch ?epoch ;
+         ciops:provesTree ?tree .
+  FILTER NOT EXISTS { ?event ciops:invalidates ?proof }
+}

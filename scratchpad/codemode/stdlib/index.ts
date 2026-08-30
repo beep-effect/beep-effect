@@ -1,3 +1,11 @@
+/**
+ * Guest ECMAScript adapters for Date, JSON, Math, Number, Object, RegExp,
+ * String, URL, console formatting, and value coercion used by the CodeMode
+ * interpreter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 export * from "./StdLib.console.ts";
 export * from "./StdLib.date.ts";
 export * from "./StdLib.json.ts";

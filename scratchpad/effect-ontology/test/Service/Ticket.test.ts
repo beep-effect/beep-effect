@@ -1,3 +1,4 @@
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { KeyValueStore } from "effect/unstable/persistence";
@@ -23,7 +24,9 @@ const PersistFailureStorage = Layer.effect(
   })
 ).pipe(Layer.provide(StorageServiceTest));
 
-const TicketPersistFailureLayer = TicketService.Default.pipe(Layer.provide(PersistFailureStorage));
+const TicketPersistFailureLayer = TicketService.Default.pipe(
+  Layer.provide(Layer.merge(PersistFailureStorage, BunCrypto.layer))
+);
 
 describe("TicketService", () => {
   it.layer(TicketPersistFailureLayer)("with failing persistence", (it) => {

@@ -1,0 +1,36 @@
+id: ic:worktree-config:002
+hypothesis_ref: dh:worktree-config:006
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'Unresolved: one hosted-required-check obligation activation would remain the same only for the same
+    candidate head, target transition, required-check designation, policy version, and uninterrupted activation interval from
+    imposition through discharge or waiver; later reacquisition is a new activation.'
+  reidentification_key:
+  - candidate head and target transition
+  - required-check designation and policy version
+  - activation and discharge provenance not present in the rule text
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: One continuously active normative requirement binding one candidate transition to one hosted required-check designation
+    under one policy version.
+  dependence: relational
+ufo_analysis:
+  candidate_category: mode
+  alternatives:
+  - a standing merge-policy specification
+  - a hosted check-status record
+  existential_dependencies:
+  - a candidate head and target transition
+  - a hosted required-check designation
+  - the governing merge policy
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - discharged by satisfaction, ended by waiver or policy change, or replaced by a later reacquisition
+counterexamples:
+- description: One candidate can satisfy a required check and later reacquire the same requirement under the same target and
+    policy; equal participant fields do not merge the two activation intervals.
+status: proposed

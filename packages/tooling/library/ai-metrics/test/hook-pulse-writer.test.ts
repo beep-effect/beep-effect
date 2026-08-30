@@ -1,8 +1,10 @@
-import { fileURLToPath } from "node:url";
-import { fcRuns } from "@beep/fc-runs";
+import * as NodeURL from "node:url";
 import {
   agentEvidenceRoot,
   HookPulseAgentKind,
+  HookPulseDisarmSentinel,
+  HookPulseDisarmWindow,
+  HookPulseDisarmWindowSchemaVersion,
   HookPulseEvent,
   HookPulseEvidenceTier,
   HookPulseInstrumentClass,
@@ -12,9 +14,12 @@ import {
   HookPulseV1FromRawEvent,
   HookPulseWaitReason,
   hashPrivateIdentifier,
+  hookPulseDisarmSentinelPath,
+  hookPulseDisarmWindowsPath,
   hookPulseLedgerDir,
 } from "@beep/repo-ai-metrics";
 import { Unknown } from "@beep/schema/Unknown";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Path, Stream } from "effect";
@@ -32,18 +37,12 @@ import { ChildProcess } from "effect/unstable/process";
 // producing a wrong ledger.
 // `fileURLToPath`, not `URL.pathname`: the latter is percent-encoded, so a
 // checkout path containing a space or `#` would yield an unspawnable writer path.
-const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
+const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
+const codexWriterPath = `${repoRoot}.codex/hooks/hook-pulse.sh`;
 // The operator half of the same instrument: the switch writes the sentinel the
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
-
-// Named once because three parties spell these: the writer (which tests for the
-// sentinel before anything else), the switch (which writes both), and this file
-// (which reads both back). Neither name is exported from the TypeScript side yet,
-// so a single const here is the closest thing to one definition.
-const DISARM_SENTINEL_FILE = "hook-pulse.disarmed";
-const DISARM_WINDOWS_FILE = "hook-pulse-disarm-windows.ndjson";
 
 // A distinctive marker planted in every content-bearing raw key measured by the
 // P1 spike. Amendment 6 is only actually enforced if this never reaches disk —
@@ -68,7 +67,7 @@ const OPERATOR_SALT = "hook-pulse-writer-operator-salt";
 // wrong. Recomputing the expected digest with the same `hashPrivateIdentifier`
 // the codecs use is what makes the two halves provably agree, exactly as the
 // `HookPulseWaitReasonInvariant` filter does for the wait derivation.
-const privateDigest = (value: string) => hashPrivateIdentifier(value, undefined);
+const privateDigest = (value: string) => hashPrivateIdentifier(value, O.none());
 
 // One salt for the writer child and the codec provider alike, so a parity case
 // reads as "both halves were told the same thing" rather than as two constants
@@ -85,12 +84,12 @@ const CODEC_PARITY_SALT = "hook-pulse-writer-codec-parity-salt";
 const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
   Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
 
-const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
-const decodeHookPulseRow = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
+const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
+const decodeHookPulseRow = HookPulseV1.decodeJsonEffect;
 const decodeRowKeys = S.decodeUnknownSync(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const decodeRowString = S.decodeUnknownSync(S.String);
-const encodeHookPulseRow = S.encodeUnknownSync(S.fromJsonString(HookPulseV1));
-const decodeHookPulseRowSync = S.decodeUnknownSync(S.fromJsonString(HookPulseV1));
+const encodeHookPulseRow = HookPulseV1.encodeJsonSync;
+const decodeHookPulseRowSync = HookPulseV1.decodeJsonSync;
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 // Fixture payloads are raw harness shapes, not a schema this package owns, so the
 // unknown-shaped encoder is the right rung: it renders stdin without pretending the
@@ -160,18 +159,28 @@ const runWriter = Effect.fnUntraced(function* (
     readonly disarmSentinel?: string;
     readonly hashSalt?: string;
     readonly viaXdgFallback?: boolean;
+    readonly writerPath?: string;
   } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const stateHome = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-" });
+  const stateHome = yield* fs.makeTempDirectoryScoped({
+    prefix: "beep-hook-pulse-",
+  });
   const evidenceRoot = agentEvidenceRoot(stateHome);
   const storeDir = hookPulseLedgerDir(evidenceRoot);
 
   if (O.isSome(O.fromUndefinedOr(options.disarmSentinel))) {
     yield* fs.makeDirectory(evidenceRoot, { recursive: true });
-    yield* fs.writeFileString(path.join(evidenceRoot, DISARM_SENTINEL_FILE), `${options.disarmSentinel}\n`);
+    yield* fs.writeFileString(hookPulseDisarmSentinelPath(evidenceRoot), `${options.disarmSentinel}\n`);
   }
+
+  const childStdin = O.match(O.fromUndefinedOr(options.disarmSentinel), {
+    // The kill-switch guard exits before the writer reads stdin. Ignoring the pipe in
+    // that case avoids racing a payload write against the child's intentional exit.
+    onSome: () => "ignore" as const,
+    onNone: () => ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true }) as const,
+  });
 
   // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
   // `node:child_process`. Measured: inside a vitest worker under the coverage script
@@ -183,7 +192,7 @@ const runWriter = Effect.fnUntraced(function* (
   // and never the `coverage` one, so no local proof could reach it. The spawner behind
   // `ChildProcess` delivers stdin and closes it under both runtimes, and it is what the
   // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
-  const handle = yield* ChildProcess.make(writerPath, [], {
+  const handle = yield* ChildProcess.make(options.writerPath ?? writerPath, [], {
     cwd: repoRoot,
     // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
     // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
@@ -219,7 +228,7 @@ const runWriter = Effect.fnUntraced(function* (
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
-      // unconfigured clone byte-identical to `hashPrivateIdentifier(value, undefined)`.
+      // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
       // The second rung is settable so the codec-parity cases can prove both
       // halves walk the *same* chain rather than only its first link.
       BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
@@ -228,7 +237,7 @@ const runWriter = Effect.fnUntraced(function* (
     // `endOnDone` is stated rather than left to its `true` default: closing stdin once
     // the payload is written is the whole reason this run terminates, so it is part of
     // what the helper promises and not an incidental default someone may retune.
-    stdin: { stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true },
+    stdin: childStdin,
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -515,6 +524,17 @@ const expectSilentRefusal = (run: WriterRun): void => {
 };
 
 layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
+  it.effect("tags Codex hook rows as codex-cli", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const run = yield* runWriter(encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+
+        expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["codex-cli"]);
+      })
+    )
+  );
+
   A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {
     it.effect(`emits one HookPulseV1 row for ${label}`, () =>
       Effect.scoped(
@@ -659,11 +679,13 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // at all, because the insecure default is what such a writer would have
         // used anyway. Only a run under an operator salt separates "resolves the
         // salt" from "hardcodes the fallback".
-        const run = yield* runWriter(encodeJson(preToolUsePayload), { hashSalt: OPERATOR_SALT });
+        const run = yield* runWriter(encodeJson(preToolUsePayload), {
+          hashSalt: OPERATOR_SALT,
+        });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-        expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(session, OPERATOR_SALT));
-        expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, OPERATOR_SALT));
+        expect(decoded.sessionId).toBe(yield* hashPrivateIdentifier(session, O.some(OPERATOR_SALT)));
+        expect(decoded.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.some(OPERATOR_SALT)));
         expect(decoded.sessionId).not.toBe(yield* privateDigest(session));
       })
     )
@@ -676,7 +698,9 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // `resolveAiMetricsHashSaltValue` trims first and falls back. That lone
         // input is where the two halves can disagree with both looking correct,
         // so the shell trims too and this pins it.
-        const run = yield* runWriter(encodeJson(preToolUsePayload), { hashSalt: "   " });
+        const run = yield* runWriter(encodeJson(preToolUsePayload), {
+          hashSalt: "   ",
+        });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.sessionId).toBe(yield* privateDigest(session));
@@ -786,10 +810,16 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     [
       { label: "unparseable stdin", stdin: "not json at all {{{" },
       { label: "empty stdin", stdin: "" },
-      { label: "a payload with no session_id", stdin: encodeJson({ ...stopPayload, session_id: undefined }) },
+      {
+        label: "a payload with no session_id",
+        stdin: encodeJson({ ...stopPayload, session_id: undefined }),
+      },
       {
         label: "a payload with an unknown hook_event_name",
-        stdin: encodeJson({ ...stopPayload, hook_event_name: "SomeFutureEvent" }),
+        stdin: encodeJson({
+          ...stopPayload,
+          hook_event_name: "SomeFutureEvent",
+        }),
       },
     ],
     ({ label, stdin }) => {
@@ -847,7 +877,9 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // With BEEP_AGENT_EVIDENCE_ROOT cleared, the writer must land in the
         // same directory `agentEvidenceRoot`/`hookPulseLedgerDir` compute — the
         // runner reads back from exactly that derived path.
-        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), { viaXdgFallback: true });
+        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), {
+          viaXdgFallback: true,
+        });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum["plan-approval"]);
@@ -863,11 +895,19 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   // either salt was exported.
   const codecParityCases: ReadonlyArray<{
     readonly label: string;
-    readonly writerOptions: { readonly aiMetricsHashSalt?: string; readonly hashSalt?: string };
+    readonly writerOptions: {
+      readonly aiMetricsHashSalt?: string;
+      readonly hashSalt?: string;
+    };
     readonly codecEnv: Record<string, string>;
     readonly expectedSalt: string | undefined;
   }> = [
-    { label: "neither salt configured", writerOptions: {}, codecEnv: {}, expectedSalt: undefined },
+    {
+      label: "neither salt configured",
+      writerOptions: {},
+      codecEnv: {},
+      expectedSalt: undefined,
+    },
     {
       label: "the hook-pulse rung",
       writerOptions: { hashSalt: CODEC_PARITY_SALT },
@@ -911,8 +951,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           // what separates "reproduces the writer" from "both hardcode the
           // default", and it fails on the salted rows if either half stops
           // reading its variable.
-          expect(codecRow.sessionId).toBe(yield* hashPrivateIdentifier(session, expectedSalt));
-          expect(codecRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, expectedSalt));
+          expect(codecRow.sessionId).toBe(yield* hashPrivateIdentifier(session, O.fromUndefinedOr(expectedSalt)));
+          expect(codecRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.fromUndefinedOr(expectedSalt)));
         })
       )
     );
@@ -926,26 +966,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
 // instrument was off", so representing a disarm window in the canonical ledger
 // would mean inventing a hook event. Keeping the window in a sibling file is
 // what lets P4 replay treat `hook-events/` as exactly one schema.
-const DISARM_WINDOW_SCHEMA_VERSION = "hook-pulse-disarm-window/v1";
-
-const HookPulseDisarmSentinel = S.Struct({
-  disarmedAt: S.String,
-  evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
-  reason: S.String,
-});
-
-const HookPulseDisarmWindow = S.Struct({
-  // `null` rather than absent, and rather than a fabricated start: an unknown
-  // window start must stay distinguishable from a measured one.
-  disarmedAt: S.NullOr(S.String),
-  evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
-  reason: S.NullOr(S.String),
-  rearmedAt: S.String,
-  schemaVersion: S.Literal(DISARM_WINDOW_SCHEMA_VERSION),
-});
-
-const decodeDisarmSentinel = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmSentinel));
-const decodeDisarmWindow = S.decodeUnknownEffect(S.fromJsonString(HookPulseDisarmWindow));
+const decodeDisarmSentinel = HookPulseDisarmSentinel.decodeJsonEffect;
+const decodeDisarmWindow = HookPulseDisarmWindow.decodeJsonEffect;
 
 // An ISO-8601 UTC instant at second resolution, which is all `date -u
 // +%Y-%m-%dT%H:%M:%SZ` can express. Asserted on `rearmedAt` so a window closed
@@ -971,15 +993,16 @@ interface SwitchStore {
 // temp root per call, as `runWriter` does, could not express it at all.
 const makeSwitchStore = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const stateHome = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-switch-" });
+  const stateHome = yield* fs.makeTempDirectoryScoped({
+    prefix: "beep-hook-pulse-switch-",
+  });
   const evidenceRoot = agentEvidenceRoot(stateHome);
 
   return {
     evidenceRoot,
-    sentinelPath: path.join(evidenceRoot, DISARM_SENTINEL_FILE),
+    sentinelPath: hookPulseDisarmSentinelPath(evidenceRoot),
     stateHome,
-    windowsPath: path.join(evidenceRoot, DISARM_WINDOWS_FILE),
+    windowsPath: hookPulseDisarmWindowsPath(evidenceRoot),
   };
 });
 
@@ -1158,9 +1181,9 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
         const window = yield* decodeDisarmWindow(expectSingleWindow(yield* readWindowRows(store)));
 
         expectSwitchOk(armed);
-        expect(window.schemaVersion).toBe(DISARM_WINDOW_SCHEMA_VERSION);
-        expect(window.disarmedAt).toBe(SEEDED_DISARM.disarmedAt);
-        expect(window.reason).toBe(SEEDED_DISARM.reason);
+        expect(window.schemaVersion).toBe(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"]);
+        expect(window.disarmedAt).toEqual(O.some(SEEDED_DISARM.disarmedAt));
+        expect(window.reason).toEqual(O.some(SEEDED_DISARM.reason));
         // Self-labelled `unknown`: no hook rows exist for the window, so anything
         // computed across it is uninstrumented by construction.
         expect(window.evidenceTier).toBe(HookPulseEvidenceTier.Enum.unknown);
@@ -1207,8 +1230,8 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
             // `null`, never the rearm instant: a window whose start defaulted to
             // "now" would read as a zero-length gap, which is worse than an
             // admitted unknown because it looks like coverage.
-            expect(window.disarmedAt).toBeNull();
-            expect(window.reason).toBeNull();
+            expect(window.disarmedAt).toEqual(O.none());
+            expect(window.reason).toEqual(O.none());
             expect(window.rearmedAt).toMatch(isoSecond);
             expect(yield* readSentinel(store)).toEqual(O.none());
           })

@@ -1,0 +1,21 @@
+id: "dh:worktree-config:014"
+observation_refs:
+  - "po:sha256:60ee0a392b7109f8914e89df188cdd5bd8e18390ddde480b96f362408411fdd4"
+  - "po:sha256:c51e70098e7cb7f6170bccb102a0436b5741f45bbba0c983f6c9461886ece32d"
+cq_warrants:
+  - "CQ-002"
+proposed_referent:
+  label: "full-repository docgen work-unit specification"
+  description: "A repeatable prescription to run full documentation generation over the repository as repository-wide proof, distinct from any execution."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "a full-repository docgen execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An AGENTS policy line can reserve bun run docgen for repository-wide proof as CLI guidance while no independently retained or governed WorkUnit individual exists; the two quotations provide no execution or lifecycle provenance."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.92, use_for_acceptance: false}

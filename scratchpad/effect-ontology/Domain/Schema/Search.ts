@@ -7,54 +7,12 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { DateTime, SchemaGetter } from "effect";
+import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { RdfObject } from "./KnowledgeModel.ts";
-import { ArticleSummary, ClaimRank, ClaimWithRank } from "./Timeline.ts";
+import { ArticleSummary, ClaimRank, ClaimWithRank, OrderedUtcRange } from "./Timeline.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Search");
-
-const SearchDateRangeDefinition = S.Struct({
-  from: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range start." }),
-  to: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range end." }),
-}).check(
-  S.makeFilter(
-    (range) =>
-      DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
-        ? undefined
-        : {
-            path: ["to"],
-            issue: "Search date-range end must not precede its start.",
-          },
-    {
-      identifier: $I`SearchDateRangeOrderCheck`,
-      title: "Ordered Search Date Range",
-      description: "A UTC search range whose end is not before its start.",
-      message: "Search date-range end must be greater than or equal to its start.",
-    }
-  )
-);
-
-const SearchDateRangeFromSelf = S.declare((input: unknown): input is typeof SearchDateRangeDefinition.Type =>
-  S.is(SearchDateRangeDefinition)(input)
-).annotate({
-  toArbitrary: () => (fc) =>
-    fc
-      .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
-      .map(([from, duration]) =>
-        SearchDateRangeDefinition.make({
-          from: DateTime.makeUnsafe(from),
-          to: DateTime.makeUnsafe(from + duration),
-        })
-      ),
-});
-
-const SearchDateRange = SearchDateRangeDefinition.pipe(
-  S.decodeTo(SearchDateRangeFromSelf),
-  $I.annoteSchema("SearchDateRange", {
-    description: "Ordered UTC date range used by search filters.",
-  })
-);
 
 const PositiveLimitFromString = S.FiniteFromString.pipe(
   S.decodeTo(PosInt, {
@@ -90,7 +48,7 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
     query: S.NonEmptyString,
     predicates: IRI.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    dateRange: S.OptionFromOptionalKey(SearchDateRange).pipe(SchemaUtils.withNoneDefault),
+    dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     rank: S.OptionFromOptionalKey(ClaimRank).pipe(SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
     offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
@@ -121,10 +79,20 @@ const ClaimSearchFacets = S.Struct({
  *
  * **Example** (Use ClaimSearchResponse)
  * ```ts
- * import type { ClaimSearchResponse } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClaimSearchResponse } from "@effect-ontology/Schema/Search"
  *
- * const count = (response: ClaimSearchResponse) => response.claims.length
- * console.log(count)
+ * const response = S.decodeUnknownOption(ClaimSearchResponse)({
+ *   query: "appointed director",
+ *   claims: [],
+ *   total: 0,
+ *   limit: 20,
+ *   offset: 0,
+ *   hasMore: false
+ * })
+ * console.log(O.map(response, (value) => value.claims.length)) // Some(0)
+ * console.log(O.map(response, (value) => value.total)) // Some(0)
  * ```
  *
  * @category dtos
@@ -184,10 +152,17 @@ const EntityTopClaim = S.Struct({
  *
  * **Example** (Use EntitySearchResult)
  * ```ts
- * import type { EntitySearchResult } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntitySearchResult } from "@effect-ontology/Schema/Search"
  *
- * const claimCount = (result: EntitySearchResult) => result.claimCount
- * console.log(claimCount)
+ * const result = S.decodeUnknownOption(EntitySearchResult)({
+ *   iri: "https://example.com/alice",
+ *   label: "Alice",
+ *   claimCount: 0
+ * })
+ * console.log(O.flatMap(result, (value) => value.label)) // Some("Alice")
+ * console.log(O.map(result, (value) => value.claimCount)) // Some(0)
  * ```
  *
  * @category models
@@ -268,10 +243,15 @@ export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery
  *
  * **Example** (Use Suggestion)
  * ```ts
- * import type { Suggestion } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { Suggestion } from "@effect-ontology/Schema/Search"
  *
- * const label = (suggestion: Suggestion) => suggestion.label
- * console.log(label)
+ * const suggestion = S.decodeUnknownOption(Suggestion)({
+ *   label: "Alice",
+ *   iri: "https://example.com/alice"
+ * })
+ * console.log(O.map(suggestion, (value) => value.label)) // Some("Alice")
  * ```
  *
  * @category models
@@ -334,7 +314,7 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for article search." }),
     query: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    dateRange: S.OptionFromOptionalKey(SearchDateRange).pipe(SchemaUtils.withNoneDefault),
+    dateRange: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
     offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
   },
@@ -348,10 +328,21 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
  *
  * **Example** (Use ArticleSearchResult)
  * ```ts
- * import type { ArticleSearchResult } from "@effect-ontology/Schema/Search"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ArticleSearchResult } from "@effect-ontology/Schema/Search"
  *
- * const conflicts = (result: ArticleSearchResult) => result.conflictCount
- * console.log(conflicts)
+ * const result = S.decodeUnknownOption(ArticleSearchResult)({
+ *   article: {
+ *     id: "article-42",
+ *     uri: "https://example.com/news/42",
+ *     publishedAt: "2026-07-25T10:00:00.000Z",
+ *     ingestedAt: "2026-07-25T10:05:00.000Z"
+ *   },
+ *   claimCount: 0,
+ *   conflictCount: 0
+ * })
+ * console.log(O.map(result, (value) => value.conflictCount)) // Some(0)
  * ```
  *
  * @category models

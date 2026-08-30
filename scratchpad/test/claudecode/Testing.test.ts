@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for the Testing module helpers — fixtures, assertion
  * helpers, and `makeMockFileSystem`.
@@ -323,3 +322,4 @@ describe("Testing.fixtures + runHookWithMockStdin integration", () => {
     })
   );
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

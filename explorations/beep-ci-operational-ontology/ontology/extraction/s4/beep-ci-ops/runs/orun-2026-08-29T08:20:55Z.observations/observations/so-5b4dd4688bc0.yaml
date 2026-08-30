@@ -1,0 +1,23 @@
+id: so:sha256:5b4dd4688bc06342616560077273e5f344b5b8b3068dab299ddaad61933a620b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 235
+  end_line: 235
+  content_sha256: 50e118fd4713d9b899894f646c902bd4185bde07fbd31f2d1828e1d70a5db1ff
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::decodeUnknownRecordOption
+  lexical_name: decodeUnknownRecordOption
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownStringRecord);
+epistemic_status: parser_derived

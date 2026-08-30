@@ -1,0 +1,194 @@
+# Pack claudecode-events
+
+- modules: 31
+- owning exports: 379
+- re-exports: 0
+- open modules: 31
+- open owning exports: 116
+
+## Files
+
+- `claudecode/Hook/Events/ConfigChange.ts` owning=10 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/CwdChanged.ts` owning=7 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/Elicitation.ts` owning=16 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/ElicitationResult.ts` owning=16 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/FileChanged.ts` owning=10 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/InstructionsLoaded.ts` owning=11 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/MessageDisplay.ts` owning=9 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/Notification.ts` owning=9 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PermissionDenied.ts` owning=11 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PermissionRequest.ts` owning=25 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PostCompact.ts` owning=9 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PostToolBatch.ts` owning=12 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PostToolUse.ts` owning=16 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PostToolUseFailure.ts` owning=11 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PreCompact.ts` owning=10 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/PreToolUse.ts` owning=19 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/SessionEnd.ts` owning=9 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/SessionStart.ts` owning=16 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/Setup.ts` owning=12 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/Stop.ts` owning=14 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/StopFailure.ts` owning=9 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/SubagentStart.ts` owning=10 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/SubagentStop.ts` owning=11 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/TaskCompleted.ts` owning=8 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/TaskCreated.ts` owning=8 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/TeammateIdle.ts` owning=8 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/UserPromptExpansion.ts` owning=13 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/UserPromptSubmit.ts` owning=11 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/WorktreeCreate.ts` owning=9 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/WorktreeRemove.ts` owning=6 moduleFindings=missing-packageDocumentation
+- `claudecode/Hook/Events/index.ts` owning=34 moduleFindings=missing-packageDocumentation
+
+## Open modules
+
+- `claudecode/Hook/Events/ConfigChange.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/CwdChanged.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/Elicitation.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/ElicitationResult.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/FileChanged.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/InstructionsLoaded.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/MessageDisplay.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/Notification.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PermissionDenied.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PermissionRequest.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PostCompact.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PostToolBatch.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PostToolUse.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PostToolUseFailure.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PreCompact.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/PreToolUse.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/SessionEnd.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/SessionStart.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/Setup.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/Stop.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/StopFailure.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/SubagentStart.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/SubagentStop.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/TaskCompleted.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/TaskCreated.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/TeammateIdle.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/UserPromptExpansion.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/UserPromptSubmit.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/WorktreeCreate.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/WorktreeRemove.ts`: missing-packageDocumentation
+- `claudecode/Hook/Events/index.ts`: missing-packageDocumentation
+
+## Open owning exports
+
+- `claudecode/Hook/Events/ConfigChange.ts:210` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/ConfigChange.ts:234` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/CwdChanged.ts:152` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/CwdChanged.ts:176` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Elicitation.ts:338` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Elicitation.ts:362` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Elicitation.ts:386` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/ElicitationResult.ts:337` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/ElicitationResult.ts:361` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/ElicitationResult.ts:385` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/FileChanged.ts:220` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/FileChanged.ts:244` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/InstructionsLoaded.ts:247` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/InstructionsLoaded.ts:271` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/MessageDisplay.ts:179` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/MessageDisplay.ts:203` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/MessageDisplay.ts:227` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Notification.ts:215` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Notification.ts:239` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionDenied.ts:231` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionDenied.ts:255` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionDenied.ts:279` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:509` `PermissionRule` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:533` `PermissionSuggestion` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:557` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:581` `RulePermissionUpdate` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:605` `ModePermissionUpdate` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:629` `DirectoryPermissionUpdate` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:653` `PermissionDecision` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:677` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PermissionRequest.ts:701` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostCompact.ts:191` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostCompact.ts:215` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolBatch.ts:220` `ToolCall` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolBatch.ts:244` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolBatch.ts:268` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolBatch.ts:292` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolUse.ts:385` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolUse.ts:409` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolUse.ts:433` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolUseFailure.ts:229` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolUseFailure.ts:253` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PostToolUseFailure.ts:277` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PreCompact.ts:226` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PreCompact.ts:250` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PreToolUse.ts:461` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PreToolUse.ts:485` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/PreToolUse.ts:509` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SessionEnd.ts:212` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SessionEnd.ts:236` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SessionStart.ts:374` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SessionStart.ts:398` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SessionStart.ts:422` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Setup.ts:242` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Setup.ts:266` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Setup.ts:290` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Stop.ts:270` `BackgroundTask` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Stop.ts:294` `SessionCron` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Stop.ts:318` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Stop.ts:342` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/Stop.ts:366` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/StopFailure.ts:204` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/StopFailure.ts:228` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SubagentStart.ts:205` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SubagentStart.ts:229` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SubagentStart.ts:253` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SubagentStop.ts:246` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SubagentStop.ts:270` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/SubagentStop.ts:294` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/TaskCompleted.ts:161` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/TaskCompleted.ts:185` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/TaskCreated.ts:161` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/TaskCreated.ts:185` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/TeammateIdle.ts:158` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/TeammateIdle.ts:182` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/UserPromptExpansion.ts:264` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/UserPromptExpansion.ts:288` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/UserPromptExpansion.ts:312` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/UserPromptSubmit.ts:242` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/UserPromptSubmit.ts:266` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/UserPromptSubmit.ts:290` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/WorktreeCreate.ts:174` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/WorktreeCreate.ts:198` `HookSpecificOutput` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/WorktreeCreate.ts:222` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/WorktreeRemove.ts:121` `Input` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/WorktreeRemove.ts:145` `Output` (value/namespace) missing=@example findings=missing-required-tags
+- `claudecode/Hook/Events/index.ts:58` `ConfigChange` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:59` `CwdChanged` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:61` `Elicitation` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:62` `ElicitationResult` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:63` `FileChanged` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:64` `InstructionsLoaded` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:66` `MessageDisplay` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:67` `Notification` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:68` `PermissionDenied` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:69` `PermissionRequest` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:70` `PostCompact` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:71` `PostToolBatch` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:72` `PostToolUse` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:73` `PostToolUseFailure` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:74` `PreCompact` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:75` `PreToolUse` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:76` `SessionEnd` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:77` `SessionStart` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:78` `Setup` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:79` `Stop` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:80` `StopFailure` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:81` `SubagentStart` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:82` `SubagentStop` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:83` `TaskCompleted` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:84` `TaskCreated` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:85` `TeammateIdle` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:86` `UserPromptExpansion` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:87` `UserPromptSubmit` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:88` `WorktreeCreate` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `claudecode/Hook/Events/index.ts:89` `WorktreeRemove` (value/re-export) missing=@category|@since|@example findings=missing-summary|missing-required-tags

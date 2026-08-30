@@ -1,0 +1,27 @@
+id: "dh:reporun:027"
+observation_refs:
+  - "so:sha256:53dfa3562ca91f94710212bf848b73ec946419464d1ed9ce22b9fed4f819bc38"
+cq_warrants: []
+proposed_referent:
+  label: "repository-step run-result record"
+  description: "A schema-shaped record for command text, exit status, timing, output references, and truncation state."
+representation_status: unresolved
+alternatives:
+  - label: "Information artifact recording a WorkUnitExecution result"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "The WorkUnitExecution occurrence itself"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Internal result DTO"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation supplies a result-record schema but no lane observation shows this carrier being produced, persisted, or used as the CQ-025 cost-calibration record. A declaration and result-like fields do not reject the null."
+epistemic_status: proposed
+confidence:
+  value: 0.52
+  use_for_acceptance: false
+

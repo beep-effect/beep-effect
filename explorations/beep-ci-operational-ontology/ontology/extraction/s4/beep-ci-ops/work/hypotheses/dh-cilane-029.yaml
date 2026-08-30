@@ -1,0 +1,26 @@
+id: "dh:cilane:029"
+observation_refs:
+  - "so:sha256:75b7768a3c203a51ef44195675fff86f932a9fcfecba05f0a81cdbfd23ebac5d"
+  - "so:sha256:dfc1fb676ba2773a33fc82292705d2ba8fa532807c5af902850d4a8b651f65dd"
+  - "so:sha256:fdc9fa8d1695093acfe0caa48c98df8c966cce5b3f4cf088faf14b433631154f"
+cq_warrants:
+  - "CQ-002"
+proposed_referent:
+  label: "CI lane invocation-option implementation"
+  description: "The source record and helpers that carry affected, base, mode, range, summary, run-count, seed, and filter choices."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification WorkUnit specification parameters"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "scope-bearing verification procedure configuration"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A schema declaration, a flag constant, and an argument-building helper can be an ephemeral DTO boundary. The observations do not identify a persistent WorkUnit specification or relate it to an episode, scope, or admissibility decision."
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

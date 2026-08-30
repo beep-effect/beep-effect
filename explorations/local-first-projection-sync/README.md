@@ -2,8 +2,12 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
-Status: `graduated` — gated candidates remain as re-entry points.
+Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
+
+Status note: gated candidates remain as re-entry points.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -1,0 +1,69 @@
+id: otp:admission-snapshot:001
+hypothesis_ref: dh:sched-core:010
+identity_card_ref: ic:sched-core:009
+foundational_status: explicitly_deferred
+term:
+  local_name: AdmissionSnapshot
+  preferred_label: admission snapshot
+  proposed_iri: https://oip.law/ontology/ci-ops#AdmissionSnapshot
+  owl_entity_kind: class
+definition:
+  text: An admission-state capture information artifact that groups capacity, active charges, live leases, queued tickets,
+    memory availability, and exceptional records at one observation boundary. It is necessary semantic support for
+    capacityAtAdmissionTokens because CQ-010 defines that value as remaining capacity immediately before the new charge; the
+    co-temporal capacity and active-charge content of the pre-grant capture distinguishes that value from a post-grant or
+    otherwise mis-scoped remainder. The term denotes the point-in-time information content whether its carrier is transient or
+    retained and does not claim that equal response values identify one durable capture token.
+  source:
+  - CQ-010
+  - CQ-023
+  - so:sha256:54af3bae065ad2e6cfb6f8068a3bbe178407105b5576a6e9e8231e9cebd579f5
+  - so:sha256:5b05efc61c2fd7de3c28414678dfa7302018d4fafd6f02a307ac897623489193
+  - so:sha256:63ba4aaa9693ba692dbd1089e69855e4c4e78f7b3d6005e529431e9a96163c70
+  - so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e
+  - po:sha256:235648e8de184e745c4d7bc96c81eb29354f19f81dae5c057de1272875f44fb6
+  - po:sha256:724441d2f5fe074205349c704ecc6b1f3aff79210f923d414f6e326a60b59ef1
+  - po:sha256:7ac375710c80682c25f8e9effab735affd8a22a5d27df4ba806992d64c780f03
+  - po:sha256:afa600fec9889222d94fb5a29bc4aa8e748edd9baaa22ceb1f64db174a9be2a6
+  - po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: unresolved
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  semantic_support_for:
+  - otp:capacity-at-admission-tokens:001
+alternatives_rejected: []
+open_issues:
+- 'Steward choice remains open: A capture timestamp or event reference, machine and policy scope, and provenance showing whether
+  repeated status values are distinct snapshot tokens would decide individuation.'
+- 'Steward must choose whether to adopt the still-viable rival model: The referent is the live admission-state situation,
+  and AdmissionSnapshot is only its information projection.'
+- 'Steward choice remains open: AdmissionSnapshot may be an extensional response value rather than an independently
+  reidentifiable record token; this proposal covers that rival by committing only to the capture information content and
+  leaving carrier-token identity unresolved.'
+revision_log:
+- from_sha256: fe69ce88032b349d642ffff81eb377df2a0bfb12358981923753b21e56cbf454
+  addressed:
+  - support-term-not-necessary
+  - discriminator-true-of-dto
+- from_sha256: d7dc3298c3a6d243e693cc08ded02d907815724cd2dbe58480059dc4f8e7361e
+  addressed:
+  - support-necessity-underdetermined
+  - discriminator-true-of-dto
+- from_sha256: 8ea4f83aa5b12557578c7fd4fe29486117168e53900505b42b3e9b98125f6115
+  addressed:
+  - support-term-not-necessary
+  - discriminator-true-of-dto
+- from_sha256: d19e119986d6ef88938afe64c8d3cc57378f399f77ff22e6f9bbbaa12953e192
+  addressed:
+  - support-warrant-self-contradiction
+status: proposed
+revision_requests: []

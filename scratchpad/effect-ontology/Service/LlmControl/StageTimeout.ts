@@ -35,7 +35,11 @@ export const TimedStage = LiteralKit([
   "grounding",
   "entity_verification",
   "serialization",
-]);
+]).annotate(
+  $I.annote("TimedStage", {
+    description: "Pipeline stages that have dedicated hard and soft timeouts.",
+  })
+);
 
 /**
  * Type of values accepted by {@link TimedStage}.
@@ -267,9 +271,15 @@ const makeStageTimeoutService = (
  *
  * ```ts
  * import { Layer } from "effect"
- * import { StageTimeoutServiceLive } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ * import { Effect } from "effect"
+ * import { StageTimeoutService, StageTimeoutServiceLive } from "@effect-ontology/Service/LlmControl/StageTimeout"
  *
- * console.log(Layer.isLayer(StageTimeoutServiceLive)) // true
+ * const program = Effect.gen(function* () {
+ *   const timeouts = yield* StageTimeoutService
+ *   return yield* timeouts.getConfig("chunking")
+ * }).pipe(Effect.provide(StageTimeoutServiceLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

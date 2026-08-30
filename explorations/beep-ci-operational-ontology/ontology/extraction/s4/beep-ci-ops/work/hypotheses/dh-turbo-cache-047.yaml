@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:047"
+observation_refs:
+  - "so:sha256:5f6d28b84b2b6a0c45f5257d36c2be6c720c4d1e501c15f6afab588634171e62"
+cq_warrants: []
+proposed_referent:
+  label: "Repository-local identifier constant for the TurboCache module"
+  description: "An internal identifier-construction token used by the source module."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A lexical alias for the TurboCache implementation module"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "An information artifact identifying a software component"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole fact is an unrepresentable declaration that constructs an internal module identifier; no independently tracked domain entity is observed."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.98
+  use_for_acceptance: false

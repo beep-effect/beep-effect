@@ -1,0 +1,24 @@
+id: "dh:cilane:023"
+observation_refs:
+  - "po:sha256:49e9678210d916feb74955a88fea32472865bcea2861d115a00528c91a9a3553"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "unit-test verification lane"
+  description: "A possible unit-test verification lane named by the quoted test-unit token."
+representation_status: lexical_alias
+alternatives:
+  - label: "test-unit command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "unit-test execution procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quoted test-unit value does not establish a test corpus, work specification, execution, or result. It can be fully explained as an internal selector, despite its plausible domain reading."
+epistemic_status: proposed
+confidence:
+  value: 0.41
+  use_for_acceptance: false

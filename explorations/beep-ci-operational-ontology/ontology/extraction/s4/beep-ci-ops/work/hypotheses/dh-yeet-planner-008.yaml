@@ -1,0 +1,30 @@
+id: "dh:yeet-planner:008"
+observation_refs:
+  - "so:sha256:1adbba90ffeca74bb7274f9ac7af8f6887553ab1344981fdce3e7ab86aaa9f4f"
+  - "so:sha256:82a07ab0edbc59f82a4a3bd5ed6791d927df50a924aeb2a8898636b1d7c344aa"
+  - "po:sha256:df2d4797ee69893a15a3519ee92e6b1b3612ee21d681769dc857b59731ffdd05"
+  - "po:sha256:b565b1f59f1de2fb2810a5cbba36c6c707705f294baf25d0b54bc812b7104d91"
+cq_warrants: []
+proposed_referent:
+  label: "Full verification procedure specification"
+  description: "A repeatable proof-plan specification selecting the pre-push proof procedure."
+representation_status: information_artifact
+alternatives:
+  - label: "Full operational verification procedure kind"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Literal planner selector token"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+  - label: "Assurance tier itself"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The quotation gives this member repeatable proof-plan content by constructing the pre-push proof definition, distinct from both an assurance obligation and an execution occurrence."
+  discriminator: "The supplied quotation maps the full member directly to constructed content for the pre-push proof-step specification."
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

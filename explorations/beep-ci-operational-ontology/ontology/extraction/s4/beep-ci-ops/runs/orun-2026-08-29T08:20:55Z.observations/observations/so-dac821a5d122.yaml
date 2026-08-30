@@ -1,0 +1,24 @@
+id: so:sha256:dac821a5d122cd247c125333d97d604bead18efe79ab37b3ac572f88d665d74e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 244
+  end_line: 271
+  content_sha256: f4af43de31397b54f38eda84b68bdcd56b1275b70b138fce4814de77a0d2b432
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts::appendYeetAttemptJournalEvent
+  lexical_name: appendYeetAttemptJournalEvent
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: appendYeetAttemptJournalEvent
+source_excerpt: export const appendYeetAttemptJournalEvent = Effect.fn("YeetAttemptJournal.append")(function*
+  (
+epistemic_status: parser_derived

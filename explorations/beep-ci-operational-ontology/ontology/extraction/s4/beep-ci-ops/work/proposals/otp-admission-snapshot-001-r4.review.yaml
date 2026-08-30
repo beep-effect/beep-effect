@@ -1,0 +1,50 @@
+target: "otp:admission-snapshot:001"
+target_sha256: "d19e119986d6ef88938afe64c8d3cc57378f399f77ff22e6f9bbbaa12953e192"
+chain_sha256: "d7a14310f00ef544f354097ceeb567be7433fc5f94ef41db77ab7d4403a966df"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: deferred-snapshot-token-individuation
+    counterexample: >-
+      Two independent status reads can return byte-identical payloads, while one
+      captured payload can be copied into two carriers. The proposal and card
+      correctly leave capture-token identity unresolved and name the timestamp,
+      scope, and provenance needed to distinguish those cases.
+    outcome: survived
+  - surface: warrant
+    rule: support-warrant-self-contradiction
+    counterexample: >-
+      CQ-023 can compute observedQueueWaitMs from a SeatRequest enqueue instant
+      and a collector boundary retained directly, or can retain the computed
+      assertion itself. The revised definition and open issue expressly concede
+      that no AdmissionSnapshot individual is needed, while operational_warrant
+      still asserts necessary semantic support for observedQueueWaitMs.
+    outcome: landed
+  - surface: null_discriminator
+    rule: runtime-capture-not-inert-dto
+    counterexample: >-
+      A schema declaration alone would be implementation-only, but the closure
+      also identifies the deployed admissionStatus and snapshotAdmissionState
+      procedures and the governed point-in-time machine-state content. A transient
+      carrier can still realize an information artifact, so DTO transience alone
+      does not erase the runtime capture referent.
+    outcome: survived
+rival_models_still_viable:
+  - "The live admission-state situation is the world-side referent and the snapshot is its information projection."
+  - "The capture is an extensional response value whose token identity remains unresolved."
+evidence:
+  - "so:sha256:54af3bae065ad2e6cfb6f8068a3bbe178407105b5576a6e9e8231e9cebd579f5"
+  - "so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e"
+  - "po:sha256:724441d2f5fe074205349c704ecc6b1f3aff79210f923d414f6e326a60b59ef1"
+  - "CQ-023"

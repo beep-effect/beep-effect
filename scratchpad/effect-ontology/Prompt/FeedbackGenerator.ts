@@ -14,19 +14,12 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { dual2 } from "../Utils/Dual.ts";
+import type { PromptDoc } from "./Doc.ts";
+import { Doc } from "./Doc.ts";
 import type { ExtractionRule, RuleCategory } from "./ExtractionRule.ts";
 import type { RuleSet } from "./RuleSet.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Prompt/FeedbackGenerator");
-
-/** Internal plain-text document assembled before feedback rendering. */
-type PromptDoc = string;
-const Doc = {
-  empty: "",
-  text: (value: string): PromptDoc => value,
-  vsep: (documents: ReadonlyArray<PromptDoc>): PromptDoc => A.join(documents, "\n"),
-  render: (document: PromptDoc, _options?: unknown): string => document,
-};
 
 const formatStandardIssue = SchemaIssue.makeFormatterStandardSchemaV1();
 const formatIssue = SchemaIssue.makeFormatterDefault();

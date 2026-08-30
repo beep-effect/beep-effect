@@ -1,28 +1,26 @@
 /**
  * Effect-native loader for Claude Code `settings.json` files.
  *
+ * **Details**
+ *
  * Each source is parsed and validated independently, then merged in Claude
  * Code precedence order. Scalars use the higher-priority value, arrays are
  * concatenated and de-duplicated, and objects are merged recursively.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
+import * as O from "@beep/utils/Option";
+import { Config, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
-import * as Config from "effect/Config";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
-import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { SettingsDecodeError, SettingsParseError, SettingsReadError } from "../Errors.ts";
 import { SettingsFile, SettingsRaw } from "./Schema.ts";
 
@@ -31,16 +29,24 @@ const $I = $ScratchpadId.create("claudecode/Settings/Loader");
 /**
  * Optional source overrides accepted by {@link load}.
  *
+ * **Gotchas**
+ *
+ * `managedSettingsRoots` replaces the default managed roots
+ * (`/Library/Application Support/ClaudeCode`, `/etc/claude-code`,
+ * `C:\Program Files\ClaudeCode`) and ignores `managedSettingsRoot`.
+ * `managedSettingsRoot` is consulted only when `managedSettingsRoots` is
+ * absent.
+ *
  * **Example** (Configure an explicit settings source)
  *
  * ```ts
+ * import * as O from "effect/Option"
  * import { Settings } from "effect-claudecode"
  *
- * const options: Settings.LoadOptions.Encoded = {
- *   settingsPath: "/tmp/session-settings.json"
- * }
- *
- * console.log(options.settingsPath) // "/tmp/session-settings.json"
+ * const options = Settings.LoadOptions.make({
+ *   settingsPath: O.some("/tmp/session-settings.json")
+ * })
+ * console.log(O.getOrUndefined(options.settingsPath)) // "/tmp/session-settings.json"
  * ```
  *
  * @category configuration
@@ -269,14 +275,10 @@ export const localSettingsPath = (cwd: string): Effect.Effect<string, never, Pat
   });
 
 const managedRoots = (options: LoadOptions): ReadonlyArray<string> =>
-  O.match(options.managedSettingsRoots, {
-    onNone: () =>
-      O.match(options.managedSettingsRoot, {
-        onNone: () => defaultManagedSettingsRoots,
-        onSome: (root) => [root],
-      }),
-    onSome: (roots) => roots,
-  });
+  options.managedSettingsRoots.pipe(
+    O.orElse(() => O.map(options.managedSettingsRoot, A.make)),
+    O.getOrElse(() => defaultManagedSettingsRoots)
+  );
 
 const managedSettingsSourcePaths = (
   options: LoadOptions
@@ -347,9 +349,20 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
 /**
  * Load and merge Claude Code settings for a working directory.
  *
+ * **Details**
+ *
  * Priority is user, project, local, optional `--settings`, then managed
  * settings. Files that do not exist are skipped. Malformed JSON and invalid
  * known settings fail with path-aware typed errors.
+ *
+ * **Gotchas**
+ *
+ * `managedSettingsRoots` replaces the default managed roots
+ * (`/Library/Application Support/ClaudeCode`, `/etc/claude-code`,
+ * `C:\Program Files\ClaudeCode`) and ignores `managedSettingsRoot`.
+ * Passing both fields is not "root plus extras": the array replaces
+ * everything. `managedSettingsRoot` is consulted only when
+ * `managedSettingsRoots` is absent.
  *
  * **Example** (Load effective settings)
  *
@@ -368,7 +381,7 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
  * @category configuration
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- The required cwd plus optional load options make a one-argument direct call indistinguishable from a curried overload.
 export const load = (
   cwd: string,
   options?: LoadOptions.Encoded

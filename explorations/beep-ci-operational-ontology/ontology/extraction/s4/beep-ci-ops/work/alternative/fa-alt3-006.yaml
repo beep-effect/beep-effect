@@ -1,0 +1,20 @@
+id: fa:alt3:006
+hypothesis_ref: dh:sched-core:007
+identity_card_ref: ic:alt3:006
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'quality: token amount inhering in a ticket and copied onto its lease'
+  still_viable: true
+- label: 'information_object: the weightTokens field as a recorded numeral'
+  still_viable: true
+strongest_counterexample: stageSelfLease copies ticket.weightTokens onto the lease, and the
+  admission guard compares activeTokenTotal plus that amount to capacity. A numeral stored
+  in a DTO without being charged against capacity would not be this quality.
+verdict: analyzed
+needed_evidence: Whether two inscriptions of the same contender's charge (ticket file and
+  lease file) are one quality or two information objects. Observationally equivalent until
+  an overwrite of one file without the other is observed.

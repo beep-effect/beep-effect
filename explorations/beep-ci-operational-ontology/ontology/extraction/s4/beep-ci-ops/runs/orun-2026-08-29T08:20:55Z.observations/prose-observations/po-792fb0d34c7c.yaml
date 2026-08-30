@@ -1,0 +1,10 @@
+id: po:sha256:792fb0d34c7c5554dc9c45ed05aa5f4cff6d5e0c28734d16a0ac63a889eba819
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 122
+  end_line: 127
+quote: owner across pid reuse; leases are reaped only when the pid is dead or the
+epistemic_status: quoted_prose

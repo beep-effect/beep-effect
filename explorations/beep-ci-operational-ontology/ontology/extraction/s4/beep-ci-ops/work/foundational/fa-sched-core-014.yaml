@@ -1,0 +1,14 @@
+id: fa:sched-core:014
+hypothesis_ref: dh:sched-core:015
+identity_card_ref: ic:sched-core:014
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: Reify a pre-grant remaining-capacity quality in addition to the data relation.
+  still_viable: false
+strongest_counterexample: A post-grant snapshot can have the same number as a different pre-grant remainder; the assertion
+  is fixed by the admission boundary, not numeric equality.
+verdict: analyzed

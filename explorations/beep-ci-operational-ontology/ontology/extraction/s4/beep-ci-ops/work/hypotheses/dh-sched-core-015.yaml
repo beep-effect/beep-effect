@@ -1,0 +1,28 @@
+id: "dh:sched-core:015"
+observation_refs:
+  - "so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f"
+  - "so:sha256:bd4d9d95ea3664e0b47b1f4d327e89339b981cbbdac3508b0ecd1853b610c278"
+  - "so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f"
+  - "po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16"
+cq_warrants: ["CQ-010"]
+proposed_referent:
+  label: "remaining admission capacity before a grant"
+  description: "The token capacity still available immediately before adding the candidate request's charge."
+representation_status: domain_referent
+alternatives:
+  - label: "derived query value equal to capacity minus active charges"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "unmaterialized arithmetic interpretation"
+    representation_status: unresolved
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The runtime gate makes the pre-grant remainder an actual boundary condition of the admission situation: a candidate that fits may start, while a concurrent overshoot is rolled back before work. The value may still be ETL-derived rather than separately persisted, but derivation does not erase the contextual capacity referent."
+  discriminator: "A candidate is promoted only when its charge fits the remaining live capacity, and an overshooting concurrent admission is rolled back before work begins."
+epistemic_status: proposed
+confidence: {value: 0.73, use_for_acceptance: false}

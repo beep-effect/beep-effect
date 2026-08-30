@@ -1,0 +1,8 @@
+# Regression (round-3 H-06, Oxigraph-proven): a failure in attempt 1 must NOT obsolete
+# a healthy retry running in attempt 2 — the join is attempt-scoped. Oracle: 0 rows.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:att-1 a ciops:VerificationAttempt .
+ciops:att-2 a ciops:VerificationAttempt .
+ciops:fail-example a ciops:CommittedFailure ; ciops:inAttempt ciops:att-1 .
+ciops:retry a ciops:WorkUnitExecution ; ciops:inAttempt ciops:att-2 ;
+    ciops:hasExecutionState ciops:RunningExecution ; ciops:hasCancelClass ciops:CleanCancel .

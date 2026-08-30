@@ -1,0 +1,15 @@
+id: "fa:sched-core:003"
+hypothesis_ref: "dh:sched-core:003"
+identity_card_ref: "ic:sched-core:003"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "The intended referent is the underlying operating-system process occurrence rather than its admission-owner role."
+    still_viable: true
+  - label: "The intended referent is only the serialized owner-coordinate tuple copied between records."
+    still_viable: true
+strongest_counterexample: "A process remains the same process after it stops owning a ticket, and the same process can own multiple records; owner classification therefore cannot supply process identity."
+verdict: "analyzed"

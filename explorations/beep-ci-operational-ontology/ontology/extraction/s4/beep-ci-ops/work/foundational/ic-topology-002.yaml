@@ -1,0 +1,33 @@
+id: "ic:topology:002"
+hypothesis_ref: "dh:topology:002"
+identity:
+  supplies_identity: false
+  identity_criterion: "A direct dependency relational fact has no identity beyond the same ordered source and target package identities, dependency kind, and repository-tree validity context; package-name strings are only evidence for its participants."
+  reidentification_key:
+    - "source package identity"
+    - "target package identity"
+    - "dependency or dev-dependency kind"
+    - "repository-tree validity interval"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "One ordered source-to-target dependency fact obtaining under one dependency kind and repository-tree validity context."
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "information_object: a dependency-manifest assertion record"
+    - "relator: a reified dependency declaration carrying version range, kind, and provenance"
+  existential_dependencies:
+    - "The source and target workspace package identities"
+    - "A dependency declaration and repository-tree context in which the relation obtains"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "the direct declaration is removed or either participant is replaced"
+    - "the dependency kind changes, ending this relational fact"
+counterexamples:
+  - description: "The same package pair can be asserted by separate dependency and devDependency entries or across multiple manifests, so endpoint names alone do not individuate one declaration or relator."
+status: proposed

@@ -1,0 +1,18 @@
+id: "dh:worktree-config:033"
+observation_refs:
+  - "so:sha256:533c072ca153582ce1b073e12af2c790a274d27aa9fcc799157c39f9166df205"
+cq_warrants: []
+proposed_referent:
+  label: "fleet-liveness window constant"
+  description: "An exported numeric implementation constant named for a liveness window."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet-liveness assessment interval"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Export syntax and an excerpted numeric value do not establish whether the number is policy, measurement window, default, or incidental implementation tuning."
+epistemic_status: proposed
+confidence: {value: 0.79, use_for_acceptance: false}

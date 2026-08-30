@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:011"
+hypothesis_ref: "dh:turbo-cache:012"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same lint-repair task specification only when they are the same authored mutating instruction in the same versioned configuration lineage with the same complete inherited dependency, cache, and input prescriptions; the lint:fix key or selector alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key lint:fix"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The declarations form one repeatable instruction for lint-repair work, distinct from each mutation execution."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A mutating lint-repair procedure specification"
+    - "A lint verification lane"
+  existential_dependencies:
+    - "The versioned configuration, package scripts, and repository state that complete the repair instruction"
+    - "At least one bearer of the instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "The underlying lint:fix scripts can mutate different files or perform no verification at all while sharing this dependency declaration, so the entry does not identify a verification lane."
+status: proposed

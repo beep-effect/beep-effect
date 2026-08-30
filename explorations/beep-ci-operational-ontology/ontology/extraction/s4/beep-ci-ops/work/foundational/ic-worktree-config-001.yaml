@@ -1,0 +1,44 @@
+id: "ic:worktree-config:001"
+hypothesis_ref: "dh:worktree-config:001"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two architecture-boundary obligation tokens are the same only when the
+    same obligated bearer, governing architecture norm version, triggering
+    contradiction, and required corrective content constitute one continuing
+    normative position; the document sentence and any checking procedure are
+    evidence for that position, not its identity.
+  reidentification_key:
+    - "obligated proposal author or decision bearer"
+    - "governing architecture norm version"
+    - "triggering proposal-to-architecture contradiction"
+    - "required corrective content"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    One normative position binding one bearer to resolve one contradiction
+    under one governing architecture norm.
+  dependence: relational
+ufo_analysis:
+  candidate_category: mode
+  alternatives:
+    - "relator: a reified normative relation among the policy authority, obligated bearer, and required correction"
+    - "information_object: the architecture-policy statement that expresses the norm"
+  existential_dependencies:
+    - "An obligated bearer or proposal decision context"
+    - "The governing architecture norm"
+    - "A contradiction situation that activates the requirement"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "discharged when the proposal changes or the governing document is amended"
+    - "waived or extinguished by an authorized policy change"
+counterexamples:
+  - description: >-
+      The same architecture sentence can apply to two independent contradicting
+      proposals at once; those are two obligation tokens even though the policy
+      text and required kind of correction are identical.
+status: proposed

@@ -1,0 +1,46 @@
+target: "otp:docgen-affected-work-unit:001"
+target_sha256: "0cbd359266c8e6005d2d2fef7bb703e61aea8662fa834ae09fd5a399b3c3b127"
+chain_sha256: "b710637218e7d28a1890142c45bedc37f404ad25dc870a4d9bce5f896f123e09"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: specification-execution-and-identifier-test
+    counterexample: >-
+      origin/main can advance between executions, and another command can reuse
+      the docgen:local name with different semantics. The card identifies the
+      symbolic procedure, affected-scope rule, applicability, and governing
+      revision rather than a dated file set, execution, or command key.
+    outcome: survived
+  - surface: warrant
+    rule: context-complete-cq-answer
+    counterexample: >-
+      Returning a lint WorkUnit can make CQ-002 non-empty but does not answer
+      which WorkUnits are admissible for an affected-docgen episode. The
+      governing policy fixes this distinct lane-by-scope prescription, so a
+      complete answer for that parameterized context must identify it.
+    outcome: survived
+  - surface: null_discriminator
+    rule: governing-prescription-not-inert-config
+    counterexample: >-
+      A stale command row could be implementation-only, but the canonical
+      repository policy governs edit loops by requiring docgen:local over
+      origin/main through HEAD plus dirty files. That operative prescription
+      is an information object even when policy text is its carrier.
+    outcome: survived
+rival_models_still_viable:
+  - "A concrete execution-bound realization resolves base, target, and dirty-tree state without replacing the reusable specification."
+evidence:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:a56b779098239e2c5a7dc016448e4f6c069488fae5ad5719d39843a6d18d323f"
+  - "CQ-002"

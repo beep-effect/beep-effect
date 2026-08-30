@@ -260,7 +260,7 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "quality:build",
     "repo-quality",
     "heavy",
-    ts2589QuarantineLane(bunRunLane(repoRoot, "quality:build", ["build"]))
+    ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:build", "build"))
   ),
   githubCheckLane("quality:lint", "repo-quality", "heavy", ciLaneStep(repoRoot, "quality:lint", "lint")),
   githubCheckLane(
@@ -301,11 +301,20 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
   // Local proof uses bounded docgen (origin/main...HEAD + dirty files) and self-escalates
   // to the full proof when global docgen inputs changed; the hosted Docgen lane keeps the
   // full-repo proof (goals/quality-speedup grill decision, 2026-08-04).
+  githubCheckLane("quality:docgen", "repo-quality", "documentation", ciLaneStep(repoRoot, "quality:docgen", "docgen")),
+  githubCheckLane("quality:coverage", "repo-quality", "test", ciLaneStep(repoRoot, "quality:coverage", "coverage")),
+  githubCheckLane("quality:codegen", "repo-quality", "preflight", ciLaneStep(repoRoot, "quality:codegen", "codegen")),
   githubCheckLane(
-    "quality:docgen",
+    "quality:commitlint",
     "repo-quality",
-    "documentation",
-    bunRunLane(repoRoot, "quality:docgen", ["docgen:local", "--", "--allow-full"])
+    "preflight",
+    ciLaneStep(repoRoot, "quality:commitlint", "commitlint")
+  ),
+  githubCheckLane(
+    "quality:desktop-ipc",
+    "repo-quality",
+    "test",
+    ciLaneStep(repoRoot, "quality:desktop-ipc", "desktop-ipc")
   ),
   githubCheckLane("quality:test-unit", "repo-quality", "test", ciLaneStep(repoRoot, "quality:test-unit", "test-unit")),
   githubCheckLane(
@@ -428,26 +437,16 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
     "pre-push:secrets",
     "diff-security",
     "preflight",
-    repoCliLane(repoRoot, "pre-push:secrets", ["github-checks", "secrets"])
+    ciLaneStep(repoRoot, "pre-push:secrets", "secrets")
   ),
   githubCheckLane(
     "pre-push:security",
     "diff-security",
     "preflight",
-    repoCliLane(repoRoot, "pre-push:security", ["github-checks", "security"])
+    ciLaneStep(repoRoot, "pre-push:security", "security")
   ),
-  githubCheckLane(
-    "pre-push:sast",
-    "diff-security",
-    "preflight",
-    repoCliLane(repoRoot, "pre-push:sast", ["github-checks", "sast"])
-  ),
-  githubCheckLane(
-    "pre-push:nix",
-    "environment",
-    "preflight",
-    repoCliLane(repoRoot, "pre-push:nix", ["github-checks", "nix"])
-  ),
+  githubCheckLane("pre-push:sast", "diff-security", "preflight", ciLaneStep(repoRoot, "pre-push:sast", "sast")),
+  githubCheckLane("pre-push:nix", "environment", "preflight", ciLaneStep(repoRoot, "pre-push:nix", "nix")),
 ];
 
 const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): string => `fallow:${featureFamily}`;
@@ -513,6 +512,18 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
  */
 export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
   githubCheckLane(
+    "cheap-gates:goals-index",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:goals-index", ["beep", "goals", "index", "--check"])
+  ),
+  githubCheckLane(
+    "cheap-gates:exploration-atlas",
+    "repo-sanity",
+    "preflight",
+    bunRunLane(repoRoot, "cheap-gates:exploration-atlas", ["beep", "explore", "atlas", "--check"])
+  ),
+  githubCheckLane(
     "cheap-gates:config-sync",
     "repo-sanity",
     "preflight",
@@ -523,6 +534,12 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "repo-quality",
     "preflight",
     repoCliLane(repoRoot, "cheap-gates:tsgo-rules", ["tsgo-rules"])
+  ),
+  githubCheckLane(
+    "cheap-gates:test-tsgo",
+    "repo-quality",
+    "preflight",
+    repoCliLane(repoRoot, "cheap-gates:test-tsgo", ["test-tsgo"])
   ),
   githubCheckLane(
     "cheap-gates:effect-imports",
@@ -541,12 +558,6 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "repo-sanity",
     "preflight",
     bunRunLane(repoRoot, "cheap-gates:allowlist-check", ["beep", "laws", "allowlist-check"])
-  ),
-  githubCheckLane(
-    "cheap-gates:goals-index",
-    "repo-sanity",
-    "preflight",
-    bunRunLane(repoRoot, "cheap-gates:goals-index", ["beep", "goals", "index", "--check"])
   ),
   githubCheckLane(
     "cheap-gates:goals-doctor",

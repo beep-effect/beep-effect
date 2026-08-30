@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:042"
+observation_refs:
+  - "so:sha256:a46f97227f2ede087411d5b80e85d9a51e538539fd6c1b1f15907c001e8b3343"
+cq_warrants: []
+proposed_referent:
+  label: "Internal predicate for remote cache arguments being present"
+  description: "An exported boolean helper over an argument array."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A property of an invocation argument collection"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A diagnostic information item about argument content"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The exported signature and helper composition show a computation shape but no invocation argument collection or recorded diagnostic result."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.93
+  use_for_acceptance: false

@@ -1,0 +1,26 @@
+id: "dh:topology:003"
+observation_refs:
+  - "po:sha256:a790b3398403b1be2e7ced74bd8a5ef6b741760df1667416c0fa1410f18fbde9"
+  - "po:sha256:7f1b0cc144cf9d58f851e9c6a1857dfd6ffdea2db7c0c4c083d7779b6a5048fd"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "transitive workspace package dependency relation"
+  description: "The derived reachability relation connecting a workspace package to packages reachable through the rule-compiled fixpoint over direct dependencies."
+representation_status: "unresolved"
+alternatives:
+  - label: "materialized dependency-closure assertion set"
+    representation_status: "information_artifact"
+    plausibility: "viable"
+  - label: "dependsOnTransitive as only a query predicate spelling"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "Deciding transitive dependency requires a runtime closure trace for a pinned graph containing direct A-to-B and B-to-C edges, the derived A-to-C reachability result, and an actual task-order or affected-set decision that consumes it, all bound to the closure-rule version; no enriched observation supplies that attestation."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.9
+  use_for_acceptance: false

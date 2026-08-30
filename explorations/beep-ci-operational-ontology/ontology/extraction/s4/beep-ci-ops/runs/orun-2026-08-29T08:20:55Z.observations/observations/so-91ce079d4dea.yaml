@@ -1,0 +1,25 @@
+id: so:sha256:91ce079d4dea5a5907e9630b019b217c08b415b18fe7a879438c08ee78a6224a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 167
+  end_line: 167
+  content_sha256: a43880c6e7ac5b2f7a59e3913f6c443d96fba471dc7b9ed70e6ae40637b1e79c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheSecretEnvName
+  lexical_name: TurboCacheSecretEnvName
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: TurboCacheSecretEnvName
+- predicate: exports_symbol
+  object: TurboCacheSecretEnvName
+source_excerpt: export type TurboCacheSecretEnvName = typeof TurboCacheSecretEnvName.Type;
+epistemic_status: parser_derived

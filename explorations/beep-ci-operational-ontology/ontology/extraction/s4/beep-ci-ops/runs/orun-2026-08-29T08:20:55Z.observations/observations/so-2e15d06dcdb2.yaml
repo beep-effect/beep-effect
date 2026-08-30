@@ -1,0 +1,23 @@
+id: so:sha256:2e15d06dcdb2e9d453bbe2c22a60752b3c62e62db475cf333f2590ac4ca41185
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 281
+  end_line: 284
+  content_sha256: e629d31b8b2f7b9a03ce94f1aac3b030813b93c8d1dba81d6884e6710170ac06
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::repoRunOutputBound
+  lexical_name: repoRunOutputBound
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: repoRunOutputBound
+source_excerpt: export const repoRunOutputBound = OutputBound.make({
+epistemic_status: parser_derived

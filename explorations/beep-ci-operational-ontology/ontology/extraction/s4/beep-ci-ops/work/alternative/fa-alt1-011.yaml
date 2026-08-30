@@ -1,0 +1,22 @@
+id: "fa:alt1:011"
+hypothesis_ref: "dh:sched-core:026"
+identity_card_ref: "ic:alt1:011"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "an individual admission episode executing that procedure"
+    still_viable: false
+  - label: "kind of process whose instances are admission episodes"
+    still_viable: true
+  - label: "collection of unrelated helper functions"
+    still_viable: false
+strongest_counterexample: "The bound spans share one ticket that is enqueued, promoted,
+  heartbeated, and released; that is one procedure specification realized many times, not one
+  dated episode and not a bag of helpers."
+verdict: "analyzed"
+needed_evidence: "If operational questions quantify over episodes as instances of a coordination
+  kind, mint the kind alongside this specification; current observations show only the
+  repeatable procedure and its runtime helpers."

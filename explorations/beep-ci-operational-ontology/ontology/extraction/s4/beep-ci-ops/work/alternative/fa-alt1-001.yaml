@@ -1,0 +1,29 @@
+id: "fa:alt1:001"
+hypothesis_ref: "dh:reporun:002"
+identity_card_ref: "ic:alt1:001"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "kind of event: the class of failed GitHub job occurrences whose setup step concluded
+      failure"
+    still_viable: true
+  - label: "information classification label recorded on a GithubJobRecord, with no independent
+      criterion beyond the literal"
+    still_viable: false
+  - label: "hosted control-plane 5xx versus deterministic workflow setup defect as two different
+      criteria"
+    still_viable: true
+strongest_counterexample: "detectGithubJobShapeClass reports shape, not flakiness: a
+  missing-action-version workflow matches setup-5xx exactly as a hosted download failure does,
+  so identifying the criterion with 'environment-only 5xx occurrence' is already false on the
+  detector's own comment."
+verdict: "analyzed"
+needed_evidence: "A partitioned observation of setup-step-failure jobs into hosted
+  action-download failures versus deterministic workflow defects, plus whether CQ-013 asks for
+  matching job occurrences or for the repeatable recognition criterion. Until that split is
+  observed, the event-kind model and the information-object model remain observationally
+  equivalent on current evidence except for the detector's explicit shape-not-flakiness comment,
+  which already favors the criterion reading."

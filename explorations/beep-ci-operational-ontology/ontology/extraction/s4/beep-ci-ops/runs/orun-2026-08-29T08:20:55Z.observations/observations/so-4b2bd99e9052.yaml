@@ -1,0 +1,23 @@
+id: so:sha256:4b2bd99e9052f582c969b0608c56212bed526566b5ac78899683e7992c8b494d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 448
+  end_line: 448
+  content_sha256: 4ab0ad960217bc23dde2eda00ddd94697401bfc5b590f52b04acf648829c12f8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::REMOTE_CACHE_MODE_SEGMENT
+  lexical_name: REMOTE_CACHE_MODE_SEGMENT
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const REMOTE_CACHE_MODE_SEGMENT = "remote:";
+epistemic_status: parser_derived

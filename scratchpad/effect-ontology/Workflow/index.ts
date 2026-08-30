@@ -1,5 +1,5 @@
 /**
- * Workflow Layer Exports
+ * Durable extraction, entity-resolution, merge, and streaming-activity constructors.
  *
  * @packageDocumentation
  * @since 0.0.0

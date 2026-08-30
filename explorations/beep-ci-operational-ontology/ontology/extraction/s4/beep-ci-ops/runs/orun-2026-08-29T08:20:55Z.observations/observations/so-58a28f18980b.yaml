@@ -1,0 +1,23 @@
+id: so:sha256:58a28f18980ba99533e3d14c566516402033b8f9ea4c6cb4dac797b89d2e6c8e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 20
+  end_line: 20
+  content_sha256: 2495b3add59a1f4e36da5e011e8868bafab2ae26b253c5995332422a57c41347
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
+epistemic_status: parser_derived

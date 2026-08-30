@@ -1,0 +1,21 @@
+# DenotationHypothesis — INTERPRETATION. LLM-producible; proposal authority only.
+# File layout: one record per file, work/hypotheses/dh-<slug>-<nnn>.yaml.
+# observation_refs is the CANONICAL provenance edge (so:/po: ids); there is no
+# second evidence list.
+id: "dh:<slug>:<nnn>"
+observation_refs: ["so:sha256:...", "po:sha256:..."]
+cq_warrants: []                   # CQ ids only
+proposed_referent: {label: "", description: ""}
+representation_status: domain_referent | information_artifact | implementation_artifact_only | lexical_alias | unresolved
+alternatives: [{label: "", representation_status: "", plausibility: viable | weak}]
+null_hypothesis:                  # REQUIRED — lexical plausibility is not evidence
+  label: "implementation artifact only"
+  rejected: false
+  rationale: ""
+  discriminator: ""               # REQUIRED when rejected: true — an observation-backed
+                                  # fact that would be FALSE if the null were true.
+                                  # "It is a named type with an id field" is TRUE of
+                                  # pure implementation artifacts and never qualifies.
+epistemic_status: proposed
+confidence: {value: 0.0, use_for_acceptance: false}   # REQUIRED block (omitting it does not
+                                  # exempt the rule); triage only; STRIPPED from steward packages

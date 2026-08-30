@@ -116,5 +116,6 @@
   "followUpRunbook": "history/outputs/launch-runbook.md",
   "schemaVersion": "initiative-manifest/v2",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 401,
   "packetPath": "goals/oip-web-production-hardening"
 }

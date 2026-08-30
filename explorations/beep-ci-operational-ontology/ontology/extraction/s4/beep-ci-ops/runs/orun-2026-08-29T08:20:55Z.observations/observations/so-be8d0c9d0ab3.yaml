@@ -1,0 +1,23 @@
+id: so:sha256:be8d0c9d0ab3dd10d4889a2bf2f0a7223030fe7ba10f907fd437da82ab937675
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 609
+  end_line: 615
+  content_sha256: d787e5d3f08631bcc80cd8cecd24b73cc1d0a1292af9be8e0ea4f33a02a9a28c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::laneFromPlanned
+  lexical_name: laneFromPlanned
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const laneFromPlanned = (step: RepoPlanStep): YeetVerdictLane =>'
+epistemic_status: parser_derived

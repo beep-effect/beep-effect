@@ -29,7 +29,7 @@ import { Approval, ExpertClaim, IsoDate, IsoTimestamp, OntologyClassName, Produc
 import { buildReferenceData } from "@/domain/ReferenceData";
 import { FrozenFixtureManifest, FrozenSourceHash } from "@/fixtures/FixtureManifest";
 import fixtureManifestJson from "@/fixtures/fixture-manifest.json";
-import providerRecordingJson from "@/fixtures/provider-recording.json?raw";
+import providerRecordingFixture from "@/fixtures/provider-recording.json";
 import { buildFixtureArtifacts } from "@/fixtures/Sources";
 import {
   buildProjectionSnapshot,
@@ -49,6 +49,9 @@ import type {
 
 const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 const makeInMemoryProjectionLayer = () => makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }));
+const providerRecordingJson = S.encodeSync(ProviderRecordingFromJsonString)(
+  S.decodeUnknownSync(ProviderRecording)(providerRecordingFixture)
+);
 
 describe("LeJeune deterministic fixture bundle", () => {
   it("round-trips schema-derived retention authorizations", () => {

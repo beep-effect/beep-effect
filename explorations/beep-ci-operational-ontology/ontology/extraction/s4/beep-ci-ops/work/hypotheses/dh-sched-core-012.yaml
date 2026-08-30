@@ -1,0 +1,26 @@
+id: "dh:sched-core:012"
+observation_refs:
+  - "so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451"
+  - "po:sha256:095cfc67cda0eb55352dc1500cfb8ee009eb802d6892b2303261c41f0d310847"
+  - "po:sha256:a826cdb22befe96bcfb6283eff25420af36fce18d379c709ab5fafb48cb788f7"
+  - "po:sha256:afa600fec9889222d94fb5a29bc4aa8e748edd9baaa22ceb1f64db174a9be2a6"
+  - "po:sha256:b9b6b5d848ec7648ee5294adb71722beadc464861c268186425474e60351b301"
+  - "po:sha256:db3b1f1ae74499c586fb09b1171ced46a6cc63e1cdd01b85cc5df087a18d0005"
+cq_warrants: []
+proposed_referent:
+  label: "capacity-token computation procedure"
+  description: "A repeatable information artifact that derives whole-token machine capacity from current available memory and admission-policy parameters."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "current machine admission capacity"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "arithmetic helper local to the scheduler"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A scheduler-local arithmetic helper can perform every cited floor, reserve, division, clamp, and cap operation while remaining implementation code with no governed procedure artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

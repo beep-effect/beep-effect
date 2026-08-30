@@ -1,0 +1,18 @@
+id: "dh:worktree-config:030"
+observation_refs:
+  - "so:sha256:2f7136170f093c19b2d6ab501d33ea662112ce76931a0ffb79d2666802a7b397"
+cq_warrants: []
+proposed_referent:
+  label: "FleetSnapshot schema declaration"
+  description: "An exported Effect Schema representation whose possible snapshot semantics are not observed."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet-state snapshot information artifact"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Only export and schema-extension syntax is supplied; no capture time, represented fleet state, or snapshot role is observation-backed."
+epistemic_status: proposed
+confidence: {value: 0.76, use_for_acceptance: false}

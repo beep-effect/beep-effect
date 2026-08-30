@@ -1,0 +1,27 @@
+id: "fa:reporun:008"
+hypothesis_ref: "dh:reporun:017"
+identity_card_ref: "ic:reporun:008"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "controlled-vocabulary member encoding a resume policy"
+    still_viable: true
+  - label: "context-dependent resume-eligibility situation"
+    still_viable: true
+  - label: "permission mode borne by a planned-step specification"
+    still_viable: true
+  - label: "implementation-only planner control value"
+    still_viable: true
+  - label: "uninterpreted planner enum member"
+    still_viable: false
+  - label: "skipped WorkUnitExecution"
+    still_viable: false
+strongest_counterexample: >-
+  The policy value can be present while no fingerprint matches and the work
+  executes, proving that the information designation, the contextual
+  eligibility situation, the evidence, and the eventual execution outcome
+  are four distinct things.
+verdict: analyzed

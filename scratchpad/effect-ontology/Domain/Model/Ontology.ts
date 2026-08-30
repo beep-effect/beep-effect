@@ -19,20 +19,13 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { extractLocalNameFromIri } from "../../Utils/Iri.ts";
 import { ContentHash, Namespace, OntologyName } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Ontology");
 
 const emptyIris = (): ReadonlyArray<IRI> => [];
-
-const localName = (iri: string): string =>
-  pipe(
-    Str.split(/[/#]/)(iri),
-    A.filter(Str.isNonEmpty),
-    A.last,
-    O.getOrElse(() => iri)
-  );
 
 const enhanceLabel = (label: string): string => {
   const split = pipe(label, Str.replace(/([a-z0-9])([A-Z])/g, "$1 $2"), Str.toLowerCase);
@@ -68,7 +61,7 @@ const optionalNamesLine: {
   (prefix: string, iris: ReadonlyArray<IRI>): O.Option<string> =>
     pipe(
       iris,
-      A.map(localName),
+      A.map(extractLocalNameFromIri),
       A.match({
         onEmpty: O.none<string>,
         onNonEmpty: (names) => O.some(`${prefix}: ${A.join(names, ", ")}`),
@@ -168,18 +161,6 @@ export const PropertyRangeKind = LiteralKit(["object", "datatype"])
 
 /**
  * Decoded `object` or `datatype` literal produced by the {@link PropertyRangeKind} schema.
- *
- * **Example** (Decode PropertyRangeKind)
- *
- * ```ts
- * import { PropertyRangeKind } from "@effect-ontology/Domain/Model/Ontology"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizePropertyRangeKind = (_value: PropertyRangeKind): string => "valid property range kind"
- *
- * console.log(O.map(S.decodeUnknownOption(PropertyRangeKind)({}), summarizePropertyRangeKind))
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -361,12 +342,8 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
    * @returns Newline-delimited labels, description, properties, and related concepts.
    */
   toDocument(): string {
-    const description = O.orElse(this.definition, () => this.comment);
     return pipe(
-      semanticLabels(this.label, this.prefLabels, this.altLabels, this.hiddenLabels),
-      A.appendAll(O.toArray(description)),
-      A.appendAll(O.toArray(this.scopeNote)),
-      A.appendAll(O.toArray(O.map(this.example, (value) => `Example: ${value}`))),
+      semanticDocumentLines(this),
       A.appendAll(O.toArray(optionalNamesLine("Properties", this.properties))),
       A.appendAll(O.toArray(relatedLine(this.broader, this.narrower, this.related))),
       A.join("\n")
@@ -415,18 +392,6 @@ export const ClassDefinition = ClassDefinitionModel.annotate({
 
 /**
  * Decoded class metadata produced by {@link ClassDefinition}, including its search-document behavior.
- *
- * **Example** (Decode ClassDefinition)
- *
- * ```ts
- * import { ClassDefinition } from "@effect-ontology/Domain/Model/Ontology"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizeClassDefinition = (_value: ClassDefinition): string => "valid class definition"
- *
- * console.log(O.map(S.decodeUnknownOption(ClassDefinition)({}), summarizeClassDefinition))
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -537,16 +502,12 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
    * @returns Newline-delimited labels, description, domain, range, and constraints.
    */
   toDocument(): string {
-    const description = O.orElse(this.definition, () => this.comment);
     const constraints = Bool.match(this.isFunctional, {
       onFalse: () => A.of(this.rangeType),
       onTrue: () => [this.rangeType, "functional"],
     });
     return pipe(
-      semanticLabels(this.label, this.prefLabels, this.altLabels, this.hiddenLabels),
-      A.appendAll(O.toArray(description)),
-      A.appendAll(O.toArray(this.scopeNote)),
-      A.appendAll(O.toArray(O.map(this.example, (value) => `Example: ${value}`))),
+      semanticDocumentLines(this),
       A.appendAll(O.toArray(optionalNamesLine("Domain", this.domain))),
       A.appendAll(O.toArray(optionalNamesLine("Range", this.range))),
       A.append(`Type: ${A.join(constraints, ", ")}`),
@@ -555,6 +516,14 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
     );
   }
 }
+
+const semanticDocumentLines = (definition: ClassDefinitionModel | PropertyDefinitionModel): ReadonlyArray<string> =>
+  pipe(
+    semanticLabels(definition.label, definition.prefLabels, definition.altLabels, definition.hiddenLabels),
+    A.appendAll(O.toArray(O.orElse(definition.definition, () => definition.comment))),
+    A.appendAll(O.toArray(definition.scopeNote)),
+    A.appendAll(O.toArray(O.map(definition.example, (value) => `Example: ${value}`)))
+  );
 
 /**
  * Normalized RDF or OWL property definition.
@@ -598,22 +567,37 @@ export const PropertyDefinition = PropertyDefinitionModel.annotate({
 /**
  * Decoded property metadata produced by {@link PropertyDefinition}, including range and search behavior.
  *
- * **Example** (Decode PropertyDefinition)
- *
- * ```ts
- * import { PropertyDefinition } from "@effect-ontology/Domain/Model/Ontology"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const summarizePropertyDefinition = (_value: PropertyDefinition): string => "valid property definition"
- *
- * console.log(O.map(S.decodeUnknownOption(PropertyDefinition)({}), summarizePropertyDefinition))
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PropertyDefinition = typeof PropertyDefinition.Type;
+
+/**
+ * Partition ontology properties by their schema-owned range kind.
+ *
+ * **Example** (Separate object and datatype properties)
+ *
+ * ```ts
+ * import { partitionPropertiesByRangeType } from "@effect-ontology/Domain/Model/Ontology"
+ *
+ * const partition = partitionPropertiesByRangeType([])
+ * console.log(partition.objectProperties.length) // 0
+ * ```
+ *
+ * @param properties - Property definitions to partition in source order.
+ * @returns Object-property and datatype-property collections.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const partitionPropertiesByRangeType = (properties: ReadonlyArray<PropertyDefinition>) => {
+  const [objectProperties, datatypeProperties] = A.partition(properties, (property) =>
+    Bool.match(property.isDatatypeProperty, {
+      onFalse: () => Result.fail(property),
+      onTrue: () => Result.succeed(property),
+    })
+  );
+  return { datatypeProperties, objectProperties };
+};
 
 const directParents: {
   (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, child: string): ReadonlyArray<IRI>;
@@ -1012,11 +996,11 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
     const validDomains = pipe(
       A.of(classIri),
       A.appendAll(superClasses),
-      A.map((iri) => Str.toLowerCase(localName(iri))),
+      A.map((iri) => Str.toLowerCase(extractLocalNameFromIri(iri))),
       A.dedupe
     );
     return A.filter(this.properties, (property) =>
-      A.some(property.domain, (domain) => A.contains(validDomains, Str.toLowerCase(localName(domain))))
+      A.some(property.domain, (domain) => A.contains(validDomains, Str.toLowerCase(extractLocalNameFromIri(domain))))
     );
   }
 
@@ -1046,4 +1030,6 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
       )
     );
   }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(OntologyContext);
 }

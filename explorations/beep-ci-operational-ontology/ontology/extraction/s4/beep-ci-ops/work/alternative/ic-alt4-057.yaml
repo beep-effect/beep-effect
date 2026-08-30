@@ -1,0 +1,29 @@
+id: ic:alt4:057
+hypothesis_ref: dh:yeet-watch:014
+identity:
+  supplies_identity: true
+  identity_criterion: Two fail check-outcome classifications are the same when they are the fail outcome assigned to the same watched check within the same watch snapshot after raw bucket and state evidence mapped through the failing lists; the literal fail is evidence, never the criterion of a hosted failure occurrence.
+  reidentification_key:
+    - fail
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One classified outcome per watched check per snapshot; differencing across snapshots compares two such wholes.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - quality
+    - phase
+  existential_dependencies:
+    - YeetWatchCheck
+    - YeetCheckSignal
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: A GitHub check whose bucket is cancel classifies as fail here, so hosted success/failure state is not identical to this snapshot classification.
+  - description: countYeetWatchFailures counts classified fail outcomes, not committed-failure events.
+status: proposed

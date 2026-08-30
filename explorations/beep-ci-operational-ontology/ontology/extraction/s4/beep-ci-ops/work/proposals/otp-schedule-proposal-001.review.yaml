@@ -1,0 +1,54 @@
+target: "otp:schedule-proposal:001"
+target_sha256: "e39e8933d150e24704a996f668e23a11ae580a7cf4e76a127a6da52384ecbc3e"
+chain_sha256: "ffbb25b0a539cc29041ca97897b999606fcabc9799439b7dd93200e6c90031bc"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; no is-a edge or valid subsumption relation is proposed to test."
+attacks:
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two planning acts can emit byte-equal ordered steps for different base and head
+      commits. The criterion uses planning provenance, applicability context, and
+      ordered prescription rather than step identifiers alone, so it correctly keeps
+      those plans distinct and survives the technical-key attack.
+    outcome: survived
+  - surface: identity
+    rule: identity-and-foundational-record-agreement
+    counterexample: >-
+      A proposal marked `carries` whose IdentityCard supplied a different identity criterion or carried none, or a
+      proposal marked `analyzed` over an FA with a different verdict, would
+      launder an unresolved identity decision. Here the card records
+      supplies_identity=false and carries_identity=true, and the FA
+      verdict is `analyzed`; both agree with the proposal, so this
+      consistency attack is survived.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-term
+    counterexample: >-
+      Removing ScheduleProposal makes CQ-020 unable to follow hasCurrentProposal and
+      return the current ordered step sequence; the CQ explicitly lists the class and
+      the relevant step relations. This is a genuine decision-term warrant.
+    outcome: survived
+  - surface: null_discriminator
+    rule: null-rival-still-viable
+    counterexample: >-
+      A transient planner DTO can combine a run-context field with a step array, sort it
+      deterministically, feed the executor, and then be discarded. All cited declarations
+      and the claimed ordering behavior remain true, and the hypothesis itself marks
+      "Planner DTO with no retained domain role" viable, so the null cannot be rejected.
+    outcome: landed
+rival_models_still_viable:
+  - "Planner DTO with no retained domain role"
+evidence:
+  - "so:sha256:b1addafaac37d8ae5ba61d331e1478b13bf74addcbb005c427cb6cd00da76fc3"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46"
+  - "CQ-020"

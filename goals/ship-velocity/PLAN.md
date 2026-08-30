@@ -1,8 +1,9 @@
 # ship-velocity — execution plan
 
 Order is by cycles-returned-per-unit-of-work. Items execute until finished; no calendar
-estimates. Each item lands as its own PR (or small PR series) through yeet; the packet manifest
-phase flips ride the final PR of each phase.
+estimates. Items normally land as focused PRs through Yeet; the operator-authorized 2026-08-27
+closeout bundles the remaining P2-P5 backlog into one PR. Packet phase flips ride the same PR as
+their implementation truth.
 
 ## P0 — Ratify and baseline — COMPLETE 2026-08-17
 
@@ -30,8 +31,9 @@ the C5 metric correction and the new C7 item below.
   `beep ci lane` argv from the shared builder in `Ci/CiLane.ts`, so local and hosted cannot drift.
   Env posture stays local (B4 owns PR-posture env).
 - ~~E1 publish refuses hand-staged INDEX + regenerates from manifests.~~ Done 2026-08-16
-  (`PortfolioIndexGuard.ts`; renders the projection after the staged-only stash, stages it when it
-  differs, refuses a hand-staged copy that disagrees).
+  (`PortfolioIndexGuard.ts`; renders the projection after the staged-only stash and refuses a
+  hand-staged copy that disagrees). P5 E2 subsequently made the projection local and ignored, so
+  publish now refuses every staged copy and never stages the generated file.
 - ~~C1 local remote-cache read path + checkout env template.~~ Done 2026-08-16 (schema-first
   `resolveTurboCachePlan` honors a complete remote-read quad and fails closed otherwise;
   `op run` env for reference-backed Turbo steps; `scripts/enable-turbo-remote-reads.sh` +
@@ -44,7 +46,7 @@ the C5 metric correction and the new C7 item below.
   in #718 — it recurred with #718 active (Lint Policy job 95354812245); see the ledger receipt
   and the capture-seam fix in #748.)
 
-## P2 — Backpressure engine
+## P2 — Backpressure engine — COMPLETE 2026-08-27
 
 - ~~A1 `yeet monitor --watch` transition stream + failure capsules + remediation dispatch.~~
   Done 2026-08-17 across three PRs: #749 (`gh pr checks --watch --fail-fast` in the publish
@@ -57,17 +59,20 @@ the C5 metric correction and the new C7 item below.
   15s p95), and three reds on one head produce one session record with three queued capsules.
   Live session attach/spawn is deliberately not part of A1: attaching consumes the inbox via
   A2's hook adapters, and spawn-when-owner-busy needs A4's leases.
-- A2 hook-mutex + ACK inbox (Claude deny / Codex inject / Grok tail adapters). In progress —
-  PR-1 of 3 landed the shared contract: `yeet inbox list|ack|append` porcelain, `yeet-ack/v1`
-  receipts (fix SHA / reasoned wontfix / thread URL; receipt existence is the ack even when
-  unreadable), and the joined inbox view with liveness against the `yeet-dispatch/v1` wave
-  record. PR-2 wires the Claude adapters (PreToolUse deny + incident mode, session splice;
-  settings.json edit is operator-gated); PR-3 the Codex inject + Grok tail.
-- A3 can't-leave-the-scene (Stop-hook veto + yeet poison-pill + waives).
-- A5 package-scoped gates (skill instructions + script gap fill + create-package templates).
-- A6 merge-ready v2.
+- ~~A2 hook-mutex + ACK inbox (Claude deny / Codex inject / Grok tail adapters).~~ Complete:
+  typed inbox/ACK porcelain is consumed by the shared hook adapter, Claude and Codex hooks, and
+  the Grok tail command; P0 one-shot incident mode permits repair work and re-arms for unrelated
+  work until an attributed ACK or waive exists.
+- ~~A3 can't-leave-the-scene (Stop-hook veto + yeet poison-pill + waives).~~ Complete: Stop and
+  quality/publish boundaries enforce the poison pill while repair-scoped work stays available;
+  expiring attributed waives and green reruns clear it.
+- ~~A5 package-scoped gates (skill instructions + script gap fill + create-package templates).~~
+  Complete: package audits report failures into the shared inbox and generated packages carry the
+  full scoped scripts.
+- ~~A6 merge-ready v2.~~ Complete: readiness is current-head, live-required-check, review-thread,
+  review-decision, draft/open, mergeability, and merge-state aware; optional reds do not block.
 
-## P3 — Full parity
+## P3 — Full parity — COMPLETE 2026-08-27
 
 - B9 deterministic coverage runtime — done 2026-08-24: `coverageEnvironment()` spreads the
   pull-request Turbo posture and `readTurboCacheEnvironment` is pure; prerequisite of B2/B4
@@ -80,34 +85,60 @@ the C5 metric correction and the new C7 item below.
   the exact `--filter … --write-baseline` command for the regressed packages, a baseline edit
   that only touches package rows measures those packages instead of the full workspace, and
   `standards/**/*.md` is coverage-inert.
-- B2 coverage in local proof (#698 landed — build on its scoping).
-- B3 missing cheap lanes; B7 docgen predicate into CLI.
-- B4 `--ci-parity` merged-tree pre-publish tier + PR-posture env.
-- B6 test-file typecheck preflight.
-- B8 parity ledger live; B5 proof reuse in shadow → active.
+- ~~B2 coverage in local proof.~~ The full local proof runs the affected, origin/main-pinned
+  coverage lane; goals-only changes remain inert.
+- ~~B3 missing cheap lanes; B7 docgen predicate into CLI.~~ Codegen Drift, range commitlint,
+  Desktop IPC, base-pinned gitleaks, and the shared none/affected/full docgen decision now run
+  through the same CLI plans locally and remotely.
+- ~~B4 `--ci-parity` merged-tree pre-publish tier + PR-posture env.~~ Normal publish exercises
+  affected lanes in the merged preview under the hosted pull-request posture.
+- ~~B6 test-file typecheck preflight.~~ Touched package tests join the cheap preflight.
+- ~~B8 parity ledger live; B5 proof reuse in shadow → active.~~ The versioned parity ledger is
+  live; current-head lane proof reuse graduated through shadow comparison and now fails closed on
+  any key/input/environment mismatch.
 
-## P4 — Concurrency + cache proof
+## P4 — Concurrency + cache proof — COMPLETE 2026-08-27
 
-- ~~D1 weighted admission leases~~ — landed 2026-08-27: machine-wide weighted admission
-  (`internal/repo-run/QualityScheduler.{schemas.,}ts`) wraps the retained per-origin
-  coordinator. Verify full/merged, publish proofs (publish priority + 2-minute aging), and
-  review-fix (1 token, class cap 3, no origin lock) queue with visible progress instead of
-  failing fast; operator surface is `beep quality scheduler status|reap` (reap dry-run by
-  default). The D3 subset required for lease correctness shipped with it: 5s heartbeats,
-  pid + `/proc` starttime reaping, MemAvailable hard floor, malformed-state quarantine.
-  Design record: `research/d1-admission-scheduler.md`.
-- D2 adaptive lane concurrency; D3 remainder (PSI/load watermarks, process-group
-  TERM→KILL centralization, per-lane peak-RSS into verdict artifacts).
-- A4 dead-owner takeover (needs D1 leases — now available).
-- C3 warm capability; C4 correctness inputs; C5 hit-rate dashboard + key de-fragmentation.
-- C2 PR remote reads (post decision).
+- ~~D1 weighted admission leases~~ — landed in PR #870 on 2026-08-27. Its
+  `internal/repo-run/QualityScheduler.{schemas.,}ts` implementation is the single machine-wide
+  admission authority; this closeout extends its proof orchestration instead of retaining the
+  superseded parallel `Yeet/internal/Admission.ts` implementation. Full proofs containing the
+  merged-preview parity lane reserve the five-token merged-preview weight, and verdict receipts
+  record per-step peak RSS.
+- ~~D2 adaptive concurrency; D3 hardening + RSS telemetry.~~ Check uses the measured-safe
+  workstation profile while the scheduler controls heavyweight proof concurrency. Scheduler
+  leases retain starttime-fenced reaping, heartbeat, memory-floor, and quarantine behavior from
+  PR #870; Yeet adds per-step peak-RSS receipts for later cap decisions.
+- ~~A4 dead-owner takeover (needs D1 leases).~~ The installed user watcher polls every 30 seconds,
+  treats a lease as stale at 240 seconds, CAS-fences zombies, prefers resume, and otherwise opens
+  an isolated incident worktree. The resulting worst-case detection bound is 270 seconds.
+- ~~C2 PR remote reads (post decision).~~ The recorded decision permits read-only cache access on
+  same-repository pull requests; forks stay local-only.
+- ~~C3 warm capability; C4 correctness inputs; C5 hit-rate dashboard + key de-fragmentation; C6
+  reference resolvability.~~ Exact-main warming, a recovery workflow, cold/warm probes,
+  correctness inputs, first-touch dashboard accounting, key de-fragmentation, and a cached
+  once-per-process 1Password-reference probe are implemented. See `research/cache-proof.md`.
 
-## P5 — Hot-file endgame + close
+## P5 — Hot-file endgame + close — IMPLEMENTATION COMPLETE 2026-08-27
 
-- E3 derived-only auto-heal + merge-driver tripwires.
-- E2 INDEX end-state PR; E4 ATLAS generator; E5 contention families.
-- E6 path-filtered required checks.
-- E7 stacked-PRs spike + decision record.
-- E8 merge-queue re-evaluation against recorded flip condition.
-- Metrics closeout: SPEC §Metrics targets met over a representative week; reflection; status
-  flip in the same PR.
+- ~~E2 INDEX end-state; E3 derived-only auto-heal + merge-driver tripwires; E4 ATLAS generator;
+  E5 contention families.~~ INDEX is an ignored manifest projection. ATLAS is an ignored D3
+  projection: event-fold authority after stream opt-in, explicit manifest-adoption authority before
+  it, with the same projector owning README Stage/Status regions. Projection checks fail on
+  underivable state, README drift, and extra Atlas content. Merge drivers remain allowlisted to
+  tracked derived paths; staged ignored projections and non-derived policy files fail closed, and
+  only intersecting contention families serialize publication.
+- ~~E6 path-filtered required checks.~~ Goals-only pull requests register the same required
+  contexts but safely skip heavyweight implementation work; the operator decision and security
+  boundaries are pinned in code and tests.
+- ~~E7 stacked-PRs spike + decision record.~~ Live draft PRs #859 and #860 proved GitHub's stack
+  graph and independent required-check registration. The trial was closed and cleaned up; stack
+  publication remains a documented manual preview until Yeet has multi-head proof/lease semantics.
+  See `research/stacked-pr-trial.md`.
+- ~~E8 merge-queue re-evaluation against recorded flip condition.~~ The last-14-day terminal
+  non-cancelled main-push success rate is 65.4%, below the 80% gate, and workflows have no
+  `merge_group` coverage. Queue stays off; strict required checks stay false. See
+  `research/merge-queue-evaluation.md`.
+- **Metrics observation gate remains open.** Implementation receipts and the post-merge sampling
+  protocol are in `research/metrics-closeout.md`. The representative week cannot begin until this
+  PR lands, so the initiative remains active and no target is claimed from synthetic evidence.

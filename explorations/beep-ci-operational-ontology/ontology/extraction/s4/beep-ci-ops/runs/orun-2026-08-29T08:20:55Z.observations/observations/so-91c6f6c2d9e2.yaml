@@ -1,0 +1,23 @@
+id: so:sha256:91c6f6c2d9e286260f55ff45a043b51c4a51377b9a0d7b6530c2ef6ca827fac2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 152
+  end_line: 161
+  content_sha256: 4d21d6e2d86fbde99c60570117b8228f4acd1e3104f2380e9e6c775ed8d9a840
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::test:integration:serial
+  lexical_name: test:integration:serial
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^build
+source_excerpt: '"test:integration:serial": {'
+epistemic_status: parser_derived

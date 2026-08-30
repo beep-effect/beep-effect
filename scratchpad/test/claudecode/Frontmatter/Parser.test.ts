@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for `Frontmatter.parse` and `Frontmatter.parseFile`.
  *
@@ -341,3 +340,4 @@ describe("Frontmatter.render*", () => {
     })
   );
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

@@ -1,0 +1,23 @@
+id: so:sha256:10dce1f7b343c888cb89540d1239b4ad5b98aac01ff6935e4e66dd2df2bcd8a1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 714
+  end_line: 736
+  content_sha256: 85f797dfc35f8f77448f01c9910da0db449945cb6381159ec4ad155ec638e9d3
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::admissionProgressReport
+  lexical_name: admissionProgressReport
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const admissionProgressReport = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

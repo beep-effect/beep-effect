@@ -1,0 +1,47 @@
+target: "otp:docgen-affected-work-unit:001"
+target_sha256: "d648194c0bb45eac007f73f6c25008a3a0af75dfb4570eb7ae901e709e455847"
+chain_sha256: "84258851fd5e8eb62e4ffbc7d449376fe601fccf21d258a823a048b2b7077756"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists
+    to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: specification-execution-and-identifier-test
+    counterexample: >-
+      origin/main can advance between two invocations while the symbolic
+      origin/main-to-HEAD plus dirty-files prescription remains unchanged, and
+      another command can reuse the docgen:local name with different semantics.
+      The card correctly identifies the full prescription rather than a run,
+      resolved file set, or command key.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      CQ-002 can return an admissible lint or test WorkUnitSpecification and can
+      remain fully answerable without this named docgen individual. The generic
+      decision class does not require every repository command prescription as
+      a semantic-support term, so the named example is not necessary.
+    outcome: landed
+  - surface: null_discriminator
+    rule: normative-prescription-discriminator
+    counterexample: >-
+      A stale command comment would not govern agent behavior, but the cited
+      canonical policy prescribes affected-scope docgen for edit loops and
+      reserves full docgen for repo-wide proof. That normative information
+      content defeats the inert-command null twin.
+    outcome: survived
+rival_models_still_viable:
+  - "A context-bound plan resolves the symbolic prescription for one execution."
+evidence:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:a56b779098239e2c5a7dc016448e4f6c069488fae5ad5719d39843a6d18d323f"
+  - "CQ-002"

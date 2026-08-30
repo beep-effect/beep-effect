@@ -1,0 +1,32 @@
+id: "ic:sched-core:025"
+hypothesis_ref: "dh:sched-core:026"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two weighted-admission coordination procedures are the same specification only when one governed protocol lineage preserves the ordered commitments to enqueue, select, stage, heartbeat, execute, and release under the same failure semantics."
+  reidentification_key:
+    - "protocol version and authority"
+    - "ordered lifecycle steps"
+    - "failure, interruption, and release semantics"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One repeatable coordination protocol whose phases and cleanup guarantees form a single ordered control specification."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "an individual admission episode executing the procedure"
+    - "a normative coordination protocol distinct from its information expression"
+    - "a collection of unrelated helper functions"
+  existential_dependencies:
+    - "weighted-admission policy and ticket-lease conventions"
+    - "origin gate and machine-capacity coordination context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a semantically changed coordination protocol"
+counterexamples:
+  - description: "Two concurrent callers can follow the same procedure while creating different tickets, leases, waits, outcomes, and cleanup events; those executions are not the procedure."
+status: "proposed"

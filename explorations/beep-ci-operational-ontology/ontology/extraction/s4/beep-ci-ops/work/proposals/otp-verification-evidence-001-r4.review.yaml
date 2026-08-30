@@ -1,0 +1,56 @@
+target: "otp:verification-evidence:001"
+target_sha256: "a6a83fa9aca75d11d8429264f6fa95dba5dc310c3e23b3ec8f686061e6cf742f"
+chain_sha256: "a3838ecf321d60568d4d9569aa3da2db54a866c8dab6099b3557c5c02a032d72"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  An artifact identity and custody contract must decide whether identity follows
+  result content, issued record lineage, or a contingently borne evidence role,
+  and specify the effects of copying, correction, invalidation, supersession,
+  and loss of faithful bearers.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: content-token-identity-underdetermined
+    counterexample: >-
+      Two executions can issue byte-equal results that remain distinct by
+      provenance, while one issued result can be copied into two stores that
+      are one content object but two record tokens. The proposal and card do
+      not merge either pair: they leave the identity provider unresolved and
+      expose both criteria for steward choice pending a custody contract.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-evidence-record
+    counterexample: >-
+      CQ-005 and CQ-006 cannot establish applicability or discharge from an
+      execution outcome alone; they require recorded evidence tied to tree,
+      epoch, procedure, and provenance. VerificationEvidence is therefore a
+      genuine decision term rather than a listing mention.
+    outcome: survived
+  - surface: null_discriminator
+    rule: role-bearer-separation
+    counterexample: >-
+      A generic result record can contingently serve as proof under policy
+      without becoming a rigid VerificationEvidence kind. The proposal defines
+      an information artifact bearing that evidentiary role, leaves rigidity
+      unresolved, and preserves the generic-bearer rival, so it does not
+      collapse the role into the bearer while the custody question remains.
+    outcome: survived
+rival_models_still_viable:
+  - "One result-content object with multiple faithful concretizations."
+  - "Distinct issued record tokens with custody histories."
+  - "A generic result artifact contingently bearing an evidence role."
+evidence:
+  - "po:sha256:3208242164204b626fdec9ccef8311690ae6f88aa2054338d6cffee34f6d0a4a"
+  - "po:sha256:c13db8addc9d014305ab9aee478dec45f03d3b3cc65a65889949dbaf72b49303"
+  - "po:sha256:c51e70098e7cb7f6170bccb102a0436b5741f45bbba0c983f6c9461886ece32d"
+  - "CQ-005"
+  - "CQ-006"

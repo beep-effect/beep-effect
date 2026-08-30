@@ -1,0 +1,46 @@
+target: "otp:admission-work-kind:001"
+target_sha256: "f11744eec5780d82d58eed6a04bcbba43dba6030cecf770fd83c41a2d8656710"
+chain_sha256: "28e2db77976ab4cf35c7f011246dbaee7898cd542317066b8acd7a9663455fbf"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: identifier-is-not-vocabulary-identity
+    counterexample: >-
+      Two schedulers can reuse all four literal spellings while assigning
+      different charge meanings. The card requires governed lineage, member
+      meanings, and versioned authority, so equal strings do not merge those
+      vocabularies.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-term
+    counterexample: >-
+      Removing AdmissionWorkKind leaves CQ-021 unable to return a governed work
+      classification for each SeatRequest. The class and hasWorkKind property
+      are explicit parts of the required answer structure.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      An unused enum could remain implementation-only, but it would not preserve
+      the cited deployed mapping of full-proof, merged-preview, review-fix, and
+      publish to different admission charges that control capacity consumption.
+      The operational distinction defeats the null twin.
+    outcome: survived
+rival_models_still_viable:
+  - "The members are controlled lexical aliases for operational work categories."
+evidence:
+  - "so:sha256:52812cd00f245efb47e28b49b04b48f05de8a7fae89b4f413ebf61b3fc57cb86"
+  - "so:sha256:ebee067e625c3a5650da8dd8f45209c9f1ecba5607feb53883b955501198153c"
+  - "po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe"
+  - "CQ-021"

@@ -2,8 +2,12 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
-Status: `parked` (mirrors roadmap-paused `domain-kernel-hardening`)
+Status: `parked`
+<!-- END GENERATED: EXPLORATION STATUS -->
+
+Status note: (mirrors roadmap-paused `domain-kernel-hardening`)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -1,0 +1,34 @@
+id: "ic:topology:082"
+hypothesis_ref: "dh:topology:082"
+identity:
+  supplies_identity: false
+  identity_criterion: "Membership check against the workspace-package-identity domain in ic:topology:001: two occurrences represent the same @beep/oip-web information object only when their package-designating content and repository, namespace, and topology interpretation are the same; the literal spelling is evidence, never the criterion."
+  reidentification_key:
+    - "@beep/oip-web package-name evidence"
+    - "repository identity"
+    - "package namespace"
+    - "topology interpretation context"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: "One repeatable @beep/oip-web-designating content unit in a fixed repository and namespace interpretation; copied tokens may realize the same member."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "none: @beep/oip-web as only a package-name lexical alias"
+    - "kind: the software package bearer designated by @beep/oip-web"
+    - "none: a generated topology-capture row without a repeatable content object"
+  existential_dependencies:
+    - "At least one concrete carrier or encoding, generically rather than any particular file"
+    - "A repository, namespace, and topology interpretation in which @beep/oip-web designates a workspace package"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "no realization of the package-designating content remains"
+    - "the designation content or interpretation changes, yielding a different information object"
+counterexamples:
+  - description: "A fork or later repository history can reuse the spelling @beep/oip-web for a different package, while the earlier information object remains distinct; the literal alone cannot establish sameness."
+status: proposed

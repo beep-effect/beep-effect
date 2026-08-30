@@ -29,7 +29,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "render": "bun run scripts/render.ts",
@@ -77,8 +77,6 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "@fontsource-variable/inter": "catalog:",
-    "@fontsource-variable/jetbrains-mono": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

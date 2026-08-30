@@ -1,0 +1,10 @@
+id: po:sha256:01d709deca7a7a1df879e16d65ac8ac92a8deca22b29c1e0119846d284370520
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 133
+  end_line: 133
+quote: '@beep/brand 132'
+epistemic_status: quoted_prose

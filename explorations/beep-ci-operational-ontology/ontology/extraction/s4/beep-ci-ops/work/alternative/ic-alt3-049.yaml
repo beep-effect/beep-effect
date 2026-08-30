@@ -1,0 +1,28 @@
+id: ic:alt3:049
+hypothesis_ref: dh:turbo-cache:012
+identity:
+  supplies_identity: true
+  identity_criterion: Two lint:fix task specifications are the same iff they prescribe the
+    same repeatable Turbo task named lint:fix with its upstream lint:fix dependency selector.
+    The configuration key is reidentification evidence rather than the criterion.
+  reidentification_key:
+  - lint:fix
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one Turbo task prescription for lint:fix
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: The lint task with cache true is a different prescription; lint:fix is observed
+    with cache false and does not inherit lint's verification reading from the name alone.
+status: proposed

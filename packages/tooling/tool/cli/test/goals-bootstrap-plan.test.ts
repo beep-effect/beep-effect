@@ -19,19 +19,21 @@ import {
   validationRequirementsForGoalDoctorFinding,
 } from "@beep/repo-cli/test/Goals";
 import { findRepoRoot } from "@beep/repo-utils";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import type { Path } from "effect";
 
 const FIXTURES_ROOT = new URL("./fixtures/goals-plan", import.meta.url).pathname;
+// biome-ignore lint/suspicious/noUndeclaredEnvVars: Local golden regeneration is an explicit uncached test-authoring mode.
 const REGEN = Bun.env.REGEN_GOLDENS === "1";
 const PILOT_SLUG = "knowledge-surface-automation";
 
@@ -84,6 +86,15 @@ const run = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path
 const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 describe("goals bootstrap --plan golden fixtures", () => {
+  it("round-trips arbitrary goal slugs through the schema codec", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(GoalSlug)(fc), (slug) => {
+        expect(S.decodeSync(GoalSlug)(S.encodeSync(GoalSlug)(slug))).toBe(slug);
+      }),
+      { numRuns: 32 }
+    );
+  });
+
   it("pins the minimal standard-delivery plan byte-for-byte", () =>
     run(expectGolden("bootstrap-minimal", compileMaterializationPlan(minimalInput, []))));
 
@@ -114,6 +125,21 @@ describe("goals bootstrap --plan determinism", () => {
         expect(secondBytes).toBe(firstBytes);
       })
     ));
+
+  it("property: schema-generated inputs compile deterministic schema-valid plans", () => {
+    const BootstrapInputArbitrary = S.toArbitrary(BootstrapInput)(fc);
+    const isMaterializationPlan = S.is(MaterializationPlan);
+    fc.assert(
+      fc.property(BootstrapInputArbitrary, (input) => {
+        const first = compileMaterializationPlan(input, []);
+        const second = compileMaterializationPlan(input, []);
+        expect(isMaterializationPlan(first)).toBe(true);
+        expect(second.planId).toBe(first.planId);
+        expect(second.entries).toStrictEqual(first.entries);
+      }),
+      fcRuns(32)
+    );
+  });
 });
 
 describe("goals bootstrap --plan input rejection", () => {
@@ -351,7 +377,7 @@ describe("goals adopt --plan manifest-less packet", () => {
 
 describe("goals adopt --plan index parity", () => {
   it(
-    "regenerating the index around a retain-only pilot plan produces the tracked bytes",
+    "regenerating the local index around a retain-only pilot plan is deterministic",
     () =>
       run(
         Effect.gen(function* () {
@@ -364,13 +390,36 @@ describe("goals adopt --plan index parity", () => {
             (entry) => entry.path === `${snapshot.packetPath}/ops/manifest.json` && entry.action !== "preserve"
           );
           expect(A.length(manifestWrites)).toBe(0);
-          const regenerated = yield* buildPortfolioIndexContent(repoRoot);
-          const tracked = yield* fs.readFileString(`${repoRoot}/${PORTFOLIO_INDEX_PATH}`);
-          expect(regenerated).toBe(tracked);
+          const first = yield* buildPortfolioIndexContent(repoRoot);
+          const second = yield* buildPortfolioIndexContent(repoRoot);
+          expect(second).toBe(first);
+          const local = yield* fs.readFileString(`${repoRoot}/${PORTFOLIO_INDEX_PATH}`).pipe(Effect.option);
+          if (O.isSome(local)) expect(local.value).toBe(first);
         })
       ),
     60_000
   );
+});
+
+describe("goals index command", () => {
+  const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+
+  it("accepts an absent or matching local projection and rejects drift", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory("goals", { recursive: true });
+
+          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
+          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--write"])))).toBe(true);
+          expect(Exit.isSuccess(yield* Effect.exit(runGoalsCommand(["index", "--check"])))).toBe(true);
+
+          yield* fs.writeFileString(PORTFOLIO_INDEX_PATH, "# stale local projection\n");
+          expectReportedExit(yield* Effect.exit(runGoalsCommand(["index", "--check"])));
+        })
+      ).pipe(provideScopedLayer(commandTestLayer))
+    ));
 });
 
 describe("goals plan validation mapping", () => {

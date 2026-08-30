@@ -1,0 +1,43 @@
+id: "ic:worktree-config:010"
+hypothesis_ref: "dh:worktree-config:014"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two full-repository docgen work-unit specifications are the same when they
+    preserve the same docgen procedure, repository-wide scope rule, proof and
+    completion semantics, and governing policy revision; distinct repository
+    snapshots and run outputs belong to executions, not to specification
+    identity.
+  reidentification_key:
+    - "docgen procedure-specification identity"
+    - "full-repository scope rule"
+    - "proof and completion semantics"
+    - "governing policy revision"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One coherent prescription binding the docgen procedure to repository-wide
+    scope and repository-proof completion semantics.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a plan already bound to one concrete repository tree and toolchain"
+    - "process: one full-repository docgen execution"
+  existential_dependencies:
+    - "At least one faithful realization of the full-repository prescription"
+    - "The repository policy that defines repository-wide proof"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by revised proof or scope semantics"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      The same full-repository prescription can run at two commits and produce
+      different documentation and verdicts; if tree state or output supplied
+      its identity, the reusable specification would collapse into its runs.
+status: proposed

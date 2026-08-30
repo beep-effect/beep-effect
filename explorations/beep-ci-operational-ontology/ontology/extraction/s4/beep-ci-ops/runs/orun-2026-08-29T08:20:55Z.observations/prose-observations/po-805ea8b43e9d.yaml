@@ -1,0 +1,10 @@
+id: po:sha256:805ea8b43e9d37cc3d82a889148ac8fd3aebda4deb587e5a779fa63dd858e9f3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: standards/fallow.pilot.inventory.jsonc
+source_span:
+  start_line: 67
+  end_line: 82
+quote: '"command": "bun run fallow:audit -- --base origin/main --gate new-only"'
+epistemic_status: quoted_prose

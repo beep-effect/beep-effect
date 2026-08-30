@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:006"
+hypothesis_ref: "dh:turbo-cache:007"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same integration-test task specification only when they are the same authored repeatable instruction in one versioned configuration lineage with the same complete inherited test and dependency prescriptions; the test:integration key or upstream selector alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key test:integration"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The dependency, cache, environment, and input declarations compose one reusable integration-test instruction."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "An integration-test verification lane realized by the specification"
+    - "An umbrella template related to parallel and serial integration-test specifications"
+  existential_dependencies:
+    - "The versioned configuration and package graph that resolve the upstream build selector"
+    - "At least one bearer of the integration-test instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "The parallel and serial integration entries share the same observed upstream build dependency, so that selector cannot distinguish an umbrella task, a lane, or multiple complete specifications."
+status: proposed

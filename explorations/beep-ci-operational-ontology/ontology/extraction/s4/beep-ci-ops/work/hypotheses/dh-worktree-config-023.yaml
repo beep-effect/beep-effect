@@ -1,0 +1,19 @@
+id: "dh:worktree-config:023"
+observation_refs:
+  - "so:sha256:05c0e351f64d87bdefbb1b88f82ecc4b740aae33a13b082ba84e45ed7c945e2f"
+  - "so:sha256:d2e5aa3df7dddf6f43d045427af415bcdeb4763839834405a8e960ff15a8fdaf"
+cq_warrants: []
+proposed_referent:
+  label: "FleetPolicyMovement code vocabulary"
+  description: "The source vocabulary containing moved, unmoved, and unknown codes together with its generated TypeScript alias."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "policy-movement state domain"
+    representation_status: unresolved
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Literal membership and a generated alias do not establish what moves, under which policy, or whether the codes denote domain states rather than implementation results."
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

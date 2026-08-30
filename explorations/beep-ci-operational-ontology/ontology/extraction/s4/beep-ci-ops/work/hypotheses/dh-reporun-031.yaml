@@ -1,0 +1,24 @@
+id: "dh:reporun:031"
+observation_refs:
+  - "so:sha256:4ff1c137e2880d5ce4df9f2df10aa5d14b0ad9ce487dd43f3d240085d2b63bce"
+cq_warrants: []
+proposed_referent:
+  label: "capture-source option vocabulary"
+  description: "The all, merge, and stdout alternatives controlling which subprocess streams an implementation folds."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Capture-strategy specification"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "Execution output-source posture"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes an implementation union over stream-selection modes. No supplied CQ asks for this distinction and no external record identity is observed."
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false
+

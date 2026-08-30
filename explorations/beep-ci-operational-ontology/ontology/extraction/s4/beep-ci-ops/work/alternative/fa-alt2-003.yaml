@@ -1,0 +1,22 @@
+id: fa:alt2:003
+hypothesis_ref: dh:reporun:020
+identity_card_ref: ic:alt2:003
+tests:
+  spec_vs_execution: merged
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: captured Turbo task telemetry row'
+  still_viable: true
+- label: 'kind: the WorkUnitSpecification the row describes'
+  still_viable: true
+- label: 'implementation_artifact_only: transient DTO used only for lookup'
+  still_viable: true
+strongest_counterexample: >-
+  TurboPlanTask fields mix planning (task, packageName) with run telemetry (hash, cacheStatus, logFile), so treating the row
+  as either a pure specification or a pure execution collapses two occurrent/continuant slots into one schema.
+verdict: analyzed
+needed_evidence: >-
+  Separate observation of a WorkUnitSpecification identity that outlives snapshot rows, or of rows that exist only during
+  a run and are discarded, would decide specification versus transient DTO.

@@ -1,0 +1,34 @@
+id: "dh:cilane:036"
+observation_refs:
+  - "so:sha256:09d318bef64ab53cfa05788b3e8c55a8bc9a014bc0f3dc2a350efb8b06ee9300"
+  - "so:sha256:39f4a2f795299b4b3b7d7839e402b10cc2b2a44d3ddb04f2b1bb910200fdf509"
+  - "so:sha256:48ca68140747c1f5e649a55622554e549c9f5f0c763dc0127c783d2bfd0165aa"
+  - "so:sha256:498f83165cfffbfad4dc10a6924b1df80779f74089b2520a66b25dbabcda78a8"
+  - "so:sha256:81ddcd13d33f3d785dad3cb3357654deb98101cd0a5a0a20d7edfb38d0e5ba09"
+  - "so:sha256:9744f3e57e6263bc7f103804c6f95844825a883349625765b6e7241721b4e0f8"
+  - "so:sha256:abc349ef562350ddbfa11db6d816c482f0c86741e130227dc1557db7eda89ee6"
+  - "so:sha256:b629caccdfbb4be6d3157222055deeca2b1d36c50af0f850de182f2868e8fd67"
+  - "so:sha256:d733019803a74266e32f2d12a2d8e2a41b1c077f3e93d393752e656d3a40307e"
+  - "so:sha256:e56777d9d8cab07afdd41f8a1127d8d309f641d2143bfadc9e8499f591f9d397"
+  - "so:sha256:f3f711c827241260fef810278021ed6fbb8c9b8f52d63dbfbf410791d593a19e"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "doctest lane helper implementation"
+  description: "The path, dependency, affected-file, ordering, revision, step, and runner helpers declared around the doctest branch."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "doctest verification-lane procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "affected doctest WorkUnit specification"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Most records contain only unrepresentable declarations, and the exported declarations add no canonical affected-set or execution fact. The cluster can be source-level selection and test plumbing without a separate ontology referent."
+epistemic_status: proposed
+confidence:
+  value: 0.83
+  use_for_acceptance: false

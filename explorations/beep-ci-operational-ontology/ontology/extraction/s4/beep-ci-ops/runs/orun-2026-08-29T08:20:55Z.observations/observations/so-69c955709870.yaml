@@ -1,0 +1,23 @@
+id: so:sha256:69c955709870a9b7d0179b4375b2d5de330bf9c0de52d1ae43a3946d3c59481c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 449
+  end_line: 463
+  content_sha256: b063de10e3a4a379eda8d1e28d07466a6ad35b73985d7e70047171a583533d19
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runRequiredPhase
+  lexical_name: runRequiredPhase
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
+epistemic_status: parser_derived

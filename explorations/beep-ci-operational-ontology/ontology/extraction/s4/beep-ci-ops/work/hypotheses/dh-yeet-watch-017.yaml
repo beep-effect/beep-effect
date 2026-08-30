@@ -1,0 +1,32 @@
+id: "dh:yeet-watch:017"
+observation_refs:
+  - "so:sha256:b870d15f88a575353b6b0228cd405f21da494b88735fc82c49042a272e0095ab"
+  - "so:sha256:a7c6ae0d10535713f109acc2252a5ec84ab4500696ac752d7782c3625caa5747"
+  - "so:sha256:9a050882c859fbe6a493e1313f31f1062c204cb96663c81dfcac83bef8f5d917"
+  - "so:sha256:72751a9073713f96a4c3bf12a592db87e3b0b3364ab929e8d5fca792681f5ac4"
+  - "so:sha256:9d94f2c4eadf05ef6bb8063baffc7078f457c7e49fa37804ee1a9d4eb41cae85"
+  - "so:sha256:fe40dd08ca1fbf3ff080c0f0df1d01acc8642d31d9258193c7e65865cc0fc01c"
+  - "so:sha256:475cea15f30764a8045bd4d652dbc2c3c65b2cbde1b708f31800facdf6a2fbb1"
+  - "so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c"
+  - "so:sha256:53871c1d8d3f62889042f3a5d4388e6e993dc3ef0478c837fbe383b75b912edd"
+  - "so:sha256:c30acf2ce6e721bb586765a46dc7f4aa0760f5c25dea64f91deac21f76228ed3"
+cq_warrants: []
+proposed_referent:
+  label: "Yeet watch snapshot information artifact"
+  description: "A poll-bounded record of a pull request head, checks, review threads, mergeability, and state."
+representation_status: unresolved
+alternatives:
+  - label: "pull request operational situation"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "transient differ input DTO"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show a composite snapshot representation and consumers, but no CQ or harvested support relation requires this record kind and no runtime snapshot instance is observed; an information-artifact reading remains viable but ungrounded."
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

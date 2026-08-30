@@ -1,0 +1,43 @@
+id: "ic:reporun:015"
+hypothesis_ref: "dh:reporun:044"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two capture-pipe wedge situations are the same only when they are the same
+    continuous still-open state of the same capture session and pipe after the
+    same child-exit, drain-grace, process-group-reap, and reap-grace sequence;
+    equal command lines or error values do not make two situations identical.
+  reidentification_key:
+    - "capture-session and pipe-endpoint provenance"
+    - "child execution and the applied deadline interval"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One situation is unified by one capture pipe, its child and descendant
+    process configuration, and one continuous interval across the configured
+    drain-and-reap deadline.
+  dependence: relational
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+    - "deadline-violation event at which the wedge is declared"
+    - "escaped-descendant process occurrence holding the write end"
+    - "CapturePipeWedgedError information object reporting the condition"
+  existential_dependencies:
+    - "the particular capture session and pipe"
+    - "the child and any descendant process retaining a write end"
+    - "the grace-and-reap policy relative to which the situation is declared"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "the pipe reaches EOF"
+    - "the capture is abandoned or detached"
+counterexamples:
+  - description: >-
+      A slow but non-escaped descendant could close the pipe immediately after
+      the configured reap grace, so deadline expiry alone does not prove that
+      a double-forked or setsid descendant caused the still-open condition.
+status: proposed

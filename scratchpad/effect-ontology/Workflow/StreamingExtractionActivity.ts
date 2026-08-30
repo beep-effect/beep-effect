@@ -22,7 +22,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
-import { Cause, Crypto, DateTime, Duration, Effect, Encoding, pipe, Schedule } from "effect";
+import { Crypto, DateTime, Duration, Effect, Encoding, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -41,6 +41,7 @@ import { ConfigService } from "../Service/Config.ts";
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
 import { RdfBuilder, rdfStoreAddQuad } from "../Service/Rdf.ts";
 import { StorageService } from "../Service/Storage.ts";
+import { activityRetryPolicy } from "../Utils/Activity.ts";
 import {
   ClaimExtractionArtifact,
   claimExtractionArtifactToQuads,
@@ -70,13 +71,22 @@ const textEncoder = new TextEncoder();
  * The schema is local to the canonical streaming activity so its output contract
  * cannot drift from a retired activity implementation.
  *
- * **Example** (Validate streaming extraction output)
+ * **Example** (Decode a streaming extraction output)
  *
  * ```ts
  * import { StreamingExtractionOutput } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(StreamingExtractionOutput)({}))
+ * const decoded = S.decodeUnknownOption(StreamingExtractionOutput)({
+ *   documentId: "doc-deadbeefcafe",
+ *   graphUri: "gs://beep-ontology-state/docs/doc-deadbeefcafe.ttl",
+ *   entityCount: 2,
+ *   relationCount: 1,
+ *   claimCount: 3,
+ *   durationMs: 88
+ * })
+ * console.log(O.map(decoded, (output) => output.entityCount))
  * ```
  *
  * @category schemas
@@ -126,9 +136,9 @@ export const StreamingExtractionOutput = S.Struct({
 );
 
 /**
- *  Runtime output produced by the streaming extraction activity.
+ * Decoded streaming extraction output produced by {@link StreamingExtractionOutput}.
  *
- *
+ * @see {@link StreamingExtractionOutput} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
@@ -149,18 +159,6 @@ const requireContent = (opt: O.Option<string>, key: string) =>
 
 const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
   O.getOrElse(config.storage.bucket, () => "local-bucket");
-
-/**
- * Default retry policy for activities
- * - Exponential backoff starting at 1 second
- * - Max 3 attempts
- * - Jitter to prevent thundering herd
- */
-const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
-  Schedule.jittered,
-  Schedule.setInputType<Cause.Cause<unknown>>(),
-  Schedule.while((meta) => Cause.hasInterrupts(meta.input))
-);
 
 // -----------------------------------------------------------------------------
 // Config Builders
@@ -197,12 +195,36 @@ const extractOntologyName = (uri: string): OntologyName => {
  * Translates the batch activity input (with preprocessing hints) to the
  * RunConfig format expected by StreamingExtraction.
  *
- * **Example** (Inspect build run config)
+ * **Example** (Map batch input to chunking and grounding)
  *
  * ```ts
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { PosInt } from "@beep/schema/Int"
+ * import { Duration } from "effect"
+ * import { BatchId, ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"
+ * import { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { buildRunConfig } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ * import * as S from "effect/Schema"
  *
- * console.log(buildRunConfig)
+ * const input = ExtractionActivityInput.make({
+ *   batchId: BatchId.make("batch-deadbeefcafe"),
+ *   documentId: DocumentId.make("doc-deadbeefcafe"),
+ *   sourceUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/docs/doc-deadbeefcafe.txt"),
+ *   ontologyUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/ontologies/foaf.ttl"),
+ *   ontologyId: OntologyName.make("foaf"),
+ *   targetNamespace: Namespace.make("foaf")
+ * })
+ * const config = buildRunConfig(input, {
+ *   model: "claude-haiku-4-5",
+ *   temperature: 0.1,
+ *   maxTokens: 1024,
+ *   timeout: Duration.seconds(30),
+ *   groundingEnabled: true,
+ *   groundingThreshold: Confidence.make(0.8),
+ *   groundingBatchSize: PosInt.make(8)
+ * }, ContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"))
+ * console.log(config.chunking.maxChunkSize)
+ * console.log(config.grounding.mode)
  * ```
  *
  * @param input - Extraction activity input with optional preprocessing hints
@@ -271,12 +293,39 @@ export const buildRunConfig = dual3(
  *
  * Adds provenance information to each entity for traceability.
  *
- * **Example** (Inspect enrich entity metadata)
+ * **Example** (Stamp a document id onto an extracted entity)
  *
  * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
+ * import { BatchId, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"
+ * import { Entity } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { enrichEntityMetadata } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ * import * as S from "effect/Schema"
  *
- * console.log(enrichEntityMetadata)
+ * const input = ExtractionActivityInput.make({
+ *   batchId: BatchId.make("batch-deadbeefcafe"),
+ *   documentId: DocumentId.make("doc-deadbeefcafe"),
+ *   sourceUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/docs/doc-deadbeefcafe.txt"),
+ *   ontologyUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/ontologies/foaf.ttl"),
+ *   ontologyId: OntologyName.make("foaf"),
+ *   targetNamespace: Namespace.make("foaf")
+ * })
+ * const enriched = enrichEntityMetadata(
+ *   [
+ *     Entity.make({
+ *       id: EntityId.make("ada_lovelace"),
+ *       mention: "Ada Lovelace",
+ *       types: [IRI.make("https://schema.org/Person")]
+ *     })
+ *   ],
+ *   input,
+ *   DateTime.makeUnsafe("2026-08-26T00:00:00.000Z")
+ * )
+ * console.log(O.getOrUndefined(enriched[0]?.documentId))
  * ```
  *
  * @param entities - Extracted entities from StreamingExtraction
@@ -327,12 +376,25 @@ export const enrichEntityMetadata = dual3(
  * 6. Serialize to RDF using claimsDataToQuads()
  * 7. Write graph to storage and return output
  *
- * **Example** (Inspect make streaming extraction activity)
+ * **Example** (Name the canonical streaming extraction activity)
  *
  * ```ts
+ * import { BatchId, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"
+ * import { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { makeStreamingExtractionActivity } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ * import * as S from "effect/Schema"
  *
- * console.log(makeStreamingExtractionActivity)
+ * const activity = makeStreamingExtractionActivity(
+ *   ExtractionActivityInput.make({
+ *     batchId: BatchId.make("batch-deadbeefcafe"),
+ *     documentId: DocumentId.make("doc-deadbeefcafe"),
+ *     sourceUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/docs/doc-deadbeefcafe.txt"),
+ *     ontologyUri: S.decodeUnknownSync(GcsUri)("gs://beep-ontology-state/ontologies/foaf.ttl"),
+ *     ontologyId: OntologyName.make("foaf"),
+ *     targetNamespace: Namespace.make("foaf")
+ *   })
+ * )
+ * console.log(activity.name)
  * ```
  *
  * @param input - Extraction activity input (from batch workflow)

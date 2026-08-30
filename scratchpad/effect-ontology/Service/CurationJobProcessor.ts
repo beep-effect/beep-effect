@@ -51,7 +51,6 @@ export type JobProcessorError = DrizzleError | AnyEmbeddingError | EventBusError
 /**
  * Job processing statistics
  *
- *
  * **Example** (Create job processing statistics)
  *
  * ```ts
@@ -60,7 +59,7 @@ export type JobProcessorError = DrizzleError | AnyEmbeddingError | EventBusError
  * console.log(JobProcessingStats.make({ jobsProcessed: 2, errors: 0, durationMs: 5 }).jobsProcessed) // 2
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class JobProcessingStats extends S.Class<JobProcessingStats>($I`JobProcessingStats`)(
@@ -81,17 +80,23 @@ type JobMeta = { readonly id: string; readonly attempts: number };
 // =============================================================================
 
 /**
- * Provides the curation job processor service capability.
+ * Drains queued curation jobs and updates processing statistics.
  *
- * **Example** (Inspect curation job processor)
+ * **Example** (Compose job processing against Default)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { CurationJobProcessor } from "@effect-ontology/Service/CurationJobProcessor"
  *
- * console.log(CurationJobProcessor)
+ * const program = Effect.gen(function* () {
+ *   const processor = yield* CurationJobProcessor
+ *   return yield* processor.processOnce
+ * }).pipe(Effect.provide(CurationJobProcessor.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class CurationJobProcessor extends Context.Service<CurationJobProcessor>()($I`CurationJobProcessor`, {
@@ -304,7 +309,7 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
      */
     const runBackground = Effect.fn("CurationJobProcessor.runBackground")(function* (
       pollInterval: Duration.Duration = Duration.seconds(5)
-    ): Effect.fn.Return<Fiber.Fiber<never, never>, never, Scope.Scope> {
+    ): Effect.fn.Return<Fiber.Fiber<never>, never, Scope.Scope> {
       const processor = Effect.gen(function* () {
         const pendingCount = yield* eventBus.pendingJobCount;
         if (pendingCount > 0) {

@@ -1,0 +1,36 @@
+id: ic:sched-core:015
+hypothesis_ref: dh:sched-core:016
+identity:
+  supplies_identity: unresolved
+  identity_criterion: 'Unresolved: two hard-floor-engaged situations would be the same only if they concern the same machine-wide
+    admission context and policy through one uninterrupted interval below the hard floor; separated true snapshots cannot
+    establish that continuity.'
+  reidentification_key:
+  - machine-wide admission context
+  - hard-floor policy version
+  - continuous below-floor interval evidence not present in snapshots
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: One uninterrupted interval in which measured available memory remains below one governing hard-floor threshold and
+    admission capacity remains forced to zero.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+  - a Boolean field in an AdmissionSnapshot
+  - an un-reified capacity-control branch
+  existential_dependencies:
+  - a machine-wide admission context
+  - measured available memory
+  - a governing hard-floor policy
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - ends when memory recovers to the threshold or the governing hard-floor policy changes
+counterexamples:
+- description: Snapshots at 10:00 and 10:02 can both report true and zero capacity even though memory recovered at 10:01;
+    without interval evidence they concern two situations, not one enduring token.
+status: proposed

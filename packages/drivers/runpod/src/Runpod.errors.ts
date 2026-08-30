@@ -8,7 +8,7 @@
 import { $RunpodId } from "@beep/identity";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { pipe, Result } from "effect";
+import { flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -394,31 +394,25 @@ class RunpodDocsErrorOptionsInput extends S.Class<RunpodDocsErrorOptionsInput>($
 
 // Keep reflective inspection inside the driver boundary: hostile proxies and
 // throwing getters are treated as absent diagnostic metadata.
-const safelyRead =
-  (key: PropertyKey) =>
-  (value: unknown): O.Option<unknown> =>
-    pipe(
-      value,
-      O.liftPredicate(P.isObject),
-      O.flatMap((object) =>
-        pipe(
-          Result.try(() => Reflect.get(object, key)),
-          Result.getOrElse(() => undefined),
-          O.fromUndefinedOr
-        )
+const safelyRead = (key: PropertyKey): ((value: unknown) => O.Option<unknown>) =>
+  flow(
+    O.liftPredicate(P.isObject),
+    O.flatMap((object) =>
+      pipe(
+        Result.try(() => Reflect.get(object, key)),
+        Result.getOrElse(() => undefined),
+        O.fromUndefinedOr
       )
-    );
-
-const stringProperty =
-  (key: PropertyKey) =>
-  (value: unknown): O.Option<string> =>
-    pipe(value, safelyRead(key), O.filter(P.isString));
-
-const isHttpClientCause = (cause: unknown): boolean =>
-  pipe(
-    Result.try(() => HttpClientError.isHttpClientError(cause)),
-    Result.getOrElse(() => false)
+    )
   );
+
+const stringProperty = (key: PropertyKey): ((value: unknown) => O.Option<string>) =>
+  flow(safelyRead(key), O.filter(P.isString));
+
+const isHttpClientCause: (cause: unknown) => boolean = flow(
+  (cause) => Result.try(() => HttpClientError.isHttpClientError(cause)),
+  Result.getOrElse(() => false)
+);
 
 const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
   pipe(

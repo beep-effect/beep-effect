@@ -1,0 +1,25 @@
+id: "dh:cilane:013"
+observation_refs:
+  - "po:sha256:35522873fbc67e68e03632a86c3574c239b7e8b82d6244d58e2a76de7256202d"
+  - "po:sha256:f592c1a1a0042dc9b4234a1b7217ea374f2799a2f4d04f77b263ef5d9058ab5d"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "labs verification lane"
+  description: "A possible operational verification lane named by the quoted labs token; the population called labs is not defined."
+representation_status: lexical_alias
+alternatives:
+  - label: "labs command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "laboratory-application verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations only repeat labs in adjacent list windows. They do not identify the applications, selection rule, work, or verdict associated with it, so the token may be implementation vocabulary alone."
+epistemic_status: proposed
+confidence:
+  value: 0.43
+  use_for_acceptance: false

@@ -1,0 +1,23 @@
+id: so:sha256:7e67f7b06265be0ec54e4ebe28735bb85838a711dfa92a9aa672599fa8f5bce2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 186
+  end_line: 186
+  content_sha256: d6329f779ba5bd6d52209f3480ace0604a36d8097d4e0d0ea03b4efd1c017f83
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::GITHUB_LOG_TIMESTAMP_PATTERN
+  lexical_name: GITHUB_LOG_TIMESTAMP_PATTERN
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const GITHUB_LOG_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z ?/u;
+epistemic_status: parser_derived

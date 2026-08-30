@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
 Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Graduated 2026-08-24:
 [`goals/oppold-corpus-salvage-restoration`](../../goals/oppold-corpus-salvage-restoration/README.md)

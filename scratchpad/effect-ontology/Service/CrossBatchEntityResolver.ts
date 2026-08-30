@@ -18,11 +18,10 @@ import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, HashMap, HashSet, Layer, MutableHashMap } from "effect";
+import { Context, Effect, HashMap, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { Entity } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
@@ -32,6 +31,7 @@ import {
   EntityRegistryRepository,
   normalizeEntityMention,
 } from "../Repository/EntityRegistry.ts";
+import { tokenizeMentionForBlocking } from "../Utils/Text.ts";
 import { EmbeddingService } from "./Embedding.ts";
 import { Embedding } from "./EmbeddingProvider.ts";
 
@@ -50,7 +50,6 @@ const ResolutionMethod = LiteralKit(["embedding_similarity", "new_canonical"]).p
 /**
  * Combined error type for cross-batch resolution operations
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -62,7 +61,6 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
 
 /**
  * Result of cross-batch entity resolution
- *
  *
  * **Example** (Create an empty resolution result)
  *
@@ -101,7 +99,6 @@ export class CrossBatchResolutionResult extends S.Class<CrossBatchResolutionResu
 
 /**
  * Describes the merged entity data exposed by this module.
- *
  *
  * **Example** (Create a resolved entity)
  *
@@ -144,7 +141,6 @@ export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
 
 /**
  * Describes the resolution stats data exposed by this module.
- *
  *
  * **Example** (Record resolution counts)
  *
@@ -245,9 +241,15 @@ export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>(
  *
  * ```ts
  * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { CrossBatchEntityResolver } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
- * console.log(Layer.isLayer(CrossBatchEntityResolver.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const resolver = yield* CrossBatchEntityResolver
+ *   return resolver
+ * }).pipe(Effect.provide(CrossBatchEntityResolver.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -587,9 +589,15 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
  *
  * ```ts
  * import { Layer } from "effect"
- * import { CrossBatchEntityResolverLive } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ * import { Effect } from "effect"
+ * import { CrossBatchEntityResolver, CrossBatchEntityResolverLive } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
- * console.log(Layer.isLayer(CrossBatchEntityResolverLive)) // true
+ * const program = Effect.gen(function* () {
+ *   const resolver = yield* CrossBatchEntityResolver
+ *   return resolver
+ * }).pipe(Effect.provide(CrossBatchEntityResolverLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -605,65 +613,5 @@ export const CrossBatchEntityResolverLive = CrossBatchEntityResolver.Default;
  * Tokenize a mention for blocking index
  */
 function tokenize(mention: string): Array<string> {
-  const stopWords = HashSet.make(
-    "the",
-    "a",
-    "an",
-    "and",
-    "or",
-    "but",
-    "in",
-    "on",
-    "at",
-    "to",
-    "for",
-    "of",
-    "with",
-    "by",
-    "from",
-    "as",
-    "is",
-    "was",
-    "are",
-    "were",
-    "been",
-    "be",
-    "have",
-    "has",
-    "had",
-    "do",
-    "does",
-    "did",
-    "will",
-    "would",
-    "could",
-    "should",
-    "may",
-    "might",
-    "must",
-    "shall",
-    "can",
-    "this",
-    "that",
-    "these",
-    "those",
-    "i",
-    "you",
-    "he",
-    "she",
-    "it",
-    "we",
-    "they",
-    "inc",
-    "corp",
-    "llc",
-    "ltd",
-    "co",
-    "company"
-  );
-
-  return A.filter(
-    Str.split(/[\s\-_.,;:!?'"()[\]{}]+/)(Str.toLowerCase(mention)),
-    (token) => token.length > 2 && !HashSet.has(stopWords, token)
-  );
+  return tokenizeMentionForBlocking(mention);
 }

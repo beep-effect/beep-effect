@@ -1,0 +1,25 @@
+id: "dh:topology:139"
+observation_refs:
+  - "po:sha256:b9c044947fc88a87fb4f8618d569ff80a0728eace5a44fe950c2448cef9f319b"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/workspace-tables workspace package"
+  description: "The workspace software package information artifact identified by @beep/workspace-tables in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/workspace-tables as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort row can contain @beep/workspace-tables and be consumed by a closure parser while remaining only a lexical package token; no cited lineage evidence identifies a continuing package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

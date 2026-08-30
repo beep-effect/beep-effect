@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:009"
+observation_refs:
+  - "so:sha256:91c6f6c2d9e286260f55ff45a043b51c4a51377b9a0d7b6530c2ef6ca827fac2"
+  - "po:sha256:dda89a68686845e46b7f29c3c3267f8aec39265b676303a93c30be0ea7f7786e"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named test:integration:serial"
+  description: "A repeatable serial-integration task specification with an observed upstream build dependency."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A serial integration-test verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A lexical specialization of the integration task"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A turbo.json entry can bear the serial-looking test:integration:serial key and an upstream build dependency while the resolved package script still runs concurrently; the cited configuration does not establish a serial verification procedure."
+epistemic_status: proposed
+confidence:
+  value: 0.74
+  use_for_acceptance: false

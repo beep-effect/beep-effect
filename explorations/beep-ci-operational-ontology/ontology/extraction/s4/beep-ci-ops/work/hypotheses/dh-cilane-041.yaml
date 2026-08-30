@@ -1,0 +1,23 @@
+id: "dh:cilane:041"
+observation_refs:
+  - "so:sha256:22cb642a4b9bcd68a25e5b6d998d0103241a06fe39dc05a2e8e35d9cfe2430a2"
+cq_warrants: []
+proposed_referent:
+  label: "hosted-runner Turbo concurrency argument"
+  description: "The source constant whose observed excerpt contains the --concurrency=2 argument."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "hosted verification resource-control policy"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "concurrency quality of a verification execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A single command-line constant does not establish a policy bearer, runner memory condition, application scope, or execution using the value. It is fully explained as implementation configuration."
+epistemic_status: proposed
+confidence:
+  value: 0.93
+  use_for_acceptance: false

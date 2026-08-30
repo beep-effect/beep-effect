@@ -2,7 +2,10 @@
 
 ## Status
 
-Stage: `capture` · Status: `parked`
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
+Stage: `capture`
+Status: `parked`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -7,33 +7,38 @@
  * Handles fetching via Jina, content-addressed storage, and optional
  * AI enrichment for metadata extraction.
  *
- * **Example** (Inspect the ingestion layer)
- *
- * ```ts
- * import { Layer } from "effect"
- * import { LinkIngestionService } from "@effect-ontology/Service/LinkIngestionService"
- *
- * console.log(Layer.isLayer(LinkIngestionService.Default)) // true
- * ```
- *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as A from "@beep/utils/Array";
 import { and, eq, inArray, lt } from "drizzle-orm";
-import { Cache, Clock, Context, DateTime, Duration, Effect, Inspectable, Layer } from "effect";
-import * as A from "effect/Array";
+import {
+    Cache,
+    Clock,
+    Context,
+    Crypto,
+    DateTime,
+    Duration,
+    Effect,
+    Encoding,
+    Inspectable,
+    Layer
+} from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
-import type { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
-import type { IngestedLinkInsertRow, IngestedLinkRow } from "../Repository/schema.ts";
+import { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
+import type {
+    IngestedLinkInsertRow,
+    IngestedLinkRow
+} from "../Repository/schema.ts";
 import { IngestedLinks, ingestedLinks } from "../Repository/schema.ts";
+import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import { ContentEnrichmentAgent } from "./ContentEnrichmentAgent.ts";
 import { ImageExtractor } from "./ImageExtractor.ts";
 import { ImageFetcher } from "./ImageFetcher.ts";
@@ -43,8 +48,7 @@ import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LinkIngestionService");
 
-const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
-  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+const normalizeQueryError = normalizeDrizzleError("execute");
 
 const decodeIngestedLinkRows = (rows: unknown) =>
   S.decodeUnknownEffect(IngestedLinks.select.pipe(S.Array, S.mutable))(rows).pipe(
@@ -63,7 +67,12 @@ const decodeIngestedLinkRows = (rows: unknown) =>
  * ```ts
  * import { LinkIngestionError } from "@effect-ontology/Service/LinkIngestionService"
  *
- * console.log(LinkIngestionError)
+ * const error = LinkIngestionError.make({
+ *   message: "Jina fetch failed",
+ *   url: "https://example.org/ada",
+ *   phase: "fetch"
+ * })
+ * console.log(error._tag) // "LinkIngestionError"
  * ```
  *
  * @category errors
@@ -76,7 +85,10 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`Lin
     url: S.optionalKey(S.String),
     phase: S.Literals(["fetch", "store", "enrich", "persist"]),
     cause: S.optionalKey(S.Defect()),
-  }
+  },
+  $I.annoteError<LinkIngestionError>("LinkIngestionError", {
+    description: "Failure raised while fetching, enriching, storing, or persisting a linked document.",
+  })
 ) {
   static readonly is = S.is(LinkIngestionError);
 }
@@ -88,127 +100,133 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`Lin
 /**
  * Options for ingesting a URL
  *
- *
  * **Example** (Use the IngestOptions contract)
  *
  * ```ts
- * import type { IngestOptions } from "@effect-ontology/Service/LinkIngestionService"
+ * import { IngestOptions } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsIngestOptions = (_value: IngestOptions): void => undefined
- *
- * console.log(acceptsIngestOptions)
+ * const options = IngestOptions.make({ ontologyId: "core", enrich: true })
+ * console.log(options.ontologyId) // "core"
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface IngestOptions {
-  /** Ontology ID for namespace scoping (required) */
-  readonly ontologyId: string;
-  /** Whether to run AI enrichment (default: true) */
-  readonly enrich?: boolean;
-  /** Whether to extract and store images (default: true) */
-  readonly extractImages?: boolean;
-  /** Source type override (auto-detected if not provided) */
-  readonly sourceType?: string;
-  /** Additional metadata to store */
-  readonly metadata?: Record<string, unknown>;
-  /** Skip if content hash already exists */
-  readonly skipDuplicates?: boolean;
-}
+export class IngestOptions extends S.Class<IngestOptions>($I`IngestOptions`)(
+  {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology identifier used for namespace scoping." }),
+    enrich: S.Boolean.pipe(S.optionalKey).annotateKey({ description: "Whether to run AI enrichment." }),
+    extractImages: S.Boolean.pipe(S.optionalKey).annotateKey({ description: "Whether to extract and store images." }),
+    sourceType: S.NonEmptyString.pipe(S.optionalKey).annotateKey({ description: "Optional source-type override." }),
+    metadata: S.Record(S.String, S.Unknown).pipe(S.optionalKey).annotateKey({
+      description: "Additional metadata persisted with the ingested link.",
+    }),
+    skipDuplicates: S.Boolean.pipe(S.optionalKey).annotateKey({
+      description: "Whether content hashes already present in the ontology are skipped.",
+    }),
+  },
+  $I.annote("IngestOptions", {
+    description: "Ontology scope, enrichment, image extraction, metadata, and duplicate handling for URL ingestion.",
+  })
+) {}
 
 /**
  * Result of ingesting a URL
  *
- *
  * **Example** (Use the IngestResult contract)
  *
  * ```ts
- * import type { IngestResult } from "@effect-ontology/Service/LinkIngestionService"
+ * import { IngestResult } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsIngestResult = (_value: IngestResult): void => undefined
- *
- * console.log(acceptsIngestResult)
+ * const result = IngestResult.make({
+ *   id: "link-1",
+ *   contentHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ *   storageUri: "documents/aaa/content.md",
+ *   duplicate: false
+ * })
+ * console.log(result.duplicate) // false
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface IngestResult {
-  /** Database ID of ingested link */
-  readonly id: string;
-  /** SHA-256 hash of content */
-  readonly contentHash: string;
-  /** Storage URI for content */
-  readonly storageUri: string;
-  /** Enriched headline (if enrichment ran) */
-  readonly headline?: string;
-  /** Whether this was a duplicate (skipped) */
-  readonly duplicate: boolean;
-  /** Word count */
-  readonly wordCount?: number;
-  /** Number of images extracted and stored */
-  readonly imageCount?: number;
-}
+export class IngestResult extends S.Class<IngestResult>($I`IngestResult`)(
+  {
+    id: S.NonEmptyString.annotateKey({ description: "Database identifier of the ingested link." }),
+    contentHash: S.NonEmptyString.annotateKey({ description: "SHA-256 content hash." }),
+    storageUri: S.NonEmptyString.annotateKey({ description: "Storage URI of the persisted content." }),
+    headline: S.String.pipe(S.optionalKey).annotateKey({ description: "Headline produced by optional enrichment." }),
+    duplicate: S.Boolean.annotateKey({ description: "Whether ingestion skipped an existing content hash." }),
+    wordCount: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Content word count when available." }),
+    imageCount: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Number of extracted images stored." }),
+  },
+  $I.annote("IngestResult", {
+    description: "Stored link identity, content location, enrichment metadata, and duplicate outcome.",
+  })
+) {}
 
 /**
  * Options for bulk ingestion
  *
- *
  * **Example** (Use the BulkIngestOptions contract)
  *
  * ```ts
- * import type { BulkIngestOptions } from "@effect-ontology/Service/LinkIngestionService"
+ * import { BulkIngestOptions } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsBulkIngestOptions = (_value: BulkIngestOptions): void => undefined
- *
- * console.log(acceptsBulkIngestOptions)
+ * const options = BulkIngestOptions.make({ ontologyId: "core", concurrency: 3 })
+ * console.log(options.concurrency) // 3
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface BulkIngestOptions extends IngestOptions {
-  /** Concurrency limit (default: 5) */
-  readonly concurrency?: number;
-  /** Continue on individual failures */
-  readonly continueOnError?: boolean;
-}
+export class BulkIngestOptions extends S.Class<BulkIngestOptions>($I`BulkIngestOptions`)(
+  {
+    ...IngestOptions.fields,
+    concurrency: S.Int.check(S.isGreaterThan(0)).pipe(S.optionalKey).annotateKey({
+      description: "Maximum concurrent URL ingestions.",
+    }),
+    continueOnError: S.Boolean.pipe(S.optionalKey).annotateKey({
+      description: "Whether individual failures are retained while remaining URLs continue.",
+    }),
+  },
+  $I.annote("BulkIngestOptions", {
+    description: "URL-ingestion options extended with concurrency and failure-continuation controls.",
+  })
+) {}
 
 /**
  * Filter for listing ingested links
  *
- *
  * **Example** (Use the IngestedLinkFilter contract)
  *
  * ```ts
- * import type { IngestedLinkFilter } from "@effect-ontology/Service/LinkIngestionService"
+ * import { IngestedLinkFilter } from "@effect-ontology/Service/LinkIngestionService"
  *
- * const acceptsIngestedLinkFilter = (_value: IngestedLinkFilter): void => undefined
- *
- * console.log(acceptsIngestedLinkFilter)
+ * const filter = IngestedLinkFilter.make({ ontologyId: "core", limit: 20 })
+ * console.log(filter.limit) // 20
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
-export interface IngestedLinkFilter {
-  readonly ontologyId?: string;
-  readonly status?: LinkStatus;
-  readonly sourceType?: string;
-  readonly organization?: string;
-  readonly limit?: number;
-  readonly offset?: number;
-}
+export class IngestedLinkFilter extends S.Class<IngestedLinkFilter>($I`IngestedLinkFilter`)(
+  {
+    ontologyId: S.NonEmptyString.pipe(S.optionalKey),
+    status: LinkStatus.pipe(S.optionalKey),
+    sourceType: S.NonEmptyString.pipe(S.optionalKey),
+    organization: S.NonEmptyString.pipe(S.optionalKey),
+    limit: S.Natural.pipe(S.optionalKey),
+    offset: S.Natural.pipe(S.optionalKey),
+  },
+  $I.annote("IngestedLinkFilter", {
+    description: "Ontology, lifecycle, source, organization, limit, and offset filters for ingested links.",
+  })
+) {}
 
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Compute SHA-256 hash of content
- */
-const computeContentHash = (content: string): string => createHash("sha256").update(content).digest("hex");
 
 /**
  * Build storage path for document
@@ -237,9 +255,15 @@ class ContentHashCacheKey extends S.Class<ContentHashCacheKey>($I`ContentHashCac
  * **Example** (Inspect link ingestion service)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { LinkIngestionService } from "@effect-ontology/Service/LinkIngestionService"
  *
- * console.log(LinkIngestionService)
+ * const program = Effect.gen(function* () {
+ *   const ingestion = yield* LinkIngestionService
+ *   return ingestion
+ * }).pipe(Effect.provide(LinkIngestionService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -254,6 +278,24 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     const imageExtractor = yield* ImageExtractor;
     const imageFetcher = yield* ImageFetcher;
     const imageStore = yield* ImageStore;
+    const crypto = yield* Crypto.Crypto;
+
+    const computeContentHash = Effect.fn("LinkIngestionService.computeContentHash")(function* (
+      content: string,
+      url: string
+    ): Effect.fn.Return<string, LinkIngestionError> {
+      const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(content)).pipe(
+        Effect.mapError((cause) =>
+          LinkIngestionError.make({
+            message: "Failed to hash fetched content",
+            url,
+            phase: "store",
+            cause,
+          })
+        )
+      );
+      return Encoding.encodeHex(digest);
+    });
 
     // Raw DB lookup for content hash within an ontology (used by cache).
     const lookupByContentHash = Effect.fn("lookupByContentHash")(function* ({ hash, ontologyId }: ContentHashCacheKey) {
@@ -309,20 +351,20 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       const { content } = jinaResponse;
 
       // 2. Compute content hash
-      const contentHash = computeContentHash(content.content);
+      const contentHash = yield* computeContentHash(content.content, url);
 
       // 3. Check for duplicate (scoped by ontology)
       if (skipDuplicates) {
         const existing = yield* getByContentHash(ontologyId, contentHash);
         if (O.isSome(existing)) {
-          return {
+          return IngestResult.make({
             id: existing.value.id,
             contentHash,
             storageUri: existing.value.storageUri,
             duplicate: true,
             ...(P.isNotNull(existing.value.headline) ? { headline: existing.value.headline } : {}),
             ...(P.isNotNull(existing.value.wordCount) ? { wordCount: existing.value.wordCount } : {}),
-          };
+          });
         }
       }
 
@@ -396,7 +438,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       // 5. Optionally enrich metadata
       let enrichedContent: EnrichedContent | undefined;
       if (enrich) {
-        const enrichResult = yield* enricher.enrichFromJina(content).pipe(
+
+        enrichedContent = yield * enricher.enrichFromJina(content).pipe(
           Effect.catch((error) =>
             Effect.gen(function* () {
               yield* Effect.logWarning("Enrichment failed, continuing without metadata", {
@@ -407,7 +450,6 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
             })
           )
         );
-        enrichedContent = enrichResult;
       }
 
       // 6. Persist to database
@@ -448,7 +490,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         )
       );
 
-      return {
+      return IngestResult.make({
         id: inserted.id,
         contentHash,
         storageUri: storagePath,
@@ -456,7 +498,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         ...(P.isNotUndefined(enrichedContent?.headline) ? { headline: enrichedContent.headline } : {}),
         ...(P.isNotNullish(wordCount) ? { wordCount } : {}),
         ...(imageCount > 0 ? { imageCount } : {}),
-      };
+      });
     });
 
     /**
@@ -469,7 +511,10 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       Effect.gen(function* () {
         const { concurrency = 5, continueOnError = true, ...ingestOptions } = options;
 
-        const results = yield* Effect.forEach(
+
+
+
+        return yield * Effect.forEach(
           urls,
           (url) =>
             ingestUrl(url, ingestOptions).pipe(
@@ -479,10 +524,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
                   continueOnError ? Effect.succeed(error) : Effect.fail(error)
               )
             ),
-          { concurrency }
+          {concurrency}
         );
-
-        return results;
       });
 
     // -----------------------------------------------------------------------

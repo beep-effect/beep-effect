@@ -1,0 +1,26 @@
+id: "dh:reporun:044"
+observation_refs:
+  - "so:sha256:cedb251eba2f0a4461900aa8fb5042e203afad5db062a03ea76c7ba3a2530d81"
+  - "so:sha256:5e270979bc0c935338c978f766a4a0cfd7a8c59839257bc90921929c26dbe23f"
+  - "so:sha256:af230c68d95b93810f99a6a149caf4c72b625d7eea4fed27a5dd336e8b14bc69"
+  - "so:sha256:9f974328db9590c5cb409a0ecac90965f46e1842c62597fc85c78d20d2c4c912"
+cq_warrants: ["CQ-013"]
+proposed_referent:
+  label: "capture-pipe wedge occurrence"
+  description: "A runtime failure condition in which captured output remains open after child exit, drain grace, process-group reap, and reap grace."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Escaped-descendant process occurrence holding the write end"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Tagged error value reporting the condition"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Stub code can retain the tagged-error declaration, deadline-function declaration, and two grace constants without waiting for child exit, reaping a process group, waiting again, or testing a still-open pipe; every cited observation therefore fits an implementation-only twin."
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

@@ -25,7 +25,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
@@ -38,7 +38,6 @@
     "./secrets": "./src/secrets.ts",
     "./layer": "./src/layer.ts",
     "./test": "./src/test.ts",
-    "./aggregates/*": "./src/aggregates/*/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -60,7 +59,6 @@
       "./secrets": "./dist/secrets.js",
       "./layer": "./dist/layer.js",
       "./test": "./dist/test.js",
-      "./aggregates/*": "./dist/aggregates/*/index.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

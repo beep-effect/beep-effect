@@ -113,9 +113,15 @@ export interface ImageBlobStoreService {
  * **Example** (Inspect image blob store)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { ImageBlobStore } from "@effect-ontology/Service/ImageBlobStore"
  *
- * console.log(ImageBlobStore)
+ * const program = Effect.gen(function* () {
+ *   const store = yield* ImageBlobStore
+ *   return store
+ * }).pipe(Effect.provide(ImageBlobStore.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

@@ -1,0 +1,27 @@
+id: "dh:turbo-cache:004"
+observation_refs:
+  - "so:sha256:61df7a18d8c9ef5297166cf626036f7e12ea1f2b9a5631d1b5c793facc39ad76"
+  - "po:sha256:213755955ee71c2e53a4c0fe443cabb862e2c87cf560e13da4b4e7b7aa80caeb"
+  - "po:sha256:6a81a5c63f2b13a5e5d4dc0dbe7a9e7b67fbbb091c74ae9ca633654f5c55a5fe"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named check"
+  description: "A repeatable task specification with an observed upstream dependency and explicit empty output declaration."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A check verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A check execution result"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A turbo.json entry can declare an upstream build dependency and empty outputs purely as build-tool configuration; the cited fragment establishes neither a governed task specification nor a realized verification lane."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

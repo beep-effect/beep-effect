@@ -8,39 +8,66 @@ import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { AiMetricsTranscriptSource } from "../models.ts";
+import {
+  AiMetricsTranscriptSource,
+  ClaudeTranscriptEventName,
+  CodexTranscriptEventName,
+  OpenClawTranscriptEventName,
+} from "../models.ts";
+import { repoPathToClaudeProjectName } from "../shell.ts";
+import type { AiMetricsTranscriptEventName } from "../models.ts";
+
+export { repoPathToClaudeProjectName };
+
 import type { Path } from "effect";
 
-const codexEventNames = [
-  "assistant_message",
-  "event",
-  "event_msg",
-  "response_item",
-  "session_meta",
-  "turn_context",
-  "user_message",
-] as const;
-
-const claudeEventNames = ["assistant", "message", "summary", "system", "tool_result", "tool_use", "user"] as const;
-
-const openClawEventNames = [
-  "event",
-  "gateway_request",
-  "gateway_response",
-  "message",
-  "request",
-  "response",
-  "session",
-  "tool_call",
-  "tool_result",
-] as const;
-
-const eventNamesForSource = (sourceKind: AiMetricsTranscriptSource): ReadonlyArray<string> =>
+const isEventNameForSource = (
+  sourceKind: AiMetricsTranscriptSource,
+  value: unknown
+): value is AiMetricsTranscriptEventName =>
   AiMetricsTranscriptSource.$match(sourceKind, {
-    claude: () => claudeEventNames,
-    codex: () => codexEventNames,
-    openclaw: () => openClawEventNames,
+    claude: () => ClaudeTranscriptEventName.isAny(value),
+    codex: () => CodexTranscriptEventName.isAny(value),
+    openclaw: () => OpenClawTranscriptEventName.isAny(value),
   });
+
+type TranscriptSourceRootInput = {
+  readonly claudeProjectsRoot: O.Option<string>;
+  readonly codexSessionsRoot: O.Option<string>;
+  readonly homeDir: string;
+  readonly repoRoot: string;
+};
+
+type TranscriptSourceRoots = {
+  readonly claudeRoot: string;
+  readonly codexRoot: string;
+  readonly homeDir: string;
+  readonly repoRoot: string;
+};
+
+/**
+ * Resolve the canonical local roots shared by transcript discovery workflows.
+ *
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveTranscriptSourceRoots: {
+  (input: TranscriptSourceRootInput, pathApi: Path.Path): TranscriptSourceRoots;
+  (pathApi: Path.Path): (input: TranscriptSourceRootInput) => TranscriptSourceRoots;
+} = dual(2, (input: TranscriptSourceRootInput, pathApi: Path.Path): TranscriptSourceRoots => {
+  const repoRoot = pathApi.resolve(input.repoRoot);
+  const homeDir = pathApi.resolve(input.homeDir);
+
+  return {
+    claudeRoot: O.getOrElse(input.claudeProjectsRoot, () =>
+      pathApi.join(homeDir, ".claude/projects", repoPathToClaudeProjectName(repoRoot))
+    ),
+    codexRoot: O.getOrElse(input.codexSessionsRoot, () => pathApi.join(homeDir, ".codex/sessions")),
+    homeDir,
+    repoRoot,
+  };
+});
 
 /**
  * Trim transcript JSONL text into non-empty lines.
@@ -53,23 +80,6 @@ export const transcriptLines: (content: string) => ReadonlyArray<string> = flow(
   A.map(Str.trim),
   A.filter(Str.isNonEmpty)
 );
-
-/**
- * Return the first defined string from a small candidate list.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const firstString = (...values: ReadonlyArray<string | undefined>): O.Option<string> =>
-  pipe(values, A.map(O.fromNullishOr), A.getSomes, A.head);
-
-/**
- * Convert a repository path into Claude's project-directory name.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const repoPathToClaudeProjectName: (repoRoot: string) => string = Str.replace(/[/\\]/gu, "-");
 
 /**
  * Normalize a source path relative to a root with POSIX separators.
@@ -85,15 +95,6 @@ export const normalizedRelativePath: {
 );
 
 /**
- * Build an optional timestamp object for schema class constructors.
- *
- * @category utilities
- * @since 0.0.0
- */
-export const optionalTimestamp = (timestamp: string | undefined): { readonly timestamp?: string } =>
-  timestamp === undefined ? {} : { timestamp };
-
-/**
  * Normalize transcript metadata into a bounded, source-specific metric event name.
  *
  * @category utilities
@@ -104,12 +105,12 @@ export const metricEventName = ({
   sourceKind,
   value,
 }: {
-  readonly fallback: string;
+  readonly fallback: AiMetricsTranscriptEventName;
   readonly sourceKind: AiMetricsTranscriptSource;
-  readonly value: string | undefined;
-}): string =>
+  readonly value: O.Option<string>;
+}): AiMetricsTranscriptEventName =>
   pipe(
-    O.fromNullishOr(value),
-    O.filter((eventName) => A.contains(eventNamesForSource(sourceKind), eventName)),
+    value,
+    O.filter((eventName) => isEventNameForSource(sourceKind, eventName)),
     O.getOrElse(() => fallback)
   );

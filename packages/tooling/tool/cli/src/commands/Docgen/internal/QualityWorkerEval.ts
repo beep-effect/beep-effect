@@ -25,7 +25,7 @@ import {
   renderPrettyCommandJson,
 } from "../../../internal/cli/Json.ts";
 import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.ts";
-import { DocgenQualityFindingCode, DocgenQualityReport } from "./Quality.ts";
+import { DocgenQualityFindingCode, DocgenQualityReport, docgenPacketCandidateOrder } from "./Quality.ts";
 import type { DocgenQualityFindingCode as DocgenQualityFindingCodeValue } from "./Quality.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/QualityWorkerEval");
@@ -481,10 +481,10 @@ export class DocgenQualityWorkerEvalRunnerInput extends S.Class<DocgenQualityWor
   $I`DocgenQualityWorkerEvalRunnerInput`
 )(
   {
-    baseUrl: S.optional(S.String),
+    baseUrl: S.optionalKey(S.String),
     model: S.String,
     provider: DocgenQualityWorkerEvalProvider,
-    reasoningEffort: S.optional(DocgenQualityWorkerEvalReasoningEffort),
+    reasoningEffort: S.optionalKey(DocgenQualityWorkerEvalReasoningEffort),
     prompt: S.String,
     workingDirectory: S.String,
   },
@@ -558,17 +558,17 @@ export class AnalyzeDocgenQualityWorkerEvalOptions extends S.Class<AnalyzeDocgen
   $I`AnalyzeDocgenQualityWorkerEvalOptions`
 )(
   {
-    baseUrl: S.optional(S.String),
-    codexSdkVersion: S.optional(S.String),
+    baseUrl: S.optionalKey(S.String),
+    codexSdkVersion: S.optionalKey(S.String),
     model: S.String,
-    packetLimit: S.optional(S.Finite),
+    packetLimit: S.optionalKey(S.Finite),
     provider: DocgenQualityWorkerEvalProvider,
-    reasoningEffort: S.optional(DocgenQualityWorkerEvalReasoningEffort),
+    reasoningEffort: S.optionalKey(DocgenQualityWorkerEvalReasoningEffort),
     report: DocgenQualityReport,
-    runner: S.optional(S.Any),
+    runner: S.optionalKey(S.Any),
     scope: DocgenQualityWorkerEvalScope,
     sourceQualityReport: S.String,
-    timeout: S.optional(S.Any),
+    timeout: S.optionalKey(S.Any),
   },
   $I.annote("AnalyzeDocgenQualityWorkerEvalOptions", {
     description: "Options for one worker eval run.",
@@ -664,12 +664,8 @@ const workerPrompt = (candidate: PacketCandidate): string =>
     "\n"
   );
 
-const packetCandidateOrder: Order.Order<PacketCandidate> = Order.combine(
-  Order.mapInput(Order.Number, (candidate) => (candidate.isFail ? 0 : 1)),
-  Order.combine(
-    Order.flip(Order.mapInput(Order.Number, (candidate) => candidate.impact)),
-    Order.mapInput(Order.String, (candidate) => candidate.packet.subjectId)
-  )
+const packetCandidateOrder: Order.Order<PacketCandidate> = docgenPacketCandidateOrder(
+  Order.mapInput(Order.String, (candidate) => candidate.packet.subjectId)
 );
 
 const findSubject = (pkg: QualityPackageReport, subjectId: string): O.Option<QualitySubject> =>

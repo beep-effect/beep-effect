@@ -1,0 +1,6 @@
+# Falsifiability (round-3 H-02): a plain-string p95 vs numeric budget cannot be
+# lexically green — non-numeric datatype is a violation under the isNumeric guard.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:g-y ciops:usedCostEstimate ciops:ce-str ; ciops:hasBudget ciops:b-y .
+ciops:ce-str ciops:p95Ms "1000" .
+ciops:b-y ciops:softP95BudgetMs 900 .

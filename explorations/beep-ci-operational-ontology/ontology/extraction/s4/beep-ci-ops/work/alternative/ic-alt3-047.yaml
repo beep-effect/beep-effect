@@ -1,0 +1,29 @@
+id: ic:alt3:047
+hypothesis_ref: dh:turbo-cache:003
+identity:
+  supplies_identity: true
+  identity_criterion: Two lint task specifications are the same iff they prescribe the same
+    repeatable Turbo task named lint, including its upstream lint dependency selector and
+    enabled result caching. The configuration key is reidentification evidence rather than
+    the criterion.
+  reidentification_key:
+  - lint
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one Turbo task prescription (dependsOn plus cache) for lint
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: A lint run in one package that consumes CPU is not this specification; cache
+    true is a property of the prescription, not of one dated execution.
+status: proposed

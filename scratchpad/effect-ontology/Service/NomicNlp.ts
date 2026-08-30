@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { pipeline } from "@xenova/transformers";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -18,18 +19,22 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService } from "./Config.ts";
+import { cosineSimilarity } from "./EmbeddingProvider.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/NomicNlp");
 
 /**
- * Nomic NLP Errors
+ * Failure while loading a Nomic model or generating embeddings.
  *
- * **Example** (Inspect nomic nlp error)
+ * **Example** (Construct a Nomic NLP error)
  *
  * ```ts
  * import { NomicNlpError } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpError)
+ * const error = NomicNlpError.make({
+ *   message: "Failed to load Nomic model Xenova/nomic-embed-text-v1"
+ * })
+ * console.log(error._tag) // "NomicNlpError"
  * ```
  *
  * @category errors
@@ -53,23 +58,53 @@ export class NomicNlpError extends S.TaggedError<NomicNlpError>($I`NomicNlpError
 }
 
 /**
- * Task types for Nomic embeddings
- * - search_query: Use when embedding a query to find relevant documents
- * - search_document: Use when embedding documents to be searched
- * - clustering: Use for clustering tasks
- * - classification: Use for classification tasks
+ * Task modes accepted by the Nomic embedding runtime.
  *
+ * **Details**
+ *
+ * `search_query` and `search_document` form the asymmetric retrieval pair;
+ * `clustering` and `classification` select the corresponding Nomic heads.
+ *
+ * **Example** (Validate a retrieval task)
+ *
+ * ```ts
+ * import { NomicTaskType } from "@effect-ontology/Service/NomicNlp"
+ *
+ * console.log(NomicTaskType.is.search_query("search_query")) // true
+ * console.log(NomicTaskType.is.search_query("rerank")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NomicTaskType = LiteralKit([
+  "search_query",
+  "search_document",
+  "clustering",
+  "classification",
+]).pipe(
+  $I.annoteSchema("NomicTaskType", {
+    description: "Finite Nomic embedding task modes supported by the local runtime.",
+  })
+);
+
+/**
+ * Runtime task mode decoded by {@link NomicTaskType}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export type NomicTaskType = "search_query" | "search_document" | "clustering" | "classification";
+export type NomicTaskType = typeof NomicTaskType.Type;
 
 /**
- * Nomic NLP Service Interface
+ * Behavioral contract implemented by the Nomic NLP service.
  *
+ * **Details**
  *
- * @category type-level
+ * Its members are executable embedding and similarity operations, so this is
+ * a service protocol rather than decodable data.
+ *
+ * @category services
  * @since 0.0.0
  */
 export interface NomicNlpServiceMethods {
@@ -109,14 +144,28 @@ export interface NomicNlpServiceMethods {
 }
 
 /**
- * Service Tag
+ * Context tag for local Nomic embed, batch-embed, and cosine-similarity calls.
  *
- * **Example** (Inspect nomic nlp service)
+ * **Example** (Score vectors through a test Nomic service)
  *
  * ```ts
+ * import { Effect, Layer } from "effect"
+ * import { cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
  * import { NomicNlpService } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpService)
+ * const TestNlp = Layer.succeed(NomicNlpService, {
+ *   embed: () => Effect.succeed([1, 0]),
+ *   embedBatch: (texts) => Effect.succeed(texts.map(() => [1, 0])),
+ *   cosineSimilarity
+ * })
+ *
+ * const score = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const nlp = yield* NomicNlpService
+ *     return nlp.cosineSimilarity([1, 0], [1, 0])
+ *   }).pipe(Effect.provide(TestNlp))
+ * )
+ * console.log(score) // 1
  * ```
  *
  * @category services
@@ -125,36 +174,62 @@ export interface NomicNlpServiceMethods {
 export class NomicNlpService extends Context.Service<NomicNlpService, NomicNlpServiceMethods>()($I`NomicNlpService`) {}
 
 /**
- * Live Implementation
+ * Model identifier and quantization flags supplied to {@link NomicNlpConfig}.
  *
- *
- * **Example** (Use the NomicNlpConfigValue contract)
+ * **Example** (Describe a quantized local model)
  *
  * ```ts
- * import type { NomicNlpConfigValue } from "@effect-ontology/Service/NomicNlp"
+ * import { NomicNlpConfigValue } from "@effect-ontology/Service/NomicNlp"
+ * import * as S from "effect/Schema"
  *
- * const acceptsNomicNlpConfigValue = (_value: NomicNlpConfigValue): void => undefined
- *
- * console.log(acceptsNomicNlpConfigValue)
+ * const config = S.decodeUnknownSync(NomicNlpConfigValue)({
+ *   modelId: "Xenova/nomic-embed-text-v1",
+ *   quantized: true
+ * })
+ * console.log(config.quantized) // true
  * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NomicNlpConfigValue = S.Struct({
+  modelId: S.String.annotateKey({ description: "Transformers.js model identifier loaded by the Nomic runtime." }),
+  quantized: S.Boolean.annotateKey({ description: "Whether Transformers.js loads quantized model weights." }),
+}).pipe(
+  $I.annoteSchema("NomicNlpConfigValue", {
+    description: "Nomic model identifier and quantization setting supplied to the local embedding runtime.",
+  })
+);
+
+/**
+ * Runtime configuration decoded by {@link NomicNlpConfigValue}.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface NomicNlpConfigValue {
-  readonly modelId: string;
-  readonly quantized: boolean;
-}
+export type NomicNlpConfigValue = typeof NomicNlpConfigValue.Type;
 
 /**
- * Provides the nomic nlp config service capability.
+ * Context tag for the Nomic model identifier and quantization setting.
  *
- * **Example** (Inspect nomic nlp config)
+ * **Example** (Read Nomic config from a test layer)
  *
  * ```ts
+ * import { Effect, Layer } from "effect"
  * import { NomicNlpConfig } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpConfig)
+ * const ConfigLive = Layer.succeed(NomicNlpConfig, {
+ *   modelId: "Xenova/nomic-embed-text-v1",
+ *   quantized: true
+ * })
+ *
+ * const modelId = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const config = yield* NomicNlpConfig
+ *     return config.modelId
+ *   }).pipe(Effect.provide(ConfigLive))
+ * )
+ * console.log(modelId) // "Xenova/nomic-embed-text-v1"
  * ```
  *
  * @category services
@@ -163,14 +238,28 @@ export interface NomicNlpConfigValue {
 export class NomicNlpConfig extends Context.Service<NomicNlpConfig, NomicNlpConfigValue>()($I`NomicNlpConfig`) {}
 
 /**
- * Provides the Effect layer for nomic nlp service live dependencies.
+ * Live Transformers.js layer for {@link NomicNlpService}.
  *
- * **Example** (Inspect nomic nlp service live)
+ * **Example** (Compose embed against the live layer)
  *
  * ```ts
- * import { NomicNlpServiceLive } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect, Layer } from "effect"
+ * import { NomicNlpConfig, NomicNlpService, NomicNlpServiceLive } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpServiceLive)
+ * const layer = Layer.provide(
+ *   NomicNlpServiceLive,
+ *   Layer.succeed(NomicNlpConfig, {
+ *     modelId: "Xenova/nomic-embed-text-v1",
+ *     quantized: true
+ *   })
+ * )
+ *
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NomicNlpService
+ *   return yield* nlp.embed("Ada founded Acme.", "search_document", 256)
+ * }).pipe(Effect.provide(layer))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -237,24 +326,6 @@ export const NomicNlpServiceLive = Layer.effect(
       return vector;
     });
 
-    const cosineSimilarity = (a: ReadonlyArray<number>, b: ReadonlyArray<number>): number => {
-      // Dimension mismatch means vectors are incomparable - return 0 (orthogonal)
-      if (a.length !== b.length) return 0;
-
-      let dotProduct = 0;
-      let normA = 0;
-      let normB = 0;
-
-      for (let i = 0; i < a.length; i++) {
-        dotProduct += a[i] * b[i];
-        normA += a[i] * a[i];
-        normB += b[i] * b[i];
-      }
-
-      if (normA === 0 || normB === 0) return 0;
-      return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-    };
-
     const embedBatch = Effect.fn("embedBatch")(function* (
       texts: ReadonlyArray<string>,
       taskType: NomicTaskType = "search_document",
@@ -284,18 +355,25 @@ export const NomicNlpServiceLive = Layer.effect(
 );
 
 /**
- * Default NomicNlpService layer
+ * Default Nomic NLP layer using {@link NomicNlpServiceLive} without extra config.
  *
  * **Details**
  *
- * Uses NomicNlpServiceLive with default configuration.
+ * Equivalent to {@link NomicNlpServiceLive}; the model falls back to
+ * `Xenova/nomic-embed-text-v1` when {@link NomicNlpConfig} is absent.
  *
- * **Example** (Inspect nomic nlp service default)
+ * **Example** (Compose similarity against the default layer)
  *
  * ```ts
- * import { NomicNlpServiceDefault } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect } from "effect"
+ * import { NomicNlpService, NomicNlpServiceDefault } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpServiceDefault)
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NomicNlpService
+ *   return nlp.cosineSimilarity([1, 0], [0, 1])
+ * }).pipe(Effect.provide(NomicNlpServiceDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -304,18 +382,29 @@ export const NomicNlpServiceLive = Layer.effect(
 export const NomicNlpServiceDefault = NomicNlpServiceLive;
 
 /**
- * Create NomicNlpConfig from ConfigService embedding settings.
+ * Layer that copies embedding model settings from {@link ConfigService}.
  *
  * **Details**
  *
- * Uses EMBEDDING_TRANSFORMERS_MODEL_ID from config (or ConfigService.embedding.transformersModelId).
+ * Reads `config.embedding.transformersModelId` and always enables quantization.
  *
- * **Example** (Inspect nomic nlp config from config service)
+ * **Example** (Provide Nomic config from application config)
  *
  * ```ts
- * import { NomicNlpConfigFromConfigService } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect, Layer } from "effect"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
+ * import { NomicNlpConfig, NomicNlpConfigFromConfigService } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpConfigFromConfigService)
+ * const modelId = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const config = yield* NomicNlpConfig
+ *     return config.modelId
+ *   }).pipe(
+ *     Effect.provide(NomicNlpConfigFromConfigService),
+ *     Effect.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG))
+ *   )
+ * )
+ * console.log(modelId)
  * ```
  *
  * @category layers
@@ -333,19 +422,28 @@ export const NomicNlpConfigFromConfigService: Layer.Layer<NomicNlpConfig, never,
 );
 
 /**
- * NomicNlpService with configuration from ConfigService.
+ * Nomic NLP layer that reads model settings from {@link ConfigService}.
  *
  * **Details**
  *
- * Reads embedding model settings from environment:
- * - EMBEDDING_TRANSFORMERS_MODEL_ID (default: "Xenova/nomic-embed-text-v1")
+ * Merges {@link NomicNlpServiceLive} with {@link NomicNlpConfigFromConfigService}.
  *
- * **Example** (Inspect nomic nlp service from config)
+ * **Example** (Wire Nomic through application config)
  *
  * ```ts
- * import { NomicNlpServiceFromConfig } from "@effect-ontology/Service/NomicNlp"
+ * import { Effect, Layer } from "effect"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
+ * import { NomicNlpService, NomicNlpServiceFromConfig } from "@effect-ontology/Service/NomicNlp"
  *
- * console.log(NomicNlpServiceFromConfig)
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NomicNlpService
+ *   return yield* nlp.embed("Ada founded Acme.")
+ * }).pipe(
+ *   Effect.provide(NomicNlpServiceFromConfig),
+ *   Effect.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG))
+ * )
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

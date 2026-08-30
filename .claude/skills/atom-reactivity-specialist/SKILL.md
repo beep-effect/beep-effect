@@ -98,7 +98,6 @@ Is this state...
 
 - `.repos/effect/packages/effect/src/unstable/reactivity/{Atom,Reactivity,AtomRpc,AsyncResult}.ts`
 - `node_modules/@effect/atom-react/src/{Hooks,RegistryContext,ScopedAtom,ReactHydration}.ts`
-- `packages/common/ui/src/components/codegraph/components/StatsPanel.tsx` (existing usage)
 
 ## Verification
 

@@ -52,3 +52,24 @@
   closed bundle references. The extracted spreadsheet text was unchanged.
 - Prevention: pass `fflate` a zone-less fixed local timestamp and run the pinned digest test under
   UTC plus at least one non-UTC time zone before publication.
+
+## 2026-08-28: test-only typecheck dropped Vite raw-module declarations
+
+- Work: close the published LeJeune PR through the required hosted Check lane.
+- Evidence: the package check and all lab tests passed, but `beep quality test-tsgo` generated a
+  test config whose `types` list contained only `node` and `bun`. The resulting check could not
+  resolve `@/fixtures/provider-recording.json?raw`, whose declaration comes from `vite/client`.
+- Impact: the required `Heavy / Check` job failed after its package check phase had completed, so
+  the exact test-only lane had to be reproduced separately.
+- Prevention: load committed raw fixtures through the test runtime when testing string boundaries,
+  or make the synthetic test-typecheck config preserve package-declared ambient types.
+
+## 2026-08-28: managed sandbox could not start Vitest workers
+
+- Work: run the focused LeJeune lab suite after repairing its test-only typecheck failure.
+- Evidence: both the default fork pool and a diagnostic thread pool failed before collecting tests;
+  the default pool reported `Timeout waiting for worker to respond`. The same `bun run test` command
+  outside the managed sandbox passed all 23 tests in three files.
+- Impact: two local attempts produced environment-only failures and no assertion evidence.
+- Prevention: admit Vitest through an execution profile that permits worker processes, or detect the
+  restricted worker environment before starting the suite.

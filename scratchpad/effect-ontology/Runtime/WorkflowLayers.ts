@@ -256,13 +256,18 @@ const GraphRAGBundle = GraphRAG.Default.pipe(Layer.provideMerge(EmbeddingBundle)
  * 2. Run migrations (v4 adds pgvector tables)
  * 3. Merge CrossBatchEntityResolverBundle into your layer composition
  *
- * **Example** (Use CrossBatchEntityResolverBundle)
+ * **Gotchas**
+ *
+ * Do not merge this bundle into {@link ActivityDependenciesLayer} by default.
+ * The activity uses `Effect.serviceOption` so missing Postgres is a graceful
+ * skip; merging too late still leaves ConfigService and pgvector holes.
+ *
+ * **Example** (Enable cross-batch resolution when Postgres is configured)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { CrossBatchEntityResolverBundle } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ActivityDependenciesLayer, CrossBatchEntityResolverBundle } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * console.log(Layer.isLayer(CrossBatchEntityResolverBundle)) // true
+ * console.log(CrossBatchEntityResolverBundle !== ActivityDependenciesLayer) // true
  * ```
  *
  * @category layers
@@ -297,25 +302,6 @@ const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
 // =============================================================================
 
 /**
- * All services required by workflow activities.
- *
- * Activities yield these in their execute effects:
- * - StorageService: Read/write documents and graphs
- * - ConfigService: Access configuration (bucket, paths)
- * - RdfBuilder: Serialize knowledge graphs to Turtle
- * - EntityExtractor: LLM-based entity extraction
- * - RelationExtractor: LLM-based relation extraction
- * - OntologyService: Ontology class/property lookup
- * - EntityResolutionService: Entity clustering with cached embeddings
- * - EmbeddingService: Embedding generation with cache-through
- *
- * Optional services (not included, enable separately):
- * - CrossBatchEntityResolver: Cross-batch entity linking (requires Postgres + pgvector)
- *   Use CrossBatchEntityResolverBundle when Postgres is configured.
- *
- * Note: ConfigService is included in output for HTTP handlers that need config.
- */
-/**
  * Reasoner bundle for RDFS/OWL inference
  *
  * Reasoner.Default has no external dependencies - it uses N3.js internally.
@@ -340,14 +326,30 @@ const ActivityEmbeddingRequirements = Layer.mergeAll(EmbeddingInfrastructure, Me
 );
 
 /**
- * Provides the Effect layer for activity dependencies layer dependencies.
+ * All services required by workflow activities.
  *
- * **Example** (Inspect activity dependencies layer)
+ * **Details**
+ *
+ * Activities yield these in their execute effects:
+ * - StorageService: Read/write documents and graphs
+ * - ConfigService: Access configuration (bucket, paths)
+ * - RdfBuilder: Serialize knowledge graphs to Turtle
+ * - EntityExtractor: LLM-based entity extraction
+ * - RelationExtractor: LLM-based relation extraction
+ * - OntologyService: Ontology class/property lookup
+ * - EntityResolutionService: Entity clustering with cached embeddings
+ * - EmbeddingService: Embedding generation with cache-through
+ *
+ * Optional services are not included: enable {@link CrossBatchEntityResolverBundle}
+ * separately when Postgres + pgvector are configured. ConfigService remains in
+ * the output for HTTP handlers that need config.
+ *
+ * **Example** (Compose activity dependencies)
  *
  * ```ts
- * import { ActivityDependenciesLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ActivityDependenciesLayer, CrossBatchEntityResolverBundle } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * console.log(ActivityDependenciesLayer)
+ * console.log(ActivityDependenciesLayer !== CrossBatchEntityResolverBundle) // true
  * ```
  *
  * @category layers
@@ -370,12 +372,17 @@ export const ActivityDependenciesLayer = ExtractionWorkflowBundle.pipe(
  * CRITICAL: The workflow's execute effect yields services like EntityExtractor.
  * These must be available when the workflow layer is constructed, not after.
  *
- * **Example** (Inspect batch extraction workflow with deps layer)
+ * **Gotchas**
+ *
+ * GraphRAG's EntityIndex still needs ConfigService through EmbeddingServiceDefault.
+ * Provide it before constructing the workflow layer, not after `Layer.launch`.
+ *
+ * **Example** (Provide activity dependencies at construction time)
  *
  * ```ts
- * import { BatchExtractionWorkflowWithDepsLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ActivityDependenciesLayer, BatchExtractionWorkflowWithDepsLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * console.log(BatchExtractionWorkflowWithDepsLayer)
+ * console.log(BatchExtractionWorkflowWithDepsLayer !== ActivityDependenciesLayer) // true
  * ```
  *
  * @category layers
@@ -399,12 +406,12 @@ export const BatchExtractionWorkflowWithDepsLayer = BatchExtractionWorkflowLayer
  * - WorkflowEngine (from WorkflowEngine.layerMemory or ClusterWorkflowEngine)
  * - FileSystem, Path (from BunServices)
  *
- * **Example** (Inspect workflow orchestrator full layer)
+ * **Example** (Compose orchestrator with the workflow and activity deps)
  *
  * ```ts
- * import { WorkflowOrchestratorFullLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { BatchExtractionWorkflowWithDepsLayer, WorkflowOrchestratorFullLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * console.log(WorkflowOrchestratorFullLayer)
+ * console.log(WorkflowOrchestratorFullLayer !== BatchExtractionWorkflowWithDepsLayer) // true
  * ```
  *
  * @category layers
@@ -433,12 +440,16 @@ export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLaye
  *
  * Use with BunServices.layer for platform services (FileSystem, Path).
  *
- * **Example** (Inspect cli extraction layer)
+ * **Example** (Use the self-contained CLI extraction stack)
  *
  * ```ts
- * import { CliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ConfigProvider } from "effect"
+ * import { CliExtractionLayer, makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * console.log(CliExtractionLayer)
+ * const withPath = makeCliExtractionLayer(
+ *   ConfigProvider.fromUnknown({ ONTOLOGY_PATH: "ontologies/people.ttl" })
+ * )
+ * console.log(withPath !== CliExtractionLayer) // true
  * ```
  *
  * @category layers
@@ -459,120 +470,55 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
  * The custom provider is set BEFORE any layers are built, ensuring
  * all services read from the custom provider.
  *
- * **Example** (Use makeCliExtractionLayer)
+ * **Example** (Override ONTOLOGY_PATH before constructing CLI services)
  *
  * ```ts
- * import { ConfigProvider, Layer } from "effect"
- * import { makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ConfigProvider } from "effect"
+ * import { CliExtractionLayer, makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
  *
+ * const ontologyPath = "ontologies/people.ttl"
  * const customProvider = ConfigProvider.fromUnknown({
- *   ONTOLOGY_PATH: "/path/to/ontology.ttl",
+ *   ONTOLOGY_PATH: ontologyPath,
  *   ONTOLOGY_EXTERNAL_VOCABS_PATH: ""
- * }).pipe(
- *   ConfigProvider.orElse(ConfigProvider.fromEnv())
- * )
+ * }).pipe(ConfigProvider.orElse(ConfigProvider.fromEnv()))
  * const layer = makeCliExtractionLayer(customProvider)
- * console.log(Layer.isLayer(layer)) // true
+ * console.log(ontologyPath.endsWith(".ttl")) // true
+ * console.log(layer !== CliExtractionLayer) // true
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProvider) => {
-  // All layers read through the custom provider installed on the final layer.
-
-  const LlmControlBundle = Layer.mergeAll(TokenBudgetServiceLive, StageTimeoutServiceLive);
-
-  const LlmExtractionBundle = Layer.mergeAll(EntityExtractor.Default, RelationExtractor.Default).pipe(
-    Layer.provideMerge(LlmControlBundle),
-    Layer.provideMerge(makeLanguageModelLayer),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const EmbeddingInfraWithConfig = EmbeddingInfrastructure.pipe(Layer.provide(CoreDependenciesLayer));
-
-  const NlpBundle = NlpService.Default.pipe(
-    Layer.provide(EmbeddingInfraWithConfig),
-    Layer.provide(MetricsService.Default),
-    Layer.provide(CoreDependenciesLayer)
-  );
-
-  const RdfBuilderBundle = RdfBuilder.Default.pipe(Layer.provideMerge(CoreDependenciesLayer));
-
-  const StorageBundle = StorageServiceLive.pipe(
-    Layer.provideMerge(CoreDependenciesLayer),
-    Layer.provideMerge(BunServices.layer)
-  );
-
-  const OntologyRegistryBundle = OntologyRegistryService.Default.pipe(
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const OntologyServiceWithRegistry = OntologyService.Default.pipe(Layer.provideMerge(OntologyRegistryBundle));
-
-  const OntologyBundle = Layer.mergeAll(OntologyServiceWithRegistry, RdfBuilderBundle).pipe(
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(NlpBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const EmbeddingBundle = EmbeddingServiceLive.pipe(
-    Layer.provideMerge(EmbeddingInfrastructure),
-    Layer.provideMerge(EmbeddingCacheWithPersistence),
-    Layer.provideMerge(MetricsService.Default),
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
-    Layer.provideMerge(OntologyBundle),
-    Layer.provideMerge(LlmExtractionBundle),
-    Layer.provideMerge(NlpBundle),
-    Layer.provideMerge(StorageBundle),
-    Layer.provideMerge(CoreDependenciesLayer)
-  );
-
-  return Layer.mergeAll(ExtractionWorkflowBundle, RdfBuilderBundle).pipe(
-    Layer.provideMerge(EmbeddingBundle),
-    // Set the custom config provider for the entire layer tree
-    Layer.provide(ConfigProvider.layer(configProvider))
-  );
-};
+export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProvider) =>
+  CliExtractionLayer.pipe(Layer.provide(ConfigProvider.layer(configProvider)));
 
 // =============================================================================
 // Open Bundles (ConfigService as requirement - for testing)
 // =============================================================================
 
 /**
- * Open bundle versions for testing
- *
- * These bundles do NOT have ConfigService pre-provided, allowing tests
- * to inject their own ConfigProvider. Use with TestConfigProviderLayer.
- *
- * Pattern:
- * ```ts
- * const TestLayer = NlpBundleOpen.pipe(
- *   Layer.provide(TestConfigProviderLayer)
- * )
- * ```
- *
- * @since 0.0.0
- */
-
-/**
  * NLP services without config baked in
  *
  * **Details**
  *
- * Requires: ConfigService | EmbeddingProvider | EmbeddingCache
+ * Requires: ConfigService | EmbeddingProvider | EmbeddingCache. These open
+ * bundles do not pre-provide ConfigService, so tests can inject
+ * {@link TestConfigProvider}.
  *
- * **Example** (Inspect nlp bundle open)
+ * **Gotchas**
+ *
+ * Do not bake ConfigService into test bundles. Provide a test ConfigProvider
+ * before constructing NLP, embedding, RDF, or storage layers.
+ *
+ * **Example** (Provide a test ConfigProvider into the open NLP bundle)
  *
  * ```ts
+ * import { ConfigProvider, Layer } from "effect"
+ * import { TestConfigProvider } from "@effect-ontology/Runtime/TestRuntime"
  * import { NlpBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  *
- * console.log(NlpBundleOpen)
+ * const TestLayer = NlpBundleOpen.pipe(Layer.provide(ConfigProvider.layer(TestConfigProvider)))
+ * console.log(TestLayer !== NlpBundleOpen) // true
  * ```
  *
  * @category layers
@@ -590,12 +536,15 @@ export const NlpBundleOpen = NlpService.Default.pipe(
  *
  * Requires: ConfigService
  *
- * **Example** (Inspect embedding bundle open)
+ * **Example** (Leave ConfigService open for tests)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { EmbeddingBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * console.log(EmbeddingBundleOpen)
+ * const closed = EmbeddingBundleOpen.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== EmbeddingBundleOpen) // true
  * ```
  *
  * @category layers
@@ -616,15 +565,15 @@ export const EmbeddingBundleOpen = EmbeddingServiceLive.pipe(
  *
  * Requires: ConfigService
  *
- * **Example** (Inspect rdf builder bundle open)
+ * **Example** (Use the open RDF builder layer)
  *
  * ```ts
- * import { RdfBuilderBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { EmbeddingBundleOpen, RdfBuilderBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
  *
  * console.log(RdfBuilderBundleOpen)
  * ```
  *
- * @category services
+ * @category layers
  * @since 0.0.0
  */
 export const RdfBuilderBundleOpen = RdfBuilder.Default;
@@ -636,12 +585,15 @@ export const RdfBuilderBundleOpen = RdfBuilder.Default;
  *
  * Requires: ConfigService
  *
- * **Example** (Inspect storage bundle open)
+ * **Example** (Leave storage ConfigService open for tests)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { StorageBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * console.log(StorageBundleOpen)
+ * const closed = StorageBundleOpen.pipe(Layer.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * console.log(closed !== StorageBundleOpen) // true
  * ```
  *
  * @category layers

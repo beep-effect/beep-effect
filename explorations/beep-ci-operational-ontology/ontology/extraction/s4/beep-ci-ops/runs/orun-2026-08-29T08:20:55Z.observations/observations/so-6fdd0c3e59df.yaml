@@ -1,0 +1,23 @@
+id: so:sha256:6fdd0c3e59dfd631422b4d30b89c829dcbfb7b359dd27199f850d6e6001475cd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 507
+  end_line: 507
+  content_sha256: 365867612ee6f79a4270c309bcfeec9948eac5fb27201aa95c3dcf68f327b23e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::witnessOrder
+  lexical_name: witnessOrder
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const witnessOrder = Order.mapInput(Order.Number, (witness: GateFileWitness) => witness.modifiedAtMs);'
+epistemic_status: parser_derived

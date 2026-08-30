@@ -1,0 +1,25 @@
+id: so:sha256:5455a88353a08e19104c4f4ed27714d39b682fb71f40c78b8067c3133c293860
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 337
+  end_line: 345
+  content_sha256: a86c9db8fa44c6783ae2c808c768270824dc47370fc4dc4bc421f03a0aec3e5f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::CallerControlledTurboCache
+  lexical_name: CallerControlledTurboCache
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CallerControlledTurboCache
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class CallerControlledTurboCache extends S.Class<CallerControlledTurboCache>($I`CallerControlledTurboCache`)(
+epistemic_status: parser_derived

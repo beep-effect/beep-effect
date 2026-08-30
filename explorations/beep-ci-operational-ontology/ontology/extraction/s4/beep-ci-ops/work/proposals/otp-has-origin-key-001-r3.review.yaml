@@ -1,0 +1,45 @@
+target: "otp:has-origin-key:001"
+target_sha256: "c2bff6e624e5dd1da7cce66efe7cb9fb5992cdf612e1a83c3752028dac460d0d"
+chain_sha256: "bb98dba25719f6c79afcaa162aa8ad95b47de54aa22e6c98a8dc7e6247d495d0"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The data-property proposal asserts no parents edge; no is-a or subproperty
+    relation exists to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: property-information-object-category-conflict
+    counterexample: >-
+      Two grants can carry equal strings under different naming schemes, and
+      two origins can collide under a basename scheme. The revised card
+      analyzes assertions rather than key objects or origins and supplies no
+      identity, so lexical equality is only scheme-scoped join evidence.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-term
+    counterexample: >-
+      Removing hasOriginKey makes CQ-009 unable to join two active grants on
+      their nonempty origin and therefore unable to detect the deployed
+      origin-exclusion violation. The relation is used in the query itself.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      An arbitrary string field could be implementation-only, but it would not
+      preserve the observed shared-order behavior in which a blocked origin's
+      contender becomes skippable and later origins advance. The operational
+      exclusion join defeats the arbitrary-field null twin.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:7ed5d7ab988de72117c954ccac2060e758502fa1c727b6f5a725f4e2293e61e8"
+  - "po:sha256:3ec9e21469f254e3b0f8e2a60ef859b55b00bce90ea455a9f84f54c73b861b78"
+  - "po:sha256:bef24461115ca5af988461aed9aedd081401c061710538fa444c2bc5e7e8e233"
+  - "CQ-009"

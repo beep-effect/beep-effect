@@ -1,0 +1,25 @@
+id: "dh:sched-core:007"
+observation_refs:
+  - "so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5"
+  - "po:sha256:2c227cbceae0143018a7fc38f9991187fa3ac7184b0bf3bb450fa911e74ffd56"
+  - "po:sha256:7133fd16712631ed47e3cc1618eb4043126bbb8ad13ddcc94dd120afebb1c174"
+  - "po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f"
+cq_warrants: ["CQ-010", "CQ-021"]
+proposed_referent:
+  label: "recorded admission charge"
+  description: "The token quantity assigned to a queued request and copied to the active grant that consumes machine-wide admission capacity."
+representation_status: domain_referent
+alternatives:
+  - label: "numeric field in ticket and lease records"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "implementation counter unrelated to a policy quantity"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "Copying a numeric field is compatible with the adversary's DTO, but the cited admission guard consumes this value as the candidate's policy charge and denies staging when the active charges plus that charge exceed capacity."
+  discriminator: "The scheduler permits a candidate to stage only when activeTokenTotal(state) plus ticket.weightTokens is no greater than capacityTokens, so this charge directly controls admission."
+epistemic_status: proposed
+confidence: {value: 0.94, use_for_acceptance: false}

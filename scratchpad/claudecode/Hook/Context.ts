@@ -1,19 +1,19 @@
 /**
  * Effect service carrying per-invocation hook context.
  *
+ * **Details**
+ *
  * Every hook handler has access to `HookContext.Service` via `yield*`
  * (or the individual accessor effects). The service is constructed by
  * the runner from the decoded envelope of the incoming stdin payload,
  * so handlers never touch the raw JSON.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
+import { Context, Effect, Layer } from "effect";
 import type * as O from "effect/Option";
-
 import type { HookEnvelope } from "./Envelope.ts";
 
 // ---------------------------------------------------------------------------
@@ -25,14 +25,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Context");
 /**
  * Camel-case view of the envelope available to every hook handler.
  *
- * **Example** (Name the context interface)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.Context.Interface
- * ```
- *
+ * @see {@link fromEnvelope} to construct this view from a decoded envelope.
+ * @see {@link layer} to provide it as {@link Service}.
  * @category services
  * @since 0.0.0
  */
@@ -51,18 +45,21 @@ export interface Interface {
 /**
  * Per-invocation hook context service.
  *
- * **Example** (Access the context service)
+ * **Example** (Read session id from the provided service)
  *
  * ```ts
- * import { Hook } from "effect-claudecode"
+ * import { Hook, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const cwd = Effect.service(Hook.Context.Service).pipe(
- *   Effect.map((context) => context.cwd)
+ * const program = Effect.service(Hook.Context.Service).pipe(
+ *   Effect.map((context) => context.sessionId),
+ *   Effect.provide(Hook.Context.layer(Testing.makeMockEnvelope()))
  * )
- * console.log(cwd)
+ * Effect.runPromise(program).then((id) => console.log(id)) // "test-session"
  * ```
  *
+ * @see {@link layer} for the layer that must be provided.
+ * @see {@link fromEnvelope} to build the service payload from a decoded envelope.
  * @category services
  * @since 0.0.0
  */
@@ -80,6 +77,7 @@ export class Service extends Context.Service<Service, Interface>()($I`Service`) 
  * console.log(context.sessionId) // "test-session"
  * ```
  *
+ * @see {@link layer} to provide the resulting view as {@link Service}.
  * @category constructors
  * @since 0.0.0
  */
@@ -98,16 +96,20 @@ export const fromEnvelope = (envelope: HookEnvelope): Interface => ({
 /**
  * Provide one decoded envelope as the current hook context.
  *
- * **Example** (Build a context layer)
+ * **Example** (Provide a mock envelope and read session id)
  *
  * ```ts
  * import { Hook, Testing } from "effect-claudecode"
- * import * as Layer from "effect/Layer"
+ * import * as Effect from "effect/Effect"
  *
- * const layer = Hook.Context.layer(Testing.makeMockEnvelope())
- * console.log(Layer.isLayer(layer)) // true
+ * const program = Hook.Context.sessionId.pipe(
+ *   Effect.provide(Hook.Context.layer(Testing.makeMockEnvelope()))
+ * )
+ * Effect.runPromise(program).then((id) => console.log(id)) // "test-session"
  * ```
  *
+ * @see {@link fromEnvelope} for the constructor this layer wraps.
+ * @see {@link sessionId} for one accessor that requires this layer.
  * @category layers
  * @since 0.0.0
  */
@@ -119,7 +121,8 @@ export const layer = (envelope: HookEnvelope): Layer.Layer<Service> =>
 // ---------------------------------------------------------------------------
 
 /**
- * Effectful access to the current session ID.
+ * Identifier that correlates this invocation with other hook events in the
+ * same Claude Code session.
  *
  * **Example** (Read the session ID)
  *
@@ -134,6 +137,7 @@ export const layer = (envelope: HookEnvelope): Layer.Layer<Service> =>
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -142,7 +146,7 @@ export const sessionId: Effect.Effect<string, never, Service> = Effect.service(S
 );
 
 /**
- * Effectful access to the path of the conversation transcript file.
+ * Filesystem path of this session's JSONL conversation transcript.
  *
  * **Example** (Read the transcript path)
  *
@@ -157,6 +161,8 @@ export const sessionId: Effect.Effect<string, never, Service> = Effect.service(S
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link readTranscript} to parse the JSONL file at this path.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -165,7 +171,7 @@ export const transcriptPath: Effect.Effect<string, never, Service> = Effect.serv
 );
 
 /**
- * Effectful access to the working directory in which the hook fired.
+ * Working directory of the Claude Code process when this hook fired.
  *
  * **Example** (Read the working directory)
  *
@@ -180,6 +186,7 @@ export const transcriptPath: Effect.Effect<string, never, Service> = Effect.serv
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -188,7 +195,8 @@ export const cwd: Effect.Effect<string, never, Service> = Effect.service(Service
 );
 
 /**
- * Effectful access to the active permission mode (if any).
+ * Claude Code permission mode on this invocation, or `Option.none` when the
+ * envelope omitted it.
  *
  * **Example** (Read the permission mode)
  *
@@ -203,6 +211,7 @@ export const cwd: Effect.Effect<string, never, Service> = Effect.service(Service
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -211,7 +220,8 @@ export const permissionMode: Effect.Effect<HookEnvelope["permission_mode"], neve
 ).pipe(Effect.map((context) => context.permissionMode));
 
 /**
- * Effectful access to the prompt id for the current hook invocation.
+ * Prompt identifier for this invocation, or `Option.none` when the envelope
+ * omitted it.
  *
  * **Example** (Read the prompt ID)
  *
@@ -226,6 +236,7 @@ export const permissionMode: Effect.Effect<HookEnvelope["permission_mode"], neve
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -234,7 +245,7 @@ export const promptId: Effect.Effect<O.Option<string>, never, Service> = Effect.
 );
 
 /**
- * Effectful access to the hook event name (e.g. `"PreToolUse"`).
+ * Name of the hook event being handled, such as `PreToolUse`.
  *
  * **Example** (Read the event name)
  *
@@ -249,6 +260,7 @@ export const promptId: Effect.Effect<O.Option<string>, never, Service> = Effect.
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -257,7 +269,8 @@ export const hookEventName: Effect.Effect<string, never, Service> = Effect.servi
 );
 
 /**
- * Effectful access to the active effort level payload (if any).
+ * Effort metadata for this invocation, or `Option.none` when the envelope
+ * omitted it.
  *
  * **Example** (Read the effort level)
  *
@@ -272,6 +285,7 @@ export const hookEventName: Effect.Effect<string, never, Service> = Effect.servi
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -280,7 +294,8 @@ export const effort: Effect.Effect<HookEnvelope["effort"], never, Service> = Eff
 );
 
 /**
- * Effectful access to the current subagent/session agent id (if any).
+ * Subagent or session agent identifier, or `Option.none` when the envelope
+ * omitted it.
  *
  * **Example** (Read the agent ID)
  *
@@ -295,6 +310,7 @@ export const effort: Effect.Effect<HookEnvelope["effort"], never, Service> = Eff
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */
@@ -303,7 +319,8 @@ export const agentId: Effect.Effect<O.Option<string>, never, Service> = Effect.s
 );
 
 /**
- * Effectful access to the current subagent/session agent type (if any).
+ * Subagent or session agent type, or `Option.none` when the envelope omitted
+ * it.
  *
  * **Example** (Read the agent type)
  *
@@ -318,6 +335,7 @@ export const agentId: Effect.Effect<O.Option<string>, never, Service> = Effect.s
  * ```
  *
  * @effects Requires {@link Service}; does not fail.
+ * @see {@link fromEnvelope} to construct the service payload from a decoded envelope.
  * @category getters
  * @since 0.0.0
  */

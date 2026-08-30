@@ -1,0 +1,37 @@
+id: ic:alt2:052
+hypothesis_ref: dh:turbo-cache:024
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two local-write-and-remote-read cache postures are the same iff they are the same access characterization of one Turbo
+    invocation — local write together with remote read, tagged remote-read and mapped to mode local:rw,remote:r; the enum
+    member is evidence rather than the criterion.
+  reidentification_key:
+  - RemoteReadTurboCache._tag remote-read
+  - TurboCacheMode.LocalWriteRemoteRead
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: One posture per Turbo invocation/checkout while that invocation is configured for local write and remote read.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: mode
+  alternatives:
+  - role
+  - information_object
+  - quality
+  existential_dependencies:
+  - Turbo invocation / checkout
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - mode switched to local-only
+  - remote-read configuration absent
+counterexamples:
+- description: 'The string local:rw,remote:r is not itself the posture: it is the CLI mode mapping that represents LocalWriteRemoteRead.'
+- description: >-
+    A resolved cache-plan record can carry the remote-read tag without the invocation currently having remote-read access,
+    so the information content is not automatically this mode.
+status: proposed

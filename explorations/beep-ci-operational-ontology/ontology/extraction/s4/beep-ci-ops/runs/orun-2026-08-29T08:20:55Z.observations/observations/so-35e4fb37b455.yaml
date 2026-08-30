@@ -1,0 +1,27 @@
+id: so:sha256:35e4fb37b45559b198eb68bd4a8c1f339456c7505089a9baeacc2af4658ef5e0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 684
+  end_line: 687
+  content_sha256: 93134f75de18ee8356b166236793dca5361293db2967af589e26a6b13575a85d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::AdmissionOriginGate
+  lexical_name: AdmissionOriginGate
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: release
+- predicate: declares_field
+  object: tryAcquire
+- predicate: exports_symbol
+  object: AdmissionOriginGate
+source_excerpt: export interface AdmissionOriginGate<OriginLease, GateError, GateRequirements> {
+epistemic_status: parser_derived
