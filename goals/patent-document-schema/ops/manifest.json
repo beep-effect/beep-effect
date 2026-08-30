@@ -5,13 +5,13 @@
     "title": "Patent Document Schema",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/patent-document-schema",
   "lifecycle": "active",
   "mission": "Ship schema-first patent-document structure in @beep/law-practice-domain with the practice-KG claims batch as first consumer.",
-  "statusNote": "Graduated first from document-structure-ontologies on 2026-08-13; later campaign goals must not widen this packet.",
+  "statusNote": "P0/P1 complete: the typed patent-document vertical slice is implemented; repository and hosted verification remain.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -53,9 +53,9 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Research", "status": "pending" },
-    { "id": "P1", "name": "Implement", "status": "pending" },
-    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P0", "name": "Research", "status": "complete" },
+    { "id": "P1", "name": "Implement", "status": "complete" },
+    { "id": "P2", "name": "Verify", "status": "in-progress" },
     { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
     { "id": "P4", "name": "Close", "status": "pending" }
   ],
