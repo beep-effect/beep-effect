@@ -71,8 +71,13 @@
     ],
     "defaultMode": "default"
   },
-  "enabledMcpjsonServers": ["phoenix-docs", "phoenix"],
-  "disabledMcpjsonServers": ["chrome-devtools", "serena", "webstorm"],
+  "enabledMcpjsonServers": ["phoenix-docs"],
+  "disabledMcpjsonServers": [
+    "chrome-devtools",
+    "phoenix",
+    "serena",
+    "webstorm"
+  ],
   "hooks": {
     "PreToolUse": [
       {

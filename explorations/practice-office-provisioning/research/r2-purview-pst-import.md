@@ -116,10 +116,15 @@ azcopy.exe copy "<Source directory of PST files>" "<SAS URL>"
 
 Rules:
 
-- The source argument is a **directory**, not a single file. Every PST in
-  that directory is uploaded.
-- Optional `--recursive` changes Azure pathnames; those pathnames must match
-  `FilePath` in the mapping CSV **exactly, case-sensitive**.
+- The source argument is a **directory**, not a single file.
+- *Correction 2026-08-30 (review finding):* with a directory source, AzCopy
+  requires `--recursive=true` to upload the directory's contents — the
+  installed AzCopy 10.32.4 `azcopy copy --help` documents directory upload
+  under that flag, and without it the job can reach mapping validation with
+  no PST blobs present. Recursion also changes the resulting Azure
+  pathnames; whatever pathnames AzCopy produces must match `FilePath` in
+  the mapping CSV **exactly, case-sensitive** — list the uploaded blobs
+  (step 3) before authoring the CSV.
 - Optional subfolder after `ingestiondata` in the SAS URL; that subfolder
   name becomes `FilePath`.
 - Each PST must have a unique name.
