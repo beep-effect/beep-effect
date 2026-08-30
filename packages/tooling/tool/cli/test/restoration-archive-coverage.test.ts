@@ -19,6 +19,18 @@ const provideTestLayer = provideScopedLayer(NodeServices.layer);
 const provideCorpusLayer = provideScopedLayer(CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
 const collectorManifestJson = S.fromJsonString(CollectorManifestRecord);
 
+type ArchiveLedgerRace = "append-current" | "append-existing" | "append-type" | "repair-current" | "repair-opened";
+
+const archiveLedgerOpenMutation = (
+  race: ArchiveLedgerRace,
+  flag: FileSystem.OpenFlag | undefined
+): "directory" | "none" | "size" => {
+  if (race === "repair-opened" && flag === "r+") return "directory";
+  if (race === "append-type" && flag === "ax+") return "directory";
+  if (race === "append-existing" && flag === "a") return "size";
+  return "none";
+};
+
 const preserveOptions = (
   sourceRoot: string,
   rootArchivePath: string,
@@ -464,9 +476,7 @@ describe("restoration archive boundary helpers", () => {
       function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const runRace = Effect.fn("RestorationArchiveCoverage.runRace")(function* (
-          race: "append-current" | "append-existing" | "append-type" | "repair-current" | "repair-opened"
-        ) {
+        const runRace = Effect.fn("RestorationArchiveCoverage.runRace")(function* (race: ArchiveLedgerRace) {
           const root = yield* fs.makeTempDirectoryScoped({ prefix: `restoration-${race}-` });
           const sourceRoot = path.join(root, "source");
           const corpusRoot = path.join(root, "corpus");
@@ -489,23 +499,21 @@ describe("restoration archive boundary helpers", () => {
             ...fs,
             open: (filePath: string, options?: Parameters<FileSystem.FileSystem["open"]>[1]) =>
               fs.open(filePath, options).pipe(
-                Effect.map((file) =>
-                  filePath !== ledgerPath
-                    ? file
-                    : {
-                        ...file,
-                        stat:
-                          race === "repair-opened" && options?.flag === "r+"
-                            ? file.stat.pipe(Effect.map((info) => ({ ...info, type: "Directory" as const })))
-                            : race === "append-type" && options?.flag === "ax+"
-                              ? file.stat.pipe(Effect.map((info) => ({ ...info, type: "Directory" as const })))
-                              : race === "append-existing" && options?.flag === "a"
-                                ? file.stat.pipe(
-                                    Effect.map((info) => ({ ...info, size: FileSystem.Size(info.size + 1n) }))
-                                  )
-                                : file.stat,
-                      }
-                )
+                Effect.map((file) => {
+                  if (filePath !== ledgerPath) return file;
+                  const mutation = archiveLedgerOpenMutation(race, options?.flag);
+                  if (mutation === "none") return file;
+                  return {
+                    ...file,
+                    stat: file.stat.pipe(
+                      Effect.map((info) =>
+                        mutation === "directory"
+                          ? { ...info, type: "Directory" as const }
+                          : { ...info, size: FileSystem.Size(info.size + 1n) }
+                      )
+                    ),
+                  };
+                })
               ),
             stat: (filePath: string) =>
               fs.stat(filePath).pipe(
