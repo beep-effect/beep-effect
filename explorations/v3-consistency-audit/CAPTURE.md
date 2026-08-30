@@ -29,11 +29,11 @@ automatically checked.
 ### Reference material the brief pointed at
 
 - v3 (archived): repo `effect-v3-main-archive`, local checkout
-  `~/YeeBois/projects/beep-effect4` (HEAD `997a827454`, "archiving main",
-  2026-02-22). Focus `packages/iam` & `packages/knowledge`. Existing
+  the local v3 clone `beep-effect4` (path in `research/SOURCES.md`; HEAD `997a827454`, "archiving main",
+  2026-02-22). Focus the v3 `iam` & `knowledge` slices (`beep-effect4/packages/iam`, `beep-effect4/packages/knowledge`). Existing
   archaeology: `explorations/atlas-synthesis/synthesis/40-v3-specs-corpus.md`,
   `41-v3-knowledge-engine.md`, `42-v3-knowledge-domain-and-demo.md`.
-- v4 doctrine: `standards/ARCHITECTURE.md`; `standards/architecture/01`, `07`,
+- v4 doctrine: `standards/ARCHITECTURE.md`; `standards/architecture/` `01`, `07`,
   `13`, `GLOSSARY.md`, `DECISIONS.md`.
 - Architecture CLI: `packages/tooling/tool/cli` → `bun run beep architecture`
   (`create slice|package`, `add concept|role`, `plan|apply|check`; `--stage`,
@@ -101,10 +101,10 @@ Measured inline before delegating; several contradict the brief's hypotheses.
   (`export * as Entities from "./entities"` …).
 - v3 identity: `const $I = $KnowledgeDomainId.create("entities/Entity")` in 471
   src files; v4 slices: `const $I = ` in 380 src files (convention survived).
-- v4: no `packages/iam`, no `packages/knowledge`. Slices with a `domain/`:
+- v4: no `iam` or `knowledge` slice under `packages/`. Slices with a `domain/`:
   agents, architecture-lab, documents, epistemic, law-practice, ontology,
   shared, workspace. The doctrine's example path
-  `packages/iam/server/src/Membership/Membership.http-handlers.ts` is hypothetical.
+  the doctrine's `iam/server/src/Membership/Membership.http-handlers.ts` example is hypothetical.
 - v4 suffix distribution (slice src): `.model` 118, `.values` 20,
   `.converters` 17, `.table` 16, `.layer` 15, `.errors` 11, `.service` 10,
   `.ports` 8, `.repo` 7, `.commands` 7, `.repository` 6, `.rpc` 5, `.atoms` 4,
@@ -161,10 +161,10 @@ Measured inline before delegating; several contradict the brief's hypotheses.
 >
 > I want to match our current architectures layout & organization but I do
 > particularly like the way I namespaced every thing:
-> `~/YeeBois/projects/beep-effect4/packages/iam/domain/src/entities/Account/contracts/index.ts`
-> `~/YeeBois/projects/beep-effect4/packages/iam/server/src/entities/index.ts`
-> `~/YeeBois/projects/beep-effect4/packages/iam/client/src/sign-up/index.ts`
-> `~/YeeBois/projects/beep-effect4/packages/iam/client/src/sign-up/email/index.ts`
+> `beep-effect4/packages/iam/domain/src/entities/Account/contracts/index.ts`
+> `beep-effect4/packages/iam/server/src/entities/index.ts`
+> `beep-effect4/packages/iam/client/src/sign-up/index.ts`
+> `beep-effect4/packages/iam/client/src/sign-up/email/index.ts`
 >
 > More emphasis on the semantics more than the organization, architecture &
 > structure.

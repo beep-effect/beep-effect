@@ -10,7 +10,7 @@ Status: `pending`
 | --- | --- | --- | --- |
 | P0 Research | pending | Re-verify every line cite in `SPEC.md` against `origin/main` HEAD (the exploration measured `2c0c8eb046`–`8f646c1e82`), ratify the nine DEFERRED rows, and draft the `standards/architecture/DECISIONS.md` entries. | Amendment list with file:line targets; nine ratifications recorded; no open decision. |
 | P1 Implement | pending | PR-A amendments → PR-B `audit` command + schemas + baseline → PR-C gate wiring. Schema first (`RoleVocabulary`, `RoleMember`, `ContractMember`, `AuditReport`, `AuditBaseline`, rule ids), then the walker/rule-engine service contract, then rules. | Each PR's acceptance rows in `SPEC.md` are met. |
-| P2 Verify | pending | Run the first vertical slice on `main`: `audit --slice architecture-lab --json` ≥ 14 findings, `--write-baseline`, second run exit 0, injected regression exit ≠ 0; `package-verify @beep/repo-cli`; `docgen:local`. | Evidence recorded under `history/`. |
+| P2 Verify | pending | Run the first vertical slice on `main`: `audit --slice architecture-lab --json` finding set equals P0's expected-path set, `--write-baseline`, second run exit 0, injected regression exit ≠ 0; `package-verify @beep/repo-cli`; `docgen:local`. | Evidence recorded under `history/`. |
 | P3 Yeet: PR to mergeable | pending | Publish each PR through yeet and drive it to mergeable: required checks green, every review thread answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads; `merge-ready: yes`. |
 | P4 Close | pending | Write the closeout reflection, flip packet state, and hand `architecture/slice-audit` to `canonical-proof-reconciliation`. | Packet status and evidence are updated; a closeout reflection exists. |
 
@@ -46,8 +46,8 @@ Before marking the packet closed:
 - Keep this plan current; archive old run outputs under `history/`.
 - Exploration packet: [`explorations/v3-consistency-audit`](../../explorations/v3-consistency-audit/README.md) — `synthesis/40`
   R1, R2, R4–R12 are the ranked mechanisms; `synthesis/00` is the 110-row
-  evidence table; `synthesis/15` §2 lists the 14 proof manifest locations the
-  first vertical slice must find.
+  evidence table; `synthesis/15` §2 lists the 14 pre-amendment proof manifest locations P0
+  re-derives against the amended doctrine for the first vertical slice.
 
 ## Verification Commands
 

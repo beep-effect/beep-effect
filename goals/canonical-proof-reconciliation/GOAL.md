@@ -11,8 +11,8 @@ kind folders, doctrine suffixes, role-named members (`User.Model`,
 codemod PR per slice, each proven by a shrinking audit baseline.
 
 Requires `architecture/slice-audit` from `goals/slice-topology-audit`: stop
-if `bun run beep architecture audit` or
-`standards/architecture.audit-baseline.jsonc` does not exist on `main`.
+if `beep architecture audit` or its baseline
+(`architecture.audit-baseline.jsonc` under `standards/`) is missing on `main`.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -34,7 +34,7 @@ Scope:
   the other manifest-covered proof paths; a `Contract` concept module in
   `@beep/schema` (sibling of `Fn/`); slice packages under
   `packages/{epistemic,law-practice,documents,workspace,ontology,agents,shared}/`
-  with their export maps; `standards/architecture.audit-baseline.jsonc`;
+  with their export maps; the audit baseline under `standards/`;
   codemods + golden-diff tests under this packet's `ops/codemods/`.
 - Out: new audit rules or gate wiring (file them in
   `goals/slice-topology-audit`), `beep architecture check` and the
@@ -59,7 +59,7 @@ Workflow:
 Acceptance:
 
 - [ ] `SPEC.md` acceptance criteria are satisfied.
-- [ ] `bun run beep architecture audit --slice architecture-lab --json`
+- [ ] `beep architecture audit --slice architecture-lab --json`
       returns zero findings and the v1 replay test still passes.
 - [ ] Every slice PR ends with a strictly smaller baseline; leftovers are
       `follow_ups` rows with owners.

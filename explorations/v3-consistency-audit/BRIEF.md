@@ -59,7 +59,7 @@ Two goal packets (DECISIONS *follow-up packaging*, *appetite*):
 | Packet | Budget | Shape |
 | --- | --- | --- |
 | `slice-topology-audit` | ~1 week, one PR train | amendments PR → `beep architecture audit` + baseline PR → ci lane PR |
-| `canonical-proof-reconciliation` | ~2–3 weeks, 1 PR per slice | manifest + `architecture-lab` PR first, then eight slice PRs; leftovers live in `follow_ups`, never block |
+| `canonical-proof-reconciliation` | ~2–3 weeks, 1 PR per slice | manifest + `architecture-lab` PR first, then seven slice PRs; leftovers live in `follow_ups`, never block |
 
 The budget constrains the solution: the auditor reuses existing walkers and
 schemas (no new lint framework), the rule set is closed `LiteralKit`
@@ -92,7 +92,7 @@ SliceFile  = packages/<slice>/<tier>/src/<kind>/<Concept>/<Concept>.<role>.ts
                                                          --     use-cases/<Concept>.ports.ts
 EntryFile  = packages/<slice>/<tier>/src/<subpath>.ts
   subpath  = key of package.json#exports minus "."      -- lowercase, name = subpath
-TestFile   = packages/<slice>/<tier>/test/**/<Concept>.<lens>.test.ts
+TestFile   = packages/<slice>/<tier>/test/**/<Concept>.<lens>.ts   -- every lens ends in .test
   lens     ∈ { test, pglite.test, pg.test, e2e.test, equivalence.test,
                contract.test, schema-parity.test }
 Barrel     : <kind>/index.ts  and  <tier>/src/index.ts  = export * as <Concept> from "./<Concept>/index.ts"
@@ -144,22 +144,23 @@ AuditReport   { schemaVersion: "architecture-audit-report/v1",
                              findings: [{ rule: RuleId, status: codified | drifted | missing,
                                           path, expected, actual }] }] }
 AuditBaseline { schemaVersion: "architecture-audit-baseline/v1",
-                counts: { [package]: { [rule]: number } },
+                findings: [{ package, rule, path, expected }],   -- identities, never counts
                 follow_ups: [{ package, rule, owner?, note }] }
 ```
 
-- **Ratchets** against `standards/architecture.audit-baseline.jsonc`
+- **Ratchets** against `architecture.audit-baseline.jsonc` (new, under `standards/`)
   (DECISIONS *rollout*) through the shared `cli/src/internal/ratchet`
   substrate (`diffMembership` / `diffTotals` / `enforceRatchet` — the code
   behind the coverage, knip, JSDoc and test-typecheck ratchets): non-zero exit
-  only when a package's count for a rule
-  exceeds its baseline; `--write-baseline` regenerates after a burn-down PR.
+  only when a finding identity (`package`, `rule`, `path`, `expected`) is
+  absent from the baseline — a fix-A-introduce-C swap under one rule still
+  fails; `--write-baseline` regenerates after a burn-down PR.
 - **Hooks** into `beep lint policy` / `beep:preflight` and a
   `ci lane architecture-audit` registered in `CiLane.ts`'s closed lane
   registry (the `knip` lane is the template); which context is *required*
   is DEFERRED (`audit lane host`).
-- **Shares** its vocabularies with the generator: `add role` accepts only
-  `RoleVocabulary[tier]` members, `add concept` emits kind folders in every
+- **Shares** its vocabularies with the generator: `add role`'s new `--file-role` flag (its
+  positional `role` stays the tier) accepts only `RoleVocabulary[tier]` members, `add concept` emits kind folders in every
   tier, and the `AcceptedProofManifest` is itself audited (a proof file
   outside the grammar fails the CLI's own tests).
 
@@ -197,7 +198,7 @@ inside a concept and the `Contract` kit home.
   slice's `use-cases/**/<Concept>.ports.ts`) keeps it checkable; anything else
   is drift. Do not reach for a regex over "looks like a port".
 - **Kind-folder moves change public subpaths.** `entities/X` ⇒
-  `./entities/X` in `package.json#exports`; the codemod must rewrite exports
+  the `entities/X` key in `package.json#exports`; the codemod must rewrite exports
   and consumers together (`TsconfigSync` only re-derives aliases). The audit
   checks `exports ↔ folders` so a half-moved package is a finding, not a
   runtime surprise.

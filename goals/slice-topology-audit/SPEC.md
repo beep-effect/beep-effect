@@ -30,9 +30,9 @@ Three PRs, in order (exploration [`MAP.md` §Sequencing](../../explorations/v3-c
 2. **Command + baseline PR.** `beep architecture audit [--slice] [--tier]
    [--json] [--write-baseline]`; `AuditReport` / `AuditBaseline` `S.Class`
    schemas (`architecture-audit-report/v1`, `architecture-audit-baseline/v1`)
-   beside `CanonicalSliceOperationPlan`; `standards/architecture.audit-baseline.jsonc`
-   generated from `main` (every current drift a counted, owned `follow_ups`
-   row); a CLI test asserting the accepted proof is audit-clean (baseline rows
+   beside `CanonicalSliceOperationPlan`; `architecture.audit-baseline.jsonc` (new, under `standards/`)
+   generated from `main` (every current drift finding, keyed by identity, an
+   owned `follow_ups` row); a CLI test asserting the accepted proof is audit-clean (baseline rows
    until `canonical-proof-reconciliation` lands).
 3. **Gate PR.** A `rootRepoLintPolicySteps` step (the required context),
    `beep:preflight`, the yeet `verify` tier, and `architecture-audit`
@@ -136,7 +136,7 @@ Higher sources outrank lower sources when they conflict.
   (`rootRepoLintPolicySteps`), `commands/Ci/CiLane.ts`,
   `.github/workflows/check.yml`, `Quality/internal/GithubChecks.ts`,
   root `package.json` (`beep:preflight`).
-- `standards/architecture.audit-baseline.jsonc` (new).
+- `architecture.audit-baseline.jsonc` (new, under `standards/`).
 - `packages/tooling/tool/cli/test/` — audit tests + the proof audit-clean test.
 
 ## Constraints
@@ -161,9 +161,12 @@ Higher sources outrank lower sources when they conflict.
   it never rewrites.
 - **`coverage/`, `dist/`, `node_modules/`, `.turbo/` are excluded** from every
   walk; the exploration's first numbers were polluted by coverage mirrors.
-- **Generator parity:** `add role` accepts only `RoleVocabulary[tier]`; `add
-  concept` emits kind folders in every tier; `AcceptedProofManifest` is itself
-  audited.
+- **Generator parity:** `add role`'s existing positional `role` stays the
+  tier (`ArchitectureSliceRole`; `Architecture.command.ts` L243-258 filters
+  package tiers with it); the file role is a new `--file-role <role>` flag
+  (plus `--op <Op>` for contracts) validated against `RoleVocabulary[tier]`;
+  `add concept` emits kind folders in every tier; `AcceptedProofManifest` is
+  itself audited.
 - **Effect v4 only;** `effect/HashMap` / `HashSet` over native `Map` / `Set`;
   `LiteralKit` over hand-rolled literal unions; `Effect.fn` for generators.
 
@@ -173,13 +176,19 @@ Higher sources outrank lower sources when they conflict.
       `standards/architecture/DECISIONS.md` entry and the doctrine text
       matches it (tree, role tables, `Model` example, member table, contract
       quartet, `contracts/` + `handlers/`).
-- [ ] `bun run beep architecture audit --slice architecture-lab --json` on
-      `main` returns ≥ 14 file-level findings with `expected` / `actual`
-      paths (the nine divergence categories in exploration `synthesis/15` §2
-      plus the two missing `.converters` files).
-- [ ] `--write-baseline` produces `standards/architecture.audit-baseline.jsonc`
-      whose `architecture-lab` rows sum to those counts; a second run exits 0;
-      an injected regression exits non-zero.
+- [ ] `beep architecture audit --slice architecture-lab --json` on `main`
+      returns exactly the post-amendment expected finding set. P0 derives that
+      set from exploration `synthesis/15` §2 (14 manifest locations across
+      nine divergence categories, measured against the old doctrine) re-read
+      against the *amended* doctrine — the ratified `.view-model.ts` and
+      `<Concept>/server.ts` admissions drop their rows, the two missing
+      `.converters` files add theirs — and records it as
+      `history/expected-proof-findings.json`; every finding carries
+      `expected` / `actual` paths; no fixed count is the bar.
+- [ ] `--write-baseline` produces `architecture.audit-baseline.jsonc` (new, under `standards/`)
+      whose `architecture-lab` finding identities equal that expected set; a
+      second run exits 0; an injected regression (one new finding identity)
+      exits non-zero.
 - [ ] The audit runs inside `lint policy` / `beep:preflight` / yeet `verify`,
       and `architecture-audit` is a registered `CiLane` id.
 - [ ] `RoleVocabulary` / `RoleMember` / `ContractMember` are read by both the
@@ -191,8 +200,8 @@ Higher sources outrank lower sources when they conflict.
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
-| First vertical slice | `bun run beep architecture audit --slice architecture-lab --json` | ≥ 14 findings, schema-valid report |
-| Ratchet | `bun run beep architecture audit` after `--write-baseline` | exit 0; exit ≠ 0 on an injected regression |
+| First vertical slice | `beep architecture audit --slice architecture-lab --json` | finding set equals P0's expected-path set; schema-valid report |
+| Ratchet | `beep architecture audit` after `--write-baseline` | exit 0; exit ≠ 0 on an injected finding identity |
 | Package proof | `bun run beep quality package-verify @beep/repo-cli` | green |
 | Docgen | `bun run docgen:local` | green |
 | Packet launcher size | `test "$(wc -m < goals/slice-topology-audit/GOAL.md)" -le 4000` | Passes |

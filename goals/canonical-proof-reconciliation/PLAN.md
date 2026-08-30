@@ -19,8 +19,9 @@ Status: `pending` — blocked on `architecture/slice-audit` from
 
 - PR-1 before any slice PR: `add concept` must stop propagating drift first.
 - Slice order is by descending baseline count (exploration estimate:
-  epistemic, law-practice, documents, workspace, ontology, agents, shared,
-  architecture-lab leftovers); re-derive it from the real baseline in P0.
+  epistemic, law-practice, documents, workspace, ontology, agents, shared —
+  seven PRs; the lab is finished in PR-1); re-derive it from the real
+  baseline in P0.
 - Member renames and deep-import rewrites are one codemod, one PR; never
   split symbol and consumers.
 - The `move concept --kind` helper is written only when the first

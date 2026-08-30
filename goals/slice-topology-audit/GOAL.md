@@ -31,7 +31,8 @@ Scope:
   `AuditReport` / `AuditBaseline`); `Fallow.command.ts` classifier export;
   `SchemaTopology.ts` regex export; `Quality/Tasks.ts`, `Ci/CiLane.ts`,
   `check.yml`, `GithubChecks.ts`, root `package.json` (gate wiring);
-  `standards/architecture.audit-baseline.jsonc`; CLI tests.
+  the audit baseline (`architecture.audit-baseline.jsonc` under `standards/`);
+  CLI tests.
 - Out: slice codemods, the `AcceptedProofManifest` / `architecture-lab`
   rewrite (that is `goals/canonical-proof-reconciliation`), driver /
   foundation / tooling rule packs, any change to `beep architecture check`
@@ -54,9 +55,10 @@ Workflow:
 Acceptance:
 
 - [ ] `SPEC.md` acceptance criteria are satisfied.
-- [ ] `bun run beep architecture audit --slice architecture-lab --json` on
-      `main` reports ≥ 14 findings; after `--write-baseline` a second run
-      exits 0 and an injected regression exits non-zero.
+- [ ] `beep architecture audit --slice architecture-lab --json` on `main`
+      reports exactly the expected finding set P0 derived; after
+      `--write-baseline` a second run exits 0 and an injected regression
+      exits non-zero.
 - [ ] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
 - [ ] No unrelated refactors or formatting churn.

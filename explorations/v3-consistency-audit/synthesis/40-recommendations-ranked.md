@@ -24,7 +24,7 @@
   add `RoleVocabulary = { domain: LiteralKit([...]), "use-cases": …, config: …, server: …, tables: … (+ "converters"), client: …, ui: … }`,
   `DomainKind` (already `ArchitectureDomainKind`), `TestLens = LiteralKit(["test","pglite.test","pg.test","e2e.test","equivalence.test","contract.test","schema-parity.test"])`,
   `LayerNameShape`, `EntryFileRule`, plus (2026-08-30 addenda) `RoleMember` — tier × role → required export names (`domain.model → ["Model"]`, `tables.table → ["Table"]`, `server.repo → /^Repo(\w+)?Live$/`, …) — and `ContractMember = LiteralKit(["Payload", "Success", "Failure", "Contract"])`, `HandlerMember = LiteralKit(["Handler"])` (R6a, R6b). Server suffix check = `RoleVocabulary.server ∪ portNamesDeclaredIn(<slice>/use-cases/**/*.ports.ts)`.
-  `add role` (`Architecture.command.ts`) validates `--role` against
+  `add role` (`Architecture.command.ts`) validates a new `--file-role` flag (its positional `role` stays the tier) against
   `RoleVocabulary[tier]` instead of accepting any string.
 - **Prerequisite decisions (locked):** kind folders every tier; doctrine
   beats proof; entry casing; `.converters`; test grammar; barrel style;
@@ -51,8 +51,12 @@
   `config`). Rules are pure functions `(PackageView) => ReadonlyArray<Finding>`
   keyed by `family/kind/tier`. Report and baseline are `S.Class` schemas:
   `architecture-audit-report/v1`, `architecture-audit-baseline/v1`
-  (`counts[package][rule]`, `follow_ups[]`). Exit non-zero only on
-  `count > baseline`, computed through `cli/src/internal/ratchet`
+  The baseline persists *finding identities* (`package`, `rule`, `path`,
+  `expected`), never counts: a codemod that fixes finding A while introducing
+  finding C under the same rule must fail, and only identity membership sees
+  that. Exit non-zero on any finding identity absent from the baseline (the
+  `diffMembership` introduced set); `counts[package][rule]` survive only as
+  report summaries; `--write-baseline` may only shrink — all computed through `cli/src/internal/ratchet`
   (`diffMembership` L71 / `diffTotals` L241 / `enforceRatchet` L67 — the
   substrate behind `CoverageRegression`, `KnipRatchet`, `JSDocRatchet`,
   `PackageTestTypecheck`, `SchemaFirstScan`, `Goals/Doctor`). Hook:
@@ -199,7 +203,7 @@
 
 - **Patterns:** `BN-23`, `BN-24`, `frs-07` (v3's hollow protocol shells — the caution)
 - **Mechanism:** `doctrine-amendment` → `architecture-cli-scaffold`
-  (`add role --role rpc --op Get` emits `contracts/Get.contract.ts`,
+  (`add role --file-role rpc --op Get` emits `contracts/Get.contract.ts`,
   `handlers/Get.handler.ts`, the `Rpcs` entry) → `architecture-cli-audit`
   (rules `contract/members`, `contract/handler-pair`: every `<Op>` under
   `use-cases/…/<C>/contracts/` has `server/…/<C>/handlers/<Op>.handler.ts`
@@ -286,7 +290,8 @@
 - **Leverage:** "tests for X" becomes one glob; the file-level counterpart of
   the LOC coverage ratchet. 0 directory moves.
 - **Sketch:** every `<pkg>/test/**/*.test.ts(x)` matches
-  `<Concept>.<lens>.test.ts` with `lens ∈ TestLens`; every concept folder
+  `<Concept>.<lens>.ts` with `lens ∈ TestLens` (every lens ends in `.test`, so
+  the file still ends in `.test.ts` and today's names already conform); every concept folder
   carrying `.model`/`.service`/`.ports`/`.repo` has ≥1 twin
   `test/**/<Concept>.*.test.ts`; `test/integration/` stays the lane split.
   Package-scoped test helpers live in `test/_shared/` or the `/test` subpath
@@ -341,8 +346,12 @@
   `add role`.
 - **Sketch:** split the manifest into `required` (per `--stage`) and
   `optional` proof files; `add concept --stage core` writes only required;
-  `add role --role http` writes the declaration *and* its handler with a
-  non-empty body (a `TODO` throw is still a body the auditor can see).
+  `add role --file-role http` writes the declaration *and* its handler, and
+  the handler body is never a placeholder: the generator takes a handler
+  implementation input or leaves the optional role absent, and the audit rule
+  `shell/placeholder-body` reports a `TODO`/`throw`-only body as a finding,
+  never as a satisfied role — otherwise the scaffold recreates the hollow
+  shells this recommendation exists to prevent.
   Once symbols are role-named (R6a), `TemplateRetarget.ts` keeps only its
   path passes (L155-159) and the `$I`-key rewrite; the identifier passes
   (L160-162, L170-171) go.

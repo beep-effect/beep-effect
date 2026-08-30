@@ -25,8 +25,8 @@ PR train (exploration [`MAP.md` §Sequencing](../../explorations/v3-consistency-
    `$I`-key rewriting; `architecture-operation-plan.test.ts` fixtures
    regenerate; the baseline's `architecture-lab` rows burn to zero.
 2. **One PR per slice**, descending baseline-count order (epistemic,
-   law-practice, documents, workspace, ontology, agents, shared,
-   architecture-lab leftovers): kind folders, suffixes, member renames with
+   law-practice, documents, workspace, ontology, agents, shared — seven PRs;
+   `architecture-lab` is finished by PR-1 and does not reappear): kind folders, suffixes, member renames with
    `ts-morph` rewriting every deep-import site to namespace access in the
    same PR, `.rpc.ts` → per-op contracts → `audit --write-baseline` →
    shrinking `follow_ups`. Leftovers stay in `follow_ups` under
@@ -92,12 +92,12 @@ Higher sources outrank lower sources when they conflict.
   `test/fixtures/architecture-operation-plan/`.
 - `packages/architecture-lab/**`, `apps/architecture-lab-proof/**`,
   `packages/_internal/db-admin/**` (manifest-covered proof paths).
-- `packages/foundation/modeling/schema/src/Contract/` (new concept module,
-  sibling of `Fn/`), reconciling
+- a new `Contract/` concept module in `packages/foundation/modeling/schema/src/`
+  (sibling of `Fn/`), reconciling
   `packages/drivers/govinfo/src/domain/contracts/Search/`.
 - `packages/{epistemic,law-practice,documents,workspace,ontology,agents,shared}/*/src/**`
   and their `package.json#exports`, `tsconfig` aliases (`beep tsconfig-sync`).
-- `standards/architecture.audit-baseline.jsonc` (`--write-baseline` per PR).
+- `architecture.audit-baseline.jsonc` (new, under `standards/`) (`--write-baseline` per PR).
 - Codemods under this packet's `ops/codemods/` following
   `goals/repo-crispening-orchestration/ops/codemods/*.codemod.ts`.
 
@@ -133,7 +133,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] Manifest + lab PR merged: `bun run beep architecture audit --slice
+- [ ] Manifest + lab PR merged: `beep architecture audit --slice
       architecture-lab --json` returns zero findings; `beep architecture add
       concept` emits role-named members, kind folders in every tier, and a
       `contracts/` + `handlers/` pair; `architecture-operation-plan.test.ts`
@@ -153,9 +153,9 @@ Higher sources outrank lower sources when they conflict.
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
-| Proof clean | `bun run beep architecture audit --slice architecture-lab --json` | zero findings |
+| Proof clean | `beep architecture audit --slice architecture-lab --json` | zero findings |
 | V1 replay | `bun run --filter @beep/repo-cli test -- architecture-operation-plan` | passes |
-| Baseline delta | `bun run beep architecture audit --write-baseline` then `git diff standards/architecture.audit-baseline.jsonc` | counts only decrease |
+| Baseline delta | `beep architecture audit --write-baseline` then `git diff` on the baseline under `standards/` | finding identities only disappear, never appear |
 | Package proof | `bun run beep quality package-verify <touched @beep/*>` | green |
 | Docgen | `bun run docgen:local` | green |
 | Packet launcher size | `test "$(wc -m < goals/canonical-proof-reconciliation/GOAL.md)" -le 4000` | Passes |

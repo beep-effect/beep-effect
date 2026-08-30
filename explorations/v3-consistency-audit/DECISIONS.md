@@ -49,7 +49,7 @@ architecture."
 **Question:** What counts as evidence for a codified / drifted / missing verdict?
 
 **Answer:** A file path plus the `rg`/`fd`/`find` command and its count or
-excerpt, from the relevant checkout (`~/YeeBois/projects/beep-effect4` for v3,
+excerpt, from the relevant checkout (the local `beep-effect4` clone for v3 — path in `research/SOURCES.md` —,
 this repo for v4). Doctrine quotes alone never establish a verdict; they
 establish the *codified* half only when paired with a code count.
 
@@ -159,8 +159,8 @@ one DECISIONS entry per role). Cost accepted: ~35 renames + export-map edits.
 lowercase boundary entrypoints (`public.ts`, `server.ts`), or one rule?
 
 **Answer:** One rule: a root entry file is named exactly after its export
-subpath, lowercase — `layer.ts` ↔ `./layer`, `tables.ts` ↔ `./tables`,
-`public.ts` ↔ `./public`, `test.ts` ↔ `./test`.
+subpath, lowercase — `layer.ts` ↔ subpath `layer`, `tables.ts` ↔ `tables`,
+`public.ts` ↔ `public`, `test.ts` ↔ `test`.
 
 **Rationale:** Mechanically checkable against `package.json#exports` with no
 exception table. Code already does this for use-cases (`public.ts`/`server.ts`
@@ -204,8 +204,10 @@ Evidence: `synthesis/14-v4-enforcement-tooling.md` §1-2, §5.
 **Question:** Hard gate, advisory-then-hard, or baseline ratchet?
 
 **Answer:** Baseline ratchet from day one: commit
-`standards/architecture.audit-baseline.jsonc` with the current per-package
-drift counts per rule; the lane fails only on regression; a `follow_ups`
+`architecture.audit-baseline.jsonc` (new, under `standards/`) with the current drift
+findings keyed by identity (`package`, `rule`, `path`, `expected`; counts are
+report summaries only — review 2026-08-30, PR #897); the lane fails only on
+regression, i.e. a finding identity absent from the baseline; a `follow_ups`
 list burns the baseline down as the proof fix and codemods land.
 
 **Rationale:** Every rule fails somewhere today (kind folders 21/32, suffix
@@ -240,7 +242,7 @@ Tables row and the manifest are amended. Evidence:
 flat `test/` with a name grammar, or rely on the coverage ratchet only?
 
 **Answer:** Flat `test/` plus a closed lens grammar plus a twin ratchet. Name
-rule `<Concept>.<lens>.test.ts` with a `LiteralKit` of lenses (`test`,
+rule `<Concept>.<lens>.ts` with a `LiteralKit` of lenses (`test`,
 `pglite.test`, `pg.test`, `e2e.test`, `equivalence.test`, `contract.test`,
 `schema-parity.test`; new lenses are a vocabulary change, not a filename).
 Audit rule: every concept folder carrying a `.model` / `.service` / `.ports` /
@@ -545,7 +547,7 @@ primitive: `Rpc.make(tag, { payload, success, error, defect, stream })`
 exposes `payloadSchema` / `successSchema` / `errorSchema`; `RpcGroup.make`,
 `.toLayer`, `RpcClient.make` (`.repos/effect/packages/effect/src/unstable/rpc/`).
 The option key is `error`, not `failure`: `Failure` is the member name,
-`error: Failure` the wiring. Codegen: `add role --role rpc --op Get` emits one
+`error: Failure` the wiring. Codegen: `add role --file-role rpc --op Get` emits one
 contract file, one handler file and one `Rpcs` entry from invariant symbols.
 Rejected: *keyed handler object only* (no `User.Get.Handler` node; the pair
 cannot be audited per operation); *v3's file tree* (contradicts kind folders

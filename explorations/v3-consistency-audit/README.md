@@ -63,6 +63,17 @@ this packet at `decompose` when their gates fire.
 
 ## Trail
 
+- 2026-08-30 (PR #897 review): **Seven Codex review threads fixed, two
+  knowledge gates cleared.** Identity-keyed audit baseline (`findings[]`, not
+  counts — a fix-A/introduce-C swap must fail), first-vertical-slice
+  acceptance is an explicit post-amendment expected-path set (not "≥ 14"),
+  `add role` keeps its tier positional and gains `--file-role`, the test lens
+  grammar is `<Concept>.<lens>.ts` (lenses already end in `.test`),
+  placeholder handler bodies are audit findings, D8 rejects only hollow
+  scaffolds (the per-operation layout is adopted), and the reconciliation
+  train is seven slice PRs after the lab PR. `knowledge refs --check` /
+  `semantic-delta`: host paths and not-yet-existing paths reworded (`CAPTURE`
+  kept verbatim except those literals).
 - 2026-08-30 (graduated): **Operator ratified all seven sub-choices and
   accepted the brief.** `DECISIONS.md` gained the ratification entry (with
   rejected options); manifest `openQuestions` shrank to the nine DEFERRED
