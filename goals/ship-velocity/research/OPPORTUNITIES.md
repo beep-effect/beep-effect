@@ -4,6 +4,78 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-30 — base fast-forward left the ignored goal projection stale
+
+- **Doing:** repeating the CLI package audit after merging the latest `origin/main`.
+- **Evidence:** 2,582 tests passed and one goal-bootstrap determinism test failed because the
+  ignored local `goals/INDEX.md` still rendered the pre-merge packet distribution while the merged
+  manifests rendered a different active, paused, and retained distribution.
+- **Would have prevented it:** refresh ignored generated projections from the new base in the
+  post-merge hook, or make hermetic package tests isolate themselves from an optional checkout-local
+  projection.
+
+## 2026-08-30 — publish discovered base overlap after local acceptance proof
+
+- **Doing:** publishing the main-push parity repair after package verification, cheap gates, and
+  the authoritative affected lane passed.
+- **Evidence:** Yeet refused before committing because `origin/main` advanced by two commits after
+  the branch was cut. One upstream commit replaced the same brittle command-count assertion in
+  `quality-tasks.test.ts`, so the branch required an explicit merge and another proof cycle. A
+  subsequent refresh immediately after that repeat package proof found a third queued PR already
+  merged, requiring another base refresh before publish.
+- **Would have prevented it:** refresh and overlap-check the base immediately before starting the
+  last expensive local acceptance lane, while retaining the publish-time stale-base refusal as the
+  final safety gate.
+
+## 2026-08-30 — scheduler probe command drifted from the live CLI
+
+- **Doing:** probing the machine-wide Yeet admission lane before starting the post-merge
+  observation work.
+- **Evidence:** the goal's operator instruction says to run
+  `bun run beep quality scheduler status`, but the live command exited 1 with
+  `Missing required flag: --json`.
+- **Would have prevented it:** keep the operator instruction in sync with the command schema, or
+  let `scheduler status` default to its human-readable view when `--json` is absent.
+
+## 2026-08-30 — fleet snapshot is too large for observation sampling
+
+- **Doing:** selecting active sibling checkouts for the representative-week cache sample.
+- **Evidence:** `bun run beep worktree fleet --json` emitted 32,786 characters for 78 checkouts,
+  including full policy-movement path lists. The captured output truncated before it provided a
+  usable active-checkout summary.
+- **Would have prevented it:** add a compact mode or liveness filter that returns checkout path,
+  branch, liveness, and dirty count without the policy path inventory.
+
+## 2026-08-30 — cache dashboard cannot sample a symlinked time window
+
+- **Doing:** building a post-merge-only cache dashboard from existing Turbo summaries without
+  copying raw receipts into the goal packet.
+- **Evidence:** eight checkouts had summaries whose `execution.startTime` fell inside the window,
+  including one with 55 files. `beep cache dashboard --runs-dir <filtered-directory>` reported
+  `runFiles: 0` when that directory contained symlinks to the selected summaries.
+- **Would have prevented it:** add `--from` and `--to` filters to `cache dashboard`, or document
+  that the runs directory must contain regular files and that symlinks are ignored.
+
+## 2026-08-30 — attempt journal lacks a terminal row
+
+- **Doing:** counting post-merge publish retries and classifying contention-family causes.
+- **Evidence:** the branch-scoped attempt journals contained five publish starts after the window
+  opened but only four publish terminal rows. The scheduler snapshot had no active lease, so the
+  unmatched attempt could not be classified as success, failure, interruption, or contention.
+- **Would have prevented it:** write an explicit interrupted or abandoned terminal record from the
+  attempt finalizer, and expose unmatched starts in `yeet status` or a bounded metrics command.
+
+## 2026-08-30 — active worktrees missed remote-cache provisioning
+
+- **Doing:** classifying the four active checkouts whose post-merge cache sample was local-only.
+- **Evidence:** 30 ordinary, enabled, non-forced `check` summaries were local-only. Three active
+  worktrees had no per-checkout remote-read configuration; one sibling clone had an incomplete
+  four-name configuration with a blank team field. Every sampled revision contained the shipped
+  implementation and used the current repo CLI, so neither stale code nor a script bypass caused
+  the result. No secret values or raw 1Password data were inspected.
+- **Would have prevented it:** make worktree bootstrap provision the read-only reference posture,
+  reject present-but-blank fields, and run the sanitized dry plan before the first cacheable task.
+
 ## 2026-08-27 — C2 workflow posture outran credential provisioning
 
 - **Doing:** proving that the same-repository pull-request remote-read decision was live before

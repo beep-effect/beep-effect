@@ -33,7 +33,7 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import { XMLParser } from "fast-xml-parser";
 import { parse } from "jsonc-parser";
-import { configStringEqualsSync } from "../../internal/cli/EnvConfig.ts";
+import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
@@ -568,8 +568,12 @@ const collectSuccessfulOutput = Effect.fn("QualityScriptCommands.collectSuccessf
   return result.output;
 });
 
-const isTruthyMainPush = (): boolean =>
-  configStringEqualsSync("GITHUB_EVENT_NAME", "push") && configStringEqualsSync("GITHUB_REF_NAME", "main");
+const isTruthyMainPush = Effect.fn("QualityScriptCommands.isTruthyMainPush")(function* () {
+  const eventName = yield* configStringOption("GITHUB_EVENT_NAME");
+  const refName = yield* configStringOption("GITHUB_REF_NAME");
+
+  return O.contains(eventName, "push") && O.contains(refName, "main");
+});
 
 const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function* (
   repoRoot: string
@@ -620,7 +624,7 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
   QualityScriptCommandError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
-  if (isTruthyMainPush()) {
+  if (yield* isTruthyMainPush()) {
     yield* Console.log("[github-checks] quality: skipped changeset status on main push");
     return A.empty<GithubCheckLaneSpec>();
   }
