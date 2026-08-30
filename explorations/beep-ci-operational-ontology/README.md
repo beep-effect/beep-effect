@@ -28,14 +28,13 @@ five adversarial rounds, mechanical `--gate` PASSED, **31 terms ratified** by th
 steward (rat-001..031), 216 conceded, 57.75% unresolved-fraction waiver ratified. The
 run is rotated and replayable from
 [`ontology/extraction/s4/beep-ci-ops/runs/`](./ontology/extraction/s4/beep-ci-ops/runs/)
-(manifest, index, observations, the vendored judging engine, replay notes). **S5 IS COMPLETE** (TAXONOMY ratified at 38 terms, sitting 4; dispositions projected)
-— previously underway: the contract is binding at
-[`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md), the
-mechanical join pass is committed (`extraction/s5/JOIN.yaml`: 25 accepted-via / 7
-domain leaves / 305 open), the sittings are COMPLETE (1–3 scribed in
-DECISIONS.md: all 337 candidates, all 104 LEDGER entries, the docket policy), the
-dispositions surface is landed and gated (`s5/DISPOSITIONS.yaml` +
-`validate_packet.py --s5`: 0 blockers), and the six-seat TAXONOMY round is running.
+(manifest, index, observations, the vendored judging engine, replay notes). **S5 IS COMPLETE AND RATIFIED** (2026-08-30): the binding contract is
+[`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md),
+sittings 1–4 are scribed in DECISIONS.md (337 candidates, 104 LEDGER entries, the
+docket policy, and the seat-round rulings), the ratified 38-term
+`extraction/s5/TAXONOMY.yaml` passes the `--s5` gate at 0 blockers / 0 warns, and
+`apply_s5_dispositions.py` projected every ruling onto the generated S4 surfaces —
+nothing `candidate`/`open` remains.
 **NEXT: stage S6 — A-Box ratification & predicates** (the runtime ETL that
 enumerates ratified-class individuals: the deferred YeetWeightedAdmissionV1, the
 package census, the deployed LiteralKit members) plus auditor run 2's queue (163
