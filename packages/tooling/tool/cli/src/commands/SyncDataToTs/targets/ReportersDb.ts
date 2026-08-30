@@ -32,6 +32,8 @@ const vocabularyDataPath = `${outputRoot}/reporters-vocabulary.data.json` as con
 const refreshCommand = "bun run beep sync-data-to-ts --target reporters-db" as const;
 const textEncoder = new TextEncoder();
 
+type ReporterIdFactory = (semanticKey: string) => Effect.Effect<string, SyncDataToTsError, Crypto.Crypto>;
+
 /**
  * Pinned reporters-db release.
  *
@@ -245,34 +247,43 @@ const decodePreviousReporterVocabularyArtifact = S.decodeUnknownEffect(
   S.fromJsonString(PreviousReporterVocabularyArtifact)
 );
 
-const readPreviousReporterVocabulary = Effect.fn("SyncDataToTs.ReportersDb.readPreviousVocabulary")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(
-    SyncDataToTsError.mapError("Failed to locate the repo root for reporter vocabulary reconciliation", targetId)
-  );
-  const absolutePath = path.resolve(repoRoot, vocabularyDataPath);
-  const exists = yield* fs
-    .exists(absolutePath)
-    .pipe(
-      SyncDataToTsError.mapError("Failed to inspect the checked-in reporter vocabulary", targetId, vocabularyDataPath)
+/**
+ * Read the checked-in reporter vocabulary used to preserve issued identities.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPreviousReporterVocabularyForTesting = Effect.fn("SyncDataToTs.ReportersDb.readPreviousVocabulary")(
+  function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const repoRoot = yield* findRepoRoot().pipe(
+      SyncDataToTsError.mapError("Failed to locate the repo root for reporter vocabulary reconciliation", targetId)
+    );
+    const absolutePath = path.resolve(repoRoot, vocabularyDataPath);
+    const exists = yield* fs
+      .exists(absolutePath)
+      .pipe(
+        SyncDataToTsError.mapError("Failed to inspect the checked-in reporter vocabulary", targetId, vocabularyDataPath)
+      );
+
+    if (!exists) {
+      return A.empty<ReporterVocabularyOutputRecord>();
+    }
+
+    const content = yield* fs
+      .readFileString(absolutePath)
+      .pipe(
+        SyncDataToTsError.mapError("Failed to read the checked-in reporter vocabulary", targetId, vocabularyDataPath)
+      );
+    const artifact = yield* decodePreviousReporterVocabularyArtifact(content).pipe(
+      SyncDataToTsError.mapError("Failed to decode the checked-in reporter vocabulary", targetId, vocabularyDataPath)
     );
 
-  if (!exists) {
-    return A.empty<ReporterVocabularyOutputRecord>();
+    return artifact.records;
   }
-
-  const content = yield* fs
-    .readFileString(absolutePath)
-    .pipe(
-      SyncDataToTsError.mapError("Failed to read the checked-in reporter vocabulary", targetId, vocabularyDataPath)
-    );
-  const artifact = yield* decodePreviousReporterVocabularyArtifact(content).pipe(
-    SyncDataToTsError.mapError("Failed to decode the checked-in reporter vocabulary", targetId, vocabularyDataPath)
-  );
-
-  return artifact.records;
-});
+);
 
 const decodeArchiveEntry = <A, E>(
   targetId: string,
@@ -367,90 +378,8 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
   });
   const { caseNameAbbreviations, journals, laws, regexes, reporters, stateAbbreviations } =
     yield* decodeReportersDbSourceData(entries);
-  const reporterSeeds = pipe(
-    R.toEntries(reporters),
-    A.flatMap(([primaryAbbreviation, records]) =>
-      A.map(records, (record) => {
-        const semanticKey = A.join([primaryAbbreviation, record.cite_type, record.name], "\u001f");
-        const lineageKey = A.join([primaryAbbreviation, record.name], "\u001f");
-        const candidateAliases = pipe(
-          [primaryAbbreviation],
-          A.appendAll(R.keys(record.editions)),
-          A.appendAll(R.keys(record.variations)),
-          A.appendAll(R.values(record.variations)),
-          A.filter(Str.isNonEmpty),
-          A.dedupe
-        );
-
-        return { candidateAliases, lineageKey, primaryAbbreviation, record, semanticKey };
-      })
-    )
-  );
-  const reportersWithIds = yield* Effect.forEach(
-    reporterSeeds,
-    (seed) => makeReporterId(seed.semanticKey).pipe(Effect.map((id) => ({ ...seed, id }))),
-    { concurrency: 16 }
-  );
-  const stableReporterIds = A.dedupe(A.map(reportersWithIds, (reporter) => reporter.id));
-
-  if (A.length(stableReporterIds) !== A.length(reportersWithIds)) {
-    return yield* SyncDataToTsError.make({
-      message: "Stable reporters-db identifiers contain a hash collision.",
-      targetId,
-      file: reportersPath,
-    });
-  }
-
-  const aliasesByReporterId = pipe(
-    reportersWithIds,
-    A.map(({ candidateAliases, id, record }) => [id, reporterAliasContext(record), candidateAliases] as const),
-    classifyVocabularyAliases,
-    A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
-    R.fromEntries
-  );
-  const projectedReporterVocabulary = A.map(
-    reportersWithIds,
-    ({ id, lineageKey, primaryAbbreviation, record, semanticKey }) => {
-      const aliases = pipe(
-        R.get(aliasesByReporterId, id),
-        O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
-      );
-
-      return ReporterVocabularyOutputRecord.make({
-        id,
-        semanticKey,
-        lineageKey,
-        primaryAbbreviation,
-        name: record.name,
-        citeType: record.cite_type,
-        editions: pipe(
-          R.toEntries(record.editions),
-          A.map(([abbreviation, edition]) => ({
-            abbreviation,
-            start: edition.start,
-            end: edition.end,
-          }))
-        ),
-        jurisdictions: record.mlz_jurisdiction,
-        aliases: aliases.aliases,
-        contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
-        status: "active",
-        successorId: null,
-      });
-    }
-  );
-  const previousReporterVocabulary = yield* readPreviousReporterVocabulary();
-  const reporterVocabulary = preserveIssuedVocabularyRecords(
-    previousReporterVocabulary,
-    projectedReporterVocabulary,
-    (previous, current) => (previous.status === "tombstone" ? previous : current),
-    (previous, successorId) =>
-      ReporterVocabularyOutputRecord.make({
-        ...previous,
-        status: "tombstone",
-        successorId,
-      })
-  );
+  const previousReporterVocabulary = yield* readPreviousReporterVocabularyForTesting();
+  const reporterVocabulary = yield* projectReporterVocabulary(reporters, previousReporterVocabulary);
   const counts = {
     caseNameAbbreviationKeys: A.length(R.keys(caseNameAbbreviations)),
     caseNameExpansions: recordArrayCount(caseNameAbbreviations),
@@ -567,6 +496,102 @@ const acquireReportersDbProjection = Effect.fn("SyncDataToTs.ReportersDb.acquire
     summary: `${counts.reporterRecords} reporters, ${counts.journalRecords} journals, ${counts.lawRecords} laws, and companion abbreviation/regex data from reporters-db ${REPORTERS_DB_RELEASE}`,
     sources: [metadata],
   });
+});
+
+/**
+ * Project reporters-db records into stable, collision-checked vocabulary identities.
+ *
+ * @category projection
+ * @since 0.0.0
+ */
+export const projectReporterVocabulary = Effect.fn("SyncDataToTs.ReportersDb.projectVocabulary")(function* (
+  reporters: Readonly<Record<string, ReadonlyArray<ReporterRecord>>>,
+  previousReporterVocabulary: ReadonlyArray<ReporterVocabularyOutputRecord>,
+  makeId: ReporterIdFactory = makeReporterId
+) {
+  const reporterSeeds = pipe(
+    R.toEntries(reporters),
+    A.flatMap(([primaryAbbreviation, records]) =>
+      A.map(records, (record) => {
+        const semanticKey = A.join([primaryAbbreviation, record.cite_type, record.name], "\u001f");
+        const lineageKey = A.join([primaryAbbreviation, record.name], "\u001f");
+        const candidateAliases = pipe(
+          [primaryAbbreviation],
+          A.appendAll(R.keys(record.editions)),
+          A.appendAll(R.keys(record.variations)),
+          A.appendAll(R.values(record.variations)),
+          A.filter(Str.isNonEmpty),
+          A.dedupe
+        );
+
+        return { candidateAliases, lineageKey, primaryAbbreviation, record, semanticKey };
+      })
+    )
+  );
+  const reportersWithIds = yield* Effect.forEach(
+    reporterSeeds,
+    (seed) => makeId(seed.semanticKey).pipe(Effect.map((id) => ({ ...seed, id }))),
+    { concurrency: 16 }
+  );
+  const stableReporterIds = A.dedupe(A.map(reportersWithIds, (reporter) => reporter.id));
+
+  if (A.length(stableReporterIds) !== A.length(reportersWithIds)) {
+    return yield* SyncDataToTsError.make({
+      message: "Stable reporters-db identifiers contain a hash collision.",
+      targetId,
+      file: reportersPath,
+    });
+  }
+
+  const aliasesByReporterId = pipe(
+    reportersWithIds,
+    A.map(({ candidateAliases, id, record }) => [id, reporterAliasContext(record), candidateAliases] as const),
+    classifyVocabularyAliases,
+    A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
+    R.fromEntries
+  );
+  const projectedReporterVocabulary = A.map(
+    reportersWithIds,
+    ({ id, lineageKey, primaryAbbreviation, record, semanticKey }) => {
+      const aliases = pipe(
+        R.get(aliasesByReporterId, id),
+        O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
+      );
+
+      return ReporterVocabularyOutputRecord.make({
+        id,
+        semanticKey,
+        lineageKey,
+        primaryAbbreviation,
+        name: record.name,
+        citeType: record.cite_type,
+        editions: pipe(
+          R.toEntries(record.editions),
+          A.map(([abbreviation, edition]) => ({
+            abbreviation,
+            start: edition.start,
+            end: edition.end,
+          }))
+        ),
+        jurisdictions: record.mlz_jurisdiction,
+        aliases: aliases.aliases,
+        contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
+        status: "active",
+        successorId: null,
+      });
+    }
+  );
+  return preserveIssuedVocabularyRecords(
+    previousReporterVocabulary,
+    projectedReporterVocabulary,
+    (previous, current) => (previous.status === "tombstone" ? previous : current),
+    (previous, successorId) =>
+      ReporterVocabularyOutputRecord.make({
+        ...previous,
+        status: "tombstone",
+        successorId,
+      })
+  );
 });
 
 /**

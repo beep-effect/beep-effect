@@ -18,6 +18,10 @@ import {
   outputFile,
   parseCsvSource,
   preserveIssuedVocabularyRecords,
+  projectCourtVocabulary,
+  projectReporterVocabulary,
+  readPreviousCourtVocabularyForTesting,
+  readPreviousReporterVocabularyForTesting,
   renderUnknownJsonModule,
   SyncDataFetchedSource,
   SyncDataTargetMetadata,
@@ -581,8 +585,7 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
             "name": "Child Court",
             "parent": "parent",
             "regex": ["\${county} \${places} \${1-2} $$ $county"],
-            "system": "state",
-            "type": null
+            "system": "state"
           }
         ]`,
         `{"county":"County"}`,
@@ -596,7 +599,7 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       expect(courts[1]).toMatchObject({
         dates: [{ end: null, start: "2000-01-01" }],
         location: "Example",
-        type: null,
+        type: "trial",
         regex: ["County (North|South) ((first)|(second)) $ County"],
       });
     })
@@ -632,6 +635,177 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       expect(error.message).toContain("Unresolved template variables");
     })
   );
+
+  it.effect(
+    "rejects courts-db utilities without the pinned ordinals declaration",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(assembleCourtsData(`[]`, `{}`, {}, `# ordinals missing`));
+      expect(error.message).toContain("Could not find the ordinals array");
+    })
+  );
+
+  it.effect(
+    "rejects duplicate assembled court identifiers",
+    Effect.fnUntraced(function* () {
+      const court = `{"citation_string":"Fixture","dates":[],"examples":[],"id":"duplicate","level":null,"location":"Example","name":"Fixture","regex":[],"system":"state","type":null}`;
+      const error = yield* Effect.flip(
+        assembleCourtsData(
+          `[${court},${court}]`,
+          `{}`,
+          {},
+          `ordinals = [
+          "first",
+        ]`
+        )
+      );
+      expect(error.message).toContain("duplicate court identifiers");
+    })
+  );
+
+  it.effect(
+    "projects assembled courts into stable vocabulary records and retains issued tombstones",
+    Effect.fnUntraced(function* () {
+      const courts = yield* assembleCourtsData(
+        `[{"citation_string":"Fixture Ct.","dates":[],"examples":[],"id":"fixture-court","level":null,"location":"Example","name":"Fixture Court","name_abbreviation":"Fixture Ct.","regex":[],"system":"state","type":null}]`,
+        `{}`,
+        {},
+        `ordinals = [
+          "first",
+        ]`
+      );
+      const current = yield* projectCourtVocabulary(courts, []);
+      const historical = [{ ...current[0]!, status: "tombstone" as const }];
+      const preservedHistorical = yield* projectCourtVocabulary(courts, historical);
+      const retained = yield* projectCourtVocabulary([], current);
+
+      expect(current).toMatchObject([
+        {
+          id: "fixture-court",
+          semanticKey: "court:fixture-court",
+          aliases: ["Fixture Court", "Fixture Ct."],
+          status: "active",
+        },
+      ]);
+      expect(preservedHistorical).toStrictEqual(historical);
+      expect(retained).toMatchObject([{ id: "fixture-court", status: "tombstone", successorId: null }]);
+    })
+  );
+
+  it.effect(
+    "projects reused court and reporter aliases with disambiguating context",
+    Effect.fnUntraced(function* () {
+      const courts = yield* assembleCourtsData(
+        `[
+          {"citation_string":"Shared","dates":[],"examples":[],"id":"first","level":null,"location":"One","name":"First Court","regex":[],"system":"state","type":null},
+          {"citation_string":"Shared","dates":[],"examples":[],"id":"second","level":null,"location":"Two","name":"Second Court","regex":[],"system":"state","type":null}
+        ]`,
+        `{}`,
+        {},
+        `ordinals = [
+          "first",
+        ]`
+      );
+      const courtVocabulary = yield* projectCourtVocabulary(courts, []);
+      const reporterData = yield* decodeReportersDbSourceData({
+        "/reporters_db/data/case_name_abbreviations.json": `{}`,
+        "/reporters_db/data/journals.json": `{}`,
+        "/reporters_db/data/laws.json": `{}`,
+        "/reporters_db/data/regexes.json": `{}`,
+        "/reporters_db/data/reporters.json": `{"Shared":[{"cite_type":"state","editions":{},"mlz_jurisdiction":[],"name":"First Reporter","variations":{}},{"cite_type":"federal","editions":{},"mlz_jurisdiction":[],"name":"Second Reporter","variations":{}}]}`,
+        "/reporters_db/data/state_abbreviations.json": `{}`,
+      });
+      const reporterVocabulary = yield* projectReporterVocabulary(reporterData.reporters, []);
+
+      expect(courtVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
+      expect(reporterVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
+    }, Effect.provide(NodeCrypto.layer))
+  );
+
+  it.effect(
+    "projects reporters into deterministic vocabulary identities and retains issued tombstones",
+    Effect.fnUntraced(function* () {
+      const data = yield* decodeReportersDbSourceData({
+        "/reporters_db/data/case_name_abbreviations.json": `{"Co.":["Company"]}`,
+        "/reporters_db/data/journals.json": `{}`,
+        "/reporters_db/data/laws.json": `{}`,
+        "/reporters_db/data/regexes.json": `{}`,
+        "/reporters_db/data/reporters.json": `{"Ex.":[{"cite_type":"state","editions":{"Ex.":{"end":null,"start":"2000-01-01"}},"mlz_jurisdiction":["us"],"name":"Example Reporter","variations":{"Example":"Ex."}}]}`,
+        "/reporters_db/data/state_abbreviations.json": `{}`,
+      });
+      const current = yield* projectReporterVocabulary(data.reporters, []);
+      const repeated = yield* projectReporterVocabulary(data.reporters, current);
+      const historical = [{ ...current[0]!, status: "tombstone" as const }];
+      const preservedHistorical = yield* projectReporterVocabulary(data.reporters, historical);
+      const retained = yield* projectReporterVocabulary({}, current);
+
+      expect(repeated).toStrictEqual(current);
+      expect(preservedHistorical).toStrictEqual(historical);
+      expect(current[0]).toMatchObject({
+        primaryAbbreviation: "Ex.",
+        semanticKey: "Ex.\u001fstate\u001fExample Reporter",
+        aliases: ["Ex.", "Example"],
+        status: "active",
+      });
+      expect(retained).toMatchObject([{ id: current[0]?.id, status: "tombstone", successorId: null }]);
+    }, Effect.provide(NodeCrypto.layer))
+  );
+
+  it.effect(
+    "rejects colliding stable reporter identifiers",
+    Effect.fnUntraced(function* () {
+      const data = yield* decodeReportersDbSourceData({
+        "/reporters_db/data/case_name_abbreviations.json": `{}`,
+        "/reporters_db/data/journals.json": `{}`,
+        "/reporters_db/data/laws.json": `{}`,
+        "/reporters_db/data/regexes.json": `{}`,
+        "/reporters_db/data/reporters.json": `{"Ex.":[{"cite_type":"state","editions":{},"mlz_jurisdiction":[],"name":"First Reporter","variations":{}},{"cite_type":"federal","editions":{},"mlz_jurisdiction":[],"name":"Second Reporter","variations":{}}]}`,
+        "/reporters_db/data/state_abbreviations.json": `{}`,
+      });
+      const error = yield* Effect.flip(
+        projectReporterVocabulary(data.reporters, [], () => Effect.succeed("reporter-collision"))
+      );
+
+      expect(error.message).toContain("hash collision");
+    })
+  );
+
+  it("reads missing and checked-in vocabulary artifacts for identity reconciliation", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        expect(yield* readPreviousCourtVocabularyForTesting()).toStrictEqual([]);
+        expect(yield* readPreviousReporterVocabularyForTesting()).toStrictEqual([]);
+
+        const courts = yield* assembleCourtsData(
+          `[{"citation_string":"Fixture Ct.","dates":[],"examples":[],"id":"fixture-court","level":null,"location":"Example","name":"Fixture Court","regex":[],"system":"state","type":null}]`,
+          `{}`,
+          {},
+          `ordinals = [
+            "first",
+          ]`
+        );
+        const courtRecords = yield* projectCourtVocabulary(courts, []);
+        const reporters = yield* decodeReportersDbSourceData({
+          "/reporters_db/data/case_name_abbreviations.json": `{}`,
+          "/reporters_db/data/journals.json": `{}`,
+          "/reporters_db/data/laws.json": `{}`,
+          "/reporters_db/data/regexes.json": `{}`,
+          "/reporters_db/data/reporters.json": `{"Ex.":[{"cite_type":"state","editions":{},"mlz_jurisdiction":[],"name":"Example Reporter","variations":{}}]}`,
+          "/reporters_db/data/state_abbreviations.json": `{}`,
+        });
+        const reporterRecords = yield* projectReporterVocabulary(reporters.reporters, []);
+        yield* writeOutputFile(
+          "packages/law-practice/domain/src/internal/generated/free-law-project/courts-vocabulary.data.json",
+          JSON.stringify({ records: courtRecords })
+        );
+        yield* writeOutputFile(
+          "packages/law-practice/domain/src/internal/generated/free-law-project/reporters-vocabulary.data.json",
+          JSON.stringify({ records: reporterRecords })
+        );
+
+        expect(yield* readPreviousCourtVocabularyForTesting()).toStrictEqual(courtRecords);
+        expect(yield* readPreviousReporterVocabularyForTesting()).toStrictEqual(reporterRecords);
+      }).pipe(withTempRepoCommand)
+    ));
 
   it("renders internal generated data through Effect Schema", () => {
     const rendered = renderUnknownJsonModule({

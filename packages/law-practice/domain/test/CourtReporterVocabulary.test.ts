@@ -361,6 +361,27 @@ describe("CourtReporterVocabulary", () => {
     expect(report.changes).toStrictEqual([]);
   });
 
+  it("recognizes retained range splits and newly published successor transitions", () => {
+    const addedRange = EffectiveRange.make({ start: O.some("2026-01-01"), end: O.none() });
+    const splitCourt = court(currentCourt, {
+      effectiveRanges: [...currentCourt.effectiveRanges, addedRange],
+    });
+    const newTombstone = court(currentCourt, {
+      id: CourtId.make("fixture-new-tombstone"),
+      semanticKey: "fixture-new-tombstone",
+      lineageKey: "fixture-new-tombstone",
+      status: "tombstone",
+      successorId: O.some(secondCourt.id),
+    });
+    const report = classify(
+      { courts: [currentCourt, secondCourt] },
+      { courts: [splitCourt, secondCourt, newTombstone] }
+    );
+
+    expect(A.map(report.changes, ({ kind }) => kind)).toEqual(expect.arrayContaining(["dateSplit", "successor"]));
+    expect(report.compatibility).toBe("compatible");
+  });
+
   it("classifies plain-alias changes even when the same text remains contextual", () => {
     const contextualAlias = ContextualAlias.make({ alias: "Fixture Rep.", context: "Fixture context" });
     const contextualOnly = reporter(currentReporter, {

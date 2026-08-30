@@ -258,32 +258,41 @@ const decodeRawCourts = S.decodeUnknownEffect(S.fromJsonString(RawCourts));
 const decodeCourts = S.decodeUnknownEffect(Courts);
 const decodePreviousCourtVocabularyArtifact = S.decodeUnknownEffect(S.fromJsonString(PreviousCourtVocabularyArtifact));
 
-const readPreviousCourtVocabulary = Effect.fn("SyncDataToTs.CourtsDb.readPreviousVocabulary")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(
-    SyncDataToTsError.mapError("Failed to locate the repo root for court vocabulary reconciliation", targetId)
-  );
-  const absolutePath = path.resolve(repoRoot, vocabularyDataPath);
-  const exists = yield* fs
-    .exists(absolutePath)
-    .pipe(
-      SyncDataToTsError.mapError("Failed to inspect the checked-in court vocabulary", targetId, vocabularyDataPath)
+/**
+ * Read the checked-in court vocabulary used to preserve issued identities.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPreviousCourtVocabularyForTesting = Effect.fn("SyncDataToTs.CourtsDb.readPreviousVocabulary")(
+  function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const repoRoot = yield* findRepoRoot().pipe(
+      SyncDataToTsError.mapError("Failed to locate the repo root for court vocabulary reconciliation", targetId)
+    );
+    const absolutePath = path.resolve(repoRoot, vocabularyDataPath);
+    const exists = yield* fs
+      .exists(absolutePath)
+      .pipe(
+        SyncDataToTsError.mapError("Failed to inspect the checked-in court vocabulary", targetId, vocabularyDataPath)
+      );
+
+    if (!exists) {
+      return A.empty<CourtVocabularyOutputRecord>();
+    }
+
+    const content = yield* fs
+      .readFileString(absolutePath)
+      .pipe(SyncDataToTsError.mapError("Failed to read the checked-in court vocabulary", targetId, vocabularyDataPath));
+    const artifact = yield* decodePreviousCourtVocabularyArtifact(content).pipe(
+      SyncDataToTsError.mapError("Failed to decode the checked-in court vocabulary", targetId, vocabularyDataPath)
     );
 
-  if (!exists) {
-    return A.empty<CourtVocabularyOutputRecord>();
+    return artifact.records;
   }
-
-  const content = yield* fs
-    .readFileString(absolutePath)
-    .pipe(SyncDataToTsError.mapError("Failed to read the checked-in court vocabulary", targetId, vocabularyDataPath));
-  const artifact = yield* decodePreviousCourtVocabularyArtifact(content).pipe(
-    SyncDataToTsError.mapError("Failed to decode the checked-in court vocabulary", targetId, vocabularyDataPath)
-  );
-
-  return artifact.records;
-});
+);
 
 const replaceLiteralAll = (text: string, search: string, replacement: string): string =>
   pipe(text, Str.split(search), A.join(replacement));
@@ -451,61 +460,8 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     });
   }
 
-  const aliasSeeds = A.map(courts, (court) => {
-    const aliases = pipe(
-      [court.name, court.citation_string],
-      A.appendAll(pipe(O.fromNullishOr(court.name_abbreviation), A.fromOption)),
-      A.appendAll(pipe(O.fromUndefinedOr(court.sub_names), O.getOrElse(A.empty<string>))),
-      A.filter(Str.isNonEmpty),
-      A.dedupe
-    );
-
-    return [court.id, `${court.location}: ${court.name}`, aliases] as const;
-  });
-  const aliasesByCourtId = pipe(
-    classifyVocabularyAliases(aliasSeeds),
-    A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
-    R.fromEntries
-  );
-  const projectedCourtVocabulary = A.map(courts, (court) => {
-    const aliases = pipe(
-      R.get(aliasesByCourtId, court.id),
-      O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
-    );
-
-    return CourtVocabularyOutputRecord.make({
-      id: court.id,
-      sourceId: court.id,
-      semanticKey: `court:${court.id}`,
-      lineageKey: `court:${court.id}`,
-      name: court.name,
-      nameAbbreviation: pipe(O.fromNullishOr(court.name_abbreviation), O.getOrNull),
-      citationString: court.citation_string,
-      sourceJurisdiction: pipe(O.fromNullishOr(court.jurisdiction), O.getOrNull),
-      system: court.system,
-      type: court.type,
-      hierarchyLevel: court.level,
-      location: court.location,
-      parentId: pipe(O.fromNullishOr(court.parent), O.getOrNull),
-      effectiveRanges: court.dates,
-      aliases: aliases.aliases,
-      contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
-      status: "active",
-      successorId: null,
-    });
-  });
-  const previousCourtVocabulary = yield* readPreviousCourtVocabulary();
-  const courtVocabulary = preserveIssuedVocabularyRecords(
-    previousCourtVocabulary,
-    projectedCourtVocabulary,
-    (previous, current) => (previous.status === "tombstone" ? previous : current),
-    (previous, successorId) =>
-      CourtVocabularyOutputRecord.make({
-        ...previous,
-        status: "tombstone",
-        successorId,
-      })
-  );
+  const previousCourtVocabulary = yield* readPreviousCourtVocabularyForTesting();
+  const courtVocabulary = yield* projectCourtVocabulary(courts, previousCourtVocabulary);
 
   const vocabularyArtifact = {
     schemaVersion: COURT_REPORTER_VOCABULARY_SCHEMA_VERSION,
@@ -573,6 +529,72 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     summary: `${A.length(courts)} assembled court records from courts-db ${COURTS_DB_RELEASE}`,
     sources: [metadata],
   });
+});
+
+/**
+ * Project assembled courts-db records into the stable court vocabulary.
+ *
+ * @category projection
+ * @since 0.0.0
+ */
+export const projectCourtVocabulary = Effect.fn("SyncDataToTs.CourtsDb.projectVocabulary")(function* (
+  courts: ReadonlyArray<CourtRecord>,
+  previousCourtVocabulary: ReadonlyArray<CourtVocabularyOutputRecord>
+) {
+  const aliasSeeds = A.map(courts, (court) => {
+    const aliases = pipe(
+      [court.name, court.citation_string],
+      A.appendAll(pipe(O.fromNullishOr(court.name_abbreviation), A.fromOption)),
+      A.appendAll(pipe(O.fromUndefinedOr(court.sub_names), O.getOrElse(A.empty<string>))),
+      A.filter(Str.isNonEmpty),
+      A.dedupe
+    );
+
+    return [court.id, `${court.location}: ${court.name}`, aliases] as const;
+  });
+  const aliasesByCourtId = pipe(
+    classifyVocabularyAliases(aliasSeeds),
+    A.map(([id, aliases, contextualAliases]) => [id, { aliases, contextualAliases }] as const),
+    R.fromEntries
+  );
+  const projectedCourtVocabulary = A.map(courts, (court) => {
+    const aliases = pipe(
+      R.get(aliasesByCourtId, court.id),
+      O.getOrElse(() => ({ aliases: A.empty<string>(), contextualAliases: A.empty<readonly [string, string]>() }))
+    );
+
+    return CourtVocabularyOutputRecord.make({
+      id: court.id,
+      sourceId: court.id,
+      semanticKey: `court:${court.id}`,
+      lineageKey: `court:${court.id}`,
+      name: court.name,
+      nameAbbreviation: pipe(O.fromNullishOr(court.name_abbreviation), O.getOrNull),
+      citationString: court.citation_string,
+      sourceJurisdiction: pipe(O.fromNullishOr(court.jurisdiction), O.getOrNull),
+      system: court.system,
+      type: court.type,
+      hierarchyLevel: court.level,
+      location: court.location,
+      parentId: pipe(O.fromNullishOr(court.parent), O.getOrNull),
+      effectiveRanges: court.dates,
+      aliases: aliases.aliases,
+      contextualAliases: A.map(aliases.contextualAliases, ([alias, context]) => ({ alias, context })),
+      status: "active",
+      successorId: null,
+    });
+  });
+  return preserveIssuedVocabularyRecords(
+    previousCourtVocabulary,
+    projectedCourtVocabulary,
+    (previous, current) => (previous.status === "tombstone" ? previous : current),
+    (previous, successorId) =>
+      CourtVocabularyOutputRecord.make({
+        ...previous,
+        status: "tombstone",
+        successorId,
+      })
+  );
 });
 
 /**
