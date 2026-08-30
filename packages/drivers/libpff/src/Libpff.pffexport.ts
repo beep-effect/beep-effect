@@ -588,10 +588,10 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative))
       );
     });
-    const sandboxExecutable = runtimeCoversPffexport ? hostPffexportPath : "/tool/pffexport";
+    const sandboxExecutable = hostPffexportPath;
     const executableBind = runtimeCoversPffexport
       ? []
-      : ["--dir", "/tool", "--ro-bind", hostPffexportPath, sandboxExecutable];
+      : ["--ro-bind", path.dirname(hostPffexportPath), path.dirname(hostPffexportPath)];
     return ChildProcess.make(
       bwrapPath,
       [
