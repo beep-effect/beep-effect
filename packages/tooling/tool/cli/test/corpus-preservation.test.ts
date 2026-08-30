@@ -443,6 +443,68 @@ describe("T7 corpus preservation", () => {
     )
   );
 
+  it.effect("refuses copy-time source growth beyond the approved aggregate ceiling", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const baseContext = yield* Layer.build(NodeServices.layer);
+        const serviceContext = yield* Layer.build(
+          CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
+        );
+        const fs = yield* FileSystem.FileSystem.pipe(Effect.provide(baseContext));
+        const path = yield* Path.Path.pipe(Effect.provide(baseContext));
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "preservation-copy-growth-test-" });
+        const corpusRoot = path.join(root, "corpus");
+        const t7Root = path.join(root, "t7");
+        const salvageRoot = path.join(t7Root, "oppold-salvage-2026-08-10");
+        const metaRoot = path.join(salvageRoot, "_meta");
+        const source = path.join(salvageRoot, "synthetic.bin");
+        yield* fs.makeDirectory(corpusRoot, { recursive: true });
+        yield* fs.makeDirectory(metaRoot, { recursive: true });
+        yield* fs.writeFile(source, new Uint8Array([1, 2, 3]));
+        yield* fs.writeFile(path.join(t7Root, "oppold-corpus.zip"), new Uint8Array([4]));
+        yield* fs.writeFileString(
+          path.join(metaRoot, "manifest.jsonl"),
+          `${encodeJson({
+            dst: "H:\\oppold-salvage-2026-08-10\\synthetic.bin",
+            size: 3,
+            status: "copied",
+          })}\n`
+        );
+        const options = T7PreservationOptions.make({ corpusRoot, t7Root });
+        const proposed = yield* preflightT7Preservation(options).pipe(Effect.provide(serviceContext));
+        yield* approveT7Preservation(corpusRoot, proposed.measurement.requiredBytes, "synthetic-operator").pipe(
+          Effect.provide(serviceContext)
+        );
+
+        let sourceStatCount = 0;
+        const racingFileSystem = FileSystem.FileSystem.of({
+          ...fs,
+          stat: Effect.fn("CorpusPreservationTest.growBeforeCopy")(function* (target) {
+            if (Str.Equivalence(target, source)) {
+              sourceStatCount += 1;
+              if (sourceStatCount === 4) {
+                yield* fs.writeFile(source, new Uint8Array([1, 2, 3, 4]));
+              }
+            }
+            const info = yield* fs.stat(target);
+            return { ...info, mtime: O.none() };
+          }),
+        });
+        const failure = yield* runT7PreservationImpl(options).pipe(
+          Effect.flip,
+          Effect.provideService(FileSystem.FileSystem, racingFileSystem),
+          Effect.provide(baseContext)
+        );
+
+        expect(failure._tag).toBe("PreservationCeilingExceededError");
+        if (failure._tag === "PreservationCeilingExceededError") {
+          expect(failure.measuredBytes).toBe(proposed.measurement.requiredBytes + 1);
+          expect(failure.ceilingBytes).toBe(proposed.measurement.requiredBytes);
+        }
+      })
+    )
+  );
+
   it.effect("records an unreadable terminal row when a recensused source disappears before copy", () =>
     Effect.scoped(
       Effect.gen(function* () {

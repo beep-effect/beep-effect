@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { DateTime, Effect, Encoding, FileSystem, Layer, MutableHashMap, Path, pipe, Stream } from "effect";
+import { DateTime, Effect, Encoding, FileSystem, Layer, MutableHashMap, MutableRef, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -1395,6 +1395,12 @@ const appendPassProvenance = Effect.fn("Preservation.appendPassProvenance")(func
   yield* appendDurably(ledgerPath, encoded);
 });
 
+type PreservationCapacityBudget = {
+  readonly ceilingBytes: number;
+  readonly destFreeBytes: number;
+  readonly requiredBytes: MutableRef.MutableRef<number>;
+};
+
 const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal")(function* (
   writer: ArchiveWriterShape,
   manifest: PreservationManifestStoreShape,
@@ -1402,14 +1408,16 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
   sourceAbs: string,
   destAbs: string,
   destRelativePath: string,
-  identity: PreservationObjectIdentity
+  identity: PreservationObjectIdentity,
+  capacity: PreservationCapacityBudget
 ): Effect.fn.Return<
   A.NonEmptyReadonlyArray<PreservationManifestRow>,
-  PreservationArchiveIoError,
+  PreservationArchiveIoError | PreservationCeilingExceededError,
   FileSystem.FileSystem
 > {
   const key = identityKey(identity);
   const fs = yield* FileSystem.FileSystem;
+  let accountedSizeBytes = identity.sizeBytes;
   const attemptOnce = Effect.fnUntraced(function* () {
     const attempt = 1 + O.getOrElse(MutableHashMap.get(attemptCounts, key), () => 0);
     MutableHashMap.set(attemptCounts, key, attempt);
@@ -1418,6 +1426,23 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
       Effect.option
     );
     const attemptIdentity = O.getOrElse(currentIdentity, () => identity);
+    const nextRequiredBytes = MutableRef.get(capacity.requiredBytes) - accountedSizeBytes + attemptIdentity.sizeBytes;
+    if (nextRequiredBytes > capacity.ceilingBytes) {
+      return yield* PreservationCeilingExceededError.make({
+        ceilingBytes: NonNegativeInt.make(capacity.ceilingBytes),
+        measuredBytes: NonNegativeInt.make(nextRequiredBytes),
+        message: "Copy-time source growth exceeds the approved preservation ceiling.",
+      });
+    }
+    if (nextRequiredBytes > capacity.destFreeBytes) {
+      return yield* PreservationCeilingExceededError.make({
+        ceilingBytes: NonNegativeInt.make(capacity.destFreeBytes),
+        measuredBytes: NonNegativeInt.make(nextRequiredBytes),
+        message: "Copy-time source growth exceeds the measured destination free space.",
+      });
+    }
+    MutableRef.set(capacity.requiredBytes, nextRequiredBytes);
+    accountedSizeBytes = attemptIdentity.sizeBytes;
     const outcome = yield* writer.archiveObject(sourceAbs, destAbs, attemptIdentity);
     const row = PreservationManifestRow.make({
       archivedAt: DateTime.formatIso(yield* DateTime.now),
@@ -1500,7 +1525,7 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
     `preservation collector: reconciled=${reconciliation.reconciledDestinations} inheritedMissing=${reconciliation.missingDestinations} collectorErrors=${reconciliation.collectorErrors} deliberateExclusions=${reconciliation.deliberateExclusions}`,
   ]);
   const files = yield* scopedSourceFiles(options);
-  yield* refreshApprovedPreflight(options, files, approved);
+  const refreshed = yield* refreshApprovedPreflight(options, files, approved);
   const archiveRoot = archiveRootFor(options.corpusRoot, path);
   const manifestPath = manifestPathFor(options.corpusRoot, path);
   const services = Layer.mergeAll(ArchiveWriterLive, PreservationManifestStoreLive(manifestPath));
@@ -1519,6 +1544,11 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
         let passed = 0;
         let unapproved = 0;
         let attempted = 0;
+        const capacity = {
+          ceilingBytes: refreshed.ceilingBytes,
+          destFreeBytes: refreshed.measurement.destFreeBytes,
+          requiredBytes: MutableRef.make(refreshed.measurement.requiredBytes),
+        } satisfies PreservationCapacityBudget;
         for (const file of files) {
           const destRelativePath =
             file.identity.sourceClass === "root-archive-object"
@@ -1532,7 +1562,8 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
             file.absolute,
             destAbs,
             destRelativePath,
-            file.identity
+            file.identity,
+            capacity
           );
           attempted += A.length(rows);
           const terminalRow = A.lastNonEmpty(rows);
