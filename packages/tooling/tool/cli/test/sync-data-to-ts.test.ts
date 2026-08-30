@@ -795,11 +795,11 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
         const reporterRecords = yield* projectReporterVocabulary(reporters.reporters, []);
         yield* writeOutputFile(
           "packages/law-practice/domain/src/internal/generated/free-law-project/courts-vocabulary.data.json",
-          yield* S.encodeEffect(S.fromJsonString(S.Unknown))({ records: courtRecords })
+          formatJson({ records: courtRecords })
         );
         yield* writeOutputFile(
           "packages/law-practice/domain/src/internal/generated/free-law-project/reporters-vocabulary.data.json",
-          yield* S.encodeEffect(S.fromJsonString(S.Unknown))({ records: reporterRecords })
+          formatJson({ records: reporterRecords })
         );
 
         expect(yield* readPreviousCourtVocabularyForTesting()).toStrictEqual(courtRecords);
