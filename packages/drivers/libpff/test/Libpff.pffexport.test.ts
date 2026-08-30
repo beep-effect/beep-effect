@@ -404,6 +404,11 @@ describe("makePffexportFileProcessingEngine", () => {
         const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
         const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
         yield* fs.writeFileString(
+          stubPath,
+          stubPffexport.replace("#!/usr/bin/env bash", "#!/usr/bin/env -u BEEP_UNUSED bash")
+        );
+        yield* fs.chmod(stubPath, 0o755);
+        yield* fs.writeFileString(
           bwrapPath,
           bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`)
         );
@@ -420,7 +425,7 @@ describe("makePffexportFileProcessingEngine", () => {
         expect(result.children.length).toBeGreaterThan(0);
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
         expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/bin\n");
-        expect(bwrapArguments).toContain(`--\n/usr/bin/bash\n${stubPath}\n`);
+        expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-u\nBEEP_UNUSED\nbash\n${stubPath}\n`);
         expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
       },
       Effect.scoped,
@@ -531,9 +536,10 @@ describe("makePffexportFileProcessingEngine", () => {
         yield* Effect.acquireRelease(fs.symlink(interpreterPath, commandPath), () =>
           fs.remove(commandPath).pipe(Effect.ignore)
         );
+        const splitString = `${commandName} -c 'exec /bin/bash "$0" "$@"'`;
         yield* fs.writeFileString(
           launcherPath,
-          stubPffexport.replace("#!/usr/bin/env bash", `#!/usr/bin/env ${commandName}`)
+          stubPffexport.replace("#!/usr/bin/env bash", `#!/usr/bin/env -S ${splitString}`)
         );
         yield* fs.chmod(launcherPath, 0o755);
         yield* fs.writeFileString(
@@ -560,7 +566,10 @@ describe("makePffexportFileProcessingEngine", () => {
         expect(result.children.length).toBeGreaterThan(0);
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
         expect(bwrapArguments).toContain(`--ro-bind\n${interpreterPrefix}\n${interpreterPrefix}\n`);
-        expect(bwrapArguments).toContain(`--\n${interpreterPath}\n${launcherPath}\n`);
+        expect(bwrapArguments).toContain("--setenv\nPATH\n");
+        expect(bwrapArguments).toContain(":/usr/bin:/bin\n");
+        expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-S\n${splitString}\n${launcherPath}\n`);
+        expect(bwrapArguments).not.toContain(`--\n${interpreterPath}\n`);
         expect(bwrapArguments).not.toContain(`/usr/bin/${commandName}`);
       },
       Effect.scoped,

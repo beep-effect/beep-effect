@@ -583,21 +583,49 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       : executableDirectory;
   };
 
+  const envShebangInvocation = (
+    shebangArgument: string
+  ): { readonly commandParts: ReadonlyArray<string>; readonly envArguments: ReadonlyArray<string> } => {
+    const trimmedArgument = Str.trim(shebangArgument);
+    if (Str.startsWith("-S ")(trimmedArgument)) {
+      const splitString = Str.trim(Str.slice(3)(trimmedArgument));
+      return { commandParts: splitString.split(/\s+/u), envArguments: ["-S", splitString] };
+    }
+    if (Str.startsWith("--split-string=")(trimmedArgument)) {
+      const splitString = Str.slice("--split-string=".length)(trimmedArgument);
+      return { commandParts: splitString.split(/\s+/u), envArguments: ["-S", splitString] };
+    }
+    const envArguments = trimmedArgument.split(/\s+/u);
+    return { commandParts: envArguments, envArguments };
+  };
+
+  const envShebangCommand = (commandParts: ReadonlyArray<string>): string | undefined => {
+    const optionOperands = ["-C", "--argv0", "--chdir", "--unset", "-u"];
+    for (let index = 0; index < commandParts.length; index += 1) {
+      const part = commandParts[index] ?? "";
+      if (A.contains(optionOperands, part)) {
+        index += 1;
+        continue;
+      }
+      if (Str.startsWith("-")(part) || Str.includes("=")(part)) continue;
+      return part.replace(/^(?:'([^']+)'|"([^"]+)")$/u, "$1$2");
+    }
+    return undefined;
+  };
+
   const sandboxEnvShebangPlan = Effect.fn("Libpff.pffexport.sandboxEnvShebangPlan")(function* (
-    shebangParts: ReadonlyArray<string>
+    shebangArgument: string
   ): Effect.fn.Return<
     {
       readonly bindArguments: ReadonlyArray<string>;
-      readonly interpreter: string;
-      readonly interpreterArguments: ReadonlyArray<string>;
+      readonly envArguments: ReadonlyArray<string>;
+      readonly searchPath: string;
     },
     LibpffError
   > {
-    const envCommandIndex = shebangParts
-      .slice(1)
-      .findIndex((part) => !Str.isEmpty(part) && !Str.startsWith("-")(part) && !Str.includes("=")(part));
-    const envCommand = shebangParts[envCommandIndex + 1];
-    if (envCommandIndex < 0 || envCommand === undefined || !/^[A-Za-z0-9._+-]+$/u.test(envCommand)) {
+    const { commandParts, envArguments } = envShebangInvocation(shebangArgument);
+    const envCommand = envShebangCommand(commandParts);
+    if (envCommand === undefined || !/^[A-Za-z0-9._+-]+$/u.test(envCommand)) {
       return yield* makeLibpffError("config", { cause: "sandbox env shebang command is unsupported" });
     }
     const resolvedEnvInterpreter = yield* Effect.scoped(
@@ -655,8 +683,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     }
     return {
       bindArguments: A.flatMap(envRuntimePrefixes, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]),
-      interpreter: canonicalEnvInterpreter,
-      interpreterArguments: shebangParts.slice(envCommandIndex + 2),
+      envArguments,
+      searchPath: A.join(":")(A.dedupe([path.dirname(resolvedEnvInterpreter), "/usr/bin", "/bin"])),
     };
   });
 
@@ -682,6 +710,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       readonly bindArguments: ReadonlyArray<string>;
       readonly command: string;
       readonly commandArguments: ReadonlyArray<string>;
+      readonly searchPath: string;
     },
     LibpffError
   > {
@@ -698,10 +727,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       Effect.map((contents) => Str.split("\n")(contents)[0] ?? ""),
       Effect.map((firstLine) => (Str.startsWith("#!")(firstLine) ? Str.trim(Str.slice(2)(firstLine)) : ""))
     );
-    const shebangParts = shebang.split(/\s+/u);
-    const prefix = shebangParts[0] ?? "";
+    const separatorIndex = shebang.search(/\s/u);
+    const prefix = separatorIndex < 0 ? shebang : Str.slice(0, separatorIndex)(shebang);
+    const shebangArgument = separatorIndex < 0 ? "" : Str.trim(Str.slice(separatorIndex)(shebang));
     if (Str.isEmpty(prefix) || !path.isAbsolute(prefix))
-      return { bindArguments: [], command: executable, commandArguments: [] };
+      return { bindArguments: [], command: executable, commandArguments: [], searchPath: "/usr/bin:/bin" };
 
     const canonicalInterpreter = yield* fs
       .realPath(prefix)
@@ -722,13 +752,15 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     }
 
     const bindArguments = yield* sandboxInterpreterBinds([prefix, canonicalInterpreter]);
-    if (path.basename(prefix) !== "env") return { bindArguments, command: executable, commandArguments: [] };
+    if (path.basename(prefix) !== "env")
+      return { bindArguments, command: executable, commandArguments: [], searchPath: "/usr/bin:/bin" };
 
-    const envPlan = yield* sandboxEnvShebangPlan(shebangParts);
+    const envPlan = yield* sandboxEnvShebangPlan(shebangArgument);
     return {
       bindArguments: [...bindArguments, ...envPlan.bindArguments],
-      command: envPlan.interpreter,
-      commandArguments: [...envPlan.interpreterArguments, executable],
+      command: canonicalInterpreter,
+      commandArguments: [...envPlan.envArguments, executable],
+      searchPath: envPlan.searchPath,
     };
   });
 
@@ -777,7 +809,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         ...executableBind,
         "--setenv",
         "PATH",
-        "/usr/bin:/bin",
+        shebangPlan.searchPath,
         ...shebangPlan.bindArguments,
         "--ro-bind",
         sourcePath,
