@@ -474,3 +474,21 @@
 - **Disposition:** publication-command construction friction; retry through a
   literal stdin body and keep the already authoritative exact-head proof.
 - **Owner:** agent shell-command construction and PR publication wrappers.
+
+## 2026-08-30 — Yeet monitor treats deployment quota failures as repairable source defects
+
+- **What happened:** the required hosted `beep yeet monitor` invocation exited
+  on three Vercel status failures and opened a local repair session even though
+  each failure was an external deployment-account quota condition, not a defect
+  in the PR head.
+- **Evidence:** `bun run beep yeet monitor --watch --until-event --summary`
+  reported first-red capsules for `Vercel – oip-web`, `Vercel –
+  oip-web-staging`, and `Vercel – todox`; every status target identified
+  `upgradeToPro=build-rate-limit`, while the GitHub Actions checks continued.
+- **What would have prevented it:** classify external deployment quota and
+  account-status contexts separately from repairable source checks, and let
+  monitor wake only on required checks or explicitly actionable providers.
+- **Disposition:** hosted-environment noise; do not run repair or retry the
+  Vercel contexts, and continue monitoring exact-head required checks and
+  review state.
+- **Owner:** Yeet hosted-monitor classification and deployment integrations.
