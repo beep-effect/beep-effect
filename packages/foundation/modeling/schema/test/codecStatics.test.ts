@@ -109,13 +109,19 @@ describe("withCodecStatics", () => {
       withStatics(() => ({ decodeUnknownSync: Selected.decodeUnknownSync, is: Selected.is }))
     );
     const Annotated = Tagged.annotate({ title: "Annotated tagged union" });
+    const decodeUnknownSync = Reflect.get(Annotated, "decodeUnknownSync");
+    const is = Reflect.get(Annotated, "is");
 
-    expect(Annotated.decodeUnknownSync({ type: "first", value: "ok" })).toStrictEqual({
-      type: "first",
-      value: "ok",
-    });
-    expect(Annotated.is({ type: "second", value: 42 })).toBe(true);
-    expect(Annotated.is).not.toBe(Selected.is);
+    expect(P.isFunction(decodeUnknownSync)).toBe(true);
+    expect(P.isFunction(is)).toBe(true);
+    if (P.isFunction(decodeUnknownSync) && P.isFunction(is)) {
+      expect(Reflect.apply(decodeUnknownSync, undefined, [{ type: "first", value: "ok" }])).toStrictEqual({
+        type: "first",
+        value: "ok",
+      });
+      expect(Reflect.apply(is, undefined, [{ type: "second", value: 42 }])).toBe(true);
+      expect(is).not.toBe(Selected.is);
+    }
   });
 
   it("rejects duplicate keys and pre-attached custom statics", () => {
