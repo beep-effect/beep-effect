@@ -1,0 +1,25 @@
+id: so:sha256:7256273f9b51e14aa53443480beb67f5244cb3da832d9075367d148574cb5b29
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts
+source_span:
+  start_line: 102
+  end_line: 112
+  content_sha256: 16d8290f2ddf53f3f0e6d2ab166d2bcec48c1502da6f993b8bdb5e5503e56e46
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts::RepoProofStepDefinition
+  lexical_name: RepoProofStepDefinition
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: RepoProofStepDefinition
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class RepoProofStepDefinition extends S.Class<RepoProofStepDefinition>($I`RepoProofStepDefinition`)(
+epistemic_status: parser_derived

@@ -1,0 +1,44 @@
+id: "ic:worktree-config:013"
+hypothesis_ref: "dh:worktree-config:017"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two Fallow dead-code procedure specifications are the same when they
+    preserve the same diagnostic semantics, configuration-binding rule,
+    finding taxonomy and interpretation, output and completion requirements,
+    and tool-policy revision; the CLI string and severity word alone do not
+    establish sameness.
+  reidentification_key:
+    - "dead-code diagnostic semantics and finding taxonomy"
+    - "configuration-binding and analysis-scope rule"
+    - "output and completion requirements"
+    - "Fallow tool and repository-policy revision"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One authoritative diagnostic plan prescribing analysis, finding
+    interpretation, output, and completion as one dead-code verification lane.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "process: a dated dead-code diagnostic execution"
+    - "information_object: the inventory command-entry record"
+    - "information_object: a dead-code procedure with boundary severity supplied by a separate policy"
+  existential_dependencies:
+    - "At least one faithful realization of the diagnostic prescription"
+    - "The tool and repository configuration context that interprets the prescription"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by changed diagnostic semantics"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      The same dead-code command string can run under two .fallowrc versions
+      that classify boundary violations differently, producing different
+      effective prescriptions and findings despite lexical command equality.
+status: proposed

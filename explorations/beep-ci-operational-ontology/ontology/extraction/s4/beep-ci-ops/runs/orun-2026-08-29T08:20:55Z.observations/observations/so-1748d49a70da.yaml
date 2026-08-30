@@ -1,0 +1,23 @@
+id: so:sha256:1748d49a70da6931b46e89604cfda72e1c41e896134cbfd333249fa61ae9edcb
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 205
+  end_line: 205
+  content_sha256: 0498568bd8d25f6cd919cb9a76dc25f9659eeee95fd35970675464c3815bbcf2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::decodePackageVerifyPackageJson
+  lexical_name: decodePackageVerifyPackageJson
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const decodePackageVerifyPackageJson = S.decodeUnknownEffect(S.fromJsonString(PackageVerifyPackageJson));
+epistemic_status: parser_derived

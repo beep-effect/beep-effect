@@ -1,0 +1,56 @@
+target: "otp:verification-evidence:001"
+target_sha256: "ea35d0d251b79961243b5281ae0e9c9de97b62a4e9cce1d17f5df20f5ff84b79"
+chain_sha256: "608dea5c3dd146890314ccead691ea03a57d2e70224a19dc2a8b80bc2df07462"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  An artifact identity and custody contract must distinguish issued record tokens from copied
+  concretizations and independently specify when a result bears the evidence role, including
+  generation, correction, invalidation, supersession, tree, epoch, and procedure provenance.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge, so there is no proposed is-a relation to test; no
+    valid subsumption relation is asserted or inferred.
+attacks:
+  - surface: identity
+    rule: identity-content-token-underdetermined
+    counterexample: >-
+      Run A and run B can emit byte-equal results with different tree, epoch, and provenance,
+      while one issued result from run A can be copied to two stores. Byte equality wrongly
+      merges the first pair and storage identity wrongly separates the second. The proposal and
+      IC keep identity, rigidity, and dependence unresolved and the FA is explicitly_deferred,
+      so the agreement rule survives, but the observations cannot choose record-token versus
+      information-content identity.
+    outcome: landed
+  - surface: warrant
+    rule: cq-term-required
+    counterexample: >-
+      Removing VerificationEvidence leaves CQ-005 without the proof records whose tree and epoch
+      validity it asks for and CQ-006 without the records that discharge lane obligations. Both
+      CQs explicitly list VerificationEvidence as a required class; this is a genuine
+      decision-term warrant, not a listing mention.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-role-vs-artifact-underdetermined
+    counterexample: >-
+      A QA implementation can persist record, extract, and judge files and call them evidence
+      while those files remain implementation artifacts; conversely an explicit acceptance
+      policy can make the same result contingently bear an evidentiary role. The quotes
+      establish recording but do not discriminate those worlds, so the rejected null is not yet
+      secured.
+    outcome: landed
+rival_models_still_viable:
+  - "One verification-result information-content object with multiple serialized concretizations"
+  - "A distinct verification record token for each generation and custody history"
+  - "Existing result record contingently playing an evidentiary role"
+evidence:
+  - "po:sha256:3208242164204b626fdec9ccef8311690ae6f88aa2054338d6cffee34f6d0a4a"
+  - "po:sha256:c13db8addc9d014305ab9aee478dec45f03d3b3cc65a65889949dbaf72b49303"
+  - "po:sha256:c51e70098e7cb7f6170bccb102a0436b5741f45bbba0c983f6c9461886ece32d"
+  - "CQ-005"
+  - "CQ-006"

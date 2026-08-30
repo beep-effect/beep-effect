@@ -1,0 +1,21 @@
+id: "dh:quality:005"
+observation_refs:
+  - "so:sha256:0cc08082c37be61aea7b2643f2b23634fed5e3712a28c2846422a3506e0b6969"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration getArray in TurboConfigProof.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by getArray"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is unrepresentable_construct for the source declaration. By contract that fact cannot ground a surviving referent, and it supplies no observed domain behavior, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

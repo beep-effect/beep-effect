@@ -1,0 +1,36 @@
+id: ic:alt2:009
+hypothesis_ref: dh:sched-core:019
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two admission origin keys are the same iff they are the same origin-exclusion token jointly carried by tickets and leases
+    and compared by the skippable predicate; the string value is evidence rather than the criterion.
+  reidentification_key:
+  - YeetAdmissionTicket.originKey
+  - YeetAdmissionLease.originKey
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: One exclusion token per origin-exclusion group used by concurrent-grant exclusion.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies:
+  - YeetAdmissionTicket
+  - YeetAdmissionLease
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - empty originKey (exclusion not applied)
+counterexamples:
+- description: >-
+    The repository origin itself is not this token: two checkouts of the same remote can carry different originKey values,
+    and the predicate only compares the carried strings.
+- description: >-
+    An empty originKey does not join tickets to leases, so a blank string is not an origin-exclusion token even though the
+    field is present.
+status: proposed

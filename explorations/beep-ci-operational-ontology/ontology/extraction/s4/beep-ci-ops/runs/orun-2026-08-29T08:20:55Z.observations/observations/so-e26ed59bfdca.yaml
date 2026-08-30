@@ -1,0 +1,23 @@
+id: so:sha256:e26ed59bfdca5a82a1a69bf985e855b29cf5e2cb0faef78330cea02ae08c4d73
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 636
+  end_line: 636
+  content_sha256: 681fab3e0626cee15d160cfe668a4f6b69c4e29f109ed05966a1e3749ede9d83
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::DEFAULT_PROPERTY_LANE_RUNS
+  lexical_name: DEFAULT_PROPERTY_LANE_RUNS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const DEFAULT_PROPERTY_LANE_RUNS = "400";
+epistemic_status: parser_derived

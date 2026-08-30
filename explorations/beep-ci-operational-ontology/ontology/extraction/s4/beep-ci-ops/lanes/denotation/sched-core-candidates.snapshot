@@ -1,0 +1,849 @@
+- candidate: AdmissionPolicy
+  kind: class
+  definition: A governing set of capacity, floor, aging, heartbeat, and class-cap parameters used for
+    weighted admission.
+  admission_kind: decision
+  cq_justification:
+  - CQ-023
+  decision_relevance: Identifies the policy against which queued-wait and starvation findings are evaluated.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:248-283 — 'Admission policy
+    knobs with the chartered production defaults.'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: AdmissionPriorityClass
+  kind: class
+  definition: The closed deployed queue-ordering class of an admission request.
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  decision_relevance: Supplies the priority value returned for every queued SeatRequest and interpreted
+    by aging.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:68-72 — 'LiteralKit(["publish",
+    "verify"])'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: AdmissionSnapshot
+  kind: class
+  definition: A point-in-time information artifact containing live capacity, leases, tickets, dead records,
+    and quarantined records.
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  - hasStarvationException
+  decision_relevance: Provides the state inputs from which pre-grant remaining capacity and hard-floor
+    exception facts must be derived.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:323-360 — 'Point-in-time
+    view of the machine-wide admission state.'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: AdmissionWorkKind
+  kind: class
+  definition: The closed deployed classification of heavyweight repository work admitted by the scheduler.
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  decision_relevance: Supplies the work-kind value returned for every queued SeatRequest.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-40 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: Agent
+  kind: class
+  definition: A process-grain admission owner identified by pid, process start time, and checkout root.
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  decision_relevance: Provides the owner returned for each queued SeatRequest.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''pid: S.Finite,
+    procStart: S.String ... checkoutRoot: S.String'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: ContendedResource
+  kind: class
+  definition: A machine or origin-scoped resource whose holder is coordinated during admission.
+  admission_kind: decision
+  cq_justification:
+  - CQ-008
+  decision_relevance: Lets the projection enumerate resources and the active grants holding each.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:673-686 — 'Gate coordinating one
+    origin-scoped resource (the per-origin full-proof lock)'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: CorruptAdmissionRecord
+  kind: class
+  definition: An undecodable ticket or lease information artifact moved out of live admission state into
+    quarantine.
+  admission_kind: semantic-support
+  supports:
+  - SeatRequest
+  - SeatGrant
+  decision_relevance: Prevents corrupt JSON files from being counted as queued requests, active grants,
+    or starvation exceptions.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:483-497 — ''return { kind: "malformed"
+    };'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: GrantState
+  kind: class
+  definition: The closed lifecycle classification of a SeatGrant as active in the live lease store or
+    released into ETL history.
+  admission_kind: decision
+  cq_justification:
+  - CQ-008
+  - CQ-009
+  decision_relevance: Restricts resource and origin-exclusion queries to active grants.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1071-1079 — ''yield* fs.remove(admitted.leasePath,
+    { force: true }).pipe(Effect.ignore);'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: SeatGrant
+  kind: class
+  definition: An active YeetAdmissionLease whose token charge is counted against current machine capacity.
+  admission_kind: decision
+  cq_justification:
+  - CQ-008
+  - CQ-009
+  - CQ-010
+  decision_relevance: Identifies active admission holders used by resource, origin-exclusion, and charge-feasibility
+    decisions.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — ''One active
+    admission lease: heavy work currently charged against capacity.'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: SeatRequest
+  kind: class
+  definition: An Agent-owned durable YeetAdmissionTicket that is currently queued for machine-wide admission.
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  - CQ-023
+  decision_relevance: Identifies the queued contenders whose charge, priority, wait, and starvation status
+    the projection must inspect.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:188-230 — ''One durable
+    queue ticket: a contender waiting for admission.'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: StarvationException
+  kind: class
+  definition: The closed class of modeled legal-degradation states that may exempt a queued request from
+    the starvation invariant.
+  admission_kind: decision
+  cq_justification:
+  - CQ-023
+  decision_relevance: Constrains the only exception that may suppress a CQ-023 starvation violation.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: activeTokens
+  kind: property
+  definition: The sum of live lease weightTokens reported by an AdmissionSnapshot.
+  domain: AdmissionSnapshot
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  decision_relevance: Provides the already-consumed charge needed to reconstruct the pre-grant remaining
+    capacity.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:611-612 — 'total + lease.weightTokens'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: admissionChargeTokens
+  kind: property
+  definition: The integer token charge persisted as weightTokens on a SeatRequest and copied to its admitted
+    SeatGrant.
+  domain: SeatRequest
+  range: xsd:integer
+  admission_kind: decision
+  cq_justification:
+  - CQ-010
+  - CQ-021
+  decision_relevance: Supports queue inspection and the charge-versus-remaining-capacity invariant.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''weightTokens:
+    S.Finite'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:878-892 — ''weightTokens: ticket.weightTokens'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: admissionTokenWeight
+  kind: property
+  definition: The deployed default token charge assigned to an AdmissionWorkKind before any small-host
+    clamp.
+  domain: AdmissionWorkKind
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - admissionChargeTokens
+  decision_relevance: Defines the nominal charge copied into a request before persisted weightTokens becomes
+    the instance truth.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:82-109 — 'Token weight
+    for each admission kind'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: admittedAtMillis
+  kind: property
+  definition: The immutable millisecond admission instant persisted on a SeatGrant lease.
+  domain: SeatGrant
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  decision_relevance: Anchors the grant-time snapshot needed to reconstruct pre-grant remaining capacity.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:155-162 — ''admittedAtMillis:
+    S.Finite'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: admittedBy
+  kind: property
+  definition: Relates a WorkUnit executed inside the admission bracket to the SeatGrant guarding that
+    execution.
+  domain: WorkUnit
+  range: SeatGrant
+  admission_kind: decision
+  cq_justification:
+  - CQ-010
+  decision_relevance: Connects an admitted WorkUnit to the grant whose charge and remaining capacity CQ-010
+    audits.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1083-1090 — 'runs use while heartbeating
+    the lease'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: blockedOnOriginAtMillis
+  kind: property
+  definition: The millisecond instant when a SeatRequest last observed its origin gate busy.
+  domain: SeatRequest
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - SeatRequest
+  - hasOriginKey
+  decision_relevance: Disambiguates a queued request skipped for a fresh external origin lock from one
+    blocked by capacity.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:216-225 — ''blockedOnOriginAtMillis:
+    S.Finite'''
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1041-1054 — ''blockedOnOriginAtMillis:
+    tick.originBusy ? refreshedMillis : ticket.blockedOnOriginAtMillis'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: capacityAtAdmissionTokens
+  kind: property
+  definition: The integer remaining token capacity immediately before a SeatGrant's new charge is added.
+  domain: SeatGrant
+  range: xsd:integer
+  admission_kind: decision
+  cq_justification:
+  - CQ-010
+  decision_relevance: Provides the right-hand quantity in the deployed charge-feasibility invariant.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:648-664 — 'activeTokenTotal(state)
+    + ticket.weightTokens <= capacityTokens'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: capacityMaxTokens
+  kind: property
+  definition: The AdmissionPolicy upper bound applied to computed machine token capacity.
+  domain: AdmissionPolicy
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  decision_relevance: Caps the live capacity used by the charge-feasibility decision.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:168-174 — 'Math.min(config.capacityMaxTokens,
+    raw)'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: capacityTokens
+  kind: property
+  definition: The whole-token machine capacity reported by an AdmissionSnapshot under its governing policy.
+  domain: AdmissionSnapshot
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  decision_relevance: Provides the total from which active charges are subtracted to reconstruct pre-grant
+    remaining capacity.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:347-356 — ''capacityTokens:
+    S.Finite'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: checkoutRoot
+  kind: property
+  definition: The checkout-root component of process-grain Agent identity copied onto tickets and leases
+    without uniqueness semantics.
+  domain: Agent
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - Agent
+  decision_relevance: Completes the owner key used to answer which Agent owns each queued request without
+    treating checkout as the exclusion key.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''checkoutRoot:
+    S.String'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: enqueuedAt
+  kind: property
+  definition: The xsd:dateTime enqueue instant ETL-converted from a ticket's enqueuedAtMillis field.
+  domain: SeatRequest
+  range: xsd:dateTime
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  decision_relevance: Returns enqueue time for queued requests and anchors observed queue wait.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:216-226 — ''enqueuedAtMillis:
+    S.Finite'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: governedBy
+  kind: property
+  definition: Relates a SeatRequest to the AdmissionPolicy used by its admission loop.
+  domain: SeatRequest
+  range: AdmissionPolicy
+  admission_kind: decision
+  cq_justification:
+  - CQ-023
+  decision_relevance: Selects the declared starvation bound and deployed parameter facts for a queued
+    request.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1108-1125 — ''request: AdmissionRequest
+    ... config?: AdmissionConfig ... const resolved = config ?? AdmissionConfig.make({});'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hardFloorEngaged
+  kind: property
+  definition: The boolean AdmissionSnapshot flag that live available memory is below hardFloorGib.
+  domain: AdmissionSnapshot
+  range: xsd:boolean
+  admission_kind: semantic-support
+  supports:
+  - hasStarvationException
+  - capacityAtAdmissionTokens
+  decision_relevance: Provides the structural carrier from which ETL derives HardFloorException and zero-capacity
+    state.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hardFloorGib
+  kind: property
+  definition: The AdmissionPolicy memory threshold below which computed token capacity is forced to zero.
+  domain: AdmissionPolicy
+  range: xsd:decimal
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  - hasStarvationException
+  decision_relevance: Constrains both capacity feasibility and the global condition used to derive HardFloorException.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:165-174 — 'if (availableGib <
+    config.hardFloorGib) { return 0; }'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hasGrantState
+  kind: property
+  definition: Relates a SeatGrant to its closed active or released lifecycle state, derived from lease
+    presence and ETL history.
+  domain: SeatGrant
+  range: GrantState
+  admission_kind: decision
+  cq_justification:
+  - CQ-008
+  - CQ-009
+  decision_relevance: Restricts holder and origin-exclusion decisions to active grants.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — 'One active
+    admission lease'
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1071-1079 — ''yield* fs.remove(admitted.leasePath,
+    { force: true }).pipe(Effect.ignore);'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hasOriginKey
+  kind: property
+  definition: Relates a SeatGrant to the verbatim nonempty originKey used for kind-independent origin
+    exclusion.
+  domain: SeatGrant
+  range: xsd:string
+  admission_kind: decision
+  cq_justification:
+  - CQ-009
+  decision_relevance: Joins active grants by origin to detect prohibited concurrent grants.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:620-628 — 'lease.originKey ===
+    ticket.originKey'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:313-320 — ''originKey: path.basename(lockPath,
+    ".lock")'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hasPriorityClass
+  kind: property
+  definition: Relates a SeatRequest to the AdmissionPriorityClass copied into its ticket priority field.
+  domain: SeatRequest
+  range: AdmissionPriorityClass
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  decision_relevance: Returns the base ordering class used before FIFO tie breakers and aging.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''priority:
+    AdmissionPriority'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hasStarvationException
+  kind: property
+  definition: Relates a SeatRequest to HardFloorException when its observation snapshot reports the global
+    hard floor engaged.
+  domain: SeatRequest
+  range: StarvationException
+  admission_kind: decision
+  cq_justification:
+  - CQ-023
+  decision_relevance: Permits only the modeled hard-floor degradation to exempt a request from the starvation
+    violation.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: hasWorkKind
+  kind: property
+  definition: Relates a SeatRequest to the AdmissionWorkKind copied into its ticket kind field.
+  domain: SeatRequest
+  range: AdmissionWorkKind
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  decision_relevance: Returns the deployed work class requested by each queued contender.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''kind: AdmissionWorkKind'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: heartbeatSeconds
+  kind: property
+  definition: The AdmissionPolicy interval for ticket and lease heartbeats and the multiplier base for
+    origin-busy stamp freshness.
+  domain: AdmissionPolicy
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - SeatRequest
+  - hasOriginKey
+  decision_relevance: Constrains how long a mixed-version origin-busy observation allows later origins
+    to skip a blocked request.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:630-634 — 'nowMillis - ticket.blockedOnOriginAtMillis
+    <= 3 * config.heartbeatSeconds * 1000'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: memAvailableGib
+  kind: property
+  definition: The live MemAvailable GiB reading carried by an AdmissionSnapshot.
+  domain: AdmissionSnapshot
+  range: xsd:decimal
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  - hasStarvationException
+  decision_relevance: Supplies the runtime input to the capacity formula and hard-floor condition.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1259-1273 — ''memAvailableGib:
+    availableGib'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: observedQueueWaitMs
+  kind: property
+  definition: The integer elapsed wait of a queued SeatRequest at an observation instant.
+  domain: SeatRequest
+  range: xsd:integer
+  admission_kind: decision
+  cq_justification:
+  - CQ-023
+  decision_relevance: Supplies the observed wait compared with the declared starvation bound.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:975-984 — 'const waitedMillis
+    = info.nowMillis - startMillis;'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: pid
+  kind: property
+  definition: The operating-system process identifier component of process-grain Agent identity copied
+    onto tickets and leases.
+  domain: Agent
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - Agent
+  decision_relevance: Contributes to the identity of the Agent owning a queued SeatRequest.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-113 — ''pid: S.Finite,
+    procStart: S.String'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: procStart
+  kind: property
+  definition: The procfs process-start identifier component that distinguishes Agent owners across pid
+    reuse.
+  domain: Agent
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - Agent
+  decision_relevance: Prevents a reused pid from being treated as the original request owner.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-127 — 'pid plus procStart
+    ... identify the owner across pid reuse'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: publishAgingSeconds
+  kind: property
+  definition: The AdmissionPolicy wait duration after which a verify-priority ticket receives publish-equivalent
+    effective rank.
+  domain: AdmissionPolicy
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - hasPriorityClass
+  - AdmissionPolicy
+  decision_relevance: Constrains effective queue ordering without asserting a starvation guarantee.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:600-609 — ''nowMillis - ticket.enqueuedAtMillis
+    >= config.publishAgingSeconds * 1000 ? 0 : 1'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: requestedBy
+  kind: property
+  definition: Relates a durable queued SeatRequest to its process-grain Agent owner.
+  domain: SeatRequest
+  range: Agent
+  admission_kind: decision
+  cq_justification:
+  - CQ-021
+  decision_relevance: Returns the owner of each queued request.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:111-120 — ''pid: S.Finite,
+    procStart: S.String ... checkoutRoot: S.String'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: reserveGib
+  kind: property
+  definition: The AdmissionPolicy memory reserve subtracted before capacity tokens are computed.
+  domain: AdmissionPolicy
+  range: xsd:decimal
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  decision_relevance: Constrains the live token capacity from which the pre-grant remainder is calculated.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:168-174 — 'availableGib - config.reserveGib'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: reviewFixClassCap
+  kind: property
+  definition: The AdmissionPolicy maximum number of concurrent ReviewFixWork leases before later review-fix
+    tickets become skippable.
+  domain: AdmissionPolicy
+  range: xsd:integer
+  admission_kind: semantic-support
+  supports:
+  - SeatRequest
+  - SeatGrant
+  decision_relevance: Constrains whether a queued review-fix request may promote while preserving progress
+    for other classes.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:636-639 — 'return activeReviewFix
+    >= config.reviewFixClassCap;'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: slotSizeGib
+  kind: property
+  definition: The AdmissionPolicy divisor converting schedulable GiB above reserve into whole capacity
+    tokens.
+  domain: AdmissionPolicy
+  range: xsd:decimal
+  admission_kind: semantic-support
+  supports:
+  - capacityAtAdmissionTokens
+  decision_relevance: Constrains the live token capacity from which the pre-grant remainder is calculated.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:168-174 — 'Math.floor((availableGib
+    - config.reserveGib) / config.slotSizeGib)'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: MachineProofLock
+  kind: individual
+  definition: The per-origin full-proof lock acquired underneath machine-wide admission.
+  admission_kind: decision
+  cq_justification:
+  - CQ-008
+  decision_relevance: Names the origin-scoped contended resource whose holder CQ-008 can report.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:673-686 — 'the per-origin full-proof
+    lock'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: YeetWeightedAdmissionV1
+  kind: individual
+  definition: The deployed default AdmissionPolicy instance constructed when no scheduler override is
+    supplied.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionPolicy
+  decision_relevance: Hosts the deployed parameter assertions used by capacity, aging, and class-cap decisions.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1108-1125 — 'const resolved =
+    config ?? AdmissionConfig.make({});'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: publish
+  kind: literal-domain-member
+  source_domain: AdmissionPriority
+  definition: Deployed AdmissionPriority literal mapped to ontology member PublishPriority.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionPriorityClass
+  decision_relevance: Defines the priority used by publish proof scopes before FIFO tie breakers.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:68-72 — 'LiteralKit(["publish",
+    "verify"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:619-665 — ''priority: "publish"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: verify
+  kind: literal-domain-member
+  source_domain: AdmissionPriority
+  definition: Deployed AdmissionPriority literal mapped to ontology member VerifyPriority.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionPriorityClass
+  decision_relevance: Defines the base priority of ordinary full-proof, merged-preview, and review-fix
+    requests.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:68-72 — 'LiteralKit(["publish",
+    "verify"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:345-380 — ''priority: "verify"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: full-proof
+  kind: literal-domain-member
+  source_domain: AdmissionWorkKind
+  definition: Deployed AdmissionWorkKind literal mapped to ontology member FullProofWork.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionWorkKind
+  decision_relevance: Defines the closed work-kind value used by ordinary and publish-priority full proofs.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:313-320 — ''kind: "full-proof"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: merged-preview
+  kind: literal-domain-member
+  source_domain: AdmissionWorkKind
+  definition: Deployed AdmissionWorkKind literal mapped to ontology member MergedPreviewWork.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionWorkKind
+  decision_relevance: Defines the closed work-kind value for whole-flow merged-preview admission.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:345-361 — ''kind: "merged-preview"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: publish
+  kind: literal-domain-member
+  source_domain: AdmissionWorkKind
+  definition: Reserved deployed AdmissionWorkKind literal mapped to ontology member PublishWork.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionWorkKind
+  decision_relevance: Completes the deployed closed work-kind domain while preserving its currently uninstantiated
+    status.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  - goals/ship-velocity/research/d1-admission-scheduler.md:41-46 — 'The publish kind (1 token) remains
+    in the schema'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: review-fix
+  kind: literal-domain-member
+  source_domain: AdmissionWorkKind
+  definition: Deployed AdmissionWorkKind literal mapped to ontology member ReviewFixWork, distinct from
+    the same spelling in YeetProofTier.
+  admission_kind: semantic-support
+  supports:
+  - AdmissionWorkKind
+  decision_relevance: Defines the closed one-token work kind subject to the review-fix class cap.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:36-36 — 'LiteralKit(["full-proof",
+    "merged-preview", "review-fix", "publish"])'
+  - 'packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:367-380 — ''kind: "review-fix"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: ActiveGrant
+  kind: literal-domain-member
+  source_domain: GrantState
+  definition: Packet-side GrantState member derived when a live, owner-valid lease record is present.
+  admission_kind: decision
+  cq_justification:
+  - CQ-008
+  - CQ-009
+  decision_relevance: Selects the grants that currently hold resources and participate in origin exclusion.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:122-170 — 'One active
+    admission lease'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: ReleasedGrant
+  kind: literal-domain-member
+  source_domain: GrantState
+  definition: Packet-side GrantState member materialized only in ETL history after an admission lease
+    is removed.
+  admission_kind: semantic-support
+  supports:
+  - GrantState
+  decision_relevance: Closes the grant lifecycle without misrepresenting deleted leases as live store
+    records.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1071-1079 — ''yield* fs.remove(admitted.leasePath,
+    { force: true }).pipe(Effect.ignore);'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler
+- candidate: HardFloorException
+  kind: literal-domain-member
+  source_domain: StarvationException
+  definition: The sole modeled StarvationException, ETL-derived for queued requests when the snapshot-global
+    hard floor is engaged.
+  admission_kind: decision
+  cq_justification:
+  - CQ-023
+  decision_relevance: Pins the only legal exception excluded from the starvation violation query.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts:1269-1277 — ''hardFloorEngaged:
+    availableGib < config.hardFloorGib'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-admission-scheduler

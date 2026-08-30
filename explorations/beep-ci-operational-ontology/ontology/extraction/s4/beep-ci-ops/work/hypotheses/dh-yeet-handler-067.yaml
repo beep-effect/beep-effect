@@ -1,0 +1,22 @@
+id: "dh:yeet-handler:067"
+observation_refs:
+  - "so:sha256:9e9be3cb74b3424a9203b6a679463a1f423ae6727e7a871621d0cf0acd70f153"
+  - "po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278"
+cq_warrants: ["CQ-008"]
+proposed_referent:
+  label: "SeatGrant contention for a ContendedResource"
+  description: "A candidate grant-to-resource relation inferred from an admission origin-gate callback; no grant or lease carrier is observed."
+representation_status: unresolved
+alternatives:
+  - label: "AdmissionRequest association with an origin-gate callback"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "SeatRequest contention for a lock resource"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotation shows only a tryAcquire callback over a lock path. It does not identify a SeatGrant lease, persist a resource relation on that lease, or justify collapsing the request-ticket and grant-lease stages."
+epistemic_status: proposed
+confidence: {value: 0.31, use_for_acceptance: false}

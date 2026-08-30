@@ -1,0 +1,16 @@
+id: fa:alt4:052
+hypothesis_ref: dh:worktree-config:006
+identity_card_ref: ic:alt4:052
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "information object: merge-gate policy prescription"
+    still_viable: true
+  - label: "relator or situation: actual merge-gating among branch, required checks, and merge permission (observationally equivalent on current evidence)"
+    still_viable: true
+strongest_counterexample: The only cited observation is the AGENTS.md sentence that hosted required checks gate the merge; that is a normative prescription, and treating it as a live GitHub protection relator overclaims the prose.
+verdict: analyzed
+needed_evidence: A hosted branch-protection setting that refuses merge unless those required checks pass, independent of this prose, would discriminate a policy information object from an operational relator.

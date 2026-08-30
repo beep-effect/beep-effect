@@ -1,0 +1,50 @@
+id: otp:has-origin-key:001
+hypothesis_ref: dh:sched-core:019
+identity_card_ref: ic:sched-core:018
+foundational_status: analyzed
+term:
+  local_name: hasOriginKey
+  preferred_label: has origin key
+  proposed_iri: https://oip.law/ontology/ci-ops#hasOriginKey
+  owl_entity_kind: data_property
+definition:
+  text: A data relation from a SeatRequest or SeatGrant to the nonempty, scheme-scoped origin key compared by the scheduler
+    for concurrent-grant exclusion. CQ-009 requires this relation to detect two active grants sharing an origin; lexical equality
+    is operational join evidence and does not identify the repository origin or a separate key object.
+  source:
+  - CQ-009
+  - so:sha256:3e8c52e70d0dfe96bccb840e61a4691e1d3f08801b3892ea976c3123f93d1f61
+  - so:sha256:4ca539a7a3ef2f6716f98022b42a4b54032476fd6ca39745d1a1b2aa2e9cd150
+  - so:sha256:7ed5d7ab988de72117c954ccac2060e758502fa1c727b6f5a725f4e2293e61e8
+  - po:sha256:3ec9e21469f254e3b0f8e2a60ef859b55b00bce90ea455a9f84f54c73b861b78
+  - po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b
+  - po:sha256:bef24461115ca5af988461aed9aedd081401c061710538fa444c2bc5e7e8e233
+foundational:
+  ufo_category: none
+  gufo_alignment: not applicable to an OWL property
+ontoclean:
+  rigidity: unresolved
+  identity: none
+  dependence: relational
+revision_log:
+- from_sha256: 68e7cb03b118dad296c5156a60369a0d84da968974a7f128a3a4f262ffc34e46
+  addressed:
+  - discriminator-true-of-dto
+- from_sha256: 2b272e303d2dbc466f01d5759681d20c1e19a530855e6694a64b23489d4d788d
+  addressed:
+  - property-information-object-category-conflict
+  - discriminator-true-of-dto
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-009
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: When one origin remains blocked, the scheduler marks that
+  contender skippable so tickets for later origins can advance in the shared admission order.'
+- 'Rejected weak alternative: the repository origin itself.'
+open_issues: []
+status: proposed
+revision_requests: []

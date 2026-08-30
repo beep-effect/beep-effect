@@ -1,0 +1,44 @@
+id: "ic:worktree-config:009"
+hypothesis_ref: "dh:worktree-config:013"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two affected-docgen work-unit specifications are the same when they retain
+    the same docgen procedure, symbolic origin/main-to-HEAD plus dirty-files
+    scope rule, edit-loop applicability, completion semantics, and governing
+    revision; the actual files selected by any one execution do not provide
+    specification identity.
+  reidentification_key:
+    - "docgen procedure-specification identity"
+    - "symbolic origin/main-to-HEAD plus dirty-files scope rule"
+    - "edit-loop applicability and completion semantics"
+    - "governing policy revision"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One coherent prescription binding the docgen procedure to one symbolic
+    affected-scope rule for edit-loop use.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: an execution-bound plan with origin/main, HEAD, and dirty state already resolved"
+    - "process: one affected-docgen execution"
+  existential_dependencies:
+    - "At least one faithful realization of the lane-by-scope prescription"
+    - "The repository policy that defines affected edit-loop use"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by a changed scope rule or procedure"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      The origin/main reference can advance while the same symbolic work-unit
+      specification is invoked again, selecting a different file set; equating
+      the resolved files with specification identity would create a new plan
+      on every run.
+status: proposed

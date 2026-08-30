@@ -1,0 +1,10 @@
+id: po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: .fallowrc.jsonc
+source_span:
+  start_line: 423
+  end_line: 425
+quote: '"gate": "new-only"'
+epistemic_status: quoted_prose

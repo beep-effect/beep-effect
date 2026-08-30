@@ -1,0 +1,23 @@
+id: so:sha256:cd58a9b42a7e1a58273ae0345bfebe92dd03b05fa10798c7b17d90420f30ff9b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 995
+  end_line: 1005
+  content_sha256: 9dbd7e88800939924e3df6582ea5b0f4227b65e41dcefd5342ebd5d31a8a09d0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::writePrCloseoutReport
+  lexical_name: writePrCloseoutReport
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* (
+epistemic_status: parser_derived

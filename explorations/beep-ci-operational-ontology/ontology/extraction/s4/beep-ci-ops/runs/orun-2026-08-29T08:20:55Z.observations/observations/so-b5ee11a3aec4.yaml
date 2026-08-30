@@ -1,0 +1,24 @@
+id: so:sha256:b5ee11a3aec4ef4203cffe7019c3541f0d0f6d03e36af61676e99c995660c0f5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 545
+  end_line: 554
+  content_sha256: 43d8c5954762b210643ac071981114206e71a75ea896b4efe2bf4ceb982497d1
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::missingTurboCacheEnvNames
+  lexical_name: missingTurboCacheEnvNames
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const missingTurboCacheEnvNames = (environment: TurboCacheEnvironment): ReadonlyArray<TurboCacheEnvName>
+  => {'
+epistemic_status: parser_derived

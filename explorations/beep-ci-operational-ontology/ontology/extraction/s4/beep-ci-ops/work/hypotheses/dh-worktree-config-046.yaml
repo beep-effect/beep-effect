@@ -1,0 +1,18 @@
+id: "dh:worktree-config:046"
+observation_refs:
+  - "so:sha256:cb6129f0c8f1447ba5928949b2f36ac30c2b99aab7ed4b3e6746f9f2dfbd7ef3"
+cq_warrants: []
+proposed_referent:
+  label: "applyPorcelainAttribute parsing helper"
+  description: "An internal variable declaration named applyPorcelainAttribute whose construct is otherwise unrepresented by the observation vocabulary."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "porcelain attribute interpretation operation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole fact is an unrepresentable variable declaration and therefore cannot ground a surviving domain or information-artifact hypothesis."
+epistemic_status: proposed
+confidence: {value: 0.97, use_for_acceptance: false}

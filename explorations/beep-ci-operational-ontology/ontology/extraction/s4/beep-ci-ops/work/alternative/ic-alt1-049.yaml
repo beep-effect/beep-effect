@@ -1,0 +1,33 @@
+id: "ic:alt1:049"
+hypothesis_ref: "dh:turbo-cache:010"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Turbo task specifications named coverage are the same iff they are the
+    same named task prescription in this repository's Turbo configuration document at the
+    observed corpus commit, carrying the observed upstream build dependency (^build),
+    cache-false, and coverage environment list. The task key spelling is reidentification
+    evidence, never the sameness criterion."
+  reidentification_key:
+    - "coverage"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one named task specification coverage as a single information object inside the Turbo
+    document; a run of the task is not a part of the specification"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies:
+    - "Turbo configuration document at the observed commit"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A particular coverage execution is a dated run, not a second coverage
+      specification. The ^build dependency is ordering content of the specification, not
+      evidence that this individual is a build."
+status: "proposed"

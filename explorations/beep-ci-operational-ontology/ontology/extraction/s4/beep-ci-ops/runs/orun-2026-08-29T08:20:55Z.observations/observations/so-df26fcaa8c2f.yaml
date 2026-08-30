@@ -1,0 +1,25 @@
+id: so:sha256:df26fcaa8c2f32e1de1c79a625a66bc8d42a29d4b4f57fb4eb5e08d313aed90e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 564
+  end_line: 564
+  content_sha256: 6d62943bfd41afcd11eee3237819532dd3c8248b298859c72ac476a7071bbf6c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::FallowQualityFeatureFamily
+  lexical_name: FallowQualityFeatureFamily
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: FallowQualityFeatureFamily
+- predicate: exports_symbol
+  object: FallowQualityFeatureFamily
+source_excerpt: export type FallowQualityFeatureFamily = typeof FallowQualityFeatureFamily.Type;
+epistemic_status: parser_derived

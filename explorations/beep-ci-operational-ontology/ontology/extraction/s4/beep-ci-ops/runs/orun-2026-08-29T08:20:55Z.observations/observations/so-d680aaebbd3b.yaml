@@ -1,0 +1,23 @@
+id: so:sha256:d680aaebbd3bd162ccea13dc2d5e321a5e05b9a3ffe4851f184f14d074bd393c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 27
+  end_line: 27
+  content_sha256: 841e0e5b90c7f5c4f0348ef8e2b55308a7d288dd244bffe1308b35e852c248b5
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::TURBO_CONFIG_PROOF_SELECTOR_VALUES
+  lexical_name: TURBO_CONFIG_PROOF_SELECTOR_VALUES
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;
+epistemic_status: parser_derived

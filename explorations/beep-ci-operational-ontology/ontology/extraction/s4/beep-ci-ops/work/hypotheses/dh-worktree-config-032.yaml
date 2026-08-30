@@ -1,0 +1,18 @@
+id: "dh:worktree-config:032"
+observation_refs:
+  - "so:sha256:33b56645b1f47f53539801f058db551aa3d8c610ed32703eb124317a84aaced5"
+cq_warrants: []
+proposed_referent:
+  label: "PorcelainBlock implementation shape"
+  description: "An internal TypeScript alias representing one parser block."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Git porcelain-output block information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A local alias declaration alone does not establish that parsed blocks have independent identity, persistence, or CQ relevance outside parser representation."
+epistemic_status: proposed
+confidence: {value: 0.94, use_for_acceptance: false}

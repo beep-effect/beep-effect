@@ -1,0 +1,24 @@
+id: so:sha256:596f62c0247e43302d1c9e05a2cb12f2f1997547905b135f7ff12fd8b232d7a8
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 701
+  end_line: 702
+  content_sha256: b3496f7d75ff12b5785b276b16e5094d4f66a7ee0bed3c9915fac8b637fe5364
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::localOnlyTurboCacheArgs
+  lexical_name: localOnlyTurboCacheArgs
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: localOnlyTurboCacheArgs
+source_excerpt: 'export const localOnlyTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string>
+  =>'
+epistemic_status: parser_derived

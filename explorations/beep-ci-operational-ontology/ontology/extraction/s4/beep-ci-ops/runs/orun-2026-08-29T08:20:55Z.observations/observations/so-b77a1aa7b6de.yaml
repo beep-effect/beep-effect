@@ -1,0 +1,23 @@
+id: so:sha256:b77a1aa7b6de4031d675944160a6526962c420458363f4ce8b2f019000153f0f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 749
+  end_line: 750
+  content_sha256: 596fccb6026d6ab56c6edb18556f5d0b7d2ed77db92ead738c0af8eac57290a8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::escalationLevelFor
+  lexical_name: escalationLevelFor
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const escalationLevelFor = (waitedMillis: number): number =>'
+epistemic_status: parser_derived

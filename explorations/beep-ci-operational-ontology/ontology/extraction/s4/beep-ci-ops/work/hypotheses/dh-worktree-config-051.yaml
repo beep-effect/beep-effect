@@ -1,0 +1,18 @@
+id: "dh:worktree-config:051"
+observation_refs:
+  - "so:sha256:fc8295539a643e0363c5ee4d89d3cddf2c50a69b1eaabdd058e14ec9b2b644ab"
+cq_warrants: []
+proposed_referent:
+  label: "blockEntry parsing helper"
+  description: "An internal variable declaration named blockEntry whose excerpt shows a PorcelainBlock parameter and WorktreeListEntry return annotation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "worktree-list record construction operation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole fact is an unrepresentable variable declaration; no domain referent can survive from this observation alone."
+epistemic_status: proposed
+confidence: {value: 0.97, use_for_acceptance: false}

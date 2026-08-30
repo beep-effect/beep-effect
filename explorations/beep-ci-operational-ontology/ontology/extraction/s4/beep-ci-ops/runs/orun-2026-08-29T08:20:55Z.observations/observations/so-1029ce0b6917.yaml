@@ -1,0 +1,23 @@
+id: so:sha256:1029ce0b69174870a017c3037387f18e38ff7f91047f0ce72dab6f823f70c310
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts
+source_span:
+  start_line: 399
+  end_line: 421
+  content_sha256: 6f48e1339c982f9f4c8b76920e3f801eefbce21e3ac79c9b3de7c95cbfe125ea
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts::collectWorkspaces
+  lexical_name: collectWorkspaces
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const collectWorkspaces = Effect.fn("PackageVerify.collectWorkspaces")(function* (
+epistemic_status: parser_derived

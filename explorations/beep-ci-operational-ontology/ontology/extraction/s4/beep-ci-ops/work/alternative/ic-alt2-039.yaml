@@ -1,0 +1,35 @@
+id: ic:alt2:039
+hypothesis_ref: dh:topology:111
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two @beep/repo-utils workspace packages are the same iff they are the same workspace software unit participating in the
+    captured package-name topology; the scoped name is evidence rather than the criterion, and the trailing sort index is
+    not part of the package.
+  reidentification_key:
+  - "@beep/repo-utils"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One software unit per distinct @beep/repo-utils workspace package in the captured topology.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies:
+  - workspace topology snapshot
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - removed from the workspace / absent from a later topology capture
+counterexamples:
+- description: >-
+    The trailing numeric token on the topo-sort line for @beep/repo-utils is a sort index, not part of the package: two captures
+    with different indices and the same scoped name are still this package.
+- description: >-
+    A lexical occurrence of @beep/repo-utils outside the topology capture (a comment, a lockfile extra) is not this workspace
+    package participant.
+status: proposed

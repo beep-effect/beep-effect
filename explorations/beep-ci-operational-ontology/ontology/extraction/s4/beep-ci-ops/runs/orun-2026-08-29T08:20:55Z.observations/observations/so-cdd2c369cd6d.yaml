@@ -1,0 +1,24 @@
+id: so:sha256:cdd2c369cd6d3ee50efbf06759d40b2e0daefe2243a5fb7db57427263f0518d6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 305
+  end_line: 348
+  content_sha256: b7905f5c7e21578463114b6ca6ff39236d8390f1b9c5bf6f6b36fc1fe7c405f2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::YEET_GATE_ARTIFACT_DESCRIPTORS
+  lexical_name: YEET_GATE_ARTIFACT_DESCRIPTORS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YEET_GATE_ARTIFACT_DESCRIPTORS
+source_excerpt: 'export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescriptor> =
+  ['
+epistemic_status: parser_derived

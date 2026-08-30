@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:046"
+observation_refs:
+  - "so:sha256:94bd8f607a0e5fb6f88b9a7dedc94f12aa59aa9571da62cfb1def5ffd735cfff"
+cq_warrants: []
+proposed_referent:
+  label: "warnMergedVerifyIgnoresUncommittedWork helper"
+  description: "No domain-ontology referent is proposed for the warnMergedVerifyIgnoresUncommittedWork helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "merged-verification warning information"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

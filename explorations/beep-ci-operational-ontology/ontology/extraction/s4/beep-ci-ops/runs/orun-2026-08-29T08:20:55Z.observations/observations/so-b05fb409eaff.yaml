@@ -1,0 +1,25 @@
+id: so:sha256:b05fb409eaff217c8757f9310dedb0581462cc68b81bcc55feaa2e41312a75f9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 345
+  end_line: 355
+  content_sha256: 566dde0baa345cab7ff226ea7984f7d7e4932550c14e2e3d4a100be2c11edaca
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::YeetMonitorRerunSpent
+  lexical_name: YeetMonitorRerunSpent
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetMonitorRerunSpent
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetMonitorRerunSpent extends S.Class<YeetMonitorRerunSpent>($I`YeetMonitorRerunSpent`)(
+epistemic_status: parser_derived

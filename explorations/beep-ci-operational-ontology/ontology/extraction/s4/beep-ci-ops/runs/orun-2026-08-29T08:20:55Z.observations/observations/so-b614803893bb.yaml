@@ -1,0 +1,32 @@
+id: so:sha256:b614803893bb8f68eb1c45fc4d01e226ece696364727c688bd7320b9f6da0266
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+source_span:
+  start_line: 60
+  end_line: 64
+  content_sha256: 7f962026935c6e48e71520ec21543a897f3dff627c606dadf0f922685ad43ddf
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts::PrCloseoutGateName
+  lexical_name: PrCloseoutGateName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: chatgpt
+- predicate: declares_literal_member
+  object: coderabbit
+- predicate: declares_literal_member
+  object: greptile
+- predicate: declares_literal_member
+  object: hosted-checks
+- predicate: declares_literal_member
+  object: review-threads
+source_excerpt: const PrCloseoutGateName = LiteralKit(["hosted-checks", "review-threads", "greptile",
+  "coderabbit", "chatgpt"]).pipe(
+epistemic_status: parser_derived

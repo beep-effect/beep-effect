@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:062"
+observation_refs:
+  - "so:sha256:a500d10a39d530fa1fd2bc2ffeec96bfb877693d2709fc0a03d3b9d766bf6fb7"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for monitorChecksStep in Planner.ts"
+  description: "No separate domain referent is established for the monitorChecksStep declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::monitorChecksStep"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

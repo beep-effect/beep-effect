@@ -1,0 +1,27 @@
+id: so:sha256:03cfe71a22104cc2d8eebd4cdac104c2c9262d7738b44a02e18600b44e8a739c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 616
+  end_line: 620
+  content_sha256: e32a2dbb52a69b5637303e3644ae9f7cbe2a200b90ffa74cd81f53ebfd64da76
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetCheckoutKind
+  lexical_name: FleetCheckoutKind
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: clone
+- predicate: declares_literal_member
+  object: linked-worktree
+- predicate: exports_symbol
+  object: FleetCheckoutKind
+source_excerpt: export const FleetCheckoutKind = LiteralKit(["clone", "linked-worktree"]).pipe(
+epistemic_status: parser_derived

@@ -1,0 +1,17 @@
+id: "fa:topology:003"
+hypothesis_ref: "dh:topology:003"
+identity_card_ref: "ic:topology:003"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Materialized dependency-closure assertion set modeled as an information object"
+    still_viable: true
+  - label: "Fixpoint computation modeled as the referent process"
+    still_viable: false
+  - label: "Closure-rule specification modeled as the referent information object"
+    still_viable: false
+strongest_counterexample: "A reachable package pair can be supported by different paths in different graph snapshots, and the closure can be recomputed into distinct materializations; the entailed relation, rule specification, execution, and result record therefore cannot share one identity."
+verdict: analyzed

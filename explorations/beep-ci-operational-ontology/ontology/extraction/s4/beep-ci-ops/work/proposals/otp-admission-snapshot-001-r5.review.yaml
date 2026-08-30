@@ -1,0 +1,51 @@
+target: "otp:admission-snapshot:001"
+target_sha256: "10da4feaa1e52d265317232d0f32d20a01aa2fb44204b3e036778ef3fb49a060"
+chain_sha256: "19a8dbd5087dcfc736803bd7979df6f4dc81713aaaf40055aa994022d8db5eae"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: capture-content-vs-token-individuation
+    counterexample: >-
+      Two independent status reads can return byte-identical values, while one
+      capture can be copied into two carriers. The adopted definition commits
+      only to the point-in-time information content, expressly disclaims value
+      equality as durable token identity, and leaves capture-token individuation
+      to the timestamp, scope, and provenance named in open_issues.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-preserves-pre-grant-boundary
+    counterexample: >-
+      The same numeric remainder can describe pre-grant or post-grant state.
+      CQ-010 requires remaining capacity immediately before the new charge,
+      and its notes require ETL reconstruction from the admission boundary.
+      The co-temporal capacity and active-charge snapshot therefore preserves
+      the decision property's stated scope rather than adding an optional label.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-capture-not-inert-dto
+    counterexample: >-
+      An inert DTO can declare the same fields, but it cannot preserve the
+      observed admissionStatus and snapshotAdmissionState procedures together
+      with the governed point-in-time materialization of live capacity, charges,
+      leases, tickets, and memory. A transient carrier can still realize that
+      capture information content.
+    outcome: survived
+rival_models_still_viable:
+  - "The live admission-state situation is the world-side referent and the snapshot is its information projection."
+  - "The capture content may lack an independently reidentifiable durable record token."
+evidence:
+  - "so:sha256:54af3bae065ad2e6cfb6f8068a3bbe178407105b5576a6e9e8231e9cebd579f5"
+  - "so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e"
+  - "po:sha256:724441d2f5fe074205349c704ecc6b1f3aff79210f923d414f6e326a60b59ef1"
+  - "CQ-010"

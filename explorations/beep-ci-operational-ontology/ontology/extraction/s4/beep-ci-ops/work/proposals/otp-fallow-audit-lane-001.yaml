@@ -1,0 +1,58 @@
+id: otp:fallow-audit-lane:001
+hypothesis_ref: dh:worktree-config:015
+identity_card_ref: ic:worktree-config:011
+foundational_status: analyzed
+term:
+  local_name: FallowAuditLane
+  preferred_label: Fallow audit procedure specification
+  proposed_iri: https://oip.law/ontology/ci-ops#FallowAuditLane
+  owl_entity_kind: individual
+definition:
+  text: The reusable verification-lane procedure specification that invokes Fallow against a selected base with the new-only
+    finding gate and produces a gate verdict. CQ-001 requires the governed VerificationLane inventory, and the distinct Fallow
+    audit command, base selection, and new-only gate make this named lane part of a complete inventory rather than an optional
+    example. Dated audit runs realize the reusable prescription without changing its identity.
+  source:
+  - CQ-001
+  - so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208
+  - po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048
+  - po:sha256:805ea8b43e9d37cc3d82a889148ac8fd3aebda4deb587e5a779fa63dd858e9f3
+  - po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+revision_log:
+- from_sha256: 1053c5217cf1a6b434848b6f45bbb98e8b4faa0aab5c73ad3caf88e5f2d13e29
+  addressed:
+  - content-lineage-identity-conflict
+  - listing-cq-warrant
+  - obligation-procedure-split
+  - discriminator-true-of-config-entry
+- from_sha256: 387afb024c155b459db1ed0017d745a7b48c5ccdcbced99c1047c1e91e20919c
+  addressed:
+  - content-lineage-identity-conflict
+  - listing-cq-warrant
+  - discriminator-true-of-config-entry
+- from_sha256: 00236b7848bb489bbe907aad1185fb64955e4a3d392e9aa2f3fc6f4689cf13e0
+  addressed:
+  - listing-cq-warrant
+- from_sha256: dcf1fe896891f499dd523b853c1161151a9ab46398c878e4f256352ee0b0c4c2
+  addressed:
+  - support-warrant-self-contradiction
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-001
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The dated pilot inventory records a Fallow audit invoked
+  against origin/main with the new-only gate and a fail verdict, and the root Fallow configuration fixes that gate for audits.'
+open_issues: []
+revision_requests: []
+status: proposed

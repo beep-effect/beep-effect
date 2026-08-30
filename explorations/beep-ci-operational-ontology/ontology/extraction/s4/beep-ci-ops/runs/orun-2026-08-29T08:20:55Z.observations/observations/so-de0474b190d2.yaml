@@ -1,0 +1,24 @@
+id: so:sha256:de0474b190d24bd7b97c3766071578bafd04c4e41d0f675c2a038e6492324ba2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 258
+  end_line: 258
+  content_sha256: e350fc95761083bc9611ab3820410d19511b8a5ef05550be050d27eab51ade07
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::getString
+  lexical_name: getString
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const getString = (value: unknown): O.Option<string> => (P.isString(value) ? O.some(value)
+  : O.none());'
+epistemic_status: parser_derived

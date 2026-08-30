@@ -1,0 +1,35 @@
+target: "otp:fallow-health-lane:001"
+target_sha256: "74b588c34978d37212714fa5ef9c2327ded6485baaad9b05ea1aa781a924777e"
+chain_sha256: "920a3047064b02a46e616288bf9b1bd8538e001bf22884ef60c207962df7c543"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: "Tool documentation or an execution trace showing whether the health command consumes the cited ceilings, a versioning rule for ceiling changes, and an explicit LaneKind assertion would decide whether this is one warranted verification-lane specification or only separate command and policy records."
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; there is no candidate subsumption to test, and no valid subsumption relation is presumed."
+attacks:
+  - surface: identity
+    rule: "unresolved-takes-precedence"
+    counterexample: "One health command can emit measurements while an external gate applies ceilings, whereas another implementation can consume the same ceilings internally. The revised card correctly leaves identity unresolved because equal command and threshold text cannot decide whether there is one prescription or two."
+    outcome: survived
+  - surface: warrant
+    rule: "listing-cq-warrant"
+    counterexample: "CQ-001 can enumerate other VerificationLane individuals and requires a LaneKind assertion that this closure never supplies. Whether the command is an extant lane rather than an inventory entry is therefore genuinely undecidable on the current observations."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "discriminator-true-of-config-pair"
+    counterexample: "A CLI inventory can list a Fallow health command while an unrelated configuration file lists complexity ceilings, even if the command never reads those ceilings and no unified governed procedure exists. That implementation-only twin preserves every cited fact."
+    outcome: landed
+rival_models_still_viable:
+  - "One threshold-bearing Fallow health procedure-specification information object"
+  - "Raw Fallow health diagnostic procedure plus a separate complexity-threshold policy"
+  - "Inventory command-entry information object only"
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:e111144fd959c0d5a1d7f8caf1d62ed2e8b5ea12c9346adfd60c22001c7d26d4"
+  - "po:sha256:38ed56de8a68cd967d27668d420a8c5f46209fa8ecefd523ce74676362c611a6"
+  - "CQ-001"

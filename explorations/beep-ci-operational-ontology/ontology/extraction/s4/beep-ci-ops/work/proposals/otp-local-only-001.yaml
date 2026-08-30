@@ -1,0 +1,52 @@
+id: otp:local-only:001
+hypothesis_ref: dh:turbo-cache:023
+identity_card_ref: ic:turbo-cache:021
+foundational_status: analyzed
+term:
+  local_name: LocalOnly
+  preferred_label: local-only
+  proposed_iri: https://oip.law/ontology/ci-ops#LocalOnly
+  owl_entity_kind: individual
+definition:
+  text: The reusable CachePosture individual whose normative content permits local cache reads and writes and forbids remote
+    cache access, operationalized by the local:rw argument. CQ-024 requires this named effective execution posture; resolver
+    records and repeated invocations are evidence for assignments of the same governed value rather than new value identities.
+  source:
+  - CQ-024
+  - so:sha256:c5efde190ee92ca63e6e934eb78e8deb7bec01d061e7f60a251c65bc458a5eee
+  - po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c
+  - po:sha256:441c069829b93c9562a294dce2ca9c5757b16db3b6dd1af5dc6ee070360ead3d
+  - po:sha256:f145ee478d3d0a92bbbe070e06d3596bffb5b28c620dc5d1f60eaa02a14cba7a
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-024
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The observations map LocalOnly to the concrete local:rw
+  mode and show the local-only branch emitting that mode as a cache argument, an operational transfer posture rather than
+  a free-standing source label.'
+- 'Rejected weak alternative: A lexical alias for a CLI argument value.'
+open_issues: []
+revision_requests: []
+revision_log:
+- from_sha256: 1fc00c530f5afcc790666c2676bcf027c6dc48ea1fc9daebe594e849852fb6ba
+  addressed:
+  - unresolved-takes-precedence
+  - discriminator-true-of-dto
+- from_sha256: 8916ea102d533dec83b17e7437a651ad5fbbbd84bb71d6fc122c39489ac6585e
+  addressed:
+  - discriminator-true-of-dto
+- from_sha256: 47118655d476f6301e3b079dc18b0f12db6de063b49bdbfc2f1f8e7ae8a2d12b
+  addressed:
+  - prior-landed-attack-not-retired
+status: proposed

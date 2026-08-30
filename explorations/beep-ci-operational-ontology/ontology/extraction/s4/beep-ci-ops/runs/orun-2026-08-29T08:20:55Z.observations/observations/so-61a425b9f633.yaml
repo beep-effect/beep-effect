@@ -1,0 +1,23 @@
+id: so:sha256:61a425b9f63374fbfe9bfb75c710ff47c308297ca246b3fb007f9d263a4f65a8
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 105
+  end_line: 105
+  content_sha256: ba93acc054d2d460056fde3c40386eeb40cf45e951fc58d5da4c55ac6e788d50
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::PENDING_STATES
+  lexical_name: PENDING_STATES
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const PENDING_STATES: ReadonlyArray<string> = ["pending", "in_progress", "queued", "waiting"];'
+epistemic_status: parser_derived

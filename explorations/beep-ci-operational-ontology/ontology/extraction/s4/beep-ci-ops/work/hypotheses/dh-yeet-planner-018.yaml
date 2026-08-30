@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:018"
+observation_refs:
+  - "so:sha256:07929cc3199ac4278b3055ef5bceb048b46a7f1ff6a4f1bf2756ed1352b93794"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for isGateUnproven in GateStaleness.ts"
+  description: "No separate domain referent is established for the isGateUnproven declaration in GateStaleness.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::isGateUnproven"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

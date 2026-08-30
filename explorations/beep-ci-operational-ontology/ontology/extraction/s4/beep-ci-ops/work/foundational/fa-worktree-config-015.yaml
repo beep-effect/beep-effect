@@ -1,0 +1,23 @@
+id: "fa:worktree-config:015"
+hypothesis_ref: "dh:worktree-config:019"
+identity_card_ref: "ic:worktree-config:015"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Authoritative Yeet monitoring plan information content"
+    still_viable: true
+  - label: "Abstract monitoring process type instantiated by pull-request-specific activities"
+    still_viable: true
+  - label: "Command-instruction record token"
+    still_viable: true
+  - label: "One dated Yeet monitor execution"
+    still_viable: false
+strongest_counterexample: >-
+  One monitor-until-merge-ready prescription can govern several pull-request
+  sessions whose pending checks, review threads, polling intervals, and end
+  times differ. Those unfolding processes cannot be identical to the reusable
+  procedure specification.
+verdict: analyzed

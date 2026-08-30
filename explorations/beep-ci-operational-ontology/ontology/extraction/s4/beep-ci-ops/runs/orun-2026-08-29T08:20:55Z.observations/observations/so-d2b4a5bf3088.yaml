@@ -1,0 +1,24 @@
+id: so:sha256:d2b4a5bf30882ca8d4461695fdad5bf0d338847d2996011bb75358e374c71ec1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1058
+  end_line: 1081
+  content_sha256: aab2b3f30b2c349d6cd052dff10681597df09f290631ca2864c699f25c18d255
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::runAdmitted
+  lexical_name: runAdmitted
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequirements, OriginLease,
+  GateRequirements>(
+epistemic_status: parser_derived

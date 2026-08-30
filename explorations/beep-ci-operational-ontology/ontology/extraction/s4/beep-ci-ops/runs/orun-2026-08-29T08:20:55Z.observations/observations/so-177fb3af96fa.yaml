@@ -1,0 +1,25 @@
+id: so:sha256:177fb3af96fac344cee73f33ab05cddcce1c695f27838693cca1d14538e26c40
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 184
+  end_line: 184
+  content_sha256: 8c68eba24186a45c13b81286ec58675c212ff59d91336a4982bc16cdecefc8fd
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::YeetMonitorTerminalState
+  lexical_name: YeetMonitorTerminalState
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetMonitorTerminalState
+- predicate: exports_symbol
+  object: YeetMonitorTerminalState
+source_excerpt: export type YeetMonitorTerminalState = typeof YeetMonitorTerminalState.Type;
+epistemic_status: parser_derived

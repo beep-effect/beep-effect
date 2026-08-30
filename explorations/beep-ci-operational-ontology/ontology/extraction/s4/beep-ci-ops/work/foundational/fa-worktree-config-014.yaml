@@ -1,0 +1,28 @@
+id: "fa:worktree-config:014"
+hypothesis_ref: "dh:worktree-config:018"
+identity_card_ref: "ic:worktree-config:014"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "One threshold-bearing Fallow health procedure-specification information object"
+    still_viable: true
+  - label: "Raw Fallow health diagnostic procedure plus a separate complexity-threshold policy"
+    still_viable: true
+  - label: "Inventory command-entry information object only"
+    still_viable: true
+  - label: "Dated Fallow health diagnostic process"
+    still_viable: false
+strongest_counterexample: >-
+  A separately ratified ceiling can change while the health command and metric
+  computation remain fixed. The evidence does not show whether this revises
+  the diagnostic procedure itself or only a policy that evaluates its output,
+  so threshold inclusion cannot yet provide identity.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Tool documentation or an execution trace must show whether the health
+  command consumes .fallowrc health ceilings during analysis or merely emits
+  measurements that a separate gate evaluates, together with the versioning
+  rule for ceiling changes.

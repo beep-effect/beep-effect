@@ -1,0 +1,22 @@
+id: fa:alt2:004
+hypothesis_ref: dh:reporun:037
+identity_card_ref: ic:alt2:004
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: produced capture record'
+  still_viable: true
+- label: 'process: the subprocess execution occurrence'
+  still_viable: true
+- label: 'implementation_artifact_only: transient return object with no retained operational role'
+  still_viable: true
+strongest_counterexample: >-
+  No cited observation persists CapturedStreams beyond the function return, so a no-retained-role reading remains viable even
+  though the construct is clearly a record of a process rather than the process.
+verdict: analyzed
+needed_evidence: >-
+  An observation that a CapturedStreams value is stored as verification evidence or discarded immediately after the caller
+  inspects exitCode would settle retained information-object versus transient DTO.

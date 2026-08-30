@@ -1,0 +1,21 @@
+id: "dh:reporun:040"
+observation_refs:
+  - "so:sha256:b5982c7010c411cc2b5b2c630736e321012d396119f5ecad15e3df356fbac4f7"
+cq_warrants: []
+proposed_referent:
+  label: "unbounded text-collection helper"
+  description: "The stream-folding function that concatenates decoded byte chunks into a string."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Construction of a log information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation describes an internal stream fold and supplies no record boundary, persistence, provenance, or CQ warrant. It is implementation plumbing."
+epistemic_status: proposed
+confidence:
+  value: 0.95
+  use_for_acceptance: false
+

@@ -1,0 +1,23 @@
+id: so:sha256:c140d1df42ea58a1777c61e7ad71675cb13fffe2cde3fccf2777521c0ffd88ae
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 626
+  end_line: 632
+  content_sha256: 77316ee7634689acb3627c081c8541fd33de0ca7b546e6817daa9d82bae5028c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::laneFromGithubCheckRun
+  lexical_name: laneFromGithubCheckRun
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const laneFromGithubCheckRun = (lane: GithubCheckLaneRun): YeetVerdictLane =>'
+epistemic_status: parser_derived

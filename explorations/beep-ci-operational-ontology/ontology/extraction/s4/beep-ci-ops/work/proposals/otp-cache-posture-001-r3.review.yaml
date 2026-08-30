@@ -1,0 +1,48 @@
+target: "otp:cache-posture:001"
+target_sha256: "adf9f0758b925e41b7b3504717a85db7eff15abff3ffcb390e55afe7ea5ca3aa"
+chain_sha256: "913f0209da435cb859ccafafb4f3b92c44c2a9fa70b4e6c2a236b1c23d0e6201"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: token-content-identity-conflict
+    counterexample: >-
+      One resolver decision can be serialized into several records, while two
+      policy versions can reuse one tag with different remote-write authority.
+      The revised card identifies governed authority content, not resolver
+      tokens, carrier copies, or tags, so it handles both cases correctly.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-necessity
+    counterexample: >-
+      Removing CachePosture leaves the three CQ-024 decision values without the
+      common closed class that fixes their local and remote authority semantics.
+      The member terms alone cannot state the required exhaustive range or
+      disambiguate them from transient resolver tags.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A tagged DTO can name a branch, but it cannot preserve the full cited fact
+      that the resolved posture determines whether the CLI injects local-only
+      cache arguments, hands Turbo remote-read mode, or leaves explicit and CI
+      arguments caller-controlled. The effective invocation behavior defeats
+      the implementation-only twin.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:5d0e6acd290b5196f60564db2ff96d372e58be87e73858be2e1509acd8ec9120"
+  - "po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c"
+  - "po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5"
+  - "po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a"
+  - "CQ-024"

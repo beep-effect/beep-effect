@@ -1,0 +1,23 @@
+id: so:sha256:a500d10a39d530fa1fd2bc2ffeec96bfb877693d2709fc0a03d3b9d766bf6fb7
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 539
+  end_line: 555
+  content_sha256: 23c6fbab1042e8ca288e8602a9e8a8357685628016265820449acb63fbda96fa
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::monitorChecksStep
+  lexical_name: monitorChecksStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const monitorChecksStep = (context: RepoRunContext): RepoPlanStep =>'
+epistemic_status: parser_derived

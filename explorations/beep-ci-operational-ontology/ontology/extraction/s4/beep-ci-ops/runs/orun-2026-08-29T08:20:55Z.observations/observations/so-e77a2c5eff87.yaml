@@ -1,0 +1,23 @@
+id: so:sha256:e77a2c5eff8745caabbb04d3987fa6d4e7898620ea128075a51ec06a96c48337
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 300
+  end_line: 303
+  content_sha256: 150c0e8cef583463da4c5c725a7444d8bda4b59480f38cb0516c28221e7322e2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::qualityStepOutputBound
+  lexical_name: qualityStepOutputBound
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: qualityStepOutputBound
+source_excerpt: export const qualityStepOutputBound = OutputBound.make({
+epistemic_status: parser_derived

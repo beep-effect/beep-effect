@@ -1,0 +1,10 @@
+id: po:sha256:4573aff219ad22a4b8f14f24b908361c22f4bcbff875384356be23bd7e2c43d9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 27
+  end_line: 27
+quote: const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;
+epistemic_status: quoted_prose

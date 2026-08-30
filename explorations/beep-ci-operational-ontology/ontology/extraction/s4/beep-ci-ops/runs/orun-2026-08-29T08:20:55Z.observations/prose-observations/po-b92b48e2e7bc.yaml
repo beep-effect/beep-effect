@@ -1,0 +1,10 @@
+id: po:sha256:b92b48e2e7bcebad1b643f7f05cddc8dd411e43355076cdd384a9c37c0ee6c99
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 248
+  end_line: 283
+quote: Admission policy knobs with the chartered production defaults.
+epistemic_status: quoted_prose

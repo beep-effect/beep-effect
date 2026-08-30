@@ -1,0 +1,44 @@
+target: otp:cache-posture:001
+target_sha256: 32230663caf27c3d9993e28128a4da0cd94db5755ee616ca2f65ba2e8e9eb724
+chain_sha256: d9302ba7e0eb3ba3e009944e59b67a8286db09d5fbd81bbfd86efbce43e675e6
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: The revised proposal asserts no parents edges; there is no is-a edge to test, and no valid subsumption relation
+    is proposed.
+attacks:
+- surface: identity
+  rule: token-content-identity-conflict
+  counterexample: One resolver episode can produce a plan value, a serialized copy, and a deserialized copy. Treating records
+    as tokens makes those three distinct, while the card merges them by episode, invocation, and content; treating them as
+    abstract content instead makes the episode requirement wrongly separate equivalent decisions from repeated resolutions.
+  outcome: landed
+- surface: warrant
+  rule: cq-referent-mismatch
+  counterexample: An execution can be planned for remote reads and then run local-only after authorization fails. The three
+    execution-borne posture terms can classify the actual run without any resolver-decision artifact, so changing the support
+    targets does not make this planned classification necessary for CQ-024.
+  outcome: landed
+- surface: null_discriminator
+  rule: discriminator-true-of-tagged-dto
+  counterexample: A pure tagged-union DTO can be invocation-scoped and enumerate caller-controlled, local-only, and remote-read
+    branches. Those facts do not require a separately identifiable decision information object.
+  outcome: landed
+rival_models_still_viable:
+- The referent is a cache-posture mode borne by the WorkUnit execution rather than a decision information object.
+- The referent is the outcome of a cache-plan resolution event rather than an enduring decision record.
+evidence:
+- so:sha256:0952b7b2035197b1af67acb93f317c9c4423d512ef37c1901ef400ebc0582d5d
+- so:sha256:5d0e6acd290b5196f60564db2ff96d372e58be87e73858be2e1509acd8ec9120
+- so:sha256:851e5258ae9f3445d2fb705147e3436235ae76d5f67e2077f865f5f4ebafcd09
+- so:sha256:fda192fc3bca2db51e31f137d0a04b20e2767c62fc68bec4e1154294ecda4319
+- po:sha256:796a368eab4715c8836bd1377c8315816c521bd1e74c85c89948d33d2216e7a0
+- po:sha256:8719ca78bfb189d92f0013582af164aaa9206f715bad8caee214eabaad8cd954
+- po:sha256:a3f91e775ab382cb51a66901aaa9aa972fc7a4759a43a8680846173d9301a919
+- CQ-024

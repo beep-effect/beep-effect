@@ -1,0 +1,24 @@
+id: so:sha256:54a9240211b0b12e3e863bf944822ce80e864d093cbfc9b1da7ff6bf647a2e7d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 428
+  end_line: 431
+  content_sha256: fe10acadafa556a17959fdf3cc6c295ce3e44f7629996bf67759c93f763c8d64
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::fullProofSteps
+  lexical_name: fullProofSteps
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const fullProofSteps = (context: RepoRunContext, collectAll: boolean): ReadonlyArray<RepoPlanStep>
+  => ['
+epistemic_status: parser_derived

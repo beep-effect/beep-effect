@@ -1,0 +1,23 @@
+id: so:sha256:6a956f2ebc1a17588d47e7d979e26a978121508db51f857f2681ac0f0bfb1451
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 425
+  end_line: 436
+  content_sha256: d776fc4a981076b519d6cefed246b4009b258d9d09511de292798c4da1a81eb0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetMergeReadyFromEncoded
+  lexical_name: YeetMergeReadyFromEncoded
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetMergeReadyFromEncoded
+source_excerpt: export const YeetMergeReadyFromEncoded = YeetMergeReadyEncoded.pipe(
+epistemic_status: parser_derived

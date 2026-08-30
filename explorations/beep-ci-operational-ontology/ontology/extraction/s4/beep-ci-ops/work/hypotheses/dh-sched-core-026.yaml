@@ -1,0 +1,30 @@
+id: "dh:sched-core:026"
+observation_refs:
+  - "so:sha256:00c7d05354f3798ed7ce481fb1029252a480eead748647ffe035a256e000efc1"
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "so:sha256:b294817cf34160b61c902aaad0c3da9f4b9073be5d206d4930ddb5ee088bac78"
+  - "so:sha256:b591d567ab5911943014805620f940f4010927096f28c776f3a2cefc69014f21"
+  - "so:sha256:b5aa09719b9721ea1bb13cd81e0d25df6f28644c59e3f7db9dcf2c7dac5088b3"
+  - "so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5"
+  - "so:sha256:d2b4a5bf30882ca8d4461695fdad5bf0d338847d2996011bb75358e374c71ec1"
+  - "so:sha256:f361e4e7687ede51865c0a9fc7b08b3d31dcaee1a9ba560868e297946baf2a59"
+  - "po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85"
+cq_warrants: []
+proposed_referent:
+  label: "weighted-admission coordination procedure"
+  description: "A repeatable procedure that enqueues a ticket, waits for promotion, stages and heartbeats a lease, runs admitted work, and releases the coordinated resources."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "an individual admission episode executing that procedure"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "collection of unrelated helper functions"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The unrelated-helper counterexample wins: the cited declarations and heartbeating quotation do not establish one ordered enqueue-through-release protocol, and ordinary orchestration plumbing can satisfy every observation."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

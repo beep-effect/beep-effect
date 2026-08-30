@@ -1,0 +1,14 @@
+id: fa:turbo-cache:022
+hypothesis_ref: dh:turbo-cache:024
+identity_card_ref: ic:turbo-cache:022
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: Treat every remote-read resolver result as a distinct execution-borne mode.
+  still_viable: false
+strongest_counterexample: The same local:rw,remote:r string can be copied between records, while posture identity depends
+  on the governed authority semantics rather than lexical mapping.
+verdict: analyzed

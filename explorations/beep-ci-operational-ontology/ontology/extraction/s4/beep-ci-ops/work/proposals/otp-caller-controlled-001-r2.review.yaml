@@ -1,0 +1,64 @@
+target: "otp:caller-controlled:001"
+target_sha256: "982940acd25576c1992ea6a8676e2450987678b8c4270a61a92a89ea51ca04b2"
+chain_sha256: "007ed1ac60ff1b661b12409e164ff85df73e38861acf4744d97bc3567b247ad4"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  Capture the effective Turbo cache arguments for caller-controlled executions
+  and obtain a steward ruling on whether the occurrences are invocation modes,
+  control-allocation situations, record content, or one reusable vocabulary value.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge, so it proposes no is-a or
+    subsumption relation and there is no candidate parent to retain instead of no
+    valid subsumption relation.
+attacks:
+  - surface: identity
+    rule: unresolved-takes-precedence
+    counterexample: >-
+      CI execution E1 can retain sanctioned remote access while explicit-argument
+      execution E2 can disable caching, although both receive the same tag. The
+      revision now correctly leaves category, rigidity, identity, and dependence
+      unresolved and marks the proposal explicitly_deferred rather than identifying
+      E1 and E2 as one homogeneous posture.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      E1 and E2 share the caller-controlled tag and proposed IRI while having
+      incompatible effective permissions. The revised card explicitly says the
+      shared tag does not decide whether they are two particulars or occurrences
+      of one vocabulary value, so the technical identifier is not the criterion.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-necessity
+    counterexample: >-
+      A CQ-024 answer that represents only LocalOnly and LocalWriteRemoteRead
+      cannot classify CI or explicit-cache-argument executions under the three-arm
+      closed posture domain. The caller-controlled value is therefore necessary,
+      even though its foundational interpretation remains unsettled.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-tagged-dto
+    counterexample: >-
+      A resolver can emit {_tag: caller-controlled, reason: ci} and the same tag
+      with reason explicit-cache-arg solely to decide whether the CLI rewrites
+      flags. Both branches vary with invocation conditions while remaining a pure
+      tagged DTO, so the cited facts still do not falsify the null.
+    outcome: landed
+rival_models_still_viable:
+  - "An invocation-scoped cache mode"
+  - "A control-allocation situation among caller, CLI, and execution"
+  - "One controlled-vocabulary value in the CachePosture domain"
+  - "Information content in a resolved cache-plan record"
+evidence:
+  - "so:sha256:5455a88353a08e19104c4f4ed27714d39b682fb71f40c78b8067c3133c293860"
+  - "po:sha256:965ef702e781e4ac242a4c1c6de05ece748e16fb63340e1b37edaf87863cc6af"
+  - "po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5"
+  - "po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a"
+  - "CQ-024"

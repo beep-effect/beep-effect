@@ -1,0 +1,10 @@
+id: po:sha256:8cafaac3a50cef6edc6b80ad03c63f9d29cec0ba4942ec59d5574dbe9b0a97e0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: AGENTS.md
+source_span:
+  start_line: 52
+  end_line: 56
+quote: Unresolved review threads are a hard merge gate
+epistemic_status: quoted_prose

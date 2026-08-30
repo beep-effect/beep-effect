@@ -1,0 +1,23 @@
+id: so:sha256:fb2d616e03be38b66176f9231c0f4ef8d02be7ba56448062300826c2663a4c99
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 313
+  end_line: 321
+  content_sha256: 19e495dfef78fa3b86694bdb3167fd01b2e5451a5c4dc53ca486812797fbb78f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::cacheStatusFromDryRunItem
+  lexical_name: cacheStatusFromDryRunItem
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const cacheStatusFromDryRunItem = (item: Record<string, unknown>): string =>'
+epistemic_status: parser_derived

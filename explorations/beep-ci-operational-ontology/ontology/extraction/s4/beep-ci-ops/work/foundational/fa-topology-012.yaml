@@ -1,0 +1,17 @@
+id: "fa:topology:012"
+hypothesis_ref: "dh:topology:012"
+identity_card_ref: "ic:topology:012"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "@beep/anthropic as a package-name lexical alias"
+    still_viable: true
+  - label: "The software package bearer designated by @beep/anthropic"
+    still_viable: true
+  - label: "Generated topology-capture row with no repeatable information object"
+    still_viable: false
+strongest_counterexample: "The same spelling @beep/anthropic can occur in another repository or after deletion and recreation for a different bearer, while a continuing package can be renamed; the captured name cannot by itself decide information-object, lexical-alias, or package-bearer identity."
+verdict: analyzed

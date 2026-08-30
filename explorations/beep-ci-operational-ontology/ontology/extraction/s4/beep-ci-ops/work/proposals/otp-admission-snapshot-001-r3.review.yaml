@@ -1,0 +1,49 @@
+target: "otp:admission-snapshot:001"
+target_sha256: "8ea4f83aa5b12557578c7fd4fe29486117168e53900505b42b3e9b98125f6115"
+chain_sha256: "f9e1e533aa67b6f4ed86228164beed28765d83c0635949f104181f83b1923849"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: unresolved-snapshot-token-identity
+    counterexample: >-
+      Two independent status reads can return byte-identical payloads, while one
+      captured payload can be copied into two carriers. The proposal correctly
+      defers token identity because no capture act or observation instant in the
+      record distinguishes those cases; it does not launder field equality into
+      identity.
+    outcome: survived
+  - surface: warrant
+    rule: support-term-not-necessary
+    counterexample: >-
+      An ingestion boundary can compute observedQueueWaitMs from a request's
+      enqueue instant and the collector instant and store that time-indexed
+      assertion directly. CQ-023 never ranges over AdmissionSnapshot, so the
+      decision property remains reproducible without admitting this class.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      A status-response DTO can be documented as a point-in-time view and can
+      materialize capacity, charges, leases, tickets, and memory while no
+      independently reidentifiable snapshot token is retained. Every cited
+      discriminator fact is true in that null world.
+    outcome: landed
+rival_models_still_viable:
+  - "The live admission-state situation is the referent and the response is only its projection."
+  - "The response is an extensional value without token identity."
+evidence:
+  - "so:sha256:54af3bae065ad2e6cfb6f8068a3bbe178407105b5576a6e9e8231e9cebd579f5"
+  - "so:sha256:da2e8d777c8768ec0117f9c85771d59dedb80a5b63942a0804c897f0abfcf05e"
+  - "po:sha256:724441d2f5fe074205349c704ecc6b1f3aff79210f923d414f6e326a60b59ef1"
+  - "CQ-023"

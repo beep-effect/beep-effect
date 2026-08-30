@@ -1,0 +1,24 @@
+id: "dh:quality:036"
+observation_refs:
+  - "so:sha256:3e296553a20a27503388bc986394099c7c5581a8666a9fdd199ce051bdf89b3f"
+cq_warrants: []
+proposed_referent:
+  label: "Possible information artifact denoted by PackageVerifyReport"
+  description: "The name suggests a report, summary, document, configuration, profile, matrix, or related record, but the observations do not establish that instances are created, retained, exchanged, or consulted outside the implementation."
+representation_status: unresolved
+alternatives:
+  - label: "PackageVerifyReport schema or DTO only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "An operational domain entity suggested by PackageVerifyReport"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The canonical facts establish only an S.Class-based declaration and possibly its export. Without an observed document lifecycle, persistence boundary, exchange, or domain bearer, the implementation-only null remains live."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.52
+  use_for_acceptance: false

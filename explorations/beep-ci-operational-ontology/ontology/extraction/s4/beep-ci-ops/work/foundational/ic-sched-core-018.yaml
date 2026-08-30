@@ -1,0 +1,34 @@
+id: ic:sched-core:018
+hypothesis_ref: dh:sched-core:019
+identity:
+  supplies_identity: false
+  identity_criterion: 'This data property supplies no identity: one hasOriginKey assertion concerns the same operational fact
+    only for the same SeatRequest or SeatGrant, the same naming scheme and scope, and the same lexical key value; equal strings
+    on different subjects or schemes do not identify an origin or a sign object.'
+  reidentification_key:
+  - request or grant reference
+  - origin-key naming scheme and scope
+  - lexical value
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: One assertion relating one request or grant to the scheme-scoped key used by origin-exclusion comparison.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - a reified origin-key information object
+  - the repository origin itself
+  existential_dependencies:
+  - a SeatRequest or SeatGrant
+  - the origin-key derivation scheme
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - the assertion ends with its subject or is replaced under a different derivation scheme
+counterexamples:
+- description: Two grants can carry the same string under different naming schemes, and one origin can acquire a different
+    key after a scheme change; string equality alone identifies neither the property assertion nor the repository origin.
+status: proposed

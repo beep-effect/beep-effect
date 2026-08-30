@@ -1,0 +1,26 @@
+id: "dh:reporun:019"
+observation_refs:
+  - "so:sha256:5ff32d0655a8cc9fbddace495da9b640c2633351caa4759c92235f53782b68e3"
+  - "so:sha256:ccb76a5f3fd90747552276360f6623e87a823ed693b6cf9caacb9e15d51b2b6b"
+  - "so:sha256:55c95d54d18f2b82756fa2bd7f23cc3fd7d294e693d77cea47f15b2d0196abfa"
+cq_warrants: []
+proposed_referent:
+  label: "repository graph-health status vocabulary"
+  description: "The ok, warning, and error codes stored in a Turbo planning snapshot."
+representation_status: unresolved
+alternatives:
+  - label: "Assessment information about graph metadata trustworthiness"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Internal validation-state enum"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show that a snapshot carries one of three codes, but no lane observation supplies the assessment procedure, persistence boundary, or CQ warrant needed to decide whether this is domain information or internal validation state."
+epistemic_status: proposed
+confidence:
+  value: 0.56
+  use_for_acceptance: false
+

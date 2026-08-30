@@ -1,0 +1,25 @@
+id: so:sha256:3137f4e5a8b817fe484a22b4181e2e0f14e153855f5d580591c14423c1931091
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 72
+  end_line: 72
+  content_sha256: 05fdd6dfedbe54f4d502d0db3302eaf04a05230377c34833099101ce314c99ea
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheMode
+  lexical_name: TurboCacheMode
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: TurboCacheMode
+- predicate: exports_symbol
+  object: TurboCacheMode
+source_excerpt: export type TurboCacheMode = typeof TurboCacheMode.Type;
+epistemic_status: parser_derived

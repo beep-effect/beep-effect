@@ -1,0 +1,35 @@
+id: ic:sched-core:014
+hypothesis_ref: dh:sched-core:015
+identity:
+  supplies_identity: false
+  identity_criterion: 'This data property supplies no identity: one capacityAtAdmissionTokens assertion is the same operational
+    fact only for the same grant admission occurrence, the same immediately pre-grant boundary, and the same token convention;
+    equal numeric remainders at other attempts are distinct facts.'
+  reidentification_key:
+  - SeatGrant admission occurrence
+  - immediately pre-grant boundary
+  - token-convention version
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: One assertion relating one grant admission occurrence to its reconstructed remaining capacity immediately before
+    the candidate charge.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - a reified remaining-capacity quality
+  - an opaque ETL field
+  existential_dependencies:
+  - a grant admission occurrence
+  - the machine admission context and its live charges
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - the assertion is fixed for the admission occurrence and does not become a post-grant remainder
+counterexamples:
+- description: Two attempts can expose the same numeric remainder while occurring under different live-grant sets; equal values
+    neither identify the facts nor require a remaining-capacity individual.
+status: proposed

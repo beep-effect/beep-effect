@@ -1,0 +1,23 @@
+id: so:sha256:12199c0b80ca83aedcc7ac5db410ea657f6d90cc0151a52199e065a3bf1df42b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 1430
+  end_line: 1445
+  content_sha256: 5aa45ba87ffb896e4cecc83b00c1ea38957f0e4e3821914d90c9aaed51419db8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::renderPlan
+  lexical_name: renderPlan
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const renderPlan = Effect.fn("Yeet.renderPlan")(function* (
+epistemic_status: parser_derived

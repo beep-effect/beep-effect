@@ -1,0 +1,20 @@
+id: "fa:alt1:055"
+hypothesis_ref: "dh:worktree-config:015"
+identity_card_ref: "ic:alt1:055"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "Fallow audit as a process kind whose instances are audit runs"
+    still_viable: true
+  - label: "Fallow audit command entry as the procedure (the inventory row only)"
+    still_viable: true
+strongest_counterexample: "The inventory records an invocable command and .fallowrc.jsonc fixes
+  gate to new-only. Together they define more than a source label, but they are still
+  information about the procedure; a run is not observed."
+verdict: "analyzed"
+needed_evidence: "A dated Fallow audit execution reidentified independently of the inventory
+  command string. If CQ-001 is answered only from the inventory/config pair, the command-entry
+  rival and the procedure-spec reading are observationally equivalent."

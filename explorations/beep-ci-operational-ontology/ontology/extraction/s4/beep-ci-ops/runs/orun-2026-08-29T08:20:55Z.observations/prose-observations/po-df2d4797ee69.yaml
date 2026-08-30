@@ -1,0 +1,10 @@
+id: po:sha256:df2d4797ee69893a15a3519ee92e6b1b3612ee21d681769dc857b59731ffdd05
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 108
+  end_line: 108
+quote: export const YeetProofTier = LiteralKit(["full", "cheap-gates", "review-fix"]).pipe(
+epistemic_status: quoted_prose

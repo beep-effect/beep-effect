@@ -1,0 +1,30 @@
+id: ic:alt3:007
+hypothesis_ref: dh:sched-core:012
+identity:
+  supplies_identity: true
+  identity_criterion: 'Two capacity procedures are the same iff they prescribe the same derivation:
+    hard-zero below the floor, subtract reserve, divide by slot size, floor, then cap. A particular
+    numeric result at one clock reading is not the procedure.'
+  reidentification_key:
+  - admissionCapacityTokensFor
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one arithmetic prescription from available memory and policy parameters
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - quality
+  existential_dependencies:
+  - AdmissionConfig parameters
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: Calling admissionCapacityTokensFor at two times with different availableGib
+    yields two capacity figures without creating two procedures; the procedure is the mapping,
+    not the output.
+status: proposed

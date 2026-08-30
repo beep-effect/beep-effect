@@ -1,0 +1,22 @@
+id: "dh:yeet-handler:069"
+observation_refs:
+  - "so:sha256:9e9be3cb74b3424a9203b6a679463a1f423ae6727e7a871621d0cf0acd70f153"
+  - "po:sha256:9c89bf17f35f4e9ac5dd3791656461492478cbd1e99258fd1e95b5babec7f0e6"
+cq_warrants: ["CQ-009"]
+proposed_referent:
+  label: "SeatGrant origin key"
+  description: "A candidate verbatim origin key on an active admission grant; the lane observes key construction during request handling but no grant-lease carrier."
+representation_status: unresolved
+alternatives:
+  - label: "SeatRequest origin-key field"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "derived lock-filename token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The originKey quotation is associated with admission request construction, while no cited observation shows the copied value on a SeatGrant lease. The request-ticket and grant-lease carriers therefore cannot be merged."
+epistemic_status: proposed
+confidence: {value: 0.35, use_for_acceptance: false}

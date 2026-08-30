@@ -1,0 +1,23 @@
+id: so:sha256:21d1cd2986591f5fcbf077b928972b09f2aaa86e451dc6cc2c4b19e42f0e49a4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 56
+  end_line: 56
+  content_sha256: 25d61290efdd464ef380ee2025cab92da543ba8aebf4047a72ade23e056bc279
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::encodeTicket
+  lexical_name: encodeTicket
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const encodeTicket = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
+epistemic_status: parser_derived

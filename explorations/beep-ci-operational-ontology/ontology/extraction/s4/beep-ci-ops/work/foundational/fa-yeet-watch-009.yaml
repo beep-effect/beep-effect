@@ -1,0 +1,26 @@
+id: "fa:yeet-watch:009"
+hypothesis_ref: "dh:yeet-watch:030"
+identity_card_ref: "ic:yeet-watch:009"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Structural subkind of failed hosted jobs whose install step failed before lane work"
+    still_viable: true
+  - label: "Anti-rigid rerun-eligible role borne by a matching failed job under current policy"
+    still_viable: true
+  - label: "Transient environment-caused installation-failure subkind"
+    still_viable: false
+  - label: "Particular dependency-installation failure or detector execution"
+    still_viable: false
+  - label: "Install-failure literal with no denoted recognition prescription"
+    still_viable: false
+strongest_counterexample: >-
+  A broken lockfile satisfies the exact failed-install-before-lane predicate on
+  every attempt, so the member neither proves a transient environmental cause
+  nor identifies an occurrence that rerunning will cure. The repeatable
+  specification remains distinct from its job bearer and execution, while a
+  structural failed-job subkind and a current-policy role remain viable.
+verdict: analyzed

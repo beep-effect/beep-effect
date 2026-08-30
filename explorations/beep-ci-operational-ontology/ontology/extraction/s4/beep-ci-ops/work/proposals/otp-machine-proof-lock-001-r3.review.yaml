@@ -1,0 +1,54 @@
+target: "otp:machine-proof-lock:001"
+target_sha256: "63bb94e71e3d3e1585f5abd57661a219c4e5e8485685927f62ea4fc82f332858"
+chain_sha256: "2a1dbb674df0d18edf9f128cb8a2db2a123e6dd4d19adf65662e1b2f3bd0e2de"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: role-bearer-identity
+    counterexample: >-
+      A gate service can be recreated and several holders can acquire in turn
+      while the same repository-origin coordination target continues bearing
+      one proof-resource role. The revised criterion follows the origin target
+      and continuous coordination regime, not service-object, holder, or lock
+      path identity, so it survives.
+    outcome: survived
+  - surface: warrant
+    rule: support-term-not-necessary
+    counterexample: >-
+      CQ-008 can distinguish contenders by relating each SeatGrant to a generic
+      origin-scoped ContendedResource identified by originKey. The question
+      does not require those resources to instantiate the specialized
+      MachineProofLock class, so the named support term is not necessary for
+      SeatGrant or for the CQ answer.
+    outcome: landed
+  - surface: null_discriminator
+    rule: deployed-contention-discriminator
+    counterexample: >-
+      A service DTO could expose acquire and release methods without recording
+      real contention, but the branch attempt journal records lock-contention
+      verdicts and the KPI counts proof-lock bounces with owner and lock-path
+      evidence. That deployed fact is false in the pure-interface twin.
+    outcome: survived
+rival_models_still_viable:
+  - "A generic origin-scoped contended resource without a proof-lock subclass."
+  - "A lock-acquisition relator between a holder and repository origin."
+evidence:
+  - "so:sha256:35e4fb37b45559b198eb68bd4a8c1f339456c7505089a9baeacc2af4658ef5e0"
+  - "po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807"
+  - "po:sha256:464f27578af7c6ee1884ce4ba45cb5b11c4375e3b0f3766562da238b43c4ea83"
+  - "po:sha256:662109a43c1cd5544d17168834af3e8c49b307ecf0e4f15ae40e623a3255e12c"
+  - "po:sha256:8dddff995d4175e482cb81b4ecb5bbeac10bb64ef9b504432cddbd7c9e3ed5b1"
+  - "po:sha256:9cff923770c88f07abedd29fe1a4b5a700805f3fab2234902793d907998339ba"
+  - "po:sha256:ad52fe14aa84aba44e09e8ae94d1032952341c19802c314700e38194b7869f42"
+  - "CQ-008"

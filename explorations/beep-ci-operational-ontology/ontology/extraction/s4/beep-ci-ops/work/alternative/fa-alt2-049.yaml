@@ -1,0 +1,21 @@
+id: fa:alt2:049
+hypothesis_ref: dh:turbo-cache:011
+identity_card_ref: ic:alt2:049
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Turbo audit work-unit specification'
+  still_viable: true
+- label: 'kind: audit verification lane'
+  still_viable: true
+- label: 'process: a particular audit execution'
+  still_viable: false
+strongest_counterexample: >-
+  The audit entry asserts dependsOn ^audit, a reusable ordering prescription, not the occurrence of an implementation label.
+verdict: analyzed
+needed_evidence: >-
+  The body of checks the audit task runs, or a proof-surface mapping for audit, would decide specification-only versus verification-lane
+  kind.

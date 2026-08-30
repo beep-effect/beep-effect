@@ -1,0 +1,33 @@
+id: "ic:sched-core:012"
+hypothesis_ref: "dh:sched-core:013"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two capacity-obligation tokens are the same only if the same normative imposition by the same authority binds the same admission actor and scope to the same charge-versus-capacity content throughout one validity interval."
+  reidentification_key:
+    - "normative authority not supplied by the source"
+    - "bound admission actor and scope"
+    - "obligation content and validity interval"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: false
+  supplies_identity: false
+  unity: "One externally dependent normative mode with one bearer, authority, applicability scope, content, and validity interval."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "mode"
+  alternatives:
+    - "Boolean guard procedure that realizes a policy constraint"
+    - "information-object policy clause"
+    - "per-attempt eligibility situation"
+  existential_dependencies:
+    - "a governing authority or accepted policy regime"
+    - "an admission actor and applicability scope"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "discharged for a particular admission decision"
+    - "withdrawn or superseded by policy authority"
+counterexamples:
+  - description: "A Boolean guard can block promotion because of local control flow even when no authority has imposed a normative obligation, so guard behavior alone does not establish an obligation."
+status: "proposed"

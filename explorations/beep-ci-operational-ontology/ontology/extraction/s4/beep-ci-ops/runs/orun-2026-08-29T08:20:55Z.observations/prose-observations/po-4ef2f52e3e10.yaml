@@ -1,0 +1,10 @@
+id: po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: goals/ship-velocity/research/d1-admission-scheduler.md
+source_span:
+  start_line: 36
+  end_line: 36
+quote: weights full-proof 3 / merged-preview 5 / review-fix 1 (×3) / publish 1 · heartbeat 5s ·
+epistemic_status: quoted_prose

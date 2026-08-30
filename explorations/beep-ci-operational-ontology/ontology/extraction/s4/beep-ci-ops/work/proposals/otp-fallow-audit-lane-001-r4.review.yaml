@@ -1,0 +1,46 @@
+target: "otp:fallow-audit-lane:001"
+target_sha256: "dcf1fe896891f499dd523b853c1161151a9ab46398c878e4f256352ee0b0c4c2"
+chain_sha256: "f68d41a994e0835df114e48e9f61c4327c6d513bff2c35888764f3a2ae4dcd87"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: content-lineage-and-execution-test
+    counterexample: >-
+      Equal audit prescriptions can be copied across repository histories, while
+      one dated audit can fail without ending the repeatable prescription. The
+      card identifies the normalized base, gate, and verdict semantics, treats
+      lineage as provenance, and keeps executions distinct.
+    outcome: survived
+  - surface: warrant
+    rule: support-warrant-self-contradiction
+    counterexample: >-
+      CQ-002 and WorkUnitSpecification remain answerable with other admissible
+      lane-by-scope prescriptions. The revised definition and open issue call
+      this named Fallow individual an optional A-Box example, while the warrant
+      still asserts necessary semantic support for the generic decision class.
+    outcome: landed
+  - surface: null_discriminator
+    rule: dated-execution-prescription-discriminator
+    counterexample: >-
+      A dormant config row could carry the command, but it would not also
+      preserve the dated inventory's origin/main invocation, new-only gate,
+      recorded fail verdict, and matching root gate. The deployed audit gives
+      the repeatable procedure content an operative referent.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048"
+  - "po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c"
+  - "CQ-002"

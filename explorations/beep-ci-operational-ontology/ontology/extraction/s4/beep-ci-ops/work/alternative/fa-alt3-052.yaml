@@ -1,0 +1,22 @@
+id: fa:alt3:052
+hypothesis_ref: dh:worktree-config:001
+identity_card_ref: ic:alt3:052
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'relator: obligation mediating a contradicting proposal and the architecture document'
+  still_viable: true
+- label: 'information_object: the normative text in ARCHITECTURE.md'
+  still_viable: true
+- label: 'mode: a normative moment inhering in the repository'
+  still_viable: true
+strongest_counterexample: The quotation imposes a consequence (proposal must change or the
+  document must be amended) and a later span lists forbidden dependency edges. That is a standing
+  rule, not a checker. Policy-as-fact would read the rule as a descriptive topology.
+verdict: analyzed
+needed_evidence: Whether the obligation is reified with its own properties (relator) or is
+  identical with the paragraph that states it (information object). Observationally equivalent
+  on the two quotations.

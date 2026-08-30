@@ -1,0 +1,29 @@
+id: ic:alt4:005
+hypothesis_ref: dh:sched-core:004
+identity:
+  supplies_identity: true
+  identity_criterion: Two admission work-kind vocabularies are the same when they comprise the same closed set of work-kind codes together with the same token-weight assignment used to charge leases; membership spelling is evidence, never a taxonomy of kinds.
+  reidentification_key:
+    - full-proof
+    - merged-preview
+    - review-fix
+    - publish
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The closed code set plus the weight function compose one vocabulary; dropping a code or changing a weight yields a different vocabulary.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: Treating each literal as a Kind of work (enum-as-taxonomy) would mint four rigid kinds from a weight table, even though publish is reserved and unused by callers.
+  - description: A string union used only for compile-time exhaustiveness, with no weight or lease effect, would not be this vocabulary.
+status: proposed

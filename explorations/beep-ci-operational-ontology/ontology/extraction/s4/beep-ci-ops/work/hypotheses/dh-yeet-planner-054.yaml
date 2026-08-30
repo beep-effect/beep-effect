@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:054"
+observation_refs:
+  - "so:sha256:7d1f00f470e6d72fd37ad373fae4a2fab1cce083112201027b7e48e07c4d7aa5"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for hasTornTrailingRecord in AttemptJournal.ts"
+  description: "No separate domain referent is established for the hasTornTrailingRecord declaration in AttemptJournal.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts::hasTornTrailingRecord"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

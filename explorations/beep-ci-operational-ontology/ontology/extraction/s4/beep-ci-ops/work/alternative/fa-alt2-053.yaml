@@ -1,0 +1,17 @@
+id: fa:alt2:053
+hypothesis_ref: dh:worktree-config:008
+identity_card_ref: ic:alt2:053
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: persisted verification evidence record'
+  still_viable: true
+- label: 'event: the verification execution outcome itself'
+  still_viable: false
+strongest_counterexample: >-
+  Collapsing the recorded evidence into the execution that produced it would make 'repo-wide proof' mean the run rather than
+  the artifact the policy tells operators to keep.
+verdict: analyzed

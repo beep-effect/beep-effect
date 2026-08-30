@@ -1,0 +1,32 @@
+id: "ic:sched-core:020"
+hypothesis_ref: "dh:sched-core:021"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two origin-scoped proof-resource role instances are the same only when the same underlying origin coordination target bears one continuous contended-resource role under the same proof-lock regime; changing holders does not change the resource."
+  reidentification_key:
+    - "repository-origin scope"
+    - "proof-lock namespace and coordination regime"
+    - "originKey or lock path as supporting evidence"
+ontoclean:
+  rigidity: "anti_rigid"
+  carries_identity: true
+  supplies_identity: false
+  unity: "One exclusive coordination boundary for proof activity over one origin, persisting across acquisition and release by different contenders."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "role"
+  alternatives:
+    - "gate service or interface representing the resource"
+    - "individual lock-acquisition relator between holder and origin"
+    - "generic acquire-and-release abstraction only"
+  existential_dependencies:
+    - "an underlying repository-origin coordination target"
+    - "a proof-lock regime and potential contenders"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "resource role ends if the origin leaves the coordination regime"
+counterexamples:
+  - description: "Two AdmissionOriginGate instances can coordinate the same origin resource, while one gate instance can be recreated; service-object identity therefore cannot identify the resource."
+status: "proposed"

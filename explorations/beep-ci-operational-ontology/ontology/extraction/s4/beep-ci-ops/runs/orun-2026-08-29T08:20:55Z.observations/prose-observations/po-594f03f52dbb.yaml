@@ -1,0 +1,10 @@
+id: po:sha256:594f03f52dbbf8506e3e2e91a8e60b5863b28b8d09d194750a4fe569b587e05e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 483
+  end_line: 497
+quote: 'return { kind: "malformed" };'
+epistemic_status: quoted_prose

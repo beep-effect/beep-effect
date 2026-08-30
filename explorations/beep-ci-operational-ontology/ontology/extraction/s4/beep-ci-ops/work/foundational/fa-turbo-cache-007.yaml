@@ -1,0 +1,15 @@
+id: "fa:turbo-cache:007"
+hypothesis_ref: "dh:turbo-cache:008"
+identity_card_ref: "ic:turbo-cache:007"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A parallel integration-test verification lane is realized by the task specification."
+    still_viable: true
+  - label: "The suffix is only a lexical specialization and the actual execution strategy is determined elsewhere."
+    still_viable: true
+strongest_counterexample: "The observed entry proves only reusable build ordering; a package script can contradict the parallel suffix, so the exact parallel semantics and resulting lane identity remain context-dependent."
+verdict: analyzed

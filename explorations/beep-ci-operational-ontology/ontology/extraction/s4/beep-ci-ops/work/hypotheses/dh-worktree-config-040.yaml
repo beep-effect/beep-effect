@@ -1,0 +1,18 @@
+id: "dh:worktree-config:040"
+observation_refs:
+  - "so:sha256:9e27f07f36cb0d50e870da5d02d9aa47414df56cf56c03ca309381b08cdb4990"
+cq_warrants: []
+proposed_referent:
+  label: "FleetScanCoverage schema declaration"
+  description: "An exported Effect Schema representation named for scan coverage."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet scan-coverage information record"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Only export and schema-extension syntax is observed; the covered population, completeness claim, and use of any coverage record are absent."
+epistemic_status: proposed
+confidence: {value: 0.79, use_for_acceptance: false}

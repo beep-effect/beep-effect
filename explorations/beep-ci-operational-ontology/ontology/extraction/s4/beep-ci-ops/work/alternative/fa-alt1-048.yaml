@@ -1,0 +1,20 @@
+id: "fa:alt1:048"
+hypothesis_ref: "dh:turbo-cache:005"
+identity_card_ref: "ic:alt1:048"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "a test verification lane as a process kind"
+    still_viable: true
+  - label: "an implementation-only configuration grouping"
+    still_viable: false
+strongest_counterexample: "A vitest run is an execution of something this specification names;
+  it is not a second test task specification. Absence of a dependsOn entry on test does not make
+  the entry a bare key: passThroughEnv is already reusable invocation-context content."
+verdict: "analyzed"
+needed_evidence: "An observation of a test-lane run reidentified independently of the turbo.json
+  test entry. If CQ-001 is answered from the task specification alone, the process-kind rival
+  stays a spec/execution split rather than a replacement."

@@ -1,0 +1,25 @@
+id: "dh:sched-core:017"
+observation_refs:
+  - "so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf"
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "po:sha256:9c431dec2cde95c190b0b7d6cdbcbda162b9cf587a8906a6fe1a4d2286a01d58"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "seat-request enqueue instant"
+  description: "The time at which a durable admission ticket entered the queue."
+representation_status: domain_referent
+alternatives:
+  - label: "millisecond timestamp recorded on a ticket"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "sorting field only"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "A finite timestamp field can exist solely to stabilize sorting."
+  discriminator: "The admission bracket stamps a newly created durable ticket with the current time, and effective rank later compares that instant with the current time to represent elapsed waiting."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

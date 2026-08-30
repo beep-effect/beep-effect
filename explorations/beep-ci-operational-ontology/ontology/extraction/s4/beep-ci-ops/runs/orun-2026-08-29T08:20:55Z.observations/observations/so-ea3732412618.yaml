@@ -1,0 +1,25 @@
+id: so:sha256:ea3732412618074a307f3662326972dd5293d38cf3544b7db58bf9a87c227799
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 453
+  end_line: 461
+  content_sha256: c6f76c99c97d3a7d9804adcbbdd4d6d30eeed906a71d8013909b4da216683da1
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetLivenessVerdict
+  lexical_name: FleetLivenessVerdict
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: FleetLivenessVerdict
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class FleetLivenessVerdict extends S.Class<FleetLivenessVerdict>($I`FleetLivenessVerdict`)(
+epistemic_status: parser_derived

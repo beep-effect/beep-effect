@@ -1,0 +1,10 @@
+id: po:sha256:7a5e2d311954ba1aa280d7ef414518175d8eaec932480eeb9784d34f6c2da194
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: AGENTS.md
+source_span:
+  start_line: 39
+  end_line: 41
+quote: Yeet is the canonical repo-quality path
+epistemic_status: quoted_prose

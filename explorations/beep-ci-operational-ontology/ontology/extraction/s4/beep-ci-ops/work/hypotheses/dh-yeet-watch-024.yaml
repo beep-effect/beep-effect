@@ -1,0 +1,29 @@
+id: "dh:yeet-watch:024"
+observation_refs:
+  - "so:sha256:f44344e14a671f9e5f86859eef0dccb723949c53750e0b7e5ec4c33dd473bf7b"
+  - "so:sha256:01ebe52998854e6382ed57cfc9052b2f4fbb29e735679f51e8911afd85469ded"
+  - "so:sha256:53871c1d8d3f62889042f3a5d4388e6e993dc3ef0478c837fbe383b75b912edd"
+  - "so:sha256:985f8eabadd1ff4531d7bdf639ae2da797f9b2ef8124751b0452456d3551bea6"
+  - "so:sha256:c30acf2ce6e721bb586765a46dc7f4aa0760f5c25dea64f91deac21f76228ed3"
+  - "so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f"
+  - "so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350"
+cq_warrants: []
+proposed_referent:
+  label: "watch-termination information record"
+  description: "A final watch-stream row carrying a computed termination reason and failing-check census."
+representation_status: unresolved
+alternatives:
+  - label: "watch execution termination event"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "watch end-reason lexical domain"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The evaluator, counter, and schema specify a possible final row, but no emitted termination record or CQ warrant is observed; the value may remain an internal control representation."
+epistemic_status: proposed
+confidence:
+  value: 0.8
+  use_for_acceptance: false

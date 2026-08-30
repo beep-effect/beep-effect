@@ -1,0 +1,25 @@
+id: so:sha256:7d81fca784579f2d5bf1d2bed62d836c001fedda5a774dbed3b94280174af3f0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 318
+  end_line: 329
+  content_sha256: 9a2aeb2c8187961ab35001e5f979737212f500095fc4368bc1521408a1ce325e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::YeetMonitorRerunJob
+  lexical_name: YeetMonitorRerunJob
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetMonitorRerunJob
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetMonitorRerunJob extends S.Class<YeetMonitorRerunJob>($I`YeetMonitorRerunJob`)(
+epistemic_status: parser_derived

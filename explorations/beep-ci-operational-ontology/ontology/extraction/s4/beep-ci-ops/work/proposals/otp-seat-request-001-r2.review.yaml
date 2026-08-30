@@ -1,0 +1,57 @@
+target: "otp:seat-request:001"
+target_sha256: "342c096ea205256c4c1a6bb739ef4211d6d25b0c5728ae297d7d6fe893650dc0"
+chain_sha256: "19c30d259cf80525e84916c36a076b6e674c505c3550f0018dd6a57601624877"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge, so it proposes no is-a relation
+    whose rigidity, inherited identity, dependence, unity, or absence can be
+    tested.
+attacks:
+  - surface: identity
+    rule: identity-criterion-counterexample
+    counterexample: >-
+      Ticket files T1 and T2 can contain byte-identical owner, kind, charge, and
+      timestamp values while being created by two enqueue acts on separate
+      carriers. The card separates them through creation provenance and continuous
+      carrier lineage rather than wrongly identifying them by value equality.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Copying T1 to another path with the same nonce and process coordinates does
+      not make the copy the original record token. The card treats those technical
+      keys as supporting evidence and still requires provenance-bearing lineage.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-necessity
+    counterexample: >-
+      CQ-021 explicitly ranges over queued SeatRequest records and CQ-023 quantifies
+      waiting SeatRequest instances governed by policy. Removing the class makes
+      both decision queries inexpressible as written.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-persistence-dto
+    counterexample: >-
+      A queue persistence DTO can be documented as a contender waiting for
+      admission, persist while queued, and be deleted when a lease is staged
+      without acquiring a separately governed information-object identity. The
+      revised open issue concedes this twin, but the analyzed hypothesis still
+      rejects it.
+    outcome: landed
+rival_models_still_viable:
+  - "The queued operational request as distinct from its record"
+  - "The ticket information object as the deployed SeatRequest"
+  - "A persistence DTO without independent record-token identity"
+evidence:
+  - "so:sha256:3e8c52e70d0dfe96bccb840e61a4691e1d3f08801b3892ea976c3123f93d1f61"
+  - "po:sha256:07350ed24a5ad10ca9a6a0af85ae646487c62e7c63e760eeb8305d395e223b25"
+  - "CQ-021"
+  - "CQ-023"

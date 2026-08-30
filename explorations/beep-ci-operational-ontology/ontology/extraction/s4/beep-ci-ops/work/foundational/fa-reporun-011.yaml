@@ -1,0 +1,21 @@
+id: "fa:reporun:011"
+hypothesis_ref: "dh:reporun:025"
+identity_card_ref: "ic:reporun:011"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "WorkUnitSpecification represented by the plan-step artifact"
+    still_viable: true
+  - label: "planner DTO with no independently retained semantics"
+    still_viable: true
+  - label: "WorkUnitExecution occurrence"
+    still_viable: false
+strongest_counterexample: >-
+  The same step identifier can be regenerated with a materially different
+  command or context, while one unchanged prescription can be executed many
+  times; neither the identifier nor an execution can supply the information
+  object's identity.
+verdict: analyzed

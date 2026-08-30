@@ -1,0 +1,27 @@
+id: ic:alt4:056
+hypothesis_ref: dh:yeet-planner:007
+identity:
+  supplies_identity: true
+  identity_criterion: Two Yeet cheap-gates procedure specifications are the same when they select the cheap-gates proof-step definition and associate the cheap-gate lane collection in a planned proof step; the selector token is evidence, never the criterion.
+  reidentification_key:
+    - cheap-gates
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The reused proof-step definition plus the cheap-gate lane/wave collection compose one planner-side prescription.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies:
+    - RepoProofStepDefinition
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: repairCheapGateStep rephases the same definition into a feedback slot, showing phase is a plan attribute rather than the identity of the cheap-gates prescription.
+  - description: A YeetProofTier token that never calls repoProofStepDefinition would not determine this specification.
+status: proposed

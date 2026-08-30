@@ -1,0 +1,21 @@
+id: "dh:worktree-config:012"
+observation_refs:
+  - "po:sha256:747d73621252aaf2a8d76342bde8d582c51498933c113bceb8b39ecdd10997d7"
+  - "po:sha256:60ee0a392b7109f8914e89df188cdd5bd8e18390ddde480b96f362408411fdd4"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "docgen verification-lane procedure"
+  description: "The documentation-generation verification procedure that can be invoked through affected edit-loop or full-repository work specifications."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "pair of docgen command descriptions"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The adversary's command-description counterexample wins: repository guidance can prescribe docgen:local for edit loops and full docgen for repository proof as two implementation instructions without establishing one governed, independently individuated docgen procedure."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.88, use_for_acceptance: false}

@@ -1,0 +1,24 @@
+id: "fa:alt1:010"
+hypothesis_ref: "dh:sched-core:022"
+identity_card_ref: "ic:alt1:010"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: false
+rival_models:
+  - label: "the admitted-work process unfolding while the lease is held"
+    still_viable: true
+  - label: "the withQualityAdmission bracketing procedure specification"
+    still_viable: false
+  - label: "generic acquire-use-release wrapper"
+    still_viable: false
+strongest_counterexample: "runAdmitted forks a heartbeat, restores the caller's use, then
+  removes the lease and releases the origin; a generic resource wrapper without those
+  participants would not explain the observed bracket. The procedure that can be rerun is a
+  different individual from this dated mediation."
+verdict: "analyzed"
+needed_evidence: "Whether the lease is modeled as this relator (the lease carrying weight,
+  heartbeat, origin) or as a participant in a distinct guarded-execution relator. Discriminating
+  observation: a property of the mediation that is not a property of the lease or of the work
+  (if none exists, lease-as-relator and this relation collapse)."

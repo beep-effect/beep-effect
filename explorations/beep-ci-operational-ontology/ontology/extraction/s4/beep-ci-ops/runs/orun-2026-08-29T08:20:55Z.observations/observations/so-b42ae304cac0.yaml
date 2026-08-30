@@ -1,0 +1,32 @@
+id: so:sha256:b42ae304cac034541a411b5a78d6c1ab6cee760517b55b48bb9c2ae181d1d261
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 88
+  end_line: 92
+  content_sha256: 8ca47d91ace5ebfb8d135f4907e1dfc084143ca2c6cc656974f8b3f167cf6658
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheEnvName
+  lexical_name: TurboCacheEnvName
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: TURBO_API
+- predicate: declares_literal_member
+  object: TURBO_CACHE
+- predicate: declares_literal_member
+  object: TURBO_TEAM
+- predicate: declares_literal_member
+  object: TURBO_TOKEN
+- predicate: exports_symbol
+  object: TurboCacheEnvName
+source_excerpt: export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM",
+  "TURBO_CACHE"]).pipe(
+epistemic_status: parser_derived

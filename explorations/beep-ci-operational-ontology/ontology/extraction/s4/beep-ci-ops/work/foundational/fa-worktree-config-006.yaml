@@ -1,0 +1,21 @@
+id: "fa:worktree-config:006"
+hypothesis_ref: "dh:worktree-config:010"
+identity_card_ref: "ic:worktree-config:006"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Unreified binary direct-dependency relation"
+    still_viable: true
+  - label: "Package-manifest dependency assertion modeled as an information object"
+    still_viable: true
+  - label: "Dependency declaration reified as a relator with constraint, kind, and provenance"
+    still_viable: true
+strongest_counterexample: >-
+  Two declaration records can ground the same ordered package dependency while
+  differing in dependency kind, version constraint, source manifest, or tree
+  context. Collapsing the binary relation, its reified declaration, and the
+  manifest record loses distinctions needed for closure and provenance.
+verdict: analyzed

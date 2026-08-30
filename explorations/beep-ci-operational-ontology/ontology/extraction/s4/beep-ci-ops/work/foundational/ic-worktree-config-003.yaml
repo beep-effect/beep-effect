@@ -1,0 +1,43 @@
+id: "ic:worktree-config:003"
+hypothesis_ref: "dh:worktree-config:007"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Sameness follows the underlying review-thread information object: one
+    continuing anchored discussion with the same creation provenance and
+    message history remains the same thread when its resolution state changes;
+    the unresolved classification does not create a new individual.
+  reidentification_key:
+    - "pull-request and review-anchor context"
+    - "thread creation provenance"
+    - "platform thread key as technical evidence"
+    - "continuity of the anchored message sequence"
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One anchored review discussion, including its messages and resolution
+    metadata, supplies the bearer whose current phase is unresolved.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: phase
+  alternatives:
+    - "information_object: a review thread with unresolved represented as a mutable attribute"
+    - "quality: a resolution-state quality inhering in a review-thread information object"
+    - "mode: a resolution obligation borne by a reviewer or pull-request owner"
+  existential_dependencies:
+    - "The underlying review-thread information object"
+    - "Its current intrinsic resolution condition"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "resolved"
+    - "obsolete or dismissed without resolution"
+counterexamples:
+  - description: >-
+      A review thread can be resolved and later reopened while retaining its
+      messages, anchor, and provenance; treating unresolved status as an
+      identity provider would invent a new thread on every transition.
+status: proposed

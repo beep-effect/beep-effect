@@ -1,0 +1,23 @@
+id: "dh:worktree-config:015"
+observation_refs:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048"
+  - "po:sha256:805ea8b43e9d37cc3d82a889148ac8fd3aebda4deb587e5a779fa63dd858e9f3"
+  - "po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Fallow audit verification-lane procedure"
+  description: "The repeatable Fallow audit activity invoked against a base and governed by a finding gate."
+representation_status: domain_referent
+alternatives:
+  - label: "Fallow audit command entry"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "A dormant command row could carry the same strings, but the dated standards inventory attests the parameterized Fallow audit and its fail verdict while the root configuration fixes the same new-only gate."
+  discriminator: "The dated pilot inventory records a Fallow audit invoked against origin/main with the new-only gate and a fail verdict, and the root Fallow configuration fixes that gate for audits."
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

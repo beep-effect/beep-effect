@@ -1,0 +1,59 @@
+id: otp:schedule-proposal:001
+hypothesis_ref: dh:reporun:026
+identity_card_ref: ic:reporun:012
+foundational_status: analyzed
+term:
+  local_name: ScheduleProposal
+  preferred_label: schedule proposal
+  proposed_iri: https://oip.law/ontology/ci-ops#ScheduleProposal
+  owl_entity_kind: class
+definition:
+  text: An ordered schedule information artifact that, when materialized for a VerificationEpisode, is linked as
+    that episode's current proposal and prescribes the applicable WorkUnit sequence and scope. CQ-020 requires this
+    current ordered prescription; the present closure does not settle whether deployed RepoRunPlan values are retained
+    as its A-Box instances.
+  source:
+  - CQ-020
+  - so:sha256:b1addafaac37d8ae5ba61d331e1478b13bf74addcbb005c427cb6cd00da76fc3
+  - so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b
+  - so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: intrinsic
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-020
+alternatives_rejected:
+- 'Implementation-artifact-only null rejected. Rationale: The proposed referent is a repeatable prescription whose
+  steps may be executed more than once; it is not the dated run that follows the prescription. Discriminator: The
+  cited plan composes a run context with an array of planned command specifications, and the cited comparator gives
+  those specifications a deterministic phase-then-identifier ordering used by the plan.'
+- 'Rejected weak denotation alternative: VerificationEpisode execution.'
+- 'Rejected non-viable foundational model: VerificationEpisode execution.'
+open_issues:
+- Steward choice remains open between a materialized current schedule artifact and a transient planner DTO. A retention
+  trace linking a RepoRunPlan output to a persisted ScheduleProposal and the episode's hasCurrentProposal update
+  would decide the deployed A-Box claim.
+revision_log:
+- from_sha256: e39e8933d150e24704a996f668e23a11ae580a7cf4e76a127a6da52384ecbc3e
+  addressed:
+  - null-rival-still-viable
+- from_sha256: e0270468da9795f77ce9664bf0c04bfca4aa75b7fd8593e0040473c2e69278ea
+  addressed:
+  - null-rival-still-viable
+- from_sha256: 9660b75a774f282f69643c9be6940bfddcc8bfbca0f3c5710c60d885f509490d
+  addressed:
+  - null-rival-still-viable
+- from_sha256: 28226b5a0cbe831b9b81c4d8a9294358748af7449578817404d8e0dc259b5c3d
+  addressed:
+  - null-rival-still-viable
+revision_requests: []
+status: proposed

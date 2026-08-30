@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:018"
+hypothesis_ref: "dh:turbo-cache:020"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same Storybook-test task specification only when they are the same authored repeatable testing instruction in the same versioned configuration lineage with the same complete inherited dependency and input prescriptions; the test:storybook key or build selector alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key test:storybook"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The declarations compose one reusable Storybook-test instruction, distinct from every run and resulting verification record."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A Storybook-test verification lane realized by the specification"
+    - "A root template for package-specific Storybook-test specifications"
+  existential_dependencies:
+    - "The versioned configuration, Storybook sources, and package scripts that complete the test instruction"
+    - "At least one bearer of the instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "Distinct Storybook test commands can share the same root build dependency and input surface while exercising different behavior, so the root declaration may be a template rather than one lane."
+status: proposed

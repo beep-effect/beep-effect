@@ -1,0 +1,23 @@
+id: "dh:yeet-watch:038"
+observation_refs:
+  - "so:sha256:07c14fb9fec8f1350585267dff71467e701063f59409c0923226d82d1bc7b3dd"
+  - "so:sha256:55b73458ad3a3257a6174935637bdab69edb379fb58f20dd6b400e27fc582000"
+  - "so:sha256:6309ffcef9f86b3d4c172c54454c30fd8984fd966c6fcb358f92f210038a8610"
+  - "so:sha256:6b086d81d8de70cb295df76991468d618eea3284b2abf4d6eca5658a42cba73d"
+cq_warrants: []
+proposed_referent:
+  label: "repository CLI module-identifier helpers"
+  description: "Source-local identifier builders used to annotate the closeout, Turbo-query, watch-stream, and monitor-loop modules."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "module-name lexical aliases"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Each observation is only an unrepresentable variable declaration for source annotation; the shared helper pattern does not denote an independent CI-operational entity."
+epistemic_status: proposed
+confidence:
+  value: 0.99
+  use_for_acceptance: false

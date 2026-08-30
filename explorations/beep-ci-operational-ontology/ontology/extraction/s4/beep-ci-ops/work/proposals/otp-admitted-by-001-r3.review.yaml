@@ -1,0 +1,47 @@
+target: "otp:admitted-by:001"
+target_sha256: "c186d632cc15afd0a18fba0053bc44b386153e81dc8e250caddfc822f428f166"
+chain_sha256: "ec60c2adbb0b0140f748c5e4cfb62f966eca08bfef2fea992d6aa1e13d7e99c9"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The object-property proposal asserts no parents edge; no is-a or
+    subproperty relation exists to test, so no valid subsumption is presumed.
+attacks:
+  - surface: identity
+    rule: property-assertion-identity
+    counterexample: >-
+      One reusable WorkUnit specification can execute twice as E1 and E2 under
+      one grant. The revised card makes E1 and E2 separate subjects and gives
+      the property no supplied identity, so it no longer merges their assertions.
+    outcome: survived
+  - surface: warrant
+    rule: cq-domain-mismatch
+    counterexample: >-
+      CQ-010 names and requires WorkUnit, the lane-by-scope scheduling object
+      used by CQ-002, whereas this proposal expressly excludes the reusable
+      specification and makes only WorkUnit execution occurrences subjects.
+      A graph with specification W, execution E, and only E admittedBy G does
+      not answer which admitted WorkUnit specification the cited CQ asks about.
+    outcome: landed
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A generic wrapper could acquire and release a lock, but it would not
+      preserve the cited scheduler behavior that an overshooting lease is
+      rolled back before the guarded work callback begins and that accepted
+      work remains capacity-charged. The runtime admission relation survives.
+    outcome: survived
+rival_models_still_viable:
+  - "A reified admission occurrence can connect specification, execution, and grant without the CQ domain mismatch."
+evidence:
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "CQ-010"

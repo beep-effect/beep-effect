@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:019"
+observation_refs:
+  - "so:sha256:5447316b0c73e560e82d5872d07abe17553792d384c1d166df41fa5d39e28b0b"
+  - "po:sha256:4fa7b391ce0031358c1605302591b99a80c9fbfabba558673fa63a95e2421f60"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo task specification named storybook:start"
+  description: "A repeatable configured task carrying an observed dependency on storybook:build."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A Storybook-start service procedure specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A verification lane"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An implementation-only Turbo entry can depend on storybook:build and thereby prescribe launch ordering; the cited configuration row supplies no retained or governed Storybook-start procedure."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.7
+  use_for_acceptance: false

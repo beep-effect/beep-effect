@@ -1,0 +1,56 @@
+id: otp:active-tokens:001
+hypothesis_ref: dh:sched-core:014
+identity_card_ref: ic:sched-core:013
+foundational_status: analyzed
+term:
+  local_name: activeTokens
+  preferred_label: active admission tokens
+  proposed_iri: https://oip.law/ontology/ci-ops#activeTokens
+  owl_entity_kind: data_property
+definition:
+  text: 'A data relation from a machine-wide admission context, as captured at an immediately pre-grant AdmissionSnapshot
+    boundary, to the sum of admission charges borne by its live SeatGrants under the governing token convention. The
+    capacityAtAdmissionTokens decision value is computed from that same snapshot as capacityTokens minus activeTokens.
+    Without this named operand, CQ-010 can still compare a stored remainder, but cannot check from the AdmissionSnapshot
+    whether that value is the deployed pre-grant remainder rather than a post-grant or otherwise miscomputed ETL value.'
+  source:
+  - CQ-010
+  - so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f
+  - po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe
+  - po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b
+  - po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f
+  - po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16
+foundational:
+  ufo_category: none
+  gufo_alignment: not applicable to an OWL property
+ontoclean:
+  rigidity: unresolved
+  identity: none
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  semantic_support_for:
+  - otp:capacity-at-admission-tokens:001
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The scheduler admits a contender only when its weight
+  fits live capacity and rolls back the newest lease when concurrent promotions push the active charge over capacity.'
+- 'Rejected weak alternative: array-reduction result with no independent meaning.'
+open_issues: []
+revision_log:
+- from_sha256: 94defa00fb3bf3198639ddc338bf1c61c72e7791c121513b1d735e32d230389d
+  addressed:
+  - identity-bearer-mismatch
+  - support-term-not-necessary
+  - discriminator-true-of-dto
+- from_sha256: fadd2c0d4d679ae735771300c0fefadd894d958ebab19948aa56562eaf9f32c9
+  addressed:
+  - support-term-not-necessary
+  - discriminator-true-of-dto
+- from_sha256: ecbfaac2364a168036bb484b22eb92ce75153ff13116f71e8c74ad2b906e8416
+  addressed:
+  - support-term-not-necessary
+status: proposed
+revision_requests: []

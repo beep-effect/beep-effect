@@ -1,0 +1,14 @@
+id: fa:worktree-config:011
+hypothesis_ref: dh:worktree-config:015
+identity_card_ref: ic:worktree-config:011
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: Treat the inventory row as configuration without repeatable procedure content.
+  still_viable: false
+strongest_counterexample: One dated audit execution can fail while the procedure specification persists, and identical procedure
+  content can be copied across repositories without acquiring a new identity.
+verdict: analyzed

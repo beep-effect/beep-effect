@@ -1,0 +1,23 @@
+id: so:sha256:c4609511021730abce805c627e8ac39fb16a03089ebf2edff20a186e2f2c05af
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 181
+  end_line: 182
+  content_sha256: cab8a6719027d3a5318fd5a83944d8ba25d854a1dc54659f45d72c8108c92b2e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/github/JobShape.ts::githubConclusion
+  lexical_name: githubConclusion
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: githubConclusion
+source_excerpt: 'export const githubConclusion = (conclusion: string | null): O.Option<string> =>'
+epistemic_status: parser_derived

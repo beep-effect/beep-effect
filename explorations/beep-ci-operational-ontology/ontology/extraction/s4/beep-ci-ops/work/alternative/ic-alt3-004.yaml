@@ -1,0 +1,36 @@
+id: ic:alt3:004
+hypothesis_ref: dh:reporun:044
+identity:
+  supplies_identity: true
+  identity_criterion: Two wedge occurrences are the same iff they are the same capture's failure
+    to reach EOF after child exit, drain grace, process-group reap, and reap grace for one
+    command. The tagged error value reports that occurrence; it is not what makes the occurrence
+    the same.
+  reidentification_key:
+  - commandLine
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one capture lifetime bounded by the child, drain grace, group reap, and reap grace
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - situation
+  - information_object
+  existential_dependencies:
+  - the child process
+  - the capture pipe
+  - any escaped descendant holding the write end
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - CapturePipeWedgedError raised
+  - capture reaches EOF before the deadline
+counterexamples:
+- description: A capture that ends during drain grace or immediately after the group reap
+    is not this occurrence; the deadline is interrupted when the stream ends and never raises
+    the wedge.
+status: proposed

@@ -1,0 +1,30 @@
+id: "dh:sched-core:004"
+observation_refs:
+  - "so:sha256:5010a3754c9b71cbae1923e541fce6661c98432e5921c39242d69c0255198a8d"
+  - "so:sha256:52812cd00f245efb47e28b49b04b48f05de8a7fae89b4f413ebf61b3fc57cb86"
+  - "so:sha256:ebee067e625c3a5650da8dd8f45209c9f1ecba5607feb53883b955501198153c"
+  - "po:sha256:1df4ac671a4779bf2519466b2ecb2dcc2b23e9ba22e02ad5cebe87366eca3566"
+  - "po:sha256:3f57f55191e8fc667ab387c84eba3390bc82db471f29e0fa36e1b21ab00a90d9"
+  - "po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe"
+  - "po:sha256:709c9ffbbdc3990c9c40d48b8af0e6596207859623572c9f79141a30cd87cef4"
+  - "po:sha256:e7c3ea8d5b5153343db1a4808576432838febc5a2b7ad96a4994272b8eff7b08"
+  - "po:sha256:f8f04fa03ce6beb02f2e04238f731ef8f501b5d1d788adca0999a49c255d3f2d"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "admission work-kind vocabulary"
+  description: "A closed information vocabulary used to classify heavyweight repository work recorded on requests and grants."
+representation_status: information_artifact
+alternatives:
+  - label: "lexical aliases for operational work categories"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "closed string union with no domain interpretation"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The design record supplies the chartered token weights applied to the four work-kind values in admission policy, while also identifying publish as a reserved member whose heavy proof currently uses full-proof weight. This establishes a controlled operational vocabulary without treating its members as ontological work subkinds."
+  discriminator: "Deployed admission assigns full-proof 3, merged-preview 5, review-fix 1, and publish 1 tokens, so work-kind selection changes scheduler capacity charging."
+epistemic_status: proposed
+confidence: {value: 0.86, use_for_acceptance: false}

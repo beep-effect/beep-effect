@@ -1,0 +1,25 @@
+id: so:sha256:01ebe52998854e6382ed57cfc9052b2f4fbb29e735679f51e8911afd85469ded
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 529
+  end_line: 529
+  content_sha256: dbe3a3b1d94b9643973207bb6dba385aaba568c9e04a651ee8eb1888cba79eda
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::YeetWatchEndReason
+  lexical_name: YeetWatchEndReason
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: YeetWatchEndReason
+- predicate: exports_symbol
+  object: YeetWatchEndReason
+source_excerpt: export type YeetWatchEndReason = typeof YeetWatchEndReason.Type;
+epistemic_status: parser_derived

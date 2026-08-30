@@ -1,0 +1,49 @@
+target: "otp:machine-proof-lock:001"
+target_sha256: "b075d75f871046de37e8993511b07ee8ea4e7b0568df0842d3a62a73ede02464"
+chain_sha256: "9217d369c990cfdc284e1e9542dae0aa36f1477675bfbb0f132fa704e617e74e"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: role-bearer-identity
+    counterexample: >-
+      A gate service can be recreated and holders can change while one origin
+      coordination target remains contended. The card makes ContendedResource
+      anti-rigid, carries the bearer's identity, and follows the underlying
+      target and continuous coordination regime rather than service object,
+      holder, or lock-path identity.
+    outcome: survived
+  - surface: warrant
+    rule: cq-required-generic-resource-class
+    counterexample: >-
+      CQ-008 explicitly asks which contended resources exist and which active
+      SeatGrants hold them. Removing the generic class leaves those resource
+      individuals untyped; the revision avoids the unwarranted proof-lock
+      subclass while preserving the class the query genuinely requires.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-contention-discriminator
+    counterexample: >-
+      A service interface can expose acquire and release without real
+      contention, but it cannot preserve the attempt journal's lock-contention
+      verdicts and the KPI's counted proof-lock bounces with owner and lock-path
+      evidence. The origin-scoped contended resource survives the interface twin.
+    outcome: survived
+rival_models_still_viable:
+  - "The concrete bearer may be a gate service, lock artifact, or repository-origin coordination target."
+  - "Each holding episode may additionally be represented by a lock-acquisition relator."
+evidence:
+  - "so:sha256:35e4fb37b45559b198eb68bd4a8c1f339456c7505089a9baeacc2af4658ef5e0"
+  - "po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807"
+  - "po:sha256:464f27578af7c6ee1884ce4ba45cb5b11c4375e3b0f3766562da238b43c4ea83"
+  - "CQ-008"

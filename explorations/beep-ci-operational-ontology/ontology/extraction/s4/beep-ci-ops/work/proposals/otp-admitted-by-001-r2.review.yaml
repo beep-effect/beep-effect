@@ -1,0 +1,65 @@
+target: "otp:admitted-by:001"
+target_sha256: "c7e15f235fa220e8fdaa6f106b13d9fa84706563690da506ec5b068c92cf9c77"
+chain_sha256: "531a1b0c7975b59f63e2422a13d10dd25cd367351bf1c8aeb1742ef663980f70"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The object-property proposal asserts no parents edge, so it proposes no
+    subproperty or is-a relation and no valid subsumption relation is available
+    for OntoClean comparison.
+attacks:
+  - surface: identity
+    rule: foundational-category-identity-mismatch
+    counterexample: >-
+      One RDF assertion W admittedBy G is a relation, but the referenced card
+      still supplies the identity of a temporally continuous admission-guarded
+      execution process. Marking the property itself unresolved does not make the
+      relation inherit the process's invocation, interval, or grant-lineage
+      identity criterion.
+    outcome: landed
+  - surface: identity
+    rule: workunit-specification-execution-split
+    counterexample: >-
+      WorkUnit specification W can execute twice as E1 and E2 under the same
+      grant G. Both occurrences collapse to the single triple W admittedBy G, so
+      the definition's phrase "a particular execution" is not represented by the
+      binary property and cannot distinguish the two executions.
+    outcome: landed
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two disjoint invocations can reuse the same callback code and a recycled
+      technical grant identifier. The card still requires continuous invocation,
+      interval, and grant lineage, so those keys alone do not identify one process.
+    outcome: survived
+  - surface: warrant
+    rule: cq-domain-match
+    counterexample: >-
+      CQ-010 does require an admittedBy edge from its WorkUnit subject to the
+      SeatGrant carrying charge and capacity. The revised property now uses that
+      source and target, so removing it makes the CQ inexpressible as written even
+      though its execution-level gloss remains defective.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-resource-wrapper
+    counterexample: >-
+      A generic acquire-use-release wrapper can run a callback, heartbeat a lease,
+      delete a lease file, and release a lock at termination while remaining only
+      runtime plumbing. No cited observation binds an independently persisted
+      WorkUnit, execution, and grant relation, so every claimed discriminator is
+      true in the null world.
+    outcome: landed
+rival_models_still_viable:
+  - "The reusable resource-bracketing procedure"
+  - "A reified admission situation connecting specification, execution, and grant"
+evidence:
+  - "po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85"
+  - "po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a"
+  - "CQ-010"

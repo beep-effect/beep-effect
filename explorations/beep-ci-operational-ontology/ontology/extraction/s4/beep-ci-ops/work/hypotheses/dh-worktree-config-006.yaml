@@ -1,0 +1,19 @@
+id: "dh:worktree-config:006"
+observation_refs:
+  - "po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b"
+cq_warrants: []
+proposed_referent:
+  label: "hosted-required-check merge obligation"
+  description: "A merge condition requiring hosted checks designated as required to be satisfied; it is an obligation distinct from the monitoring procedure that observes it."
+representation_status: domain_referent
+alternatives:
+  - label: "hosted-check policy statement"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The cited repository rule assigns a normative merge consequence to hosted required-check status, so the evidence is not exhausted by a passive check-status representation."
+  discriminator: "The governing repository rule makes satisfaction of hosted required checks a condition of merge, so an unsatisfied required check blocks the candidate branch from merging."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}
