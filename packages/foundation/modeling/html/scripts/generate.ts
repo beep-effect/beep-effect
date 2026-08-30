@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { createHash } from "node:crypto";
 import { $HtmlId } from "@beep/identity";
 import { Defect, LiteralKit } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
@@ -26,7 +25,9 @@ import { Unknown } from "@beep/schema/Unknown";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
+  Crypto,
   Effect,
+  Encoding,
   FileSystem,
   flow,
   Layer,
@@ -4062,15 +4063,25 @@ const program = Effect.gen(function* () {
   const languageSubtagRegistrySource = yield* fs.readFileString(
     path.join(dataDir, "iana/language-subtag-registry.txt")
   );
+  const crypto = yield* Crypto.Crypto;
+  const registryHash = Encoding.encodeHex(
+    yield* crypto.digest("SHA-256", new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
+      Effect.mapError((cause) =>
+        HtmlGenerationError.make({
+          cause,
+          message: "HTML generator could not hash the IANA language-subtag registry",
+        })
+      )
+    )
+  );
+  if (registryHash !== IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256) {
+    return yield* HtmlGenerationError.make({
+      message: `IANA registry requires SHA-256 ${IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256}; received ${registryHash}`,
+    });
+  }
 
   const { conforming, languageTagRegistry, meta, model, total } = yield* Effect.try({
     try: () => {
-      const registryHash = createHash("sha256").update(languageSubtagRegistrySource).digest("hex");
-      if (registryHash !== IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256) {
-        failGeneration(
-          `IANA registry requires SHA-256 ${IANA_LANGUAGE_SUBTAG_REGISTRY_SHA256}; received ${registryHash}`
-        );
-      }
       const registry = parseLanguageSubtagRegistry(languageSubtagRegistrySource);
       return {
         ...buildModel({

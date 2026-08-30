@@ -5,15 +5,22 @@ import {
   CiLocalStepPlan,
   ciLaneStepsForTesting,
   ciLocalStepsForTesting,
+  docgenLaneModeForChangedPaths,
   doctestStepForTesting,
   runCiLane,
 } from "@beep/repo-cli/commands/Ci";
+import {
+  readTurboCacheEnvironment,
+  resolveTurboCachePlan,
+  turboCachePlanArgs,
+} from "@beep/repo-cli/test/SharedInternals";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -21,6 +28,21 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 const REPO_ROOT = "/repo";
 const MERGE_BASE_SHA = "mergebase1234";
 const encoder = new TextEncoder();
+
+const withEnvVar = <A>(name: string, value: string | undefined, use: () => A): A => {
+  const previous = Bun.env[name];
+  if (value === undefined) delete Bun.env[name];
+  else Bun.env[name] = value;
+  try {
+    return use();
+  } finally {
+    if (previous === undefined) delete Bun.env[name];
+    else Bun.env[name] = previous;
+  }
+};
+
+const expectedTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" }));
 
 const commandHandle = (output = "", exitCode = 0) =>
   ChildProcessSpawner.makeHandle({
@@ -136,26 +158,22 @@ const prShapeOptions = CiLaneRunOptions.make({
   summarize: true,
 });
 
-// The 16 required-check context names read from ruleset 10240248 on 2026-08-13.
-const REQUIRED_CONTEXT_NAMES = [
-  "Check",
-  "Codegen Drift",
-  "Commitlint",
-  "Coverage Regression",
-  "Docgen",
-  "Doctest",
-  "Knip",
-  "Lint",
-  "Lint Policy",
-  "Nix Shell",
-  "Professional Desktop IPC Stdio",
-  "Repo Sanity",
-  "SAST",
-  "Secret Scanning",
-  "Security",
-  "Test Integration",
-  "Test Unit",
-];
+const BranchProtectionContextSnapshot = S.Struct({
+  schemaVersion: S.Literal("branch-protection-contexts/v1"),
+  capturedAt: S.String,
+  repository: S.Literal("beep-effect/beep-effect"),
+  branch: S.Literal("main"),
+  rulesetId: S.Literal(10240248),
+  rulesetName: S.String,
+  enforcement: S.Literal("active"),
+  strictRequiredStatusChecksPolicy: S.Literal(false),
+  requiredStatusChecks: S.Array(S.String),
+});
+const decodeBranchProtectionContextSnapshot = S.decodeUnknownEffect(S.fromJsonString(BranchProtectionContextSnapshot));
+const branchProtectionContextSnapshotUrl = new URL(
+  "../../../../../goals/ship-velocity/research/branch-protection-contexts.json",
+  import.meta.url
+);
 
 describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
@@ -170,16 +188,21 @@ describe("CI lane descriptors", () => {
     expect(missing).toEqual([]);
   });
 
-  it("matches the frozen required-check context set", () => {
-    const requiredContexts = pipe(
-      CI_LANE_DESCRIPTORS,
-      A.filter((descriptor) => descriptor.required),
-      A.map((descriptor) => descriptor.contextName),
-      A.dedupe,
-      A.sort(Order.String)
-    );
-    expect(requiredContexts).toEqual(REQUIRED_CONTEXT_NAMES);
-  });
+  it.effect("matches the exact captured required-check context set", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* Effect.tryPromise(() => Bun.file(branchProtectionContextSnapshotUrl).text()).pipe(
+        Effect.flatMap(decodeBranchProtectionContextSnapshot)
+      );
+      const requiredContexts = pipe(
+        CI_LANE_DESCRIPTORS,
+        A.filter((descriptor) => descriptor.required),
+        A.map((descriptor) => descriptor.contextName),
+        A.dedupe,
+        A.sort(Order.String)
+      );
+      expect(requiredContexts).toEqual(A.sort(snapshot.requiredStatusChecks, Order.String));
+    })
+  );
 
   it("keeps the ecosystem contracts context visible but non-required", () => {
     const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "ecosystem"));
@@ -200,7 +223,6 @@ describe("CI lane descriptors", () => {
     expect(descriptor.contextName).toBe("Labs");
     expect(descriptor.required).toBe(false);
     expect(descriptor.laneClass).toBe("workflow-gated");
-    expect(A.contains(REQUIRED_CONTEXT_NAMES, descriptor.contextName)).toBe(false);
   });
 
   it("marks the CI-only residue as unreplayable", () => {
@@ -215,10 +237,30 @@ describe("CI lane descriptors", () => {
 });
 
 describe("ciLaneStepsForTesting", () => {
-  it("serializes the PR-shape check lane on fleet workers", () => {
-    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
-    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=1", "--affected", "--summarize"]);
+  it("uses the local PR-shape check concurrency outside GitHub Actions", () => {
+    const step = withEnvVar("GITHUB_ACTIONS", undefined, () =>
+      withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+        firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions))
+      )
+    );
+    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=3", "--affected", "--summarize"]);
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
+  });
+
+  it("uses the hosted PR-shape check concurrency in GitHub Actions", () => {
+    const step = withEnvVar("GITHUB_ACTIONS", "true", () =>
+      withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
+        firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions))
+      )
+    );
+    expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=2", "--affected", "--summarize"]);
+  });
+
+  it("lowers Check to c2 under a contended admission profile", () => {
+    withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", "2", () => {
+      const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "check", prShapeOptions));
+      expect([...step.args]).toEqual(["run", "check", "--", "--concurrency=2", "--affected", "--summarize"]);
+    });
   });
 
   it("builds the PR-shape package lint graph with TURBO_SCM_BASE", () => {
@@ -230,6 +272,7 @@ describe("ciLaneStepsForTesting", () => {
       "turbo",
       "run",
       "lint",
+      ...expectedTurboCacheArgs(["--concurrency=2", "--filter=!./apps/labs/**", "--affected", "--summarize"]),
       "--concurrency=2",
       "--filter=!./apps/labs/**",
       "--affected",
@@ -240,7 +283,14 @@ describe("ciLaneStepsForTesting", () => {
 
   it("builds the push-shape lint lane with the hosted-runner turbo cap", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint", baseOptions));
-    expect([...step.args]).toEqual(["turbo", "run", "lint", "--concurrency=2", "--filter=!./apps/labs/**"]);
+    expect([...step.args]).toEqual([
+      "turbo",
+      "run",
+      "lint",
+      ...expectedTurboCacheArgs(["--concurrency=2", "--filter=!./apps/labs/**"]),
+      "--concurrency=2",
+      "--filter=!./apps/labs/**",
+    ]);
     expect(step.env).toBeUndefined();
   });
 
@@ -259,6 +309,7 @@ describe("ciLaneStepsForTesting", () => {
       "check",
       "lint",
       "test",
+      ...expectedTurboCacheArgs(["--filter=./apps/labs/**", "--concurrency=2"]),
       "--filter=./apps/labs/**",
       "--concurrency=2",
     ]);
@@ -271,6 +322,7 @@ describe("ciLaneStepsForTesting", () => {
       "check",
       "lint",
       "test",
+      ...expectedTurboCacheArgs(["--filter=./apps/labs/**", "--concurrency=2"]),
       "--filter=./apps/labs/**",
       "--concurrency=2",
       "--summarize",
@@ -381,6 +433,11 @@ describe("ciLaneStepsForTesting", () => {
   });
 
   it("builds docgen lanes per workflow lane-gate mode", () => {
+    const auto = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }))
+    );
+    expect([...auto.args]).toEqual(["run", "docgen:local", "--", "--base", "origin/main", "--head", "HEAD"]);
+
     expect(ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "none" }))).toEqual(
       []
     );
@@ -394,6 +451,16 @@ describe("ciLaneStepsForTesting", () => {
       ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "full" }))
     );
     expect([...full.args]).toEqual(["run", "docgen"]);
+  });
+
+  it("selects Docgen none, affected, and full modes from one CLI predicate", () => {
+    expect(docgenLaneModeForChangedPaths([])).toBe("none");
+    expect(docgenLaneModeForChangedPaths(["goals/ship-velocity/PLAN.md"])).toBe("affected");
+    expect(docgenLaneModeForChangedPaths(["standards/architecture/DECISIONS.md"])).toBe("affected");
+    expect(docgenLaneModeForChangedPaths(["scripts/release.sh"])).toBe("none");
+    expect(docgenLaneModeForChangedPaths(["packages/example/src/index.ts"])).toBe("affected");
+    expect(docgenLaneModeForChangedPaths(["packages/tooling/tool/docgen/src/index.ts"])).toBe("full");
+    expect(docgenLaneModeForChangedPaths(["tsconfig.base.json"])).toBe("full");
   });
 
   it("builds exact full and affected Doctest argv", () => {
@@ -465,7 +532,15 @@ describe("ciLaneStepsForTesting", () => {
   it("builds the property lane with the 400-run floor, fixed seed, and cache-partitioning env", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "property", prShapeOptions));
     expect(step.command).toBe("bunx");
-    expect([...step.args]).toEqual(["turbo", "run", "test:property", "--concurrency=4", "--affected", "--summarize"]);
+    expect([...step.args]).toEqual([
+      "turbo",
+      "run",
+      "test:property",
+      ...expectedTurboCacheArgs(["--concurrency=4", "--affected", "--summarize"]),
+      "--concurrency=4",
+      "--affected",
+      "--summarize",
+    ]);
     expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400", BEEP_FC_SEED: "20260708", TURBO_SCM_BASE: "origin/main" });
 
     const deep = firstOf(
@@ -550,7 +625,7 @@ describe("ciLocalStepsForTesting", () => {
       "lane",
       "docgen",
       "--mode",
-      "affected",
+      "auto",
       "--base",
       "origin/main",
     ]);
@@ -613,6 +688,35 @@ layer(
     })
   );
 });
+
+const autoDocgenCommands = A.empty<string>();
+layer(doctestCiLayer(["packages/a/src/index.ts"], dependentDoctestSources, autoDocgenCommands))(
+  "automatic Docgen CI lane",
+  (it) => {
+    it.effect("derives the affected mode from the base-to-head diff and executes it", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
+
+        expect(autoDocgenCommands[0]).toBe("git diff --name-only origin/main...HEAD");
+        expect(autoDocgenCommands[1]).toContain("bun run docgen:local -- --base origin/main --head HEAD");
+      })
+    );
+  }
+);
+
+const inertDocgenCommands = A.empty<string>();
+layer(doctestCiLayer(["scripts/release.sh"], dependentDoctestSources, inertDocgenCommands))(
+  "automatic inert Docgen CI lane",
+  (it) => {
+    it.effect("skips execution when the diff has no Docgen inputs", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
+
+        expect(inertDocgenCommands).toEqual(["git diff --name-only origin/main...HEAD"]);
+      })
+    );
+  }
+);
 
 const manifestDoctestCommands = A.empty<string>();
 

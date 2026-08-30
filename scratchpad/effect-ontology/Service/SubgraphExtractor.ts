@@ -84,7 +84,6 @@ export class Subgraph extends S.Class<Subgraph>($I`Subgraph`)(
 /**
  * Constructor input accepted by {@link Subgraph}.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -127,7 +126,6 @@ export class ExtractOptions extends S.Class<ExtractOptions>($I`ExtractOptions`)(
 
 /**
  * Constructor input accepted by {@link ExtractOptions}.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -176,7 +174,6 @@ export class ExtractRelevantOptions extends S.Class<ExtractRelevantOptions>($I`E
 /**
  * Constructor input accepted by {@link ExtractRelevantOptions}.
  *
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -185,6 +182,10 @@ export type ExtractRelevantOptionsInput = (typeof ExtractRelevantOptions)["~type
 /**
  * Subgraph extraction service contract.
  *
+ * **Details**
+ *
+ * This remains an interface because both members are dual executable
+ * operations over an in-memory knowledge graph, not serializable data.
  *
  * @category services
  * @since 0.0.0
@@ -386,9 +387,15 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
  * **Example** (Compose the live extraction layer)
  *
  * ```ts
- * import { SubgraphExtractorDefault } from "@effect-ontology/Service/SubgraphExtractor"
+ * import { Effect } from "effect"
+ * import { SubgraphExtractor, SubgraphExtractorDefault } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * console.log(SubgraphExtractorDefault)
+ * const program = Effect.gen(function* () {
+ *   const extractor = yield* SubgraphExtractor
+ *   return extractor
+ * }).pipe(Effect.provide(SubgraphExtractorDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

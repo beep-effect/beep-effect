@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `decompose`
 Status: `active`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Spine graduated 2026-08-13 ([`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/),
 merged via PR #694); status flipped 2026-08-24 per the graduation contract.

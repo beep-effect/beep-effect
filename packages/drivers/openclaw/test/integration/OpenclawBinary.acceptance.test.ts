@@ -31,6 +31,7 @@ import {
   findLossySchemaPlaceholders,
   renderOpenclawConfig,
 } from "@beep/openclaw/OpenclawRender";
+import { currentHostArchitecture, currentHostPlatform } from "@beep/utils/HostProcess";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, layer } from "@effect/vitest";
 import { Config, Context, Effect, Layer, pipe } from "effect";
@@ -196,8 +197,8 @@ const ensurePinnedNodeStaged = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const cacheRoot = yield* resolveCacheRoot;
-  const arch = process.arch === "arm64" ? "arm64" : "x64";
-  const distribution = `node-v${compatibility.nodeVersion}-${process.platform}-${arch}`;
+  const arch = currentHostArchitecture === "arm64" ? "arm64" : "x64";
+  const distribution = `node-v${compatibility.nodeVersion}-${currentHostPlatform}-${arch}`;
   const stageDir = path.join(cacheRoot, "node", `v${compatibility.nodeVersion}`);
   const binDir = path.join(stageDir, distribution, "bin");
   if (yield* isUsableNodeDirectory(binDir)) {

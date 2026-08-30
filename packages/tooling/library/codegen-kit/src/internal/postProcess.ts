@@ -1,4 +1,4 @@
-import { Match, Order, pipe } from "effect";
+import { flow, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -188,8 +188,10 @@ const applyReplacements = (source: string, replacements: ReadonlyArray<Replaceme
       `${Str.slice(0, replacement.start)(current)}${replacement.text}${Str.slice(replacement.end)(current)}`
   );
 
-const unwrapExpression = (source: string): string =>
-  pipe(source, Str.slice(Str.length(expressionPrefix)), Str.slice(0, -Str.length(expressionSuffix)));
+const unwrapExpression: (source: string) => string = flow(
+  Str.slice(Str.length(expressionPrefix)),
+  Str.slice(0, -Str.length(expressionSuffix))
+);
 
 const visitNodes = (root: ts.Node, visit: (node: ts.Node) => void): void => {
   visit(root);
@@ -517,8 +519,11 @@ const renderSchemaPair = (name: string, constLine: string, config: GenerateConfi
 const schemaName = (typeLine: string): O.Option<string> =>
   pipe(Str.match(/^export type ([A-Za-z0-9_]+)/)(typeLine), O.flatMap(A.get(1)), O.filter(P.isString));
 
-const rawLines = (source: string): ReadonlyArray<string> =>
-  pipe(source, Str.split("\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
+const rawLines: (source: string) => ReadonlyArray<string> = flow(
+  Str.split("\n"),
+  A.map(Str.trim),
+  A.filter(Str.isNonEmpty)
+);
 
 const schemaPairs = (source: string): ReadonlyArray<readonly [string, string]> => {
   const lines = rawLines(source);

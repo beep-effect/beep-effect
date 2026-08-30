@@ -2,6 +2,8 @@
 
 ## Status
 
+Lifecycle: `completed-retained`
+
 Completed-retained (closed 2026-07-27) — all five phases complete: P1 minimum
 vertical proof, P2 Tika Server driver, P3 libpff PST-export driver, P4
 real-engine CLI proof, and P5 quality and handoff. Latest evidence: live

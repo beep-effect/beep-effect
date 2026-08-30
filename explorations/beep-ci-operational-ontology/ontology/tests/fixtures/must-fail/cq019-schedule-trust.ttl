@@ -1,0 +1,8 @@
+# Falsifiability (the previously-UNENFORCED schedule half, now enforced): a
+# ScheduleProposal trusting a fail-open affected set must violate arm 1.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:c-failopen a ciops:AffectedComputation ; ciops:hasAffectedOutcome ciops:fo-x .
+ciops:fo-x a ciops:FailOpenOutcome .
+ciops:sp-filtered a ciops:ScheduleProposal ;
+    ciops:hasScope ciops:AffectedScope ;
+    ciops:scopedByComputation ciops:c-failopen .

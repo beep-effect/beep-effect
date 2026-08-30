@@ -27,12 +27,19 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/HttpMiddleware");
 /**
  * Request-local actor used for auditable conflict transitions.
  *
- * **Example** (Inspect the request service)
+ * **Example** (Provide an anonymous conflict actor)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { ConflictActor } from "@effect-ontology/Schema/Timeline"
  * import { CurrentConflictActor } from "@effect-ontology/Runtime/HttpMiddleware"
  *
- * console.log(CurrentConflictActor)
+ * const actor = ConflictActor.make({ principal: "anonymous", credentialFingerprint: O.none() })
+ * const program = Effect.succeed(actor.principal).pipe(
+ *   Effect.provideService(CurrentConflictActor, actor)
+ * )
+ * console.log(Effect.runSync(program)) // "anonymous"
  * ```
  *
  * @category services
@@ -81,12 +88,24 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * - Health endpoints remain public
  * - Invalid/missing key returns 401
  *
- * **Example** (Inspect make auth middleware)
+ * **Example** (Reject a versioned request without an API key)
  *
  * ```ts
+ * import { Effect, Layer } from "effect"
+ * import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
  * import { makeAuthMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
- * console.log(makeAuthMiddleware)
+ * const response = Effect.runSync(
+ *   Effect.gen(function* () {
+ *     const middleware = yield* makeAuthMiddleware
+ *     const request = HttpServerRequest.fromWeb(new Request("http://localhost/v1/extract"))
+ *     return yield* middleware(Effect.succeed(HttpServerResponse.empty())).pipe(
+ *       Effect.provideService(HttpServerRequest.HttpServerRequest, request)
+ *     )
+ *   }).pipe(Effect.provide(Layer.succeed(ConfigService, DEFAULT_CONFIG)))
+ * )
+ * console.log(response.status) // 401
  * ```
  *
  * @category constructors
@@ -160,12 +179,23 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 /**
  * Middleware to track active requests for graceful shutdown
  *
- * **Example** (Inspect make shutdown middleware)
+ * **Example** (Reject new work after drain starts)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { HttpServerResponse } from "effect/unstable/http"
  * import { makeShutdownMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ * import { ShutdownService } from "@effect-ontology/Runtime/Shutdown"
  *
- * console.log(makeShutdownMiddleware)
+ * const rejected = Effect.gen(function* () {
+ *   const shutdown = yield* ShutdownService
+ *   yield* shutdown.initiateShutdown
+ *   const middleware = yield* makeShutdownMiddleware
+ *   return yield* middleware(Effect.succeed(HttpServerResponse.empty())).pipe(
+ *     Effect.catchTag("ShutdownError", (error) => Effect.succeed(error._tag))
+ *   )
+ * }).pipe(Effect.provide(ShutdownService.Default))
+ * console.log(Effect.isEffect(rejected)) // true
  * ```
  *
  * @category constructors
@@ -187,12 +217,21 @@ export const makeShutdownMiddleware = Effect.gen(function* () {
  * - Response status code
  * - Configurable log level (debug for health checks, info for API)
  *
- * **Example** (Inspect make logging middleware)
+ * **Example** (Time a request through logging middleware)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
  * import { makeLoggingMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  *
- * console.log(makeLoggingMiddleware)
+ * const middleware = Effect.runSync(makeLoggingMiddleware)
+ * const request = HttpServerRequest.fromWeb(new Request("http://localhost/v1/extract"))
+ * const response = Effect.runSync(
+ *   middleware(Effect.succeed(HttpServerResponse.empty())).pipe(
+ *     Effect.provideService(HttpServerRequest.HttpServerRequest, request)
+ *   )
+ * )
+ * console.log(response.status) // 204
  * ```
  *
  * @category constructors

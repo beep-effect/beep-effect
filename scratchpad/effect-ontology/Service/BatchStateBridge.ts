@@ -61,9 +61,15 @@ export interface BatchStateBridgeShape {
  * **Example** (Inspect batch state bridge)
  *
  * ```ts
- * import { BatchStateBridge } from "@effect-ontology/Service/BatchStateBridge"
+ * import { Effect } from "effect"
+ * import { BatchStateBridge, BatchStateBridgeDefault } from "@effect-ontology/Service/BatchStateBridge"
  *
- * console.log(BatchStateBridge)
+ * const program = Effect.gen(function* () {
+ *   const bridge = yield* BatchStateBridge
+ *   return bridge
+ * }).pipe(Effect.provide(BatchStateBridgeDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -144,10 +150,15 @@ const makeBatchStateBridge = Effect.gen(function* () {
  * **Example** (Use BatchStateBridgeLive)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { BatchStateBridgeLive } from "@effect-ontology/Service/BatchStateBridge"
+ * import { Effect } from "effect"
+ * import { BatchStateBridge, BatchStateBridgeLive } from "@effect-ontology/Service/BatchStateBridge"
  *
- * console.log(Layer.isLayer(BatchStateBridgeLive)) // true
+ * const program = Effect.gen(function* () {
+ *   const bridge = yield* BatchStateBridge
+ *   return bridge
+ * }).pipe(Effect.provide(BatchStateBridgeLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -161,9 +172,15 @@ export const BatchStateBridgeLive = Layer.effect(BatchStateBridge, makeBatchStat
  * **Example** (Inspect batch state bridge default)
  *
  * ```ts
- * import { BatchStateBridgeDefault } from "@effect-ontology/Service/BatchStateBridge"
+ * import { Effect } from "effect"
+ * import { BatchStateBridge, BatchStateBridgeDefault } from "@effect-ontology/Service/BatchStateBridge"
  *
- * console.log(BatchStateBridgeDefault)
+ * const program = Effect.gen(function* () {
+ *   const bridge = yield* BatchStateBridge
+ *   return bridge
+ * }).pipe(Effect.provide(BatchStateBridgeDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

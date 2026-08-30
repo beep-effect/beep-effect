@@ -15,6 +15,7 @@ import { fromWorkspaceRow, toWorkspaceInsert } from "@beep/workspace-tables/enti
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
 import { eq } from "drizzle-orm";
 import { Effect, FileSystem, HashMap, Ref } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
@@ -28,7 +29,7 @@ const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 const publicIdFor = (id: PosInt): string => `${WORKSPACE_TABLE_NAME}_a${id}`;
 
 const baseWorkspaceEntity = (id: PosInt, vaultRootPath: O.Option<WorkspaceVaultRootPath>): Workspace =>
-  S.decodeSync(Workspace)({
+  Workspace.decodeSync({
     createdAt: id,
     createdByPrincipal: SYSTEM_PRINCIPAL,
     entityType: "WorkspaceWorkspace",
@@ -179,7 +180,7 @@ export const makeDrizzleWorkspaceVaultStore = Effect.fn("Workspace.WorkspaceVaul
         .where(eq(workspaceTable.id, id))
         .limit(1)
         .pipe(repositoryUnavailable("select Workspace"));
-      if (rows.length === 0) {
+      if (A.isReadonlyArrayEmpty(rows)) {
         const seed = baseWorkspaceEntity(id, O.some(input.vaultRootPath));
         yield* db
           .insert(workspaceTable)

@@ -1,0 +1,17 @@
+# CQ-017: Which lane obligations are required for CI-merge assurance but not local-full assurance, and vice versa (the asymmetry map)?
+# Expected: non_empty | priority: should_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?lane ?onlyIn WHERE {
+  {
+    ciops:TierCiMergeGreen ciops:requiresLane ?lane .
+    FILTER NOT EXISTS { ciops:TierLocalFullProof ciops:requiresLane ?lane }
+    BIND(ciops:TierCiMergeGreen AS ?onlyIn)
+  }
+  UNION
+  {
+    ciops:TierLocalFullProof ciops:requiresLane ?lane .
+    FILTER NOT EXISTS { ciops:TierCiMergeGreen ciops:requiresLane ?lane }
+    BIND(ciops:TierLocalFullProof AS ?onlyIn)
+  }
+}

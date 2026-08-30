@@ -17,19 +17,6 @@ import { ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
 const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));
 
-/**
- * Claim-rank vocabulary re-exported for timeline source-path parity.
- *
- * **Example** (Use BooleanQueryValueDefinition)
- * ```ts
- * import { ClaimRank } from "@effect-ontology/Schema/Timeline"
- *
- * console.log(ClaimRank.is.preferred("preferred")) // true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
 export { ClaimRank };
 
 /**
@@ -127,7 +114,7 @@ const PositiveIntQuery = S.FiniteFromString.pipe(
   })
 );
 
-const TimelineRangeDefinition = S.Struct({
+const OrderedUtcRangeDefinition = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({
     description: "Inclusive UTC range start.",
   }),
@@ -145,37 +132,64 @@ const TimelineRangeDefinition = S.Struct({
               issue: "Timeline range end must not precede its start.",
             },
       {
-        identifier: $I`TimelineRangeOrderCheck`,
-        title: "Ordered Timeline Range",
-        description: "A UTC query range whose end is not before its start.",
-        message: "Timeline range end must be greater than or equal to its start.",
+        identifier: $I`OrderedUtcRangeCheck`,
+        title: "Ordered UTC Range",
+        description: "A UTC range whose end is not before its start.",
+        message: "UTC range end must be greater than or equal to its start.",
       }
     )
   )
   .pipe(SchemaUtils.withCodecStatics);
 
-const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof TimelineRangeDefinition.Type =>
-  TimelineRangeDefinition.is(input)
+const OrderedUtcRangeFromSelf = S.declare((input: unknown): input is typeof OrderedUtcRangeDefinition.Type =>
+  OrderedUtcRangeDefinition.is(input)
 ).annotate({
   toArbitrary: () => (fc) =>
     fc
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
-        TimelineRangeDefinition.make({
+        OrderedUtcRangeDefinition.make({
           from: DateTime.makeUnsafe(from),
           to: DateTime.makeUnsafe(from + duration),
         })
       ),
 });
 
-const TimelineRange = TimelineRangeDefinition.pipe(
-  S.decodeTo(TimelineRangeFromSelf),
-  $I.annoteSchema("TimelineRange", {
-    description: "Ordered UTC range used by timeline queries.",
+/**
+ * Ordered inclusive UTC date-time range shared by search and timeline inputs.
+ *
+ * **Example** (Decode an ordered range)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OrderedUtcRange } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * const range = S.decodeUnknownOption(OrderedUtcRange)({
+ *   from: "2026-01-01T00:00:00.000Z",
+ *   to: "2026-01-02T00:00:00.000Z"
+ * })
+ * console.log(range)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OrderedUtcRange = OrderedUtcRangeDefinition.pipe(
+  S.decodeTo(OrderedUtcRangeFromSelf),
+  $I.annoteSchema("OrderedUtcRange", {
+    description: "Ordered inclusive UTC range shared by search filters and timeline queries.",
   })
 );
 
-const TimelineRangeQuery = S.fromJsonString(TimelineRangeDefinition).pipe(
+/**
+ * Runtime value decoded by {@link OrderedUtcRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OrderedUtcRange = typeof OrderedUtcRange.Type;
+
+const TimelineRangeQuery = S.fromJsonString(OrderedUtcRangeDefinition).pipe(
   $I.annoteSchema("TimelineRangeQuery", {
     description: "JSON-encoded ordered UTC range accepted in a URL-query value.",
   })
@@ -239,10 +253,32 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
  *
  * **Example** (Use ClaimWithRank)
  * ```ts
- * import type { ClaimWithRank } from "@effect-ontology/Schema/Timeline"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClaimWithRank } from "@effect-ontology/Schema/Timeline"
  *
- * const readRank = (claim: ClaimWithRank) => claim.rank
- * console.log(readRank)
+ * const claim = S.decodeUnknownOption(ClaimWithRank)({
+ *   id: "00000000-0000-4000-8000-000000000011",
+ *   subject: "https://example.com/alice",
+ *   predicate: "https://schema.org/name",
+ *   object: {
+ *     termType: "Literal",
+ *     value: "Alice",
+ *     datatype: {
+ *       termType: "NamedNode",
+ *       value: "https://www.w3.org/2001/XMLSchema#string"
+ *     }
+ *   },
+ *   rank: "preferred",
+ *   source: {
+ *     id: "article-42",
+ *     uri: "https://example.com/news/42",
+ *     publishedAt: "2026-07-25T10:00:00.000Z",
+ *     ingestedAt: "2026-07-25T10:05:00.000Z"
+ *   },
+ *   transactionTime: { assertedAt: "2026-07-25T10:05:00.000Z" }
+ * })
+ * console.log(O.map(claim, (value) => value.rank)) // Some("preferred")
  * ```
  *
  * @category models
@@ -256,7 +292,7 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
     object: RdfObject,
     rank: ClaimRank,
     source: ArticleSummary,
-    validTime: S.OptionFromOptionalKey(TimelineRange).pipe(SchemaUtils.withNoneDefault),
+    validTime: S.OptionFromOptionalKey(OrderedUtcRange).pipe(SchemaUtils.withNoneDefault),
     transactionTime: S.Struct({
       assertedAt: S.DateTimeUtcFromString,
       derivedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
@@ -313,10 +349,21 @@ export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionS
  *
  * **Example** (Use ArticleDetailResponse)
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  * import { ArticleDetailResponse } from "@effect-ontology/Schema/Timeline"
  *
- * const countClaims = (response: ArticleDetailResponse) => response.claims.length
- * console.log(countClaims)
+ * const response = S.decodeUnknownOption(ArticleDetailResponse)({
+ *   article: {
+ *     id: "article-42",
+ *     uri: "https://example.com/news/42",
+ *     publishedAt: "2026-07-25T10:00:00.000Z",
+ *     ingestedAt: "2026-07-25T10:05:00.000Z"
+ *   },
+ *   entityCount: 0,
+ *   conflictCount: 0
+ * })
+ * console.log(O.map(response, (value) => value.claims.length)) // Some(0)
  * ```
  *
  * @category dtos
@@ -367,10 +414,14 @@ export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`Timelin
  *
  * **Example** (Use TimelineEntityResponse)
  * ```ts
- * import type { TimelineEntityResponse } from "@effect-ontology/Schema/Timeline"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TimelineEntityResponse } from "@effect-ontology/Schema/Timeline"
  *
- * const countCorrections = (response: TimelineEntityResponse) => response.corrections.length
- * console.log(countCorrections)
+ * const response = S.decodeUnknownOption(TimelineEntityResponse)({
+ *   iri: "https://example.com/alice"
+ * })
+ * console.log(O.map(response, (value) => value.corrections.length)) // Some(0)
  * ```
  *
  * @category dtos
@@ -425,10 +476,17 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
  *
  * **Example** (Use TimelineClaimsResponse)
  * ```ts
- * import type { TimelineClaimsResponse } from "@effect-ontology/Schema/Timeline"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TimelineClaimsResponse } from "@effect-ontology/Schema/Timeline"
  *
- * const hasNext = (response: TimelineClaimsResponse) => response.hasMore
- * console.log(hasNext)
+ * const response = S.decodeUnknownOption(TimelineClaimsResponse)({
+ *   total: 0,
+ *   limit: 20,
+ *   offset: 0,
+ *   hasMore: false
+ * })
+ * console.log(O.map(response, (value) => value.hasMore)) // Some(false)
  * ```
  *
  * @category dtos
@@ -479,10 +537,16 @@ const AffectedClaim = S.Struct({
  *
  * **Example** (Use CorrectionWithClaims)
  * ```ts
- * import type { CorrectionWithClaims } from "@effect-ontology/Schema/Timeline"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CorrectionWithClaims } from "@effect-ontology/Schema/Timeline"
  *
- * const affectedCount = (correction: CorrectionWithClaims) => correction.affectedClaims.length
- * console.log(affectedCount)
+ * const correction = S.decodeUnknownOption(CorrectionWithClaims)({
+ *   id: "corr-1",
+ *   correctionType: "update",
+ *   correctionDate: "2026-07-25T12:00:00.000Z"
+ * })
+ * console.log(O.map(correction, (value) => value.affectedClaims.length)) // Some(0)
  * ```
  *
  * @category models
@@ -686,10 +750,41 @@ const ClaimConflictDefinition = S.TaggedUnion({
  *
  * **Example** (Use ClaimConflict)
  * ```ts
- * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClaimConflict } from "@effect-ontology/Schema/Timeline"
  *
- * const status = (conflict: ClaimConflict) => conflict._tag
- * console.log(status)
+ * const ranked = {
+ *   id: "00000000-0000-4000-8000-000000000011",
+ *   subject: "https://example.com/alice",
+ *   predicate: "https://schema.org/name",
+ *   object: {
+ *     termType: "Literal",
+ *     value: "Alice",
+ *     datatype: {
+ *       termType: "NamedNode",
+ *       value: "https://www.w3.org/2001/XMLSchema#string"
+ *     }
+ *   },
+ *   rank: "preferred",
+ *   source: {
+ *     id: "article-42",
+ *     uri: "https://example.com/news/42",
+ *     publishedAt: "2026-07-25T10:00:00.000Z",
+ *     ingestedAt: "2026-07-25T10:05:00.000Z"
+ *   },
+ *   transactionTime: { assertedAt: "2026-07-25T10:05:00.000Z" }
+ * }
+ * const conflict = S.decodeUnknownOption(ClaimConflict)({
+ *   _tag: "pending",
+ *   id: "conflict-1",
+ *   ontologyId: "ontology-a",
+ *   conflictType: "position",
+ *   claimA: ranked,
+ *   claimB: ranked
+ * })
+ * console.log(O.map(conflict, (value) => value._tag)) // Some("pending")
+ * console.log(O.map(conflict, (value) => value.conflictType)) // Some("position")
  * ```
  *
  * @invariant The `_tag` determines whether and which resolution data exists.
@@ -705,14 +800,6 @@ export const ClaimConflict = ClaimConflictDefinition.pipe(
 
 /**
  * Runtime value decoded by {@link ClaimConflict}.
- *
- * **Example** (Use ClaimConflict)
- * ```ts
- * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline"
- *
- * const conflictType = (conflict: ClaimConflict) => conflict.conflictType
- * console.log(conflictType)
- * ```
  *
  * @category type-level
  * @since 0.0.0

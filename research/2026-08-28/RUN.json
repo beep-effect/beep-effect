@@ -1,0 +1,72 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-08-28",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-08-26T22:22:00-05:00",
+    "end": "2026-08-28T08:27:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 34,
+    "note": "lastSuccessfulRun on main was still null (08-27 stamp never merged). Window starts at last merged packet's attempted time (2026-08-26 22:22 CT). Closed unmerged #862 (2026-08-27) claims are committed at research/ledger/excluded-packets/2026-08-27.jsonl."
+  },
+  "claimsEmitted": 15,
+  "collisionRate": 0.0,
+  "selfReject": false,
+  "sourcesSeen": { "web": 12, "arxiv": 8, "github": 18, "x": 0 },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 5,
+    "held": 4,
+    "heldAndMoved": 1,
+    "broken": 0,
+    "standingClaims": [
+      "f-law-05-2026-08-26 USPTO ODP four fields",
+      "f-effect-05-2026-08-26 drizzle TaggedErrorClass",
+      "w-instant-sunset 2027-08-31",
+      "w-skills-over-mcp SEP-2640",
+      "w-schema-binary cluster wire"
+    ],
+    "note": "ODP, drizzle, Instant, SEP-2640 hold. SchemaBinary holds and moved (overnight #7506/#7507/#7508)."
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "user-X MCP is connected but X API v2 search/news returns client-not-enrolled / Client Forbidden (developer App not attached to a Project). No x.com posts in this packet. Do not treat silence as absence of X traffic."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "SPEC verify seats (Sol/Luna) are not available here. Writer used structured records only; no second-provider refutation pass."
+    },
+    {
+      "id": "github-mcp-dcr",
+      "severity": "auth",
+      "detail": "GitHub MCP not usable in this harness. Publisher uses gh + cloud agent instead."
+    },
+    {
+      "id": "prior-packet-closed-unmerged",
+      "severity": "process-gap",
+      "detail": "research/2026-08-27 PR #862 was closed unmerged (commitlint type-enum on subject `research:`). Its 12 claims are committed at research/ledger/excluded-packets/2026-08-27.jsonl so later digests do not depend on the closed PR. This commit uses docs(research):."
+    }
+  ],
+  "resume": {
+    "retry": ["x-search"],
+    "cursor": "enroll X developer App in a Project, then re-search window 2026-08-26T22:22-05:00/2026-08-28T08:27-05:00"
+  },
+  "repoReplay": {
+    "merged": [870, 868, 866, 864, 863, 858, 857, 856, 855, 854, 853, 852],
+    "open": [874, 873, 872, 871, 869, 867, 865],
+    "blockingResearchPr": null,
+    "closedUnmergedResearchPr": 862
+  },
+  "weekly": null
+}

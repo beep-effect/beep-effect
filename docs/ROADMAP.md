@@ -18,16 +18,17 @@ This is the **only cross-portfolio priority layer** in the repo. It owns
 ordering, lanes, horizons, and resume conditions. It owns no lifecycle
 status (phase counts quoted below are snapshots at the freshness date):
 
-- [`goals/INDEX.md`](../goals/INDEX.md) — machine truth for packet lifecycle
-  (generated; single writer `bun run beep goals set-status`).
-- [`explorations/ATLAS.md`](../explorations/ATLAS.md) — exploration status
-  board (navigation only).
+- `goals/<slug>/ops/manifest.json` — tracked machine truth for goal lifecycle;
+  `bun run beep goals index` renders the ignored local portfolio view.
+- `explorations/<slug>/ops/manifest.json` or, after stream opt-in, the packet's
+  D3 event fold — exploration state authority; `bun run beep explore atlas`
+  renders the ignored local navigation view.
 - [`docs/product/prose-to-proof.md`](./product/prose-to-proof.md) — the
   product PRD and its P0–P5 phase definitions.
 
 Priority changes land here via PR; the lifecycle changes they imply are
-executed through `set-status` in the same PR so this file and `INDEX.md`
-never disagree.
+executed through `set-status` in the same PR so this file and the tracked
+packet manifests never disagree.
 
 ## North star
 
@@ -70,7 +71,8 @@ complete + packet-control-plane-core closed. Its 2026-07-14 locked 25-packet
 queue is stale and will be relocked from control-plane derived state at
 revisit; until then the portfolio drains through ordinary operator-driven
 sessions. Priority stays owned by this file; lifecycle stays owned by
-`goals/INDEX.md`.
+tracked packet manifests. Run `bun run beep goals index` for the local
+generated portfolio view.
 
 ### Lane 1 — Product
 
@@ -148,8 +150,9 @@ and [`ai-metrics-stack`](../goals/ai-metrics-stack/README.md) are all
 completed-retained (2026-08-17 re-eval). The freed slot goes to:
 
 - [`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-  (3/6) — the packet system's event fold, guarded writers, and derived
-  projections. It is the instrument that makes the *next* roadmap re-eval
+  (6/6, completed-retained 2026-08-26) — the packet system's event fold,
+  guarded writers, and derived projections. It is the instrument that makes
+  the *next* roadmap re-eval
   mechanical (derived pulse: what can start, what is blocked, what awaits the
   operator), scaffolded 2026-08-17 from the ratified packet-system-redesign MAP
   with proofs pre-specified. Self-hosts in advisory mode per D9.
@@ -220,8 +223,9 @@ ratchets hold at zero — keep-green only, no new clicks past zero.
 queue — research-backed packets held for lane capacity, a firing gate, or a
 model-capability jump — ordered by this file when a slot frees. Parked is not
 a soft kill. The exploration side of the queue (14 packets, each with a named
-resume trigger) lives in
-[`explorations/ATLAS.md`](../explorations/ATLAS.md).
+resume trigger) lives in the tracked packet READMEs under
+[`explorations/`](../explorations/README.md); `bun run beep explore atlas`
+renders their current local status view.
 
 | Packet | Resumes when |
 | --- | --- |
@@ -268,7 +272,7 @@ Labs list above, with its enabling driver packets riding along. **Drift note
 `oppold-corpus-salvage-restoration` (#782) graduated without lane entries;
 reconcile them at the next re-eval rather than pretending the rule held. The gold-intake cohort's
 pre-drafted DECISIONS files are the shaping queue;
-[`explorations/ATLAS.md`](../explorations/ATLAS.md) stays the status board.
+`bun run beep explore atlas` renders the local status board from D3 state.
 
 ## Projections
 

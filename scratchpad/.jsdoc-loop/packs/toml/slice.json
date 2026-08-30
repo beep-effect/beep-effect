@@ -1,0 +1,2945 @@
+{
+  "pack": "toml",
+  "modules": [
+    {
+      "file": "toml/Toml.ts",
+      "pack": "toml",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDateTime.ts",
+      "pack": "toml",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "pack": "toml",
+      "exportCount": 11,
+      "owningExportCount": 11,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDocument.ts",
+      "pack": "toml",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlEdit.ts",
+      "pack": "toml",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlFormat.ts",
+      "pack": "toml",
+      "exportCount": 4,
+      "owningExportCount": 4,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "pack": "toml",
+      "exportCount": 21,
+      "owningExportCount": 21,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlVisitor.ts",
+      "pack": "toml",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/index.ts",
+      "pack": "toml",
+      "exportCount": 11,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": true,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "pack": "toml",
+      "exportCount": 12,
+      "owningExportCount": 12,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/limits.ts",
+      "pack": "toml",
+      "exportCount": 5,
+      "owningExportCount": 5,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/parser.ts",
+      "pack": "toml",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "pack": "toml",
+      "exportCount": 15,
+      "owningExportCount": 15,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/semantic.ts",
+      "pack": "toml",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/stringifyValue.ts",
+      "pack": "toml",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "toml/Toml.ts",
+      "name": "TomlStringifyOptions",
+      "line": 33,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/Toml.ts",
+      "name": "TomlParseError",
+      "line": 45,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/Toml.ts",
+      "name": "TomlStringifyError",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/Toml.ts",
+      "name": "TomlBoundCodec",
+      "line": 143,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/Toml.ts",
+      "name": "Toml",
+      "line": 179,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@remarks",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDateTime.ts",
+      "name": "TomlLocalDate",
+      "line": 97,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDateTime.ts",
+      "name": "TomlLocalTime",
+      "line": 111,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDateTime.ts",
+      "name": "TomlLocalDateTime",
+      "line": 123,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDateTime.ts",
+      "name": "TomlOffsetDateTime",
+      "line": 138,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlLexErrorCode",
+      "line": 22,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlLexErrorCode",
+      "line": 29,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlParseErrorCode",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlParseErrorCode",
+      "line": 43,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlSemanticErrorCode",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlSemanticErrorCode",
+      "line": 57,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlStringifyErrorCode",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlStringifyErrorCode",
+      "line": 71,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlErrorCode",
+      "line": 79,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlErrorCode",
+      "line": 91,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDiagnostic.ts",
+      "name": "TomlDiagnostic",
+      "line": 106,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@remarks",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlDocument.ts",
+      "name": "TomlDocument",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@remarks",
+        "@example",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": true,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-example",
+          "detail": "Uses retired @example carrier; convert to **Example** (Title)."
+        },
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlEdit.ts",
+      "name": "TomlSegment",
+      "line": 21,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlEdit.ts",
+      "name": "TomlPath",
+      "line": 29,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlEdit.ts",
+      "name": "TomlRange",
+      "line": 38,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlEdit.ts",
+      "name": "TomlEdit",
+      "line": 55,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@remarks",
+        "@effected",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlFormat.ts",
+      "name": "TomlRangeLike",
+      "line": 51,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlFormat.ts",
+      "name": "TomlFormattingOptions",
+      "line": 61,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlFormat.ts",
+      "name": "TomlModificationError",
+      "line": 74,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlFormat.ts",
+      "name": "TomlFormat",
+      "line": 773,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "legacy-remarks",
+          "detail": "Uses retired @remarks; move into Details or Gotchas."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlKeyKind",
+      "line": 19,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlKeyKind",
+      "line": 26,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlKey",
+      "line": 37,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlStringStyle",
+      "line": 49,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlStringStyle",
+      "line": 56,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlString",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlInteger",
+      "line": 77,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlFloat",
+      "line": 88,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlBoolean",
+      "line": 99,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlDateTimeLiteral",
+      "line": 110,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlArray",
+      "line": 122,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlInlineEntry",
+      "line": 134,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlInlineTable",
+      "line": 147,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlValueNode",
+      "line": 160,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlValueNode",
+      "line": 171,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlKeyValue",
+      "line": 188,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlTableHeader",
+      "line": 201,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlArrayTableHeader",
+      "line": 214,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlTrivia",
+      "line": 227,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlExpression",
+      "line": 239,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlNode.ts",
+      "name": "TomlExpression",
+      "line": 246,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlVisitor.ts",
+      "name": "TomlVisitorEvent",
+      "line": 43,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlVisitor.ts",
+      "name": "TomlVisitorEvent",
+      "line": 56,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/TomlVisitor.ts",
+      "name": "TomlVisitor",
+      "line": 177,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlBoundCodec",
+      "line": 16,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "toml",
+      "tags": [
+        "@remarks",
+        "@link",
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": true,
+      "missingTags": [],
+      "findings": [
+        {
+          "rule": "legacy-carrier",
+          "detail": "Re-export JSDoc uses a retired @example or @remarks carrier."
+        }
+      ]
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "Toml, TomlParseError, TomlStringifyError, TomlStringifyOptions",
+      "line": 17,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime",
+      "line": 18,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlDiagnostic, TomlErrorCode, TomlLexErrorCode, TomlParseErrorCode, TomlSemanticErrorCode, TomlStringifyErrorCode",
+      "line": 19,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlDocument",
+      "line": 27,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlPath, TomlSegment",
+      "line": 28,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlEdit, TomlRange",
+      "line": 29,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlRangeLike",
+      "line": 30,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlFormat, TomlFormattingOptions, TomlModificationError",
+      "line": 31,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlArray, TomlArrayTableHeader, TomlBoolean, TomlDateTimeLiteral, TomlExpression, TomlFloat, TomlInlineEntry, TomlInlineTable, TomlInteger, TomlKey, TomlKeyKind, TomlKeyValue, TomlString, TomlStringStyle, TomlTableHeader, TomlTrivia, TomlValueNode",
+      "line": 32,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/index.ts",
+      "name": "TomlVisitor, TomlVisitorEvent",
+      "line": 51,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TOML_LEX_ERROR_CODES",
+      "line": 6,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TOML_PARSE_ERROR_CODES",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TOML_SEMANTIC_ERROR_CODES",
+      "line": 32,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TOML_STRINGIFY_ERROR_CODES",
+      "line": 40,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TomlLexErrorCodeRaw",
+      "line": 50,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TomlParseErrorCodeRaw",
+      "line": 51,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TomlSemanticErrorCodeRaw",
+      "line": 52,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TomlStringifyErrorCodeRaw",
+      "line": 53,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "TomlErrorCodeRaw",
+      "line": 54,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "RawDiagnostic",
+      "line": 61,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "RawTomlError",
+      "line": 69,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/diagnostics.ts",
+      "name": "isRawTomlError",
+      "line": 78,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/limits.ts",
+      "name": "MAX_NESTING_DEPTH",
+      "line": 5,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/limits.ts",
+      "name": "GuardReason",
+      "line": 8,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/limits.ts",
+      "name": "GuardExceeded",
+      "line": 15,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/limits.ts",
+      "name": "isGuardExceeded",
+      "line": 36,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/limits.ts",
+      "name": "assertCap",
+      "line": 42,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/parser.ts",
+      "name": "parseExpressions",
+      "line": 407,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "ScanResult",
+      "line": 17,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "ScalarValue",
+      "line": 23,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "isBareKeyChar",
+      "line": 64,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "skipBom",
+      "line": 68,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "assertValidUnicode",
+      "line": 80,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanWhitespace",
+      "line": 93,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanNewline",
+      "line": 109,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanComment",
+      "line": 127,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanBareKey",
+      "line": 143,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanBasicString",
+      "line": 213,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanLiteralString",
+      "line": 258,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanMultilineBasicString",
+      "line": 312,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanMultilineLiteralString",
+      "line": 391,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "scanValueToken",
+      "line": 475,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/scanner.ts",
+      "name": "classifyValueToken",
+      "line": 578,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/semantic.ts",
+      "name": "SemanticVisitor",
+      "line": 24,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/semantic.ts",
+      "name": "analyze",
+      "line": 228,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/semantic.ts",
+      "name": "buildValue",
+      "line": 321,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/stringifyValue.ts",
+      "name": "renderKey",
+      "line": 95,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/stringifyValue.ts",
+      "name": "renderInlineValue",
+      "line": 213,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "toml/internal/stringifyValue.ts",
+      "name": "stringifyValue",
+      "line": 296,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "toml",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    }
+  ]
+}

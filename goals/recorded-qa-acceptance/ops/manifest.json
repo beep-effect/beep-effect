@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/recorded-qa-acceptance",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 539,
   "mission": "Prove the beep qa recording/extraction/judging system end-to-end on the dock-react pointer fixes, including a falsification round demonstrating true-positive detection.",
   "executionCapable": false,
   "reflectionRequired": true,

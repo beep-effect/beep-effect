@@ -7,6 +7,7 @@ import {
   YeetAckReceipt,
   YeetAckReceiptJson,
   YeetAckThreadResolution,
+  YeetAckWaiveResolution,
   YeetAckWontfixResolution,
   yeetInboxAckPath,
 } from "@beep/repo-cli/test/Yeet";
@@ -39,7 +40,7 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 });
 
 describe("renderYeetAckResolution", () => {
-  it("phrases each of the three closing moves", () => {
+  it("phrases every closing move", () => {
     expect(renderYeetAckResolution(YeetAckFixResolution.make({ sha: "2817f28" }))).toBe("fix-sha 2817f28");
     expect(renderYeetAckResolution(YeetAckWontfixResolution.make({ reason: "flaky infra lane" }))).toBe(
       "wontfix: flaky infra lane"
@@ -47,6 +48,16 @@ describe("renderYeetAckResolution", () => {
     expect(renderYeetAckResolution(YeetAckThreadResolution.make({ url: "https://example.test/t/1" }))).toBe(
       "thread https://example.test/t/1"
     );
+    expect(
+      renderYeetAckResolution(
+        YeetAckWaiveResolution.make({
+          actor: "operator",
+          expiresAt: "2099-01-01T00:00:00Z",
+          reason: "hosted dependency unavailable",
+          shard: "Security",
+        })
+      )
+    ).toBe("waive Security by operator until 2099-01-01T00:00:00Z: hosted dependency unavailable");
   });
 });
 
@@ -90,6 +101,30 @@ describe("readYeetAckState", () => {
 
         expect(state.acked).toBe(true);
         expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f286d3" }));
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("keeps an unexpired waiver acked and re-arms an expired waiver", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const receipt = (expiresAt: string) =>
+          YeetAckReceipt.make({
+            ackedAt: AT,
+            id: "coverage-abc123",
+            resolution: YeetAckWaiveResolution.make({
+              actor: "operator",
+              expiresAt,
+              reason: "temporary exception",
+              shard: "Coverage",
+            }),
+          });
+
+        yield* writeYeetAckReceipt(root, receipt("2099-01-01T00:00:00Z"));
+        expect((yield* readYeetAckState(root, "coverage-abc123")).acked).toBe(true);
+
+        yield* writeYeetAckReceipt(root, receipt("2000-01-01T00:00:00Z"));
+        expect((yield* readYeetAckState(root, "coverage-abc123")).acked).toBe(false);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );

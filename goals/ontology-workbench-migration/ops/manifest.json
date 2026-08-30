@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/ontology-workbench-migration",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 436,
   "mission": "Migrate the Ontology workbench monolith into nine fine-grained dock panels (workspace-substrate step 4, first surface) and land the four dock capability residuals folded into this packet: per-panel constraints, tab-overflow dropdown, drop-indicator quadrants, StrictMode-safe tree host.",
   "executionCapable": true,
   "reflectionRequired": true,

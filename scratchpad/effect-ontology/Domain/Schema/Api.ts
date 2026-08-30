@@ -68,14 +68,6 @@ export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
 /**
  * Runtime value decoded by {@link SubmitJobSource}.
  *
- * **Example** (Use SubmitJobSource)
- * ```ts
- * import type { SubmitJobSource } from "@effect-ontology/Schema/Api"
- *
- * const tag = (source: SubmitJobSource) => source._tag
- * console.log(typeof tag) // "function"
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -352,14 +344,6 @@ export const JobStatusResponse = JobStatusResponseDefinition.pipe(
 
 /**
  * Runtime value decoded by {@link JobStatusResponse}.
- *
- * **Example** (Use JobStatusResponse)
- * ```ts
- * import type { JobStatusResponse } from "@effect-ontology/Schema/Api"
- *
- * const status = (response: JobStatusResponse) => response.status
- * console.log(typeof status) // "function"
- * ```
  *
  * @category type-level
  * @since 0.0.0

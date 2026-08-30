@@ -6,7 +6,7 @@
  */
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { pipe } from "effect";
+import { flow, pipe } from "effect";
 import * as S from "effect/Schema";
 import { ScaleStep, SurfaceStep } from "./Brand.schema.ts";
 import type { BrandIdentity, ColorScheme, FontStack, Glow, GlowLayer, GlowStop, Typography } from "./Brand.schema.ts";
@@ -53,8 +53,7 @@ const isGenericFontFamily = S.is(GenericFontFamily);
 
 // Control characters are schema-invalid (PrintableText), so escaping covers the two
 // printable metacharacters CSS strings care about.
-const escapeCssString = (value: string): string =>
-  pipe(value, Str.replaceAll("\\", "\\\\"), Str.replaceAll('"', '\\"'));
+const escapeCssString: (value: string) => string = flow(Str.replaceAll("\\", "\\\\"), Str.replaceAll('"', '\\"'));
 
 const quoteFamily = (family: string): string => (isGenericFontFamily(family) ? family : `"${escapeCssString(family)}"`);
 

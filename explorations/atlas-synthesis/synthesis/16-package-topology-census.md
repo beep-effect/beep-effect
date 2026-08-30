@@ -1,5 +1,8 @@
 # 16 — Package & Topology Census (Authoritative)
 
+> **Historical (superseded 2026-08-29):** basic-memory + codegraph were removed from this
+> repo and machine; see `standards/memory-architecture/04-decision-log.md`. Kept as a record.
+
 _Date: 2026-06-17_
 _Scope: current-state inventory of every workspace package in `beep-effect3`. This file is the SUBSTRATE other baseline-synthesis agents read; treat the tables here as the canonical "what exists today" reference._
 

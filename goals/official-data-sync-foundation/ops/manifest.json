@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/official-data-sync-foundation",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 269,
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {

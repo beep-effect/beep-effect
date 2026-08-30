@@ -1,0 +1,6 @@
+# Falsifiability (seat G's laundering counterexample, now executable): typed evidence
+# carrying a NARROWED scope with NO scopedByComputation edge must violate arm 2
+# (scope-provenance gap) — the exact hole the circular round-1 letter permitted.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:ev-laundered a ciops:VerificationEvidence ;
+    ciops:hasScope ciops:AffectedScope .

@@ -48,7 +48,7 @@ import pgliteWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/p
 import { migrateOnBoot } from "./Migrations.ts";
 import type { PgliteClientOptions } from "@beep/pglite";
 import type { PostgresDrizzle } from "@beep/postgres";
-import type { Context } from "effect";
+import type { Context, Crypto } from "effect";
 
 const $I = $ProfessionalDesktopId.create("runtime/Pglite");
 
@@ -394,7 +394,7 @@ export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
  * @category layers
  * @since 0.0.0
  */
-export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle> = Layer.unwrap(
+export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle, never, Crypto.Crypto> = Layer.unwrap(
   Effect.gen(function* () {
     const dataDir = yield* ChatDbDataDir;
     const shouldMarkDataDir = yield* ensureCompatibleChatDbDataDir(dataDir);

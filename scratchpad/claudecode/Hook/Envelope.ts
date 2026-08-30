@@ -1,11 +1,14 @@
 /**
  * Base envelope fields shared by every Claude Code hook event.
  *
+ * **Details**
+ *
  * `envelopeFields` is the reusable field record each event spreads into
  * its own input schema. `HookEnvelope` is the named `S.Class` that
  * decodes the base shape alone (useful for tooling and tests that only
  * care about the envelope).
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -25,8 +28,9 @@ const $I = $ScratchpadId.create("claudecode/Hook/Envelope");
  *
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as S from "effect/Schema"
  *
- * const level: Hook.EffortLevel = "high"
+ * const level = S.decodeUnknownSync(Hook.EffortLevel)("high")
  * console.log(level) // "high"
  * ```
  *
@@ -40,24 +44,17 @@ export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"])
 );
 
 /**
- * Type-level model for `EffortLevel`.
+ * Decoded value produced by {@link EffortLevel}.
  *
- * **Example** (Name the effort-level type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.EffortLevel
- * ```
- *
+ * @see {@link EffortLevel} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type EffortLevel = typeof EffortLevel.Type;
 
 /**
- * Schema for `HookPermissionMode`.
+ * Permission mode Claude reports on a hook envelope, such as `plan` or
+ * `acceptEdits`.
  *
  * **Example** (Decode a permission mode)
  *
@@ -69,8 +66,9 @@ export type EffortLevel = typeof EffortLevel.Type;
  * console.log(mode) // "plan"
  * ```
  *
+ * @see {@link envelopeFields} for the shared envelope record that carries this mode.
+ * @see {@link HookEnvelope} for the named class that decodes the base envelope.
  * @category schemas
- *
  * @since 0.0.0
  */
 export const HookPermissionMode = LiteralKit([
@@ -87,24 +85,16 @@ export const HookPermissionMode = LiteralKit([
 );
 
 /**
- * Type-level model for `HookPermissionMode`.
+ * Decoded value produced by {@link HookPermissionMode}.
  *
- * **Example** (Name the permission-mode type)
- *
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Example = Hook.HookPermissionMode
- * ```
- *
+ * @see {@link HookPermissionMode} for the runtime schema and decoding behavior.
  * @category type-level
- *
  * @since 0.0.0
  */
 export type HookPermissionMode = typeof HookPermissionMode.Type;
 
 /**
- * Schema for `HookEffort`.
+ * Effort metadata attached to a Claude Code hook invocation.
  *
  * **Example** (Construct effort metadata)
  *
@@ -115,8 +105,9 @@ export type HookPermissionMode = typeof HookPermissionMode.Type;
  * console.log(effort.level) // "high"
  * ```
  *
+ * @see {@link envelopeFields} for the shared envelope record that carries this metadata.
+ * @see {@link HookEnvelope} for the named class that decodes the base envelope.
  * @category schemas
- *
  * @since 0.0.0
  */
 export class HookEffort extends S.Class<HookEffort>($I`HookEffort`)(
@@ -128,6 +119,8 @@ export class HookEffort extends S.Class<HookEffort>($I`HookEffort`)(
 
 /**
  * Reusable field record shared by every hook input schema.
+ *
+ * **Details**
  *
  * `hook_event_name` remains `S.String` here; individual event schemas
  * override it with their event-specific literal.

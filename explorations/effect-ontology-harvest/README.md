@@ -2,8 +2,12 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `align`
-Status: `parked` (align-complete)
+Status: `parked`
+<!-- END GENERATED: EXPLORATION STATUS -->
+
+Status note: (align-complete)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

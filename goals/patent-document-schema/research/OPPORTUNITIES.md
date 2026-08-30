@@ -30,3 +30,13 @@
 - **Prevention:** Run the full proof's import-governance and schema-first cheap
   gates before the review-fix tier starts its expensive repository-wide test
   and docgen lanes.
+
+## 2026-08-29 — branch-sync guidance named a removed script
+
+- **Work:** Verifying repository version alignment after merging `origin/main`
+  into the patent-document feature branch.
+- **Evidence:** `bun run version-sync-check` exited with
+  `Script not found "version-sync-check"`; the current script is
+  `bun run version-sync --skip-network`.
+- **Prevention:** Update branch-sync guidance to name the current read-only
+  version-sync invocation, or retain a compatibility alias for the old name.

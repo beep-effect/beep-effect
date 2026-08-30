@@ -1,9 +1,11 @@
 import {
   deriveYeetMergeReady,
   GateUnproven,
+  GhStatusCheck,
   PrCloseoutReport,
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
+  summarizeRemoteChecksForTesting,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusReviewThread,
@@ -14,9 +16,9 @@ import {
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { A } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -80,17 +82,32 @@ const openRemote = (fields: {
   readonly unresolvedReviewThreadCount?: number;
   readonly unresolvedThreads?: O.Option<ReadonlyArray<YeetStatusReviewThread>>;
   readonly headSha?: O.Option<string>;
+  readonly isDraft?: boolean;
+  readonly mergeable?: string;
+  readonly mergeStateStatus?: string;
+  readonly reviewDecision?: string;
+  readonly state?: string;
 }) =>
   YeetStatusRemote.make({
     available: true,
     checked: true,
     detail: "PR #560 OPEN",
+    state: fields.state ?? "OPEN",
+    isDraft: fields.isDraft ?? false,
+    mergeable: fields.mergeable ?? "MERGEABLE",
+    mergeStateStatus: fields.mergeStateStatus ?? "CLEAN",
     headSha: fields.headSha ?? O.some(HEAD_A),
     unresolvedReviewThreadCount: fields.unresolvedReviewThreadCount ?? 0,
     unresolvedThreads: fields.unresolvedThreads ?? O.some(A.empty<YeetStatusReviewThread>()),
-    ...(fields.checkCount === undefined ? {} : { checkCount: fields.checkCount }),
-    ...(fields.failingCheckCount === undefined ? {} : { failingCheckCount: fields.failingCheckCount }),
-    ...(fields.pendingCheckCount === undefined ? {} : { pendingCheckCount: fields.pendingCheckCount }),
+    ...O.getSomesStruct({
+      reviewDecision: O.fromUndefinedOr(fields.reviewDecision),
+      checkCount: O.fromUndefinedOr(fields.checkCount),
+      failingCheckCount: O.fromUndefinedOr(fields.failingCheckCount),
+      pendingCheckCount: O.fromUndefinedOr(fields.pendingCheckCount),
+      requiredCheckCount: O.fromUndefinedOr(fields.checkCount),
+      failingRequiredCheckCount: O.fromUndefinedOr(fields.failingCheckCount),
+      pendingRequiredCheckCount: O.fromUndefinedOr(fields.pendingCheckCount),
+    }),
   });
 
 describe("yeet review-thread excerpts", () => {
@@ -159,14 +176,14 @@ describe("yeet merge readiness", () => {
     ).toStrictEqual(O.none());
   });
 
-  it("names checks-green first when the pipeline is red and threads are also open", () => {
+  it("names required-checks-green first when the pipeline is red and threads are also open", () => {
     const mergeReady = deriveYeetMergeReady(
       closeoutArtifact(1, O.some("4/5")),
       openRemote({ checkCount: 24, failingCheckCount: 1, unresolvedReviewThreadCount: 2 })
     );
 
     expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(false));
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("checks-green"));
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
   });
 
   it("treats a still-pending pipeline as not green", () => {
@@ -175,7 +192,7 @@ describe("yeet merge readiness", () => {
       openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 3 })
     );
 
-    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("checks-green"));
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("required-checks-green"));
   });
 
   it("names threads-resolved once the pipeline is green", () => {
@@ -304,6 +321,71 @@ describe("yeet merge readiness", () => {
     expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
     expect(O.flatMap(mergeReady, (value) => value.criteria.greptileScore)).toStrictEqual(O.some("4/5"));
   });
+
+  it("does not let an optional red block required-check readiness", () => {
+    const remote = YeetStatusRemote.make({
+      ...openRemote({ checkCount: 17, failingCheckCount: 0, pendingCheckCount: 0 }),
+      checkCount: 18,
+      failingCheckCount: 1,
+      optionalCheckCount: 1,
+      failingOptionalCheckCount: 1,
+    });
+    const mergeReady = deriveYeetMergeReady(closeoutArtifact(0, O.some("5/5")), remote);
+
+    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+  });
+
+  it.each([
+    ["pr-open", { state: "CLOSED" }],
+    ["not-draft", { isDraft: true }],
+    ["mergeable", { mergeable: "CONFLICTING" }],
+    ["merge-state-acceptable", { mergeStateStatus: "BLOCKED" }],
+    ["review-decision-acceptable", { reviewDecision: "CHANGES_REQUESTED" }],
+  ] as const)("blocks on %s when that live pull request surface is unsatisfied", (criterion, fields) => {
+    const mergeReady = deriveYeetMergeReady(
+      closeoutArtifact(0, O.some("5/5")),
+      openRemote({
+        checkCount: 17,
+        failingCheckCount: 0,
+        pendingCheckCount: 0,
+        unresolvedReviewThreadCount: 0,
+        ...fields,
+      })
+    );
+
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some(criterion));
+  });
+});
+
+describe("yeet remote check partitions", () => {
+  it("counts required and optional failures independently", () => {
+    const required = GhStatusCheck.make({ bucket: "pass", name: "Check / Lint", state: "SUCCESS" });
+    const optionalFailure = GhStatusCheck.make({ bucket: "fail", name: "Vercel", state: "FAILURE" });
+    const optionalPending = GhStatusCheck.make({ bucket: "pending", name: "Preview", state: "IN_PROGRESS" });
+    const summary = summarizeRemoteChecksForTesting(
+      O.some([required, optionalFailure, optionalPending]),
+      O.some([required])
+    );
+
+    expect(O.getOrThrow(summary.checkCount)).toBe(3);
+    expect(O.getOrThrow(summary.failingCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.pendingCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.requiredCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.failingRequiredCheckCount)).toBe(0);
+    expect(O.getOrThrow(summary.pendingRequiredCheckCount)).toBe(0);
+    expect(O.getOrThrow(summary.optionalCheckCount)).toBe(2);
+    expect(O.getOrThrow(summary.failingOptionalCheckCount)).toBe(1);
+    expect(O.getOrThrow(summary.pendingOptionalCheckCount)).toBe(1);
+  });
+
+  it("keeps the optional partition unknown when the required capture is unavailable", () => {
+    const required = GhStatusCheck.make({ bucket: "pass", name: "Check / Lint", state: "SUCCESS" });
+    const summary = summarizeRemoteChecksForTesting(O.some([required]), O.none());
+
+    expect(O.getOrThrow(summary.checkCount)).toBe(1);
+    expect(summary.requiredCheckCount).toStrictEqual(O.none());
+    expect(summary.optionalCheckCount).toStrictEqual(O.none());
+  });
 });
 
 describe("yeet status snapshot rendering and encoding", () => {
@@ -349,6 +431,31 @@ describe("yeet status snapshot rendering and encoding", () => {
 
     expect(summary).toContain("gate staleness: 0 stale, 1 unproven");
     expect(summary).not.toContain("gate staleness: none");
+  });
+
+  it("renders legacy unsplit and unavailable check snapshots without overstating required-check state", () => {
+    const legacySummary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        remote: YeetStatusRemote.make({
+          available: true,
+          checked: true,
+          checkCount: 18,
+          detail: "PR #560 OPEN",
+          failingCheckCount: 1,
+          pendingCheckCount: 2,
+        }),
+      })
+    );
+    const unavailableSummary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        remote: YeetStatusRemote.make({ available: true, checked: true, detail: "PR #560 OPEN" }),
+      })
+    );
+
+    expect(legacySummary).toContain("checks: 18 total, 1 failing, 2 pending (legacy unsplit snapshot)");
+    expect(unavailableSummary).toContain("checks: not checked");
   });
 
   it.effect("round-trips through the status JSON codec instead of leaking Option runtime objects", () =>

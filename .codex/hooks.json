@@ -1,6 +1,62 @@
 {
+  "description": "Checkout-local Yeet inbox backpressure, agent-effectiveness pulses, and UI design hooks.",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/packet-projections.sh\"",
+            "timeout": 30,
+            "statusMessage": "Refreshing packet projections"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Reading Yeet inbox"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Checking Yeet inbox"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/law-pulse.sh\""
+          }
+        ]
+      },
       {
         "matcher": "Edit|Write|apply_patch",
         "hooks": [
@@ -12,9 +68,58 @@
             "commandWindows": "if exist \".agents/skills/impeccable/scripts/hook.mjs\" (node \".agents/skills/impeccable/scripts/hook.mjs\" & exit /b)"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "additionalContextLimit": 1200,
+            "statusMessage": "Reading Yeet inbox"
+          }
+        ]
       }
     ],
     "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/yeet-inbox.sh\" codex",
+            "timeout": 2,
+            "statusMessage": "Checking Yeet inbox"
+          }
+        ]
+      },
       {
         "hooks": [
           {

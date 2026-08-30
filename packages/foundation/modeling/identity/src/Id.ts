@@ -942,7 +942,22 @@ type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<
 
 type SchemaStatics<Schema extends S.Top> = Omit<Schema, keyof Schema["Rebuild"] | keyof S.Top>;
 
-type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
+/**
+ * Rebuilt schema type that retains custom statics after annotations are applied.
+ *
+ * **Example** (Describe an annotated string schema)
+ *
+ * ```ts import.meta.vitest name="Describe an annotated string schema"
+ * import type { AnnotatedSchema } from "@beep/identity"
+ * import * as S from "effect/Schema"
+ *
+ * type AnnotatedString = AnnotatedSchema<typeof S.String>
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
 
 /**
  * Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,

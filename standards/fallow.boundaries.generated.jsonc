@@ -2938,6 +2938,7 @@
         "from": "@beep/repo-ai-metrics",
         "allow": [
           "@beep/duckdb",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/phoenix",
@@ -2948,6 +2949,7 @@
         ],
         "allowTypeOnly": [
           "@beep/duckdb",
+          "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/phoenix",
@@ -3040,6 +3042,7 @@
         "allow": [
           "@beep/chalk",
           "@beep/identity",
+          "@beep/md",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
@@ -3048,6 +3051,7 @@
         "allowTypeOnly": [
           "@beep/chalk",
           "@beep/identity",
+          "@beep/md",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",

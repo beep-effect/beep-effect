@@ -156,10 +156,19 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
  *
  * **Example** (Use ExtractionActivityInput)
  * ```ts
- * import type { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  *
- * const ontology = (input: ExtractionActivityInput) => input.ontologyId
- * console.log(typeof ontology) // "function"
+ * const input = S.decodeUnknownOption(ExtractionActivityInput)({
+ *   batchId: "batch-abc123def456",
+ *   documentId: "doc-abc123def456",
+ *   sourceUri: "gs://beep-input/documents/report.pdf",
+ *   ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
+ *   ontologyId: "premier-league",
+ *   targetNamespace: "football"
+ * })
+ * console.log(O.map(input, (value) => value.ontologyId)) // Some("premier-league")
  * ```
  *
  * @category dtos
@@ -195,10 +204,15 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
  *
  * **Example** (Use ResolutionActivityInput)
  * ```ts
- * import type { ResolutionActivityInput } from "@effect-ontology/Schema/Batch"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ResolutionActivityInput } from "@effect-ontology/Schema/Batch"
  *
- * const count = (input: ResolutionActivityInput) => input.documentGraphUris.length
- * console.log(typeof count) // "function"
+ * const input = S.decodeUnknownOption(ResolutionActivityInput)({
+ *   batchId: "batch-abc123def456",
+ *   documentGraphUris: ["gs://beep-ontology-state/documents/doc-abc123def456/graph.jsonld"]
+ * })
+ * console.log(O.map(input, (value) => value.documentGraphUris.length)) // Some(1)
  * ```
  *
  * @invariant At least one document graph is supplied for resolution.
@@ -229,10 +243,17 @@ export class ResolutionActivityInput extends S.Class<ResolutionActivityInput>($I
  *
  * **Example** (Use ValidationActivityInput)
  * ```ts
- * import type { ValidationActivityInput } from "@effect-ontology/Schema/Batch"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ValidationActivityInput } from "@effect-ontology/Schema/Batch"
  *
- * const graph = (input: ValidationActivityInput) => input.resolvedGraphUri
- * console.log(typeof graph) // "function"
+ * const input = S.decodeUnknownOption(ValidationActivityInput)({
+ *   batchId: "batch-abc123def456",
+ *   resolvedGraphUri: "gs://beep-ontology-state/batches/batch-abc123def456/resolved.jsonld",
+ *   ontologyUri: "gs://beep-ontology/football/premier-league.ttl"
+ * })
+ * console.log(O.map(input, (value) => value.validationPolicy.logOnly)) // Some(false)
+ * console.log(O.map(input, (value) => value.validationPolicy.failOnViolation)) // Some(true)
  * ```
  *
  * @category dtos
@@ -307,10 +328,18 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
  *
  * **Example** (Use ValidationActivityOutput)
  * ```ts
- * import type { ValidationActivityOutput } from "@effect-ontology/Schema/Batch"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ValidationActivityOutput } from "@effect-ontology/Schema/Batch"
  *
- * const conforms = (output: ValidationActivityOutput) => output.conforms
- * console.log(typeof conforms) // "function"
+ * const output = S.decodeUnknownOption(ValidationActivityOutput)({
+ *   validatedUri: "gs://beep-ontology-state/batches/batch-abc123def456/validated.jsonld",
+ *   conforms: true,
+ *   violations: 0,
+ *   reportUri: "gs://beep-ontology-state/batches/batch-abc123def456/shacl.json",
+ *   durationMs: 12
+ * })
+ * console.log(O.map(output, (value) => value.conforms)) // Some(true)
  * ```
  *
  * @invariant Counts and duration are finite and non-negative; summary
@@ -340,10 +369,16 @@ export class ValidationActivityOutput extends S.Class<ValidationActivityOutput>(
  *
  * **Example** (Use IngestionActivityInput)
  * ```ts
- * import type { IngestionActivityInput } from "@effect-ontology/Schema/Batch"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { IngestionActivityInput } from "@effect-ontology/Schema/Batch"
  *
- * const namespace = (input: IngestionActivityInput) => input.targetNamespace
- * console.log(typeof namespace) // "function"
+ * const input = S.decodeUnknownOption(IngestionActivityInput)({
+ *   batchId: "batch-abc123def456",
+ *   validatedGraphUri: "gs://beep-ontology-state/batches/batch-abc123def456/validated.jsonld",
+ *   targetNamespace: "football"
+ * })
+ * console.log(O.map(input, (value) => value.targetNamespace)) // Some("football")
  * ```
  *
  * @category dtos
@@ -372,10 +407,20 @@ export class IngestionActivityInput extends S.Class<IngestionActivityInput>($I`I
  *
  * **Example** (Use BatchWorkflowPayload)
  * ```ts
- * import type { BatchWorkflowPayload } from "@effect-ontology/Schema/Batch"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BatchWorkflowPayload } from "@effect-ontology/Schema/Batch"
  *
- * const documents = (payload: BatchWorkflowPayload) => payload.documentIds
- * console.log(typeof documents) // "function"
+ * const payload = S.decodeUnknownOption(BatchWorkflowPayload)({
+ *   batchId: "batch-abc123def456",
+ *   ontologyId: "premier-league",
+ *   manifestUri: "gs://beep-ontology-state/batches/batch-abc123def456/manifest.json",
+ *   ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
+ *   ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
+ *   targetNamespace: "football",
+ *   documentIds: ["doc-abc123def456"]
+ * })
+ * console.log(O.map(payload, (value) => value.documentIds.length)) // Some(1)
  * ```
  *
  * @invariant Contains at least one document identifier and complete

@@ -2,7 +2,7 @@ import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { FsUtils, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
 import { transform as transformDoctest } from "@effect/doctest/Transform";
-import { Effect, FileSystem, Hash, HashMap, Layer, MutableHashMap, Order, Path, pipe, Result } from "effect";
+import { Effect, FileSystem, flow, Hash, HashMap, Layer, MutableHashMap, Order, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import { Node, SyntaxKind } from "ts-morph";
@@ -42,8 +42,10 @@ const sourceDigest = (source: string): string => `effect-hash:${Hash.string(sour
 const lineAtOffset = (source: string, offset: number): number =>
   Str.split(/\r?\n/)(Str.slice(0, offset)(source)).length;
 
-const maskJSDocStars = (comment: string): string =>
-  pipe(comment, Str.replace(/^([ \t]*)\* /gm, "$1  "), Str.replace(/^([ \t]*)\*(?!\/)/gm, "$1 "));
+const maskJSDocStars: (comment: string) => string = flow(
+  Str.replace(/^([ \t]*)\* /gm, "$1  "),
+  Str.replace(/^([ \t]*)\*(?!\/)/gm, "$1 ")
+);
 
 const ownersByJSDocStart = (file: string, source: string): MutableHashMap.MutableHashMap<number, Node> => {
   const project = createInMemoryTsMorphProject();
@@ -54,13 +56,11 @@ const ownersByJSDocStart = (file: string, source: string): MutableHashMap.Mutabl
 const importSpecifierPattern =
   /(?:\b(?:import|export)\s+(?:[\s\S]*?\s+from\s+)?|\bimport\s*\(|\brequire\s*\()\s*["']([^"']+)["']/g;
 
-const importSpecifiers = (code: string): ReadonlyArray<string> =>
-  pipe(
-    code,
-    Str.matchAll(importSpecifierPattern),
-    A.fromIterable,
-    A.flatMap((match) => O.match(O.fromUndefinedOr(match[1]), { onNone: A.empty<string>, onSome: A.of }))
-  );
+const importSpecifiers: (code: string) => ReadonlyArray<string> = flow(
+  Str.matchAll(importSpecifierPattern),
+  A.fromIterable,
+  A.flatMap((match) => O.match(O.fromUndefinedOr(match[1]), { onNone: A.empty<string>, onSome: A.of }))
+);
 
 const firstMatch = (code: string, pattern: RegExp): O.Option<string> => {
   const match = pattern.exec(code);

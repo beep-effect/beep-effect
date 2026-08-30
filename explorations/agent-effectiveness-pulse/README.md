@@ -2,8 +2,12 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
-Status: `graduated` (wave 2 cut 2026-07-31)
+Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
+
+Status note: (wave 2 cut 2026-07-31)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

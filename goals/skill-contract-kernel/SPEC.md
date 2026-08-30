@@ -81,7 +81,7 @@ Seeded from the brief's rabbit holes and the grill round
   goal must not mint a competing canonical encoding (exploration DECISIONS 2026-08-24).
 - **Substrate freshness:** exploration research validated Effect AI `Tool`/`Toolkit` on
   Effect `4.0.0-rc.108`; the repo is on `rc.111`. P0 revalidates those shapes against
-  `.repos/effect` (provision via `scripts/setup-agent-memory.sh` if the symlink is missing).
+  `.repos/effect` (provision via `scripts/setup-effect-ref.sh` if the symlink is missing).
 - **Opaque constructors:** "verified"/"passed" values are constructible only through the
   evaluator (the `VerifiedTextAnchor` pattern). Completion states are unreachable without
   blocking-gate evidence by construction.

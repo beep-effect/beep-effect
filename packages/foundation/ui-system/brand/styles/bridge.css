@@ -2,7 +2,7 @@
  * Opt-in bridge from @beep/ui's shadcn tokens onto the beep brand scale.
  *
  * Import order in an app stylesheet:
- *   @import "@beep/brand/styles/fonts.css";
+ *   Import the Fontsource modules from the application entry point first.
  *   @import "@beep/ui/styles/globals.css";
  *   @import "@beep/brand/styles/brand.css";
  *   @import "@beep/brand/styles/bridge.css";

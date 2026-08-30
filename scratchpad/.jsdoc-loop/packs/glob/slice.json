@@ -1,0 +1,1275 @@
+{
+  "pack": "glob",
+  "modules": [
+    {
+      "file": "glob/GlobPattern.ts",
+      "pack": "glob",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/GlobSet.ts",
+      "pack": "glob",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/index.ts",
+      "pack": "glob",
+      "exportCount": 2,
+      "owningExportCount": 0,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": true,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": []
+    },
+    {
+      "file": "glob/internal/assertValidPattern.ts",
+      "pack": "glob",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/ast.ts",
+      "pack": "glob",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/balancedMatch.ts",
+      "pack": "glob",
+      "exportCount": 3,
+      "owningExportCount": 3,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/braceExpansion.ts",
+      "pack": "glob",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/braceExpressions.ts",
+      "pack": "glob",
+      "exportCount": 2,
+      "owningExportCount": 2,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/escape.ts",
+      "pack": "glob",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "pack": "glob",
+      "exportCount": 9,
+      "owningExportCount": 9,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/minimatch.ts",
+      "pack": "glob",
+      "exportCount": 6,
+      "owningExportCount": 3,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/types.ts",
+      "pack": "glob",
+      "exportCount": 6,
+      "owningExportCount": 6,
+      "hasFileoverview": true,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": true,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/unescape.ts",
+      "pack": "glob",
+      "exportCount": 1,
+      "owningExportCount": 1,
+      "hasFileoverview": false,
+      "hasPackageDocumentation": false,
+      "hasSince": false,
+      "hasLead": false,
+      "hasRemarks": false,
+      "hasLegacyExample": false,
+      "findings": [
+        {
+          "rule": "missing-module-summary",
+          "detail": "Module lacks a useful fileoverview lead."
+        },
+        {
+          "rule": "missing-packageDocumentation",
+          "detail": "Exporting module lacks @packageDocumentation."
+        },
+        {
+          "rule": "missing-module-since",
+          "detail": "Exporting module lacks @since 0.0.0."
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "file": "glob/GlobPattern.ts",
+      "name": "GlobPatternError",
+      "line": 24,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "glob",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/GlobPattern.ts",
+      "name": "GlobPatternOptions",
+      "line": 50,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "glob",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/GlobPattern.ts",
+      "name": "GlobPattern",
+      "line": 144,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "glob",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/GlobSet.ts",
+      "name": "GlobSet",
+      "line": 58,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "glob",
+      "tags": [
+        "@link",
+        "@public"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/index.ts",
+      "name": "GlobPattern, GlobPatternError, GlobPatternOptions",
+      "line": 10,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "glob",
+      "tags": [
+        "@packageDocumentation"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "glob/index.ts",
+      "name": "GlobSet",
+      "line": 11,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "glob/internal/assertValidPattern.ts",
+      "name": "assertValidPattern",
+      "line": 12,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/ast.ts",
+      "name": "ExtglobType",
+      "line": 69,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/ast.ts",
+      "name": "AST",
+      "line": 180,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/balancedMatch.ts",
+      "name": "BalancedResult",
+      "line": 27,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "glob",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/balancedMatch.ts",
+      "name": "balanced",
+      "line": 44,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/balancedMatch.ts",
+      "name": "range",
+      "line": 62,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/braceExpansion.ts",
+      "name": "BraceExpansionOptions",
+      "line": 108,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/braceExpansion.ts",
+      "name": "expand",
+      "line": 119,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [
+        "@link"
+      ],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/braceExpressions.ts",
+      "name": "ParseClassResult",
+      "line": 38,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/braceExpressions.ts",
+      "name": "parseClass",
+      "line": 46,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/escape.ts",
+      "name": "escape",
+      "line": 39,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "MAX_PATTERN_LENGTH",
+      "line": 5,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "EXPANSION_MAX",
+      "line": 8,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "MAX_GLOBSTAR_RECURSION",
+      "line": 11,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "MAX_EXTGLOB_RECURSION",
+      "line": 14,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "MAX_NESTING_DEPTH",
+      "line": 17,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "GuardReason",
+      "line": 20,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "GuardExceeded",
+      "line": 28,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "isGuardExceeded",
+      "line": 39,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/limits.ts",
+      "name": "assertCap",
+      "line": 46,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/minimatch.ts",
+      "name": "escape",
+      "line": 36,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "glob/internal/minimatch.ts",
+      "name": "EngineOptions, MMRegExp, ParseReturn, ParseReturnFiltered, Platform",
+      "line": 37,
+      "kind": "re-export",
+      "exportKind": "type-re-export",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "glob/internal/minimatch.ts",
+      "name": "unescape",
+      "line": 38,
+      "kind": "re-export",
+      "exportKind": "re-export",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [],
+      "findings": []
+    },
+    {
+      "file": "glob/internal/minimatch.ts",
+      "name": "GLOBSTAR",
+      "line": 39,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/minimatch.ts",
+      "name": "braceExpand",
+      "line": 117,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/minimatch.ts",
+      "name": "Minimatch",
+      "line": 135,
+      "kind": "value",
+      "exportKind": "class",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/types.ts",
+      "name": "Platform",
+      "line": 13,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/types.ts",
+      "name": "EngineOptions",
+      "line": 33,
+      "kind": "type",
+      "exportKind": "interface",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/types.ts",
+      "name": "MMRegExp",
+      "line": 88,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/types.ts",
+      "name": "GLOBSTAR",
+      "line": 94,
+      "kind": "value",
+      "exportKind": "const",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": true,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/types.ts",
+      "name": "ParseReturnFiltered",
+      "line": 96,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/types.ts",
+      "name": "ParseReturn",
+      "line": 97,
+      "kind": "type",
+      "exportKind": "type",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since."
+        }
+      ]
+    },
+    {
+      "file": "glob/internal/unescape.ts",
+      "name": "unescape",
+      "line": 45,
+      "kind": "value",
+      "exportKind": "re-export",
+      "pack": "glob",
+      "tags": [],
+      "hasLead": false,
+      "hasTitledExample": false,
+      "hasLegacyExample": false,
+      "hasRemarks": false,
+      "missingTags": [
+        "@category",
+        "@since",
+        "@example"
+      ],
+      "findings": [
+        {
+          "rule": "missing-summary",
+          "detail": "Owning export lacks a useful one-paragraph lead."
+        },
+        {
+          "rule": "missing-required-tags",
+          "detail": "Missing @category, @since, @example."
+        }
+      ]
+    }
+  ]
+}
