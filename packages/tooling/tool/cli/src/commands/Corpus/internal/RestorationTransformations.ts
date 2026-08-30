@@ -4007,6 +4007,12 @@ const legacyResumeState = Effect.fn("CorpusRestoration.legacyResumeState")(funct
   );
 });
 
+const legacyInterruptedAttemptRoots = (start: FamilyAttemptStart): ReadonlyArray<InterruptedRootCandidate> => [
+  { label: "proof", relativePath: `proof/${start.sourceId}/${start.attemptId}` },
+  { label: "converted", relativePath: `converted/${start.sourceSha256}.docx` },
+  { label: "converted-partial", relativePath: `converted/${start.sourceSha256}.docx.partial` },
+];
+
 /**
  * Convert every distinct preserved legacy-Word digest with declared text, page, and visual fidelity checks.
  *
@@ -4079,11 +4085,7 @@ export const restoreLegacyWordImpl = Effect.fn("CorpusRestoration.restoreLegacyW
         .makeDirectory(run.outputRoot, { recursive: true })
         .pipe(CorpusCommandError.mapError("Failed creating legacy-Word restoration output root."));
       yield* requireCanonicalContainedPath(run.outputRoot, run.outputRoot);
-      yield* recoverInterruptedAttempts(run, (start) => [
-        { label: "proof", relativePath: `proof/${start.sourceId}/${start.attemptId}` },
-        { label: "converted", relativePath: `converted/${start.sourceSha256}.docx` },
-        { label: "converted-partial", relativePath: `converted/${start.sourceSha256}.docx.partial` },
-      ]);
+      yield* recoverInterruptedAttempts(run, legacyInterruptedAttemptRoots);
       const existingOutput = yield* hashTransformationTree(run.outputRoot);
       if (existingOutput.sizeBytes > options.maxTotalOutputBytes) {
         return yield* rejectFamilyPreflight(
@@ -4098,6 +4100,7 @@ export const restoreLegacyWordImpl = Effect.fn("CorpusRestoration.restoreLegacyW
       }
 
       const resume = yield* legacyResumeState(run, inventory.candidates, existingOutput.sizeBytes);
+      const engineVersion = O.isSome(version) ? version.value.output : options.expectedConverterVersion;
       const counters = yield* runBoundedFamilyCandidates(
         resume.candidates,
         resume.counters,
@@ -4105,14 +4108,7 @@ export const restoreLegacyWordImpl = Effect.fn("CorpusRestoration.restoreLegacyW
         options.maxTotalElapsedMillis,
         options.maxTotalOutputBytes,
         (candidate, outputBytes) =>
-          processLegacyWordTerminal(
-            candidate,
-            O.match(version, { onNone: () => options.expectedConverterVersion, onSome: (captured) => captured.output }),
-            run,
-            options,
-            run.startedAt,
-            outputBytes
-          )
+          processLegacyWordTerminal(candidate, engineVersion, run, options, run.startedAt, outputBytes)
       );
       return yield* finalizeFamilyRun(
         run,
@@ -4959,6 +4955,7 @@ export const restorationTransformationTesting = {
   latestAttemptsAreTerminal,
   legacyFidelityPasses,
   legacyFailureTerminal,
+  legacyInterruptedAttemptRoots,
   legacyOutputWatchdog,
   legacyResumeState,
   legacySegmentReconciles,
