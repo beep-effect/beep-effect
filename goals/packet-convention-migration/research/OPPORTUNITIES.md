@@ -1023,6 +1023,12 @@
   `68.27`, `68.85`, and `51.35`, then printed `bun run coverage --
   --filter=@beep/repo-cli --write-baseline` and “never run bun run
   coverage:baseline:write for a per-package drop.”
+- **Recurrence evidence:** after the package-scoped writer produced PR #906
+  head `f168a70eb7`, Actions job `99328701092` measured the same aggregate and
+  per-file values as the local writer, including `TmpfsReap.ts` at `94.06`
+  statements and `93.2` functions, but still compared that file with the
+  base-pinned `94.34` and `94.26` floors. The branch and GitHub merge-preview
+  baseline both contain the newly measured lower values.
 - **What would have prevented it:** make Yeet's staleness repair render the same
   package-scoped command as the hosted ratchet, and explain whether CI
   intentionally ignores PR-authored lower floors until an explicit reviewer
@@ -1266,3 +1272,22 @@
   explicit repository.
 - **Owner:** hosted-check command construction and GitHub CLI repository
   context.
+
+## 2026-08-30 — GitHub CLI withholds a failed job's logs until unrelated jobs finish
+
+- **What happened:** the exact-head Coverage Regression job reached a terminal
+  failure, but its diagnostic logs remained unavailable because the overall
+  workflow still had Lint running.
+- **Evidence:** the Actions jobs API reported `Heavy / Coverage Regression` as
+  `completed` with conclusion `failure`; immediately afterward,
+  `gh run view 33338129004 --job 99328701092 --log-failed` exited 1 with
+  `run 33338129004 is still in progress; logs will be available when it is
+  complete`.
+- **What would have prevented it:** allow job-scoped log retrieval as soon as
+  that job is terminal, or have the hosted monitor surface the failed job's
+  annotations independently of the parent workflow's remaining jobs.
+- **Disposition:** hosted failure-observability bottleneck; preserve the failed
+  exact head, wait only for the remaining workflow job, then retrieve the
+  terminal coverage comparator output before editing.
+- **Owner:** GitHub Actions job-log availability and Yeet first-red evidence
+  collection.

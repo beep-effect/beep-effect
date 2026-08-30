@@ -20497,15 +20497,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 78.88,
-      "statements": 78.66,
-      "branches": 68.07,
-      "functions": 72.57,
+      "lines": 78.89,
+      "statements": 78.67,
+      "branches": 68.09,
+      "functions": 72.59,
       "uncovered": {
-        "lines": 8381,
-        "statements": 8865,
-        "branches": 4799,
-        "functions": 3245
+        "lines": 8377,
+        "statements": 8860,
+        "branches": 4797,
+        "functions": 3243
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -26413,15 +26413,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
-          "lines": 94.94,
-          "statements": 94.06,
-          "branches": 88.46,
-          "functions": 93.2,
+          "lines": 95.75,
+          "statements": 95.01,
+          "branches": 89.42,
+          "functions": 94.44,
           "uncovered": {
-            "lines": 25,
-            "statements": 31,
-            "branches": 24,
-            "functions": 11
+            "lines": 21,
+            "statements": 26,
+            "branches": 22,
+            "functions": 9
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {

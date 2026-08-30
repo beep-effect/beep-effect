@@ -1,4 +1,9 @@
-import { runRepoCommandCapture, runTmpfsReap, TmpfsReapReport } from "@beep/repo-cli/test/RepoRun";
+import {
+  resolveBeepCacheRoot,
+  runRepoCommandCapture,
+  runTmpfsReap,
+  TmpfsReapReport,
+} from "@beep/repo-cli/test/RepoRun";
 import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -686,6 +691,47 @@ describe("tmpfs reap", () => {
         const explicitMissingRoot = path.join(root, "missing-explicit-root");
         const explicitReport = yield* runTmpfsReap({ cacheRoot, tmpRoot: explicitMissingRoot });
         expect(explicitReport.tmpRoots).toEqual([explicitMissingRoot]);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("falls back safely when ambient TMPDIR is malformed and the HOME cache does not exist", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const homeRoot = path.join(root, "home");
+        const systemTmpRoot = path.join(root, "system-tmp");
+        yield* Effect.forEach(
+          [homeRoot, systemTmpRoot],
+          (directory) => fs.makeDirectory(directory, { recursive: true }),
+          { discard: true }
+        );
+
+        const configProvider = ConfigProvider.make((configPath) => {
+          const name = A.head(configPath);
+          if (O.isSome(name) && name.value === "HOME") {
+            return Effect.succeed(ConfigProvider.makeValue(homeRoot));
+          }
+          if (O.isSome(name) && name.value === "TMPDIR") {
+            return Effect.fail(new ConfigProvider.SourceError({ message: "fixture TMPDIR source failure" }));
+          }
+          return Effect.succeed(undefined);
+        });
+        const cacheRoot = yield* resolveBeepCacheRoot().pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, configProvider)
+        );
+        expect(cacheRoot).toBe(path.join(homeRoot, ".cache"));
+        expect(yield* fs.exists(cacheRoot)).toBe(false);
+
+        const report = yield* runTmpfsReap({
+          classes: ["head-install"],
+          listProcessCommandLines: noProcessCommandLines,
+          systemTmpRoot,
+        }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
+        expect(report.tmpRoots).toEqual([systemTmpRoot]);
+        expect(report.candidates).toEqual([]);
+        expect(report.warnings).toEqual([]);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
