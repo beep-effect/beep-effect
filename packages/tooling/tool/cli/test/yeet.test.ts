@@ -560,6 +560,49 @@ esac
         })
       )
     ));
+
+  it("bounds receipt retirement retries under persistent transition contention", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bin = path.join(tmpDir, "bin");
+          const inbox = path.join(tmpDir, ".beep", "inbox");
+          const leasePath = path.join(inbox, "pr-lease.json");
+          const attemptsPath = path.join(inbox, "hook-mutex.lock.attempts");
+          yield* fs.makeDirectory(bin);
+          const ghPath = path.join(bin, "gh");
+          yield* fs.writeFileString(
+            ghPath,
+            '#!/bin/sh\nprintf \'%s\\n\' \'{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}\'\n'
+          );
+          yield* fs.chmod(ghPath, 0o755);
+
+          const receipt = yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            writePublishedPrLease(tempContext)
+          );
+          const flockPath = path.join(bin, "flock");
+          yield* fs.writeFileString(flockPath, '#!/bin/sh\nprintf "attempt\\n" >> "$1.attempts"\nexit 73\n');
+          yield* fs.chmod(flockPath, 0o755);
+
+          const error = yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            retirePublishedPrLeaseReceipt(tempContext, receipt, "start-pr-early-failed").pipe(Effect.flip)
+          );
+
+          expect(error.message).toContain("after repeated contention");
+          expect(Str.split(/\r?\n/u)(Str.trim(yield* fs.readFileString(attemptsPath)))).toHaveLength(4);
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: receipt.generationId,
+            status: "active",
+          });
+        })
+      )
+    ));
 });
 
 describe("yeet planner", () => {

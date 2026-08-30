@@ -405,7 +405,7 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
   reason: string,
   expectedGeneration: O.Option<string> = O.none(),
   verifyCheckoutHead = true,
-  settleContention = false
+  waitForMutex = false
 ) {
   const transition = Effect.gen(function* () {
     const current = yield* readLease(leasePath);
@@ -448,23 +448,18 @@ const retirePublishedPrLeaseAtPath = Effect.fn("PrLease.retireAtPath")(function*
       "pr-lease-retired",
       checkoutRoot,
       verifyCheckoutHead === true ? targetHeadSha : "",
-      settleContention
+      waitForMutex
     );
     return { changed: true, generationId: current.value.generationId, preservedNewer: false } as const;
   });
-  const result = yield* settleContention === true
-    ? transition.pipe(
-        Effect.retry({ while: P.isTagged("PrLeaseTransitionContendedError") }),
-        Effect.catchTag("PrLeaseTransitionContendedError", () => Effect.never)
-      )
-    : transition.pipe(
-        Effect.retry({ times: 3, while: P.isTagged("PrLeaseTransitionContendedError") }),
-        Effect.catchTag("PrLeaseTransitionContendedError", (error) =>
-          YeetCommandError.make({
-            message: `Could not retire the current PR ownership generation after repeated contention (${error.expectedGeneration}).`,
-          })
-        )
-      );
+  const result = yield* transition.pipe(
+    Effect.retry({ times: 3, while: P.isTagged("PrLeaseTransitionContendedError") }),
+    Effect.catchTag("PrLeaseTransitionContendedError", (error) =>
+      YeetCommandError.make({
+        message: `Could not retire the current PR ownership generation after repeated contention (${error.expectedGeneration}).`,
+      })
+    )
+  );
   yield* Console.log(
     result.preservedNewer
       ? `[yeet] preserved newer published-PR lease while retiring generation ${result.generationId}: ${reason}`
@@ -489,7 +484,7 @@ const retirePublishedPrLeaseForContext = Effect.fn("PrLease.retireForContext")(f
   reason: string,
   expectedGeneration: O.Option<string>,
   verifyCheckoutHead: boolean,
-  settleContention = false
+  waitForMutex = false
 ) {
   const path = yield* Path.Path;
   const inbox = path.join(context.repoRoot, ".beep", "inbox");
@@ -502,7 +497,7 @@ const retirePublishedPrLeaseForContext = Effect.fn("PrLease.retireForContext")(f
     reason,
     expectedGeneration,
     verifyCheckoutHead,
-    settleContention
+    waitForMutex
   );
 });
 
