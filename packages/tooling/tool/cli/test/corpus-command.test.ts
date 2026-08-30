@@ -1888,6 +1888,10 @@ describe("corpus restoration preservation", () => {
           records,
           (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
         );
+        const terminalRows = A.filter(
+          records,
+          (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
+        );
         const preflight = A.findFirst(records, (record) => record.recordType === "archive-preflight");
         if (O.isNone(seal) || O.isNone(terminal) || O.isNone(preflight)) {
           return yield* Effect.die("Expected sealed preflight and terminal fixture rows.");
@@ -1937,6 +1941,24 @@ describe("corpus restoration preservation", () => {
             })
           )
         );
+        const firstTerminal = terminalRows[0];
+        const secondTerminal = terminalRows[1];
+        if (firstTerminal === undefined || secondTerminal === undefined) {
+          return yield* Effect.die("Expected at least two archive terminal fixture rows.");
+        }
+        const duplicateDestinationTerminal =
+          secondTerminal.recordType === "archive-file-pass"
+            ? ArchiveLedgerRecord.cases["archive-file-pass"].make({
+                ...secondTerminal,
+                destinationRelativePath: firstTerminal.destinationRelativePath,
+              })
+            : ArchiveLedgerRecord.cases["archive-directory-pass"].make({
+                ...secondTerminal,
+                destinationRelativePath: firstTerminal.destinationRelativePath,
+              });
+        const duplicateDestination = yield* reseal(
+          A.map(withoutSeal, (record) => (record === secondTerminal ? duplicateDestinationTerminal : record))
+        );
         const variants: ReadonlyArray<ReadonlyArray<ArchiveLedgerRecord>> = [
           withoutSeal,
           A.append(records, seal.value),
@@ -1947,6 +1969,7 @@ describe("corpus restoration preservation", () => {
           duplicatePreflight,
           unapprovedPreflight,
           withFailure,
+          duplicateDestination,
         ];
 
         yield* Effect.forEach(
