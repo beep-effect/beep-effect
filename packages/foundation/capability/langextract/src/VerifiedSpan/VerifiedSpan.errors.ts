@@ -32,6 +32,8 @@ export const VerifiedSpanErrorReason = LiteralKit([
   "limit-exceeded",
   "malformed-source",
   "not-found",
+  "normalization-version-mismatch",
+  "invalid-history",
 ]).pipe(
   $I.annoteSchema("VerifiedSpanErrorReason", {
     description: "Fail-closed reasons emitted by strict locator-to-raw-source mapping.",
