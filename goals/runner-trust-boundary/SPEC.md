@@ -34,8 +34,8 @@ The required runner class has all of these properties:
 ## Ownership
 
 - `goals/runner-trust-boundary` owns runner trust-boundary security, transferred
-  Codex IDs, external admission proof, workload-identity removal, and
-  exact-ID dashboard closure.
+  Codex IDs, external admission proof, workload-identity removal,
+  post-release JIT containment, and exact-ID dashboard closure.
 - `goals/ci-fleet-endgame` keeps fleet performance and architecture ownership.
   It remains active and P6-gated; this packet does not absorb or close it.
 - `goals/ci-fleet-residue` remains completed-retained. Its 2026-08-14 live Gate
@@ -264,8 +264,9 @@ manifest, and index state together.
       obtain usable ambient application instance-role credentials.
 - [x] The role allow, boundary Deny, live canary, Gate L, and live external
       sample prove one-way, self-only metadata disable before runner startup.
-- [ ] P4 proves that replay of the one-use JIT configuration is rejected and
-      scrubs the operator-retained probe value. P2 records the visible argv
+- [ ] P8 proves that replay of the one-use JIT configuration is rejected after
+      the original listener ends and scrubs the operator-retained probe value.
+      P2 records the visible argv
       residue without claiming replay rejection. Partially proven 2026-08-25
       in `research/P4-EVIDENCE.md` (run `32893112867`, `M_JIT_REPLAY: PASS`):
       concurrent replay is rejected and the value was scrubbed; replay after
@@ -329,5 +330,5 @@ manifest, and index state together.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| E1 Post-release JIT replay untested | The replay half of `c799c2269d748191997ff176ce4bfd48` and `33cd94a12d788191afbec1edc25c433f`; SPEC acceptance item "P4 proves that replay of the one-use JIT configuration is rejected" | `ci-fleet-endgame` (probe change lands in `fleet-shadow-check.yml` on `main`) | P4 proved that GitHub rejects a second listener while the original session is alive (`A session for this runner already exists.`). It did not test replay after the original listener is stopped, nor replay from another host after the VM is gone. Job code runs as `ec2-user` with passwordless sudo and can read, exfiltrate, or kill the listener; the shim powers the VM off on listener exit, but a root attacker can also stop the shim, and stale registrations are not reaped before GitHub's one-day ephemeral cleanup. Recorded 2026-08-25 at closeout; the packet does not claim post-release rejection. | A disposable-runner probe that stops the original listener, replays the configuration from the host and from another host, and records a server-side rejection; or a controller change that deregisters the runner on abnormal listener exit, proven live. |
+| E1 Post-release JIT replay untested | The replay half of `c799c2269d748191997ff176ce4bfd48` and `33cd94a12d788191afbec1edc25c433f`; P8 acceptance requires post-release rejection or containment | `runner-trust-boundary` P8 | P4 proved that GitHub rejects a second listener while the original session is alive (`A session for this runner already exists.`). It did not test replay after the original listener is stopped, nor replay from another host after the VM is gone. Job code runs as `ec2-user` with passwordless sudo and can read, exfiltrate, or kill the listener; the shim powers the VM off on listener exit, but a root attacker can also stop the shim, and stale registrations are not reaped before GitHub's one-day ephemeral cleanup. The 2026-08-30 review reactivated this packet because a live trust-boundary residual cannot be retired into a performance packet. | A disposable-runner probe that stops the original listener, replays the configuration from the host and from another host, and records a server-side rejection; or a controller change that removes the recoverable configuration before job code can execute and deregisters on abnormal listener exit, proven live. |
 | E2 Four IDs closed before the P4 re-proof | `c799c2269d748191997ff176ce4bfd48`, `33cd94a12d788191afbec1edc25c433f`, `9459410104b881919cd820b97c673b67`, `d1f026deb21881919d853e63780734fe` | Operator | The operator authorized closing these four on 2026-08-24 after #796 and #800 merged, on their individual `P1` and P2 evidence, before P3 and P4 existed. `P2-DESIGN.md` mapped the P4 JIT replay probe to both workload-identity IDs; that probe ran on 2026-08-25 and passed for concurrent replay only (E1). The final-head run `32893112867` re-passed every other mapped gate. The closures were not reversed. | Operator reopens the two workload-identity IDs on the dashboard, or E1 is removed. |

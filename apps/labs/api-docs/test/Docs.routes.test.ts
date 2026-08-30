@@ -40,6 +40,24 @@ const verifyDocsRoutes = Effect.fn("ApiDocs.test.verifyDocsRoutes")(function* ()
   );
   expect(committedSpecResponse.status).toBe(200);
   yield* Effect.tryPromise(() => committedSpecResponse.text()).pipe(Effect.flatMap(decodeUnknownJson));
+
+  const committedDocsResponse = yield* Effect.tryPromise(() =>
+    webHandler.handler(new Request("http://api-docs.test/apis/govinfo-full/docs"))
+  );
+  expect(committedDocsResponse.status).toBe(200);
+  expect(committedDocsResponse.headers.get("content-security-policy")).toContain("script-src 'self'");
+  const committedDocs = yield* Effect.tryPromise(() => committedDocsResponse.text());
+  expect(committedDocs).toContain('src="/assets/scalar-api-reference-1.43.5.js"');
+  expect(committedDocs).not.toContain("cdn.jsdelivr.net");
+
+  const scalarScriptResponse = yield* Effect.tryPromise(() =>
+    webHandler.handler(new Request("http://api-docs.test/assets/scalar-api-reference-1.43.5.js"))
+  );
+  expect(scalarScriptResponse.status).toBe(200);
+  expect(scalarScriptResponse.headers.get("content-type")).toContain("text/javascript");
+  const scalarScript = yield* Effect.tryPromise(() => scalarScriptResponse.text());
+  expect(scalarScript).toContain("@scalar/api-reference@1.43.5");
+  expect(scalarScript.length).toBeGreaterThan(1_000_000);
 });
 
 describe("API docs routes", () => {

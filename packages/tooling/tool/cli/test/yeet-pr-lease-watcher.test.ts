@@ -47,6 +47,7 @@ describe("Yeet PR lease watcher", () => {
           expect(script).toContain('parse_timestamp_epoch "$refreshed_at"');
           expect(script).toContain('"$projects_root"/*/.beep/inbox/pr-lease.json');
           expect(script).toContain('"$projects_root"/*-worktrees/*/.beep/inbox/pr-lease.json');
+          expect(script).toContain("take_over_checkout() (");
         })
       )
     ));

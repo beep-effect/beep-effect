@@ -17,6 +17,7 @@ import {
   FlattenMediaOptions,
   ImageAuditOptions,
   ImageCurationOptions,
+  MatchPersonOptions,
   NormalizeFilesOptions,
   ProcessFilesOptions,
 } from "./Files.schemas.ts";
@@ -30,6 +31,7 @@ import {
   detectFacesFiles,
   FilesCommandServiceLive,
   flattenMediaFiles,
+  matchPerson,
   normalizeFiles,
   printFilesIndex,
   processFiles,
@@ -93,6 +95,23 @@ const curateImagesOutDirFlag = Flag.directory("out-dir").pipe(
 );
 const curateImagesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
   Flag.withDescription("Curation manifest output path; defaults to --out-dir/manifests/image-curation-manifest.json"),
+  Flag.optional
+);
+const matchPersonDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("Candidate photo directory to scan for the target person")
+);
+const matchPersonReferencesFlag = Flag.directory("references", { mustExist: true }).pipe(
+  Flag.withDescription("Trusted reference directory whose images contain only the target person")
+);
+const matchPersonManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+  Flag.withDescription("Required schema-versioned person-match manifest output path")
+);
+const matchPersonOutDirFlag = Flag.directory("out-dir").pipe(
+  Flag.withDescription("Optional directory receiving non-destructive accepted and review copies"),
+  Flag.optional
+);
+const matchPersonCacheDirFlag = Flag.directory("cache-dir").pipe(
+  Flag.withDescription("Optional cache root for the isolated Python environment and InsightFace models"),
   Flag.optional
 );
 const archiveDirFlag = Flag.directory("archive-dir").pipe(
@@ -188,6 +207,18 @@ const auditImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
 const curateImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Overwrite existing regular-file curation outputs and manifest")
+);
+const matchPersonOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Overwrite an existing regular-file manifest and matching output files")
+);
+const matchPersonRecursiveFlag = Flag.boolean("recursive").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Recursively scan nested candidate and reference directories")
+);
+const matchPersonAcceptModelLicenseFlag = Flag.boolean("accept-model-license").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Accept InsightFace's non-commercial research terms for the buffalo_l weights")
 );
 const captionTextFlag = Flag.string("caption").pipe(
   Flag.withDefault(""),
@@ -298,6 +329,22 @@ const minFaceConfidenceFlag = Flag.float("min-confidence").pipe(
 const minFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
   Flag.withDefault(1),
   Flag.withDescription("Flag detected faces whose primary face box area is below this image percentage")
+);
+const matchPersonDetectionThresholdFlag = Flag.float("detection-threshold").pipe(
+  Flag.withDefault(0.6),
+  Flag.withDescription("Minimum SCRFD face detection confidence between 0 and 1")
+);
+const matchPersonMatchThresholdFlag = Flag.float("match-threshold").pipe(
+  Flag.withDefault(0.5),
+  Flag.withDescription("Minimum target-person cosine similarity between 0 and 1")
+);
+const matchPersonReviewThresholdFlag = Flag.float("review-threshold").pipe(
+  Flag.withDefault(0.35),
+  Flag.withDescription("Lower cosine-similarity boundary for identity review")
+);
+const matchPersonMinFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
+  Flag.withDefault(1),
+  Flag.withDescription("Flag matched faces below this percentage of the full image area")
 );
 const faceEdgeMarginPctFlag = Flag.float("edge-margin-pct").pipe(
   Flag.withDefault(2),
@@ -527,6 +574,63 @@ const filesDetectFacesCommand = Command.make(
   Command.provide(FilesCommandServiceLive)
 );
 
+const filesMatchPersonCommand = Command.make(
+  "match-person",
+  {
+    acceptModelLicense: matchPersonAcceptModelLicenseFlag,
+    cacheDir: matchPersonCacheDirFlag,
+    detectionThreshold: matchPersonDetectionThresholdFlag,
+    dir: matchPersonDirFlag,
+    json: jsonFlag,
+    manifest: matchPersonManifestFlag,
+    matchThreshold: matchPersonMatchThresholdFlag,
+    minFaceAreaPct: matchPersonMinFaceAreaPctFlag,
+    outDir: matchPersonOutDirFlag,
+    overwrite: matchPersonOverwriteFlag,
+    recursive: matchPersonRecursiveFlag,
+    references: matchPersonReferencesFlag,
+    reviewThreshold: matchPersonReviewThresholdFlag,
+  },
+  Effect.fn(function* ({
+    acceptModelLicense,
+    cacheDir,
+    detectionThreshold,
+    dir,
+    json,
+    manifest,
+    matchThreshold,
+    minFaceAreaPct,
+    outDir,
+    overwrite,
+    recursive,
+    references,
+    reviewThreshold,
+  }) {
+    yield* runFilesProgram(
+      matchPerson(
+        MatchPersonOptions.make({
+          acceptModelLicense,
+          cacheDir,
+          detectionThreshold,
+          dir,
+          json,
+          manifest,
+          matchThreshold,
+          minFaceAreaPct,
+          outDir,
+          overwrite,
+          recursive,
+          references,
+          reviewThreshold,
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Match one trusted person across a local photo collection with InsightFace buffalo_l"),
+  Command.provide(FilesCommandServiceLive)
+);
+
 const filesNormalizeCommand = Command.make(
   "normalize",
   {
@@ -692,6 +796,7 @@ export const filesCommand = Command.make("files", {}, () => printFilesIndex).pip
     filesDetectBordersCommand,
     filesDetectFacesCommand,
     filesFlattenMediaCommand,
+    filesMatchPersonCommand,
     filesNormalizeCommand,
     filesProcessCommand,
     filesSortAndRenameCommand,

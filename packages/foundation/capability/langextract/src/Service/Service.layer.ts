@@ -91,7 +91,7 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
       });
       const alignedCount = pipe(
         extractions,
-        A.filter(GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_fuzzy"])),
+        A.filter(GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"])),
         A.length
       );
       const unalignedCount = Num.subtract(A.length(extractions), alignedCount);

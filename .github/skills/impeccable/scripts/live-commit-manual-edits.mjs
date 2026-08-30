@@ -4,7 +4,7 @@
  * CLI helper: apply pending live copy edits as one AI-owned batch.
  *
  * The browser Save path stages copy edits in .impeccable/live. This script is
- * called by /manual-edit-commit when the user clicks Apply copy edits. It gives
+ * called by /manual-edit-commit after a trusted operator authorizes Apply. It gives
  * the local AI runner the full staged batch plus evidence, validates the files
  * the runner reports touching, and clears only entries reported as applied.
  *
@@ -884,7 +884,7 @@ async function repairPostApplyValidation({
       continue;
     }
 
-    const repairedChecks = runCopyEditPostApplyChecks({ cwd, files: currentFiles });
+    const repairedChecks = runCopyEditPostApplyChecks({ cwd, env, files: currentFiles });
     currentWarnings = [...currentWarnings, ...(repairedChecks.warnings || [])];
     if (!repairedChecks.ok) {
       currentFailures = repairedChecks.failures || [];
@@ -1180,7 +1180,7 @@ export async function commitManualEdits({
     });
   }
 
-  const postChecks = runCopyEditPostApplyChecks({ cwd, files: result.files || [] });
+  const postChecks = runCopyEditPostApplyChecks({ cwd, env, files: result.files || [] });
   if (!postChecks.ok) {
     const postCheckEntries =
       verifiedAppliedIds.length > 0

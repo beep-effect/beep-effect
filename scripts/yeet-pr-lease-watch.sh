@@ -189,7 +189,9 @@ terminate_spawned_fixer() {
   fi
 }
 
-take_over_checkout() {
+# Run each checkout scan in a subshell so the dynamically allocated flock file
+# descriptor is scope-bound: every early return closes it before the next scan.
+take_over_checkout() (
   local root="$1" inbox lease failures acks lock_fd generation status session_id owner_pid owner_start head_branch
   local observed_start observed_state refreshed_at refreshed_epoch now_epoch age head_sha pr_number rows
   local precheck_refreshed_at precheck_refreshed_epoch precheck_now_epoch precheck_age
@@ -405,7 +407,7 @@ take_over_checkout() {
       rm -f "$original_lease"
     fi
   fi
-}
+)
 
 scan_once() {
   local roots=() lease_paths=() root lease_path restore_nullglob=0

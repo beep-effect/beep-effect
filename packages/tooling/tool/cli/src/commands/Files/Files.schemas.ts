@@ -55,6 +55,13 @@ export * from "./internal/ImageAudit.schemas.ts";
  */
 export * from "./internal/ImageCuration.schemas.ts";
 /**
+ * Target-person matching option, worker-boundary, and report schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/MatchPerson.schemas.ts";
+/**
  * Shared media primitive and probe-boundary schemas.
  *
  * @category schemas

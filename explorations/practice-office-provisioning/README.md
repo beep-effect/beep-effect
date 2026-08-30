@@ -73,3 +73,14 @@ Business, FreshBooks live limits, the Purview >100 GB support case).
   reference cleanup, @beep/box brick honesty); the "r7 missing" finding was
   invalid. HubSpot portal facts captured. Stage advanced to `shape`;
   BRIEF.md drafted for operator review.
+- 2026-08-30 (PR #909 closeout): #909 merged with all required checks green;
+  its ten review threads triaged and fixed — appetite carve-outs named in
+  the no-gos (PST import + contact-CSV seeding), Box driver managers scoped
+  to the stay-on-Business posture, the write-verbs goal cut to
+  contacts-only (no approved Graph mail-write lane), Box Sign
+  attorney-context and external-collaborator economics added to decisions,
+  FreshBooks invoice-endpoint validation gate + single-use refresh-token
+  rotation added, r2 AzCopy command carries `--recursive=true`, citation
+  registry count clarified. The yeet-inbox hook fences were narrowed on
+  main mid-session (PR #912) after three regression classes hit this
+  session.

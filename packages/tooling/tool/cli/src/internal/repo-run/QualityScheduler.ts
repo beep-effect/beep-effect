@@ -31,7 +31,6 @@ import {
   Fiber,
   FileSystem,
   Layer,
-  MutableHashSet,
   Order,
   Path,
   pipe,
@@ -40,6 +39,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
@@ -48,19 +48,13 @@ import {
   AdmissionCoordinationProtocol,
   AdmissionRequest,
   AdmissionSnapshot,
+  DeadLeaseScopePlan,
   QualitySchedulerError,
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
-import { RunScopeRecord, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
-import {
-  enterRunScope,
-  listRunScopeUnits,
-  readRunScopeOwnerRoot,
-  readRunScopeTelemetry,
-  runScopeUnitName,
-  stopRunScopeForReap,
-} from "./RunScope.ts";
+import { RunScopeRecord, RunScopeStopOutcome, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
+import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -516,14 +510,15 @@ const reapDeadAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
 const repairAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>(
   directories: AdmissionDirectories,
   classified: ReadonlyArray<{ readonly entryPath: string; readonly outcome: AdmissionEntryClass<Entry> }>,
-  codec: AdmissionEntryCodec<Entry, DecodeError>
+  codec: AdmissionEntryCodec<Entry, DecodeError>,
+  retainedDeadPaths: ReadonlyArray<string>
 ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
   yield* Effect.forEach(
     classified,
     ({ entryPath, outcome }) =>
       outcome.kind === "malformed"
         ? quarantineEntry(directories, entryPath, "undecodable")
-        : outcome.kind === "dead"
+        : outcome.kind === "dead" && !A.contains(retainedDeadPaths, entryPath)
           ? reapDeadAdmissionEntry(entryPath, outcome.entry, codec)
           : Effect.void,
     { discard: true }
@@ -534,7 +529,8 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
   directories: AdmissionDirectories,
   directory: string,
   codec: AdmissionEntryCodec<Entry, DecodeError>,
-  repair: boolean
+  repair: boolean,
+  retainedDeadPaths: ReadonlyArray<string> = A.empty()
 ): Effect.fn.Return<
   {
     readonly live: ReadonlyArray<{ readonly path: string; readonly entry: Entry }>;
@@ -555,7 +551,7 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
     const entryPath = path.join(directory, name);
     return Effect.map(classifyAdmissionEntry(entryPath, codec), (outcome) => ({ entryPath, outcome }));
   });
-  yield* repair ? repairAdmissionEntries(directories, classified, codec) : Effect.void;
+  yield* repair ? repairAdmissionEntries(directories, classified, codec, retainedDeadPaths) : Effect.void;
   return {
     live: A.getSomes(
       A.map(classified, ({ entryPath, outcome }) =>
@@ -575,7 +571,8 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
 
 const scanAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
-  repair: boolean
+  repair: boolean,
+  retainedDeadLeasePaths: ReadonlyArray<string> = A.empty()
 ): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const leases = yield* collectAdmissionEntries(
     directories,
@@ -585,7 +582,8 @@ const scanAdmissionState = Effect.fnUntraced(function* (
       ownerOf: (lease: YeetAdmissionLease) => lease,
       describe: (lease: YeetAdmissionLease) => `pid ${lease.pid} (${lease.kind}, ${lease.checkoutRoot})`,
     },
-    repair
+    repair,
+    retainedDeadLeasePaths
   );
   const tickets = yield* collectAdmissionEntries(
     directories,
@@ -1269,7 +1267,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
-    nonce: randomUUID().slice(0, 8),
+    nonce: randomUUID(),
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>
@@ -1386,7 +1384,8 @@ const enrichLeaseRunScopeTelemetry = (
 const snapshotAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   config: AdmissionConfig,
-  repair: boolean
+  repair: boolean,
+  retainedDeadLeasePaths: ReadonlyArray<string> = A.empty()
 ): Effect.fn.Return<
   AdmissionSnapshot,
   QualitySchedulerError,
@@ -1394,7 +1393,7 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const state = yield* scanAdmissionState(directories, repair);
+  const state = yield* scanAdmissionState(directories, repair, retainedDeadLeasePaths);
   const leases = yield* Effect.forEach(state.leases, ({ lease }) => enrichLeaseRunScopeTelemetry(lease), {
     concurrency: 4,
   });
@@ -1417,44 +1416,85 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
   });
 });
 
-const derivedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
-  Str.isNonEmpty(lease.nonce) ? [runScopeUnitName(lease.nonce)] : A.empty();
-
-const recordedRunScopeUnitName = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
-  pipe(O.fromUndefinedOr(lease.runScope), O.match({ onNone: A.empty<string>, onSome: (scope) => [scope.unitName] }));
-
-// Only scopes that record this reaper's admission root as owner are candidates.
-// Production now has one invariant root; a scope from an isolated test fixture
-// is someone else's live work, never a leak from here.
-const ownedByRoot = (ownerRoot: string) =>
-  Effect.fnUntraced(function* (
-    unitName: string
-  ): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
-    const recorded = yield* readRunScopeOwnerRoot(unitName);
-    return O.exists(recorded, (root) => root === ownerRoot) ? O.some(unitName) : O.none();
-  });
-
-const stopLeakedRunScopes = Effect.fnUntraced(function* (
-  state: LiveAdmissionState,
-  ownerRoot: string
-): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
-  // A live lease protects both its recorded unit and the nonce-derived unit,
-  // which covers the window before enterRunScope's record reaches the lease.
-  const liveUnits = MutableHashSet.fromIterable(
-    A.flatMap(state.leases, ({ lease }) => A.appendAll(derivedRunScopeUnitName(lease), recordedRunScopeUnitName(lease)))
-  );
-  const deadTargets = A.flatMap(state.deadLeases, ({ lease }) =>
-    pipe(
-      recordedRunScopeUnitName(lease),
-      A.match({ onEmpty: () => derivedRunScopeUnitName(lease), onNonEmpty: (recorded) => recorded })
+const runScopeUnitNamesForLease = (lease: YeetAdmissionLease): ReadonlyArray<string> =>
+  A.dedupe(
+    A.appendAll(
+      Str.isNonEmpty(lease.nonce) ? [runScopeUnitName(lease.nonce)] : A.empty<string>(),
+      pipe(O.fromUndefinedOr(lease.runScope), O.match({ onNone: A.empty<string>, onSome: (scope) => [scope.unitName] }))
     )
   );
-  const unowned = A.filter(yield* listRunScopeUnits(), (unitName) => !MutableHashSet.has(liveUnits, unitName));
-  const ownedTargets = A.getSomes(yield* Effect.forEach(unowned, ownedByRoot(ownerRoot), { concurrency: 4 }));
-  const targets = MutableHashSet.fromIterable(A.appendAll(deadTargets, ownedTargets));
-  yield* Effect.forEach(targets, stopRunScopeForReap, { concurrency: 4, discard: true });
-});
 
+const isRetainedDeadLeaseScopePlan = DeadLeaseScopePlan.guards.retain;
+const isStoppedDeadLeaseScopePlan = DeadLeaseScopePlan.guards.stop;
+
+const deadLeaseScopePlan = (
+  liveUnitNames: ReadonlyArray<string>,
+  { lease, path }: LiveAdmissionState["deadLeases"][number]
+): DeadLeaseScopePlan => {
+  const recorded = O.fromUndefinedOr(lease.runScope);
+  if (Str.isEmpty(lease.nonce)) {
+    return O.isSome(recorded)
+      ? { _tag: "retain", leasePath: path, reason: "legacy-nonce-missing" }
+      : { _tag: "reap", leasePath: path };
+  }
+  const unitName = runScopeUnitName(lease.nonce);
+  if (O.exists(recorded, (scope) => !Str.Equivalence(scope.unitName, unitName))) {
+    return { _tag: "retain", leasePath: path, reason: "recorded-unit-mismatch" };
+  }
+  if (A.contains(liveUnitNames, unitName)) {
+    return { _tag: "retain", leasePath: path, reason: "live-unit-conflict" };
+  }
+  return O.exists(
+    recorded,
+    (scope) => RunScopeSupport.is.disabled(scope.support) || RunScopeSupport.is.unsupported(scope.support)
+  )
+    ? { _tag: "reap", leasePath: path }
+    : { _tag: "stop", leasePath: path, unitName };
+};
+
+const stopLeakedRunScopes = Effect.fnUntraced(function* (
+  state: LiveAdmissionState
+): Effect.fn.Return<ReadonlyArray<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  // Only a dead lease is coordinated proof that its scope is no longer live.
+  // A loaded unit absent from this scan may belong to an admission racing with
+  // the reaper, so absence is never authority to stop it.
+  const liveUnitNames = A.dedupe(A.flatMap(state.leases, ({ lease }) => runScopeUnitNamesForLease(lease)));
+  const plans = A.map(state.deadLeases, (lease) => deadLeaseScopePlan(liveUnitNames, lease));
+  const retained = A.filter(plans, isRetainedDeadLeaseScopePlan);
+  yield* Effect.forEach(
+    retained,
+    (plan) =>
+      Console.error(`[yeet] retaining dead admission lease ${plan.leasePath}: run-scope authority ${plan.reason}.`),
+    { discard: true }
+  );
+  const stopGroups = pipe(
+    A.filter(plans, isStoppedDeadLeaseScopePlan),
+    A.groupBy((plan) => plan.unitName),
+    R.values
+  );
+  const outcomes = yield* Effect.forEach(
+    stopGroups,
+    Effect.fnUntraced(function* (group) {
+      const first = A.head(group);
+      if (O.isNone(first)) {
+        return A.empty<string>();
+      }
+      const outcome = yield* stopRunScopeForReap(first.value.unitName);
+      if (RunScopeStopOutcome.is.stopped(outcome) || RunScopeStopOutcome.is.absent(outcome)) {
+        return A.empty<string>();
+      }
+      yield* Console.error(
+        `[yeet] retaining ${A.length(group)} dead admission lease(s): ${first.value.unitName} stop ${outcome}.`
+      );
+      return A.map(group, (plan) => plan.leasePath);
+    }),
+    { concurrency: 4 }
+  );
+  return A.appendAll(
+    A.map(retained, (plan) => plan.leasePath),
+    A.flatten(outcomes)
+  );
+});
 /**
  * Reap dead admission state (dead pid or `/proc` start-time mismatch).
  *
@@ -1481,8 +1521,8 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
   FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
 > {
   const directories = yield* ensureAdmissionDirectories();
-  if (options.apply) {
-    yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false), directories.root);
-  }
-  return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply);
+  const retainedDeadLeasePaths = options.apply
+    ? yield* stopLeakedRunScopes(yield* scanAdmissionState(directories, false))
+    : A.empty<string>();
+  return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply, retainedDeadLeasePaths);
 });

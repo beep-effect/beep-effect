@@ -1,7 +1,7 @@
-import fs from "node:fs";
-import path from "node:path";
-import { getLegacyLiveSessionsDir, getLiveSessionsDir, safeSessionId } from "../lib/impeccable-paths.mjs";
-import { COMPLETED_SESSION_PHASES, GENERATION_FENCED_SESSION_PHASES } from "./vocabulary.mjs";
+import fs from 'node:fs';
+import path from 'node:path';
+import { getLegacyLiveSessionsDir, getLiveSessionsDir, safeSessionId } from '../lib/impeccable-paths.mjs';
+import { COMPLETED_SESSION_PHASES, GENERATION_FENCED_SESSION_PHASES } from './vocabulary.mjs';
 
 const COMPLETED_PHASES = new Set(COMPLETED_SESSION_PHASES);
 export const GENERATION_FENCED_PHASES = new Set(GENERATION_FENCED_SESSION_PHASES);
@@ -11,8 +11,8 @@ export const GENERATION_FENCED_PHASES = new Set(GENERATION_FENCED_SESSION_PHASES
 // sequence number. Both are stripped before a snapshot is handed to a caller.
 // The byte count is what makes a cached snapshot verifiable — the journal is
 // append-only, so a matching size means no event has landed since.
-const META_JOURNAL_BYTES = "__journalBytes";
-const META_NEXT_SEQ = "__nextSeq";
+const META_JOURNAL_BYTES = '__journalBytes';
+const META_NEXT_SEQ = '__nextSeq';
 
 // TODO(revision-unification): `checkpointRevision`, `browserCheckpointRevision`,
 // and `publicationCheckpointRevision` are three counters for two domains.
@@ -114,7 +114,7 @@ export function createLiveSessionStore({ cwd = process.cwd(), sessionId } = {}) 
         ts: new Date().toISOString(),
         event: normalized,
       };
-      fs.appendFileSync(journalPath, JSON.stringify(entry) + "\n");
+      fs.appendFileSync(journalPath, JSON.stringify(entry) + '\n');
       const next = applyEvent(prior.snapshot, entry);
       persist(normalized.id, next, prior.nextSeq + 1);
       return next;
@@ -127,8 +127,9 @@ export function createLiveSessionStore({ cwd = process.cwd(), sessionId } = {}) 
      * storage materializes a ghost session in this store.
      */
     has(id) {
-      if (!id || typeof id !== "string") return false;
-      return fs.existsSync(getJournalPath(rootDir, id)) || fs.existsSync(getJournalPath(legacyRootDir, id));
+      if (!id || typeof id !== 'string') return false;
+      return fs.existsSync(getJournalPath(rootDir, id))
+        || fs.existsSync(getJournalPath(legacyRootDir, id));
     },
     /**
      * Read-only. `live-status` and `live-resume` call this against a session a
@@ -137,7 +138,7 @@ export function createLiveSessionStore({ cwd = process.cwd(), sessionId } = {}) 
      * Snapshot files are written by appendEvent and by flush().
      */
     getSnapshot(id = sessionId, opts = {}) {
-      if (!id) throw new Error("session id required");
+      if (!id) throw new Error('session id required');
       const { snapshot } = readState(id);
       if (!opts.includeCompleted && COMPLETED_PHASES.has(snapshot.phase)) return null;
       return snapshot;
@@ -148,7 +149,7 @@ export function createLiveSessionStore({ cwd = process.cwd(), sessionId } = {}) 
      * processes use; callers that need the state itself should use getSnapshot.
      */
     flush(id = sessionId) {
-      if (!id) throw new Error("session id required");
+      if (!id) throw new Error('session id required');
       const state = readState(id, { allowSnapshotFile: false });
       persist(id, state.snapshot, state.nextSeq);
       return state.snapshot;
@@ -158,7 +159,7 @@ export function createLiveSessionStore({ cwd = process.cwd(), sessionId } = {}) 
       for (const dir of [legacyRootDir, rootDir]) {
         if (!fs.existsSync(dir)) continue;
         for (const name of fs.readdirSync(dir)) {
-          if (name.endsWith(".jsonl")) ids.add(name.slice(0, -".jsonl".length));
+          if (name.endsWith('.jsonl')) ids.add(name.slice(0, -'.jsonl'.length));
         }
       }
       // Each id goes through readState, so a session whose journal has not moved
@@ -189,11 +190,11 @@ function statOrNull(filePath) {
 function readSnapshotFile(snapshotPath, id, journalBytes) {
   let parsed;
   try {
-    parsed = JSON.parse(fs.readFileSync(snapshotPath, "utf-8"));
+    parsed = JSON.parse(fs.readFileSync(snapshotPath, 'utf-8'));
   } catch {
     return null;
   }
-  if (!parsed || typeof parsed !== "object") return null;
+  if (!parsed || typeof parsed !== 'object') return null;
   if (parsed[META_JOURNAL_BYTES] !== journalBytes) return null;
   if (!Number.isInteger(parsed[META_NEXT_SEQ])) return null;
   const nextSeq = parsed[META_NEXT_SEQ];
@@ -206,25 +207,25 @@ function readSnapshotFile(snapshotPath, id, journalBytes) {
 }
 
 function normalizeEvent(event, fallbackId) {
-  if (!event || typeof event !== "object") throw new Error("event object required");
+  if (!event || typeof event !== 'object') throw new Error('event object required');
   const id = event.id || fallbackId;
-  if (!id || typeof id !== "string") throw new Error("event id required");
-  if (!event.type || typeof event.type !== "string") throw new Error("event type required");
+  if (!id || typeof id !== 'string') throw new Error('event id required');
+  if (!event.type || typeof event.type !== 'string') throw new Error('event type required');
   return { ...event, id };
 }
 
 function getJournalPath(rootDir, id) {
-  return path.join(rootDir, safeSessionId(id) + ".jsonl");
+  return path.join(rootDir, safeSessionId(id) + '.jsonl');
 }
 
 function getSnapshotPath(rootDir, id) {
-  return path.join(rootDir, safeSessionId(id) + ".snapshot.json");
+  return path.join(rootDir, safeSessionId(id) + '.snapshot.json');
 }
 
 function baseSnapshot(id) {
   return {
     id,
-    phase: "new",
+    phase: 'new',
     pageUrl: null,
     sourceFile: null,
     previewFile: null,
@@ -275,9 +276,9 @@ const MOUNT_FAILURE_HISTORY = 5;
  * the user is looking at something.
  */
 function deriveRenderState(snapshot) {
-  if (snapshot.mountedVariants.length > 0) return "mounted";
-  if (snapshot.mountFailures.length > 0) return "failed";
-  if (snapshot.generationCompletedAt) return "pending";
+  if (snapshot.mountedVariants.length > 0) return 'mounted';
+  if (snapshot.mountFailures.length > 0) return 'failed';
+  if (snapshot.generationCompletedAt) return 'pending';
   return null;
 }
 
@@ -287,18 +288,18 @@ function rebuildSnapshotFromJournal(journalPath, id) {
   let nextSeq = 1;
   if (!fs.existsSync(journalPath)) return { snapshot, diagnostics, nextSeq };
 
-  const lines = fs.readFileSync(journalPath, "utf-8").split("\n");
+  const lines = fs.readFileSync(journalPath, 'utf-8').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (!line.trim()) continue;
     try {
       const entry = JSON.parse(line);
-      if (!entry || typeof entry !== "object") throw new Error("entry is not object");
+      if (!entry || typeof entry !== 'object') throw new Error('entry is not object');
       if (Number.isInteger(entry.seq)) nextSeq = Math.max(nextSeq, entry.seq + 1);
       snapshot = applyEvent(snapshot, entry);
     } catch (err) {
       diagnostics.push({
-        error: "journal_parse_failed",
+        error: 'journal_parse_failed',
         line: i + 1,
         message: err.message,
       });
@@ -325,8 +326,8 @@ function applyEvent(snapshot, entry) {
   };
 
   switch (event.type) {
-    case "generate":
-      next.phase = "generate_requested";
+    case 'generate':
+      next.phase = 'generate_requested';
       next.pageUrl = event.pageUrl ?? next.pageUrl;
       next.expectedVariants = event.count ?? next.expectedVariants;
       next.pendingEventSeq = entry.seq ?? next.pendingEventSeq;
@@ -337,15 +338,14 @@ function applyEvent(snapshot, entry) {
       next.mountedVariants = [];
       next.mountFailures = [];
       next.renderState = null;
-      if (event.screenshotPath)
-        upsertArtifact(next.annotationArtifacts, { type: "screenshot", path: event.screenshotPath });
+      if (event.screenshotPath) upsertArtifact(next.annotationArtifacts, { type: 'screenshot', path: event.screenshotPath });
       break;
-    case "variant_plan":
+    case 'variant_plan':
       if (!next.generationCanceled && !GENERATION_FENCED_PHASES.has(next.phase)) {
         next.variantPlan = event.plan ?? next.variantPlan;
       }
       break;
-    case "detector_waivers":
+    case 'detector_waivers':
       if (!next.generationCanceled && !GENERATION_FENCED_PHASES.has(next.phase)) {
         next.detectorWaivers = [
           ...(next.detectorWaivers || []),
@@ -353,34 +353,32 @@ function applyEvent(snapshot, entry) {
         ];
       }
       break;
-    case "agent_phase":
+    case 'agent_phase':
       next.generationPhase = event.phase ?? next.generationPhase;
       if (event.phase) {
         next.generationTimings[event.phase] = {
-          at: event.at ?? (Date.parse(entry.ts || "") || null),
+          at: event.at ?? (Date.parse(entry.ts || '') || null),
           durationMs: event.durationMs ?? null,
         };
       }
       break;
-    case "variants_ready":
-    case "agent_done":
-      if (
-        (next.generationCanceled || GENERATION_FENCED_PHASES.has(next.phase)) &&
-        !(event.type === "agent_done" && event.carbonize === true && next.phase === "accept_requested")
-      ) {
+    case 'variants_ready':
+    case 'agent_done':
+      if ((next.generationCanceled || GENERATION_FENCED_PHASES.has(next.phase))
+          && !(event.type === 'agent_done' && event.carbonize === true && next.phase === 'accept_requested')) {
         next.diagnostics.push({
-          error: "late_generation_event_ignored",
+          error: 'late_generation_event_ignored',
           type: event.type,
           phase: next.phase,
         });
         break;
       }
-      next.phase = event.carbonize === true ? "carbonize_required" : "variants_ready";
+      next.phase = event.carbonize === true ? 'carbonize_required' : 'variants_ready';
       // Durable completion marker: later browser checkpoints (a resumed page
       // reporting phase "generating") regress `phase`, but generation staying
       // finished is monotone — the live server keys missed-`done` redelivery
       // on this field.
-      next.generationCompletedAt = event.at ?? (Date.parse(entry.ts || "") || Date.now());
+      next.generationCompletedAt = event.at ?? (Date.parse(entry.ts || '') || Date.now());
       next.sourceFile = event.sourceFile ?? event.file ?? next.sourceFile;
       next.previewFile = event.previewFile ?? next.previewFile;
       next.previewMode = event.previewMode ?? next.previewMode;
@@ -389,17 +387,17 @@ function applyEvent(snapshot, entry) {
       next.pendingEvent = null;
       if (event.carbonize === true) {
         next.diagnostics.push({
-          error: "carbonize_cleanup_required",
+          error: 'carbonize_cleanup_required',
           file: event.file || null,
-          message: "Accepted variant still has carbonize markers that must be folded into source CSS.",
+          message: 'Accepted variant still has carbonize markers that must be folded into source CSS.',
         });
       }
       next.renderState = deriveRenderState(next);
       break;
-    case "variant_mounted": {
+    case 'variant_mounted': {
       const variant = Number(event.variant);
       if (!Number.isInteger(variant) || variant < 1) {
-        next.diagnostics.push({ error: "malformed_mount_ack", type: event.type, variant: event.variant ?? null });
+        next.diagnostics.push({ error: 'malformed_mount_ack', type: event.type, variant: event.variant ?? null });
         break;
       }
       if (!next.mountedVariants.includes(variant)) {
@@ -408,19 +406,19 @@ function applyEvent(snapshot, entry) {
       next.renderState = deriveRenderState(next);
       break;
     }
-    case "variant_mount_failed": {
+    case 'variant_mount_failed': {
       const variant = Number(event.variant);
       if (!Number.isInteger(variant) || variant < 1) {
-        next.diagnostics.push({ error: "malformed_mount_ack", type: event.type, variant: event.variant ?? null });
+        next.diagnostics.push({ error: 'malformed_mount_ack', type: event.type, variant: event.variant ?? null });
         break;
       }
       next.mountFailures = [
         ...next.mountFailures,
         {
           variant,
-          url: typeof event.url === "string" ? event.url : null,
-          error: typeof event.error === "string" ? event.error : null,
-          at: event.at ?? (Date.parse(entry.ts || "") || Date.now()),
+          url: typeof event.url === 'string' ? event.url : null,
+          error: typeof event.error === 'string' ? event.error : null,
+          at: event.at ?? (Date.parse(entry.ts || '') || Date.now()),
         },
       ].slice(-MOUNT_FAILURE_HISTORY);
       next.renderState = deriveRenderState(next);
@@ -433,73 +431,71 @@ function applyEvent(snapshot, entry) {
       }
       break;
     }
-    case "checkpoint":
+    case 'checkpoint':
       if (next.generationCanceled || GENERATION_FENCED_PHASES.has(next.phase)) {
-        next.diagnostics.push({
-          error: "checkpoint_after_terminal_ignored",
-          phase: event.phase ?? null,
-          revision: event.revision ?? null,
-        });
+        next.diagnostics.push({ error: 'checkpoint_after_terminal_ignored', phase: event.phase ?? null, revision: event.revision ?? null });
         break;
       }
       {
-        const revisionDomain =
-          event.revisionDomain === "publication" || (event.reason === "variants_progress" && !event.owner)
-            ? "publication"
-            : "browser";
-        const revisionField =
-          revisionDomain === "publication" ? "publicationCheckpointRevision" : "browserCheckpointRevision";
-        const currentRevision =
-          next[revisionField] ?? (revisionDomain === "browser" ? next.checkpointRevision : 0) ?? 0;
+        const revisionDomain = event.revisionDomain === 'publication'
+          || (event.reason === 'variants_progress' && !event.owner)
+          ? 'publication'
+          : 'browser';
+        const revisionField = revisionDomain === 'publication'
+          ? 'publicationCheckpointRevision'
+          : 'browserCheckpointRevision';
+        const currentRevision = next[revisionField]
+          ?? (revisionDomain === 'browser' ? next.checkpointRevision : 0)
+          ?? 0;
         if ((event.revision ?? 0) >= currentRevision) {
           next.phase = event.phase ?? next.phase;
           next[revisionField] = event.revision ?? currentRevision;
-          if (revisionDomain === "browser") {
+          if (revisionDomain === 'browser') {
             next.checkpointRevision = event.revision ?? next.checkpointRevision;
             next.activeOwner = event.owner ?? next.activeOwner;
           }
           next.arrivedVariants = event.arrivedVariants ?? next.arrivedVariants;
-          if (revisionDomain === "browser") next.visibleVariant = event.visibleVariant ?? next.visibleVariant;
+          if (revisionDomain === 'browser') next.visibleVariant = event.visibleVariant ?? next.visibleVariant;
           next.sourceFile = event.sourceFile ?? next.sourceFile;
           next.previewFile = event.previewFile ?? next.previewFile;
           next.previewMode = event.previewMode ?? next.previewMode;
-          if (revisionDomain === "browser" && event.paramValues) next.paramValues = { ...event.paramValues };
+          if (revisionDomain === 'browser' && event.paramValues) next.paramValues = { ...event.paramValues };
         } else {
-          next.diagnostics.push({ error: "stale_checkpoint_ignored", revision: event.revision, revisionDomain });
+          next.diagnostics.push({ error: 'stale_checkpoint_ignored', revision: event.revision, revisionDomain });
         }
       }
       break;
-    case "accept":
-    case "accept_intent":
-      next.phase = "accept_requested";
+    case 'accept':
+    case 'accept_intent':
+      next.phase = 'accept_requested';
       next.generationCanceled = true;
-      next.generationCanceledAt = event.at ?? (Date.parse(entry.ts || "") || Date.now());
-      next.cancelReason = "accept";
+      next.generationCanceledAt = event.at ?? (Date.parse(entry.ts || '') || Date.now());
+      next.cancelReason = 'accept';
       next.visibleVariant = Number(event.variantId ?? next.visibleVariant);
       if (event.paramValues) next.paramValues = { ...event.paramValues };
       next.pendingEventSeq = entry.seq ?? next.pendingEventSeq;
       next.pendingEvent = toPendingEvent(event);
       break;
-    case "manual_edit_apply":
-      next.phase = "manual_edit_apply_requested";
+    case 'manual_edit_apply':
+      next.phase = 'manual_edit_apply_requested';
       next.pageUrl = event.pageUrl ?? next.pageUrl;
       next.pendingEventSeq = entry.seq ?? next.pendingEventSeq;
       next.pendingEvent = toPendingEvent(event);
       break;
-    case "steer":
-      next.phase = "steer_requested";
+    case 'steer':
+      next.phase = 'steer_requested';
       next.pageUrl = event.pageUrl ?? next.pageUrl;
       next.pendingEventSeq = entry.seq ?? next.pendingEventSeq;
       next.pendingEvent = toPendingEvent(event);
       break;
-    case "carbonize_cleanup":
-      next.phase = "carbonize_cleanup_requested";
+    case 'carbonize_cleanup':
+      next.phase = 'carbonize_cleanup_requested';
       next.sourceFile = event.file ?? next.sourceFile;
       next.pendingEventSeq = entry.seq ?? next.pendingEventSeq;
       next.pendingEvent = toPendingEvent(event);
       break;
-    case "steer_done":
-      next.phase = "steer_done";
+    case 'steer_done':
+      next.phase = 'steer_done';
       next.sourceFile = event.sourceFile ?? event.file ?? next.sourceFile;
       next.previewFile = event.previewFile ?? next.previewFile;
       next.previewMode = event.previewMode ?? next.previewMode;
@@ -507,39 +503,39 @@ function applyEvent(snapshot, entry) {
       next.pendingEventSeq = null;
       next.pendingEvent = null;
       break;
-    case "discard":
-      next.phase = "discard_requested";
+    case 'discard':
+      next.phase = 'discard_requested';
       next.generationCanceled = true;
-      next.generationCanceledAt = event.at ?? (Date.parse(entry.ts || "") || Date.now());
-      next.cancelReason = "discard";
+      next.generationCanceledAt = event.at ?? (Date.parse(entry.ts || '') || Date.now());
+      next.cancelReason = 'discard';
       next.pendingEventSeq = entry.seq ?? next.pendingEventSeq;
       next.pendingEvent = toPendingEvent(event);
       break;
-    case "discarded":
-      next.phase = "discarded";
+    case 'discarded':
+      next.phase = 'discarded';
       next.pendingEventSeq = null;
       next.pendingEvent = null;
       break;
-    case "complete":
-      next.phase = "completed";
+    case 'complete':
+      next.phase = 'completed';
       next.sourceFile = event.sourceFile ?? event.file ?? next.sourceFile;
       next.previewFile = event.previewFile ?? next.previewFile;
       next.previewMode = event.previewMode ?? next.previewMode;
       next.pendingEventSeq = null;
       next.pendingEvent = null;
       break;
-    case "agent_error":
-      if (next.generationCanceled && event.sourceEventType === "generate") {
-        next.diagnostics.push({ error: "late_generation_event_ignored", type: event.type, phase: next.phase });
+    case 'agent_error':
+      if (next.generationCanceled && event.sourceEventType === 'generate') {
+        next.diagnostics.push({ error: 'late_generation_event_ignored', type: event.type, phase: next.phase });
         break;
       }
-      next.phase = "agent_error";
+      next.phase = 'agent_error';
       next.pendingEventSeq = null;
       next.pendingEvent = null;
-      next.diagnostics.push({ error: "agent_error", message: event.message || "unknown agent error" });
+      next.diagnostics.push({ error: 'agent_error', message: event.message || 'unknown agent error' });
       break;
     default:
-      next.diagnostics.push({ error: "unknown_event_type", type: event.type });
+      next.diagnostics.push({ error: 'unknown_event_type', type: event.type });
       break;
   }
   return next;
@@ -563,5 +559,5 @@ function writeSnapshot(snapshotPath, snapshot, meta) {
     [META_JOURNAL_BYTES]: meta?.journalBytes ?? -1,
     [META_NEXT_SEQ]: meta?.nextSeq ?? 1,
   };
-  fs.writeFileSync(snapshotPath, JSON.stringify(payload, null, 2) + "\n");
+  fs.writeFileSync(snapshotPath, JSON.stringify(payload, null, 2) + '\n');
 }

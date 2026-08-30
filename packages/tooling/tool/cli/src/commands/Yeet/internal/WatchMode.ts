@@ -328,7 +328,10 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     threadsResolved,
     mergeable: Str.toUpperCase(view.mergeable ?? "UNKNOWN") === "MERGEABLE",
     mergeStateAcceptable: A.contains(acceptableWatchMergeStates, Str.toUpperCase(mergeStateStatus)),
-    reviewDecisionAcceptable: view.reviewDecision === null || Str.toUpperCase(view.reviewDecision) === "APPROVED",
+    reviewDecisionAcceptable:
+      view.reviewDecision === null ||
+      Str.isEmpty(view.reviewDecision) ||
+      Str.toUpperCase(view.reviewDecision) === "APPROVED",
     greptileScore: O.none(),
   });
 

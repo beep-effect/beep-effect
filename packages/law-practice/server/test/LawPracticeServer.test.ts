@@ -24,6 +24,8 @@ import {
 
 const OFFICE_ACTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling the lid to the base"}]}`;
 
+const MINIMAL_FOLD_DISTINCTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling \\n the lid to the base"}]}`;
+
 const UNALIGNED_DISTINCTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"an impossible limitation"}]}`;
 
 const MISSING_DISTINCTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"}]}`;
@@ -124,6 +126,32 @@ describe("@beep/law-practice-server", () => {
           expect(view.counts.candidate).toBe(0);
           expect(view.counts.admitted).toBe(0);
           expect([...view.admittedKeys]).toEqual([]);
+        })
+      );
+    }
+  );
+
+  it.layer(makeLawPracticeServerTestLayer(MINIMAL_FOLD_DISTINCTION_MODEL_OUTPUT))(
+    "office-action review loop over minimal-fold extraction",
+    (it) => {
+      it.effect(
+        "IrToLaw accepts a minimal-fold distinction and preserves its raw source anchor",
+        Effect.fnUntraced(function* () {
+          const langExtract = yield* LangExtractService;
+          const irToLaw = yield* IrToLaw;
+          const extractionResult = yield* langExtract.extract(makeExtractionRequest());
+          const distinctionExtraction = extractionResult.extractions.find(
+            (extraction) => extraction.label === "distinction"
+          );
+
+          expect(distinctionExtraction?.alignmentStatus).toBe("match_minimal_fold");
+
+          const law = yield* irToLaw.toLaw(extractionResult.extractions);
+
+          expect(law.distinction.anchor.quote).toBe(EXPECTED_DISTINCTION_QUOTE);
+          expect(OFFICE_ACTION_FIXTURE.slice(law.distinction.anchor.startChar, law.distinction.anchor.endChar)).toBe(
+            law.distinction.anchor.quote
+          );
         })
       );
     }

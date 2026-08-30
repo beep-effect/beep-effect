@@ -196,7 +196,8 @@ provenance ledger; per-claim context lives in the reports themselves.
 - <https://learn.microsoft.com/en-us/office365/servicedescriptions/office-365-platform-service-description/office-365-platform-service-description>
 - <https://www.lso.ca/lawyers/practice-supports-and-resources/practice-management-guidelines/file-management>
 
-## r7-sol-pro-gap-report.md (49 distinct URLs)
+## r7-sol-pro-gap-report.md (49 distinct URLs; the report's numbered
+source list has 48 entries — one URL appears in body text only)
 
 - <https://learn.microsoft.com/en-us/office365/servicedescriptions/microsoft-365-service-descriptions/microsoft-365-tenantlevel-services-licensing-guidance/microsoft-purview-service-description>
 - <https://learn.microsoft.com/en-us/purview/pst-import-overview>
