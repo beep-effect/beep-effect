@@ -14,15 +14,6 @@
  * 4. **Domain/range mismatch**: Re-classify entity or update relation
  * 5. **Pattern violation**: Reformat value to match pattern
  *
- * **Example** (Inspect the correction layer)
- *
- * ```ts
- * import { Layer } from "effect"
- * import { CorrectorAgent } from "@effect-ontology/Service/Agent/CorrectorAgent"
- *
- * console.log(Layer.isLayer(CorrectorAgent.Default)) // true
- * ```
- *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -49,6 +40,7 @@ import { OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import type { Agent } from "../../Domain/Model/Agent.ts";
 import { AgentId, AgentMetadata, ValidationResult } from "../../Domain/Model/Agent.ts";
 import type { OntologyContext } from "../../Domain/Model/Ontology.ts";
+import { extractLocalNameFromIri as extractLocalName } from "../../Utils/Iri.ts";
 import { ConfigService, ConfigServiceDefault } from "../Config.ts";
 import { generateObjectWithFeedback } from "../GenerateWithFeedback.ts";
 import type { RdfStore } from "../Rdf.ts";
@@ -83,11 +75,14 @@ export const CorrectionStrategy = LiteralKit([
   "reclassify-entity", // Wrong type/class
   "reformat-value", // Pattern mismatch
   "skip", // Cannot be corrected automatically
-]);
+]).annotate(
+  $I.annote("CorrectionStrategy", {
+    description: "Closed set of SHACL correction strategies emitted by the corrector agent.",
+  })
+);
 
 /**
  * Correction strategy based on violation type
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -243,15 +238,7 @@ export const Correction = S.Union([
 /**
  * Decoded correction value produced by {@link Correction}.
  *
- * **Example** (Accept a correction value)
- *
- * ```ts
- * import type { Correction } from "@effect-ontology/Service/Agent/CorrectorAgent"
- *
- * const strategy = (correction: Correction): Correction["strategy"] => correction.strategy
- * console.log(strategy)
- * ```
- *
+ * @see {@link Correction} for the runtime tagged-union schema and constructors.
  * @category models
  * @since 0.0.0
  */
@@ -294,14 +281,26 @@ export const correctionShouldApply: (correction: Correction) => boolean = Correc
 // =============================================================================
 
 /**
- * Error: Failed to generate correction
+ * Failure to generate a correction for a SHACL violation.
  *
- * **Example** (Inspect correction error)
+ * **Example** (Construct a correction error)
  *
  * ```ts
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
+ * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
  * import { CorrectionError } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
- * console.log(CorrectionError)
+ * const error = CorrectionError.make({
+ *   message: "Could not generate a founder value",
+ *   violation: ShaclValidationViolation.make({
+ *     focusNode: "https://example.org/Ada",
+ *     path: makeNamedNode("https://example.org/founded"),
+ *     message: "Expected at least 1 value.",
+ *     severity: "violation"
+ *   }),
+ *   strategy: "generate-value"
+ * })
+ * console.log(error._tag) // "CorrectionError"
  * ```
  *
  * @category errors
@@ -321,14 +320,23 @@ export class CorrectionError extends S.TaggedError<CorrectionError>($I`Correctio
 ) {}
 
 /**
- * Error: Failed to apply correction to graph
+ * Failure to apply a generated correction to an RDF graph.
  *
- * **Example** (Inspect correction application error)
+ * **Example** (Construct an application error)
  *
  * ```ts
- * import { CorrectionApplicationError } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { Correction, CorrectionApplicationError } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
- * console.log(CorrectionApplicationError)
+ * const error = CorrectionApplicationError.make({
+ *   message: "Could not write the generated triple",
+ *   correction: Correction.cases.skip.make({
+ *     focusNode: "https://example.org/Ada",
+ *     explanation: "Manual review is required.",
+ *     confidence: Confidence.make(1)
+ *   })
+ * })
+ * console.log(error._tag) // "CorrectionApplicationError"
  * ```
  *
  * @category errors
@@ -349,20 +357,39 @@ export class CorrectionApplicationError extends S.TaggedError<CorrectionApplicat
 ) {}
 
 /**
- * Result of correcting a single violation
+ * Result of correcting a single SHACL violation.
  *
- * **Example** (Inspect correction result)
+ * **Example** (Record a skipped correction)
  *
  * ```ts
- * import { CorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
+ * import { NonNegNum } from "@beep/schema/Number"
+ * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
+ * import { Correction, CorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
- * console.log(CorrectionResult)
+ * const result = CorrectionResult.make({
+ *   violation: ShaclValidationViolation.make({
+ *     focusNode: "https://example.org/Ada",
+ *     path: makeNamedNode("https://example.org/founded"),
+ *     message: "Expected at least 1 value.",
+ *     severity: "violation"
+ *   }),
+ *   correction: Correction.cases.skip.make({
+ *     focusNode: "https://example.org/Ada",
+ *     explanation: "Manual review is required.",
+ *     confidence: Confidence.make(1)
+ *   }),
+ *   applied: false,
+ *   durationMs: NonNegNum.make(12)
+ * })
+ * console.log(result.applied) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class CorrectionResult extends S.Class<CorrectionResult>("CorrectionResult")({
+export class CorrectionResult extends S.Class<CorrectionResult>($I`CorrectionResult`)({
   /**
    * The original violation
    */
@@ -382,23 +409,36 @@ export class CorrectionResult extends S.Class<CorrectionResult>("CorrectionResul
    * Time taken in milliseconds
    */
   durationMs: NonNegNum,
-}) {}
+  },
+  $I.annote("CorrectionResult", {
+    description: "Single-violation correction, whether it was applied, and elapsed milliseconds.",
+  })
+) {}
 
 /**
- * Result of correcting all violations in a report
+ * Aggregate outcome of correcting every violation in a SHACL report.
  *
- * **Example** (Inspect batch correction result)
+ * **Example** (Record a fully skipped batch)
  *
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegNum } from "@beep/schema/Number"
  * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
- * console.log(BatchCorrectionResult)
+ * const batch = BatchCorrectionResult.make({
+ *   results: [],
+ *   totalViolations: NonNegativeInt.make(1),
+ *   correctedCount: NonNegativeInt.make(0),
+ *   skippedCount: NonNegativeInt.make(1),
+ *   durationMs: NonNegNum.make(12)
+ * })
+ * console.log(batch.allCorrected) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>("BatchCorrectionResult")({
+export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>($I`BatchCorrectionResult`)({
   /**
    * Individual correction results
    */
@@ -423,19 +463,30 @@ export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>("Batch
    * Total duration in milliseconds
    */
   durationMs: NonNegNum,
-}) {
+  },
+  $I.annote("BatchCorrectionResult", {
+    description: "Per-violation results plus corrected, skipped, and elapsed counters.",
+  })
+) {
   /**
    * Success rate (corrected / total)
    *
-   * **Example** (Inspect batch correction result.success rate)
+   * **Example** (Read the success rate)
    *
    * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { NonNegNum } from "@beep/schema/Number"
    * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
    *
-   * console.log(BatchCorrectionResult)
+   * const batch = BatchCorrectionResult.make({
+   *   results: [],
+   *   totalViolations: NonNegativeInt.make(2),
+   *   correctedCount: NonNegativeInt.make(1),
+   *   skippedCount: NonNegativeInt.make(1),
+   *   durationMs: NonNegNum.make(40)
+   * })
+   * console.log(batch.successRate) // 0.5
    * ```
-   *
-   * @returns Result produced by this operation.
    */
   get successRate(): number {
     return this.totalViolations > 0 ? this.correctedCount / this.totalViolations : 1;
@@ -444,34 +495,32 @@ export class BatchCorrectionResult extends S.Class<BatchCorrectionResult>("Batch
   /**
    * Whether all violations were corrected
    *
-   * **Example** (Inspect batch correction result.all corrected)
+   * **Example** (Check whether every violation was corrected)
    *
    * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { NonNegNum } from "@beep/schema/Number"
    * import { BatchCorrectionResult } from "@effect-ontology/Service/Agent/CorrectorAgent"
    *
-   * console.log(BatchCorrectionResult)
+   * const batch = BatchCorrectionResult.make({
+   *   results: [],
+   *   totalViolations: NonNegativeInt.make(1),
+   *   correctedCount: NonNegativeInt.make(0),
+   *   skippedCount: NonNegativeInt.make(1),
+   *   durationMs: NonNegNum.make(12)
+   * })
+   * console.log(batch.allCorrected) // false
    * ```
-   *
-   * @returns Result produced by this operation.
    */
   get allCorrected(): boolean {
     return this.correctedCount === this.totalViolations;
   }
+
+  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchCorrectionResult);
 }
 
 /**
- * Input for CorrectorAgent execution
- *
- *
- * **Example** (Use the CorrectorInput contract)
- *
- * ```ts
- * import type { CorrectorInput } from "@effect-ontology/Service/Agent/CorrectorAgent"
- *
- * const acceptsCorrectorInput = (_value: CorrectorInput): void => undefined
- *
- * console.log(acceptsCorrectorInput)
- * ```
+ * Validation report, RDF store, and ontology context supplied to the corrector.
  *
  * @category type-level
  * @since 0.0.0
@@ -647,12 +696,27 @@ const correctionFromResponse: (response: CorrectionResponse) => (violation: Shac
  * Corrections can add missing values, fix datatypes, remove excess values,
  * or reclassify entities.
  *
- * **Example** (Inspect corrector agent)
+ * **Example** (Classify a minCount violation)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
+ * import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation"
  * import { CorrectorAgent } from "@effect-ontology/Service/Agent/CorrectorAgent"
  *
- * console.log(CorrectorAgent)
+ * const violation = ShaclValidationViolation.make({
+ *   focusNode: "https://example.org/Ada",
+ *   path: makeNamedNode("https://example.org/founded"),
+ *   message: "Less than minCount 1",
+ *   severity: "violation"
+ * })
+ *
+ * const program = Effect.gen(function* () {
+ *   const corrector = yield* CorrectorAgent
+ *   return corrector.classifyViolation(violation)
+ * }).pipe(Effect.provide(CorrectorAgent.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -1057,14 +1121,3 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Extract local name from IRI
- */
-const extractLocalName = (iri: string): string => {
-  const hashIndex = iri.lastIndexOf("#");
-  if (hashIndex >= 0) return iri.slice(hashIndex + 1);
-  const slashIndex = iri.lastIndexOf("/");
-  if (slashIndex >= 0) return iri.slice(slashIndex + 1);
-  return iri;
-};

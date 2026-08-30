@@ -1,0 +1,58 @@
+id: otp:architecture-boundary-obligation:001
+hypothesis_ref: dh:worktree-config:001
+identity_card_ref: ic:worktree-config:001
+foundational_status: explicitly_deferred
+term:
+  local_name: VerificationObligation
+  preferred_label: verification obligation
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationObligation
+  owl_entity_kind: class
+definition:
+  text: A relationally dependent normative mode requiring a bearer to obtain or supply verification under a governing policy.
+    CQ-006 necessarily distinguishes the obligation to be discharged from the verification procedure that realizes it; an
+    architecture-boundary rule may activate one such generic obligation without requiring an architecture-specific subclass.
+  source:
+  - CQ-006
+  - po:sha256:a8f45d7aff5dac863717489999e1c1b730d1b57612435ac657d3bab1a0f533ea
+  - po:sha256:18ce6572b69bdaf8e3e4542f8b754842f0a93567e33c7d48d0a9f2b3a0bc95f3
+foundational:
+  ufo_category: mode
+  gufo_alignment: gufo:ExtrinsicMode
+ontoclean:
+  rigidity: rigid
+  identity: none
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  semantic_support_for:
+  - otp:verification-evidence:001
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: When a proposed slice, package, adapter, or dependency
+  contradicts the governing architecture, repository policy requires either correction of that proposal or amendment of the
+  architecture rule.'
+open_issues:
+- 'Steward choice remains open between representing the generic obligation as the selected extrinsic mode or as a normative
+  relator connecting policy authority, obligated bearer, required verification, and discharge; CQ-006 requires the generic
+  obligation either way.'
+- 'An architecture-policy information object is a distinct rule specification that may activate a VerificationObligation;
+  architecture-specific obligation subclasses remain deferred unless later decision requirements need them.'
+revision_requests: []
+revision_log:
+- from_sha256: e29af2b2c2fcd8b55acd5896f0dffac98918bc1c8f57d0bff5bfc698c5e609fe
+  addressed:
+  - identity-activation-conflict
+  - support-term-not-necessary
+- from_sha256: 03ab57115fd82663fb3a6bfcd47968dc0bf90b77c791c105b0ab36c3c3395083
+  addressed:
+  - support-term-not-necessary
+- from_sha256: 5e8effa1f896f70bc7d715b54f3484d4061fade392968f99f69f7cacd353814e
+  addressed:
+  - support-term-not-necessary
+- from_sha256: 8b6eb25cada1982222f7ac2c0ca3d90fd1a5e41794bd0726700c6987aaf10e08
+  addressed:
+  - relational-mode-alignment-conflict
+  - support-warrant-self-contradiction
+status: proposed

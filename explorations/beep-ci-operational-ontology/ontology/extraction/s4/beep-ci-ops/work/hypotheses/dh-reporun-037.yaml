@@ -1,0 +1,27 @@
+id: "dh:reporun:037"
+observation_refs:
+  - "so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d"
+  - "so:sha256:ca5e01bb598282d204b571b9567ae92a62782dc0dea487b412200725b31fde49"
+  - "so:sha256:8e9ac56f7faaa4343dc5e43ba0d5db57423412ece68eb4b5d65adbce396d5976"
+cq_warrants: []
+proposed_referent:
+  label: "split-stream captured-subprocess result record"
+  description: "A produced information record containing exit code, separate stdout and stderr, and combined truncation state."
+representation_status: information_artifact
+alternatives:
+  - label: "Subprocess execution occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Transient return object with no retained operational role"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The information object is kept separate from the process occurrence that produced it. The observations do not establish persistence or a CQ-facing evidence role."
+  discriminator: "The cited execution function spawns a child process, folds stdout and stderr separately while obtaining the exit code, and constructs this record from those three runtime results."
+epistemic_status: proposed
+confidence:
+  value: 0.75
+  use_for_acceptance: false
+

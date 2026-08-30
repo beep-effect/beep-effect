@@ -1,0 +1,23 @@
+id: so:sha256:97a0c82a0e429cdc17a77bfb6a8c436347b838de1bd6052ef16a846307b9b2fc
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 236
+  end_line: 240
+  content_sha256: f1cf36129b5a81b2235730288ce30d22d406cee7e80ba2320620ca6dec139664
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::dev
+  lexical_name: dev
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^build
+source_excerpt: '"dev": {'
+epistemic_status: parser_derived

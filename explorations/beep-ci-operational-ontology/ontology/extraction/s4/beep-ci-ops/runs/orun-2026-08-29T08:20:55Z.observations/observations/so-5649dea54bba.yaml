@@ -1,0 +1,23 @@
+id: so:sha256:5649dea54bba487c6416a8f922feeaaf4231cdf94a85a0e77450c0aa19c26844
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 184
+  end_line: 184
+  content_sha256: c8e3f08aa0902c22c61a4c2b6b06c481ff08a4f1fcbf984cf29d9eda816f45ae
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/github/JobShape.ts::INSTALL_STEP_NAME_PATTERN
+  lexical_name: INSTALL_STEP_NAME_PATTERN
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const INSTALL_STEP_NAME_PATTERN = /^(?:install dependencies|bun install|install)\b/u;
+epistemic_status: parser_derived

@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:058"
+observation_refs:
+  - "so:sha256:e2b28409b629953de98ae2a85f103f3880531c22716a1fa9c0fdf54a1aaabac8"
+cq_warrants: []
+proposed_referent:
+  label: "runPrePushHookMode helper"
+  description: "No domain-ontology referent is proposed for the runPrePushHookMode helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "pre-push verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

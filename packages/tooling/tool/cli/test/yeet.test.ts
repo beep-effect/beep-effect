@@ -64,6 +64,7 @@ import {
   repoProofStepDefinition,
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
+  retirePublishedPrLeaseReceipt,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
   shouldSkipCommitForReusablePublishForTesting,
@@ -79,6 +80,7 @@ import {
   validateProofCoordinatorDirectoryForTesting,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
+  writePublishedPrLease,
   YeetAttemptStarted,
   YeetCommandError,
   YeetExecutedStep,
@@ -103,10 +105,11 @@ import { UUID } from "@beep/schema/String";
 import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -116,9 +119,23 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const decodeLeaseSummary = S.decodeUnknownSync(
+  S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Finite, status: S.optionalKey(S.String) }))
+);
+const decodeLeaseRetirementRequest = S.decodeUnknownSync(
+  S.fromJsonString(
+    S.Struct({
+      schemaVersion: S.Literal("yeet-pr-lease-retirement/v1"),
+      generationId: S.String,
+      headSha: S.String,
+      prNumber: S.Finite,
+      reason: S.String,
+    })
+  )
+);
 const attemptUuid = S.decodeUnknownSync(UUID);
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
@@ -175,6 +192,38 @@ const withTempDirectory = <Result, Error, Requirements>(
         yield* fs.remove(tmpDir, { recursive: true });
       })
   ).pipe(provideScopedLayer(PlatformLayer));
+
+const withEnvVarEffect = <Out, Error, Requirements>(
+  name: string,
+  value: string | undefined,
+  use: Effect.Effect<Out, Error, Requirements>
+): Effect.Effect<Out, Error, Requirements> =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = Bun.env[name];
+      if (value === undefined) delete Bun.env[name];
+      else Bun.env[name] = value;
+      return previous;
+    }),
+    () => use,
+    (previous) =>
+      Effect.sync(() => {
+        if (previous === undefined) delete Bun.env[name];
+        else Bun.env[name] = previous;
+      })
+  );
+
+const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {
+  const previous = Bun.env[name];
+  if (value === undefined) delete Bun.env[name];
+  else Bun.env[name] = value;
+  try {
+    return use();
+  } finally {
+    if (previous === undefined) delete Bun.env[name];
+    else Bun.env[name] = previous;
+  }
+};
 
 type TempTrackedFileRepo = {
   readonly filePath: string;
@@ -408,6 +457,179 @@ const findStep = (steps: ReadonlyArray<RepoPlanStep>, label: string): RepoPlanSt
     O.getOrThrow
   );
 
+describe("yeet published PR lease", () => {
+  it("replaces terminal and abandoned ownership while preserving an open prior PR", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bin = path.join(tmpDir, "bin");
+          const leasePath = path.join(tmpDir, ".beep", "inbox", "pr-lease.json");
+          yield* fs.makeDirectory(bin);
+          const ghPath = path.join(bin, "gh");
+          yield* fs.writeFileString(
+            ghPath,
+            `#!/bin/sh
+case "\${3:-}" in
+  --json) printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}' ;;
+  700) printf '%s\\n' '{"number":700,"headRefName":"already-merged","state":"MERGED"}' ;;
+  701) printf '%s\\n' '{"number":701,"headRefName":"still-open","state":"OPEN"}' ;;
+  *) exit 2 ;;
+esac
+`
+          );
+          yield* fs.chmod(ghPath, 0o755);
+
+          const writeExistingLease = Effect.fn("test.writeExistingPrLease")(function* (
+            generationId: string,
+            prNumber: number,
+            status: "active" | "claiming" | "retired" = "active"
+          ) {
+            const encoded = yield* encodeJson({
+              schemaVersion: "yeet-pr-lease/v1",
+              generationId,
+              sessionId: `retired-agent:${generationId}`,
+              pid: 999_999,
+              procStart: "dead",
+              checkoutRoot: tmpDir,
+              branch: `old-pr-${prNumber}`,
+              headSha: "deadbeef",
+              prNumber,
+              acquiredAt: "2026-08-27T00:00:00Z",
+              refreshedAt: "2026-08-27T00:00:00Z",
+              status,
+            });
+            yield* fs.makeDirectory(path.dirname(leasePath), { recursive: true });
+            yield* fs.writeFileString(leasePath, `${encoded}\n`);
+          });
+          const publish = withEnvVarEffect("PATH", `${bin}:${Bun.env.PATH ?? ""}`, writePublishedPrLease(tempContext));
+
+          const receipt = yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+
+          yield* writeExistingLease("terminal-pr", 700);
+          yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+
+          yield* writeExistingLease("retired-current-pr", 874, "retired");
+          yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+
+          yield* writeExistingLease("claiming-current-pr", 874, "claiming");
+          expect(Exit.isFailure(yield* Effect.exit(publish))).toBe(true);
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: "claiming-current-pr",
+            prNumber: 874,
+          });
+
+          yield* writeExistingLease("open-pr", 701);
+          expect(Exit.isFailure(yield* Effect.exit(publish))).toBe(true);
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: "open-pr",
+            prNumber: 701,
+          });
+
+          yield* writeExistingLease("abandoned-current-pr", 874);
+          const finalReceipt = yield* publish;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath)).generationId).not.toBe("abandoned-current-pr");
+
+          const gitPath = path.join(bin, "git");
+          yield* fs.writeFileString(gitPath, "#!/bin/sh\nexit 99\n");
+          yield* fs.writeFileString(ghPath, "#!/bin/sh\nexit 98\n");
+          yield* fs.chmod(gitPath, 0o755);
+          const mutexReadyPath = path.join(tmpDir, ".beep", "inbox", "mutex-ready");
+          const mutexHolder = Bun.spawn(
+            [
+              "flock",
+              path.join(tmpDir, ".beep", "inbox", "hook-mutex.lock"),
+              "sh",
+              "-c",
+              'touch "$1"; sleep 3',
+              "yeet-test-mutex-holder",
+              mutexReadyPath,
+            ],
+            { cwd: tmpDir, stdin: "ignore", stdout: "ignore", stderr: "ignore" }
+          );
+          let mutexReady = false;
+          for (let attempt = 0; attempt < 200 && !mutexReady; attempt += 1) {
+            mutexReady = yield* fs.exists(mutexReadyPath);
+            if (!mutexReady) yield* Effect.sleep("10 millis");
+          }
+          expect(mutexReady).toBe(true);
+          yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            retirePublishedPrLeaseReceipt(tempContext, finalReceipt, "start-pr-early-failed")
+          );
+          expect(yield* Effect.promise(() => mutexHolder.exited)).toBe(0);
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: finalReceipt.generationId,
+            status: "retired",
+          });
+          expect(receipt.generationId).not.toBe(finalReceipt.generationId);
+        })
+      )
+    ));
+
+  it("bounds receipt retirement mutex waits and retries under persistent transition contention", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bin = path.join(tmpDir, "bin");
+          const inbox = path.join(tmpDir, ".beep", "inbox");
+          const leasePath = path.join(inbox, "pr-lease.json");
+          const attemptsPath = path.join(inbox, "hook-mutex.lock.attempts");
+          yield* fs.makeDirectory(bin);
+          const ghPath = path.join(bin, "gh");
+          yield* fs.writeFileString(
+            ghPath,
+            '#!/bin/sh\nprintf \'%s\\n\' \'{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}\'\n'
+          );
+          yield* fs.chmod(ghPath, 0o755);
+
+          const receipt = yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            writePublishedPrLease(tempContext)
+          );
+          const flockPath = path.join(bin, "flock");
+          yield* fs.writeFileString(
+            flockPath,
+            '#!/bin/sh\n[ "$1" = "-w" ] || exit 90\n[ "$2" = "5" ] || exit 91\nprintf "attempt\\n" >> "$3.attempts"\nexit 73\n'
+          );
+          yield* fs.chmod(flockPath, 0o755);
+
+          yield* withEnvVarEffect(
+            "PATH",
+            `${bin}:${Bun.env.PATH ?? ""}`,
+            retirePublishedPrLeaseReceipt(tempContext, receipt, "start-pr-early-failed")
+          );
+
+          expect(Str.split(/\r?\n/u)(Str.trim(yield* fs.readFileString(attemptsPath)))).toHaveLength(4);
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
+            generationId: receipt.generationId,
+            status: "active",
+          });
+          const retirementQueue = path.join(inbox, "pr-lease-retirements");
+          const retirementRequests = yield* fs.readDirectory(retirementQueue);
+          expect(retirementRequests).toHaveLength(1);
+          expect(
+            decodeLeaseRetirementRequest(yield* fs.readFileString(path.join(retirementQueue, retirementRequests[0]!)))
+          ).toMatchObject({
+            generationId: receipt.generationId,
+            headSha: receipt.headSha,
+            prNumber: receipt.prNumber,
+            reason: "start-pr-early-failed",
+          });
+        })
+      )
+    ));
+});
+
 describe("yeet planner", () => {
   it("keeps yeet command error optional context at the command boundary", () => {
     const emptyError = YeetCommandError.new(new Error("cause"), "failed");
@@ -438,6 +660,7 @@ describe("yeet planner", () => {
       "commit:git:commit",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "publish:head-install-preflight",
       "publish:git:push",
     ]);
@@ -495,7 +718,10 @@ describe("yeet planner", () => {
           "quality:check:tsgo-smoke",
         ],
       }),
-      expect.objectContaining({ id: "test", laneIds: ["quality:test-unit", "quality:test-integration"] }),
+      expect.objectContaining({
+        id: "test",
+        laneIds: ["quality:coverage", "quality:desktop-ipc", "quality:test-unit", "quality:test-integration"],
+      }),
       expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
     ]);
     expect(findStep(plan.steps, "full:cheap-gates").waves).toEqual([
@@ -517,6 +743,23 @@ describe("yeet planner", () => {
       "pre-push",
       "--collect-all",
     ]);
+  });
+
+  it("builds explicit CI parity as the installed merge-preview CI battery", () => {
+    const plan = buildYeetRunPlanForTesting({ ciParity: true, context, message: O.none(), mode: "verify" });
+
+    expect(A.map(plan.steps, (step) => step.label)).toEqual(["fallow-advisory-feedback", "full:ci-parity"]);
+    const parity = findStep(plan.steps, "full:ci-parity");
+    expect(parity.args).toEqual(["run", "beep", "ci", "local", "--affected", "--base", "origin/main"]);
+    expect(parity.verification).toBe("installed-merge-preview-pr-posture");
+    expect(parity.env).toMatchObject({
+      BEEP_TEST_DATABASE_DRIVER: undefined,
+      BEEP_TEST_DATABASE_URL: undefined,
+      CI: "true",
+      DATABASE_URL: undefined,
+      GITHUB_ACTIONS: "true",
+      TURBO_CACHE: "local:rw",
+    });
   });
 
   it("builds review-fix verify as the targeted review proof", () => {
@@ -708,6 +951,7 @@ describe("yeet planner", () => {
       "early-publish:git:push",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
     ]);
@@ -729,6 +973,27 @@ describe("yeet planner", () => {
     expect(earlyPush.args).toEqual(["push", "-u", "origin", "HEAD"]);
     expect(earlyPush.args).not.toContain("--no-verify");
     expect(earlyPush.env).toBeUndefined();
+  });
+
+  it("targets the original PR branch when a recovery worktree supplies a push refspec", () => {
+    const plan = withEnvVar("BEEP_YEET_PUSH_REFSPEC", "HEAD:refs/heads/feature/original-pr", () =>
+      buildYeetRunPlanForTesting({
+        context,
+        message: O.some("fix(repo-cli): recover published branch"),
+        monitor: true,
+        startPrEarly: true,
+      })
+    );
+    expect(findStep(plan.steps, "early-publish:git:push").args).toEqual([
+      "push",
+      "-u",
+      "origin",
+      "HEAD:refs/heads/feature/original-pr",
+    ]);
+    const invalid = withEnvVar("BEEP_YEET_PUSH_REFSPEC", "refs/heads/not-a-head-refspec", () =>
+      buildYeetRunPlanForTesting({ context, message: O.some("fix(repo-cli): reject invalid recovery refspec") })
+    );
+    expect(findStep(invalid.steps, "publish:git:push").args).toEqual(["push", "-u", "origin", "HEAD"]);
   });
 
   it("builds push-only reuse publish as only push plus optional monitor", () => {
@@ -857,6 +1122,7 @@ describe("yeet planner", () => {
       "commit:git:commit",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "publish:head-install-preflight",
       "publish:git:push",
       "monitor:pr-context",
@@ -2185,6 +2451,7 @@ describe("yeet publish scope helpers", () => {
       "commit:git:commit",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
@@ -2212,6 +2479,7 @@ describe("yeet publish scope helpers", () => {
       "publish:pr-create",
       "full:cheap-gates",
       "full:pre-push",
+      "full:ci-parity",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
     ]);
@@ -2259,7 +2527,12 @@ describe("yeet publish scope helpers", () => {
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const plan = buildYeetRunPlanForTesting({ context: tempContext, message: O.none(), mode: "verify" });
         const step = findStep(plan.steps, "publish:head-install-preflight");
-        const result = yield* executeStepWithArtifacts(tempContext, step);
+        const result = yield* executeStepWithArtifacts(tempContext, step).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ XDG_CACHE_HOME: path.join(tmpDir, "cache") })
+          )
+        );
 
         expect(result.exitCode).not.toBe(0);
         expect(result.output).toContain("Frozen-lockfile clean-HEAD install preflight failed");

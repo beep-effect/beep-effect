@@ -1,0 +1,18 @@
+id: fa:alt4:048
+hypothesis_ref: dh:turbo-cache:009
+identity_card_ref: ic:alt4:048
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: Turbo task specification named test:integration:serial"
+    still_viable: true
+  - label: "kind: serial integration-test verification lane (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: lexical specialization with no task content
+    still_viable: false
+strongest_counterexample: The serial-integration entry prescribes an upstream build dependency, so the configuration bears reusable work-ordering content rather than only a spelling.
+verdict: analyzed
+needed_evidence: A serial integration-test lane defined outside turbo.json, or this turbo entry used for non-test work, would discriminate spec from lane Kind.

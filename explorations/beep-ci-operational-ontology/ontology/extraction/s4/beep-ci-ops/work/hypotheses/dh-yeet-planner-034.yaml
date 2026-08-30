@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:034"
+observation_refs:
+  - "so:sha256:39a22fd1e1fee0f8c0a36bb121d7e8584487f5d66dd3a29439bdbdf728c09d50"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for closeoutSteps in Planner.ts"
+  description: "No separate domain referent is established for the closeoutSteps declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::closeoutSteps"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

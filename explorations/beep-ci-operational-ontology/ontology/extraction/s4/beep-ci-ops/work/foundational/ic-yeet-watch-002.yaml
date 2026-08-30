@@ -1,0 +1,54 @@
+id: "ic:yeet-watch:002"
+hypothesis_ref: "dh:yeet-watch:014"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Membership check against the Yeet check-outcome classification-value
+    domain in ic:yeet-watch:001: two occurrences realize the same fail member
+    only when they preserve the same normalized failure judgment under the
+    same classifier semantics, applicability context, and version lineage.
+    Membership requires failure evidence in the raw bucket or state and takes
+    precedence over pending evidence. Separate snapshot assignments can carry
+    equal fail content without being the same record, and the fail spelling is
+    evidence rather than the criterion.
+  reidentification_key:
+    - "normalized fail-classification content"
+    - "failure-precedence classifier rule and version lineage"
+    - "failing bucket or state as supporting evidence"
+    - "bearing check and snapshot assignment as supporting record evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One fail judgment in the closed classification scheme, unifying several
+    raw failure signals without merging their checks, causes, occurrences, or
+    snapshot records.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "information_object: a snapshot-bound fail assignment in one watched-check record"
+    - "phase: a terminal nonpassing phase borne by a check execution"
+    - "event: a committed failure occurrence that caused the check to end"
+    - "none: the fail token as only a lexical selector"
+  existential_dependencies:
+    - "At least one faithful bearer of the normalized fail content, generically rather than this token"
+    - "The Yeet classifier interpretation and version under which failure evidence has precedence"
+    - "For a particular assignment, the classified check and the snapshot record that carries it"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as historical classifier content"
+    - "ceased when no faithful bearer of the content remains"
+    - "replaced when the defining failure-classification rule changes"
+counterexamples:
+  - description: >-
+      Failure, cancellation, error, and timeout evidence all map to fail even
+      though they can arise from different events and causes, so the member
+      cannot be identified with one failure occurrence or causal kind.
+  - description: >-
+      Two distinct failed checks can carry value-equal fail assignments in one
+      snapshot without thereby becoming the same check or the same record.
+status: proposed

@@ -1,0 +1,28 @@
+id: ic:alt4:002
+hypothesis_ref: dh:reporun:017
+identity:
+  supplies_identity: false
+  identity_criterion: Two fingerprint-match resume designations are the same when they are the resume-eligibility quality inhering in the same planned step under the conservative-resume rule; the literal token is evidence, never the criterion, and rewriting the quality to never yields a different designation rather than the same one in a new state.
+  reidentification_key:
+    - fingerprint-match
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: The designation inheres as one quality of one planned step, not as a heap of predicate bits.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+    - role
+    - information_object
+  existential_dependencies:
+    - RepoPlanStep
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: enforceConservativeResume rewrites non-candidate steps to never, so a requested fingerprint-match token on a mutating or repo-scoped step is not this designation.
+  - description: A skipped execution of a step is an occurrence, not the plan-side eligibility quality.
+status: proposed

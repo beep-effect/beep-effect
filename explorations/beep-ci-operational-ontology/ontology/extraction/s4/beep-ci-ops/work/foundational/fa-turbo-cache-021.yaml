@@ -1,0 +1,14 @@
+id: fa:turbo-cache:021
+hypothesis_ref: dh:turbo-cache:023
+identity_card_ref: ic:turbo-cache:021
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: Treat every local-only resolver result as a distinct execution-borne mode.
+  still_viable: false
+strongest_counterexample: Different resolver records can carry local:rw for different invocations while referring to one governed
+  posture value; record identity is not posture-content identity.
+verdict: analyzed

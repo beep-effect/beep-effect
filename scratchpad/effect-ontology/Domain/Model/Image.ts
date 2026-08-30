@@ -371,6 +371,10 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
     const schema = S.fromJsonString(ImageManifest);
     return S.encodeEffect(schema)(i);
   };
+
+  static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(S.fromJsonString(ImageManifest, {
+    space: 2
+  }))
 }
 
 /**
@@ -470,4 +474,6 @@ export class ImageFetchResult extends S.Class<ImageFetchResult>($I`ImageFetchRes
   $I.annote("ImageFetchResult", {
     description: "Fetched image bytes paired with their digest, media type, and discovery provenance.",
   })
-) {}
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageFetchResult)
+}

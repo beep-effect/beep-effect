@@ -1,0 +1,25 @@
+id: so:sha256:a64dc174173ded5009d4e8d1b7c7f0e8aa1ab75aa53e55eddbf0ab021e440325
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 110
+  end_line: 110
+  content_sha256: 2d80b2e466cf8e5d5d2bcc2a39383cf03324420b7e769db045e8d7517b4c4d8c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::RepoPlanStepScope
+  lexical_name: RepoPlanStepScope
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: RepoPlanStepScope
+- predicate: exports_symbol
+  object: RepoPlanStepScope
+source_excerpt: export type RepoPlanStepScope = typeof RepoPlanStepScope.Type;
+epistemic_status: parser_derived

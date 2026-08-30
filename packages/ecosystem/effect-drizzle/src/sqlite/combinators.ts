@@ -323,7 +323,10 @@ export function numeric(options: { readonly mode: SqliteColumn.NumericMode }): u
         ? injectNumberChecks(input, [isFinite()])
         : injectBigIntCheck(
             input,
-            isBetweenBigInt({ minimum: -9_223_372_036_854_775_808n, maximum: 9_223_372_036_854_775_807n })
+            isBetweenBigInt({
+              minimum: BigInt("-9223372036854775808"),
+              maximum: BigInt("9223372036854775807"),
+            })
           );
     return Field.patch(checked, { column: SqliteColumn.Numeric.make({ mode: options.mode }) });
   };

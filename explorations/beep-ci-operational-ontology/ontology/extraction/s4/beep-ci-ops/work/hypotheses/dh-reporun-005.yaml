@@ -1,0 +1,21 @@
+id: "dh:reporun:005"
+observation_refs:
+  - "so:sha256:1e3d705406fc1e22a51614612d25a06bd0ae427e1dc548449dca25350cddd0d2"
+cq_warrants: []
+proposed_referent:
+  label: "RepoRun.proofs module identifier binding"
+  description: "The local identifier-factory binding used to annotate proof-surface implementation declarations."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Identifier for a proof-domain module"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation exposes only an unrepresentable identifier-factory variable declaration. It does not describe a proof, procedure, lane, or record outside the implementation."
+epistemic_status: proposed
+confidence:
+  value: 0.98
+  use_for_acceptance: false
+

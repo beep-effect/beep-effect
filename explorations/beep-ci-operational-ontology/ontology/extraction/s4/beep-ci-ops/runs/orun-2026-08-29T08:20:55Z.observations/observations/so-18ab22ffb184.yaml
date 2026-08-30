@@ -1,0 +1,23 @@
+id: so:sha256:18ab22ffb184d127ac05577f06bbd95c804e82db90dd8e247e9a1f3997d74d11
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 68
+  end_line: 80
+  content_sha256: 509fb08c5b92115a3fdceb4336b2eabf8b9e1046636eaf1abeba81c51e5a4bba
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::lint
+  lexical_name: lint
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^lint
+source_excerpt: '"lint": {'
+epistemic_status: parser_derived

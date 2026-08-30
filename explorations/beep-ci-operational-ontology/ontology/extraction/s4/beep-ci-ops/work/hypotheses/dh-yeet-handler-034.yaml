@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:034"
+observation_refs:
+  - "so:sha256:69c955709870a9b7d0179b4375b2d5de330bf9c0de52d1ae43a3946d3c59481c"
+cq_warrants: []
+proposed_referent:
+  label: "runRequiredPhase helper"
+  description: "No domain-ontology referent is proposed for the runRequiredPhase helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "required-phase execution procedure distinct from any verification obligation"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

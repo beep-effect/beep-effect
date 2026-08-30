@@ -1,0 +1,23 @@
+id: "dh:worktree-config:010"
+observation_refs:
+  - "so:sha256:19f1e38081aee7b60aecde18430abd809861b1cf6eb9ebf7065e34305b7275be"
+  - "po:sha256:47c1ecee6c68dd2abf05cf58cdbdc3944bbad2d1375eccbaa2bd1abea13d3ec9"
+  - "po:sha256:648149e8ec61b86770c1c8511b659226c3e8605ab43ac3a0c03439f40b6002fa"
+  - "po:sha256:95043bdded97559199ecb0db22c74fb5278abc7814d2c685019f9d1134a81547"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "direct workspace package dependency"
+  description: "A directed dependency from an importing workspace package to a directly declared imported workspace package."
+representation_status: unresolved
+alternatives:
+  - label: "package-manifest dependency declaration"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Deciding this manifest-backed relation requires a deployed resolver or Turbo trace that links the exact package.json declaration to a resolved workspace-graph edge and shows the imported package's task ordered or executed before the importing package's task, with pinned tree and dependency-kind provenance; no enriched observation supplies it."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.92, use_for_acceptance: false}

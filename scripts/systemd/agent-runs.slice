@@ -1,0 +1,12 @@
+# Install:
+#   cp scripts/systemd/agent-runs.slice ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+
+[Unit]
+Description=beep agent run-lease slice
+
+[Slice]
+CPUAccounting=yes
+MemoryAccounting=yes
+IOAccounting=yes
+TasksAccounting=yes

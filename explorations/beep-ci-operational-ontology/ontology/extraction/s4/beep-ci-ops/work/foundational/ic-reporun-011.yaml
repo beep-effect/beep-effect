@@ -1,0 +1,43 @@
+id: "ic:reporun:011"
+hypothesis_ref: "dh:reporun:025"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two planned repository-command specifications are the same when they are
+    the same plan-step prescription in one planning and revision lineage with
+    equivalent command, ordered arguments, working-directory and environment
+    semantics, phase, scope, mutability, and resume conditions; the id field
+    does not establish sameness by itself.
+  reidentification_key:
+    - "containing plan provenance and plan revision"
+    - "step identifier together with the complete prescribed operation"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One information object is unified by a single executable prescription and
+    the phase, scope, mutability, and resume constraints governing it.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "WorkUnitSpecification denoted by the plan step"
+    - "WorkUnitExecution that realizes the prescription"
+    - "planner DTO with no independently retained semantics"
+  existential_dependencies:
+    - "the containing plan or planning act that individuates the step token"
+    - "the repository-run context that gives cwd, scope, and phase their meaning"
+    - "at least one digital realization of the prescription"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      A regenerated plan can reuse a step id while changing its command,
+      working directory, environment, or resume policy; the resulting
+      prescription is not the same merely because the id string is stable.
+status: proposed

@@ -1,0 +1,25 @@
+id: "dh:topology:120"
+observation_refs:
+  - "po:sha256:2c743c12268376189d5c1e2c3cf5407be95ddded11339842a938d1a0bb54415c"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/shared-domain workspace package"
+  description: "The workspace software package information artifact identified by @beep/shared-domain in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/shared-domain as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The adversary's serialization-only DTO wins: the sole cited evidence is one generated topology row containing a package-looking token and ordinal, with no manifest, dependency edge, lineage, or independently governed package reference."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

@@ -1,0 +1,32 @@
+id: "ic:sched-core:008"
+hypothesis_ref: "dh:sched-core:008"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two weighted-admission policy specifications are the same only when they continue one authoritative policy lineage with the same normative rule set, parameter meanings, applicability scope, and version; equal configuration values alone are insufficient."
+  reidentification_key:
+    - "policy authority and version"
+    - "normative parameter set"
+    - "applicability scope"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One governed admission specification whose capacity, floor, heartbeat, aging, progress, and class-cap clauses share an authority and revision history."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "a particular deployed admission-policy regime"
+    - "a configuration value object without normative force"
+  existential_dependencies:
+    - "a policy authority and declared applicability context"
+    - "at least one inscription or executable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by an authoritative policy revision"
+    - "withdrawn from applicability"
+counterexamples:
+  - description: "Two independently deployed configuration objects can contain identical defaults while being governed by different authorities or applying to different fleets."
+status: "proposed"

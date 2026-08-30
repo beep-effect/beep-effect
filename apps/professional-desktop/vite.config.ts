@@ -56,6 +56,45 @@ const initialChunkGroups = [
     test: /node_modules[\\/](sonner|tailwind-merge|clsx|class-variance-authority|@base-ui|@phosphor-icons)[\\/]/,
     priority: 30,
   },
+  // These eagerly loaded workspace families remain part of startup; the groups
+  // only give their stable dependency boundaries separate cacheable outputs.
+  {
+    name: "storage-vendor",
+    test: /(?:node_modules[\\/]drizzle-orm[\\/]|packages[\\/]ecosystem[\\/]effect-drizzle[\\/])/,
+    priority: 34,
+  },
+  // Html.model and the generated metadata tables are independently addressable
+  // modules and would otherwise make the HTML family exceed the 750 kB cap.
+  {
+    name: "html-schema-model",
+    test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]src[\\/]Html\.model\.ts$/,
+    priority: 34,
+  },
+  {
+    name: "html-metadata",
+    test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]src[\\/](?:Html\.meta|internal[\\/]Html\.language-tag-registry\.generated)\.ts$/,
+    priority: 34,
+  },
+  {
+    name: "html-modeling",
+    test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]/,
+    priority: 33,
+  },
+  {
+    name: "rich-text-modeling",
+    test: /packages[\\/]foundation[\\/]modeling[\\/](lexical|md)[\\/]/,
+    priority: 33,
+  },
+  {
+    name: "editor-workspace",
+    test: /packages[\\/]foundation[\\/]ui-system[\\/]editor[\\/]/,
+    priority: 32,
+  },
+  {
+    name: "dock-workspace",
+    test: /packages[\\/]foundation[\\/]ui-system[\\/](dock|dock-react)[\\/]/,
+    priority: 31,
+  },
   { name: "pretext-vendor", test: /node_modules[\\/]@chenglou[\\/]pretext[\\/]/, priority: 25 },
 ];
 

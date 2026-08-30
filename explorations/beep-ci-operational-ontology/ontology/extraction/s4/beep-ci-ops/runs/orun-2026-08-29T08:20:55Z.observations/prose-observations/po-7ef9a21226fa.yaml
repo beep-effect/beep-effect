@@ -1,0 +1,10 @@
+id: po:sha256:7ef9a21226fac9427a379db3d1c4eab2bb3d3c629f8c3425a58a13073f2047da
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 2
+  end_line: 2
+quote: 'Local Turbo cache posture: the decision that says whether a workstation may'
+epistemic_status: quoted_prose

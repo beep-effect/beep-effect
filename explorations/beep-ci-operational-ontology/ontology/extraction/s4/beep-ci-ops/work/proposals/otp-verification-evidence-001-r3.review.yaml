@@ -1,0 +1,54 @@
+target: "otp:verification-evidence:001"
+target_sha256: "d2100ce95692a3dbf619ba1161fbea9bcd404f108288768ab43887fda869f295"
+chain_sha256: "797451ea6c9b892942d9ab527df9f2b6b332617f9824eaf87e0a2c10c5536ed7"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  An artifact identity and custody contract must decide whether identity follows
+  result content, issued record lineage, or a contingently borne evidence role,
+  and specify the effects of copying, correction, invalidation, supersession,
+  and loss of faithful bearers.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: content-token-identity-underdetermined
+    counterexample: >-
+      Two executions can issue byte-equal results that remain distinct by
+      provenance, while one issued result can be copied into two stores that
+      are one content object but two record tokens. The unchanged card names
+      both criteria without selecting which entity the class individuates.
+    outcome: landed
+  - surface: warrant
+    rule: cq-requires-evidence-record
+    counterexample: >-
+      CQ-005 and CQ-006 cannot establish applicability or discharge from an
+      execution outcome alone; they require recorded evidence tied to tree,
+      epoch, procedure, and provenance. VerificationEvidence is therefore a
+      genuine decision term rather than a listing mention.
+    outcome: survived
+  - surface: null_discriminator
+    rule: role-bearer-model-underdetermined
+    counterexample: >-
+      A generic result record can be persisted by record, extract, and judge
+      stages and contingently serve as proof under policy without being a rigid
+      VerificationEvidence kind. All cited facts remain true in that role-bearer
+      world, so they do not settle class rigidity, identity, or dependence.
+    outcome: landed
+rival_models_still_viable:
+  - "One result-content object with multiple faithful concretizations."
+  - "Distinct issued record tokens with custody histories."
+  - "A generic result artifact contingently bearing an evidence role."
+evidence:
+  - "po:sha256:3208242164204b626fdec9ccef8311690ae6f88aa2054338d6cffee34f6d0a4a"
+  - "po:sha256:c13db8addc9d014305ab9aee478dec45f03d3b3cc65a65889949dbaf72b49303"
+  - "po:sha256:c51e70098e7cb7f6170bccb102a0436b5741f45bbba0c983f6c9461886ece32d"
+  - "CQ-005"
+  - "CQ-006"

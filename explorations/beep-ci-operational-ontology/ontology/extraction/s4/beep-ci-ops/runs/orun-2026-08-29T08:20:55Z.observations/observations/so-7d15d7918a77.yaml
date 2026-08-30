@@ -1,0 +1,29 @@
+id: so:sha256:7d15d7918a7759e4496307bde229138b14fe3113ea136c150376e03b11bf439a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 266
+  end_line: 271
+  content_sha256: 63c499d37f2ffd43119b5ac51d66f5b18d11a7224b3420a3bf829324ea711aee
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::AdmissionDirectories
+  lexical_name: AdmissionDirectories
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: leases
+- predicate: declares_field
+  object: quarantine
+- predicate: declares_field
+  object: queue
+- predicate: declares_field
+  object: root
+source_excerpt: interface AdmissionDirectories {
+epistemic_status: parser_derived

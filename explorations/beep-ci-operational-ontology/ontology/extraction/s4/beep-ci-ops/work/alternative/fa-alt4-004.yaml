@@ -1,0 +1,18 @@
+id: fa:alt4:004
+hypothesis_ref: dh:reporun:045
+identity_card_ref: ic:alt4:004
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "event: interruption episode of a captured child on budget expiry"
+    still_viable: true
+  - label: "information object: the tagged error reporting the episode (observationally equivalent on current evidence because the timeout branch always constructs it)"
+    still_viable: true
+  - label: "situation: configured timeout policy being violated"
+    still_viable: true
+strongest_counterexample: The timeout option is a duration policy on the capture; identifying the occurrence with that policy would make every bounded capture a timeout even when the child exits in time.
+verdict: analyzed
+needed_evidence: A timeout interruption that does not construct CaptureCommandTimedOutError, or an error instance without a preceding race-and-interrupt, would discriminate the occurrent from the report.

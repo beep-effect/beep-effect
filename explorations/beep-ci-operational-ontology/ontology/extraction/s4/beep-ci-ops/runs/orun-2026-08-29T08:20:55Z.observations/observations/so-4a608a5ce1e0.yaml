@@ -1,0 +1,23 @@
+id: so:sha256:4a608a5ce1e05e5ad45c307b00c7232d0ee44a854f8654d02331dcd6de01319b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 510
+  end_line: 525
+  content_sha256: f82ef162b389214f2739e25796528bfe2fbd046b47d42b7c8192b549f82f3f1a
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::repairAdmissionEntries
+  lexical_name: repairAdmissionEntries
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const repairAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>(
+epistemic_status: parser_derived

@@ -1,0 +1,31 @@
+id: "ic:alt1:011"
+hypothesis_ref: "dh:sched-core:026"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two weighted-admission coordination procedures are the same iff they
+    prescribe the same repeatable coordination: enqueue a durable ticket, wait for promotion,
+    stage and heartbeat a lease, run admitted work, and release the coordinated resources. A
+    particular admission episode is not the procedure."
+  reidentification_key:
+    - "withQualityAdmission"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one procedure specification whose steps are enqueue, wait, stage, heartbeat, use, and
+    release"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "One call of withQualityAdmission is an episode, not a second procedure. Treating
+      the helper functions as unrelated would miss that they jointly realize one
+      ticket-to-release lifecycle for a single request."
+status: "proposed"

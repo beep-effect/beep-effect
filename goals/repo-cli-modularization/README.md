@@ -2,7 +2,9 @@
 
 ## Status
 
-**COMPLETE - final reconciliation verified; PR closeout in progress**
+Lifecycle: `paused`
+
+**PAUSED - final local reconciliation verified; replacement delivery PR needed**
 
 ## Owner
 
@@ -40,6 +42,10 @@ compliance, and raise JSDoc on touched files to the
   reconciliation: build, check, knip, jsdoc, lint, full docgen, unit tests,
   type tests, integration tests, fallow, repo sanity, secrets, security, SAST,
   and Nix.
+- The packet cannot claim completion under its merge gate: PR #339 was closed,
+  and no merged or mergeable replacement PR is recorded. Resume by reconciling
+  against current `main`, rerunning authoritative proof, and publishing a
+  replacement delivery PR.
 - Closeout reflection: `history/reflections/2026-07-08-codex.md`.
 
 ## Reading Order

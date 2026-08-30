@@ -1,0 +1,31 @@
+id: so:sha256:b8b4f9e2f41e9cb38ac96ff635fbc9fc9eff0e00026b5d52482ae4579bafc611
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 806
+  end_line: 810
+  content_sha256: 8712651efd781c043f17b286458e251e3db2f46bc42127872dbcfc8c2f45c31b
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::GithubCheckLaneWave
+  lexical_name: GithubCheckLaneWave
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: documentation
+- predicate: declares_literal_member
+  object: heavy
+- predicate: declares_literal_member
+  object: preflight
+- predicate: declares_literal_member
+  object: test
+- predicate: exports_symbol
+  object: GithubCheckLaneWave
+source_excerpt: export const GithubCheckLaneWave = LiteralKit(["preflight", "heavy", "test", "documentation"]).annotate(
+epistemic_status: parser_derived

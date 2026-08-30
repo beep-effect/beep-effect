@@ -1,0 +1,53 @@
+id: otp:admission-policy:001
+hypothesis_ref: dh:sched-core:008
+identity_card_ref: ic:sched-core:008
+foundational_status: analyzed
+term:
+  local_name: AdmissionPolicy
+  preferred_label: admission policy
+  proposed_iri: https://oip.law/ontology/ci-ops#AdmissionPolicy
+  owl_entity_kind: class
+definition:
+  text: A governed policy-specification information artifact that declares the starvation bound and weighted-admission rules
+    for SeatRequests. CQ-023 requires the governing policy and its bound; the chartered defaults, priority-aging branch, and
+    review-fix class-cap branch establish the operative rule content rather than merely the shape of AdmissionConfig.
+  source:
+  - CQ-023
+  - so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf
+  - so:sha256:7ed5d7ab988de72117c954ccac2060e758502fa1c727b6f5a725f4e2293e61e8
+  - so:sha256:890225b81338cf75b1929fbc02de3d877d860906991499298d41a82f4f59cca8
+  - po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3
+  - po:sha256:abc08c224e904cfc5a0878b26ca70b707f559468bf33fde1b9ea74a01bb7edaf
+  - po:sha256:b92b48e2e7bcebad1b643f7f05cddc8dd411e43355076cdd384a9c37c0ee6c99
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+revision_log:
+- from_sha256: ceb9fccfb70a2e43c5d129457f91d20f20b33cb436eca3e05d9e97ea7c3c3055
+  addressed:
+  - discriminator-true-of-config-dto
+- from_sha256: 763e890773b0bab8d2401877030d006e43c4e9b968447eae203090541b9d60e5
+  addressed:
+  - discriminator-true-of-config-dto
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-023
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The chartered production value publishAgingSeconds promotes
+  aged tickets in effectivePriorityRank, while reviewFixClassCap makes isTicketSkippable refuse additional review-fix admissions.'
+- 'Rejected weak alternative: configuration object with no normative interpretation.'
+open_issues:
+- 'Steward must choose whether to adopt the still-viable rival model: A deployed policy regime is a domain situation or normative
+  mode distinct from the specification that describes it.'
+- 'Steward must choose whether to adopt the still-viable rival model: AdmissionConfig is only a value object whose fields
+  affect behavior without constituting a governed policy artifact.'
+status: proposed
+revision_requests: []

@@ -1,0 +1,42 @@
+id: "ic:reporun:003"
+hypothesis_ref: "dh:reporun:004"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two install-before-lane failure situations are the same only when they are
+    the same installation failure occurrence within the same GitHub job
+    execution and share the same ensuing interval in which no consequential
+    repository lane step occurs; the install-failure label is not identity.
+  reidentification_key:
+    - "GitHub job database identifier together with its run attempt"
+    - "failed installation-step occurrence and later-step ordering"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One situation is unified by one job execution, one failed installation
+    step, and the ordered absence of consequential lane work afterward.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+    - "installation failure event followed by skipped work"
+    - "anti-rigid classification of a GitHub job bearer"
+    - "information record assigning the install-failure label"
+  existential_dependencies:
+    - "the particular GitHub job execution"
+    - "the installation-step occurrence"
+    - "the ordered later job steps used to establish that no lane ran"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "a consequential lane step begins"
+    - "the job execution ends with no lane having run"
+counterexamples:
+  - description: >-
+      A repository with a deterministically broken lockfile can fail during
+      installation before any lane starts, matching the situation without an
+      infrastructure or network failure.
+status: proposed

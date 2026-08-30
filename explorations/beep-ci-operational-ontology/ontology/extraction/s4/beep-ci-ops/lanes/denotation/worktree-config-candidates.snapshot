@@ -1,0 +1,330 @@
+- candidate: ArchitectureBoundaryRule
+  kind: class
+  definition: A binding normative constraint over package or import dependencies whose contradiction requires
+    the proposal or rule to change.
+  admission_kind: semantic-support
+  supports:
+  - FallowDeadCodeLane
+  decision_relevance: Defines the doctrine against which the Fallow dead-code lane can report a BoundaryViolation.
+  evidence:
+  - standards/ARCHITECTURE.md:3-7 — 'If a proposed slice, package, adapter, or dependency contradicts
+    this document, the proposal must change or this document must be amended.'
+  - standards/ARCHITECTURE.md:255-270 — 'Forbidden by default'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: BoundaryViolation
+  kind: class
+  definition: A Fallow diagnostic that reports an enforced architecture-boundary rule violation.
+  admission_kind: semantic-support
+  supports:
+  - FallowDeadCodeLane
+  decision_relevance: Defines the boundary-diagnostic outcome produced by the Fallow dead-code lane.
+  evidence:
+  - '.fallowrc.jsonc:426-436 — ''"boundary-violation": "error"'''
+  - 'standards/fallow.pilot.inventory.jsonc:37-47 — ''"boundaryViolations": 0'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: FallowBoundaryRuleProvenance
+  kind: class
+  definition: An information artifact linking a generated Fallow boundary rule to its source, doctrine,
+    catalog, and enforcement-scope references.
+  admission_kind: semantic-support
+  supports:
+  - FallowDeadCodeLane
+  decision_relevance: Constrains which generated boundary rules may ground a boundary result from the
+    Fallow dead-code lane.
+  evidence:
+  - 'standards/fallow.boundaries.provenance.schema.json:4-13 — ''"title": "Fallow Boundary Rule Provenance"'''
+  - standards/fallow.boundaries.provenance.schema.json:35-44 — '"sourceRefs", "doctrineRefs", "catalogRefs",
+    "promotionEligible"'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: HostedRequiredCheck
+  kind: class
+  definition: A hosted check whose required status gates merge of a feature branch.
+  admission_kind: semantic-support
+  supports:
+  - YeetMonitorLane
+  decision_relevance: Defines a hosted condition collected by YeetMonitorLane when evaluating merge readiness.
+  evidence:
+  - AGENTS.md:42-45 — 'let hosted required checks gate the merge'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: UnresolvedReviewThread
+  kind: class
+  definition: A PR review thread whose unresolved state is a hard merge gate.
+  admission_kind: semantic-support
+  supports:
+  - YeetMonitorLane
+  decision_relevance: Defines a blocking condition collected by YeetMonitorLane before CI-merge assurance
+    can hold.
+  evidence:
+  - AGENTS.md:52-56 — 'Unresolved review threads are a hard merge gate'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: VerificationEvidence
+  kind: class
+  definition: A recorded validation result used as proof, including schema-validated browser-QA evidence
+    and repo-wide docgen proof.
+  admission_kind: decision
+  cq_justification:
+  - CQ-005
+  - CQ-006
+  decision_relevance: Lets the projection distinguish completed evidence from the lane or WorkUnit that
+    produced it.
+  evidence:
+  - AGENTS.md:46-48 — 'repo-wide proof'
+  - AGENTS.md:81-83 — 'recorded evidence'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: WorkUnit
+  kind: class
+  definition: A verification-lane specification paired with an execution scope, exemplified by affected
+    and full-repository docgen invocations.
+  admission_kind: decision
+  cq_justification:
+  - CQ-002
+  decision_relevance: Provides the scheduling quantum used to choose a lane and scope for an episode.
+  evidence:
+  - AGENTS.md:46-48 — 'bounded to `origin/main...HEAD` + dirty files ... repo-wide proof'
+  - 'standards/fallow.pilot.inventory.jsonc:67-73 — ''"command": "bun run fallow:audit -- --base origin/main
+    --gate new-only"'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: dependsOn
+  kind: property
+  definition: Relates an importing PackageRef to the PackageRef it imports directly.
+  domain: PackageRef
+  range: PackageRef
+  admission_kind: semantic-support
+  supports:
+  - dependsOnTransitive
+  decision_relevance: Supplies the direct package edges whose Datalog closure determines affected packages.
+  evidence:
+  - standards/ARCHITECTURE.md:189-194 — 'Arrows point from the importing package to the imported package.'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: dependsOn
+  kind: property
+  definition: Relates a PackageRef to a directly declared @beep/* dependency or devDependency PackageRef.
+  domain: PackageRef
+  range: PackageRef
+  admission_kind: semantic-support
+  supports:
+  - dependsOnTransitive
+  decision_relevance: Supplies the direct base edges from which CQ-004's dependency closure is computed.
+  evidence:
+  - 'explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv:55 — ''dependsOn,property,CQ-004,"direct
+    workspace dependency edge; semantic-support (two-kind law): supports=dependsOnTransitive — the fixpoint''s
+    base relation (round-3 I-03/H-09 licensing fix)"'''
+  - 'packages/drivers/hubspot/package.json:62 — ''"@beep/identity": "workspace:^",'''
+  - 'packages/drivers/hubspot/package.json:68 — ''"@beep/test-utils": "workspace:^",'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-package-topology
+- candidate: BrowserQaLane
+  kind: individual
+  definition: A recorded gesture-bearing UI verification lane comprising record, extract, judge, and schema
+    validation.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Lets the projection enumerate the browser-QA validation surface when a gesture-bearing
+    UI milestone is in scope.
+  evidence:
+  - AGENTS.md:81-83 — 'recorded evidence via `bun run beep qa` (record → extract → judge)'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: DocgenAffectedWorkUnit
+  kind: individual
+  definition: The docgen WorkUnit bounded to the origin/main-to-HEAD change plus dirty files for edit
+    loops.
+  admission_kind: decision
+  cq_justification:
+  - CQ-002
+  decision_relevance: Allows the projection to choose affected documentation proof during repair loops.
+  evidence:
+  - AGENTS.md:46-48 — '`bun run docgen:local` for edit loops (bounded to `origin/main...HEAD` + dirty
+    files)'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: DocgenFullRepoWorkUnit
+  kind: individual
+  definition: The docgen WorkUnit that runs the full repository documentation proof.
+  admission_kind: decision
+  cq_justification:
+  - CQ-002
+  decision_relevance: Allows the projection to choose full-repository documentation proof when affected
+    proof is insufficient.
+  evidence:
+  - AGENTS.md:46-48 — 'full `bun run docgen` only for the repo-wide proof'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: DocgenLane
+  kind: individual
+  definition: The documentation-generation verification lane invoked in affected edit-loop or full-repository
+    proof scope.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Lets the projection enumerate doc generation once and schedule its affected or full-repository
+    WorkUnit.
+  evidence:
+  - AGENTS.md:46-48 — '`bun run docgen:local` for edit loops ... full `bun run docgen` only for the repo-wide
+    proof'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: FallowAuditLane
+  kind: individual
+  definition: A Fallow verification lane that audits a base-relative change and gates findings attributed
+    as newly introduced.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Lets the projection enumerate the base-relative Fallow audit surface separately
+    from dead-code and health probes.
+  evidence:
+  - 'standards/fallow.pilot.inventory.jsonc:67-82 — ''"command": "bun run fallow:audit -- --base origin/main
+    --gate new-only"'''
+  - '.fallowrc.jsonc:423-425 — ''"gate": "new-only"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: FallowAuditOriginMainNewOnlyWorkUnit
+  kind: individual
+  definition: The Fallow audit WorkUnit configured against origin/main with the new-only finding gate.
+  admission_kind: decision
+  cq_justification:
+  - CQ-002
+  decision_relevance: Makes the named base-relative audit invocation available as a schedulable lane-by-scope
+    unit.
+  evidence:
+  - 'standards/fallow.pilot.inventory.jsonc:67-73 — ''"command": "bun run fallow:audit -- --base origin/main
+    --gate new-only"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: FallowDeadCodeLane
+  kind: individual
+  definition: A command-invoked Fallow verification lane that reports dead-code and dependency-hygiene
+    diagnostics, including boundary violations.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Lets the projection enumerate the Fallow dead-code validation surface and classify
+    its lane kind.
+  evidence:
+  - 'standards/fallow.pilot.inventory.jsonc:31-46 — ''"command": "bunx fallow dead-code --format json
+    --quiet"'''
+  - '.fallowrc.jsonc:426-436 — ''"boundary-violation": "error"'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: FallowHealthLane
+  kind: individual
+  definition: A command-invoked Fallow verification lane that measures function health, maintainability,
+    and threshold severity.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Lets the projection enumerate the Fallow health validation surface and classify
+    its lane kind.
+  evidence:
+  - 'standards/fallow.pilot.inventory.jsonc:92-103 — ''"command": "bunx fallow health --format json --quiet"'''
+  - .fallowrc.jsonc:302-312 — 'Complexity ceilings'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: YeetMonitorLane
+  kind: individual
+  definition: The collected PR-closeout verification activity that monitors hosted state until merge readiness
+    is reported.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  - CQ-006
+  - CQ-017
+  decision_relevance: Supplies the collected merge-readiness lane whose unmet state prevents CI-merge
+    assurance.
+  evidence:
+  - 'AGENTS.md:52-56 — ''run `bun run beep yeet monitor` until it reports `merge-ready: yes`'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: YeetVerifyLane
+  kind: individual
+  definition: The canonical collected repository-quality verification activity executed by the Yeet verify
+    command.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Lets the projection enumerate the repository's canonical aggregate verification
+    surface.
+  evidence:
+  - AGENTS.md:39-41 — 'Yeet is the canonical repo-quality path'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-fallow-laws
+- candidate: clone
+  kind: literal-domain-member
+  source_domain: FleetCheckoutKind
+  definition: The clone source classification for a machine-local checkout.
+  admission_kind: semantic-support
+  supports:
+  - Checkout
+  decision_relevance: Constrains the Checkout bearer used in evidence-transferability decisions without
+    asserting an exclusion key.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — 'LiteralKit(["clone",
+    "linked-worktree"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: linked-worktree
+  kind: literal-domain-member
+  source_domain: FleetCheckoutKind
+  definition: The linked-worktree source classification for a machine-local checkout.
+  admission_kind: semantic-support
+  supports:
+  - Checkout
+  decision_relevance: Constrains the Checkout bearer used in evidence-transferability decisions without
+    asserting an exclusion key.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — 'LiteralKit(["clone",
+    "linked-worktree"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits

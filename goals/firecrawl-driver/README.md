@@ -2,6 +2,8 @@
 
 ## Status
 
+Lifecycle: `completed-retained`
+
 Completed (retained). Packet authored on 2026-06-04; closed retroactively on
 2026-07-11.
 

@@ -1,0 +1,50 @@
+target: "otp:full-verification-plan-specification:001"
+target_sha256: "e8f5ff4d68e838e2f04aabb0f77be51cd60e36850d93b57138710e147643d0d2"
+chain_sha256: "6fba4e798413723fcc0310176334e18ecb2bef0391fbbc965f8c445820400bc3"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to test,
+    so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: generic-plan-absorbs-component-composite-rivals
+    counterexample: >-
+      A pre-push member prescription and a cheap-gates-plus-pre-push composite
+      have different parts and unity. The adopted VerificationPlanSpecification
+      class does not identify them as one token; it accommodates both as plan
+      specifications and leaves their internal boundary and revision identity
+      expressly open.
+    outcome: survived
+  - surface: warrant
+    rule: schedule-specification-execution-split
+    counterexample: >-
+      Without repeatable plan content, CQ-020's current ScheduleProposal can be
+      collapsed into the dated execution that realizes it. The generic plan
+      specification preserves the ordered WorkUnit prescription and applicable
+      scope that the decision term must expose, so the support is necessary to
+      its stated semantics.
+    outcome: survived
+  - surface: null_discriminator
+    rule: operative-plan-content-not-literal-token
+    counterexample: >-
+      A bare full literal can be implementation-only, but the cited dispatcher
+      constructs a pre-push proof-step prescription and the planner composes
+      ordered verification content. A transient DTO may carry that information
+      object without making the prescription identical to its carrier.
+    outcome: survived
+rival_models_still_viable:
+  - "The full selector may denote a member-level pre-push specification."
+  - "A full request may instantiate a composite cheap-gates-plus-pre-push plan."
+  - "Concrete contexts may produce a family of plan-step specification individuals."
+evidence:
+  - "so:sha256:1adbba90ffeca74bb7274f9ac7af8f6887553ab1344981fdce3e7ab86aaa9f4f"
+  - "po:sha256:b565b1f59f1de2fb2810a5cbba36c6c707705f294baf25d0b54bc812b7104d91"
+  - "CQ-020"

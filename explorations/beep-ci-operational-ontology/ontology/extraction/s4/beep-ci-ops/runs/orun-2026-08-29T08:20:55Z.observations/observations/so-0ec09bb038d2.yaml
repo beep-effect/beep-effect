@@ -1,0 +1,24 @@
+id: so:sha256:0ec09bb038d210bc0c239c15d922a2bbac6f355f66c8e309731b2fb9a58cb7e9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 556
+  end_line: 557
+  content_sha256: 8c21ef97132b21a7a8d7919618014e02af3d240e726e9095e3dd80835f800957
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::requestedTurboCacheMode
+  lexical_name: requestedTurboCacheMode
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const requestedTurboCacheMode = (environment: TurboCacheEnvironment): O.Option<TurboCacheMode>
+  =>'
+epistemic_status: parser_derived

@@ -1,0 +1,10 @@
+id: po:sha256:796a368eab4715c8836bd1377c8315816c521bd1e74c85c89948d33d2216e7a0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 309
+  end_line: 313
+quote: export const TurboCachePlanTag = LiteralKit(["caller-controlled", "local-only", "remote-read"]).pipe(
+epistemic_status: quoted_prose

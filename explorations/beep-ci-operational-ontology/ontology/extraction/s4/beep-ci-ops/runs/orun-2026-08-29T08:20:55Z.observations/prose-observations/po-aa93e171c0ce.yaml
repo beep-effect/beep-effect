@@ -1,0 +1,10 @@
+id: po:sha256:aa93e171c0cefc6cbfbb058423b6495491de5e56be9be3fc86be44b67be9e302
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 895
+  end_line: 898
+quote: LiteralKit(["passed", "failed", "not-run-early-stop"])
+epistemic_status: quoted_prose

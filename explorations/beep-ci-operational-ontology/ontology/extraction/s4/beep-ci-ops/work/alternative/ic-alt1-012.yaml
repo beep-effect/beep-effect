@@ -1,0 +1,35 @@
+id: "ic:alt1:012"
+hypothesis_ref: "dh:topology:002"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two direct workspace package dependency relations are the same iff they
+    mediate the same ordered pair of workspace packages as a declared direct dependency used as
+    the base relation for affected-package closure. A pre-glossary row spelling dependsOn is
+    evidence that such a relation is hypothesized, never the sameness criterion."
+  reidentification_key:
+    - "dependsOn"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one declared-dependency relator with two package participants; not a mereological sum of
+    those packages"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "relator"
+  alternatives:
+    - "information_object"
+  existential_dependencies:
+    - "source workspace package"
+    - "target workspace package"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "declaration removed from the workspace manifest"
+counterexamples:
+  - description: "Transitive closure over dependsOn is a different relation: identifying dependsOn
+      with dependsOnTransitive would make a package depend directly on every package in its
+      affected-set. Identifying the relation with a package would make every dependent package a
+      different edge."
+status: "proposed"

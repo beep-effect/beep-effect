@@ -1,0 +1,21 @@
+id: "dh:quality:032"
+observation_refs:
+  - "so:sha256:31baae1868e72567f452d82d080545edee5e451bc48d0c2bfa09c33de0fef344"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration byWorkspacePathLengthDescending in PackageVerify.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by byWorkspacePathLengthDescending"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is unrepresentable_construct for the source declaration. By contract that fact cannot ground a surviving referent, and it supplies no observed domain behavior, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

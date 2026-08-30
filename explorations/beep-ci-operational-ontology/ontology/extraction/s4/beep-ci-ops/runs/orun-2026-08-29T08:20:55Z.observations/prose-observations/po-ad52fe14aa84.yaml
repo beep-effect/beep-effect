@@ -1,0 +1,10 @@
+id: po:sha256:ad52fe14aa84aba44e09e8ae94d1032952341c19802c314700e38194b7869f42
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/research/kpi-baseline-2026-08-27.md
+source_span:
+  start_line: 55
+  end_line: 55
+quote: 41 verdict files vs 18 journals with 186 finished attempts here.
+epistemic_status: quoted_prose

@@ -1,0 +1,25 @@
+id: "dh:topology:048"
+observation_refs:
+  - "po:sha256:8c4d89db02a5ad168842e27ff470bbeb7b11cb4cd0b9100e4afcd90f30513c53"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/epistemic-tables workspace package"
+  description: "The workspace software package information artifact identified by @beep/epistemic-tables in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/epistemic-tables as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The adversary's serialization-only DTO wins: the sole cited evidence is one generated topology row containing a package-looking token and ordinal, with no manifest, dependency edge, lineage, or independently governed package reference."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

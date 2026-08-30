@@ -1,0 +1,44 @@
+id: "ic:reporun:009"
+hypothesis_ref: "dh:reporun:018"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Applying the shared resume-policy domain criterion in ic:reporun:008, two
+    never-resume designation information objects are the same when they
+    preserve the same prohibition against fingerprint-based skipping, the
+    same applicability scope, and the same issuing policy revision; repeated
+    uses of the word never do not by themselves identify one designation.
+  reidentification_key:
+    - "never literal together with the governing resume-policy revision"
+    - "applicability scope of the prohibition"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One designation is unified by a single prohibition and its applicability
+    scope; it states an obligation-layer constraint rather than prescribing or
+    performing the command itself.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "controlled-vocabulary individual for resume policy"
+    - "prohibition mode borne by a planned-step specification"
+    - "WorkUnitExecution that happened not to resume"
+    - "implementation-only planner control value"
+  existential_dependencies:
+    - "the policy or governance context that gives the prohibition force"
+    - "the planned-step specification that a concrete designation qualifies"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded"
+    - "revoked"
+counterexamples:
+  - description: >-
+      A step designated never may still be omitted because its whole plan is
+      cancelled or filtered, so the prohibition on fingerprint resume does
+      not entail that any particular command execution occurs.
+status: proposed

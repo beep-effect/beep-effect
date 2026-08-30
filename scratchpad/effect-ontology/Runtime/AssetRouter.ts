@@ -14,7 +14,6 @@ import { Unknown } from "@beep/schema/Unknown";
 import { Effect, Inspectable } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -26,18 +25,24 @@ import { StorageService } from "../Service/Storage.ts";
 // =============================================================================
 
 /**
- * Validates and represents asset router values at runtime.
+ * HTTP surface for downloading raw documents, Turtle graphs, link content, and batch reports.
  *
- * **Example** (Validate asset router)
+ * **Details**
+ *
+ * Document bytes are served at `GET /v1/ontologies/:ontologyId/documents/:docId/content`.
+ *
+ * **Example** (Register the asset routes on an HTTP router)
  *
  * ```ts
  * import { Layer } from "effect"
+ * import { HttpRouter } from "effect/unstable/http"
  * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
  *
- * console.log(Layer.isLayer(AssetRouter)) // true
+ * const served = Layer.provide(AssetRouter, HttpRouter.layer)
+ * console.log(served !== AssetRouter) // true
  * ```
  *
- * @category layers
+ * @category endpoints
  * @since 0.0.0
  */
 export const AssetRouter = HttpRouter.addAll([
@@ -242,7 +247,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      const decodedBatchId = BatchId.decodeOption(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
@@ -314,7 +319,7 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      const decodedBatchId = BatchId.decodeOption(rawBatchId);
       if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {

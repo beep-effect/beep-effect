@@ -1,0 +1,23 @@
+id: so:sha256:5f6d28b84b2b6a0c45f5257d36c2be6c720c4d1e501c15f6afab588634171e62
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 32
+  end_line: 32
+  content_sha256: d5cb6d065191fddca035a51c0111ecf7d4966235cd81e7ae76b65bfb2e942dc7
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::$I
+  lexical_name: $I
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const $I = $RepoCliId.create("internal/cli/TurboCache");
+epistemic_status: parser_derived

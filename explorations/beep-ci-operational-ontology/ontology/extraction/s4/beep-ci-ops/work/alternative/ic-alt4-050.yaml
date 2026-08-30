@@ -1,0 +1,27 @@
+id: ic:alt4:050
+hypothesis_ref: dh:turbo-cache:018
+identity:
+  supplies_identity: true
+  identity_criterion: Two Turbo storybook:build task specifications are the same when they occupy the same pipeline slot with the same upstream build dependency; the key spelling is evidence, never the criterion.
+  reidentification_key:
+    - storybook:build
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The storybook:build pipeline slot together with its upstream build dependency compose one task prescription.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies:
+    - turbo pipeline
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: storybook:start depends on storybook:build but is a persistent non-build task, not this specification.
+  - description: "Treating this as a verification lane overclaims: the cited facts show only a configured dependency."
+status: proposed

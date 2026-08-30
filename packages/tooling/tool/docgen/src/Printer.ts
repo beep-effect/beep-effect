@@ -6,6 +6,7 @@
  */
 
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { Md, renderMarkdownBlocks } from "@beep/md";
 import { SchemaUtils } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, Layer, Match, Order, pipe } from "effect";
@@ -17,6 +18,7 @@ import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
 import * as Parser from "./Parser.ts";
+import type { Block, Inline } from "@beep/md";
 
 const $I = $RepoDocgenId.create("Printer");
 
@@ -66,10 +68,14 @@ export const Printable = S.Union([
  */
 export type Printable = typeof Printable.Type;
 
-const Markdown = {
-  bold: (content: string) => `**${content}**`,
-  strikethrough: (content: string) => `~~${content}~~`,
-};
+// Symbol names and JSDoc-derived prose are trusted markdown already; the
+// rawMarkdown lane keeps them byte-verbatim where Md.text would escape
+// punctuation such as `_` and `.`.
+const raw = Md.rawMarkdown;
+
+const rawBlock = (value: string): Block => Md.p(raw(value));
+
+const sectionLabel = (title: string): Block => Md.p(Md.strong(title));
 
 const replaceJSDocLinks: (text: string) => string = Str.replaceWith(
   /\{@link\s+([^\s}]+)(?:\s+([^}]+))?}/g,
@@ -92,7 +98,7 @@ const removeFenceMetadata: (markdown: string) => string = Str.replaceWith(
 
 const printOptionalDescription = Effect.fn("printOptionalDescription")(function* (description: string | undefined) {
   if (P.isUndefined(description)) {
-    return "";
+    return A.empty<Block>();
   }
 
   const config = yield* Configuration.Configuration;
@@ -101,71 +107,50 @@ const printOptionalDescription = Effect.fn("printOptionalDescription")(function*
     config.theme === Configuration.DEFAULT_THEME
       ? removeFenceMetadata(descriptionWithoutLinks)
       : descriptionWithoutLinks;
-  return `\n\n${out}`;
+  return [rawBlock(out)];
 });
 
-const printArray = (title: string, values?: ReadonlyArray<string>): string => {
-  if (P.isUndefined(values) || A.isReadonlyArrayEmpty(values)) {
-    return "";
-  }
+const printArray = (title: string, values?: ReadonlyArray<string>): ReadonlyArray<Block> =>
+  P.isUndefined(values) || A.isReadonlyArrayEmpty(values)
+    ? A.empty<Block>()
+    : [sectionLabel(title), rawBlock(A.join("\n")(values))];
 
-  return `\n\n${Markdown.bold(title)}\n\n${A.join("\n")(values)}`;
-};
+const fenceBlock = (code: string): Block =>
+  pipe(
+    ["```ts", "~~~ts"],
+    A.some((prefix) => Str.startsWith(prefix)(code))
+  )
+    ? rawBlock(code)
+    : Md.pre(code, { language: "ts" });
 
-const printFence = (code: string): string => {
-  if (
-    pipe(
-      ["```ts", "~~~ts"],
-      A.some((prefix) => Str.startsWith(prefix)(code))
-    )
-  ) {
-    return code;
-  }
-
-  return `\`\`\`ts\n${code}\n\`\`\``;
-};
-
-const printOptionalSignature = (signature?: string): string =>
-  signature === undefined ? "" : `\n\n${Markdown.bold("Signature")}\n\n${printFence(signature)}`;
+const printOptionalSignature = (signature?: string): ReadonlyArray<Block> =>
+  signature === undefined ? A.empty<Block>() : [sectionLabel("Signature"), fenceBlock(signature)];
 
 const printThrowsArray = (throws?: ReadonlyArray<string>) => printArray("Throws", throws);
 
-const printExamplesArray = (examples: ReadonlyArray<string>): string =>
-  examples.length === 0
-    ? ""
-    : pipe(
-        examples,
-        A.map((example) => `\n\n**Example**\n\n${printFence(example)}`),
-        A.join("")
-      );
+const printExamplesArray = (examples: ReadonlyArray<string>): ReadonlyArray<Block> =>
+  A.flatMap(examples, (example) => [sectionLabel("Example"), fenceBlock(example)]);
 
-const printOptionalSince = (since: ReadonlyArray<string>): string =>
-  since.length === 0 ? "" : `\n\nSince v${A.join(", ")(since)}`;
+const printOptionalSince = (since: ReadonlyArray<string>): ReadonlyArray<Block> =>
+  A.isReadonlyArrayEmpty(since) ? A.empty<Block>() : [rawBlock(`Since v${A.join(", ")(since)}`)];
 
-const printHeaderByIndentation = (indentation: number) =>
+const headingByIndentation = (indentation: number) =>
   Match.value(indentation).pipe(
-    Match.when(0, () => "## "),
-    Match.when(1, () => "### "),
-    Match.orElse(() => "#### ")
+    Match.when(0, () => Md.h2),
+    Match.when(1, () => Md.h3),
+    Match.orElse(() => Md.h4)
   );
 
-const printTitle = (name: string, deprecated: ReadonlyArray<string>, postfix?: string): string => {
+const printTitle = (name: string, deprecated: ReadonlyArray<string>, postfix?: string): ReadonlyArray<Inline> => {
   const printableName = Str.trim(name) === "hasOwnProperty" ? `${name} (function)` : name;
-  const title = deprecated.length > 0 ? Markdown.strikethrough(printableName) : printableName;
-  return postfix === undefined ? title : `${title} ${postfix}`;
+  const title: Inline = deprecated.length > 0 ? Md.del(raw(printableName)) : raw(printableName);
+  return postfix === undefined ? [title] : [title, raw(` ${postfix}`)];
 };
 
-const printSeesArray = (sees?: ReadonlyArray<string>): string => {
-  if (sees === undefined || sees.length === 0) {
-    return "";
-  }
-
-  return `\n\n${Markdown.bold("See")}\n\n${pipe(
-    sees,
-    A.map((see) => `- ${replaceJSDocLinks(see)}`),
-    A.join("\n")
-  )}`;
-};
+const printSeesArray = (sees?: ReadonlyArray<string>): ReadonlyArray<Block> =>
+  P.isUndefined(sees) || A.isReadonlyArrayEmpty(sees)
+    ? A.empty<Block>()
+    : [sectionLabel("See"), Md.ul(A.map(sees, (see) => Md.li(raw(replaceJSDocLinks(see)))))];
 
 const pathSegments = (segments: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.flatMap(segments, flow(Str.split(/[\\/]+/), A.filter(Str.isNonEmpty)));
@@ -215,13 +200,13 @@ const appendUrlPath = (baseUrl: string, relativePath: string): string =>
 
 const printOptionalSourceLink = Effect.fn("printOptionalSourceLink")(function* (position?: Domain.Position) {
   if (P.isUndefined(position)) {
-    return "";
+    return A.empty<Block>();
   }
 
   const config = yield* Configuration.Configuration;
   const source = yield* Parser.Source;
   const sourcePath = getSourceLinkPath(source, config);
-  return `\n\n[Source](${appendUrlPath(config.srcLink, sourcePath)}#L${position.line})`;
+  return [Md.p(Md.a(`${appendUrlPath(config.srcLink, sourcePath)}#L${position.line}`, "Source"))];
 });
 type PrintModelOptions = {
   readonly signature?: string | undefined;
@@ -232,17 +217,17 @@ type PrintModelOptions = {
 const printModel = Effect.fn("printModel")(function* (name: string, doc: Domain.Doc, options: PrintModelOptions) {
   const sourceLink = yield* printOptionalSourceLink(options.position);
   const description = yield* printOptionalDescription(doc.description);
-  return (
-    printHeaderByIndentation(options.indentation ?? 0) +
-    printTitle(name, doc.deprecated, options.postfix) +
-    description +
-    printThrowsArray(doc.throws) +
-    printExamplesArray(doc.examples) +
-    printSeesArray(doc.sees) +
-    printOptionalSignature(options.signature) +
-    sourceLink +
-    printOptionalSince(doc.since)
-  );
+  const title = headingByIndentation(options.indentation ?? 0)(printTitle(name, doc.deprecated, options.postfix));
+  return A.flatten([
+    [title],
+    description,
+    printThrowsArray(doc.throws),
+    printExamplesArray(doc.examples),
+    printSeesArray(doc.sees),
+    printOptionalSignature(options.signature),
+    sourceLink,
+    printOptionalSince(doc.since),
+  ]);
 });
 type PrintEntryOptions = {
   readonly indentation?: number | undefined;
@@ -280,24 +265,7 @@ const printClass = Effect.fn("printClass")(function* (model: Domain.Class) {
   const methods = yield* Effect.forEach(model.methods, printMethod);
   const properties = yield* Effect.forEach(model.properties, printProperty);
 
-  return (
-    header +
-    pipe(
-      staticMethods,
-      A.map((value) => `\n\n${value}`),
-      A.join("")
-    ) +
-    pipe(
-      methods,
-      A.map((value) => `\n\n${value}`),
-      A.join("")
-    ) +
-    pipe(
-      properties,
-      A.map((value) => `\n\n${value}`),
-      A.join("")
-    )
-  );
+  return A.flatten([header, A.flatten(staticMethods), A.flatten(methods), A.flatten(properties)]);
 });
 
 const printConstant = (model: Domain.Constant) => printEntry(model, {});
@@ -313,10 +281,12 @@ const printInterface: {
   (
     model: Domain.Interface,
     indentation: number
-  ): Effect.Effect<string, never, Configuration.Configuration | Parser.Source>;
+  ): Effect.Effect<ReadonlyArray<Block>, never, Configuration.Configuration | Parser.Source>;
   (
     indentation: number
-  ): (model: Domain.Interface) => Effect.Effect<string, never, Configuration.Configuration | Parser.Source>;
+  ): (
+    model: Domain.Interface
+  ) => Effect.Effect<ReadonlyArray<Block>, never, Configuration.Configuration | Parser.Source>;
 } = dual(2, (model: Domain.Interface, indentation: number) =>
   printEntry(model, {
     indentation,
@@ -328,10 +298,12 @@ const printTypeAlias: {
   (
     model: Domain.TypeAlias,
     indentation: number
-  ): Effect.Effect<string, never, Configuration.Configuration | Parser.Source>;
+  ): Effect.Effect<ReadonlyArray<Block>, never, Configuration.Configuration | Parser.Source>;
   (
     indentation: number
-  ): (model: Domain.TypeAlias) => Effect.Effect<string, never, Configuration.Configuration | Parser.Source>;
+  ): (
+    model: Domain.TypeAlias
+  ) => Effect.Effect<ReadonlyArray<Block>, never, Configuration.Configuration | Parser.Source>;
 } = dual(2, (model: Domain.TypeAlias, indentation: number) =>
   printEntry(model, {
     indentation,
@@ -343,16 +315,18 @@ const printNamespace: {
   (
     model: Domain.Namespace,
     indentation: number
-  ): Effect.Effect<string, never, Configuration.Configuration | Parser.Source>;
+  ): Effect.Effect<ReadonlyArray<Block>, never, Configuration.Configuration | Parser.Source>;
   (
     indentation: number
-  ): (model: Domain.Namespace) => Effect.Effect<string, never, Configuration.Configuration | Parser.Source>;
+  ): (
+    model: Domain.Namespace
+  ) => Effect.Effect<ReadonlyArray<Block>, never, Configuration.Configuration | Parser.Source>;
 } = dual(
   2,
   Effect.fn("printNamespace")(function* (
     model: Domain.Namespace,
     indentation: number
-  ): Effect.fn.Return<string, never, Configuration.Configuration | Parser.Source> {
+  ): Effect.fn.Return<ReadonlyArray<Block>, never, Configuration.Configuration | Parser.Source> {
     const header = yield* printModel(model.name, model.doc, {
       position: model.position,
       indentation,
@@ -364,24 +338,19 @@ const printNamespace: {
     );
     const namespaces = yield* Effect.forEach(model.namespaces, printNamespace(indentation + 1));
 
-    return (
-      header +
-      pipe(
-        interfaces,
-        A.map((value) => `\n\n${value}`),
-        A.join("")
-      ) +
-      pipe(
-        typeAliases,
-        A.map((value) => `\n\n${value}`),
-        A.join("")
-      ) +
-      pipe(
-        namespaces,
-        A.map((value) => `\n\n${value}`),
-        A.join("")
-      )
-    );
+    return A.flatten([header, A.flatten(interfaces), A.flatten(typeAliases), A.flatten(namespaces)]);
+  })
+);
+
+const printBlocks = Match.type<Printable>().pipe(
+  Match.tagsExhaustive({
+    Class: printClass,
+    Constant: printConstant,
+    Export: printExport,
+    Function: printFunction,
+    Interface: printInterface(0),
+    TypeAlias: printTypeAlias(0),
+    Namespace: printNamespace(0),
   })
 );
 
@@ -447,20 +416,12 @@ const printNamespace: {
  * ```
  *
  * @internal
+ * @param printable - Documented entity to render.
+ * @returns Effect that yields the entity rendered as markdown.
  * @category formatting
  * @since 0.0.0
  */
-export const print = Match.type<Printable>().pipe(
-  Match.tagsExhaustive({
-    Class: printClass,
-    Constant: printConstant,
-    Export: printExport,
-    Function: printFunction,
-    Interface: printInterface(0),
-    TypeAlias: printTypeAlias(0),
-    Namespace: printNamespace(0),
-  })
-);
+export const print = (printable: Printable) => Effect.map(printBlocks(printable), renderMarkdownBlocks);
 
 const DEFAULT_CATEGORY = "utils";
 
@@ -561,36 +522,29 @@ const sortByName: <
  * @since 0.0.0
  */
 export const printModule = (module: Domain.Module) =>
-  Effect.scoped(
-    Layer.build(Parser.Source.layer(module.source)).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* Effect.gen(function* () {
-            const description = yield* printModel(module.name, module.doc, { postfix: "overview" });
-            const grouped = A.groupBy(sortByName(getPrintables(module)), (printable) =>
-              printable.doc.category.length === 0 ? DEFAULT_CATEGORY : A.join(", ")(printable.doc.category)
-            );
-            const printables = A.sort(byCategory)(R.toEntries(grouped) as Array<[string, Array<Printable>]>);
+  Layer.build(Parser.Source.layer(module.source)).pipe(
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        return yield* Effect.gen(function* () {
+          const description = yield* printModel(module.name, module.doc, { postfix: "overview" });
+          const grouped = A.groupBy(sortByName(getPrintables(module)), (printable) =>
+            printable.doc.category.length === 0 ? DEFAULT_CATEGORY : A.join(", ")(printable.doc.category)
+          );
+          const printables = A.sort(byCategory)(R.toEntries(grouped) as Array<[string, Array<Printable>]>);
 
-            const strings = yield* Effect.forEach(
-              printables,
-              Effect.fnUntraced(function* ([category, categoryPrintables]) {
-                const values = yield* Effect.forEach(sortByName(categoryPrintables), print);
-                return `\n\n# ${category}${pipe(
-                  values,
-                  A.map((value) => `\n\n${value}`),
-                  A.join("")
-                )}`;
-              })
-            );
+          const categories = yield* Effect.forEach(
+            printables,
+            Effect.fnUntraced(function* ([category, categoryPrintables]) {
+              const values = yield* Effect.forEach(sortByName(categoryPrintables), printBlocks);
+              return A.prepend(A.flatten(values), Md.h1(raw(category)));
+            })
+          );
 
-            return `${description}
-
-<!-- toc -->${A.join("")(strings)}`;
-          }).pipe(Effect.provide(context));
-        })
-      )
-    )
+          return renderMarkdownBlocks(A.flatten([description, [rawBlock("<!-- toc -->")], A.flatten(categories)]));
+        }).pipe(Effect.provide(context));
+      })
+    ),
+    Effect.scoped
   );
 
 /**

@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:004"
+hypothesis_ref: "dh:turbo-cache:004"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same check task specification only when they preserve the same authored check instruction in the same versioned configuration lineage, including all inherited dependency, input, and output prescriptions; neither the check key nor an empty output list alone supplies identity."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key check"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The dependency, input, and explicit no-output declarations form one repeatable check instruction."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A check verification lane realized by this specification"
+    - "A root template for package-specific check specifications"
+  existential_dependencies:
+    - "The versioned Turbo configuration and package graph that interpret the upstream selector"
+    - "At least one bearer of the check instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "An empty outputs declaration says nothing about what a package check script performs, and multiple package checks can inherit the same root declaration while remaining distinct specifications."
+status: proposed

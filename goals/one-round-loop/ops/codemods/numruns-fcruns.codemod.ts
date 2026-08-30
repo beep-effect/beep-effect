@@ -30,7 +30,7 @@
  * @since 0.0.0
  */
 import { TSMorphService, TSMorphServiceLive } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Console, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -227,7 +227,7 @@ export const runNumRunsFcRunsCodemod = (
 if (import.meta.main) {
   const filePaths = process.argv.slice(2);
   const MainLayer = TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
-  Effect.runPromise(
+  NodeRuntime.runMain(
     runNumRunsFcRunsCodemod(filePaths).pipe(
       Effect.flatMap((results) =>
         Effect.forEach(
@@ -238,10 +238,7 @@ if (import.meta.main) {
           }
         )
       ),
-      Effect.tapCause((cause) => Console.error(cause)),
       Effect.provide(MainLayer)
     )
-  ).catch(() => {
-    process.exit(1);
-  });
+  );
 }

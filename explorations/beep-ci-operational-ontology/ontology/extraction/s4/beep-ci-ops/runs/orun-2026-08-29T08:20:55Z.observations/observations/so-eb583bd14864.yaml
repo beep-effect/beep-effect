@@ -1,0 +1,23 @@
+id: so:sha256:eb583bd1486412aad179ccf2cb4ad553c5b970e016ab7330ce6a1234faa02caa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 227
+  end_line: 231
+  content_sha256: fa5e45ac3c655315c71b31b46778cce117b9510baf860ee5f2adb7d9fadc8194
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::CommandOutput
+  lexical_name: CommandOutput
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: CommandOutput
+source_excerpt: type CommandOutput = {
+epistemic_status: parser_derived

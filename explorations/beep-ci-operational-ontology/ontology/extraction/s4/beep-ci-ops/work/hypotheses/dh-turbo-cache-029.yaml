@@ -1,0 +1,27 @@
+id: "dh:turbo-cache:029"
+observation_refs:
+  - "so:sha256:21dc04c447e3bb1755f100c1ed3368874b7e28d033a45d7532bd0bccea558782"
+  - "so:sha256:2386ea23a9df123913d1e64bf3f14ca0f9b40796aed3cfd3d2b4460bfeec74ef"
+  - "so:sha256:ce756433828f34ce2f8a09e0e005eb8fbb6fc1e0abb2380c070d6cb3b7f7622d"
+  - "so:sha256:ec27d6076035810db743ad0d88d125e7fc1c3c69fc83a83bb7e0d3bc21e2ce33"
+cq_warrants: []
+proposed_referent:
+  label: "Internal cache-value-source classification"
+  description: "A software classification between literal and secret-reference values, together with helpers that produce or test the classification."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "An information-artifact classification of configuration-value provenance"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Two domain-level modes of configuration value availability"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations expose a literal vocabulary, its alias, and helper signatures; they do not observe any configuration value, provenance record, or secret-resolution event."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.84
+  use_for_acceptance: false

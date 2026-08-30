@@ -1,0 +1,53 @@
+target: "otp:seat-request:001"
+target_sha256: "a5bcff26d4a14de7330a7e909ad8b88ea6ed75308427a388e725119c4fd42a10"
+chain_sha256: "991f5c59b91731e6ab978352ab900bd1389a245346ed4dfe02bf81cc5d97dd8d"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: ticket-lineage-identity
+    counterexample: >-
+      A byte-for-byte copy of a queued ticket in another carrier is a second
+      record token, while heartbeat updates mutate the original ticket without
+      replacing it. The card follows the exclusive enqueue and carrier lineage
+      rather than nonce, process coordinates, or serialized equality, so it
+      distinguishes both cases.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-queued-request
+    counterexample: >-
+      CQ-021 and CQ-023 require the queued contender whose priority, enqueue
+      time, wait, and eventual promotion are evaluated. Neither an Agent nor a
+      SeatGrant can stand in for that waiting ticket, so SeatRequest is directly
+      necessary for both questions.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-queue-lifecycle-discriminator
+    counterexample: >-
+      A persistence DTO could store request-shaped fields without affecting
+      admission. The deployed scheduler orders the live queued tickets,
+      promotes the first fitting contender, and ages a waiting verify ticket
+      into publish priority, which is false in the storage-only twin.
+    outcome: survived
+rival_models_still_viable:
+  - "The queued ticket artifact may record a distinct world-side request."
+evidence:
+  - "so:sha256:3e8c52e70d0dfe96bccb840e61a4691e1d3f08801b3892ea976c3123f93d1f61"
+  - "so:sha256:406c216dc233619297fa1281dcf64ead5e9510e6753613a373fb0473d9a00bc8"
+  - "po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807"
+  - "po:sha256:07350ed24a5ad10ca9a6a0af85ae646487c62e7c63e760eeb8305d395e223b25"
+  - "po:sha256:2d8b36c6bb7afb7cda727640a5656328452253def711c0a1cfdb43848de709a9"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:bef24461115ca5af988461aed9aedd081401c061710538fa444c2bc5e7e8e233"
+  - "CQ-021"
+  - "CQ-023"

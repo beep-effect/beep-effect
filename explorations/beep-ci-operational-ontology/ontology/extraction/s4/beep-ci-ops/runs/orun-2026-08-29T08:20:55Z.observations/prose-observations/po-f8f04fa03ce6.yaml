@@ -1,0 +1,10 @@
+id: po:sha256:f8f04fa03ce6beb02f2e04238f731ef8f501b5d1d788adca0999a49c255d3f2d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 111
+  end_line: 120
+quote: 'kind: AdmissionWorkKind'
+epistemic_status: quoted_prose

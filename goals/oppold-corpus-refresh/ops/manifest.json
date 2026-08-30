@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/oppold-corpus-refresh",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 290,
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {

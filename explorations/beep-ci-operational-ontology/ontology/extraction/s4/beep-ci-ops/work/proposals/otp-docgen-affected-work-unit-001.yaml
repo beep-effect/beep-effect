@@ -1,0 +1,57 @@
+id: otp:docgen-affected-work-unit:001
+hypothesis_ref: dh:worktree-config:013
+identity_card_ref: ic:worktree-config:009
+foundational_status: analyzed
+term:
+  local_name: DocgenAffectedWorkUnit
+  preferred_label: docgen affected work unit
+  proposed_iri: https://oip.law/ontology/ci-ops#DocgenAffectedWorkUnit
+  owl_entity_kind: individual
+definition:
+  text: The WorkUnitSpecification individual that prescribes docgen:local for edit loops over origin/main through HEAD plus
+    current dirty files. CQ-002 asks which lane-by-scope WorkUnits are admissible, so a complete answer for the affected-docgen
+    context must identify this governed prescription rather than substituting a lint, test, or full-docgen work unit. Concrete
+    base, target, and dirty-tree bindings belong to an execution-bound realization of this reusable specification.
+  source:
+  - CQ-002
+  - po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6
+  - po:sha256:a56b779098239e2c5a7dc016448e4f6c069488fae5ad5719d39843a6d18d323f
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: intrinsic
+revision_log:
+- from_sha256: fa1e4006101cabd63e26779fddf1a326c5999d3783da236d103ace2e01d3388e
+  addressed:
+  - listing-cq-warrant
+  - discriminator-true-of-command-config
+- from_sha256: 04e8d954cbc6fc1c7224356fd271b07b8085a21a3c89a4c92eafa3eb345d03b7
+  addressed:
+  - listing-cq-warrant
+  - discriminator-true-of-command-config
+- from_sha256: d648194c0bb45eac007f73f6c25008a3a0af75dfb4570eb7ae901e709e455847
+  addressed:
+  - listing-cq-warrant
+- from_sha256: 6232b674fa5886c153bfa891d2c8301050947f4be1d2fa2c419f4461ff5e647c
+  addressed:
+  - support-warrant-self-contradiction
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-002
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: For edit loops, the governing repository rule requires
+  docgen:local to operate only over origin/main through HEAD plus the current dirty files.'
+- 'Rejected weak alternative: an affected docgen execution.'
+open_issues:
+- 'Steward choice remains open only for realization granularity: retain the named individual as the reusable symbolic
+  affected-scope prescription, and model any concrete base, target, and dirty snapshot as an execution-bound realization or
+  contextualized copy rather than as a rival denotation.'
+status: proposed
+revision_requests: []

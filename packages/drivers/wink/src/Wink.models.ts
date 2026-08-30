@@ -37,15 +37,13 @@ const makeWinkStringArrayArbitrary = (fc: typeof FastCheck) => fc.array(fc.strin
  * @category models
  * @since 0.0.0
  */
-export const WinkStringArray = S.Array(S.String)
-  .annotate({
+export const WinkStringArray = S.Array(S.String).pipe(
+  SchemaUtils.withEffectCodecStatics,
+  $I.annoteSchema("WinkStringArray", {
+    description: "Array of strings returned by Wink NLP accessors.",
     toArbitrary: () => makeWinkStringArrayArbitrary,
   })
-  .pipe(
-    $I.annoteSchema("WinkStringArray", {
-      description: "Array of strings returned by Wink NLP accessors.",
-    })
-  );
+);
 
 /**
  * Runtime value decoded by {@link WinkStringArray} for Wink string-valued accessors.

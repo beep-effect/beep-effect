@@ -1,0 +1,29 @@
+id: so:sha256:ee5eb71145b5266dac148b60213a2d24a9a6ddce8f395be81c54b035cf209be4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 246
+  end_line: 250
+  content_sha256: 1fb8f2e95901aab1b3432a034b1479c91de59914e2cc478d562f1031502757f6
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetLiveness
+  lexical_name: FleetLiveness
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: dormant
+- predicate: declares_literal_member
+  object: live
+- predicate: declares_literal_member
+  object: unknown
+- predicate: exports_symbol
+  object: FleetLiveness
+source_excerpt: export const FleetLiveness = LiteralKit(["live", "dormant", "unknown"]).pipe(
+epistemic_status: parser_derived

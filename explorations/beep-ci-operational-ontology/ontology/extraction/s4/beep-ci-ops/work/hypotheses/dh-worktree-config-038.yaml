@@ -1,0 +1,18 @@
+id: "dh:worktree-config:038"
+observation_refs:
+  - "so:sha256:8a9cb0aa5ba8d57f75a8e0ae3ae66aab17afb6dd0eb3b530efc1b8545f392360"
+cq_warrants: []
+proposed_referent:
+  label: "PorcelainAccumulator implementation shape"
+  description: "An internal TypeScript alias for mutable or incremental parser state."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "worktree parsing state"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A local alias declaration for parser state supplies no discriminator for a real-world or information-artifact referent."
+epistemic_status: proposed
+confidence: {value: 0.96, use_for_acceptance: false}

@@ -1,0 +1,9 @@
+id: rat:22
+proposal_ref: otp:local-write-remote-read:001
+proposal_sha256: d0260cd01355438a4591fa0036b92cead67fce8457ac2d758ea5045c12fde970
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept LocalWriteRemoteRead — the quad-gated remote-read posture.

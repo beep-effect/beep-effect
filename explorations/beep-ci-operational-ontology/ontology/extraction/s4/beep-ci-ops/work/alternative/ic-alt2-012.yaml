@@ -1,0 +1,38 @@
+id: ic:alt2:012
+hypothesis_ref: dh:topology:003
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two transitive workspace-package dependency relators are the same iff they relate the same ordered pair of workspace packages
+    as reachability through the compiled dependsOn fixpoint in one topology; the predicate spelling dependsOnTransitive is
+    evidence rather than the criterion.
+  reidentification_key:
+  - dependsOnTransitive
+  - ordered pair of workspace package names
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One relator per ordered pair in the compiled reachability fixpoint of one topology snapshot.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+  - information_object
+  existential_dependencies:
+  - source workspace package
+  - target workspace package
+  - topology snapshot
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - pair leaves the compiled closure after a dependency change
+counterexamples:
+- description: >-
+    A SPARQL spelling of dependsOnTransitive with no compiled fixpoint would not be this relator; the pre-glossary row states
+    a Datalog fixpoint over dependsOn.
+- description: >-
+    A direct dependsOn edge is a different relation; transitive reachability can hold with no direct edge between the same
+    pair.
+status: proposed

@@ -1,0 +1,50 @@
+id: otp:local-write-remote-read:001
+hypothesis_ref: dh:turbo-cache:024
+identity_card_ref: ic:turbo-cache:022
+foundational_status: analyzed
+term:
+  local_name: LocalWriteRemoteRead
+  preferred_label: local-write remote-read cache posture mode
+  proposed_iri: https://oip.law/ontology/ci-ops#LocalWriteRemoteRead
+  owl_entity_kind: individual
+definition:
+  text: The reusable CachePosture individual whose normative content permits local cache reads and writes plus remote reads
+    while forbidding remote writes, operationalized by local:rw,remote:r. CQ-024 requires this named effective execution posture;
+    the remote-read tag and cache string are evidence for its authority semantics rather than its identity criterion.
+  source:
+  - CQ-024
+  - so:sha256:abac752ac37354d5eedde577bf15ec6abf059d5a07396b61a3817eed3e9c7645
+  - po:sha256:03e9aaac7d867e871fe1b6bec68141b31d170bd428aec327da8ca43df00397bc
+  - po:sha256:0c1451cdc80d47a798ce0094c28a4bdb1bab2f1618bbcac3fdba9ab8d605328b
+  - po:sha256:1ffc862ba7eec6d7ee7eed682dfb86f65db7fa7e01fb60878af8add3eea3e6be
+  - po:sha256:4913306a00a80f1a737bdc0393fae6a091841e8c7f009a0f54bf60a178e2fadd
+  - po:sha256:72dda28d4621e5ab4bf1a1f2d85ef9ae34b2393bde139ab0360ca629281cbebd
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: relational
+revision_log:
+- from_sha256: 8a2e6bb3743a4a04f8756254c6298eb189542c819a4561aef3f8a115d4d8d26e
+  addressed:
+  - individual-particular-identity-conflict
+  - discriminator-true-of-lexical-mapping
+- from_sha256: 528346d90f819922c3d79db547000359e3bad8e86c5494352c2b2305a64cb560
+  addressed:
+  - discriminator-true-of-lexical-mapping
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-024
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: A complete sanctioned remote-read configuration selects
+  the remote-read plan for one invocation and hands Turbo the local:rw,remote:r cache mode used by that run.'
+- 'Rejected weak alternative: A lexical alias for a composite CLI cache string.'
+open_issues: []
+revision_requests: []
+status: proposed

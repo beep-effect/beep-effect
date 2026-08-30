@@ -1,0 +1,50 @@
+target: "otp:admitted-by:001"
+target_sha256: "690016db03b562889417f85de6b4cc6eae4513824a9ee7f4135eb6f88346366d"
+chain_sha256: "986b04a9790d8f020d93092c8efa918f81ce85bdfc99932ec9a0eca5ef7fcf55"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The object-property proposal asserts no parents edge; no is-a or
+    subproperty relation exists to test, so no valid subsumption relation is
+    presumed.
+attacks:
+  - surface: identity
+    rule: execution-assertion-individuation
+    counterexample: >-
+      One reusable WorkUnit specification can execute twice under the same
+      SeatGrant. The revised property uses the two execution occurrences as
+      distinct subjects and supplies no identity of its own, so it no longer
+      collapses those assertions.
+    outcome: survived
+  - surface: warrant
+    rule: cq-domain-mismatch
+    counterexample: >-
+      CQ-010 ranges admittedBy from the reusable WorkUnit scheduling object,
+      while this proposal expressly limits the property's subject to a WorkUnit
+      execution occurrence. A graph containing specification W, execution E,
+      and only E admittedBy G cannot answer the cited query for W; the revised
+      definition and open issue acknowledge that mismatch without repairing it.
+    outcome: landed
+  - surface: null_discriminator
+    rule: deployed-admission-relation
+    counterexample: >-
+      A generic acquire-use-release wrapper could be plumbing, but it would not
+      preserve the deployed rule that an overshooting lease is rolled back
+      before the guarded work begins and that accepted work remains charged
+      while the grant is heartbeated. The execution-to-grant relation survives
+      the implementation-only twin.
+    outcome: survived
+rival_models_still_viable:
+  - "A reified admission occurrence can connect WorkUnit specification, execution occurrence, and SeatGrant."
+evidence:
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "CQ-010"

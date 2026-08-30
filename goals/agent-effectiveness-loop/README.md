@@ -2,7 +2,12 @@
 
 ## Status
 
+Lifecycle: `completed-retained`
+
 Phase 1 complete
+
+On-demand reflection:
+[`history/reflections/2026-08-29-codex.md`](./history/reflections/2026-08-29-codex.md).
 
 ## Mission
 

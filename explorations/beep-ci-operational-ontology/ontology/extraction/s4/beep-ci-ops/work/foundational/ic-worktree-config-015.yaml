@@ -1,0 +1,44 @@
+id: "ic:worktree-config:015"
+hypothesis_ref: "dh:worktree-config:019"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two Yeet monitor procedure specifications are the same when they preserve
+    the same monitoring objective, observation and repetition semantics,
+    merge-ready termination condition, failure handling, and policy revision;
+    the command token and any particular pull-request monitoring run are not
+    identity criteria.
+  reidentification_key:
+    - "monitoring objective and observation semantics"
+    - "repeat-until merge-ready termination rule"
+    - "failure and interruption handling"
+    - "Yeet and repository-policy revision"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One authoritative closeout-monitoring plan whose observation, repetition,
+    and termination rules jointly prescribe the lane.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "process: a dated Yeet monitoring activity for one pull request"
+    - "none: an abstract monitoring process type"
+    - "information_object: the command-instruction record rather than its prescriptive content"
+  existential_dependencies:
+    - "At least one faithful realization of the monitoring prescription"
+    - "The Yeet and repository policy context that defines merge-ready"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by changed monitoring or merge-readiness semantics"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      Two operators can follow the same monitor-until-merge-ready prescription
+      against different pull requests at the same time; the activities have
+      different observations and endings while the plan remains one.
+status: proposed

@@ -1,0 +1,18 @@
+id: "fa:sched-core:012"
+hypothesis_ref: "dh:sched-core:013"
+identity_card_ref: "ic:sched-core:012"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The referent is only the Boolean guard procedure expressed in source code."
+    still_viable: true
+  - label: "The referent is an information-object clause in a weighted-admission policy specification."
+    still_viable: true
+  - label: "Each successful or failed capacity check is a contextual eligibility situation rather than an obligation."
+    still_viable: true
+strongest_counterexample: "The same predicate can be evaluated in tests, bypassed on small machines, or changed locally without any evidence of an issuing authority, bearer, or normative validity interval."
+verdict: "explicitly_deferred"
+needed_evidence: "A policy source must name the obligation's authority, bearer, applicability interval, and normative content independently of the selfMayAttempt guard procedure."

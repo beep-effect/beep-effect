@@ -1,0 +1,31 @@
+id: "ic:sched-core:026"
+hypothesis_ref: "dh:sched-core:027"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two capacity-overshoot rollback procedures are the same specification only when one algorithmic lineage preserves the admission ordering, cumulative-prefix test, loser criterion, and rollback-before-use semantics under one policy version."
+  reidentification_key:
+    - "algorithm version"
+    - "admission ordering and tie-break semantics"
+    - "capacity-prefix and rollback rule"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One deterministic recovery rule coupling an immutable lease order, cumulative capacity test, loser selection, and pre-execution rollback."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "an individual capacity-overshoot recovery occurrence"
+    - "file-based scheduler implementation helper"
+  existential_dependencies:
+    - "the lease ordering and weighted-capacity policy"
+    - "the staged-lease concurrency model"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a changed ordering, prefix, or rollback rule"
+counterexamples:
+  - description: "Two separate races can invoke the same rollback rule and remove different leases; the recovery occurrences differ even though their procedure is identical."
+status: "proposed"

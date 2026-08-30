@@ -1,0 +1,21 @@
+id: "fa:reporun:016"
+hypothesis_ref: "dh:reporun:045"
+identity_card_ref: "ic:reporun:016"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "configured timeout-policy violation situation"
+    still_viable: true
+  - label: "child-interruption cleanup process"
+    still_viable: true
+  - label: "tagged error information object reporting the timeout"
+    still_viable: true
+strongest_counterexample: >-
+  One caller's short budget can time out a command that another caller's
+  longer budget permits to finish, so the occurrence is a context-indexed
+  event rather than an intrinsic command property, a timeout specification,
+  or the error record that reports it.
+verdict: analyzed

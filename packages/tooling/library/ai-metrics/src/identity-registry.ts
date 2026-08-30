@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Defect, LiteralKit } from "@beep/schema";
+import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
@@ -22,6 +22,7 @@ import {
 import type { PlatformError } from "effect";
 
 const $I = $RepoAiMetricsId.create("identity-registry");
+
 const identityRegistryVersion = "ai-metrics-identity-registry/v1";
 const hashSaltNamespaceMarker = "ai-metrics-hash-salt-namespace/v1";
 const identityDirName = "identity";
@@ -189,7 +190,6 @@ export class AiMetricsSourceInstance extends S.Class<AiMetricsSourceInstance>($I
  * const registry = AiMetricsIdentityRegistry.make({
  *   generatedAtEpochMillis: 1,
  *   hashSaltStatus: "provided",
- *   registryVersion: "ai-metrics-identity-registry/v1",
  *   roots: [],
  *   sourceInstances: []
  * })
@@ -203,18 +203,19 @@ export class AiMetricsSourceInstance extends S.Class<AiMetricsSourceInstance>($I
 export class AiMetricsIdentityRegistry extends S.Class<AiMetricsIdentityRegistry>($I`AiMetricsIdentityRegistry`)(
   {
     generatedAtEpochMillis: S.Finite,
-    hashSaltNamespaceId: S.OptionFromOptionalKey(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<string>()))
-    ),
+    hashSaltNamespaceId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     hashSaltStatus: AiMetricsHashSaltStatus,
-    registryVersion: S.Literal(identityRegistryVersion),
+    registryVersion: S.Literal(identityRegistryVersion).pipe(SchemaUtils.withConstantDefault(identityRegistryVersion)),
     roots: S.Array(AiMetricsCanonicalRoot),
     sourceInstances: S.Array(AiMetricsSourceInstance),
   },
   $I.annote("AiMetricsIdentityRegistry", {
     description: "Persisted registry of canonical AI metrics roots and the source instances writing to them.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(AiMetricsIdentityRegistry));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(AiMetricsIdentityRegistry));
+}
 
 /**
  * Input for deriving one canonical root's identity.
@@ -275,8 +276,7 @@ export class AiMetricsIdentityRegistryUpsertInput extends S.Class<AiMetricsIdent
     homeDir: S.String,
     rootPath: S.String,
     sourceKinds: S.Array(AiMetricsTranscriptSource).pipe(
-      S.withConstructorDefault(Effect.succeed(A.empty<AiMetricsTranscriptSource>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<AiMetricsTranscriptSource>()))
+      SchemaUtils.withEmptyArrayDefaults<AiMetricsTranscriptSource>()
     ),
   },
   $I.annote("AiMetricsIdentityRegistryUpsertInput", {
@@ -316,9 +316,6 @@ export class AiMetricsIdentityRegistryError extends S.TaggedError<AiMetricsIdent
   })
 ) {}
 
-const encodeIdentityRegistryJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsIdentityRegistry));
-const decodeIdentityRegistryJson = S.decodeUnknownEffect(S.fromJsonString(AiMetricsIdentityRegistry));
-
 const byRootId: Order.Order<AiMetricsCanonicalRoot> = Order.mapInput(Order.String, (root) => root.rootId);
 const byInstanceIdHash: Order.Order<AiMetricsSourceInstance> = Order.mapInput(
   Order.String,
@@ -329,7 +326,7 @@ const identityRegistryFailure = (message: string) => (cause: unknown) =>
   AiMetricsIdentityRegistryError.make({ cause, message });
 
 const hashPrivate = (value: string, hashSalt: string | undefined) =>
-  hashPrivateIdentifier(value, hashSalt).pipe(
+  hashPrivateIdentifier(value, O.fromUndefinedOr(hashSalt)).pipe(
     Effect.mapError(identityRegistryFailure("Failed to hash an AI metrics identity value."))
   );
 
@@ -346,7 +343,7 @@ const firstMatch = (pattern: RegExp, content: string): O.Option<string> =>
     O.flatMapNullishOr((match) => match[1])
   );
 
-const isNotFound = (error: PlatformError.PlatformError): boolean => error.reason._tag === "NotFound";
+const isNotFound = (error: PlatformError.PlatformError): boolean => Eq.equals(error.reason._tag, "NotFound");
 
 // Absence is the only read outcome that honestly means "no file". `Effect.option` would also
 // swallow `PermissionDenied` and `BadResource` (what reading a directory yields), so an existing
@@ -386,11 +383,11 @@ const probeGitRoot = Effect.fn("AiMetrics.identityRegistry.probeGitRoot")(functi
     });
   }
 
-  if (info.value.type === "Directory") {
+  if (Eq.equals(info.value.type, "Directory")) {
     return { commonGitDir: gitPath, gitDir: gitPath, kind: AiMetricsRootKind.Enum["primary-clone"], worktreeName: "" };
   }
 
-  if (info.value.type !== "File") {
+  if (!Eq.equals(info.value.type, "File")) {
     return yield* AiMetricsIdentityRegistryError.make({
       cause: gitPath,
       message: "AI metrics canonical root is not a git root.",
@@ -494,7 +491,7 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
     O.map(Str.split("\n")),
     O.getOrElse(A.empty<string>),
     A.map((line) => pipe(Str.trim(line), Str.split(/\s+/u))),
-    A.findFirst((fields) => fields[1] === ref.value),
+    A.findFirst((fields) => Eq.equals(fields[1], ref.value)),
     O.flatMap((fields) =>
       pipe(
         O.fromNullishOr(fields[0]),
@@ -542,7 +539,7 @@ export const isNestedGitRoot: (args: {
     const fs = yield* FileSystem.FileSystem;
     const pathApi = yield* Path.Path;
 
-    if (pathApi.resolve(dirPath) === pathApi.resolve(scanRoot)) {
+    if (Eq.equals(pathApi.resolve(dirPath), pathApi.resolve(scanRoot))) {
       return false;
     }
 
@@ -597,7 +594,7 @@ export const makeAiMetricsCanonicalRoot: (
     const rootPath = pathApi.resolve(input.rootPath);
     const probe = yield* probeGitRoot(rootPath);
     const cloneIdHash = yield* hashPrivate(rootPath, input.hashSalt);
-    const isLinkedWorktree = probe.kind === AiMetricsRootKind.Enum["linked-worktree"];
+    const isLinkedWorktree = AiMetricsRootKind.is["linked-worktree"](probe.kind);
     const parentRootId = isLinkedWorktree
       ? O.some(`root-${yield* hashPrivate(pathApi.dirname(probe.commonGitDir), input.hashSalt)}`)
       : O.none<string>();
@@ -649,7 +646,7 @@ const claimRegistryLock = Effect.fnUntraced(function* (lockPath: string, token: 
   return yield* fs.writeFileString(lockPath, token, { flag: "wx" }).pipe(
     Effect.as(true),
     Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "AlreadyExists"
+      Eq.equals(error.reason._tag, "AlreadyExists")
         ? Effect.succeed(false)
         : Effect.fail(identityRegistryFailure("Failed to create the AI metrics identity registry lock.")(error))
     )
@@ -751,30 +748,21 @@ export const readAiMetricsIdentityRegistry: (
     if (O.isNone(content)) {
       return AiMetricsIdentityRegistry.make({
         generatedAtEpochMillis: nowEpochMillis,
-        hashSaltStatus: resolveAiMetricsHashSaltStatus(undefined),
-        registryVersion: identityRegistryVersion,
+        hashSaltStatus: resolveAiMetricsHashSaltStatus(O.none()),
         roots: A.empty<AiMetricsCanonicalRoot>(),
         sourceInstances: A.empty<AiMetricsSourceInstance>(),
       });
     }
 
-    return yield* decodeIdentityRegistryJson(content.value).pipe(
+    return yield* AiMetricsIdentityRegistry.decodeJsonEffect(content.value).pipe(
       Effect.mapError(identityRegistryFailure("Failed to decode the AI metrics identity registry."))
     );
   });
 
 const withFirstSeen = (root: AiMetricsCanonicalRoot, firstSeenAtEpochMillis: number): AiMetricsCanonicalRoot =>
   AiMetricsCanonicalRoot.make({
-    cloneIdHash: root.cloneIdHash,
-    excludedFromParentSnapshot: root.excludedFromParentSnapshot,
+    ...root,
     firstSeenAtEpochMillis,
-    kind: root.kind,
-    lastSeenAtEpochMillis: root.lastSeenAtEpochMillis,
-    ...O.getSomesStruct({ parentRootId: O.fromUndefinedOr(root.parentRootId) }),
-    repositoryIdHash: root.repositoryIdHash,
-    ...O.getSomesStruct({ revision: O.fromUndefinedOr(root.revision) }),
-    rootId: root.rootId,
-    worktreeIdHash: root.worktreeIdHash,
   });
 
 const legacyRegistryAllSaltedIdentitiesMatch = (
@@ -805,7 +793,6 @@ const legacyRegistryAllSaltedIdentitiesMatch = (
  *     AiMetricsIdentityRegistry.make({
  *       generatedAtEpochMillis: 1,
  *       hashSaltStatus: "provided",
- *       registryVersion: "ai-metrics-identity-registry/v1",
  *       roots: [],
  *       sourceInstances: []
  *     })
@@ -824,7 +811,7 @@ export const identityRegistryToJson: (
   registry: AiMetricsIdentityRegistry
 ) => Effect.Effect<string, AiMetricsIdentityRegistryError> = Effect.fn("AiMetrics.identityRegistryToJson")(
   function* (registry) {
-    return yield* encodeIdentityRegistryJson(registry).pipe(
+    return yield* AiMetricsIdentityRegistry.encodeJsonEffect(registry).pipe(
       Effect.mapError(identityRegistryFailure("Failed to encode the AI metrics identity registry as JSON."))
     );
   }
@@ -860,8 +847,9 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   const pathApi = yield* Path.Path;
   const existing = yield* readAiMetricsIdentityRegistry(input.dataRoot);
 
-  const hashSaltStatus = resolveAiMetricsHashSaltStatus(input.hashSalt);
-  const hashSaltNamespaceId = yield* hashPrivateIdentifier(hashSaltNamespaceMarker, input.hashSalt).pipe(
+  const hashSalt = O.fromUndefinedOr(input.hashSalt);
+  const hashSaltStatus = resolveAiMetricsHashSaltStatus(hashSalt);
+  const hashSaltNamespaceId = yield* hashPrivateIdentifier(hashSaltNamespaceMarker, hashSalt).pipe(
     Effect.mapError(identityRegistryFailure("Failed to derive the AI metrics hash-salt namespace id."))
   );
   const existingPopulated =
@@ -880,10 +868,9 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
     });
   }
 
-  const rootsById = MutableHashMap.empty<string, AiMetricsCanonicalRoot>();
-  for (const existingRoot of existing.roots) {
-    MutableHashMap.set(rootsById, existingRoot.rootId, existingRoot);
-  }
+  const rootsById = MutableHashMap.fromIterable(
+    A.map(existing.roots, (existingRoot) => [existingRoot.rootId, existingRoot] as const)
+  );
   MutableHashMap.set(
     rootsById,
     root.rootId,
@@ -897,19 +884,14 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
     )
   );
 
-  const instancesById = MutableHashMap.empty<string, AiMetricsSourceInstance>();
-  for (const existingInstance of existing.sourceInstances) {
-    MutableHashMap.set(instancesById, existingInstance.instanceIdHash, existingInstance);
-  }
-  for (const instance of instances) {
-    MutableHashMap.set(instancesById, instance.instanceIdHash, instance);
-  }
+  const instancesById = MutableHashMap.fromIterable(
+    A.map(A.appendAll(existing.sourceInstances, instances), (instance) => [instance.instanceIdHash, instance] as const)
+  );
 
   const registry = AiMetricsIdentityRegistry.make({
     generatedAtEpochMillis: nowEpochMillis,
     hashSaltNamespaceId: O.some(hashSaltNamespaceId),
     hashSaltStatus,
-    registryVersion: identityRegistryVersion,
     roots: pipe(A.fromIterable(MutableHashMap.values(rootsById)), A.sort(byRootId)),
     sourceInstances: pipe(A.fromIterable(MutableHashMap.values(instancesById)), A.sort(byInstanceIdHash)),
   });

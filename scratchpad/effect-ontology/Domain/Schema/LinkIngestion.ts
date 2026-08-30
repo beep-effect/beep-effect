@@ -11,20 +11,11 @@ import { Match } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
+import { SourceType } from "../Model/EnrichedContent.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 
 export { HttpUrl };
-
-const SourceType = LiteralKit(["news", "blog", "press_release", "official", "academic", "unknown"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("news", "blog", "press_release", "official", "academic", "unknown"),
-  })
-  .annotate(
-    $I.annote("SourceType", {
-      description: "Supported source classifications for ingested links.",
-    })
-  );
 
 /**
  * Canonical lifecycle status shared by link contracts and persistence.
@@ -311,14 +302,6 @@ export const BatchIngestResult = BatchIngestResultDefinition.pipe(
 /**
  * Runtime value decoded by {@link BatchIngestResult}.
  *
- * **Example** (Use BatchIngestResult)
- * ```ts
- * import type { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion"
- *
- * const readStatus = (result: BatchIngestResult) => result._tag
- * console.log(readStatus)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -449,14 +432,6 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
 
 /**
  * Runtime value decoded by {@link BatchIngestResponse}.
- *
- * **Example** (Use BatchIngestResponse)
- * ```ts
- * import type { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion"
- *
- * const total = (response: BatchIngestResponse) => response.summary.total
- * console.log(total)
- * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:062"
+observation_refs:
+  - "so:sha256:fbca11cbe18f3865866215a1b890365d57c17a86ff974d1f9b50041f79e08df2"
+cq_warrants: []
+proposed_referent:
+  label: "runWithMergedPreviewAdmission helper"
+  description: "No domain-ontology referent is proposed for the runWithMergedPreviewAdmission helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "merged-preview admission procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

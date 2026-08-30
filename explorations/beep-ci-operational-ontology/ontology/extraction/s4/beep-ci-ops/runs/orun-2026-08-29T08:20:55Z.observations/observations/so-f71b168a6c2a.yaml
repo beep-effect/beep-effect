@@ -1,0 +1,37 @@
+id: so:sha256:f71b168a6c2ae3db3894064c6c52de3f29b7464bb4e6d6d6194a7b6ad5e99155
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 34
+  end_line: 46
+  content_sha256: b38b87171b9717e35888a795db3ec15e1193b7df4785bae1fb68d45931dc9489
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::RepoPlanPhase
+  lexical_name: RepoPlanPhase
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: commit
+- predicate: declares_literal_member
+  object: early-publish
+- predicate: declares_literal_member
+  object: feedback
+- predicate: declares_literal_member
+  object: full
+- predicate: declares_literal_member
+  object: monitor
+- predicate: declares_literal_member
+  object: prepare
+- predicate: declares_literal_member
+  object: publish
+- predicate: exports_symbol
+  object: RepoPlanPhase
+source_excerpt: export const RepoPlanPhase = LiteralKit([
+epistemic_status: parser_derived

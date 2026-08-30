@@ -1,0 +1,36 @@
+id: ic:alt2:006
+hypothesis_ref: dh:sched-core:006
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two admission ranking specifications are the same iff they define the same publish/verify vocabulary together with the
+    same aging rule that promotes an aged verify ticket to publish rank; the literal members are evidence rather than the
+    criterion.
+  reidentification_key:
+  - AdmissionPriority.publish
+  - AdmissionPriority.verify
+  - publishAgingSeconds
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One specification per distinct ranking rule-plus-vocabulary used to order tickets.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - role
+  - phase
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    A ticket bearing verify that later ranks as 0 because it aged is still the same ticket; the ranking specification did
+    not become that ticket's role.
+- description: >-
+    Sorting by pid or nonce as tie-breakers is not this specification; those comparators are extra order keys, not the priority
+    vocabulary.
+status: proposed

@@ -1,0 +1,14 @@
+id: fa:turbo-cache:020
+hypothesis_ref: dh:turbo-cache:022
+identity_card_ref: ic:turbo-cache:020
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: Treat each resolver result as a distinct caller-controlled mode.
+  still_viable: false
+strongest_counterexample: CI and explicit-cache-argument resolutions have different causes and records but preserve the same
+  no-override posture content.
+verdict: analyzed

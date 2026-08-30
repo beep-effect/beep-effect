@@ -10,9 +10,9 @@ closure has the user-approved FINISH disposition and rides the
 
 The re-run is recorded in
 [history/outputs/2026-07-14-proof-lane.md](./history/outputs/2026-07-14-proof-lane.md).
-Build, test, and type-test did not pass in this environment, so the packet is
-not yet ready for the driver to flip its lifecycle to `completed-retained`.
-Browser smoke evidence follows separately from the driver.
+The restricted-sandbox build and test failures were environment artifacts; the
+driver rerun passed every defined package lane, and the plan's `type-test` lane
+was reconciled as never defined. Browser smoke evidence is recorded separately.
 
 ## Overview
 

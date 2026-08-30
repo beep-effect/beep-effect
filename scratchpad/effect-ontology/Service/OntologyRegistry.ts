@@ -16,6 +16,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -27,6 +28,11 @@ import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/OntologyRegistry");
+const OntologyIdentifierType = LiteralKit(["id", "iri"]).pipe(
+  $I.annoteSchema("OntologyIdentifierType", {
+    description: "Registry fields that can identify an ontology lookup target.",
+  })
+);
 
 /**
  * Error types for registry operations
@@ -36,7 +42,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/OntologyRegistry");
  * ```ts
  * import { RegistryNotFoundError } from "@effect-ontology/Service/OntologyRegistry"
  *
- * console.log(RegistryNotFoundError)
+ * const error = RegistryNotFoundError.make({ path: "ontologies/registry.json" })
+ * console.log(error._tag) // "RegistryNotFoundError"
  * ```
  *
  * @category errors
@@ -59,12 +66,16 @@ export class RegistryNotFoundError extends S.TaggedError<RegistryNotFoundError>(
 /**
  * Provides the registry parse error service capability.
  *
- * **Example** (Inspect registry parse error)
+ * **Example** (Construct a parse error)
  *
  * ```ts
  * import { RegistryParseError } from "@effect-ontology/Service/OntologyRegistry"
  *
- * console.log(RegistryParseError)
+ * const error = RegistryParseError.make({
+ *   path: "ontologies/registry.json",
+ *   cause: new Error("Unexpected token")
+ * })
+ * console.log(error._tag) // "RegistryParseError"
  * ```
  *
  * @category errors
@@ -90,12 +101,16 @@ export class RegistryParseError extends S.TaggedError<RegistryParseError>($I`Reg
 /**
  * Provides the ontology not found error service capability.
  *
- * **Example** (Inspect ontology not found error)
+ * **Example** (Construct a not-found error)
  *
  * ```ts
  * import { OntologyNotFoundError } from "@effect-ontology/Service/OntologyRegistry"
  *
- * console.log(OntologyNotFoundError)
+ * const error = OntologyNotFoundError.make({
+ *   identifier: "core",
+ *   type: "id"
+ * })
+ * console.log(error._tag) // "OntologyNotFoundError"
  * ```
  *
  * @category errors
@@ -107,7 +122,7 @@ export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError>(
     identifier: S.String.annotateKey({
       description: "Ontology identifier or IRI that could not be resolved.",
     }),
-    type: S.Literals(["id", "iri"]).annotateKey({
+    type: OntologyIdentifierType.annotateKey({
       description: "Registry field used for the failed lookup.",
     }),
   },
@@ -120,7 +135,6 @@ export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError>(
 
 /**
  * Describes the registry error data exposed by this module.
- *
  *
  * @category type-level
  * @since 0.0.0
@@ -142,12 +156,18 @@ const DEFAULT_REGISTRY_PATH = "registry.json";
  * - Look up ontologies by ID or IRI
  * - Resolve ontology URIs to storage paths
  *
- * **Example** (Inspect ontology registry service)
+ * **Example** (Look up an ontology by id)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { OntologyRegistryService } from "@effect-ontology/Service/OntologyRegistry"
  *
- * console.log(OntologyRegistryService)
+ * const program = Effect.gen(function* () {
+ *   const registry = yield* OntologyRegistryService
+ *   return yield* registry.getById("core")
+ * }).pipe(Effect.provide(OntologyRegistryService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -182,7 +202,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
         return yield* RegistryNotFoundError.make({ path: registryPath });
       }
 
-      const registry = yield* S.decodeEffect(OntologyRegistryJson)(contentOpt.value).pipe(
+      const registry = yield* OntologyRegistryJson.decodeEffect(contentOpt.value).pipe(
         Effect.mapError((cause) => RegistryParseError.make({ path: registryPath, cause }))
       );
 

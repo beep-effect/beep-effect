@@ -1,0 +1,18 @@
+id: "fa:sched-core:006"
+hypothesis_ref: "dh:sched-core:006"
+identity_card_ref: "ic:sched-core:006"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "AdmissionPriority is one controlled vocabulary, while effectivePriorityRank is a separately versioned procedure."
+    still_viable: true
+  - label: "Effective queue priority is an anti-rigid role or phase of a queued request under elapsed-time context."
+    still_viable: true
+  - label: "All declarations are merely sorting codes and comparator implementation."
+    still_viable: false
+strongest_counterexample: "A request can retain the literal verify while its effective rank becomes publish-equivalent after aging, proving that recorded priority class and contextual rank are not one property."
+verdict: "explicitly_deferred"
+needed_evidence: "A governance or versioning artifact must show whether the priority domain and ranking-plus-aging rule are one specification or two independently revised information objects."

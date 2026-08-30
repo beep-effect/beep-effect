@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/codex-security-findings-2026-08-04",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 559,
   "mission": "Remediate and close the 27 Codex Cloud security findings captured on 2026-08-04.",
   "executionCapable": true,
   "reflectionRequired": true,

@@ -1,0 +1,24 @@
+id: so:sha256:e2049fc2602845d6ec4d550b782e9bcbbfad35b36a20bde28adad6127c700d0d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 445
+  end_line: 445
+  content_sha256: 491a12ab585037e12aaa0bee719bf45774e5f812864f75ce490fabafe3ea1508
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheResolutionOptions
+  lexical_name: TurboCacheResolutionOptions
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: TurboCacheResolutionOptions
+source_excerpt: 'type TurboCacheResolutionOptions = { readonly args: ReadonlyArray<string>; readonly ci:
+  boolean };'
+epistemic_status: parser_derived

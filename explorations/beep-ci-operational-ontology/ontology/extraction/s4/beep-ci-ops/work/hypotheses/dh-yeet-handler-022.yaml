@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:022"
+observation_refs:
+  - "so:sha256:474b46ca83be65473d5ec38e301c95d3cb12e30621aef841cc5fbf6f6fcb6531"
+  - "so:sha256:c3d449e25986005da7eb34c72bdfe428892c42ccf9b1fdae346137badaa8889e"
+cq_warrants: []
+proposed_referent:
+  label: "runProofPhase implementation and test alias"
+  description: "No domain-ontology referent is proposed for the runProofPhase implementation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification proof-phase procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show an implementation declaration and a test-facing alias. Aliasing executable code for tests does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

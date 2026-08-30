@@ -17,7 +17,7 @@
     "check": "bun run beep:check",
     "codegen": "echo 'no codegen needed'",
     "coverage": "bunx vitest run --coverage",
-    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",

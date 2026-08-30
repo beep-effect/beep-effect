@@ -1,0 +1,26 @@
+id: "dh:reporun:020"
+observation_refs:
+  - "so:sha256:e5889bf926cca97972fac66ac70522193133f1b1f529d136a45b8cde89356e33"
+  - "so:sha256:55c95d54d18f2b82756fa2bd7f23cc3fd7d294e693d77cea47f15b2d0196abfa"
+  - "so:sha256:7bca8384aafaad080a48a43b44f691e2010a51b931c2a92307236d308094d420"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo task telemetry entry"
+  description: "An information record carrying task identifiers and optional planning or run metadata inside a Turbo snapshot."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "WorkUnitSpecification represented by the task entry"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Transient DTO used only for lookup"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A transient Turbo snapshot DTO can hold task entries and a lookup helper can search them by task identifier; the cited declarations establish neither retained custody nor an operational consumer outside that lookup."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.7
+  use_for_acceptance: false

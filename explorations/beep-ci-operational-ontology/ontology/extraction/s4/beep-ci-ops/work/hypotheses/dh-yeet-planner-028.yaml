@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:028"
+observation_refs:
+  - "so:sha256:26dc2dfddb4f36a5cfc4bd75a83a43cd1d08cccd60728f4f6c009321582eefaa"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for YeetRunPlanModeOptions in Planner.ts"
+  description: "A possible referent suggested by the YeetRunPlanModeOptions schema declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::YeetRunPlanModeOptions"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Export and syntactic inheritance facts are equally true of a pure schema or data-transfer declaration; no supplied observation establishes an independently existing subject or information object."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

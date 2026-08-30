@@ -17,8 +17,10 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as ChildProcess from "effect/unstable/process/ChildProcess";
+import { readTurboCacheEnvironment } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
+import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
 import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import {
@@ -31,11 +33,34 @@ import {
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type { DocgenWorkspacePackage } from "./Operations.ts";
+import type { DocgenPackageAnalysis, DocgenWorkspacePackage } from "./Operations.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/Local");
+
+/**
+ * Render the missing-tag and category diagnostics shared by docgen checks.
+ *
+ * @param missingTags - Required JSDoc tags absent from the subject.
+ * @param categoryIssues - Invalid category diagnostics for the subject.
+ * @returns A semicolon-separated diagnostic summary.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderDocgenIssueText: {
+  (categoryIssues: ReadonlyArray<string>): (missingTags: ReadonlyArray<string>) => string;
+  (missingTags: ReadonlyArray<string>, categoryIssues: ReadonlyArray<string>): string;
+} = dual(2, (missingTags: ReadonlyArray<string>, categoryIssues: ReadonlyArray<string>): string =>
+  A.join(
+    [
+      ...(A.isReadonlyArrayEmpty(missingTags) ? A.empty() : [`missing ${A.join(missingTags, ", ")}`]),
+      ...(A.isReadonlyArrayEmpty(categoryIssues) ? A.empty() : [`invalid category: ${A.join(categoryIssues, "; ")}`]),
+    ],
+    "; "
+  )
+);
 
 const DEFAULT_LOCAL_PARALLEL = 1 as const;
 const DOCGEN_FULL_COMMAND = "bun run docgen" as const;
@@ -111,7 +136,7 @@ const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDr
 const decodeDocgenProcessDiagnostic = S.decodeUnknownOption(DocgenProcessDiagnostic);
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
-type DocgenLocalEnvironment = FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
+type DocgenLocalEnvironment = Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
 type DocgenLocalOptions = {
   readonly allowFull: boolean;
   readonly base: string;
@@ -395,30 +420,32 @@ const selectedPackageFromWorkspacePackage = (
     reasons,
   });
 
+const localTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" }));
+
 const turboArgsForSelectedPackages = (
   selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>,
   parallel: number
-): ReadonlyArray<string> => [
-  "turbo",
-  "run",
-  "docgen",
-  ...A.map(selectedPackages, turboFilterForPackage),
-  `--concurrency=${localParallel(parallel)}`,
-  "--summarize",
-  "--ui=stream",
-  // No background daemon: a daemon spawned inside this child survives it and
-  // holds process handles, which repeatedly kept the hosted Docgen lane's bun
-  // wrapper from exiting after successful runs (hang or SIGABRT at teardown).
-  // Turbo 2.10 dropped the `--daemon=false` value form (and no longer uses
-  // the daemon for `turbo run` at all); `--no-daemon` remains accepted.
-  "--no-daemon",
-];
+): ReadonlyArray<string> => {
+  const args = [
+    ...A.map(selectedPackages, turboFilterForPackage),
+    `--concurrency=${localParallel(parallel)}`,
+    "--summarize",
+    "--ui=stream",
+    // No background daemon: a daemon spawned inside this child survives it and
+    // holds process handles, which repeatedly kept the hosted Docgen lane's bun
+    // wrapper from exiting after successful runs (hang or SIGABRT at teardown).
+    // Turbo 2.10 dropped the `--daemon=false` value form (and no longer uses
+    // the daemon for `turbo run` at all); `--no-daemon` remains accepted.
+    "--no-daemon",
+  ];
+  return ["turbo", "run", "docgen", ...localTurboCacheArgs(args), ...args];
+};
 
-const fullTurboArgs = (parallel: number): ReadonlyArray<string> => [
-  "run",
-  "docgen",
-  `--concurrency=${localParallel(parallel)}`,
-];
+const fullTurboArgs = (parallel: number): ReadonlyArray<string> => {
+  const args = [`--concurrency=${localParallel(parallel)}`];
+  return ["run", "docgen", ...localTurboCacheArgs(args), ...args];
+};
 
 const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {
   yield* assertNoOrphanDocgenConfigPaths();
@@ -816,6 +843,24 @@ const renderPlanJson = Effect.fn("DocgenLocal.renderPlanJson")(function* (plan: 
   yield* Console.log(`${json}\n`);
 });
 
+const logDocumentationFailure = Effect.fn("DocgenLocal.logDocumentationFailure")(function* (
+  analysis: DocgenPackageAnalysis
+) {
+  yield* Console.error(
+    `docgen:local: ${analysis.packagePath} has ${analysis.summary.missingDocumentation} export(s) missing docgen metadata`
+  );
+  yield* Effect.forEach(
+    analysis.exports,
+    Effect.fnUntraced(function* (issue) {
+      const issueText = renderDocgenIssueText(issue.missingTags, issue.categoryIssues);
+      if (Str.isNonEmpty(issueText)) {
+        yield* Console.error(`  ${issue.filePath}:${issue.line} ${issue.name} ${issueText}`);
+      }
+    }),
+    { discard: true }
+  );
+});
+
 const checkPackageDocumentation = Effect.fn("DocgenLocal.checkPackageDocumentation")(function* (
   packages: ReadonlyArray<DocgenWorkspacePackage>,
   parallel: number
@@ -825,25 +870,7 @@ const checkPackageDocumentation = Effect.fn("DocgenLocal.checkPackageDocumentati
   });
   const failures = A.filter(analyses, (analysis) => analysis.summary.missingDocumentation > 0);
 
-  for (const analysis of failures) {
-    yield* Console.error(
-      `docgen:local: ${analysis.packagePath} has ${analysis.summary.missingDocumentation} export(s) missing docgen metadata`
-    );
-    for (const issue of analysis.exports) {
-      const issueText = A.join(
-        [
-          ...(issue.missingTags.length === 0 ? A.empty() : [`missing ${A.join(issue.missingTags, ", ")}`]),
-          ...(issue.categoryIssues.length === 0
-            ? A.empty()
-            : [`invalid category: ${A.join(issue.categoryIssues, "; ")}`]),
-        ],
-        "; "
-      );
-      if (Str.isNonEmpty(issueText)) {
-        yield* Console.error(`  ${issue.filePath}:${issue.line} ${issue.name} ${issueText}`);
-      }
-    }
-  }
+  yield* Effect.forEach(failures, logDocumentationFailure, { discard: true });
 
   if (A.isReadonlyArrayNonEmpty(failures)) {
     return yield* DomainError.make({
@@ -905,9 +932,8 @@ const directTurboArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string
 // 60-minute budget after 2m8s of real work (run 31991634069, and again on the
 // following push). The parent then sits in `runToExit` waiting on a child that
 // is already done, so the CLI's exit-on-success teardown never gets to run --
-// the stall is mid-program, not at exit, which is why the existing
-// `Exit.isSuccess -> process.exit(0)` fixes in bin-main.ts and the docgen bin
-// cannot help.
+// the stall is mid-program, not at exit, which is why the forced-exit
+// teardowns in bin-main.ts and the docgen bin cannot help.
 //
 // By the time turbo wedges, every task has succeeded and its output is on disk
 // and in .turbo/cache, so abandoning it and retrying costs seconds: the retry
@@ -1194,6 +1220,37 @@ export const buildDocgenLocalPlan: (
   return yield* buildDocgenLocalPlanWithRepoRoot(options, repoRoot);
 });
 
+const executeDocgenLocalPlan = Effect.fn("DocgenLocal.executeDocgenLocalPlan")(function* (
+  options: DocgenLocalOptions,
+  plan: DocgenLocalPlan,
+  repoRoot: string
+): Effect.fn.Return<DocgenLocalPlan, CliReportedExit | DomainError | NoSuchFileError, DocgenLocalEnvironment> {
+  if (options.plan) {
+    return yield* plan.mode === "full-required"
+      ? failWithReportedExit("docgen:local: full docgen proof required.")
+      : Effect.succeed(plan);
+  }
+  if (plan.mode === "full-required") {
+    if (!options.allowFull) {
+      yield* Console.error('docgen:local: full docgen proof required; re-run with "--full" to execute it.');
+      return yield* failWithReportedExit("docgen:local: full docgen proof required.");
+    }
+    yield* Console.log("docgen:local: full docgen proof required; executing it (--allow-full).");
+    yield* runFullDocgen(repoRoot, plan.parallel);
+    return plan;
+  }
+  if (plan.mode === "noop") {
+    yield* Console.log("docgen:local: no package-local docgen inputs changed");
+    return plan;
+  }
+  if (plan.mode === "full") {
+    yield* runFullDocgen(repoRoot, plan.parallel);
+    return plan;
+  }
+  yield* runScopedDocgen(plan, repoRoot);
+  return plan;
+});
+
 /**
  * Run the bounded local docgen proof.
  *
@@ -1238,33 +1295,5 @@ export const runDocgenLocal: (
       yield* renderPlan(plan);
     }
 
-    if (options.plan) {
-      if (plan.mode === "full-required") {
-        return yield* failWithReportedExit("docgen:local: full docgen proof required.");
-      }
-      return plan;
-    }
-
-    if (plan.mode === "full-required") {
-      if (options.allowFull) {
-        yield* Console.log("docgen:local: full docgen proof required; executing it (--allow-full).");
-        yield* runFullDocgen(repoRoot, plan.parallel);
-        return plan;
-      }
-      yield* Console.error('docgen:local: full docgen proof required; re-run with "--full" to execute it.');
-      return yield* failWithReportedExit("docgen:local: full docgen proof required.");
-    }
-
-    if (plan.mode === "noop") {
-      yield* Console.log("docgen:local: no package-local docgen inputs changed");
-      return plan;
-    }
-
-    if (plan.mode === "full") {
-      yield* runFullDocgen(repoRoot, plan.parallel);
-      return plan;
-    }
-
-    yield* runScopedDocgen(plan, repoRoot);
-    return plan;
+    return yield* executeDocgenLocalPlan(options, plan, repoRoot);
   });

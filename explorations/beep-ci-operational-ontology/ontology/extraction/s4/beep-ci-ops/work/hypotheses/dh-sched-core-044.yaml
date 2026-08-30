@@ -1,0 +1,19 @@
+id: "dh:sched-core:044"
+observation_refs:
+  - "so:sha256:c495d31259470046cae479195e2d33cc5f9d9060d01f169ae18f8ff2c382c478"
+  - "so:sha256:d4959d1413de730b430c9b1dae27647f01fb832631ac367a9bd3a12f4fd9ebc9"
+cq_warrants: []
+proposed_referent:
+  label: "quality-scheduler error representation"
+  description: "A typed runtime failure value and constructor-options shape used by the scheduler implementation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "information artifact describing an admission-coordination failure"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish typed error inheritance, a constructor member, and an optional exit code, all of which are compatible with runtime error plumbing without a stable failure-signature referent."
+epistemic_status: proposed
+confidence: {value: 0.96, use_for_acceptance: false}

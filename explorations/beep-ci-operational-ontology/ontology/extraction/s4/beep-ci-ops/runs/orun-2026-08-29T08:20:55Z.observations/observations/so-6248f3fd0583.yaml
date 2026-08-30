@@ -1,0 +1,23 @@
+id: so:sha256:6248f3fd0583cedb07a5caf1471ebf4555f059101d2baefb1b9a83ca748fd757
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 431
+  end_line: 447
+  content_sha256: 26e7d5a769a6a1758a2bef4e260cdfb64593cf458caaf448f37b853fc8b89901
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runVerifyMode
+  lexical_name: runVerifyMode
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runVerifyMode = Effect.fn("Yeet.runVerifyMode")(function* (
+epistemic_status: parser_derived

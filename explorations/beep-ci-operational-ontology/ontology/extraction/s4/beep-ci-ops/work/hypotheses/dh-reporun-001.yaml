@@ -1,0 +1,21 @@
+id: "dh:reporun:001"
+observation_refs:
+  - "so:sha256:06d78c51d68c7bd2b74826d41ef718f88bf0b787bd56113374260cc58149bbe0"
+cq_warrants: []
+proposed_referent:
+  label: "JobShape module identifier binding"
+  description: "The local identifier-factory binding used to annotate the JobShape implementation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Identifier for a repository-domain module"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only observed fact is an unrepresentable variable declaration for an identifier factory. It supplies no domain behavior or world-facing record semantics, so the implementation-only null stands."
+epistemic_status: proposed
+confidence:
+  value: 0.98
+  use_for_acceptance: false
+

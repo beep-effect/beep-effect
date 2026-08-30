@@ -1,0 +1,45 @@
+target: "otp:capacity-at-admission-tokens:001"
+target_sha256: "b1007dbe40d0ea8e3e8527c67a42981b790836c70832a9746908cdb6a665be18"
+chain_sha256: "f6c87f8db961c30a75001ebb1a0fad7a8d37ae80ccd5d921186dc6649061593a"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The data-property proposal asserts no parents edge; no is-a or subproperty
+    relation exists to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: property-quality-category-conflict
+    counterexample: >-
+      Admission attempts A1 and A2 can each expose a remainder of ten while
+      occurring at different pre-grant boundaries. The revised card analyzes
+      the data-property assertions, supplies no quality identity, and separates
+      them by grant occurrence, boundary, and token convention.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-term
+    counterexample: >-
+      Removing capacityAtAdmissionTokens makes CQ-010 unable to bind the
+      immediately pre-grant remainder or compare it with the admitted charge.
+      A post-grant value cannot substitute without reversing the intended audit.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      An ephemeral arithmetic value could be implementation-only, but it would
+      not preserve the cited operational boundary in which a candidate starts
+      only when its charge fits live capacity and a concurrent overshoot is
+      rolled back before work. The contextual capacity fact survives the null test.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:bd4d9d95ea3664e0b47b1f4d327e89339b981cbbdac3508b0ecd1853b610c278"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f"
+  - "CQ-010"

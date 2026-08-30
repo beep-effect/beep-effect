@@ -1,0 +1,23 @@
+id: "fa:worktree-config:007"
+hypothesis_ref: "dh:worktree-config:011"
+identity_card_ref: "ic:worktree-config:007"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Authoritative browser-QA plan information content"
+    still_viable: true
+  - label: "Abstract browser-QA procedure universal rather than one plan information object"
+    still_viable: true
+  - label: "Particular workflow-document token"
+    still_viable: true
+  - label: "Dated browser-QA execution"
+    still_viable: false
+strongest_counterexample: >-
+  One ordered browser-QA prescription can govern many concurrent or repeated
+  sessions, and each session has its own gestures, timing, evidence, and
+  judgment. A model that lets the reusable procedure unfold as one of those
+  sessions merges specification with execution.
+verdict: analyzed

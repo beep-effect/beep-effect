@@ -19,6 +19,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { Unknown } from "@beep/schema/Unknown";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
@@ -107,7 +108,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
           `biome check ${task.fixture} --reporter=json`,
         ],
         promptHash,
-        promptRef: normalizeRelativePath(taskPath),
+        promptRef: O.some(normalizeRelativePath(taskPath)),
         title: task.id,
       })
     ),
@@ -117,7 +118,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
           benchmarkCaseId: task.id,
           configSnapshotId: `skillopt-scorer-${configSnapshotDigest}`,
           elapsedMs,
-          note: recordNote(report),
+          note: O.some(recordNote(report)),
           passed: report.score >= 0.999,
           qualityGate:
             report.score >= 0.999 ? AiMetricsQualityGateStatus.Enum.passed : AiMetricsQualityGateStatus.Enum.failed,

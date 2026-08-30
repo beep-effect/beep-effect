@@ -1,0 +1,10 @@
+id: po:sha256:4038169163ebb2271b6ea2b74c8e75ad45c1abe88e7c573a9a299b743c837b3e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 74
+  end_line: 74
+quote: '@beep/architecture-lab-tables 73'
+epistemic_status: quoted_prose

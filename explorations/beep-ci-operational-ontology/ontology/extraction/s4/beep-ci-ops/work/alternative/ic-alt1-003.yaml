@@ -1,0 +1,34 @@
+id: "ic:alt1:003"
+hypothesis_ref: "dh:reporun:018"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two never-resume designations are the same iff they encode the same
+    fail-closed prescription: a planned step may not be skipped by conservative
+    fingerprint-match resume. The member spelling is reidentification evidence, never the
+    sameness criterion."
+  reidentification_key:
+    - "never"
+    - "RepoPlanStepResume"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one normative designation as a single information object, not a collection of rewritten
+    steps"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "quality"
+    - "mode"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "enforceConservativeResume rewrites non-candidate steps to carry never without
+      creating a new designation; if never were the step that was not resumed, every rewritten
+      plan step would be a new individual of this type. A particular execution that happened not
+      to be skipped is likewise not the designation."
+status: "proposed"

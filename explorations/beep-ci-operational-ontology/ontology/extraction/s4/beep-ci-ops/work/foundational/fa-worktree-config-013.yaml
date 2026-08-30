@@ -1,0 +1,23 @@
+id: "fa:worktree-config:013"
+hypothesis_ref: "dh:worktree-config:017"
+identity_card_ref: "ic:worktree-config:013"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Versioned Fallow dead-code plan information content"
+    still_viable: true
+  - label: "Dead-code procedure specification plus a separate boundary-severity policy"
+    still_viable: true
+  - label: "Inventory command-entry information object only"
+    still_viable: true
+  - label: "Dated dead-code diagnostic process"
+    still_viable: false
+strongest_counterexample: >-
+  Two configurations can give the same CLI command different effective rule
+  severities, while two runs under one configuration remain distinct
+  processes. Command equality therefore identifies neither the full procedure
+  specification nor any execution.
+verdict: analyzed

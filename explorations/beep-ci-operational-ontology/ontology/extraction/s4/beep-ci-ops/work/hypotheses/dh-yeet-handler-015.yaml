@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:015"
+observation_refs:
+  - "so:sha256:2d9485514adf5b58c4a125bf19746ea1daf349f249874e380bb722e1dd86c10b"
+cq_warrants: []
+proposed_referent:
+  label: "YeetBaseFreshness schema representation"
+  description: "No domain-ontology referent is proposed for the YeetBaseFreshness schema representation; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "base-divergence assessment record"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only an exported schema class and its syntactic base. Representation structure alone does not establish that instances are domain entities or governed information artifacts."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

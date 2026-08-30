@@ -1,0 +1,31 @@
+id: ic:alt4:004
+hypothesis_ref: dh:reporun:045
+identity:
+  supplies_identity: true
+  identity_criterion: Two captured-command timeout occurrences are the same when they are the same interruption episode of the same captured child after the same duration budget elapses; the tagged error value that reports the episode is evidence, never the criterion.
+  reidentification_key:
+    - CaptureCommandTimedOutError
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The race of capture against the duration budget together with the subsequent child interruption form one timeout episode.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - information_object
+    - situation
+  existential_dependencies:
+    - captured child process
+    - caller-supplied duration budget
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - interrupted
+    - reported-as-timed-out
+counterexamples:
+  - description: A capture that completes inside the budget produces no such occurrence even though the same error type exists in source.
+  - description: Constructing CaptureCommandTimedOutError in a test without racing a child is an information record, not this runtime episode.
+status: proposed

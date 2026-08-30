@@ -1,0 +1,23 @@
+id: so:sha256:ad120680e575c4c2c3796485798bf6ba91a9a901a640186409e26b07faaf1a3a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 767
+  end_line: 773
+  content_sha256: ade6627209ccb9158acbc1da478a529586435af9a8e82f6f74ed84972b64c218
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::encodeLeaseText
+  lexical_name: encodeLeaseText
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const encodeLeaseText = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

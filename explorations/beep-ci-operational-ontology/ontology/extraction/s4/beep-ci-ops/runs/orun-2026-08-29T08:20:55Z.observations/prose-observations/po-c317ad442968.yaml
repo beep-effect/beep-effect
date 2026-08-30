@@ -1,0 +1,10 @@
+id: po:sha256:c317ad442968f0cbbbcc25cc491452db0fffc71620b820dd71dec5165f7e6618
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: goals/ship-velocity/research/d1-admission-scheduler.md
+source_span:
+  start_line: 64
+  end_line: 64
+quote: 6. **Reap rule.** Only pid-dead or `/proc` starttime mismatch (SPEC D3); stale heartbeats
+epistemic_status: quoted_prose

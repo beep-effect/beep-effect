@@ -1,0 +1,24 @@
+id: "dh:cilane:016"
+observation_refs:
+  - "po:sha256:a8f77e9fd46db38914d5da73cc3454b202963dce718dee81db604c137fd92b28"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Nix verification lane"
+  description: "A possible operational verification lane named by the quoted nix token."
+representation_status: lexical_alias
+alternatives:
+  - label: "nix command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "Nix-environment verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotation records nix only as a list value. It does not say whether this denotes a shell, a flake check, a job, or merely a command branch, so no domain referent is discriminated."
+epistemic_status: proposed
+confidence:
+  value: 0.4
+  use_for_acceptance: false

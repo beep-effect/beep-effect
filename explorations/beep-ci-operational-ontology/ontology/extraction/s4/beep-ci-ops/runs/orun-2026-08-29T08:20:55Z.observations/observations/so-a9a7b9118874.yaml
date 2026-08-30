@@ -1,0 +1,24 @@
+id: so:sha256:a9a7b9118874a3a0b403ed198442c434e16df582a760e4a441c5d9c279ebe737
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 413
+  end_line: 413
+  content_sha256: f93ab2257d4fa72896fa51c27c18363843fbe9b25b5c6965493822885baa0b82
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::commandText
+  lexical_name: commandText
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command,
+  ...args], " ");'
+epistemic_status: parser_derived

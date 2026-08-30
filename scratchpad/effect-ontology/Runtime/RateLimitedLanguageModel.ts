@@ -162,14 +162,16 @@ const makeAiProtection = Effect.fn("RateLimitedAiClient.makeProtection")(functio
 /**
  *  Rate-limited Anthropic client adapter used before `AnthropicLanguageModel.make`.
  *
- * **Example** (Inspect rate limited anthropic client layer)
+ * **Example** (Select Anthropic when ConfigService.llm.provider is anthropic)
  *
  * ```ts
- * import { RateLimitedAnthropicClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
+ * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
  * console.log(RateLimitedAnthropicClientLayer)
  * ```
  *
+ * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.
+ * @see {@link RateLimitedOpenAiClientLayer} for the OpenAI sibling used when the configured vendor is openai.
  * @category layers
  * @since 0.0.0
  */
@@ -199,14 +201,16 @@ export const RateLimitedAnthropicClientLayer = Layer.effect(
 /**
  *  Rate-limited OpenAI client adapter used before `OpenAiLanguageModel.make`.
  *
- * **Example** (Inspect rate limited open ai client layer)
+ * **Example** (Select OpenAI when ConfigService.llm.provider is openai)
  *
  * ```ts
- * import { RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
+ * import { RateLimitedAnthropicClientLayer, RateLimitedOpenAiClientLayer } from "@effect-ontology/Runtime/RateLimitedLanguageModel"
  *
  * console.log(RateLimitedOpenAiClientLayer)
  * ```
  *
+ * @see {@link makeLanguageModelLayer} for the ConfigService-driven selector that provides this adapter.
+ * @see {@link RateLimitedAnthropicClientLayer} for the Anthropic sibling used when the configured vendor is anthropic.
  * @category layers
  * @since 0.0.0
  */

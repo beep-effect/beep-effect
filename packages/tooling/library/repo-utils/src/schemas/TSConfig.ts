@@ -10,15 +10,21 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
 import { JsoncTextToUnknown } from "@beep/schema/Jsonc";
-import { A, Str } from "@beep/utils";
-import { Cause, Effect, Exit, pipe, Result, SchemaGetter, SchemaIssue, Struct } from "effect";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as A from "@beep/utils/Array";
+import * as Eq from "@beep/utils/Equal";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
+import * as R from "@beep/utils/Record";
+import * as Str from "@beep/utils/Str";
+import * as Struct from "@beep/utils/Struct";
+import { thunkFalse, thunkTrue } from "@beep/utils/thunk";
+import { Cause, Effect, Exit, Result, SchemaGetter, SchemaIssue } from "effect";
+import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
-import { Model } from "effect/unstable/schema";
+import * as Model from "effect/unstable/schema/Model";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
 import type { DomainError } from "../errors/index.ts";
 
@@ -212,6 +218,10 @@ const TSConfigJsonKey = S.String.check(
 );
 
 const JsonRecord = S.Record(TSConfigJsonKey, S.Json).pipe(
+  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    empty: schema.make({}),
+  })),
   $I.annoteSchema("TSConfigJsonRecord", {
     description: "A JSON object used for open tsconfig extension points such as plugin extras and ts-node overrides.",
   })
@@ -250,10 +260,21 @@ const makeEncodedStruct = <Fields extends S.Struct.Fields>(fields: Fields) =>
 
 const emptyJsonRecord: Readonly<Record<string, S.Json>> = {};
 
-const mergeLooseJsonObject = <Value extends object>(
-  rest: Readonly<Record<string, S.Json>>,
-  value: Value
-): Readonly<Record<string, S.Json>> & Value => ({ ...rest, ...value });
+const mergeLooseJsonObject: {
+  <Value extends object>(
+    rest: Readonly<Record<string, S.Json>>,
+    value: Value
+  ): Readonly<Record<string, S.Json>> & Value;
+  <Value extends object>(
+    value: Value
+  ): (rest: Readonly<Record<string, S.Json>>) => Readonly<Record<string, S.Json>> & Value;
+} = dual(
+  2,
+  <Value extends object>(
+    rest: Readonly<Record<string, S.Json>>,
+    value: Value
+  ): Readonly<Record<string, S.Json>> & Value => ({ ...rest, ...value })
+);
 
 const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, name: string, description: string) => {
   const strict = S.Struct(fields);
@@ -272,7 +293,6 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
   >(S.StructWithRest(makeEncodedStruct(fields), [LooseRecord]).ast);
   const decodeStrict = S.decodeUnknownEffect(strict);
   const encodeStrict = S.encodeEffect(strict);
-  const decodeRest = S.decodeUnknownEffect(JsonRecord);
 
   const pickKnownKeys = <Value extends Readonly<Record<string, unknown>>>(value: Value) =>
     R.filter(value, (_value, key) => A.contains(knownKeys, key));
@@ -285,7 +305,9 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
         isLooseJsonRecord(input)
           ? Effect.zipWith(
               decodeStrict(pickKnownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
-              decodeRest(pickUnknownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
+              JsonRecord.decodeUnknownEffect(pickUnknownKeys(input), options).pipe(
+                Effect.mapError((error) => error.issue)
+              ),
               (decodedValue, decodedRest) => mergeLooseJsonObject(decodedRest, decodedValue)
             )
           : decodeStrict(input, options).pipe(
@@ -298,7 +320,7 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
           encodeStrict(pickKnownKeys(input) as typeof strict.Type, options).pipe(
             Effect.mapError((error) => error.issue)
           ),
-          decodeRest(pickUnknownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
+          JsonRecord.decodeUnknownEffect(pickUnknownKeys(input), options).pipe(Effect.mapError((error) => error.issue)),
           (encodedValue, encodedRest) => mergeLooseJsonObject(encodedRest, encodedValue)
         )
       ),
@@ -373,7 +395,7 @@ const nullableOptionalField = <Schema extends S.Top>(schema: Schema, name: strin
   Model.optionalOption(schema).pipe($I.annoteSchema(name, { description })).annotateKey({ description });
 
 const toOptionalValue = <Value>(value: O.Option<Value> | Value | null | undefined): O.Option<Value> => {
-  if (value === undefined || value === null) {
+  if (P.isNullish(value)) {
     return O.none();
   }
 
@@ -384,15 +406,15 @@ const isTrueOption = (value: O.Option<boolean> | boolean | null | undefined): bo
   pipe(
     toOptionalValue(value),
     O.match({
-      onNone: () => false,
-      onSome: (actual) => actual === true,
+      onNone: thunkFalse,
+      onSome: identity,
     })
   );
 
 const getTargetRank = (target: (typeof TARGET_VALUES)[number]): number =>
   pipe(
     TARGET_VALUES,
-    A.findFirstIndex((candidate) => candidate === target),
+    A.findFirstIndex(Eq.equals(target)),
     O.getOrElse(() => -1)
   );
 
@@ -1202,7 +1224,7 @@ const TSConfigCompilerOptionsChecks = S.makeFilterGroup(
         pipe(
           toOptionalValue(options.reactNamespace),
           O.match({
-            onNone: () => true,
+            onNone: thunkTrue,
             onSome: () =>
               pipe(
                 toOptionalValue(options.jsx),
@@ -1222,7 +1244,7 @@ const TSConfigCompilerOptionsChecks = S.makeFilterGroup(
         pipe(
           toOptionalValue(options.maxNodeModuleJsDepth),
           O.match({
-            onNone: () => true,
+            onNone: thunkTrue,
             onSome: () => isTrueOption(options.allowJs),
           })
         ),
@@ -1627,7 +1649,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * @since 0.0.0
    */
   static readonly decodeStrictResult = (input: unknown): Result.Result<TSConfig.Type, S.SchemaError> =>
-    Result.map(decodeTSConfigSemanticUnknownResult(input, strictDecodeOptions), (value) => TSConfig.make(value));
+    TSConfigSemantic.decodeUnknownResult(input, strictDecodeOptions);
 
   /**
    * Strictly decode an unknown value into `TSConfig`, preserving failures in an `Exit`.
@@ -1646,10 +1668,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * @since 0.0.0
    */
   static readonly decodeStrictExit = (input: unknown): Exit.Exit<TSConfig.Type, S.SchemaError> =>
-    pipe(
-      decodeTSConfigSemanticUnknownExit(input, strictDecodeOptions),
-      Exit.map((value) => TSConfig.make(value))
-    );
+    TSConfigSemantic.decodeUnknownExit(input, strictDecodeOptions);
 
   /**
    * Strictly decode an unknown value into `TSConfig` as an Effect.
@@ -1669,7 +1688,11 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * @since 0.0.0
    */
   static readonly decodeStrictEffect = (input: unknown): Effect.Effect<TSConfig.Type, S.SchemaError> =>
-    decodeTSConfigSemanticUnknownEffect(input, strictDecodeOptions).pipe(Effect.map((value) => TSConfig.make(value)));
+    TSConfigSemantic.decodeUnknownEffect(input, strictDecodeOptions).pipe(
+      // Not a trivial lambda: S.Class `make` runs `new this(...)`, so a bare
+      // `TSConfig.make` reference detaches `this` and throws at decode time.
+      Effect.map((decoded) => TSConfig.make(decoded))
+    );
 
   /**
    * Decode JSONC text into strict `TSConfig`.
@@ -1690,7 +1713,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
     "RepoUtils.TSConfig.decodeJsoncText"
   )(function* (input) {
     const parsed = yield* decodeJsoncUnknownText(input);
-    const decoded = yield* decodeTSConfigSemanticUnknownEffect(parsed, strictDecodeOptions);
+    const decoded = yield* TSConfigSemantic.decodeUnknownEffect(parsed, strictDecodeOptions);
     return TSConfig.make(decoded);
   });
 
@@ -1737,6 +1760,23 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
     const validated = yield* TSConfig.decodeStrictEffect(input);
     return yield* encodeTSConfigJsonStringEffect(validated);
   });
+
+  /**
+   * Decode `TSConfig` input to compact JSON text.
+   *
+   * **Example** (Encode compact JSON string)
+   *
+   * ```ts
+   * import { Effect } from "effect"
+   * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
+   * const json = Effect.runSync(TSConfig.decodeUnknownEffect({ compilerOptions: { strict: true } }))
+   * console.log(json.includes("\"strict\":true"))
+   * ```
+   *
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(TSConfig);
 }
 
 /**
@@ -1788,8 +1828,8 @@ const TSConfigSemanticChecks = S.makeFilterGroup(
           toOptionalValue(config["ts-node"]),
           O.flatMap((tsNode) => toOptionalValue(tsNode.experimentalReplAwait)),
           O.match({
-            onNone: () => true,
-            onSome: (enabled) => enabled === false || isTargetAtLeast(getCompilerTarget(config), "es2018"),
+            onNone: thunkTrue,
+            onSome: (enabled) => !enabled || isTargetAtLeast(getCompilerTarget(config), "es2018"),
           })
         ),
       {
@@ -1809,25 +1849,27 @@ const TSConfigSemanticChecks = S.makeFilterGroup(
 );
 
 const TSConfigSemantic = TSConfig.check(TSConfigSemanticChecks).pipe(
+  SchemaUtils.withResultCodecStatics,
+  SchemaUtils.withExitCodecStatics,
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("TSConfigSemantic", {
     description: "Strict tsconfig shape with cross-field semantic checks used by the decode helpers.",
   })
 );
 
-const decodeJsoncUnknownTextExit = S.decodeUnknownExit(JsoncTextToUnknown);
 const decodeJsoncUnknownText = (input: string): Effect.Effect<unknown, S.SchemaError> => {
-  const exit = decodeJsoncUnknownTextExit(input);
+  const exit = JsoncTextToUnknown.decodeUnknownExit(input);
 
   if (Exit.isSuccess(exit)) {
     return Effect.succeed(exit.value);
   }
 
-  const failure = Cause.findErrorOption(exit.cause);
-  return O.isSome(failure) ? Effect.fail(failure.value) : Effect.die(Cause.squash(exit.cause));
+  return Cause.findErrorOption(exit.cause).pipe(
+    O.map(Effect.fail),
+    O.getOrElse(() => pipe(exit.cause, Cause.squash, Effect.die))
+  );
 };
-const decodeTSConfigSemanticUnknownResult = S.decodeUnknownResult(TSConfigSemantic);
-const decodeTSConfigSemanticUnknownExit = S.decodeUnknownExit(TSConfigSemantic);
-const decodeTSConfigSemanticUnknownEffect = S.decodeUnknownEffect(TSConfigSemantic);
+
 const encodeTSConfigUnknownEffect = S.encodeUnknownEffect(TSConfig);
 const encodeTSConfigJsonStringEffect = S.encodeUnknownEffect(S.fromJsonString(TSConfig));
 

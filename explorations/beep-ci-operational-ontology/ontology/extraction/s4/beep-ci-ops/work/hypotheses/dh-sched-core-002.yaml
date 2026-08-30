@@ -1,0 +1,29 @@
+id: "dh:sched-core:002"
+observation_refs:
+  - "so:sha256:4ca539a7a3ef2f6716f98022b42a4b54032476fd6ca39745d1a1b2aa2e9cd150"
+  - "so:sha256:9d883e58d7914e411e29305aba63d9b50f0b29af985e462558a90e0b881c8bbd"
+  - "po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a"
+  - "po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe"
+  - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+  - "po:sha256:67896e490e18f6b629d0f7e95275f3bcf6a24af73eed3a479f3bfb6bb7636f01"
+  - "po:sha256:c317ad442968f0cbbbcc25cc491452db0fffc71620b820dd71dec5165f7e6618"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+cq_warrants: ["CQ-008", "CQ-009", "CQ-010"]
+proposed_referent:
+  label: "active admission-lease record"
+  description: "An information artifact recording an active grant under which heavy work is currently charged against admission capacity."
+representation_status: information_artifact
+alternatives:
+  - label: "the admission grant relation recorded by the lease"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "lease JSON used only for interprocess bookkeeping"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "Runtime evidence shows that a live lease is weighted and heartbeated, is subject to owner-liveness reaping, and can be rolled back when concurrent promotion overshoots capacity. Those governed transitions support the active admission-lease record as an information artifact; a separate world-side grant relator remains a foundational rival."
+  discriminator: "After admission the scheduler charges the lease's configured weight, refreshes its heartbeat, reaps it on owner-liveness failure, and rolls back a capacity overshoot."
+epistemic_status: proposed
+confidence: {value: 0.94, use_for_acceptance: false}

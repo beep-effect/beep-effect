@@ -1,0 +1,39 @@
+id: ic:alt2:001
+hypothesis_ref: dh:reporun:003
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two runner-loss job-shape situations are the same iff they are the same obtaining of one failed GitHub job whose recorded
+    step list is nonempty and every step conclusion is absent; the runner-loss member is evidence of classification rather
+    than the sameness of that obtaining.
+  reidentification_key:
+  - GithubJobShapeClass.runner-loss
+  - GithubJobRecord for the matching job
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: One obtaining per GitHub job occurrence that satisfies the failed-and-no-step-conclusions conjunction.
+  dependence: relational
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+  - information_object
+  - event
+  existential_dependencies:
+  - GithubJobRecord
+  - recorded step list
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - job record rewritten with step conclusions
+  - job no longer classified as failure
+counterexamples:
+- description: >-
+    An empty step list is refused by the classifier, so a failed job with no steps is not this situation even if the runner
+    also vanished.
+- description: >-
+    A failed job in which any one step has a conclusion is a different configuration; sharing the runner-loss label after
+    a later reclassify would not make those two obtainings the same.
+status: proposed

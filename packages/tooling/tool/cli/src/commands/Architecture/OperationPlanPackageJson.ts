@@ -12,6 +12,14 @@ import { Effect, pipe } from "effect";
 import * as R from "effect/Record";
 import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.ts";
 
+const isRootExportSubpath = (subpath: string): boolean => subpath === ".";
+const isServerLayerExportSubpath = (role: ArchitecturePackageRole, subpath: string): boolean =>
+  role === "server" && subpath === "./layer";
+const isWildcardExportSubpath = Str.endsWith("/*");
+const domainDirectoryExportSubpaths = A.make("./aggregates", "./entities", "./identity", "./values");
+const isDomainDirectoryExportSubpath = (role: ArchitecturePackageRole, subpath: string): boolean =>
+  role === "domain" && A.some(domainDirectoryExportSubpaths, (candidate) => candidate === subpath);
+
 const packageExportEntrypointFor = (
   role: ArchitecturePackageRole,
   subpath: string,
@@ -20,15 +28,12 @@ const packageExportEntrypointFor = (
 ): string => {
   const strippedSubpath = Str.replace("./", "")(subpath);
 
-  if (subpath === ".") return `./${outDir}/index.${extension}`;
-  if (subpath === "./layer" && role === "server") return `./${outDir}/Layer.${extension}`;
-  if (Str.endsWith("/*")(subpath)) {
+  if (isRootExportSubpath(subpath)) return `./${outDir}/index.${extension}`;
+  if (isServerLayerExportSubpath(role, subpath)) return `./${outDir}/Layer.${extension}`;
+  if (isWildcardExportSubpath(subpath)) {
     return `./${outDir}/${Str.replace("/*", `/*/index.${extension}`)(strippedSubpath)}`;
   }
-  if (
-    role === "domain" &&
-    (subpath === "./aggregates" || subpath === "./entities" || subpath === "./identity" || subpath === "./values")
-  ) {
+  if (isDomainDirectoryExportSubpath(role, subpath)) {
     return `./${outDir}/${strippedSubpath}/index.${extension}`;
   }
   return `./${outDir}/${strippedSubpath}.${extension}`;
@@ -113,7 +118,7 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
       build: "bun run beep:build",
       check: "bun run beep:check",
       coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-      docgen: "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+      docgen: "bunx --bun --no-install docgen",
       lint: "bun run beep:lint",
       "lint:fix": "bun run beep:lint:fix",
       test: "bun run beep:test",

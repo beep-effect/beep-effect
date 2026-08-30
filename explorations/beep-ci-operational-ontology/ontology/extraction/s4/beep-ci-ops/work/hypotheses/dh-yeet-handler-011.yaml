@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:011"
+observation_refs:
+  - "so:sha256:257909ab7672d6dbd61213ca4c93b38370757033c2cbef3b2c8d9f2a61e8d364"
+  - "so:sha256:9d668fe405304915bb6779bc796963c4bd5a692b7bb7d222f2deb9bae557545c"
+cq_warrants: []
+proposed_referent:
+  label: "runMonitorCheckWatch implementation and test alias"
+  description: "No domain-ontology referent is proposed for the runMonitorCheckWatch implementation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "hosted-check monitoring procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show an implementation declaration and a test-facing alias. Aliasing executable code for tests does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

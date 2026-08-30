@@ -1,0 +1,35 @@
+# CQ-019: Does any subject trust the affected set of a fail-open computation — and does any verification evidence or schedule proposal carry a narrowed scope (materialized OR derived through its steps' WorkUnits) without scope provenance, or a provenance edge pointing at a non-computation? (must be zero on all arms)
+# Expected: zero_rows | priority: must_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?subject ?violation WHERE {
+  {
+    ?computation ciops:hasAffectedOutcome ?failureMode .
+    ?failureMode a ciops:FailOpenOutcome .
+    ?subject ciops:scopedByComputation ?computation .
+    BIND("fail-open-trust" AS ?violation)
+  }
+  UNION
+  {
+    VALUES ?stype { ciops:VerificationEvidence ciops:ScheduleProposal }
+    ?subject a ?stype ; ciops:hasScope ?scope .
+    FILTER (?scope != ciops:FullRepoScope)
+    FILTER NOT EXISTS { ?subject ciops:scopedByComputation ?comp }
+    BIND("scope-provenance-gap" AS ?violation)
+  }
+  UNION
+  {
+    ?subject a ciops:ScheduleProposal ; ciops:hasStep ?st .
+    ?st ciops:schedulesWorkUnit ?swu .
+    ?swu ciops:hasScope ?sscope .
+    FILTER (?sscope != ciops:FullRepoScope)
+    FILTER NOT EXISTS { ?subject ciops:scopedByComputation ?c2 }
+    BIND("derived-scope-provenance-gap" AS ?violation)
+  }
+  UNION
+  {
+    ?subject ciops:scopedByComputation ?target .
+    FILTER NOT EXISTS { ?target ciops:hasAffectedOutcome ?outcome }
+    BIND("dangling-provenance-target" AS ?violation)
+  }
+}

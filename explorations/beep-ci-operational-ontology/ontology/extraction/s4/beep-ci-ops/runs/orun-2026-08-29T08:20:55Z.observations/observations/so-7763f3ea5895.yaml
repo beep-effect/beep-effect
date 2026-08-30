@@ -1,0 +1,27 @@
+id: so:sha256:7763f3ea5895c3078de604d4b0cb5dce9a0a991089d73d3e755dbdb6c5403591
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 164
+  end_line: 168
+  content_sha256: b038f31efb7e76486e5bf7267dc57527f9e34f1fd42ef6e9e995942c33d7c3a0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetOutcome
+  lexical_name: YeetOutcome
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: failure
+- predicate: declares_literal_member
+  object: success
+- predicate: exports_symbol
+  object: YeetOutcome
+source_excerpt: export const YeetOutcome = LiteralKit(["success", "failure"]).pipe(
+epistemic_status: parser_derived

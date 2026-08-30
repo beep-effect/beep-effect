@@ -14,6 +14,14 @@
  * `Schema.TaggedClass` lose their constructor identity when piped, so concrete
  * classes should attach the same statics in-body.
  *
+ * **Gotchas**
+ *
+ * Attaching to a schema that already carries statics under the same keys
+ * follows the {@link withStatics} collision policy: an identical value is
+ * skipped, a configurable property is replaced last-write-wins, and a
+ * non-configurable property holding a different value throws a tagged
+ * `WithStaticsStaticRedefinitionError`.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -107,19 +115,74 @@ export interface SharedCodecStatics<Sch extends S.Constraint> {
  * @since 0.0.0
  */
 export interface SyncCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
+  /**
+   * Decode input already typed as the schema's `Encoded` type, throwing
+   * `SchemaError` on mismatch. For trusted boundaries where a mismatch is a
+   * programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly decodeSync: ReturnType<typeof S.decodeSync<Sch>>;
+  /**
+   * Parse a JSON string first, then decode the parsed value, throwing
+   * `SchemaError` when parsing or decoding fails. For trusted boundaries where
+   * a mismatch is a programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly decodeSyncFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeSync<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Decode an unknown value, throwing `SchemaError` on mismatch. For trusted
+   * boundaries where a mismatch is a programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownSync: ReturnType<typeof S.decodeUnknownSync<Sch>>;
+  /**
+   * Parse an unknown input as a JSON string first, then decode the parsed
+   * value, throwing `SchemaError` when the input is not a JSON string or the
+   * parsed value mismatches. For trusted boundaries where a mismatch is a
+   * programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownSyncFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeUnknownSync<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode a decoded value to the schema's `Encoded` type, throwing
+   * `SchemaError` on mismatch. For trusted boundaries where a mismatch is a
+   * programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly encodeSync: ReturnType<typeof S.encodeSync<Sch>>;
+  /**
+   * Encode a decoded value, then stringify the encoded result to a JSON
+   * string, throwing `SchemaError` on mismatch. For trusted boundaries where a
+   * mismatch is a programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly encodeSyncFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeSync<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode an unknown value, throwing `SchemaError` on mismatch. For trusted
+   * boundaries where a mismatch is a programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownSync: ReturnType<typeof S.encodeUnknownSync<Sch>>;
+  /**
+   * Encode an unknown value, then stringify the encoded result to a JSON
+   * string, throwing `SchemaError` on mismatch. For trusted boundaries where a
+   * mismatch is a programmer error.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownSyncFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeUnknownSync<JsonStringCodec<Sch>>>
   >;
@@ -134,19 +197,68 @@ export interface SyncCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends Sha
  * @since 0.0.0
  */
 export interface PromiseCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
+  /**
+   * Decode input already typed as the schema's `Encoded` type, returning a
+   * `Promise` that rejects with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly decodePromise: ReturnType<typeof S.decodePromise<Sch>>;
+  /**
+   * Parse a JSON string first, then decode the parsed value, returning a
+   * `Promise` that rejects with `SchemaError` when parsing or decoding fails.
+   *
+   * @since 0.0.0
+   */
   readonly decodePromiseFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodePromise<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Decode an unknown value, returning a `Promise` that rejects with
+   * `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownPromise: ReturnType<typeof S.decodeUnknownPromise<Sch>>;
+  /**
+   * Parse an unknown input as a JSON string first, then decode the parsed
+   * value, returning a `Promise` that rejects with `SchemaError` when the
+   * input is not a JSON string or the parsed value mismatches.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownPromiseFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeUnknownPromise<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode a decoded value to the schema's `Encoded` type, returning a
+   * `Promise` that rejects with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodePromise: ReturnType<typeof S.encodePromise<Sch>>;
+  /**
+   * Encode a decoded value, then stringify the encoded result to a JSON
+   * string, returning a `Promise` that rejects with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodePromiseFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodePromise<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode an unknown value, returning a `Promise` that rejects with
+   * `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownPromise: ReturnType<typeof S.encodeUnknownPromise<Sch>>;
+  /**
+   * Encode an unknown value, then stringify the encoded result to a JSON
+   * string, returning a `Promise` that rejects with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownPromiseFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeUnknownPromise<JsonStringCodec<Sch>>>
   >;
@@ -161,19 +273,68 @@ export interface PromiseCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends 
  * @since 0.0.0
  */
 export interface EffectCodecStatics<Sch extends EffectCapableCodec<Sch>> extends SharedCodecStatics<Sch> {
+  /**
+   * Decode input already typed as the schema's `Encoded` type into an `Effect`
+   * that fails with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly decodeEffect: ReturnType<typeof S.decodeEffect<Sch>>;
+  /**
+   * Parse a JSON string first, then decode the parsed value into an `Effect`
+   * that fails with `SchemaError` when parsing or decoding fails.
+   *
+   * @since 0.0.0
+   */
   readonly decodeEffectFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeEffect<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Decode an unknown value into an `Effect` that fails with `SchemaError` on
+   * mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownEffect: ReturnType<typeof S.decodeUnknownEffect<Sch>>;
+  /**
+   * Parse an unknown input as a JSON string first, then decode the parsed
+   * value into an `Effect` that fails with `SchemaError` when the input is not
+   * a JSON string or the parsed value mismatches.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownEffectFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeUnknownEffect<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode a decoded value to the schema's `Encoded` type in an `Effect` that
+   * fails with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodeEffect: ReturnType<typeof S.encodeEffect<Sch>>;
+  /**
+   * Encode a decoded value, then stringify the encoded result to a JSON string
+   * in an `Effect` that fails with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodeEffectFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeEffect<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode an unknown value in an `Effect` that fails with `SchemaError` on
+   * mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownEffect: ReturnType<typeof S.encodeUnknownEffect<Sch>>;
+  /**
+   * Encode an unknown value, then stringify the encoded result to a JSON
+   * string in an `Effect` that fails with `SchemaError` on mismatch.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownEffectFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeUnknownEffect<JsonStringCodec<Sch>>>
   >;
@@ -188,19 +349,68 @@ export interface EffectCodecStatics<Sch extends EffectCapableCodec<Sch>> extends
  * @since 0.0.0
  */
 export interface ExitCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
+  /**
+   * Decode input already typed as the schema's `Encoded` type, capturing
+   * success or a `SchemaError` failure as an `Exit` without throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeExit: ReturnType<typeof S.decodeExit<Sch>>;
+  /**
+   * Parse a JSON string first, then decode the parsed value, capturing parse
+   * and decode failures as a failed `Exit` instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeExitFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeExit<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Decode an unknown value, capturing success or a `SchemaError` failure as
+   * an `Exit` without throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownExit: ReturnType<typeof S.decodeUnknownExit<Sch>>;
+  /**
+   * Parse an unknown input as a JSON string first, then decode the parsed
+   * value, capturing parse and decode failures as a failed `Exit` instead of
+   * throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownExitFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeUnknownExit<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode a decoded value to the schema's `Encoded` type, capturing success
+   * or a `SchemaError` failure as an `Exit` without throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeExit: ReturnType<typeof S.encodeExit<Sch>>;
+  /**
+   * Encode a decoded value, then stringify the encoded result to a JSON
+   * string, capturing failures as a failed `Exit` instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeExitFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeExit<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode an unknown value, capturing success or a `SchemaError` failure as
+   * an `Exit` without throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownExit: ReturnType<typeof S.encodeUnknownExit<Sch>>;
+  /**
+   * Encode an unknown value, then stringify the encoded result to a JSON
+   * string, capturing failures as a failed `Exit` instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownExitFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeUnknownExit<JsonStringCodec<Sch>>>
   >;
@@ -215,19 +425,68 @@ export interface ExitCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends Sha
  * @since 0.0.0
  */
 export interface OptionCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
+  /**
+   * Decode input already typed as the schema's `Encoded` type, returning
+   * `None` on schema mismatch instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeOption: ReturnType<typeof S.decodeOption<Sch>>;
+  /**
+   * Parse a JSON string first, then decode the parsed value, returning `None`
+   * when parsing or decoding fails.
+   *
+   * @since 0.0.0
+   */
   readonly decodeOptionFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeOption<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Decode an unknown value, returning `None` on schema mismatch instead of
+   * throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownOption: ReturnType<typeof S.decodeUnknownOption<Sch>>;
+  /**
+   * Parse an unknown input as a JSON string first, then decode the parsed
+   * value, returning `None` when the input is not a JSON string or the parsed
+   * value mismatches.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownOptionFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeUnknownOption<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode a decoded value to the schema's `Encoded` type, returning `None` on
+   * schema mismatch instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeOption: ReturnType<typeof S.encodeOption<Sch>>;
+  /**
+   * Encode a decoded value, then stringify the encoded result to a JSON
+   * string, returning `None` on failure.
+   *
+   * @since 0.0.0
+   */
   readonly encodeOptionFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeOption<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode an unknown value, returning `None` on schema mismatch instead of
+   * throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownOption: ReturnType<typeof S.encodeUnknownOption<Sch>>;
+  /**
+   * Encode an unknown value, then stringify the encoded result to a JSON
+   * string, returning `None` on failure.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownOptionFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeUnknownOption<JsonStringCodec<Sch>>>
   >;
@@ -242,19 +501,68 @@ export interface OptionCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends S
  * @since 0.0.0
  */
 export interface ResultCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
+  /**
+   * Decode input already typed as the schema's `Encoded` type, returning a
+   * failed `Result` carrying `SchemaError` on mismatch instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeResult: ReturnType<typeof S.decodeResult<Sch>>;
+  /**
+   * Parse a JSON string first, then decode the parsed value, returning a
+   * failed `Result` carrying `SchemaError` when parsing or decoding fails.
+   *
+   * @since 0.0.0
+   */
   readonly decodeResultFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeResult<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Decode an unknown value, returning a failed `Result` carrying
+   * `SchemaError` on mismatch instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownResult: ReturnType<typeof S.decodeUnknownResult<Sch>>;
+  /**
+   * Parse an unknown input as a JSON string first, then decode the parsed
+   * value, returning a failed `Result` carrying `SchemaError` when the input
+   * is not a JSON string or the parsed value mismatches.
+   *
+   * @since 0.0.0
+   */
   readonly decodeUnknownResultFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.decodeUnknownResult<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode a decoded value to the schema's `Encoded` type, returning a failed
+   * `Result` carrying `SchemaError` on mismatch instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeResult: ReturnType<typeof S.encodeResult<Sch>>;
+  /**
+   * Encode a decoded value, then stringify the encoded result to a JSON
+   * string, returning a failed `Result` carrying `SchemaError` on failure.
+   *
+   * @since 0.0.0
+   */
   readonly encodeResultFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeResult<JsonStringCodec<Sch>>>
   >;
+  /**
+   * Encode an unknown value, returning a failed `Result` carrying
+   * `SchemaError` on mismatch instead of throwing.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownResult: ReturnType<typeof S.encodeUnknownResult<Sch>>;
+  /**
+   * Encode an unknown value, then stringify the encoded result to a JSON
+   * string, returning a failed `Result` carrying `SchemaError` on failure.
+   *
+   * @since 0.0.0
+   */
   readonly encodeUnknownResultFromJsonString: ConfigurableJsonStringRunner<
     ReturnType<typeof S.encodeUnknownResult<JsonStringCodec<Sch>>>
   >;

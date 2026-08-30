@@ -1,0 +1,23 @@
+id: fa:alt3:004
+hypothesis_ref: dh:reporun:044
+identity_card_ref: ic:alt3:004
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'event: the occurrence that the capture is still open after the full deadline'
+  still_viable: true
+- label: 'situation: the persisting open-pipe condition after child exit'
+  still_viable: true
+- label: 'information_object: CapturePipeWedgedError as the report'
+  still_viable: true
+strongest_counterexample: capturePipeDeadline waits through CAPTURE_DRAIN_GRACE and CAPTURE_REAP_GRACE
+  and only then dies with CapturePipeWedgedError. The error object can be constructed without
+  any pipe being open, so the tagged value is not the occurrence.
+verdict: analyzed
+needed_evidence: Whether the wedge is punctual at the die() instant (event) or the open-pipe
+  condition throughout the grace windows (situation). A probe of when the write-end holder
+  exists relative to the die() would discriminate. The tagged-error reading is already split
+  by the deadline's temporal guards.

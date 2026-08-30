@@ -80,13 +80,28 @@ const GenerationOptionsShape = S.Struct({
 /**
  * Retrieved entity with its fused relevance and exact graph distance.
  *
- * **Example** (Reject an incomplete scored node)
+ * **Example** (Construct a seed scored node)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { IRI } from "@beep/rdf"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { Entity } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  * import { ScoredNode } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(S.is(ScoredNode)({})) // false
+ * const node = ScoredNode.make({
+ *   entity: Entity.make({
+ *     id: EntityId.make("ada"),
+ *     mention: "Ada",
+ *     types: [IRI.make("https://schema.org/Person")]
+ *   }),
+ *   score: Confidence.make(0.9),
+ *   hopDistance: NonNegativeInt.make(0),
+ *   isSeed: true
+ * })
+ * console.log(node.isSeed) // true
+ * console.log(node.hopDistance) // 0
  * ```
  *
  * @category models
@@ -181,13 +196,51 @@ export type RetrievalOptionsInput = (typeof RetrievalOptions)["~type.make.in"];
 /**
  * Complete retrieval output used to ground a generated answer.
  *
- * **Example** (Reject an incomplete retrieval result)
+ * **Example** (Construct a one-seed retrieval result)
  *
  * ```ts
- * import * as S from "effect/Schema"
- * import { RetrievalResult } from "@effect-ontology/Service/GraphRAG"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { IRI } from "@beep/rdf"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { Entity } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { RetrievalResult, RetrievalStats, ScoredNode } from "@effect-ontology/Service/GraphRAG"
+ * import { Subgraph } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * console.log(S.is(RetrievalResult)({})) // false
+ * const ada = Entity.make({
+ *   id: EntityId.make("ada"),
+ *   mention: "Ada",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const result = RetrievalResult.make({
+ *   subgraph: Subgraph.make({
+ *     nodes: [ada],
+ *     edges: [],
+ *     centerNodes: [ada.id],
+ *     depth: NonNegativeInt.make(0),
+ *     distances: []
+ *   }),
+ *   scoredNodes: [
+ *     ScoredNode.make({
+ *       entity: ada,
+ *       score: Confidence.make(0.9),
+ *       hopDistance: NonNegativeInt.make(0),
+ *       isSeed: true
+ *     })
+ *   ],
+ *   context: "Ada wrote Notes.",
+ *   query: "Who is Ada?",
+ *   stats: RetrievalStats.make({
+ *     seedCount: NonNegativeInt.make(1),
+ *     nodeCount: NonNegativeInt.make(1),
+ *     edgeCount: NonNegativeInt.make(0),
+ *     hops: NonNegativeInt.make(0),
+ *     avgScore: Confidence.make(0.9)
+ *   })
+ * })
+ * console.log(result.query) // "Who is Ada?"
+ * console.log(result.subgraph.nodes.length) // 1
+ * console.log(result.stats.hops) // 0
  * ```
  *
  * @category models
@@ -326,13 +379,57 @@ export type FormatContextOptionsInput = (typeof FormatContextOptions)["~type.mak
 /**
  * Grounded language-model answer whose citations are canonical entity IDs.
  *
- * **Example** (Reject an incomplete grounded answer)
+ * **Example** (Cite a retrieved seed entity)
  *
  * ```ts
- * import * as S from "effect/Schema"
- * import { GroundedAnswer } from "@effect-ontology/Service/GraphRAG"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { IRI } from "@beep/rdf"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { Entity } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { GroundedAnswer, RetrievalResult, RetrievalStats, ScoredNode } from "@effect-ontology/Service/GraphRAG"
+ * import { Subgraph } from "@effect-ontology/Service/SubgraphExtractor"
  *
- * console.log(S.is(GroundedAnswer)({})) // false
+ * const ada = Entity.make({
+ *   id: EntityId.make("ada"),
+ *   mention: "Ada",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const retrieval = RetrievalResult.make({
+ *   subgraph: Subgraph.make({
+ *     nodes: [ada],
+ *     edges: [],
+ *     centerNodes: [ada.id],
+ *     depth: NonNegativeInt.make(0),
+ *     distances: []
+ *   }),
+ *   scoredNodes: [
+ *     ScoredNode.make({
+ *       entity: ada,
+ *       score: Confidence.make(0.9),
+ *       hopDistance: NonNegativeInt.make(0),
+ *       isSeed: true
+ *     })
+ *   ],
+ *   context: "Ada wrote Notes.",
+ *   query: "Who is Ada?",
+ *   stats: RetrievalStats.make({
+ *     seedCount: NonNegativeInt.make(1),
+ *     nodeCount: NonNegativeInt.make(1),
+ *     edgeCount: NonNegativeInt.make(0),
+ *     hops: NonNegativeInt.make(0),
+ *     avgScore: Confidence.make(0.9)
+ *   })
+ * })
+ * const answer = GroundedAnswer.make({
+ *   answer: "Ada is the retrieved person seed.",
+ *   citations: [ada.id],
+ *   confidence: Confidence.make(0.9),
+ *   reasoning: "The subgraph contains only the Ada seed.",
+ *   retrieval
+ * })
+ * console.log(answer.citations) // ["ada"]
+ * console.log(answer.retrieval.subgraph.nodes.length) // 1
  * ```
  *
  * @category models
@@ -354,13 +451,36 @@ export class GroundedAnswer extends S.Class<GroundedAnswer>($I`GroundedAnswer`)(
 /**
  * One directed knowledge-graph relation in an answer explanation path.
  *
- * **Example** (Reject an incomplete reasoning step)
+ * **Example** (Walk one authorship step)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { IRI } from "@beep/rdf"
+ * import { Entity, Relation, RelationObject } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  * import { ReasoningStep } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(S.is(ReasoningStep)({})) // false
+ * const ada = Entity.make({
+ *   id: EntityId.make("ada"),
+ *   mention: "Ada",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const notes = Entity.make({
+ *   id: EntityId.make("notes"),
+ *   mention: "Notes",
+ *   types: [IRI.make("https://schema.org/CreativeWork")]
+ * })
+ * const step = ReasoningStep.make({
+ *   from: ada,
+ *   relation: Relation.make({
+ *     subjectId: ada.id,
+ *     predicate: IRI.make("https://schema.org/author"),
+ *     object: RelationObject.cases.EntityReference.make({ value: notes.id })
+ *   }),
+ *   to: notes,
+ *   explanation: "Ada authored Notes."
+ * })
+ * console.log(step.from.id) // "ada"
+ * console.log(step.to.id) // "notes"
  * ```
  *
  * @category models
@@ -381,13 +501,44 @@ export class ReasoningStep extends S.Class<ReasoningStep>($I`ReasoningStep`)(
 /**
  * Complete path-based derivation for a grounded answer.
  *
- * **Example** (Reject an incomplete reasoning trace)
+ * **Example** (Trace a one-step authorship path)
  *
  * ```ts
- * import * as S from "effect/Schema"
- * import { ReasoningTrace } from "@effect-ontology/Service/GraphRAG"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { IRI } from "@beep/rdf"
+ * import { Entity, Relation, RelationObject } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { ReasoningStep, ReasoningTrace } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(S.is(ReasoningTrace)({})) // false
+ * const ada = Entity.make({
+ *   id: EntityId.make("ada"),
+ *   mention: "Ada",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const notes = Entity.make({
+ *   id: EntityId.make("notes"),
+ *   mention: "Notes",
+ *   types: [IRI.make("https://schema.org/CreativeWork")]
+ * })
+ * const step = ReasoningStep.make({
+ *   from: ada,
+ *   relation: Relation.make({
+ *     subjectId: ada.id,
+ *     predicate: IRI.make("https://schema.org/author"),
+ *     object: RelationObject.cases.EntityReference.make({ value: notes.id })
+ *   }),
+ *   to: notes,
+ *   explanation: "Ada authored Notes."
+ * })
+ * const trace = ReasoningTrace.make({
+ *   steps: [step],
+ *   explanation: "Ada is connected to Notes by authorship.",
+ *   confidence: Confidence.make(0.9),
+ *   query: "What did Ada write?",
+ *   involvedEntities: [ada.id, notes.id]
+ * })
+ * console.log(trace.steps.length) // 1
+ * console.log(trace.involvedEntities) // ["ada", "notes"]
  * ```
  *
  * @category models
@@ -501,13 +652,6 @@ const ReasoningTraceOutput = S.Struct({
 
 /**
  * Effectful GraphRAG service with natural data-first and data-last methods.
- *
- * **Example** (Select the retrieval operation)
- * ```ts
- * import type { GraphRAGService } from "@effect-ontology/Service/GraphRAG"
- * const operation: keyof GraphRAGService = "retrieve"
- * console.log(operation) // "retrieve"
- * ```
  *
  * @category services
  * @since 0.0.0
@@ -858,9 +1002,15 @@ const mapGenerationError =
  * **Example** (Access the GraphRAG service tag)
  *
  * ```ts
- * import { GraphRAG } from "@effect-ontology/Service/GraphRAG"
+ * import { Effect } from "effect"
+ * import { GraphRAG, GraphRAGDefault } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(GraphRAG.key)
+ * const program = Effect.gen(function* () {
+ *   const rag = yield* GraphRAG
+ *   return rag
+ * }).pipe(Effect.provide(GraphRAGDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -1120,9 +1270,15 @@ ${stepsDescription}`,
  *
  * ```ts
  * import { Layer } from "effect"
- * import { GraphRAGDefault } from "@effect-ontology/Service/GraphRAG"
+ * import { Effect } from "effect"
+ * import { GraphRAG, GraphRAGDefault } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(Layer.isLayer(GraphRAGDefault)) // true
+ * const program = Effect.gen(function* () {
+ *   const rag = yield* GraphRAG
+ *   return rag
+ * }).pipe(Effect.provide(GraphRAGDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

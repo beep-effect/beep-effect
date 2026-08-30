@@ -686,7 +686,7 @@ export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure
     capsule,
     checkout: repoRoot,
     id: yeetInboxRowId(capsule),
-    severity: YeetInboxSeverity.Enum.P0,
+    severity: check.required ? YeetInboxSeverity.Enum.P0 : YeetInboxSeverity.Enum.P1,
     ts: at,
   });
   const wave = yield* loadYeetRemediationWave(repoRoot);

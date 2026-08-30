@@ -5,7 +5,7 @@
  * @category utilities
  * @since 0.0.0
  */
-// cspell:ignore codegraph tsmorph
+// cspell:ignore tsmorph
 // biome-ignore-all assist/source/organizeImports: docgen requires individually documented re-export declarations.
 
 /**

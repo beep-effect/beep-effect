@@ -1,0 +1,33 @@
+id: "ic:alt1:056"
+hypothesis_ref: "dh:worktree-config:019"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Yeet monitor verification-lane procedures are the same iff they
+    prescribe the same goal-conditioned closeout: run the monitor until it reports merge-ready.
+    The command spelling is reidentification evidence, never the sameness criterion. The merge
+    obligations the monitor observes are other individuals."
+  reidentification_key:
+    - "bun run beep yeet monitor"
+    - "merge-ready: yes"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one closeout-procedure specification; merge-ready reports and unresolved-thread
+    obligations are not parts of it"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+    - "process"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "One night's monitor session that ends at merge-ready is an execution, not a second
+      procedure. Unresolved review threads are a merge gate the procedure watches; identifying
+      the procedure with those threads would make every unresolved thread a monitor procedure."
+status: "proposed"

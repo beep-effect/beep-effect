@@ -1,0 +1,33 @@
+id: "ic:sched-core:002"
+hypothesis_ref: "dh:sched-core:002"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two active-lease record tokens are the same only when they continue the same exclusive lease-creation lineage through heartbeat rewrites until release; repeated grants to the same process are distinct even when their encoded fields coincide."
+  reidentification_key:
+    - "exclusive lease creation provenance"
+    - "lease carrier path as supporting evidence"
+    - "admission instant, process coordinates, and start time"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One exclusively staged lease record whose charge, owner fields, and heartbeat updates form one continuous carrier history."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "the admission-grant relation represented by the lease"
+    - "interprocess bookkeeping JSON without independent artifact identity"
+  existential_dependencies:
+    - "at least one digital carrier"
+    - "the active admission context and owner represented by the record"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "deleted when admitted work ends"
+    - "removed when the owner is reaped"
+    - "moved to quarantine when undecodable"
+counterexamples:
+  - description: "The same process can be admitted twice with the same work fields, while the lease body carries no ticket nonce; those are two lease records, not one continuing record."
+status: "proposed"

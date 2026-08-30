@@ -7,7 +7,6 @@
  */
 
 import { Thread } from "@beep/workspace-domain/entities/Thread";
-import * as S from "effect/Schema";
 import type { Table } from "./Thread.table.ts";
 
 /**
@@ -48,9 +47,6 @@ export type ThreadRow = typeof Table.$inferSelect;
  */
 export type ThreadInsert = typeof Table.$inferInsert;
 
-const encodeThread = S.encodeSync(Thread);
-const decodeThreadRow = S.decodeUnknownSync(Thread);
-
 /**
  * Convert a Thread entity into its persistence insert row.
  *
@@ -66,10 +62,9 @@ const decodeThreadRow = S.decodeUnknownSync(Thread);
  * ```ts
  * import { Thread } from "@beep/workspace-domain/entities/Thread"
  * import { toThreadInsert } from "@beep/workspace-tables/entities/Thread"
- * import * as S from "effect/Schema"
  *
  * const principal = { component: "Runtime", kind: "System" }
- * const thread = S.decodeUnknownSync(Thread)({
+ * const thread = Thread.decodeUnknownSync({
  *   createdAt: 1,
  *   createdByPrincipal: principal,
  *   entityType: "WorkspaceThread",
@@ -93,7 +88,7 @@ const decodeThreadRow = S.decodeUnknownSync(Thread);
  * @since 0.0.0
  */
 export const toThreadInsert = (thread: Thread): ThreadInsert => {
-  const encoded = encodeThread(thread);
+  const encoded = Thread.encodeSync(thread);
 
   return {
     createdAt: encoded.createdAt,
@@ -142,4 +137,4 @@ export const toThreadInsert = (thread: Thread): ThreadInsert => {
  * @category tables
  * @since 0.0.0
  */
-export const fromThreadRow = (row: ThreadRow): Thread => decodeThreadRow(row);
+export const fromThreadRow = (row: ThreadRow): Thread => Thread.decodeUnknownSync(row);

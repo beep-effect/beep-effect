@@ -1,0 +1,21 @@
+id: "fa:reporun:004"
+hypothesis_ref: "dh:reporun:007"
+identity_card_ref: "ic:reporun:004"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "cheap-gates verification lane"
+    still_viable: true
+  - label: "controlled-vocabulary member naming a proof surface"
+    still_viable: true
+  - label: "CLI selector token only"
+    still_viable: false
+strongest_counterexample: >-
+  The same cheap-gates token can survive a revision that changes the ordered
+  command prescription, while the same prescription can be realized in more
+  than one file or process; lexical equality therefore settles neither
+  specification identity nor execution identity.
+verdict: analyzed

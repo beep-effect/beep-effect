@@ -52,4 +52,5 @@ export class Turn extends ProductEntity.Entity<Turn>()(WorkspaceIdentity.TurnId)
   })
 ) {
   static readonly decodeUnknownSync = S.decodeUnknownSync(Turn);
+  static readonly encodeSync = S.encodeSync(Turn);
 }

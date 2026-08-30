@@ -1,0 +1,57 @@
+id: otp:hosted-required-check-merge-obligation:001
+hypothesis_ref: dh:worktree-config:006
+identity_card_ref: ic:worktree-config:002
+foundational_status: explicitly_deferred
+term:
+  local_name: RequiredCheckDesignation
+  preferred_label: required-check designation
+  proposed_iri: https://oip.law/ontology/ci-ops#RequiredCheckDesignation
+  owl_entity_kind: class
+definition:
+  text: A relationally dependent normative mode borne by a check relative to a governed target, designating successful evidence
+    from that check as mandatory before the target transition may occur. CQ-006 needs this generic required-versus-optional
+    distinction when determining unmet obligations; a hosted merge check is one bearer, not a separate hosted-check-specific
+    obligation kind. Discharge and waiver concern the associated generic VerificationObligation, not the designation's identity.
+  source:
+  - CQ-006
+  - po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b
+foundational:
+  ufo_category: mode
+  gufo_alignment: gufo:ExtrinsicMode
+ontoclean:
+  rigidity: rigid
+  identity: unresolved
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  semantic_support_for:
+  - otp:verification-evidence:001
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The governing repository rule makes satisfaction of hosted
+  required checks a condition of merge, so an unsatisfied required check blocks the candidate branch from merging.'
+open_issues:
+- 'Steward choice remains open between the selected extrinsic-mode representation and a normative relator connecting check,
+  governing target, and policy; both represent the generic RequiredCheckDesignation rather than a hosted-specific obligation.'
+- 'The standing merge-policy specification and each generic VerificationObligation activation are distinct from this designation;
+  later discharge or reacquisition provenance may refine those entities without changing the selected term.'
+revision_requests: []
+revision_log:
+- from_sha256: 21382b31c7032c466380b3dd5b0d618cd2d7dbd4d940ff61bcd7ca03c0a99929
+  addressed:
+  - identity-activation-conflict
+  - support-term-not-necessary
+- from_sha256: e5f02caaa00f1fedead6e9625ca54ffcf9668d8ef4a8ca220bb8ab31f4d51dca
+  addressed:
+  - identity-activation-conflict
+  - support-target-not-decision-term
+- from_sha256: fd498ea579dec3d54d48d43ae284371d2de95cdade26f03e52f641a79cb9d875
+  addressed:
+  - support-term-not-necessary
+- from_sha256: 7f4c8cef2629a25ef7e9411bca3169495d9e33b8be400e16f94a951b6b08d449
+  addressed:
+  - relational-mode-alignment-conflict
+  - support-warrant-self-contradiction
+status: proposed

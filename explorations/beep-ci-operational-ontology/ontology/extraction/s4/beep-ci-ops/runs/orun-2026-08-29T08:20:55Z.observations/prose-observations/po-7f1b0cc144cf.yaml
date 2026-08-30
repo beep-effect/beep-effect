@@ -1,0 +1,10 @@
+id: po:sha256:7f1b0cc144cf9d58f851e9c6a1857dfd6ffdea2db7c0c4c083d7779b6a5048fd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml
+source_span:
+  start_line: 116
+  end_line: 116
+quote: ?pkg ciops:dependsOnTransitive ?touched .
+epistemic_status: quoted_prose

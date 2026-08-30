@@ -1,0 +1,29 @@
+id: "dh:yeet-watch:013"
+observation_refs:
+  - "so:sha256:1c2ec820c112ce5ea53f65bba4befef2d10f6cce9a598c3c9206542d2328c6a1"
+  - "so:sha256:7f7a8c8336d864c351c0af447fd1b8527bdcf64e32abbbf3d9b37fe478205d2e"
+  - "so:sha256:66c7b3c26155bec06360ef44886cb47f52ca047c429de21cded6f76b5b05b2bc"
+  - "so:sha256:a7c6ae0d10535713f109acc2252a5ec84ab4500696ac752d7782c3625caa5747"
+  - "so:sha256:b870d15f88a575353b6b0228cd405f21da494b88735fc82c49042a272e0095ab"
+  - "so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c"
+  - "po:sha256:831ad2bef49180653d697083dba976e11d7fc153e0605eb92d7998adb9fc2214"
+cq_warrants: []
+proposed_referent:
+  label: "pass check-outcome classification"
+  description: "An information value assigned to a PR check in a Yeet watch snapshot after raw state evidence is classified as passing."
+representation_status: lexical_alias
+alternatives:
+  - label: "successful check execution state"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "pass string token"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Stub implementations can preserve the pass literal, classifier declaration, record declarations, and snapshot-diff declaration without returning pass for passing evidence or consuming it in transitions; the cited closure establishes only a source-level outcome token."
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

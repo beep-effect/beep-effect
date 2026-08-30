@@ -1,0 +1,23 @@
+id: so:sha256:4915ab3bd330301ca8f7b150290b377b0216aee0dfd700912216cb04e0f20d82
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 1227
+  end_line: 1358
+  content_sha256: 7e9b9ed1e28c3ff78c59b7389e8682207e1d8c28c256dd905ee8805b99e709d0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runPlanExecution
+  lexical_name: runPlanExecution
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
+epistemic_status: parser_derived

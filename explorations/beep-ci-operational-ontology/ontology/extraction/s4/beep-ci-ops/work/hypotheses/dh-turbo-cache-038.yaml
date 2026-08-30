@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:038"
+observation_refs:
+  - "so:sha256:1d7244f810176291238e764c831ac41248593e09b25d8e6ad50bdb62039db19f"
+cq_warrants: []
+proposed_referent:
+  label: "Internal predicate for recognizing remote Turbo cache arguments"
+  description: "A boolean helper declaration over a string argument."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A classification relation between invocation arguments and remote cache control"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A lexical test over command-line syntax"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole parser fact is unrepresentable_construct and the signature alone does not establish a domain classification or any argument occurrence."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.94
+  use_for_acceptance: false

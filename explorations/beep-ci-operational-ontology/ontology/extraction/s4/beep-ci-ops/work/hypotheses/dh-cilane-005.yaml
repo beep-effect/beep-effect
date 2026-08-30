@@ -1,0 +1,24 @@
+id: "dh:cilane:005"
+observation_refs:
+  - "po:sha256:46d2a3715a9be770c00b688c23ea55ac5e36b6bef90f9a5af5b4c9fbc17250a7"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "coverage verification lane"
+  description: "A possible operational verification lane named by the quoted coverage token; no operational bearer is established."
+representation_status: lexical_alias
+alternatives:
+  - label: "coverage command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "coverage-regression verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation supplies only the coverage string as source-list content. That is compatible with an internal switch value and does not show an independently identifiable validation procedure or occurrence."
+epistemic_status: proposed
+confidence:
+  value: 0.42
+  use_for_acceptance: false

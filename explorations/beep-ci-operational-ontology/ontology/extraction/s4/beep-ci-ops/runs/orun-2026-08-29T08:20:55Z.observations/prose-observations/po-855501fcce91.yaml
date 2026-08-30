@@ -1,0 +1,10 @@
+id: po:sha256:855501fcce91a1abd40a2ac7a2efc3fabe445e244e19e5f7f670097ea07cb9f0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 479
+  end_line: 509
+quote: 'failedStepId: S.optionalKey(S.String),'
+epistemic_status: quoted_prose

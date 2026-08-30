@@ -1,0 +1,29 @@
+id: so:sha256:f81c5a172da4d0203dfd25e4212402281cd5d97e08481ca34fa12e32c37bf5d4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 451
+  end_line: 456
+  content_sha256: 2c6c8b39623072fe24aad392c66862c82500105e16e84f35eba835722a09ecb0
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::LiveAdmissionState
+  lexical_name: LiveAdmissionState
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: dead
+- predicate: declares_field
+  object: leases
+- predicate: declares_field
+  object: quarantined
+- predicate: declares_field
+  object: tickets
+source_excerpt: interface LiveAdmissionState {
+epistemic_status: parser_derived

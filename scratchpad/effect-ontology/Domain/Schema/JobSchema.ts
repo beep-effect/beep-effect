@@ -14,7 +14,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils, UUID } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ContentHash, OntologyName } from "../Identity.ts";
+import { OntologyName, withContentHashIdStatics } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/JobSchema");
@@ -52,9 +52,7 @@ export const BackgroundJobId = S.String.check(
       description: "Compact content-derived identifier for a persisted background job.",
     }),
     SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`job-${ContentHash.idFragment(hash)}`),
-    }))
+    withContentHashIdStatics("job")
   );
 
 /**
@@ -247,14 +245,6 @@ export const BackgroundJob = BackgroundJobDefinition.pipe(
 /**
  * Runtime job decoded by {@link BackgroundJob}.
  *
- * **Example** (Use BackgroundJob)
- * ```ts
- * import type { BackgroundJob } from "@effect-ontology/Schema/JobSchema"
- *
- * const jobName = (job: BackgroundJob) => job._tag
- * console.log(jobName)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -313,14 +303,6 @@ export const JobMetadata = JobMetadataDefinition.annotate({
 
 /**
  * Runtime metadata decoded by {@link JobMetadata}.
- *
- * **Example** (Use JobMetadata)
- * ```ts
- * import type { JobMetadata } from "@effect-ontology/Schema/JobSchema"
- *
- * const attempts = (metadata: JobMetadata) => metadata.attempts
- * console.log(attempts)
- * ```
  *
  * @category type-level
  * @since 0.0.0

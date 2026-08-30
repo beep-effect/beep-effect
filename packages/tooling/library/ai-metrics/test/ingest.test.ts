@@ -2,6 +2,8 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
   AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
   AgentEffectivenessAnnotationValue,
+  AgentSession,
+  AgentTurn,
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
   AiMetricsConfigSnapshotInput,
@@ -57,6 +59,7 @@ import {
   listAiMetricsBenchmarkCases,
   listAiMetricsRetentionInventory,
   locateLatestAiMetricsMirrorBundle,
+  ModelCall,
   makeAiMetricsConfigSnapshot,
   makeAiMetricsInstallApplyDryRunResult,
   makeAiMetricsInstallDoctorResult,
@@ -82,6 +85,9 @@ import {
   runAiMetricsRetentionRestoreDrill,
   sourceDiscoveryToJson,
   summarizeTranscriptText,
+  summaryToJson,
+  ToolInvocation,
+  TranscriptIngestSummary,
   upsertAiMetricsBenchmarkCase,
   writeAiMetricsConfigSnapshotArtifacts,
   writeAiMetricsDerivedStorage,
@@ -91,14 +97,13 @@ import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { expect, it, layer } from "@effect/vitest";
 import { Effect, Encoding, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { FastCheck as fc, TestClock } from "effect/testing";
-import type { TUnsafe } from "@beep/types";
 
 const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void => {
   const formatIssue = SchemaIssue.makeFormatterDefault();
@@ -231,23 +236,98 @@ const spanIdsByName = (
     A.map((projection) => projection.spanId)
   );
 
-const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
-  schema: Schema,
+const assertEncodeDecodeRoundTrip = <A>(
+  law: {
+    readonly arbitrary: fc.Arbitrary<A>;
+    readonly decode: (input: unknown) => A;
+    readonly encode: (value: A) => unknown;
+    readonly equivalent: (self: A, that: A) => boolean;
+  },
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeUnknownSync(schema);
-  const equivalent = S.toEquivalence(schema);
-
   fc.assert(
-    fc.property(arbitrary, (value) => {
-      const decoded = decode(encode(value));
+    fc.property(law.arbitrary, (value) => {
+      const decoded = law.decode(law.encode(value));
 
-      return Equal.equals(decoded, value) || equivalent(decoded, value);
+      return Equal.equals(decoded, value) || law.equivalent(decoded, value);
     }),
     fcRuns(options?.numRuns ?? 12)
   );
+};
+
+const transcriptTextSummaryInputLaw = {
+  arbitrary: S.toArbitrary(AiMetricsTranscriptTextSummaryInput)(fc),
+  decode: S.decodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
+  encode: S.encodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
+  equivalent: S.toEquivalence(AiMetricsTranscriptTextSummaryInput),
+};
+const agentSessionLaw = {
+  arbitrary: S.toArbitrary(AgentSession)(fc),
+  decode: S.decodeUnknownSync(AgentSession),
+  encode: S.encodeUnknownSync(AgentSession),
+  equivalent: S.toEquivalence(AgentSession),
+};
+const isAgentSession = S.is(AgentSession);
+const AgentSessionSchemaProperty = fc.property(S.toArbitrary(AgentSession)(fc), (session) => isAgentSession(session));
+const agentTurnLaw = {
+  arbitrary: S.toArbitrary(AgentTurn)(fc),
+  decode: S.decodeUnknownSync(AgentTurn),
+  encode: S.encodeUnknownSync(AgentTurn),
+  equivalent: S.toEquivalence(AgentTurn),
+};
+const codexTranscriptLineLaw = {
+  arbitrary: S.toArbitrary(CodexTranscriptLine)(fc),
+  decode: S.decodeUnknownSync(CodexTranscriptLine),
+  encode: S.encodeUnknownSync(CodexTranscriptLine),
+  equivalent: S.toEquivalence(CodexTranscriptLine),
+};
+const claudeTranscriptLineLaw = {
+  arbitrary: S.toArbitrary(ClaudeTranscriptLine)(fc),
+  decode: S.decodeUnknownSync(ClaudeTranscriptLine),
+  encode: S.encodeUnknownSync(ClaudeTranscriptLine),
+  equivalent: S.toEquivalence(ClaudeTranscriptLine),
+};
+const openClawTranscriptLineLaw = {
+  arbitrary: S.toArbitrary(OpenClawTranscriptLine)(fc),
+  decode: S.decodeUnknownSync(OpenClawTranscriptLine),
+  encode: S.encodeUnknownSync(OpenClawTranscriptLine),
+  equivalent: S.toEquivalence(OpenClawTranscriptLine),
+};
+const transcriptIngestSummaryLaw = {
+  arbitrary: S.toArbitrary(TranscriptIngestSummary)(fc),
+  decode: S.decodeUnknownSync(TranscriptIngestSummary),
+  encode: S.encodeUnknownSync(TranscriptIngestSummary),
+  equivalent: S.toEquivalence(TranscriptIngestSummary),
+};
+const otlpAttributeValueLaw = {
+  arbitrary: S.toArbitrary(AiMetricsOtlpAttributeValue)(fc),
+  decode: S.decodeUnknownSync(AiMetricsOtlpAttributeValue),
+  encode: S.encodeUnknownSync(AiMetricsOtlpAttributeValue),
+  equivalent: S.toEquivalence(AiMetricsOtlpAttributeValue),
+};
+const forwarderOtlpExportLaw = {
+  arbitrary: S.toArbitrary(AiMetricsForwarderOtlpExport)(fc),
+  decode: S.decodeUnknownSync(AiMetricsForwarderOtlpExport),
+  encode: S.encodeUnknownSync(AiMetricsForwarderOtlpExport),
+  equivalent: S.toEquivalence(AiMetricsForwarderOtlpExport),
+};
+const effectivenessAnnotationValueLaw = {
+  arbitrary: S.toArbitrary(AgentEffectivenessAnnotationValue)(fc),
+  decode: S.decodeUnknownSync(AgentEffectivenessAnnotationValue),
+  encode: S.encodeUnknownSync(AgentEffectivenessAnnotationValue),
+  equivalent: S.toEquivalence(AgentEffectivenessAnnotationValue),
+};
+const retentionMutationResultLaw = {
+  arbitrary: S.toArbitrary(AiMetricsRetentionMutationResult)(fc),
+  decode: S.decodeUnknownSync(AiMetricsRetentionMutationResult),
+  encode: S.encodeUnknownSync(AiMetricsRetentionMutationResult),
+  equivalent: S.toEquivalence(AiMetricsRetentionMutationResult),
+};
+const nonEmptyTrimmedStringLaw = {
+  arbitrary: S.toArbitrary(NonEmptyTrimmedStr)(fc),
+  decode: S.decodeUnknownSync(NonEmptyTrimmedStr),
+  encode: S.encodeUnknownSync(NonEmptyTrimmedStr),
+  equivalent: S.toEquivalence(NonEmptyTrimmedStr),
 };
 
 const phoenixService = <A extends { readonly tool: string }>(spec: { readonly services: ReadonlyArray<A> }) =>
@@ -256,7 +336,37 @@ const phoenixService = <A extends { readonly tool: string }>(spec: { readonly se
     A.findFirst((service) => service.tool === AiMetricsTool.Enum.phoenix)
   );
 
-layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (it) => {
+it("derives valid agent sessions from the schema", () => fc.assert(AgentSessionSchemaProperty, fcRuns(12)));
+
+it("rejects impossible line and measurement values at construction", () => {
+  expect(() =>
+    AgentTurn.make({
+      eventName: "event_msg",
+      lineNumber: 0,
+      sourceKind: "codex",
+      sourcePathHash: "source",
+    })
+  ).toThrow();
+  expect(() =>
+    ModelCall.make({
+      callId: "call-1",
+      latencyMs: O.some(-1),
+      model: "synthetic-model",
+      provider: "synthetic-provider",
+      totalTokens: O.some(0),
+    })
+  ).toThrow();
+  expect(() =>
+    ToolInvocation.make({
+      durationMs: O.some(1.5),
+      exitCode: O.some(0),
+      toolName: "synthetic-tool",
+      toolRunId: "tool-1",
+    })
+  ).toThrow();
+});
+
+layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {
@@ -271,6 +381,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
 
       const summary = yield* summarizeTranscriptText({
         content,
+        hashSalt: O.none(),
         sourceKind: AiMetricsTranscriptSource.Enum.codex,
         sourcePath: "codex.jsonl",
       });
@@ -280,9 +391,12 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       expect(summary.acceptedEvents).toBe(2);
       expect(summary.rejectedLines).toBe(1);
       expect(summary.eventNames).toEqual(["event_msg", "session_meta"]);
-      expect(summary.firstTimestamp).toBe("2026-05-05T10:00:00Z");
-      expect(summary.lastTimestamp).toBe("2026-05-05T10:01:00Z");
+      expect(summary.firstTimestamp).toEqual(O.some("2026-05-05T10:00:00Z"));
+      expect(summary.lastTimestamp).toEqual(O.some("2026-05-05T10:01:00Z"));
       expect(summary.sourcePathHash).not.toBe("codex.jsonl");
+      const encoded = yield* summaryToJson(summary);
+      expect(encoded).toContain('"firstTimestamp":"2026-05-05T10:00:00Z"');
+      expect(encoded).toContain('"lastTimestamp":"2026-05-05T10:01:00Z"');
     })
   );
 
@@ -293,6 +407,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
 
       const summary = yield* summarizeTranscriptText({
         content,
+        hashSalt: O.none(),
         sourceKind: AiMetricsTranscriptSource.Enum.claude,
         sourcePath: "claude.jsonl",
       });
@@ -304,31 +419,34 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   );
 
   it("preserves crispened schema wire shapes and arbitrary round trips", () => {
-    expect(
-      S.encodeUnknownSync(S.fromJsonString(CodexTranscriptLine))(CodexTranscriptLine.make({ type: "event_msg" }))
-    ).toBe('{"type":"event_msg"}');
-    expect(
-      S.encodeUnknownSync(S.fromJsonString(ClaudeTranscriptLine))(ClaudeTranscriptLine.make({ type: "message" }))
-    ).toBe('{"type":"message"}');
-    expect(
-      S.encodeUnknownSync(S.fromJsonString(OpenClawTranscriptLine))(OpenClawTranscriptLine.make({ event: "message" }))
-    ).toBe('{"event":"message"}');
+    expect(CodexTranscriptLine.encodeJsonSync(CodexTranscriptLine.make({ type: "event_msg" }))).toBe(
+      '{"type":"event_msg"}'
+    );
+    expect(ClaudeTranscriptLine.encodeJsonSync(ClaudeTranscriptLine.make({ type: O.some("message") }))).toBe(
+      '{"type":"message"}'
+    );
+    expect(OpenClawTranscriptLine.encodeJsonSync(OpenClawTranscriptLine.make({ event: O.some("message") }))).toBe(
+      '{"event":"message"}'
+    );
 
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsTranscriptTextSummaryInput);
-    assertSchemaEncodeDecodeRoundTrip(CodexTranscriptLine, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(ClaudeTranscriptLine, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(OpenClawTranscriptLine, { numRuns: 8 });
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsOtlpAttributeValue);
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsForwarderOtlpExport);
-    assertSchemaEncodeDecodeRoundTrip(AgentEffectivenessAnnotationValue);
-    assertSchemaEncodeDecodeRoundTrip(AiMetricsRetentionMutationResult);
-    assertSchemaEncodeDecodeRoundTrip(NonEmptyTrimmedStr);
+    assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw);
+    assertEncodeDecodeRoundTrip(agentSessionLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(agentTurnLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { numRuns: 8 });
+    assertEncodeDecodeRoundTrip(otlpAttributeValueLaw);
+    assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw);
+    assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw);
+    assertEncodeDecodeRoundTrip(retentionMutationResultLaw);
+    assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw);
   });
 
   it.effect(
     "normalizes Codex attribution metadata before hashing",
     Effect.fn(function* () {
-      const hashSalt = "test-salt";
+      const hashSalt = O.some("test-salt");
       const attribution = yield* makeAiMetricsSourceAttribution({
         content:
           '{"type":"session_meta","payload":{"id":" session-1 ","parent_session_id":"   ","source":{"subagent":{"agent_nickname":"   ","agent_role":" reviewer ","parent_thread_id":" thread-1 "}}}}',
@@ -339,11 +457,11 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       });
 
       expect(attribution.sourceRole).toBe("subagent");
-      expect(attribution.agentNicknameHash).toBeUndefined();
-      expect(attribution.parentSessionIdHash).toBeUndefined();
-      expect(attribution.agentRoleHash).toBe(yield* hashPrivateIdentifier("reviewer", hashSalt));
-      expect(attribution.parentThreadIdHash).toBe(yield* hashPrivateIdentifier("thread-1", hashSalt));
-      expect(attribution.sessionIdHash).toBe(yield* hashPrivateIdentifier("session-1", hashSalt));
+      expect(attribution.agentNicknameHash).toEqual(O.none());
+      expect(attribution.parentSessionIdHash).toEqual(O.none());
+      expect(attribution.agentRoleHash).toEqual(O.some(yield* hashPrivateIdentifier("reviewer", hashSalt)));
+      expect(attribution.parentThreadIdHash).toEqual(O.some(yield* hashPrivateIdentifier("thread-1", hashSalt)));
+      expect(attribution.sessionIdHash).toEqual(O.some(yield* hashPrivateIdentifier("session-1", hashSalt)));
     })
   );
 
@@ -382,10 +500,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           yield* Effect.gen(function* () {
             const result = yield* runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                claudeProjectsRoot: claudeRoot,
-                codexSessionsRoot: codexRoot,
-                dataRoot,
-                hashSalt: "test-salt",
+                claudeProjectsRoot: O.some(claudeRoot),
+                codexSessionsRoot: O.some(codexRoot),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
                 rawArchiveKey,
@@ -399,18 +517,26 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             expect(result.turnCount).toBe(3);
             expect(result.sourceCoverage).toEqual(
               expect.arrayContaining([
-                expect.objectContaining({ candidateFileCount: 1, includedFileCount: 1, sourceKind: "codex" }),
-                expect.objectContaining({ candidateFileCount: 1, includedFileCount: 1, sourceKind: "claude" }),
+                expect.objectContaining({
+                  candidateFileCount: 1,
+                  includedFileCount: 1,
+                  sourceKind: "codex",
+                }),
+                expect.objectContaining({
+                  candidateFileCount: 1,
+                  includedFileCount: 1,
+                  sourceKind: "claude",
+                }),
               ])
             );
             expect(yield* forwarderRunResultToJson(result)).toContain(result.ingestRunId);
             expect(result.parquetExportMode).toBe("snapshot");
             const parquetExportDir = result.parquetExportDir;
-            expect(parquetExportDir).toBeDefined();
-            if (parquetExportDir === undefined) {
+            expect(O.isSome(parquetExportDir)).toBe(true);
+            if (O.isNone(parquetExportDir)) {
               return;
             }
-            expect(yield* fs.exists(path.join(parquetExportDir, "ai_metrics_turns.parquet"))).toBe(true);
+            expect(yield* fs.exists(path.join(parquetExportDir.value, "ai_metrics_turns.parquet"))).toBe(true);
             expect(yield* fs.exists(path.join(dataRoot, "config-snapshots/latest.json"))).toBe(true);
 
             const duckdb = yield* DuckDb;
@@ -428,7 +554,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             expect(archiveText).not.toContain("secret-value");
 
             const envelope = yield* readEncryptedRawArchiveEnvelope(archivePath);
-            const plaintext = yield* decryptEncryptedRawArchiveEnvelope({ envelope, rawArchiveKey });
+            const plaintext = yield* decryptEncryptedRawArchiveEnvelope({
+              envelope,
+              rawArchiveKey,
+            });
             expect(plaintext).toContain("secret-value");
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
@@ -453,19 +582,19 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.codex,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -477,11 +606,11 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             const record = AiMetricsDerivedTranscriptRecord.make({
               archiveObject: AiMetricsRawArchiveObject.make({
                 algorithm: "AES-256-GCM",
-                archiveObjectId: "raw-content-addressed-object",
+                archiveObjectId: "raw-1111111111111111111111111111111111111111111111111111111111111111",
                 archivePath: path.join(dataRoot, "raw/codex/raw-content-addressed-object.json"),
                 created: false,
                 encryptedAtEpochMillis: 1,
-                plaintextContentHash: "plaintext-content-hash",
+                plaintextContentHash: "2222222222222222222222222222222222222222222222222222222222222222",
                 sourceKind: AiMetricsTranscriptSource.Enum.codex,
                 sourcePathHash: summary.sourcePathHash,
               }),
@@ -504,7 +633,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
               })
             );
             expect(disabled.parquetExportMode).toBe("none");
-            expect(disabled.parquetExportDir).toBeUndefined();
+            expect(disabled.parquetExportDir).toEqual(O.none());
             expect(disabled.parquetTables).toEqual([]);
             expect(yield* fs.exists(path.join(dataRoot, "derived/parquet"))).toBe(false);
 
@@ -516,7 +645,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
               })
             );
             expect(latest.parquetExportMode).toBe("latest");
-            expect(latest.parquetExportDir).toBe(path.join(dataRoot, "derived/parquet/latest"));
+            expect(latest.parquetExportDir).toEqual(O.some(path.join(dataRoot, "derived/parquet/latest")));
             expect(yield* fs.exists(path.join(dataRoot, "derived/parquet/latest/ai_metrics_turns.parquet"))).toBe(true);
 
             yield* writeText(path.join(dataRoot, "derived/parquet/latest/stale.tmp"), "stale\n");
@@ -571,10 +700,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           yield* Effect.gen(function* () {
             const result = yield* runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                claudeProjectsRoot: claudeRoot,
-                codexSessionsRoot: codexRoot,
-                dataRoot,
-                hashSalt: "test-salt",
+                claudeProjectsRoot: O.some(claudeRoot),
+                codexSessionsRoot: O.some(codexRoot),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
                 maxFiles: 1,
@@ -627,19 +756,19 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.codex,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -651,11 +780,11 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             const record = AiMetricsDerivedTranscriptRecord.make({
               archiveObject: AiMetricsRawArchiveObject.make({
                 algorithm: "AES-256-GCM",
-                archiveObjectId: "raw-content-addressed-object",
+                archiveObjectId: "raw-1111111111111111111111111111111111111111111111111111111111111111",
                 archivePath: path.join(dataRoot, "raw/codex/raw-content-addressed-object.json"),
                 created: false,
                 encryptedAtEpochMillis: 1,
-                plaintextContentHash: "plaintext-content-hash",
+                plaintextContentHash: "2222222222222222222222222222222222222222222222222222222222222222",
                 sourceKind: AiMetricsTranscriptSource.Enum.codex,
                 sourcePathHash: summary.sourcePathHash,
               }),
@@ -792,8 +921,8 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             // Turns hang off their session span and share its trace, so one agent session
             // reads as one trace in Phoenix rather than as unrelated roots.
             expect(turnSpan.traceId).toBe(sessionSpan.traceId);
-            expect(turnSpan.parentSpanId).toBe(sessionSpan.spanId);
-            expect(sessionSpan.parentSpanId).toBeUndefined();
+            expect(O.getOrThrow(turnSpan.parentSpanId)).toBe(sessionSpan.spanId);
+            expect(O.isNone(sessionSpan.parentSpanId)).toBe(true);
 
             // A rejected delivery must leave the watermark open. Without the failure
             // short-circuiting the mark, these turns would be recorded as exported after
@@ -917,9 +1046,9 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           yield* Effect.gen(function* () {
             const forwarder = yield* runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                codexSessionsRoot: path.join(homeDir, ".codex/sessions"),
-                dataRoot,
-                hashSalt: "test-salt",
+                codexSessionsRoot: O.some(path.join(homeDir, ".codex/sessions")),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
                 rawArchiveKey,
@@ -945,7 +1074,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
                 agentTaskId: firstTask.value.agentTaskId,
                 followUpFix: false,
                 interventionCount: 1,
-                note: "OPENAI_API_KEY=secret-scorecard-fixture",
+                note: O.some("OPENAI_API_KEY=secret-scorecard-fixture"),
                 passed: true,
                 qualityGate: AiMetricsQualityGateStatus.Enum.passed,
                 rating: 5,
@@ -956,7 +1085,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
                 benchmarkCaseId: "case-p4",
                 expectedChecks: ["bun run check"],
                 promptHash: "prompt-hash-only",
-                promptRef: "benchmarks/case-p4.md",
+                promptRef: O.some("benchmarks/case-p4.md"),
                 title: "P4 report proof",
               })
             );
@@ -965,7 +1094,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
                 benchmarkCaseId: benchmarkCase.benchmarkCaseId,
                 configSnapshotId: forwarder.configSnapshotId,
                 elapsedMs: 1200,
-                note: "passed without raw prompt",
+                note: O.some("passed without raw prompt"),
                 passed: true,
                 qualityGate: AiMetricsQualityGateStatus.Enum.passed,
               })
@@ -983,7 +1112,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             const reportMarkdown = yield* fs.readFileString(report.markdownPath);
 
             expect(queue.items).toHaveLength(1);
-            expect(label.note).toContain("[REDACTED]");
+            expect(O.getOrThrow(label.note)).toContain("[REDACTED]");
             expect(benchmarkRun.passed).toBe(true);
             expect(listedCases.cases).toHaveLength(1);
             expect(report.document.scores).toHaveLength(1);
@@ -1006,9 +1135,9 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       const spec = yield* makeAiMetricsInstallSpec(
         AiMetricsInstallInput.make({
           defaultTool: AiMetricsTool.Enum.phoenix,
-          hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
+          hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
           privacyMode: AiMetricsPrivacyMode.Enum.encrypted_raw_redacted_ui,
-          rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+          rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
           target: AiMetricsDeployTarget.Enum.dankserver,
         })
       );
@@ -1030,7 +1159,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       expect(phoenix.value.image).toBe("arizephoenix/phoenix:latest");
       expect(phoenix.value.otlp.traceUrl).toBe("https://dankserver.tailc7c348.ts.net:8447/v1/traces");
       expect(phoenix.value.publicUrl).toBe("https://dankserver.tailc7c348.ts.net:8447");
-      expect(spec.hashSaltSecretRef).toBe("op://TBK/ai-metrics/hash-salt");
+      expect(O.getOrThrow(spec.hashSaltSecretRef)).toBe("op://TBK/ai-metrics/hash-salt");
       expect(
         pipe(
           spec.plannedCommands,
@@ -1072,8 +1201,8 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const homeDir = path.join(tmpDir, "home");
           const repoRoot = path.join(tmpDir, "repo");
           const install = AiMetricsInstallInput.make({
-            hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
-            rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+            hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
+            rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
             target: AiMetricsDeployTarget.Enum.dankserver,
           });
 
@@ -1084,7 +1213,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
 
           const discovery = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -1095,7 +1224,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
           const doctor = yield* makeAiMetricsInstallDoctorResult(
             AiMetricsInstallDoctorInput.make({
               install,
-              sourceDiscovery: discovery,
+              sourceDiscovery: O.some(discovery),
             })
           );
           const apply = yield* makeAiMetricsInstallApplyDryRunResult(install);
@@ -1144,10 +1273,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
             "--otlp",
             "--json",
           ],
-          hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
+          hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
           intervalMinutes: 15,
           lockPath: "%t/beep-ai-metrics-forwarder.lock",
-          rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+          rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
           statusPath: ".beep/ai-metrics/forwarder/status/latest.json",
           workingDirectory: "/repo/beep-effect",
         })
@@ -1221,7 +1350,11 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
   it.effect(
     "adds Phoenix OTLP contracts and renders a dedicated local compose file",
     Effect.fn(function* () {
-      const spec = yield* makeAiMetricsInstallSpec(AiMetricsInstallInput.make({ dataRoot: "/srv/data/ai-metrics" }));
+      const spec = yield* makeAiMetricsInstallSpec(
+        AiMetricsInstallInput.make({
+          dataRoot: O.some("/srv/data/ai-metrics"),
+        })
+      );
       const phoenix = phoenixService(spec);
       expect(O.isSome(phoenix)).toBe(true);
       if (O.isNone(phoenix)) {
@@ -1255,7 +1388,7 @@ volumes:
     Effect.fn(function* () {
       const spec = yield* makeAiMetricsInstallSpec(
         AiMetricsInstallInput.make({
-          dataRoot: "/srv/data/ai-metrics",
+          dataRoot: O.some("/srv/data/ai-metrics"),
           phoenixImage: "arizephoenix/phoenix:latest-p5b",
         })
       );
@@ -1294,19 +1427,19 @@ volumes:
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.claude,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -1318,11 +1451,11 @@ volumes:
             const record = AiMetricsDerivedTranscriptRecord.make({
               archiveObject: AiMetricsRawArchiveObject.make({
                 algorithm: "AES-256-GCM",
-                archiveObjectId: "raw-content-addressed-object",
+                archiveObjectId: "raw-1111111111111111111111111111111111111111111111111111111111111111",
                 archivePath: path.join(dataRoot, "raw/codex/raw-content-addressed-object.json"),
                 created: true,
                 encryptedAtEpochMillis: 1,
-                plaintextContentHash: "plaintext-content-hash",
+                plaintextContentHash: "2222222222222222222222222222222222222222222222222222222222222222",
                 sourceKind: AiMetricsTranscriptSource.Enum.claude,
                 sourcePathHash: summary.sourcePathHash,
               }),
@@ -1429,15 +1562,15 @@ volumes:
       const error = yield* Effect.flip(
         runAiMetricsForwarder(
           AiMetricsForwarderInput.make({
-            dataRoot: "/srv/data/ai-metrics",
-            hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
+            dataRoot: O.some("/srv/data/ai-metrics"),
+            hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
             homeDir: "/tmp/home",
             rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(1))),
-            rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+            rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
             repoRoot: "/tmp/repo",
             target: AiMetricsDeployTarget.Enum.dankserver,
           })
-        )
+        ).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))))
       );
 
       expect(error.message).toContain("non-local forwarder runs require a resolved hash salt value");
@@ -1449,7 +1582,7 @@ volumes:
     Effect.fn(function* () {
       const summary = yield* summarizeTranscriptText({
         content: '{"type":"sk-secretfixture","timestamp":"2026-05-05T10:00:00Z"}',
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourceKind: AiMetricsTranscriptSource.Enum.codex,
         sourcePath: "codex.jsonl",
       });
@@ -1474,13 +1607,13 @@ volumes:
           );
           const summary = yield* summarizeTranscriptText({
             content,
-            hashSalt: "test-salt",
+            hashSalt: O.some("test-salt"),
             sourceKind: AiMetricsTranscriptSource.Enum.codex,
             sourcePath,
           });
           const result = yield* makeAiMetricsPrivacyCheckResult({
             content,
-            hashSalt: "test-salt",
+            hashSalt: O.some("test-salt"),
             sourcePath,
             summary,
           });
@@ -1523,19 +1656,19 @@ volumes:
           yield* Effect.gen(function* () {
             const summary = yield* summarizeTranscriptText({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourceKind: AiMetricsTranscriptSource.Enum.codex,
               sourcePath,
             });
             const privacy = yield* makeAiMetricsPrivacyCheckResult({
               content,
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               sourcePath,
               summary,
             });
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot,
+                dataRoot: O.some(dataRoot),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -1546,7 +1679,7 @@ volumes:
             );
 
             expect(privacy.sanitized.sourceRole).toBe("subagent");
-            expect(privacy.sanitized.threadSpawn).toBe(true);
+            expect(O.getOrThrow(privacy.sanitized.threadSpawn)).toBe(true);
             expect(privacy.sanitized.sessionIdHash).not.toBe("child-session");
             expect(privacy.sanitized.parentThreadIdHash).not.toBe("parent-thread");
             expect(privacy.sanitized.agentRoleHash).not.toBe("worker");
@@ -1560,11 +1693,11 @@ volumes:
                   AiMetricsDerivedTranscriptRecord.make({
                     archiveObject: AiMetricsRawArchiveObject.make({
                       algorithm: "AES-256-GCM",
-                      archiveObjectId: "raw-subagent",
+                      archiveObjectId: "raw-3333333333333333333333333333333333333333333333333333333333333333",
                       archivePath: path.join(dataRoot, "raw/codex/raw-subagent.json"),
                       created: false,
                       encryptedAtEpochMillis: 1,
-                      plaintextContentHash: "plaintext-content-hash",
+                      plaintextContentHash: "4444444444444444444444444444444444444444444444444444444444444444",
                       sourceKind: AiMetricsTranscriptSource.Enum.codex,
                       sourcePathHash: summary.sourcePathHash,
                     }),
@@ -1580,13 +1713,20 @@ volumes:
 
             const duckdb = yield* DuckDb;
             const sessionRows = yield* duckdb.query(
-              "SELECT source_role AS sourceRole, thread_spawn AS threadSpawn, parent_thread_id_hash AS parentThreadIdHash FROM ai_metrics_sessions"
+              `SELECT agent_nickname_hash AS agentNicknameHash,
+                      parent_session_id_hash AS parentSessionIdHash,
+                      parent_thread_id_hash AS parentThreadIdHash,
+                      source_role AS sourceRole,
+                      thread_spawn AS threadSpawn
+                 FROM ai_metrics_sessions`
             );
             const turnRows = yield* duckdb.query("SELECT DISTINCT source_role AS sourceRole FROM ai_metrics_turns");
 
             expect(sessionRows).toEqual([
               expect.objectContaining({
-                parentThreadIdHash: privacy.sanitized.parentThreadIdHash,
+                agentNicknameHash: O.getOrNull(privacy.sanitized.agentNicknameHash),
+                parentSessionIdHash: null,
+                parentThreadIdHash: O.getOrNull(privacy.sanitized.parentThreadIdHash),
                 sourceRole: "subagent",
                 threadSpawn: true,
               }),
@@ -1953,7 +2093,10 @@ volumes:
     Effect.fn(function* () {
       yield* Effect.acquireUseRelease(
         Effect.sync(() => {
-          const requests: Array<{ readonly body: string; readonly contentType: string }> = [];
+          const requests: Array<{
+            readonly body: string;
+            readonly contentType: string;
+          }> = [];
           const server = Bun.serve({
             // Continuation-passing rather than `async`/`await`: this repo represents async
             // control flow with Effect, and a bare `async function` here trips the
@@ -1994,8 +2137,11 @@ volumes:
           // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
           const projections = A.makeBy(1200, (index) =>
             AiMetricsOtlpSpanProjection.make({
-              attributes: { "ai_metrics.line_number": index + 1, "openinference.span.kind": "CHAIN" },
-              parentSpanId: "aabbccddeeff0011",
+              attributes: {
+                "ai_metrics.line_number": index + 1,
+                "openinference.span.kind": "CHAIN",
+              },
+              parentSpanId: O.some("aabbccddeeff0011"),
               spanId: Str.padStart(16, "0")(globalThis.String(index + 1)),
               spanName: "ai_metrics.agent.turn",
               traceId: "0123456789abcdef0123456789abcdef",
@@ -2074,7 +2220,9 @@ volumes:
           const fs = yield* FileSystem.FileSystem;
           const dataRoot = path.join(tmpDir, "metrics");
           const duckDbPath = path.join(dataRoot, "derived/ai-metrics.duckdb");
-          yield* fs.makeDirectory(path.dirname(duckDbPath), { recursive: true });
+          yield* fs.makeDirectory(path.dirname(duckDbPath), {
+            recursive: true,
+          });
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
@@ -2107,7 +2255,11 @@ volumes:
             );
             yield* Effect.forEach(
               [
-                { ingestRunId: "run-early", lineNumber: 1, turnId: "turn-early" },
+                {
+                  ingestRunId: "run-early",
+                  lineNumber: 1,
+                  turnId: "turn-early",
+                },
                 { ingestRunId: "run-late", lineNumber: 2, turnId: "turn-late" },
               ],
               Effect.fnUntraced(function* (turn) {
@@ -2128,7 +2280,10 @@ volumes:
 
           // Prune only run-early.
           yield* runAiMetricsRetentionDelete(
-            AiMetricsRetentionSelector.make({ beforeEpochMillis: 50, dataRoot }),
+            AiMetricsRetentionSelector.make({
+              beforeEpochMillis: O.some(50),
+              dataRoot,
+            }),
             false
           );
 
@@ -2151,7 +2306,10 @@ volumes:
           // again once its last turn goes -- an empty session row surviving forever and
           // pinning its agent task alive through the task GC.
           yield* runAiMetricsRetentionDelete(
-            AiMetricsRetentionSelector.make({ beforeEpochMillis: 200, dataRoot }),
+            AiMetricsRetentionSelector.make({
+              beforeEpochMillis: O.some(200),
+              dataRoot,
+            }),
             false
           );
 
@@ -2195,15 +2353,26 @@ volumes:
             // never reaches this shape, and getting it wrong violates the primary key.
             yield* Effect.forEach(
               [
-                { agentSessionId: contentSessionId, ingestRunId: "run-new", turnId: "turn-new" },
-                { agentSessionId: legacySessionId, ingestRunId: "run-old", turnId: "turn-old" },
+                {
+                  agentSessionId: contentSessionId,
+                  ingestRunId: "run-new",
+                  turnId: "turn-new",
+                },
+                {
+                  agentSessionId: legacySessionId,
+                  ingestRunId: "run-old",
+                  turnId: "turn-old",
+                },
               ],
               Effect.fnUntraced(function* (row) {
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_sessions (
                      agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
                    ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'mixed-transcript', 'primary', 'snapshot')`,
-                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                  {
+                    agentSessionId: row.agentSessionId,
+                    ingestRunId: row.ingestRunId,
+                  }
                 );
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_turns (
@@ -2293,7 +2462,12 @@ volumes:
                      $turnId, $ingestRunId, $agentSessionId, 'codex', 'grown-transcript',
                      'primary', $lineNumber, 'event', $turnId, NULL
                    )`,
-                  { agentSessionId, ingestRunId: row.ingestRunId, lineNumber: row.lineNumber, turnId: row.turnId }
+                  {
+                    agentSessionId,
+                    ingestRunId: row.ingestRunId,
+                    lineNumber: row.lineNumber,
+                    turnId: row.turnId,
+                  }
                 );
               }),
               { discard: true }
@@ -2473,7 +2647,7 @@ volumes:
 
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot: path.join(tmpDir, "metrics"),
+                dataRoot: O.some(path.join(tmpDir, "metrics")),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -2520,8 +2694,18 @@ volumes:
             // that column.
             yield* Effect.forEach(
               [
-                { agentSessionId: "session-run-1", ingestRunId: "run-1", lineNumber: 1, turnId: "turn-1" },
-                { agentSessionId: "session-run-2", ingestRunId: "run-2", lineNumber: 2, turnId: "turn-2" },
+                {
+                  agentSessionId: "session-run-1",
+                  ingestRunId: "run-1",
+                  lineNumber: 1,
+                  turnId: "turn-1",
+                },
+                {
+                  agentSessionId: "session-run-2",
+                  ingestRunId: "run-2",
+                  lineNumber: 2,
+                  turnId: "turn-2",
+                },
               ],
               Effect.fnUntraced(function* (row) {
                 yield* duckdb.run(
@@ -2534,7 +2718,10 @@ volumes:
                   `INSERT INTO ai_metrics_sessions (
                      agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
                    ) VALUES ($agentSessionId, $ingestRunId, 'codex', 'same-transcript-hash', 'primary', 'snapshot')`,
-                  { agentSessionId: row.agentSessionId, ingestRunId: row.ingestRunId }
+                  {
+                    agentSessionId: row.agentSessionId,
+                    ingestRunId: row.ingestRunId,
+                  }
                 );
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_turns (
@@ -2552,7 +2739,7 @@ volumes:
 
             const installSpec = yield* makeAiMetricsInstallSpec(
               AiMetricsInstallInput.make({
-                dataRoot: path.join(tmpDir, "metrics"),
+                dataRoot: O.some(path.join(tmpDir, "metrics")),
                 target: AiMetricsDeployTarget.Enum.local,
               })
             );
@@ -2582,7 +2769,7 @@ volumes:
             const turnParents = pipe(
               batch.projections,
               A.filter((projection) => projection.spanName === "ai_metrics.agent.turn"),
-              A.map((projection) => projection.parentSpanId),
+              A.map((projection) => O.getOrThrow(projection.parentSpanId)),
               A.dedupe
             );
             expect(turnParents).toEqual(sessionSpanIds);
@@ -2598,13 +2785,13 @@ volumes:
       const content = '{"type":"session_meta","timestamp":"2026-05-05T12:00:00Z"}';
       const summary = yield* summarizeTranscriptText({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourceKind: AiMetricsTranscriptSource.Enum.codex,
         sourcePath: "codex.jsonl",
       });
       const result = yield* makeAiMetricsPrivacyCheckResult({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourcePath: "codex.jsonl",
         summary,
       });
@@ -2630,7 +2817,10 @@ volumes:
 
           const snapshotDir = path.join(tmpDir, ".beep/ai-metrics/config-snapshots");
           const result = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: tmpDir }));
-          yield* writeAiMetricsConfigSnapshotArtifacts({ outputDir: snapshotDir, result });
+          yield* writeAiMetricsConfigSnapshotArtifacts({
+            outputDir: snapshotDir,
+            result,
+          });
           const again = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: tmpDir }));
           const json = yield* configSnapshotToJson(result);
 
@@ -2651,14 +2841,14 @@ volumes:
           yield* writeText(path.join(tmpDir, ".codex/config.toml"), 'model = "gpt-5.1"\n');
           const changed = yield* makeAiMetricsConfigSnapshot(
             AiMetricsConfigSnapshotInput.make({
-              previousSnapshotPath: path.join(snapshotDir, "latest.json"),
+              previousSnapshotPath: O.some(path.join(snapshotDir, "latest.json")),
               repoRoot: tmpDir,
             })
           );
           expect(changed.snapshot.configHash).not.toBe(result.snapshot.configHash);
           expect(changed.snapshot.changedPaths).toEqual([".codex/config.toml"]);
           expect(changed.diff.modifiedPaths).toEqual([".codex/config.toml"]);
-          expect(changed.snapshot.previousSnapshotId).toBe(result.snapshot.snapshotId);
+          expect(O.getOrThrow(changed.snapshot.previousSnapshotId)).toBe(result.snapshot.snapshotId);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -2677,7 +2867,13 @@ volumes:
             yield* Unknown.encodeUnknownEffectFromJsonString({
               excludedDirectoryNames: [],
               fileCount: 1,
-              files: [{ contentHash: "legacy-hash", relativePath: "AGENTS.md", sizeBytes: 18 }],
+              files: [
+                {
+                  contentHash: "legacy-hash",
+                  relativePath: "AGENTS.md",
+                  sizeBytes: 18,
+                },
+              ],
               snapshot: {
                 changedPaths: ["AGENTS.md"],
                 configHash: "legacy-hash",
@@ -2690,12 +2886,12 @@ volumes:
 
           const result = yield* makeAiMetricsConfigSnapshot(
             AiMetricsConfigSnapshotInput.make({
-              previousSnapshotPath: path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
+              previousSnapshotPath: O.some(path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json")),
               repoRoot: tmpDir,
             })
           );
 
-          expect(result.snapshot.previousSnapshotId).toBe("config-legacy");
+          expect(O.getOrThrow(result.snapshot.previousSnapshotId)).toBe("config-legacy");
           expect(result.diff.modifiedPaths).toEqual(["AGENTS.md"]);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
@@ -2714,7 +2910,7 @@ volumes:
           const error = yield* Effect.flip(
             makeAiMetricsConfigSnapshot(
               AiMetricsConfigSnapshotInput.make({
-                previousSnapshotPath: path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
+                previousSnapshotPath: O.some(path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json")),
                 repoRoot: tmpDir,
               })
             )
@@ -2744,20 +2940,21 @@ volumes:
             '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}'
           );
           yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Test agent guide\n");
+          yield* writeText(path.join(dataRoot, "raw"), "block archive directory creation\n");
 
           const error = yield* Effect.flip(
             runAiMetricsForwarder(
               AiMetricsForwarderInput.make({
-                codexSessionsRoot: codexRoot,
-                dataRoot,
-                hashSalt: "test-salt",
+                codexSessionsRoot: O.some(codexRoot),
+                dataRoot: O.some(dataRoot),
+                hashSalt: O.some("test-salt"),
                 homeDir,
                 includeAll: true,
-                rawArchiveKey: Redacted.make("not-valid-base64"),
+                rawArchiveKey: Redacted.make(Encoding.encodeBase64(new Uint8Array(32).fill(11))),
                 repoRoot,
                 target: AiMetricsDeployTarget.Enum.local,
               })
-            )
+            ).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))))
           );
           const snapshotDir = path.join(dataRoot, "config-snapshots");
           const snapshotFiles = yield* fs.readDirectory(snapshotDir);
@@ -2793,11 +2990,15 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              hashSalt: "test-salt",
+              claudeProjectsRoot: O.none(),
+              codexSessionsRoot: O.none(),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
-              openClawUnitPath,
+              maxFileBytes: O.none(),
+              openClawUnitPath: O.some(openClawUnitPath),
               repoRoot,
+              sinceEpochMillis: O.none(),
             })
           );
           const json = yield* sourceDiscoveryToJson(result);
@@ -2806,9 +3007,21 @@ volumes:
           expect(result.discoveredFileCount).toBe(3);
           expect(result.sources).toEqual(
             expect.arrayContaining([
-              expect.objectContaining({ fileCount: 1, sourceKind: "codex", status: "available" }),
-              expect.objectContaining({ fileCount: 1, sourceKind: "claude", status: "available" }),
-              expect.objectContaining({ fileCount: 1, sourceKind: "openclaw", status: "available" }),
+              expect.objectContaining({
+                fileCount: 1,
+                sourceKind: "codex",
+                status: "available",
+              }),
+              expect.objectContaining({
+                fileCount: 1,
+                sourceKind: "claude",
+                status: "available",
+              }),
+              expect.objectContaining({
+                fileCount: 1,
+                sourceKind: "openclaw",
+                status: "available",
+              }),
             ])
           );
           expect(json).toContain("gateway_metadata");
@@ -2836,8 +3049,8 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              claudeProjectsRoot: claudeRoot,
-              hashSalt: "test-salt",
+              claudeProjectsRoot: O.some(claudeRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -2880,8 +3093,8 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              codexSessionsRoot: codexRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -2927,12 +3140,15 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              codexSessionsRoot: codexRoot,
-              hashSalt: "test-salt",
+              claudeProjectsRoot: O.none(),
+              codexSessionsRoot: O.some(codexRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
-              maxFileBytes: 128,
+              maxFileBytes: O.some(128),
+              openClawUnitPath: O.none(),
               repoRoot,
+              sinceEpochMillis: O.none(),
             })
           );
           const codex = pipe(
@@ -2940,7 +3156,7 @@ volumes:
             A.findFirst((source) => source.sourceKind === AiMetricsTranscriptSource.Enum.codex)
           );
 
-          expect(result.maxFileBytes).toBe(128);
+          expect(result.maxFileBytes).toEqual(O.some(128));
           expect(O.isSome(codex)).toBe(true);
           if (O.isNone(codex)) {
             return;
@@ -2971,8 +3187,8 @@ volumes:
 
           const result = yield* discoverAiMetricsSources(
             AiMetricsSourceDiscoveryInput.make({
-              codexSessionsRoot: codexRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               repoRoot,
@@ -2988,9 +3204,9 @@ volumes:
             return;
           }
           expect(codex.value.files).toHaveLength(1);
-          expect(codex.value.files[0]?.agentRoleHash).toBeDefined();
+          expect(O.isSome(codex.value.files[0]?.agentRoleHash ?? O.none())).toBe(true);
           expect(codex.value.files[0]?.sourceRole).toBe("subagent");
-          expect(codex.value.files[0]?.threadSpawn).toBe(true);
+          expect(O.getOrThrow(codex.value.files[0]?.threadSpawn ?? O.none())).toBe(true);
         })
       ).pipe(provideScopedLayer(NodeServices.layer));
     })
@@ -3002,20 +3218,20 @@ volumes:
       const content = '{"sessionId":"claude-session","timestamp":"2026-05-05T11:00:00Z"}';
       const primarySummary = yield* summarizeTranscriptText({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourceKind: AiMetricsTranscriptSource.Enum.claude,
         sourcePath: "/tmp/subagents/workspace/claude.jsonl",
       });
       const primary = yield* makeAiMetricsPrivacyCheckResult({
         content,
-        hashSalt: "test-salt",
+        hashSalt: O.some("test-salt"),
         sourcePath: "/tmp/subagents/workspace/claude.jsonl",
         summary: primarySummary,
       });
       const subagent = yield* makeAiMetricsPrivacyCheckResult({
         content,
-        hashSalt: "test-salt",
-        relativePath: "subagents/claude.jsonl",
+        hashSalt: O.some("test-salt"),
+        relativePath: O.some("subagents/claude.jsonl"),
         sourcePath: "/tmp/workspace/subagents/claude.jsonl",
         summary: primarySummary,
       });
@@ -3054,9 +3270,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3139,9 +3355,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3153,13 +3369,13 @@ volumes:
           yield* writeText(path.join(dataRoot, "reports/weekly.md"), "# report\n");
 
           const selector = AiMetricsRetentionSelector.make({
-            beforeEpochMillis: 4_102_444_800_000,
+            beforeEpochMillis: O.some(4_102_444_800_000),
             dataRoot,
           });
           const inventory = yield* listAiMetricsRetentionInventory(selector);
           const drill = yield* runAiMetricsRetentionRestoreDrill(
             AiMetricsRetentionRestoreDrillInput.make({
-              hashSalt: "test-salt",
+              hashSalt: O.some("test-salt"),
               maxObjects: 1,
               rawArchiveKey,
               restoreRoot,
@@ -3293,9 +3509,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3316,13 +3532,13 @@ volumes:
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
           const selector = AiMetricsRetentionSelector.make({
-            beforeEpochMillis: 4_102_444_800_000,
+            beforeEpochMillis: O.some(4_102_444_800_000),
             dataRoot,
           });
           const invalidPathExit = yield* Effect.exit(
             runAiMetricsRetentionRestoreDrill(
               AiMetricsRetentionRestoreDrillInput.make({
-                hashSalt: "test-salt",
+                hashSalt: O.some("test-salt"),
                 maxObjects: 1,
                 rawArchiveKey,
                 restoreRoot,
@@ -3343,7 +3559,7 @@ volumes:
           const exit = yield* Effect.exit(
             runAiMetricsRetentionRestoreDrill(
               AiMetricsRetentionRestoreDrillInput.make({
-                hashSalt: "test-salt",
+                hashSalt: O.some("test-salt"),
                 maxObjects: 1,
                 rawArchiveKey,
                 restoreRoot,
@@ -3382,9 +3598,9 @@ volumes:
 
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
-              codexSessionsRoot: codexRoot,
-              dataRoot,
-              hashSalt: "test-salt",
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
               homeDir,
               includeAll: true,
               rawArchiveKey,
@@ -3423,7 +3639,10 @@ volumes:
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
-          const selector = AiMetricsRetentionSelector.make({ beforeEpochMillis, dataRoot });
+          const selector = AiMetricsRetentionSelector.make({
+            beforeEpochMillis: O.some(beforeEpochMillis),
+            dataRoot,
+          });
           const compactResult = yield* runAiMetricsRetentionCompact(selector, false);
           expect(compactResult.dryRun).toBe(false);
           expect(compactResult.deletedDerivedExportCount).toBe(1);
@@ -3471,8 +3690,8 @@ volumes:
 
           const labelOnlySelector = AiMetricsRetentionSelector.make({
             dataRoot,
-            sinceEpochMillis: beforeEpochMillis,
-            untilEpochMillis: beforeEpochMillis + 2,
+            sinceEpochMillis: O.some(beforeEpochMillis),
+            untilEpochMillis: O.some(beforeEpochMillis + 2),
           });
           const labelOnlyDelete = yield* runAiMetricsRetentionDelete(labelOnlySelector, false).pipe(
             provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })))

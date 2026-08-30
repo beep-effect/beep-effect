@@ -1,0 +1,137 @@
+# Pack toml
+
+- modules: 15
+- owning exports: 92
+- re-exports: 11
+- open modules: 14
+- open owning exports: 92
+
+## Files
+
+- `toml/Toml.ts` owning=5 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/TomlDateTime.ts` owning=4 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/TomlDiagnostic.ts` owning=11 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/TomlDocument.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/TomlEdit.ts` owning=4 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/TomlFormat.ts` owning=4 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/TomlNode.ts` owning=21 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/TomlVisitor.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/index.ts` owning=0 moduleFindings=none
+- `toml/internal/diagnostics.ts` owning=12 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/internal/limits.ts` owning=5 moduleFindings=missing-packageDocumentation|missing-module-since
+- `toml/internal/parser.ts` owning=1 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/internal/scanner.ts` owning=15 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/internal/semantic.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+- `toml/internal/stringifyValue.ts` owning=3 moduleFindings=missing-module-summary|missing-packageDocumentation|missing-module-since
+
+## Open modules
+
+- `toml/Toml.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/TomlDateTime.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/TomlDiagnostic.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/TomlDocument.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/TomlEdit.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/TomlFormat.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/TomlNode.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/TomlVisitor.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/internal/diagnostics.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/internal/limits.ts`: missing-packageDocumentation, missing-module-since
+- `toml/internal/parser.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/internal/scanner.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/internal/semantic.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+- `toml/internal/stringifyValue.ts`: missing-module-summary, missing-packageDocumentation, missing-module-since
+
+## Open owning exports
+
+- `toml/Toml.ts:33` `TomlStringifyOptions` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `toml/Toml.ts:45` `TomlParseError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/Toml.ts:64` `TomlStringifyError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/Toml.ts:143` `TomlBoundCodec` (type/interface) missing=@category|@since findings=missing-required-tags
+- `toml/Toml.ts:179` `Toml` (value/class) missing=@category|@since findings=legacy-example|legacy-remarks|missing-required-tags
+- `toml/TomlDateTime.ts:97` `TomlLocalDate` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDateTime.ts:111` `TomlLocalTime` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDateTime.ts:123` `TomlLocalDateTime` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDateTime.ts:138` `TomlOffsetDateTime` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:22` `TomlLexErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:29` `TomlLexErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:36` `TomlParseErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:43` `TomlParseErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:50` `TomlSemanticErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:57` `TomlSemanticErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:64` `TomlStringifyErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:71` `TomlStringifyErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:79` `TomlErrorCode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:91` `TomlErrorCode` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlDiagnostic.ts:106` `TomlDiagnostic` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `toml/TomlDocument.ts:78` `TomlDocument` (value/class) missing=@category|@since findings=legacy-example|legacy-remarks|missing-required-tags
+- `toml/TomlEdit.ts:21` `TomlSegment` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlEdit.ts:29` `TomlPath` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlEdit.ts:38` `TomlRange` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlEdit.ts:55` `TomlEdit` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `toml/TomlFormat.ts:51` `TomlRangeLike` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlFormat.ts:61` `TomlFormattingOptions` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlFormat.ts:74` `TomlModificationError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlFormat.ts:773` `TomlFormat` (value/class) missing=@category|@since|@example findings=legacy-remarks|missing-required-tags
+- `toml/TomlNode.ts:19` `TomlKeyKind` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:26` `TomlKeyKind` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlNode.ts:37` `TomlKey` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:49` `TomlStringStyle` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:56` `TomlStringStyle` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlNode.ts:64` `TomlString` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:77` `TomlInteger` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:88` `TomlFloat` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:99` `TomlBoolean` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:110` `TomlDateTimeLiteral` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:122` `TomlArray` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:134` `TomlInlineEntry` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:147` `TomlInlineTable` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:160` `TomlValueNode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:171` `TomlValueNode` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlNode.ts:188` `TomlKeyValue` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:201` `TomlTableHeader` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:214` `TomlArrayTableHeader` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:227` `TomlTrivia` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:239` `TomlExpression` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlNode.ts:246` `TomlExpression` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlVisitor.ts:43` `TomlVisitorEvent` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/TomlVisitor.ts:56` `TomlVisitorEvent` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/TomlVisitor.ts:177` `TomlVisitor` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/diagnostics.ts:6` `TOML_LEX_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:17` `TOML_PARSE_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:32` `TOML_SEMANTIC_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:40` `TOML_STRINGIFY_ERROR_CODES` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:50` `TomlLexErrorCodeRaw` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:51` `TomlParseErrorCodeRaw` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:52` `TomlSemanticErrorCodeRaw` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:53` `TomlStringifyErrorCodeRaw` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:54` `TomlErrorCodeRaw` (type/type) missing=@category|@since findings=missing-summary|missing-required-tags
+- `toml/internal/diagnostics.ts:61` `RawDiagnostic` (type/interface) missing=@category|@since findings=missing-required-tags
+- `toml/internal/diagnostics.ts:69` `RawTomlError` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/diagnostics.ts:78` `isRawTomlError` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `toml/internal/limits.ts:5` `MAX_NESTING_DEPTH` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/limits.ts:8` `GuardReason` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/internal/limits.ts:15` `GuardExceeded` (value/class) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/limits.ts:36` `isGuardExceeded` (value/const) missing=@category|@since|@example findings=missing-summary|missing-required-tags
+- `toml/internal/limits.ts:42` `assertCap` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/parser.ts:407` `parseExpressions` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:17` `ScanResult` (type/interface) missing=@category|@since findings=missing-required-tags
+- `toml/internal/scanner.ts:23` `ScalarValue` (type/type) missing=@category|@since findings=missing-required-tags
+- `toml/internal/scanner.ts:64` `isBareKeyChar` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:68` `skipBom` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:80` `assertValidUnicode` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:93` `scanWhitespace` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:109` `scanNewline` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:127` `scanComment` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:143` `scanBareKey` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:213` `scanBasicString` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:258` `scanLiteralString` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:312` `scanMultilineBasicString` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:391` `scanMultilineLiteralString` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:475` `scanValueToken` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/scanner.ts:578` `classifyValueToken` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/semantic.ts:24` `SemanticVisitor` (type/interface) missing=@category|@since findings=missing-required-tags
+- `toml/internal/semantic.ts:228` `analyze` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/semantic.ts:321` `buildValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/stringifyValue.ts:95` `renderKey` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/stringifyValue.ts:213` `renderInlineValue` (value/const) missing=@category|@since|@example findings=missing-required-tags
+- `toml/internal/stringifyValue.ts:296` `stringifyValue` (value/const) missing=@category|@since|@example findings=missing-required-tags

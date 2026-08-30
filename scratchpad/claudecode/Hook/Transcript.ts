@@ -1,27 +1,26 @@
 /**
- * Transcript reader.
+ * Reads the JSON-lines conversation transcript stored at the
+ * `transcript_path` field of every hook envelope. `readTranscript`
+ * uses the Effect `FileSystem` service and parses each line as an
+ * unknown JSON value, returning a read-only array.
  *
- * Claude Code stores the conversation transcript as a JSON-lines file
- * at the `transcript_path` field of every hook envelope. `readTranscript`
- * reads that file via the Effect `FileSystem` service and parses each
- * line as an unknown JSON value, returning a read-only array.
+ * **Details**
  *
  * This module requires a platform `FileSystem` layer to be provided by
  * the caller (e.g. `NodeFileSystem.layer` from
  * `@effect/platform-node-shared/NodeFileSystem`).
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { Unknown } from "@beep/schema/Unknown";
+import { Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import { TranscriptReadError } from "../Errors.ts";
 
 // ---------------------------------------------------------------------------
@@ -40,23 +39,35 @@ const JsonValue = S.fromJsonString(Unknown).pipe(
  * Read a Claude Code transcript file and return each JSONL line as a
  * parsed unknown value.
  *
+ * **Details**
+ *
  * Requires `FileSystem.FileSystem` in the environment.
+ *
+ * **Gotchas**
+ *
+ * Empty and whitespace-only lines are dropped. Each remaining line is
+ * JSON-decoded. Both filesystem read failures and JSONL parse failures
+ * surface as {@link TranscriptReadError}, not as a raw thrown parse error.
  *
  * **Example** (Count transcript events)
  *
  * ```ts
- * import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem"
  * import * as Effect from "effect/Effect"
- * import { Hook } from "effect-claudecode"
+ * import { Hook, Testing } from "effect-claudecode"
  *
- * const program = Hook.readTranscript("./transcript.jsonl").pipe(
- *   Effect.map((events) => events.length),
- *   Effect.provide(NodeFileSystem.layer)
+ * const fileSystem = Testing.makeMockFileSystem({
+ *   "/transcript.jsonl": '{"type":"user"}\n{"type":"assistant"}\n'
+ * })
+ * const count = await Effect.runPromise(
+ *   Hook.readTranscript("/transcript.jsonl").pipe(
+ *     Effect.map((events) => events.length),
+ *     Effect.provide(fileSystem.layer)
+ *   )
  * )
- *
- * console.log(Effect.isEffect(program)) // true
+ * console.log(count) // 2
  * ```
  *
+ * @see {@link TranscriptReadError} for the tagged failure raised on read or JSONL decode errors.
  * @category parsing
  * @since 0.0.0
  */

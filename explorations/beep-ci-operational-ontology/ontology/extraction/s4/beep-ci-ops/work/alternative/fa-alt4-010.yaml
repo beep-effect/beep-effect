@@ -1,0 +1,18 @@
+id: fa:alt4:010
+hypothesis_ref: dh:sched-core:025
+identity_card_ref: ic:alt4:010
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "information object: owner-liveness criterion specification"
+    still_viable: true
+  - label: "quality: the process's current alive-or-dead condition (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: platform-specific probing implementation as the referent
+    still_viable: false
+strongest_counterexample: Leases are reaped when the pid is dead or the recorded start time no longer matches; a probe implementation that omitted start-time continuity would still be a probe, but not this criterion.
+verdict: analyzed
+needed_evidence: A reaping decision driven by this criterion on a non-Linux host where start time is unreadable, versus a different liveness rule, would discriminate the spec from a particular /proc mechanism.

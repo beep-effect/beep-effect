@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/pretext-driver",
   "lifecycle": "completed-retained",
+  "mergedPullRequest": 391,
   "mission": "Wrap @chenglou/pretext as the repo driver @beep/pretext: browser-safe pure root (FontMetricsSnapshot contracts, codecs, pure layout helpers), @beep/pretext/browser capture surface (prepare/canvas/engine-profile), fixture-backed test layers so every consumer tests DOM-free, and centralized typed technical errors. Zero product surface.",
   "executionCapable": true,
   "reflectionRequired": true,

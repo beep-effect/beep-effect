@@ -1,0 +1,25 @@
+id: so:sha256:9e27f07f36cb0d50e870da5d02d9aa47414df56cf56c03ca309381b08cdb4990
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 780
+  end_line: 792
+  content_sha256: a15a466f5a3a01c505e2de4a95726def108caa8c5ecfd8e833a71f301083f8f7
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetScanCoverage
+  lexical_name: FleetScanCoverage
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: FleetScanCoverage
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class FleetScanCoverage extends S.Class<FleetScanCoverage>($I`FleetScanCoverage`)(
+epistemic_status: parser_derived

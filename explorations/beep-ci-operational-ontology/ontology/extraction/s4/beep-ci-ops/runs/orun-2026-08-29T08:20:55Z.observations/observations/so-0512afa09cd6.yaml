@@ -1,0 +1,24 @@
+id: so:sha256:0512afa09cd64a85c440014d4b55794c9d4ab7838ae92b929f118183c3ff217c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1467
+  end_line: 1470
+  content_sha256: c25001d9e8faa058acfb6a20af8371dc7f018aa05397cd41930cb1bf18a1e8a5
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::docgenModeFlagChoices
+  lexical_name: docgenModeFlagChoices
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const docgenModeFlagChoices: ReadonlyArray<readonly [DocgenLaneMode, DocgenLaneMode]>
+  = A.map('
+epistemic_status: parser_derived
