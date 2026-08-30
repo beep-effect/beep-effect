@@ -634,18 +634,21 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     if (envInterpreterInfo.type !== "File") {
       return yield* makeLibpffError("engine-unavailable", { cause: "env shebang interpreter is not a regular file" });
     }
-    if (sandboxRuntimeCovers(canonicalEnvInterpreter)) return [];
-    const envRuntimePrefix = runtimePrefixFor(canonicalEnvInterpreter);
-    if (envRuntimePrefix === path.parse(envRuntimePrefix).root) {
+    const envRuntimePrefixes = A.dedupe(
+      A.filter(
+        [runtimePrefixFor(resolvedEnvInterpreter), runtimePrefixFor(canonicalEnvInterpreter)],
+        (runtimePrefix) => !sandboxRuntimeCovers(runtimePrefix)
+      )
+    );
+    if (A.isReadonlyArrayEmpty(envRuntimePrefixes)) return [];
+    if (A.some(envRuntimePrefixes, (runtimePrefix) => runtimePrefix === path.parse(runtimePrefix).root)) {
       return yield* makeLibpffError("config", { cause: "sandbox env interpreter bind cannot expose the host root" });
     }
     return [
-      "--ro-bind",
-      envRuntimePrefix,
-      envRuntimePrefix,
-      "--ro-bind",
-      canonicalEnvInterpreter,
-      `/usr/bin/${envCommand.value}`,
+      ...A.flatMap(envRuntimePrefixes, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]),
+      "--setenv",
+      "PATH",
+      `${path.dirname(resolvedEnvInterpreter)}:/usr/bin:/bin`,
     ];
   });
 
@@ -751,6 +754,9 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         "--dir",
         "/output",
         ...executableBind,
+        "--setenv",
+        "PATH",
+        "/usr/bin:/bin",
         ...(yield* sandboxShebangBinds(hostPffexportPath)),
         "--ro-bind",
         sourcePath,
@@ -764,9 +770,6 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         "--setenv",
         "LANG",
         "C.UTF-8",
-        "--setenv",
-        "PATH",
-        "/usr/bin:/bin",
         "--",
         sandboxExecutable,
         "-f",

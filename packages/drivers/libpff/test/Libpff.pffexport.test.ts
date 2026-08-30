@@ -501,7 +501,7 @@ describe("makePffexportFileProcessingEngine", () => {
   );
 
   it.effect(
-    "binds and aliases an external interpreter selected by env",
+    "binds an env-selected interpreter at its original path-sensitive prefix",
     Effect.fnUntraced(
       function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -514,6 +514,7 @@ describe("makePffexportFileProcessingEngine", () => {
         const commandPath = path.resolve(import.meta.dirname, "../../../..", "node_modules", ".bin", commandName);
         const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
         const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
+        const bwrapArgumentsPath = path.join(fixtureRoot, "bwrap-arguments");
         yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
         yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
         yield* fs.copy("/bin/bash", interpreterPath);
@@ -526,7 +527,10 @@ describe("makePffexportFileProcessingEngine", () => {
           stubPffexport.replace("#!/usr/bin/env bash", `#!/usr/bin/env ${commandName}`)
         );
         yield* fs.chmod(launcherPath, 0o755);
-        yield* fs.writeFileString(bwrapPath, bwrapStub);
+        yield* fs.writeFileString(
+          bwrapPath,
+          bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`)
+        );
         yield* fs.chmod(bwrapPath, 0o755);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({
@@ -545,6 +549,11 @@ describe("makePffexportFileProcessingEngine", () => {
         );
 
         expect(result.children.length).toBeGreaterThan(0);
+        const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
+        expect(bwrapArguments).toContain(`--ro-bind\n${path.dirname(commandPath)}\n${path.dirname(commandPath)}\n`);
+        expect(bwrapArguments).toContain(`--ro-bind\n${interpreterPrefix}\n${interpreterPrefix}\n`);
+        expect(bwrapArguments).toContain(`--setenv\nPATH\n${path.dirname(commandPath)}:/usr/bin:/bin\n`);
+        expect(bwrapArguments).not.toContain(`/usr/bin/${commandName}`);
       },
       Effect.scoped,
       provideTestLayer
