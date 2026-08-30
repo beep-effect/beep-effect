@@ -394,7 +394,7 @@ describe("makePffexportFileProcessingEngine", () => {
     )
   );
 
-  it.effect(
+  it.live(
     "uses a standard-root env interpreter without an additional runtime bind",
     Effect.fnUntraced(
       function* () {
@@ -419,7 +419,8 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(result.children.length).toBeGreaterThan(0);
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
-        expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/usr/bin:/bin\n");
+        expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/bin\n");
+        expect(bwrapArguments).toContain(`--\n/usr/bin/bash\n${stubPath}\n`);
         expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
       },
       Effect.scoped,
@@ -507,8 +508,8 @@ describe("makePffexportFileProcessingEngine", () => {
     )
   );
 
-  it.effect(
-    "binds an env-selected interpreter at its original path-sensitive prefix",
+  it.live(
+    "invokes an env-selected interpreter through its canonical path-sensitive prefix",
     Effect.fnUntraced(
       function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -516,16 +517,29 @@ describe("makePffexportFileProcessingEngine", () => {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const fixtureRoot = path.dirname(stubPath);
         const interpreterPrefix = path.join(fixtureRoot, "interpreter");
-        const interpreterPath = path.join(interpreterPrefix, "bin", "bash");
         const commandName = `${path.basename(fixtureRoot)}-bash`;
-        const commandPath = path.resolve(import.meta.dirname, "../../../..", "node_modules", ".bin", commandName);
+        const interpreterPath = path.join(interpreterPrefix, "bin", commandName);
+        const commandDirectory = path.join(fixtureRoot, "command-bin");
+        const commandPath = path.join(commandDirectory, commandName);
         const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
         const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
         const bwrapArgumentsPath = path.join(fixtureRoot, "bwrap-arguments");
         yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
+        yield* fs.makeDirectory(commandDirectory, { recursive: true });
         yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
         yield* fs.copy("/bin/bash", interpreterPath);
         yield* fs.chmod(interpreterPath, 0o755);
+        yield* Effect.acquireRelease(
+          Effect.sync(() => {
+            const previousPath = process.env.PATH;
+            process.env.PATH = `${commandDirectory}:${previousPath ?? ""}`;
+            return previousPath;
+          }),
+          (previousPath) =>
+            Effect.sync(() => {
+              process.env.PATH = previousPath;
+            })
+        );
         yield* Effect.acquireRelease(fs.symlink(interpreterPath, commandPath), () =>
           fs.remove(commandPath).pipe(Effect.ignore)
         );
@@ -559,7 +573,7 @@ describe("makePffexportFileProcessingEngine", () => {
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
         expect(bwrapArguments).toContain(`--ro-bind\n${path.dirname(commandPath)}\n${path.dirname(commandPath)}\n`);
         expect(bwrapArguments).toContain(`--ro-bind\n${interpreterPrefix}\n${interpreterPrefix}\n`);
-        expect(bwrapArguments).toContain(`--setenv\nPATH\n${path.dirname(commandPath)}:/usr/bin:/bin\n`);
+        expect(bwrapArguments).toContain(`--\n${interpreterPath}\n${launcherPath}\n`);
         expect(bwrapArguments).not.toContain(`/usr/bin/${commandName}`);
       },
       Effect.scoped,

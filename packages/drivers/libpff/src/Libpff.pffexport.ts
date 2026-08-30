@@ -583,14 +583,21 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       : executableDirectory;
   };
 
-  const sandboxEnvShebangBinds = Effect.fn("Libpff.pffexport.sandboxEnvShebangBinds")(function* (
+  const sandboxEnvShebangPlan = Effect.fn("Libpff.pffexport.sandboxEnvShebangPlan")(function* (
     shebangParts: ReadonlyArray<string>
-  ): Effect.fn.Return<ReadonlyArray<string>, LibpffError> {
-    const envCommand = A.findFirst(
-      shebangParts.slice(1),
-      (part) => !Str.isEmpty(part) && !Str.startsWith("-")(part) && !Str.includes("=")(part)
-    );
-    if (O.isNone(envCommand) || !/^[A-Za-z0-9._+-]+$/u.test(envCommand.value)) {
+  ): Effect.fn.Return<
+    {
+      readonly bindArguments: ReadonlyArray<string>;
+      readonly interpreter: string;
+      readonly interpreterArguments: ReadonlyArray<string>;
+    },
+    LibpffError
+  > {
+    const envCommandIndex = shebangParts
+      .slice(1)
+      .findIndex((part) => !Str.isEmpty(part) && !Str.startsWith("-")(part) && !Str.includes("=")(part));
+    const envCommand = shebangParts[envCommandIndex + 1];
+    if (envCommandIndex < 0 || envCommand === undefined || !/^[A-Za-z0-9._+-]+$/u.test(envCommand)) {
       return yield* makeLibpffError("config", { cause: "sandbox env shebang command is unsupported" });
     }
     const resolvedEnvInterpreter = yield* Effect.scoped(
@@ -598,7 +605,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         const handle = yield* spawner.spawn(
           ChildProcess.make(
             "/bin/sh",
-            ["-c", 'command -v -- "$1"', "shebang-interpreter-resolver", envCommand.value],
+            ["-c", 'command -v -- "$1"', "shebang-interpreter-resolver", envCommand],
             spawnOptions
           )
         );
@@ -646,12 +653,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     if (A.some(envRuntimePrefixes, (runtimePrefix) => runtimePrefix === path.parse(runtimePrefix).root)) {
       return yield* makeLibpffError("config", { cause: "sandbox env interpreter bind cannot expose the host root" });
     }
-    return [
-      ...A.flatMap(envRuntimePrefixes, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]),
-      "--setenv",
-      "PATH",
-      `${path.dirname(resolvedEnvInterpreter)}:/usr/bin:/bin`,
-    ];
+    return {
+      bindArguments: A.flatMap(envRuntimePrefixes, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]),
+      interpreter: canonicalEnvInterpreter,
+      interpreterArguments: shebangParts.slice(envCommandIndex + 2),
+    };
   });
 
   const sandboxInterpreterBinds = Effect.fn("Libpff.pffexport.sandboxInterpreterBinds")(function* (
@@ -669,9 +675,16 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     return A.flatMap(binds, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]);
   });
 
-  const sandboxShebangBinds = Effect.fn("Libpff.pffexport.sandboxShebangBinds")(function* (
+  const sandboxShebangPlan = Effect.fn("Libpff.pffexport.sandboxShebangPlan")(function* (
     executable: string
-  ): Effect.fn.Return<ReadonlyArray<string>, LibpffError> {
+  ): Effect.fn.Return<
+    {
+      readonly bindArguments: ReadonlyArray<string>;
+      readonly command: string;
+      readonly commandArguments: ReadonlyArray<string>;
+    },
+    LibpffError
+  > {
     const shebang = yield* Effect.scoped(
       fs.open(executable, { flag: "r" }).pipe(
         Effect.flatMap((handle) => handle.readAlloc(4096)),
@@ -687,7 +700,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     );
     const shebangParts = shebang.split(/\s+/u);
     const prefix = shebangParts[0] ?? "";
-    if (Str.isEmpty(prefix) || !path.isAbsolute(prefix)) return [];
+    if (Str.isEmpty(prefix) || !path.isAbsolute(prefix))
+      return { bindArguments: [], command: executable, commandArguments: [] };
 
     const canonicalInterpreter = yield* fs
       .realPath(prefix)
@@ -708,9 +722,14 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     }
 
     const bindArguments = yield* sandboxInterpreterBinds([prefix, canonicalInterpreter]);
-    if (path.basename(prefix) !== "env") return bindArguments;
+    if (path.basename(prefix) !== "env") return { bindArguments, command: executable, commandArguments: [] };
 
-    return [...bindArguments, ...(yield* sandboxEnvShebangBinds(shebangParts))];
+    const envPlan = yield* sandboxEnvShebangPlan(shebangParts);
+    return {
+      bindArguments: [...bindArguments, ...envPlan.bindArguments],
+      command: envPlan.interpreter,
+      commandArguments: [...envPlan.interpreterArguments, executable],
+    };
   });
 
   const sandboxedPffexportCommand = Effect.fn("Libpff.pffexport.sandboxedCommand")(function* (
@@ -729,7 +748,6 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       });
     }
     const runtimeCoversPffexport = sandboxRuntimeCovers(hostPffexportPath);
-    const sandboxExecutable = hostPffexportPath;
     const executableRuntimePrefix = runtimePrefixFor(hostPffexportPath);
     if (!runtimeCoversPffexport && executableRuntimePrefix === path.parse(executableRuntimePrefix).root) {
       return yield* makeLibpffError("config", { cause: "sandbox executable bind cannot expose the host root" });
@@ -737,6 +755,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     const executableBind = runtimeCoversPffexport
       ? []
       : ["--ro-bind", executableRuntimePrefix, executableRuntimePrefix];
+    const shebangPlan = yield* sandboxShebangPlan(hostPffexportPath);
     return ChildProcess.make(
       bwrapPath,
       [
@@ -759,7 +778,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         "--setenv",
         "PATH",
         "/usr/bin:/bin",
-        ...(yield* sandboxShebangBinds(hostPffexportPath)),
+        ...shebangPlan.bindArguments,
         "--ro-bind",
         sourcePath,
         "/input/source.pst",
@@ -773,7 +792,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         "LANG",
         "C.UTF-8",
         "--",
-        sandboxExecutable,
+        shebangPlan.command,
+        ...shebangPlan.commandArguments,
         "-f",
         exportFormat,
         "-m",
