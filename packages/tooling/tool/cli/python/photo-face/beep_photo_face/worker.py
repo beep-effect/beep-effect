@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import fcntl
+import errno
 import hashlib
+import importlib
 import json
 import math
 import os
@@ -19,7 +20,7 @@ from collections import Counter
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, BinaryIO, Iterator
 
 # OpenCV reads this limit during module initialization and rejects oversized
 # image headers before allocating the full decoded pixel buffer.
@@ -51,6 +52,7 @@ MODEL_LICENSE_URL = (
     "https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md"
 )
 MAX_MODEL_ARCHIVE_BYTES = 400 * 1024 * 1024
+MODEL_LOCK_RETRY_SECONDS = 0.1
 ALLOWED_MODULES = ("detection", "recognition")
 PROVIDERS = ("CPUExecutionProvider",)
 SUPPORTED_EXTENSIONS = frozenset({".jpg", ".jpeg", ".png", ".webp"})
@@ -577,6 +579,82 @@ def download_model_archive(destination: Path) -> None:
         ) from error
 
 
+def _model_lock_backend(platform_name: str) -> tuple[bool, Any]:
+    is_windows = platform_name == "nt"
+    module_name = "msvcrt" if is_windows else "fcntl"
+    return is_windows, importlib.import_module(module_name)
+
+
+def _windows_lock_is_contended(error: OSError) -> bool:
+    return error.errno in {errno.EACCES, errno.EAGAIN, errno.EDEADLK} or getattr(
+        error, "winerror", None
+    ) in {33, 36}
+
+
+def _acquire_windows_file_lock(lock_file: BinaryIO, backend: Any) -> None:
+    lock_file.seek(0, os.SEEK_END)
+    if lock_file.tell() == 0:
+        lock_file.write(b"\0")
+        lock_file.flush()
+
+    while True:
+        lock_file.seek(0)
+        try:
+            backend.locking(lock_file.fileno(), backend.LK_NBLCK, 1)
+            return
+        except OSError as error:
+            if not _windows_lock_is_contended(error):
+                raise
+            time.sleep(MODEL_LOCK_RETRY_SECONDS)
+
+
+@contextlib.contextmanager
+def _exclusive_model_lock(
+    lock_file: BinaryIO, lock_path: Path, platform_name: str
+) -> Iterator[None]:
+    try:
+        is_windows, backend = _model_lock_backend(platform_name)
+        if is_windows:
+            _acquire_windows_file_lock(lock_file, backend)
+        else:
+            backend.flock(lock_file.fileno(), backend.LOCK_EX)
+    except (ImportError, OSError) as error:
+        raise WorkerError(
+            "model-acquisition-failed",
+            f"could not acquire the model acquisition lock {lock_path}: {error}",
+        ) from error
+
+    try:
+        yield
+    finally:
+        try:
+            if is_windows:
+                lock_file.seek(0)
+                backend.locking(lock_file.fileno(), backend.LK_UNLCK, 1)
+            else:
+                backend.flock(lock_file.fileno(), backend.LOCK_UN)
+        except OSError as error:
+            raise WorkerError(
+                "model-acquisition-failed",
+                f"could not release the model acquisition lock {lock_path}: {error}",
+            ) from error
+
+
+@contextlib.contextmanager
+def model_acquisition_lock(lock_path: Path) -> Iterator[None]:
+    try:
+        lock_file = lock_path.open("a+b")
+    except OSError as error:
+        raise WorkerError(
+            "model-acquisition-failed",
+            f"could not open the model acquisition lock {lock_path}: {error}",
+        ) from error
+
+    with lock_file:
+        with _exclusive_model_lock(lock_file, lock_path, os.name):
+            yield
+
+
 def ensure_model_available(arguments: WorkerArguments) -> list[Path]:
     runtime_directory = arguments.model_root / "models" / MODEL_RUNTIME_NAME
     if runtime_directory.exists() or runtime_directory.is_symlink():
@@ -597,33 +675,29 @@ def ensure_model_available(arguments: WorkerArguments) -> list[Path]:
     models_directory = arguments.model_root / "models"
     models_directory.mkdir(parents=True, exist_ok=True)
     lock_path = models_directory / f".{MODEL_RUNTIME_NAME}.lock"
-    with lock_path.open("a+b") as lock_file:
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-        try:
-            if runtime_directory.exists() or runtime_directory.is_symlink():
-                return verify_runtime_model_directory(runtime_directory)
-
-            archive_path = models_directory / f"{MODEL_NAME}.zip"
-            if archive_path.exists() or archive_path.is_symlink():
-                verify_model_archive(archive_path)
-            else:
-                descriptor, temporary_name = tempfile.mkstemp(
-                    prefix=f".{MODEL_NAME}.", suffix=".zip", dir=models_directory
-                )
-                os.close(descriptor)
-                temporary_archive = Path(temporary_name)
-                temporary_archive.unlink()
-                try:
-                    download_model_archive(temporary_archive)
-                    verify_model_archive(temporary_archive)
-                    os.rename(temporary_archive, archive_path)
-                finally:
-                    temporary_archive.unlink(missing_ok=True)
-
-            install_verified_model_archive(archive_path, models_directory)
+    with model_acquisition_lock(lock_path):
+        if runtime_directory.exists() or runtime_directory.is_symlink():
             return verify_runtime_model_directory(runtime_directory)
-        finally:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+        archive_path = models_directory / f"{MODEL_NAME}.zip"
+        if archive_path.exists() or archive_path.is_symlink():
+            verify_model_archive(archive_path)
+        else:
+            descriptor, temporary_name = tempfile.mkstemp(
+                prefix=f".{MODEL_NAME}.", suffix=".zip", dir=models_directory
+            )
+            os.close(descriptor)
+            temporary_archive = Path(temporary_name)
+            temporary_archive.unlink()
+            try:
+                download_model_archive(temporary_archive)
+                verify_model_archive(temporary_archive)
+                os.rename(temporary_archive, archive_path)
+            finally:
+                temporary_archive.unlink(missing_ok=True)
+
+        install_verified_model_archive(archive_path, models_directory)
+        return verify_runtime_model_directory(runtime_directory)
 
 
 def load_face_analysis(

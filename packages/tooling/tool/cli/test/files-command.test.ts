@@ -1498,6 +1498,21 @@ describe("files command", { concurrent: false }, () => {
           yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${workerReportJson}'\n`);
           yield* fs.chmod(uvPath, 0o755);
           const jsonChunks: Array<string> = [];
+          let hardLinkCallCount = 0;
+          const noHardLinkFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            link: () =>
+              Effect.suspend(() => {
+                hardLinkCallCount += 1;
+                return Effect.fail(
+                  PlatformError.badArgument({
+                    description: "hard links unavailable",
+                    method: "link",
+                    module: "FileSystem",
+                  })
+                );
+              }),
+          };
           yield* withEnvVar(
             "BEEP_UV_PATH",
             uvPath,
@@ -1520,7 +1535,8 @@ describe("files command", { concurrent: false }, () => {
                 Effect.sync(() => {
                   jsonChunks.push(text);
                 })
-              )
+              ),
+              Effect.provideService(FileSystem.FileSystem, noHardLinkFileSystem)
             )
           );
 
@@ -1543,6 +1559,7 @@ describe("files command", { concurrent: false }, () => {
           expect(yield* fs.readFileString(groupPath)).toBe("group source");
           expect(yield* fs.readFileString(otherPath)).toBe("other source");
           expect(yield* fs.readFileString(unreadablePath)).toBe("unreadable source");
+          expect(hardLinkCallCount).toBe(0);
 
           const backupNamedManifestPath = path.join(tmpDir, ".previous-manifest");
           yield* fs.writeFileString(backupNamedManifestPath, "previous manifest");
@@ -1754,21 +1771,36 @@ describe("files command", { concurrent: false }, () => {
           yield* fs.writeFileString(groupTarget, "previous group");
           yield* fs.writeFileString(manifestPath, "previous manifest");
           yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${workerReportJson}'\n`);
+          let stagedRenameCount = 0;
           let linkCallCount = 0;
           const failingFileSystem: FileSystem.FileSystem = {
             ...fs,
-            link: (existingPath, newPath) =>
+            link: () =>
               Effect.suspend(() => {
                 linkCallCount += 1;
-                return linkCallCount === 2
+                return Effect.fail(
+                  PlatformError.badArgument({
+                    description: "unexpected hard-link materialization",
+                    method: "link",
+                    module: "FileSystem",
+                  })
+                );
+              }),
+            rename: (fromPath, toPath) =>
+              Effect.suspend(() => {
+                if (!Str.startsWith(".staged-")(path.basename(fromPath))) {
+                  return fs.rename(fromPath, toPath);
+                }
+                stagedRenameCount += 1;
+                return stagedRenameCount === 2
                   ? Effect.fail(
                       PlatformError.badArgument({
                         description: "simulated second person-match commit failure",
-                        method: "link",
+                        method: "rename",
                         module: "FileSystem",
                       })
                     )
-                  : fs.link(existingPath, newPath);
+                  : fs.rename(fromPath, toPath);
               }),
           };
           const rollbackExit = yield* withEnvVar(
@@ -1792,7 +1824,8 @@ describe("files command", { concurrent: false }, () => {
           );
 
           expect(Exit.isFailure(rollbackExit)).toBe(true);
-          expect(linkCallCount).toBe(2);
+          expect(stagedRenameCount).toBe(2);
+          expect(linkCallCount).toBe(0);
           expect(yield* fs.readFileString(acceptedTarget)).toBe("previous solo");
           expect(yield* fs.readFileString(groupTarget)).toBe("previous group");
           expect(yield* fs.readFileString(manifestPath)).toBe("previous manifest");
@@ -1801,9 +1834,80 @@ describe("files command", { concurrent: false }, () => {
           expect(
             A.filter(yield* sortedDirectoryEntries(tmpDir), (name) => Str.startsWith(".beep-files-person-match-")(name))
           ).toEqual([]);
+          expect(yield* fs.readFileString(soloPath)).toBe("solo source");
+          expect(yield* fs.readFileString(groupPath)).toBe("group source");
+          expect(yield* fs.readFileString(otherPath)).toBe("other source");
+          expect(yield* fs.readFileString(unreadablePath)).toBe("unreadable source");
         })
       )
     ));
+
+  it.each([
+    { cacheChild: "insightface", targetState: "existing" },
+    { cacheChild: "insightface", targetState: "dangling" },
+    { cacheChild: "venv-cpu-py312-v1", targetState: "existing" },
+    { cacheChild: "venv-cpu-py312-v1", targetState: "dangling" },
+    { cacheChild: "uv-cache", targetState: "existing" },
+    { cacheChild: "uv-cache", targetState: "dangling" },
+  ])(
+    "rejects a $targetState symlinked $cacheChild cache child before starting the worker",
+    ({ cacheChild, targetState }) =>
+      Effect.runPromise(
+        withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const candidateDir = path.join(tmpDir, "candidates");
+            const referenceDir = path.join(tmpDir, "references");
+            const cacheDir = path.join(tmpDir, "cache");
+            const escapedDir = path.join(tmpDir, "escaped");
+            const canaryPath = path.join(escapedDir, "canary.txt");
+            const manifestPath = path.join(tmpDir, "person-match.json");
+            const uvPath = path.join(tmpDir, "uv");
+            const workerMarkerPath = path.join(tmpDir, "worker-started");
+            const targetExists = targetState === "existing";
+
+            yield* fs.makeDirectory(candidateDir, { recursive: true });
+            yield* fs.makeDirectory(referenceDir, { recursive: true });
+            yield* fs.makeDirectory(cacheDir, { recursive: true });
+            if (targetExists) {
+              yield* fs.makeDirectory(escapedDir, { recursive: true });
+              yield* fs.writeFileString(canaryPath, "untouched");
+            }
+            yield* fs.symlink(escapedDir, path.join(cacheDir, cacheChild));
+            yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
+
+            const message = yield* withEnvVar(
+              "BEEP_UV_PATH",
+              uvPath,
+              expectFilesCommandFailure([
+                "match-person",
+                "--references",
+                referenceDir,
+                "--dir",
+                candidateDir,
+                "--cache-dir",
+                cacheDir,
+                "--manifest",
+                manifestPath,
+                "--accept-model-license",
+              ])
+            );
+
+            expect(message).toMatch(targetExists ? /symlinked|aliased/i : /failed to resolve/i);
+            expect(message).toContain(path.join(cacheDir, cacheChild));
+            expect(yield* fs.exists(workerMarkerPath)).toBe(false);
+            expect(yield* fs.exists(manifestPath)).toBe(false);
+            if (targetExists) {
+              expect(yield* fs.readFileString(canaryPath)).toBe("untouched");
+              expect(yield* sortedDirectoryEntries(escapedDir)).toEqual(["canary.txt"]);
+            } else {
+              expect(yield* fs.exists(escapedDir)).toBe(false);
+            }
+          })
+        )
+      )
+  );
 
   it("rejects overlapping person-match manifest, output, and cache paths before starting the worker", () =>
     Effect.runPromise(

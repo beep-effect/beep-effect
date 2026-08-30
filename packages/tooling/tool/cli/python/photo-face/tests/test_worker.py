@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import errno
 import hashlib
 import json
 from pathlib import Path
@@ -279,6 +281,91 @@ def test_runtime_model_directory_rejects_extra_onnx(
     assert "untrusted.onnx" in raised.value.message
 
 
+@pytest.mark.parametrize(
+    ("platform_name", "module_name", "is_windows"),
+    [("posix", "fcntl", False), ("nt", "msvcrt", True)],
+)
+def test_model_lock_selects_stdlib_backend_for_platform(
+    platform_name: str,
+    module_name: str,
+    is_windows: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    backend = object()
+    imported_modules: list[str] = []
+
+    def import_module(name: str) -> object:
+        imported_modules.append(name)
+        return backend
+
+    monkeypatch.setattr(worker.importlib, "import_module", import_module)
+
+    assert worker._model_lock_backend(platform_name) == (is_windows, backend)
+    assert imported_modules == [module_name]
+
+
+def test_windows_model_lock_retries_contention_and_releases(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lock_path = tmp_path / "model.lock"
+    sleep_calls: list[float] = []
+
+    class WindowsLockBackend:
+        LK_NBLCK = 1
+        LK_UNLCK = 2
+
+        def __init__(self) -> None:
+            self.calls: list[tuple[int, int, int]] = []
+            self.acquire_attempts = 0
+
+        def locking(self, descriptor: int, operation: int, byte_count: int) -> None:
+            self.calls.append((descriptor, operation, byte_count))
+            if operation == self.LK_NBLCK:
+                self.acquire_attempts += 1
+                if self.acquire_attempts == 1:
+                    raise OSError(errno.EACCES, "model lock is held")
+
+    backend = WindowsLockBackend()
+    monkeypatch.setattr(
+        worker, "_model_lock_backend", lambda _platform_name: (True, backend)
+    )
+    monkeypatch.setattr(worker.time, "sleep", sleep_calls.append)
+
+    with lock_path.open("a+b") as lock_file:
+        descriptor = lock_file.fileno()
+        with worker._exclusive_model_lock(lock_file, lock_path, "nt"):
+            assert backend.calls == [
+                (descriptor, backend.LK_NBLCK, 1),
+                (descriptor, backend.LK_NBLCK, 1),
+            ]
+            assert lock_path.read_bytes() == b"\0"
+
+    assert backend.calls == [
+        (descriptor, backend.LK_NBLCK, 1),
+        (descriptor, backend.LK_NBLCK, 1),
+        (descriptor, backend.LK_UNLCK, 1),
+    ]
+    assert sleep_calls == [worker.MODEL_LOCK_RETRY_SECONDS]
+
+
+def test_model_lock_backend_failure_is_typed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lock_path = tmp_path / "model.lock"
+
+    def unavailable_backend(_platform_name: str) -> tuple[bool, object]:
+        raise ImportError("no platform lock backend")
+
+    monkeypatch.setattr(worker, "_model_lock_backend", unavailable_backend)
+
+    with pytest.raises(WorkerError) as raised:
+        with worker.model_acquisition_lock(lock_path):
+            raise AssertionError("the critical section must not run")
+
+    assert raised.value.code == "model-acquisition-failed"
+    assert "could not acquire the model acquisition lock" in raised.value.message
+
+
 def make_worker_arguments(tmp_path: Path) -> WorkerArguments:
     reference_directory = tmp_path / "references"
     source_directory = tmp_path / "candidates"
@@ -295,6 +382,62 @@ def make_worker_arguments(tmp_path: Path) -> WorkerArguments:
         recursive=False,
         accept_model_license=True,
     )
+
+
+def test_model_acquisition_lock_spans_download_verify_and_install(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    arguments = make_worker_arguments(tmp_path)
+    lock_held = False
+    calls: list[str] = []
+
+    @contextlib.contextmanager
+    def tracked_lock(lock_path: Path):
+        nonlocal lock_held
+        assert lock_path == (
+            arguments.model_root / "models" / f".{worker.MODEL_RUNTIME_NAME}.lock"
+        )
+        assert lock_held is False
+        lock_held = True
+        try:
+            yield
+        finally:
+            lock_held = False
+
+    def download(destination: Path) -> None:
+        assert lock_held is True
+        calls.append("download")
+        destination.write_bytes(b"tiny archive")
+
+    def verify_archive(_archive_path: Path) -> None:
+        assert lock_held is True
+        calls.append("verify-archive")
+
+    def install(_archive_path: Path, models_directory: Path) -> None:
+        assert lock_held is True
+        calls.append("install")
+        (models_directory / worker.MODEL_RUNTIME_NAME).mkdir()
+
+    def verify_runtime(runtime_directory: Path) -> list[Path]:
+        assert lock_held is True
+        calls.append("verify-runtime")
+        return [runtime_directory / name for name in worker.MODEL_ARTIFACT_NAMES]
+
+    monkeypatch.setattr(worker, "model_acquisition_lock", tracked_lock)
+    monkeypatch.setattr(worker, "download_model_archive", download)
+    monkeypatch.setattr(worker, "verify_model_archive", verify_archive)
+    monkeypatch.setattr(worker, "install_verified_model_archive", install)
+    monkeypatch.setattr(worker, "verify_runtime_model_directory", verify_runtime)
+
+    artifacts = worker.ensure_model_available(arguments)
+
+    runtime_directory = arguments.model_root / "models" / worker.MODEL_RUNTIME_NAME
+    assert artifacts == [
+        runtime_directory / "det_10g.onnx",
+        runtime_directory / "w600k_r50.onnx",
+    ]
+    assert calls == ["download", "verify-archive", "install", "verify-runtime"]
+    assert lock_held is False
 
 
 def test_unreadable_candidate_is_reported_without_running_inference(
