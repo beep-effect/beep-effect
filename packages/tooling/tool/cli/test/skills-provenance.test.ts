@@ -40,6 +40,7 @@ const fixtureRoot = new URL("./fixtures/skills-provenance", import.meta.url).pat
 const textEncoder = new TextEncoder();
 const emptyDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const TestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 
@@ -450,9 +451,9 @@ layer(TestLayer)("skills provenance service", (it) => {
           Bun.spawnSync([runner, adapter, auditedRepo, "observe", target], {
             cwd: auditedRepo,
             env: {
-              ...process.env,
+              ...Bun.env,
               BWRAP_CAPTURE: capturePath,
-              PATH: `${binDirectory}:${process.env.PATH ?? ""}`,
+              PATH: `${binDirectory}:${Bun.env.PATH ?? ""}`,
             },
             stderr: "pipe",
             stdout: "pipe",
@@ -537,7 +538,7 @@ layer(TestLayer)("skills provenance service", (it) => {
             return null;
           },
         };
-        const invoke = ({
+        const invoke = Effect.fn("SkillsProvenanceTest.invokeManualEditRoute")(function* ({
           body,
           expectedCapability,
           providedCapability,
@@ -547,43 +548,49 @@ layer(TestLayer)("skills provenance service", (it) => {
           readonly expectedCapability: string;
           readonly providedCapability?: string;
           readonly route?: string;
-        }) =>
-          new Promise<{ readonly status: number }>((resolve) => {
+        }) {
+          return yield* Effect.callback<{ readonly status: number }>((resume) => {
             let status = 0;
             const response = {
               end: () => {
-                resolve({ status });
+                resume(Effect.succeed({ status }));
               },
               writeHead: (statusCode: number) => {
                 status = statusCode;
               },
             };
             const request = {
-              headers: providedCapability ? { "x-impeccable-commit-capability": providedCapability } : {},
+              headers: providedCapability === undefined ? {} : { "x-impeccable-commit-capability": providedCapability },
               method: "POST",
               on: (event: string, listener: (chunk?: string) => void) => {
-                if (event === "data" && body) listener(body);
+                if (event === "data" && body !== undefined) listener(body);
                 if (event === "end") queueMicrotask(listener);
                 return request;
               },
             };
             const handle = routeModule.createManualEditRoutes({
               chatAgentLikelyActive: () => false,
-              commitManualEdits: async ({ env }: { readonly env: Record<string, string | undefined> }) => {
+              commitManualEdits: ({ env }: { readonly env: Record<string, string | undefined> }) => {
                 commitCalls += 1;
                 childEnvironment = env;
                 const firstSelection = copyAgentModule.chooseCopyEditAgent({ env: { ...env } });
                 const cachedSelection = copyAgentModule.chooseCopyEditAgent({ env: { ...env } });
-                if (firstSelection !== "codex" || cachedSelection !== "codex") {
-                  throw new Error("sanitized provider probe did not select the fixture Codex executable");
-                }
-                return { applied: [], cleared: 0, failed: [], files: [], reason: "no_pending_edits", warnings: [] };
+                expect(firstSelection).toBe("codex");
+                expect(cachedSelection).toBe("codex");
+                return Promise.resolve({
+                  applied: [],
+                  cleared: 0,
+                  failed: [],
+                  files: [],
+                  reason: "no_pending_edits",
+                  warnings: [],
+                });
               },
               cwd: probeRoot,
               env: () => ({
                 IMPECCABLE_LIVE_COMMIT_CAPABILITY: expectedCapability,
                 IMPECCABLE_LIVE_COPY_AGENT: "auto",
-                PATH: `${probeBin}:${process.env.PATH ?? ""}`,
+                PATH: `${probeBin}:${Bun.env.PATH ?? ""}`,
                 PROBE_CAPTURE: probeCapture,
                 VISIBLE_VALUE: "kept",
               }),
@@ -596,30 +603,25 @@ layer(TestLayer)("skills provenance service", (it) => {
             });
             expect(handle(request, response, new URL(`http://127.0.0.1${route}`))).toBe(true);
           });
+        });
 
-        expect((yield* Effect.promise(() => invoke({ expectedCapability: "" }))).status).toBe(403);
-        expect((yield* Effect.promise(() => invoke({ expectedCapability: "expected" }))).status).toBe(403);
+        const rollbackBody = yield* encodeUnknownJson({ action: "rollback", token: "page-token" });
+
+        expect((yield* invoke({ expectedCapability: "" })).status).toBe(403);
+        expect((yield* invoke({ expectedCapability: "expected" })).status).toBe(403);
+        expect((yield* invoke({ expectedCapability: "expected", providedCapability: "wrong" })).status).toBe(403);
         expect(
-          (yield* Effect.promise(() => invoke({ expectedCapability: "expected", providedCapability: "wrong" }))).status
+          (yield* invoke({
+            body: rollbackBody,
+            expectedCapability: "expected",
+            route: "/manual-edit-repair-decision?token=page-token",
+          })).status
         ).toBe(403);
         expect(
-          (yield* Effect.promise(() =>
-            invoke({
-              body: JSON.stringify({ action: "rollback", token: "page-token" }),
-              expectedCapability: "expected",
-              route: "/manual-edit-repair-decision?token=page-token",
-            })
-          )).status
-        ).toBe(403);
-        expect(
-          (yield* Effect.promise(() =>
-            invoke({ expectedCapability: "expected", route: "/manual-edit-discard?token=page-token" })
-          )).status
+          (yield* invoke({ expectedCapability: "expected", route: "/manual-edit-discard?token=page-token" })).status
         ).toBe(403);
         expect(transactionCalls).toEqual({ cancel: 0, clear: 0, count: 0, read: 0, rollback: 0, write: 0 });
-        const accepted = yield* Effect.promise(() =>
-          invoke({ expectedCapability: "expected", providedCapability: "expected" })
-        );
+        const accepted = yield* invoke({ expectedCapability: "expected", providedCapability: "expected" });
 
         expect(accepted.status).toBe(200);
         expect(commitCalls).toBe(1);
@@ -647,24 +649,20 @@ layer(TestLayer)("skills provenance service", (it) => {
         expect(postCheckEnvironment?.IMPECCABLE_LIVE_COMMIT_CAPABILITY).toBeUndefined();
         const rollbackCallsBeforeTrustedActions = transactionCalls.rollback;
         expect(
-          (yield* Effect.promise(() =>
-            invoke({
-              body: JSON.stringify({ action: "rollback", token: "page-token" }),
-              expectedCapability: "expected",
-              providedCapability: "expected",
-              route: "/manual-edit-repair-decision?token=page-token",
-            })
-          )).status
+          (yield* invoke({
+            body: rollbackBody,
+            expectedCapability: "expected",
+            providedCapability: "expected",
+            route: "/manual-edit-repair-decision?token=page-token",
+          })).status
         ).toBe(200);
         expect(transactionCalls.rollback).toBe(rollbackCallsBeforeTrustedActions + 1);
         expect(
-          (yield* Effect.promise(() =>
-            invoke({
-              expectedCapability: "expected",
-              providedCapability: "expected",
-              route: "/manual-edit-discard?token=page-token",
-            })
-          )).status
+          (yield* invoke({
+            expectedCapability: "expected",
+            providedCapability: "expected",
+            route: "/manual-edit-discard?token=page-token",
+          })).status
         ).toBe(200);
         expect(transactionCalls.rollback).toBe(rollbackCallsBeforeTrustedActions + 2);
         expect(transactionCalls.cancel).toBe(1);
@@ -680,7 +678,7 @@ layer(TestLayer)("skills provenance service", (it) => {
         expect(A.filter(activities, (activity) => activity.type === "manual_edit_discard_denied")).toEqual([
           { payload: { reason: "operator_capability_mismatch" }, type: "manual_edit_discard_denied" },
         ]);
-        expect(JSON.stringify(activities)).not.toContain("expected");
+        expect(yield* encodeUnknownJson(activities)).not.toContain("expected");
       })
     )
   );

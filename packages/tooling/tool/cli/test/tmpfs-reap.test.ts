@@ -976,16 +976,17 @@ describe("tmpfs reap", () => {
         yield* fs.writeFileString(path.join(outside, "preserve.txt"), "do not delete\n");
         yield* runCommand("touch", ["-d", fixtureTimestamp(3), candidate], root);
 
+        const swapCandidateBeforeProcessScan = Effect.fn("TmpfsReapTest.swapCandidateBeforeProcessScan")(function* () {
+          yield* fs.remove(candidate, { force: true, recursive: true });
+          yield* fs.symlink(outside, candidate);
+          return A.empty<string>();
+        }, Effect.orDie);
+
         const report = yield* runTmpfsReap({
           apply: true,
           cacheRoot,
           classes: ["scoped-temp"],
-          listProcessCommandLines: () =>
-            Effect.gen(function* () {
-              yield* fs.remove(candidate, { force: true, recursive: true });
-              yield* fs.symlink(outside, candidate);
-              return A.empty<string>();
-            }),
+          listProcessCommandLines: swapCandidateBeforeProcessScan,
           nowMillis: FIXTURE_NOW_MILLIS,
           tmpRoot,
         });
