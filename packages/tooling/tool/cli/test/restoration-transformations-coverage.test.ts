@@ -21,6 +21,21 @@ const identity = {
   schemaVersion: "oppold-corpus-restoration/v1" as const,
   transformationRunId: "transformation-1",
 };
+const context = {
+  archiveRoot: "/archive",
+  corpusRoot: "/corpus",
+  family: "legacy-word" as const,
+  ledgerPath: "/corpus/ledger.jsonl",
+  mailScope: O.none<"full" | "slice">(),
+  outputRoot: "/corpus/output",
+  preservationRecords: [],
+  preservationRunId: identity.preservationRunId,
+  preservationSealSha256: identity.preservationSealSha256,
+  runLabel: identity.runLabel,
+  runRoot: "/corpus/run",
+  startedAt: 0,
+  transformationRunId: identity.transformationRunId,
+};
 const archivedFile = (objectId: string, sourceRelativePath: string, sizeBytes = 2) =>
   ArchiveLedgerRecord.cases["archive-file-pass"].make({
     attemptId: `attempt-${objectId}`,
@@ -388,6 +403,74 @@ describe("restoration transformation semantic helpers", () => {
       expect(O.isNone(exhausted)).toBe(true);
       expect(yield* RT.maximumPageRmse([], [], Object.create(null), Object.create(null))).toBe(0);
     }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("rejects invalid persisted run-state shapes at each resumability boundary", () =>
+    Effect.gen(function* () {
+      const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
+        ...identity,
+        expectedCount: NonNegativeInt.make(0),
+        family: "legacy-word",
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        policySha256: sha("policy"),
+        recordType: "family-run-start",
+      });
+      const summary = TransformationLedgerRecord.cases["family-run-summary"].make({
+        ...identity,
+        elapsedMillis: NonNegativeInt.make(1),
+        exceptionCount: NonNegativeInt.make(0),
+        family: "legacy-word",
+        inputBytes: NonNegativeInt.make(0),
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        outputBytes: NonNegativeInt.make(0),
+        outputTreeSha256: sha("empty"),
+        passCount: NonNegativeInt.make(0),
+        recordType: "family-run-summary",
+        sourceCount: NonNegativeInt.make(0),
+        unapprovedCount: NonNegativeInt.make(0),
+      });
+      const acceptance = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
+        ...identity,
+        evidenceSha256: sha("evidence"),
+        expectedCount: NonNegativeInt.make(0),
+        family: "legacy-word",
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        message: "rejected",
+        outputTreeSha256: sha("empty"),
+        recordType: "family-acceptance-failure",
+        terminalCount: NonNegativeInt.make(0),
+        unapprovedCount: NonNegativeInt.make(1),
+      });
+
+      expect(O.isSome(yield* RT.resumableFamilyStart(context, []).pipe(Effect.option))).toBe(true);
+      expect(O.isSome(yield* RT.resumableFamilyStart(context, [runStart]).pipe(Effect.option))).toBe(true);
+      expect(O.isNone(yield* RT.resumableFamilyStart(context, [acceptance]).pipe(Effect.option))).toBe(true);
+      expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary, runStart]).pipe(Effect.option))).toBe(true);
+      expect(O.isNone(yield* RT.resumableFamilyStart(context, [summary]).pipe(Effect.option))).toBe(true);
+      expect((yield* RT.contextFromFamilyStart(context, runStart)).startedAt).toBeGreaterThan(0);
+      const invalidStart = { ...runStart, recordedAt: "not-a-date" };
+      expect(O.isNone(yield* RT.contextFromFamilyStart(context, invalidStart).pipe(Effect.option))).toBe(true);
+      expect(O.isNone(yield* RT.requireMailScope(context).pipe(Effect.option))).toBe(true);
+      expect(
+        yield* RT.requireMailScope({ ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") })
+      ).toBe("full");
+      expect(
+        O.isNone(
+          yield* RT.rejectFamilyPreflight(
+            true,
+            context,
+            0,
+            PosInt.make(100),
+            PosInt.make(100),
+            "denied",
+            "preflight rejected"
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+    })
   );
 
   it.effect("derives preservation elapsed time and rejects unsealed evidence", () =>
