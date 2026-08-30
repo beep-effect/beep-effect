@@ -784,3 +784,19 @@
   configuration, and rerun the read-only watch with explicit
   `--repo beep-effect/beep-effect`.
 - **Owner:** Yeet/GitHub CLI repository-context propagation.
+
+## 2026-08-30 — Required-check watch exits before workflows register
+
+- **What happened:** immediately after the final push, the required-only GitHub
+  check watcher exited instead of waiting for workflow check suites to be
+  created for the new head.
+- **Evidence:** `gh pr checks 906 --repo beep-effect/beep-effect --required
+  --watch --interval 10` exited 1 with `no required checks reported on the
+  'docs/packet-convention-closeout-recovery' branch` even though the previous
+  head registered 17 required checks and the new push had just completed.
+- **What would have prevented it:** give `--watch` a bounded registration grace
+  period, or have Yeet distinguish `zero checks not yet registered` from the
+  terminal `workflow configured no required checks` state.
+- **Disposition:** hosted-propagation friction; use a bounded retry only for the
+  exact no-check message, then hand control to the normal required-check watch.
+- **Owner:** GitHub check-watch startup semantics and Yeet hosted monitoring.
