@@ -437,6 +437,15 @@ if _args.s6:
 
     census_rec = abox_doc.get("census") or {}
     census_file = S6 / "CENSUS.yaml"
+    census_doc = yaml.safe_load(census_file.read_text()) if census_file.is_file() else {}
+    census_ttl = S6 / "graphs/census.ttl"
+    if not census_doc.get("graph_sha256_12"):
+        blocker("CENSUS.yaml carries no census graph digest (graph_sha256_12)")
+    elif census_ttl.is_file() and _sha12(census_ttl) != census_doc["graph_sha256_12"]:
+        blocker(
+            f"graphs/census.ttl bytes ({_sha12(census_ttl)}) do not match the recorded "
+            f"digest {census_doc['graph_sha256_12']} in CENSUS.yaml"
+        )
     if census_file.is_file() and census_rec.get("sha256_12"):
         if _sha12(census_file) != census_rec["sha256_12"]:
             blocker(
