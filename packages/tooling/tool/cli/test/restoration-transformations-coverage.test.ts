@@ -1,3 +1,4 @@
+import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import {
   ArchiveLedgerRecord,
   encodeArchiveLedgerRecordJson,
@@ -139,6 +140,27 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
     expect(RT.classifyMailFailure("I/O failed")).toBe("engine-failure");
     expect(RT.classifyMailError("password required")).toBe("password");
     expect(RT.classifyMailError({ unexpected: true })).toBe("engine-failure");
+    expect(
+      RT.classifyMailError(
+        FileProcessingOperationError.fromReason("archive-export-failed", {
+          details: { processClassification: "codepage" },
+          message: "driver failed",
+        })
+      )
+    ).toBe("codepage");
+    expect(
+      RT.classifyMailError(
+        FileProcessingOperationError.fromReason("archive-export-failed", {
+          details: { processClassification: "unknown" },
+          message: "corrupt payload",
+        })
+      )
+    ).toBe("corrupt");
+    expect(
+      RT.classifyMailError(
+        FileProcessingOperationError.fromReason("archive-export-failed", { message: "encrypted payload" })
+      )
+    ).toBe("password");
 
     expect(O.getOrUndefined(RT.signatureExtension(Uint8Array.of(0x25, 0x50, 0x44, 0x46)))).toBe("pdf");
     expect(O.getOrUndefined(RT.signatureExtension(Uint8Array.of(0x89, 0x50, 0x4e, 0x47)))).toBe("png");
@@ -364,6 +386,18 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       yield* RT.removeMatchingAcceptancePartial(directory, partial, canonical);
       expect(yield* fs.exists(partial)).toBe(false);
 
+      const changed = RestorationAcceptanceRecord.make({
+        ...record,
+        evidenceSha256: sha("changed-acceptance"),
+      });
+      const changedCanonical = yield* encodeRestorationAcceptanceRecordJson(changed);
+      yield* fs.writeFileString(partial, `${changedCanonical}\n`);
+      expect(
+        O.isNone(yield* RT.removeMatchingAcceptancePartial(directory, partial, canonical).pipe(Effect.option))
+      ).toBe(true);
+      yield* fs.remove(partial);
+      expect(O.isNone(yield* RT.writeAcceptanceRecord(corpusRoot, "run-1", changed).pipe(Effect.option))).toBe(true);
+
       const recycle = RestorationAcceptanceRecord.make({
         ...record,
         family: "recycle",
@@ -376,6 +410,14 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       yield* fs.writeFileString(recyclePartial, `${encodedRecycle}\n`);
       yield* RT.writeAcceptanceRecord(corpusRoot, "run-2", recycle);
       expect(yield* fs.exists(path.join(recycleDirectory, "recycle.json"))).toBe(true);
+
+      const conflictingPartialDirectory = path.join(corpusRoot, "staging/restoration/runs/run-3/acceptance");
+      yield* fs.makeDirectory(conflictingPartialDirectory, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(conflictingPartialDirectory, "preservation.json.partial"),
+        `${changedCanonical}\n`
+      );
+      expect(O.isNone(yield* RT.writeAcceptanceRecord(corpusRoot, "run-3", record).pipe(Effect.option))).toBe(true);
 
       const outside = path.join(corpusRoot, "outside");
       yield* fs.writeFileString(outside, "x");
@@ -643,6 +685,104 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         O.none()
       ).pipe(Effect.option);
       expect(O.isNone(conflict)).toBe(true);
+
+      yield* RT.appendAttachmentRepair(
+        mailContext,
+        "attempt-2",
+        "object-2",
+        "attachments/typed.bin",
+        "pdf",
+        "derived/typed.pdf",
+        "repaired",
+        O.some({ sha256: sha("typed"), sizeBytes: PosInt.make(1) })
+      );
+      expect(yield* fs.readFileString(ledgerPath)).toContain('"derivedSizeBytes":1');
+
+      const unterminatedPath = path.join(root, "ledgers/mail/unterminated.jsonl");
+      yield* fs.writeFileString(unterminatedPath, first.trimEnd());
+      expect(
+        O.isNone(
+          yield* RT.appendAttachmentRepair(
+            { ...mailContext, ledgerPath: unterminatedPath },
+            "attempt-3",
+            "object-3",
+            "attachments/file.bin",
+            "pdf",
+            "attachments/file.pdf",
+            "unsupported",
+            O.none()
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+
+      const blankRowPath = path.join(root, "ledgers/mail/blank-row.jsonl");
+      yield* fs.writeFileString(blankRowPath, `${first}\n`);
+      expect(
+        O.isNone(
+          yield* RT.appendAttachmentRepair(
+            { ...mailContext, ledgerPath: blankRowPath },
+            "attempt-4",
+            "object-4",
+            "attachments/file.bin",
+            "pdf",
+            "attachments/file.pdf",
+            "unsupported",
+            O.none()
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+
+      const terminalPath = path.join(root, "ledgers/mail/terminal.jsonl");
+      const terminal = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
+        ...identity,
+        evidenceSha256: sha("terminal"),
+        expectedCount: NonNegativeInt.make(0),
+        family: "mail",
+        mailScope: "full",
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        message: "terminal",
+        outputTreeSha256: sha(""),
+        recordType: "family-acceptance-failure",
+        terminalCount: NonNegativeInt.make(0),
+        unapprovedCount: NonNegativeInt.make(1),
+      });
+      yield* fs.writeFileString(terminalPath, `${yield* encodeTransformationLedgerRecordJson(terminal)}\n`);
+      expect(
+        O.isNone(
+          yield* RT.appendAttachmentRepair(
+            { ...mailContext, ledgerPath: terminalPath },
+            "attempt-5",
+            "object-5",
+            "attachments/file.bin",
+            "pdf",
+            "attachments/file.pdf",
+            "unsupported",
+            O.none()
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
+
+      const invalidPendingPath = path.join(root, "ledgers/mail/invalid-pending.jsonl");
+      const pendingSummary = familySummary("mail", 0, 0, 0);
+      yield* fs.writeFileString(
+        invalidPendingPath,
+        `${yield* encodeTransformationLedgerRecordJson(pendingSummary)}\n${first}`
+      );
+      expect(
+        O.isNone(
+          yield* RT.appendAttachmentRepair(
+            { ...mailContext, ledgerPath: invalidPendingPath },
+            "attempt-6",
+            "object-6",
+            "attachments/file.bin",
+            "pdf",
+            "attachments/file.pdf",
+            "unsupported",
+            O.none()
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
     })
   );
 
@@ -706,6 +846,70 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
           "attempt-1"
         )
       ).toEqual({ inputBytes: 0, outputBytes: 0, passed: false, unapproved: true });
+    })
+  );
+
+  it.effect("rejects drifted PST bytes and records an exhausted-budget terminal", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "pst-preflight-" });
+      const sourcePath = path.join(root, "store.pst");
+      const ledgerPath = path.join(root, "ledgers/mail/full.jsonl");
+      yield* fs.writeFileString(sourcePath, "abc");
+      yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
+      const pass = ArchiveLedgerRecord.cases["archive-file-pass"].make({
+        ...archivedFile("pst-budget", "mail/store.pst", 3),
+        sha256: sha("abc"),
+      });
+      const mailContext = {
+        ...context,
+        corpusRoot: root,
+        family: "mail" as const,
+        ledgerPath,
+        mailScope: O.some<"full" | "slice">("full"),
+        outputRoot: path.join(root, "output"),
+        runRoot: root,
+      };
+      const options = RestorationMailOptions.make({
+        corpusRoot: root,
+        expectedStoreCount: NonNegativeInt.make(1),
+        maxAmplificationRatio: 1,
+        maxElapsedMillis: PosInt.make(100),
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        pffexportPath: "pffexport",
+        scope: "full",
+        tikaJarPath: "/tika.jar",
+      });
+      const candidate = { family: "pst" as const, objectId: pass.objectId, pass: O.some(pass), sourcePath };
+      const exhausted = yield* RT.processPstCandidate(candidate, options, mailContext, 0, 100, "attempt-budget");
+      expect(exhausted).toEqual({ inputBytes: 3, outputBytes: 0, passed: false, unapproved: true });
+      expect(yield* fs.readFileString(ledgerPath)).toContain("no remaining approved cumulative output budget");
+
+      const drifted = { ...candidate, pass: O.some({ ...pass, sha256: sha("different") }) };
+      expect(
+        O.isNone(
+          yield* RT.processPstCandidate(drifted, options, mailContext, 100, 100, "attempt-drift").pipe(Effect.option)
+        )
+      ).toBe(true);
+
+      const noSpaceOptions = RestorationMailOptions.make({
+        ...options,
+        maxAmplificationRatio: Number.MAX_SAFE_INTEGER,
+      });
+      const noSpace = yield* RT.processPstCandidate(
+        candidate,
+        noSpaceOptions,
+        mailContext,
+        Number.MAX_SAFE_INTEGER,
+        100,
+        "attempt-space"
+      );
+      expect(noSpace).toEqual({ inputBytes: 3, outputBytes: 0, passed: false, unapproved: true });
+      expect(yield* fs.readFileString(ledgerPath)).toContain(
+        "Available bytes are below the next mail attempt output ceiling"
+      );
     })
   );
 
@@ -811,6 +1015,22 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
           100
         )
       ).toBe(0);
+      const mismatchedAttachment = path.join(attemptRoot, "Attachment-document.bin");
+      yield* fs.writeFile(mismatchedAttachment, Uint8Array.of(0x25, 0x50, 0x44, 0x46));
+      expect(
+        O.isNone(
+          yield* RT.repairAttachment(
+            { absolutePath: mismatchedAttachment, relativePath: "Attachment-document.bin" },
+            attemptRoot,
+            "attempt-mismatched",
+            "object-mismatched",
+            options,
+            mailContext,
+            0,
+            100
+          ).pipe(Effect.option)
+        )
+      ).toBe(true);
       const repairRecords = yield* fs.readFileString(ledgerPath);
       expect(repairRecords).toContain('"repairStatus":"unsupported"');
       expect(repairRecords).toContain('"repairStatus":"unchanged"');
@@ -1139,6 +1359,8 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
     });
     const recycleSummary = familySummary("recycle", 1, 0, 1);
     const recycleSegment = [recycleRunStart, recycleStart, join, mapping];
+    expect(RT.recycleCheckpointOrderValid([mapping, join])).toBe(true);
+    expect(RT.recycleCheckpointOrderValid([join, mapping])).toBe(false);
     expect(RT.attemptTerminalBindings([mapping])).toEqual([
       { attemptId: recycleStart.attemptId, sourceId: "content-object" },
     ]);
