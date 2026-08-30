@@ -399,6 +399,7 @@ const streamRemainder = Effect.fn("Preservation.streamRemainder")(function* (
   sourceAbs: string,
   partialAbs: string,
   offset: number,
+  expectedSizeBytes: number,
   hasher: Sha256State
 ): Effect.fn.Return<number, PreservationArchiveIoError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
@@ -407,11 +408,17 @@ const streamRemainder = Effect.fn("Preservation.streamRemainder")(function* (
     fs.open(partialAbs, { flag: offset === 0 ? "w+" : "a+" }).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (handle) {
-          yield* Stream.runForEach(fs.stream(sourceAbs, { chunkSize: hashChunkBytes, offset }), (chunk) =>
-            Effect.sync(() => {
-              hasher.update(chunk);
-              copied += chunk.byteLength;
-            }).pipe(Effect.andThen(handle.writeAll(chunk)))
+          yield* Stream.runForEach(
+            fs.stream(sourceAbs, {
+              bytesToRead: Math.max(0, expectedSizeBytes - offset),
+              chunkSize: hashChunkBytes,
+              offset,
+            }),
+            (chunk) =>
+              Effect.sync(() => {
+                hasher.update(chunk);
+                copied += chunk.byteLength;
+              }).pipe(Effect.andThen(handle.writeAll(chunk)))
           );
           yield* handle.sync;
         })
@@ -540,7 +547,13 @@ const promoteVerifiedCopy = Effect.fn("Preservation.promoteVerifiedCopy")(functi
   afterPayload: NonNullable<ArchiveWriterLiveOptions["afterPayloadSync"]>
 ): Effect.fn.Return<PreservationAttemptOutcome, PreservationArchiveIoError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const bytesCopied = yield* streamRemainder(sourceAbs, partialAbs, staged.stagedBytes, staged.hasher);
+  const bytesCopied = yield* streamRemainder(
+    sourceAbs,
+    partialAbs,
+    staged.stagedBytes,
+    statBefore.sizeBytes,
+    staged.hasher
+  );
   yield* afterPayload(ArchiveWriterPayloadSyncHookInput.make({ partialAbs, sourceAbs }));
   const statAfterOption = yield* statSource(sourceAbs);
   if (O.isNone(statAfterOption)) {
@@ -1414,7 +1427,7 @@ const appendPassProvenance = Effect.fn("Preservation.appendPassProvenance")(func
 
 type PreservationCapacityBudget = {
   readonly ceilingBytes: number;
-  readonly destFreeBytes: number;
+  readonly corpusRoot: string;
   readonly requiredBytes: MutableRef.MutableRef<number>;
 };
 
@@ -1452,7 +1465,7 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
 ): Effect.fn.Return<
   A.NonEmptyReadonlyArray<PreservationManifestRow>,
   PreservationArchiveIoError | PreservationCeilingExceededError,
-  FileSystem.FileSystem
+  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > {
   const key = identityKey(identity);
   const fs = yield* FileSystem.FileSystem;
@@ -1466,7 +1479,8 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
     );
     const attemptIdentity = O.getOrElse(currentIdentity, () => identity);
     const nextRequiredBytes = MutableRef.get(capacity.requiredBytes) - accountedSizeBytes + attemptIdentity.sizeBytes;
-    yield* validateCopyTimeCapacityForTesting(nextRequiredBytes, capacity.ceilingBytes, capacity.destFreeBytes);
+    const currentDestFreeBytes = yield* destinationFreeBytes(capacity.corpusRoot);
+    yield* validateCopyTimeCapacityForTesting(nextRequiredBytes, capacity.ceilingBytes, currentDestFreeBytes);
     MutableRef.set(capacity.requiredBytes, nextRequiredBytes);
     accountedSizeBytes = attemptIdentity.sizeBytes;
     const outcome = yield* writer.archiveObject(sourceAbs, destAbs, attemptIdentity);
@@ -1572,7 +1586,7 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
         let attempted = 0;
         const capacity = {
           ceilingBytes: refreshed.ceilingBytes,
-          destFreeBytes: refreshed.measurement.destFreeBytes,
+          corpusRoot: path.resolve(options.corpusRoot),
           requiredBytes: MutableRef.make(refreshed.measurement.requiredBytes),
         } satisfies PreservationCapacityBudget;
         for (const file of files) {

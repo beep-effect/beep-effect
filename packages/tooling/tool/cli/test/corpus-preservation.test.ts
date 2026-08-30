@@ -30,6 +30,7 @@ import {
   verifyT7Preservation,
 } from "@beep/repo-cli/commands/Corpus";
 import {
+  approveT7PreservationImpl,
   preflightT7PreservationImpl,
   runT7PreservationImpl,
   validateCopyTimeCapacityForTesting,
@@ -55,24 +56,30 @@ const isT7ArchiveProvenanceRecord = S.is(T7ArchiveProvenanceRecord);
 const runCorpusCommand = Command.runWith(corpusCommand, { version: "0.0.0" });
 const utf8Encoder = new TextEncoder();
 
-const capturedSpawner = (exitCode: number, stdout: string, stderr: string) => {
-  const stdoutStream = Stream.make(utf8Encoder.encode(stdout));
-  const stderrStream = Stream.make(utf8Encoder.encode(stderr));
-  const handle = ChildProcessSpawner.makeHandle({
-    all: Stream.concat(stdoutStream, stderrStream),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: stderrStream,
-    stdin: Sink.drain,
-    stdout: stdoutStream,
-    unref: Effect.succeed(Effect.void),
+const capturedSpawnerFrom = (reply: () => readonly [exitCode: number, stdout: string, stderr: string]) =>
+  ChildProcessSpawner.make(() => {
+    const [exitCode, stdout, stderr] = reply();
+    const stdoutStream = Stream.make(utf8Encoder.encode(stdout));
+    const stderrStream = Stream.make(utf8Encoder.encode(stderr));
+    return Effect.succeed(
+      ChildProcessSpawner.makeHandle({
+        all: Stream.concat(stdoutStream, stderrStream),
+        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+        getInputFd: () => Sink.drain,
+        getOutputFd: () => Stream.empty,
+        isRunning: Effect.succeed(false),
+        kill: () => Effect.void,
+        pid: ChildProcessSpawner.ProcessId(1),
+        stderr: stderrStream,
+        stdin: Sink.drain,
+        stdout: stdoutStream,
+        unref: Effect.succeed(Effect.void),
+      })
+    );
   });
-  return ChildProcessSpawner.make(() => Effect.succeed(handle));
-};
+
+const capturedSpawner = (exitCode: number, stdout: string, stderr: string) =>
+  capturedSpawnerFrom(() => [exitCode, stdout, stderr]);
 
 const syntheticBytes = (length: number): Uint8Array => {
   const bytes = new Uint8Array(length);
@@ -523,6 +530,62 @@ describe("T7 corpus preservation", () => {
     )
   );
 
+  it.effect("refreshes destination free space before each copy attempt", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const baseContext = yield* Layer.build(NodeServices.layer);
+        const fs = yield* FileSystem.FileSystem.pipe(Effect.provide(baseContext));
+        const path = yield* Path.Path.pipe(Effect.provide(baseContext));
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "preservation-copy-capacity-refresh-test-" });
+        const corpusRoot = path.join(root, "corpus");
+        const t7Root = path.join(root, "t7");
+        const salvageRoot = path.join(t7Root, "oppold-salvage-2026-08-10");
+        const metaRoot = path.join(salvageRoot, "_meta");
+        yield* fs.makeDirectory(corpusRoot, { recursive: true });
+        yield* fs.makeDirectory(metaRoot, { recursive: true });
+        yield* fs.writeFile(path.join(salvageRoot, "synthetic.bin"), new Uint8Array([1, 2, 3]));
+        yield* fs.writeFile(path.join(t7Root, "oppold-corpus.zip"), new Uint8Array([4]));
+        yield* fs.writeFileString(
+          path.join(metaRoot, "manifest.jsonl"),
+          `${encodeJson({
+            dst: "H:\\oppold-salvage-2026-08-10\\synthetic.bin",
+            size: 3,
+            status: "copied",
+          })}\n`
+        );
+
+        let capacityProbeCount = 0;
+        const capacitySpawner = capturedSpawnerFrom(() => {
+          capacityProbeCount += 1;
+          const availableKiB = capacityProbeCount < 4 ? 1024 : 0;
+          return [
+            0,
+            `Filesystem 1024-blocks Used Available Capacity Mounted on\nsynthetic 1024 0 ${availableKiB} 0% /\n`,
+            "",
+          ];
+        });
+        const provideCapacityServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+          effect.pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, capacitySpawner),
+            Effect.provide(baseContext)
+          );
+        const options = T7PreservationOptions.make({ corpusRoot, t7Root });
+        const proposed = yield* provideCapacityServices(preflightT7PreservationImpl(options));
+        yield* provideCapacityServices(
+          approveT7PreservationImpl(corpusRoot, proposed.measurement.requiredBytes, "synthetic-operator")
+        );
+        const failure = yield* provideCapacityServices(runT7PreservationImpl(options)).pipe(Effect.flip);
+
+        expect(capacityProbeCount).toBe(4);
+        expect(failure._tag).toBe("PreservationCeilingExceededError");
+        if (failure._tag === "PreservationCeilingExceededError") {
+          expect(failure.measuredBytes).toBe(proposed.measurement.requiredBytes);
+          expect(failure.ceilingBytes).toBe(0);
+        }
+      })
+    )
+  );
+
   it.effect("records an unreadable terminal row when a recensused source disappears before copy", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -617,6 +680,43 @@ describe("T7 corpus preservation", () => {
 
         const complete = yield* writer.archiveObject(source, freshDest, identity);
         expect(complete.kind).toBe("already-complete");
+
+        const streamingGrowthSource = path.join(root, "streaming-growth-source.bin");
+        const streamingGrowthDest = path.join(root, "archive", "streaming-growth.bin");
+        yield* fs.writeFile(streamingGrowthSource, new Uint8Array([1, 2, 3]));
+        const streamingGrowthIdentity = yield* identityFor(streamingGrowthSource, "streaming-growth-source.bin").pipe(
+          Effect.provide(baseContext)
+        );
+        let streamingGrowthInjected = false;
+        const streamingGrowthFileSystem = FileSystem.FileSystem.of({
+          ...fs,
+          stream: (target, options) => {
+            if (!Str.Equivalence(target, streamingGrowthSource) || streamingGrowthInjected) {
+              return fs.stream(target, options);
+            }
+            streamingGrowthInjected = true;
+            return Stream.unwrap(
+              fs
+                .writeFile(streamingGrowthSource, new Uint8Array([4]), { flag: "a" })
+                .pipe(Effect.as(fs.stream(target, options)))
+            );
+          },
+        });
+        const streamingGrowthContext = yield* Layer.build(makeArchiveWriterLive()).pipe(
+          Effect.provideService(FileSystem.FileSystem, streamingGrowthFileSystem),
+          Effect.provide(baseContext)
+        );
+        const streamingGrowthWriter = yield* ArchiveWriter.pipe(Effect.provide(streamingGrowthContext));
+        expect(
+          (yield* streamingGrowthWriter.archiveObject(
+            streamingGrowthSource,
+            streamingGrowthDest,
+            streamingGrowthIdentity
+          )).kind
+        ).toBe("changed-during-copy");
+        expect(Number((yield* fs.stat(`${streamingGrowthDest}.preservation-partial`)).size)).toBe(
+          streamingGrowthIdentity.sizeBytes
+        );
 
         const settleMutationSource = path.join(root, "settle-mutation-source.bin");
         const settleMutationDest = path.join(root, "archive", "settle-mutation.bin");
