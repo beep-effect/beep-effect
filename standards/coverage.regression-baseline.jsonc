@@ -20497,15 +20497,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 76.69,
-      "statements": 76.41,
-      "branches": 64.29,
-      "functions": 70.28,
+      "lines": 76.72,
+      "statements": 76.44,
+      "branches": 64.31,
+      "functions": 70.34,
       "uncovered": {
-        "lines": 8291,
-        "statements": 8772,
-        "branches": 4753,
-        "functions": 3207
+        "lines": 8282,
+        "statements": 8761,
+        "branches": 4750,
+        "functions": 3200
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -23605,15 +23605,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-          "lines": 32.32,
-          "statements": 32.03,
-          "branches": 16.29,
-          "functions": 20.1,
+          "lines": 33.7,
+          "statements": 33.54,
+          "branches": 17.41,
+          "functions": 23.36,
           "uncovered": {
-            "lines": 427,
-            "statements": 437,
-            "branches": 149,
-            "functions": 147
+            "lines": 419,
+            "statements": 428,
+            "branches": 147,
+            "functions": 141
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
@@ -26173,15 +26173,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 88.77,
-          "statements": 88.58,
-          "branches": 82.14,
-          "functions": 80.71,
+          "lines": 89.03,
+          "statements": 89.08,
+          "branches": 83.03,
+          "functions": 81.42,
           "uncovered": {
-            "lines": 44,
-            "statements": 46,
-            "branches": 20,
-            "functions": 27
+            "lines": 43,
+            "statements": 44,
+            "branches": 19,
+            "functions": 26
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {

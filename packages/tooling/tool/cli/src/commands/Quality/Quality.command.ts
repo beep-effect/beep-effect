@@ -2716,6 +2716,33 @@ const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: nu
   ...A.map(snapshot.quarantined, (path) => `- quarantined: ${path}`),
 ];
 
+/**
+ * Render admission status lines, including run-scope details per lease.
+ *
+ * **Example** (Render an empty snapshot)
+ *
+ * ```ts
+ * import { AdmissionSnapshot } from "@beep/repo-cli/test/RepoRun"
+ * import { renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const snapshot = AdmissionSnapshot.make({
+ *   capacityTokens: 10, activeTokens: 0, memAvailableGib: 64, hardFloorEngaged: false,
+ *   leases: [], tickets: [], dead: [], quarantined: [],
+ * })
+ * console.log(renderAdmissionSnapshotLinesForTesting(snapshot, 0)[0]) // "admission capacity: 0/10 tokens (MemAvailable 64.0 GiB)"
+ * ```
+ *
+ * @param snapshot - Admission snapshot to render.
+ * @param nowMillis - Current time used to flag stale heartbeats.
+ * @returns Operator-facing status lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const renderAdmissionSnapshotLinesForTesting: {
+  (snapshot: AdmissionSnapshot, nowMillis: number): ReadonlyArray<string>;
+  (nowMillis: number): (snapshot: AdmissionSnapshot) => ReadonlyArray<string>;
+} = dual(2, renderAdmissionSnapshotLines);
+
 const schedulerStatusCommand = Command.make(
   "status",
   {

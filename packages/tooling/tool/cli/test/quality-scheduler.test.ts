@@ -1,8 +1,10 @@
+import { renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   AdmissionConfig,
   AdmissionJournalAdmitted,
   AdmissionJournalEvent,
   AdmissionRequest,
+  AdmissionSnapshot,
   admissionCapacityTokensFor,
   admissionJournalPath,
   admissionStatus,
@@ -940,6 +942,63 @@ describe("quality-scheduler", () => {
         );
       })
     ));
+
+  it("renders run-scope details on lease status lines", () => {
+    const base = {
+      schemaVersion: "yeet-admission-lease/v1" as const,
+      pid: 4242,
+      procStart: "1",
+      kind: "full-proof" as const,
+      weightTokens: 3,
+      priority: "verify" as const,
+      originKey: "origin-render",
+      checkoutRoot: "/repo/render",
+      branch: "feat/render",
+      command: "bun run beep yeet verify",
+      startedAt: "2026-08-30T00:00:00Z",
+      admittedAtMillis: 0,
+      heartbeatAtMillis: 0,
+    };
+    const snapshot = AdmissionSnapshot.make({
+      capacityTokens: 10,
+      activeTokens: 9,
+      memAvailableGib: 64,
+      hardFloorEngaged: false,
+      leases: [
+        YeetAdmissionLease.make({
+          ...base,
+          runScope: RunScopeRecord.make({
+            unitName: "agent-run-peak.scope",
+            support: "active",
+            attachedPid: 4242,
+            attachedAt: "2026-08-30T00:00:01Z",
+            memoryPeakBytes: 4096,
+          }),
+        }),
+        YeetAdmissionLease.make({
+          ...base,
+          pid: 4243,
+          runScope: RunScopeRecord.make({
+            unitName: "agent-run-nopeak.scope",
+            support: "failed",
+            attachedPid: 4243,
+            attachedAt: "2026-08-30T00:00:01Z",
+          }),
+        }),
+        YeetAdmissionLease.make({ ...base, pid: 4244 }),
+      ],
+      tickets: [],
+      dead: [],
+      quarantined: [],
+    });
+
+    const lines = renderAdmissionSnapshotLinesForTesting(snapshot, 0);
+    expect(lines[0]).toBe("admission capacity: 9/10 tokens (MemAvailable 64.0 GiB)");
+    expect(lines[1]).toContain(" scope=agent-run-peak.scope support=active peak=4096 bytes");
+    expect(lines[2]).toContain(" scope=agent-run-nopeak.scope support=failed");
+    expect(lines[2]).not.toContain("peak=");
+    expect(lines[3]).not.toContain("scope=");
+  });
 
   it("stops only unowned scopes that record this admission root as owner", () =>
     Effect.runPromise(
