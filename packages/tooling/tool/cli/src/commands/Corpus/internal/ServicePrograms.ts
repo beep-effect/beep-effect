@@ -127,11 +127,12 @@ import type {
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
 } from "../Corpus.schemas.ts";
+import type { CorpusLedgerRecord } from "./Preservation.schemas.ts";
 
 const isCorpusProvenanceRecord = S.is(CorpusProvenanceRecord);
 
 const retainCorpusProvenanceRecords = (
-  records: ReadonlyArray<typeof CorpusLedgerRecordJson.Type>
+  records: ReadonlyArray<CorpusLedgerRecord>
 ): ReadonlyArray<CorpusProvenanceRecord> => A.filter(records, isCorpusProvenanceRecord);
 
 const $I = $RepoCliId.create("commands/Corpus/internal/ServicePrograms");
