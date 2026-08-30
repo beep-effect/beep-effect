@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "schema-utils-selective-codec-statics",
+    "packetId": "goal-packet/v1:c2391bcf696f4ef142e6a4536fcd8771b4c8594aa6287178faeb107090123599",
+    "title": "Selective Schema Codec Statics",
+    "status": "active",
+    "created": "2026-08-30",
+    "updated": "2026-08-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/schema-utils-selective-codec-statics",
+  "lifecycle": "active",
+  "mission": "Replace broad SchemaUtils codec-static bundles with safe, selected, hoisted statics and migrate all existing usages to the minimal required set.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "note": "Authored directly from a 2026-08-30 SchemaUtils design review and /grilling session; decisions are recorded in DECISIONS.md and made normative by SPEC.md.",
+    "graduated": "2026-08-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/schema-utils-selective-codec-statics/README.md",
+    "goals/schema-utils-selective-codec-statics/SPEC.md",
+    "goals/schema-utils-selective-codec-statics/DECISIONS.md",
+    "goals/schema-utils-selective-codec-statics/PLAN.md",
+    "goals/schema-utils-selective-codec-statics/GOAL.md",
+    "goals/schema-utils-selective-codec-statics/research/SOURCES.md",
+    "goals/schema-utils-selective-codec-statics/research/OPPORTUNITIES.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/schema-utils-selective-codec-statics/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Align and census",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Implement selective APIs",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Migrate and delete broad variants",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Ratchet and verify",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "explicit-selector-compatibility",
+      "question": "Must withCodecStatics require a non-empty key tuple with no zero-argument compatibility overload?",
+      "recommended": "Yes; make explicit selection mandatory and delete the broad behavior."
+    },
+    {
+      "id": "class-utility-shape",
+      "question": "Should S.Class schemas use a nested frozen utility bag bound with classStatics(this, keys)?",
+      "recommended": "Yes; it preserves Effect's class implementation and allows consumer-side destructuring without constructor magic."
+    },
+    {
+      "id": "json-boundary",
+      "question": "Should JSON-string convenience names stay out of the selector in favor of explicit named S.fromJsonString schemas?",
+      "recommended": "Yes; separate construction-time JSON options from per-call parse options and prevent accidental double wrapping."
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/schema-utils-selective-codec-statics/GOAL.md)\" -le 4000",
+    "jq . goals/schema-utils-selective-codec-statics/ops/manifest.json",
+    "rg -n \"schema-utils-selective-codec-statics|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/schema-utils-selective-codec-statics",
+    "git diff --check -- goals/schema-utils-selective-codec-statics",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check"
+  ],
+  "stopConditions": [
+    "The /grilling frontier is non-empty or shared understanding is not explicitly confirmed.",
+    "Safe class binding would require a custom Schema implementation or Effect-internal mutation.",
+    "An exported schema's minimal public helper surface cannot be established from repository evidence.",
+    "JSON option ownership would rebuild a codec on each business-function call.",
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

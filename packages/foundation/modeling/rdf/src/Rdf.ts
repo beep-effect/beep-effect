@@ -407,6 +407,8 @@ export class NamedNode extends S.Class<NamedNode>($I`NamedNode`)(
   })
 ) {
   static readonly decodeUnknownResult = S.decodeUnknownResult(this);
+
+  static readonly decodeEffect = S.decodeEffect(NamedNode);
 }
 
 /**

@@ -365,7 +365,7 @@ const renderMarkdownHeading = (block: Heading): string =>
   `${pipe("#", Str.repeat(block.level))} ${renderMarkdownInlines(block.children)}`;
 
 const renderHtmlHeading = (block: Heading): string => {
-  const tag = S.is(HeadingLevel)(block.level) ? `h${block.level}` : "h6";
+  const tag = HeadingLevel.is(block.level) ? `h${block.level}` : "h6";
   return `<${tag}>${renderHtmlInlines(block.children)}</${tag}>`;
 };
 
@@ -1233,7 +1233,7 @@ const renderHtmlBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string 
   Match.value(block).pipe(
     Match.tagsExhaustive({
       heading: ({ children, level }) => {
-        const tag = S.is(HeadingLevel)(level) ? `h${level}` : "h6";
+        const tag = HeadingLevel.is(level) ? `h${level}` : "h6";
         return `<${tag}>${renderHtmlInlinesWithPolicy(policy, children)}</${tag}>`;
       },
       p: ({ children }) => `<p>${renderHtmlInlinesWithPolicy(policy, children)}</p>`,

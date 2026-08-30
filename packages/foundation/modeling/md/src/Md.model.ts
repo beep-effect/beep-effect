@@ -1649,7 +1649,8 @@ export declare namespace P {
 export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
   $I.annoteSchema("HeadingLevel", {
     description: "Markdown heading level from one (largest) to six (smallest).",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
 );
 
 /**
