@@ -129,36 +129,40 @@ const claimEvidenceFrom = (
   claim: PatentClaim
 ): O.Option<readonly [startChar: number, quote: string]> =>
   pipe(
-    Str.match(new RegExp(`(?:^|\\n)[\\t ]*${escapeRegExp(claimsHeading)}[\\t ]*(?:\\n|$)`, "iu"))(sourceText),
-    O.flatMap((headingMatch) =>
-      pipe(
-        O.fromUndefinedOr(headingMatch.index),
-        O.map((headingStart) => Num.sum(headingStart, Str.length(headingMatch[0]))),
-        O.flatMap((claimsStart) => {
-          const claimsText = Str.slice(claimsStart)(sourceText);
-          const claimPattern = new RegExp(
-            `(?:^|\\n)[\\t ]*${claim.claimNumber}\\.[\\t ]+(${whitespaceFlexiblePattern(claim.claimText)})`,
-            "iu"
-          );
-          return pipe(
-            Str.match(claimPattern)(claimsText),
-            O.flatMap((claimMatch) =>
-              pipe(
-                O.all({
-                  matchStart: O.fromUndefinedOr(claimMatch.index),
-                  quote: A.get(claimMatch, 1),
-                }),
-                O.flatMap(({ matchStart, quote }) =>
+    Str.matchAll(new RegExp(`(?:^|\\n)[\\t ]*${escapeRegExp(claimsHeading)}[\\t ]*(?:\\n|$)`, "giu"))(sourceText),
+    A.fromIterable,
+    A.reverse,
+    A.reduce(O.none<readonly [startChar: number, quote: string]>(), (evidence, headingMatch) =>
+      O.isSome(evidence)
+        ? evidence
+        : pipe(
+            O.fromUndefinedOr(headingMatch.index),
+            O.map((headingStart) => Num.sum(headingStart, Str.length(headingMatch[0]))),
+            O.flatMap((claimsStart) => {
+              const claimsText = Str.slice(claimsStart)(sourceText);
+              const claimPattern = new RegExp(
+                `(?:^|\\n)[\\t ]*${claim.claimNumber}\\.[\\t ]+(${whitespaceFlexiblePattern(claim.claimText)})`,
+                "iu"
+              );
+              return pipe(
+                Str.match(claimPattern)(claimsText),
+                O.flatMap((claimMatch) =>
                   pipe(
-                    Str.indexOf(quote)(claimMatch[0]),
-                    O.map((quoteOffset) => [Num.sum(claimsStart, Num.sum(matchStart, quoteOffset)), quote] as const)
+                    O.all({
+                      matchStart: O.fromUndefinedOr(claimMatch.index),
+                      quote: A.get(claimMatch, 1),
+                    }),
+                    O.flatMap(({ matchStart, quote }) =>
+                      pipe(
+                        Str.indexOf(quote)(claimMatch[0]),
+                        O.map((quoteOffset) => [Num.sum(claimsStart, Num.sum(matchStart, quoteOffset)), quote] as const)
+                      )
+                    )
                   )
                 )
-              )
-            )
-          );
-        })
-      )
+              );
+            })
+          )
     )
   );
 

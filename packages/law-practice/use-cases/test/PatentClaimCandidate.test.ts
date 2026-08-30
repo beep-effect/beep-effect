@@ -84,4 +84,20 @@ describe("PatentClaimCandidate", () => {
       expect(error.message).toContain("does not align to the normalized patent source text");
     })
   );
+
+  it.effect(
+    "anchors evidence to the last matching claims heading when earlier content duplicates it",
+    Effect.fnUntraced(function* () {
+      const duplicateHeadingSource = ["CLAIMS (CONTINUED)", `1. ${evidenceQuote}`, sourceText].join("\n");
+      const mapped = yield* patentClaimCandidateFrom(
+        input(Str.repeat(64)("5"), "CLAIMS (CONTINUED)", claim, duplicateHeadingSource)
+      );
+      const actualClaimsHeading = O.getOrThrow(Str.lastIndexOf("CLAIMS (CONTINUED)")(duplicateHeadingSource));
+
+      expect(mapped.evidence.span.startChar).toBeGreaterThan(actualClaimsHeading);
+      expect(Str.slice(mapped.evidence.span.startChar, mapped.evidence.span.endChar)(duplicateHeadingSource)).toBe(
+        evidenceQuote
+      );
+    })
+  );
 });
