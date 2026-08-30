@@ -143,12 +143,13 @@ describe("T7 corpus preservation", () => {
       );
       expect(rootMismatch._tag).toBe("PreservationPreflightUnapprovedError");
 
-      const destinationExceeded = yield* validateCopyTimeCapacityForTesting(4, 5, 3).pipe(Effect.flip);
+      const destinationExceeded = yield* validateCopyTimeCapacityForTesting(4, 4, 5, 3).pipe(Effect.flip);
       expect(destinationExceeded._tag).toBe("PreservationCeilingExceededError");
       if (destinationExceeded._tag === "PreservationCeilingExceededError") {
         expect(destinationExceeded.ceilingBytes).toBe(3);
         expect(destinationExceeded.measuredBytes).toBe(4);
       }
+      yield* validateCopyTimeCapacityForTesting(4, 1, 5, 1);
     })
   );
   it.effect("refuses missing, unapproved, and undersized capacity preflights", () =>
@@ -582,6 +583,61 @@ describe("T7 corpus preservation", () => {
           expect(failure.measuredBytes).toBe(proposed.measurement.requiredBytes);
           expect(failure.ceilingBytes).toBe(0);
         }
+      })
+    )
+  );
+
+  it.effect("checks later copies against only the uncopied destination bytes", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const baseContext = yield* Layer.build(NodeServices.layer);
+        const fs = yield* FileSystem.FileSystem.pipe(Effect.provide(baseContext));
+        const path = yield* Path.Path.pipe(Effect.provide(baseContext));
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "preservation-remaining-capacity-test-" });
+        const corpusRoot = path.join(root, "corpus");
+        const t7Root = path.join(root, "t7");
+        const salvageRoot = path.join(t7Root, "oppold-salvage-2026-08-10");
+        const metaRoot = path.join(salvageRoot, "_meta");
+        yield* fs.makeDirectory(corpusRoot, { recursive: true });
+        yield* fs.makeDirectory(metaRoot, { recursive: true });
+        yield* fs.writeFile(path.join(salvageRoot, "synthetic.bin"), new Uint8Array(1024));
+        yield* fs.writeFile(path.join(t7Root, "oppold-corpus.zip"), new Uint8Array(1024));
+        yield* fs.writeFileString(
+          path.join(metaRoot, "manifest.jsonl"),
+          `${encodeJson({
+            dst: "H:\\oppold-salvage-2026-08-10\\synthetic.bin",
+            size: 1024,
+            status: "copied",
+          })}\n`
+        );
+
+        let capacityProbeCount = 0;
+        const capacitySpawner = capturedSpawnerFrom(() => {
+          capacityProbeCount += 1;
+          const availableKiB = capacityProbeCount < 5 ? 3 : capacityProbeCount === 5 ? 2 : 1;
+          return [
+            0,
+            `Filesystem 1024-blocks Used Available Capacity Mounted on\nsynthetic 2 0 ${availableKiB} 0% /\n`,
+            "",
+          ];
+        });
+        const provideCapacityServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+          effect.pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, capacitySpawner),
+            Effect.provide(baseContext)
+          );
+        const options = T7PreservationOptions.make({ corpusRoot, t7Root });
+        const proposed = yield* provideCapacityServices(preflightT7PreservationImpl(options));
+        expect(proposed.measurement.requiredBytes).toBeGreaterThan(2048);
+        expect(proposed.measurement.requiredBytes).toBeLessThanOrEqual(3072);
+        yield* provideCapacityServices(
+          approveT7PreservationImpl(corpusRoot, proposed.measurement.requiredBytes, "synthetic-operator")
+        );
+        const summary = yield* provideCapacityServices(runT7PreservationImpl(options));
+
+        expect(capacityProbeCount).toBe(6);
+        expect(summary.passed).toBe(3);
+        expect(summary.unapproved).toBe(0);
       })
     )
   );

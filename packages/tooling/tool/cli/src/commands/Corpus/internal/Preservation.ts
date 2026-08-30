@@ -1426,28 +1426,30 @@ const appendPassProvenance = Effect.fn("Preservation.appendPassProvenance")(func
 });
 
 type PreservationCapacityBudget = {
+  readonly aggregateRequiredBytes: MutableRef.MutableRef<number>;
   readonly ceilingBytes: number;
   readonly corpusRoot: string;
-  readonly requiredBytes: MutableRef.MutableRef<number>;
+  readonly remainingRequiredBytes: MutableRef.MutableRef<number>;
 };
 
 /** @category Testing */
 export const validateCopyTimeCapacityForTesting = Effect.fnUntraced(function* (
-  nextRequiredBytes: number,
+  aggregateRequiredBytes: number,
+  remainingRequiredBytes: number,
   ceilingBytes: number,
   destFreeBytes: number
 ) {
-  if (nextRequiredBytes > ceilingBytes) {
+  if (aggregateRequiredBytes > ceilingBytes) {
     return yield* PreservationCeilingExceededError.make({
       ceilingBytes: NonNegativeInt.make(ceilingBytes),
-      measuredBytes: NonNegativeInt.make(nextRequiredBytes),
+      measuredBytes: NonNegativeInt.make(aggregateRequiredBytes),
       message: "Copy-time source growth exceeds the approved preservation ceiling.",
     });
   }
-  if (nextRequiredBytes > destFreeBytes) {
+  if (remainingRequiredBytes > destFreeBytes) {
     return yield* PreservationCeilingExceededError.make({
       ceilingBytes: NonNegativeInt.make(destFreeBytes),
-      measuredBytes: NonNegativeInt.make(nextRequiredBytes),
+      measuredBytes: NonNegativeInt.make(remainingRequiredBytes),
       message: "Copy-time source growth exceeds the measured destination free space.",
     });
   }
@@ -1478,10 +1480,26 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
       Effect.option
     );
     const attemptIdentity = O.getOrElse(currentIdentity, () => identity);
-    const nextRequiredBytes = MutableRef.get(capacity.requiredBytes) - accountedSizeBytes + attemptIdentity.sizeBytes;
+    const nextAggregateRequiredBytes =
+      MutableRef.get(capacity.aggregateRequiredBytes) - accountedSizeBytes + attemptIdentity.sizeBytes;
+    const nextRemainingRequiredBytes =
+      MutableRef.get(capacity.remainingRequiredBytes) - accountedSizeBytes + attemptIdentity.sizeBytes;
+    const partialInfo = yield* fs.stat(`${destAbs}${partialSuffix}`).pipe(Effect.option);
+    const allocatedInfo = O.isSome(partialInfo) ? partialInfo : yield* fs.stat(destAbs).pipe(Effect.option);
+    const allocatedBytes = O.match(allocatedInfo, {
+      onNone: () => 0,
+      onSome: (info) => Math.min(attemptIdentity.sizeBytes, Number(info.size)),
+    });
+    const destinationBytesRequired = Math.max(0, nextRemainingRequiredBytes - allocatedBytes);
     const currentDestFreeBytes = yield* destinationFreeBytes(capacity.corpusRoot);
-    yield* validateCopyTimeCapacityForTesting(nextRequiredBytes, capacity.ceilingBytes, currentDestFreeBytes);
-    MutableRef.set(capacity.requiredBytes, nextRequiredBytes);
+    yield* validateCopyTimeCapacityForTesting(
+      nextAggregateRequiredBytes,
+      destinationBytesRequired,
+      capacity.ceilingBytes,
+      currentDestFreeBytes
+    );
+    MutableRef.set(capacity.aggregateRequiredBytes, nextAggregateRequiredBytes);
+    MutableRef.set(capacity.remainingRequiredBytes, nextRemainingRequiredBytes);
     accountedSizeBytes = attemptIdentity.sizeBytes;
     const outcome = yield* writer.archiveObject(sourceAbs, destAbs, attemptIdentity);
     const row = PreservationManifestRow.make({
@@ -1584,11 +1602,12 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
         let passed = 0;
         let unapproved = 0;
         let attempted = 0;
-        const capacity = {
+        const capacity: PreservationCapacityBudget = {
+          aggregateRequiredBytes: MutableRef.make(refreshed.measurement.requiredBytes),
           ceilingBytes: refreshed.ceilingBytes,
           corpusRoot: path.resolve(options.corpusRoot),
-          requiredBytes: MutableRef.make(refreshed.measurement.requiredBytes),
-        } satisfies PreservationCapacityBudget;
+          remainingRequiredBytes: MutableRef.make(refreshed.measurement.requiredBytes),
+        };
         for (const file of files) {
           const destRelativePath =
             file.identity.sourceClass === "root-archive-object"
@@ -1609,6 +1628,9 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
           const terminalRow = A.lastNonEmpty(rows);
           const sha = expectedDigest(terminalRow);
           if (O.isSome(sha)) {
+            MutableRef.update(capacity.remainingRequiredBytes, (remaining) =>
+              Math.max(0, remaining - terminalRow.object.sizeBytes)
+            );
             passed += 1;
             yield* appendPassProvenance(options.corpusRoot, terminalRow, sha.value);
           } else {
