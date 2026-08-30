@@ -492,3 +492,121 @@
   Vercel contexts, and continue monitoring exact-head required checks and
   review state.
 - **Owner:** Yeet hosted-monitor classification and deployment integrations.
+
+## 2026-08-30 — Managed-temp repair hard-codes a POSIX-only fixture root
+
+- **What happened:** the first deterministic repair for privacy-sensitive
+  Agent Effectiveness fixtures ignored the managed home-based `TMPDIR` by
+  forcing `/tmp`. Greptile correctly identified that the test setup would fail
+  on native Windows, while its suggested ambient-temp fallback would recreate
+  the original private-home-path rejection on both managed POSIX hosts and
+  normal per-user Windows temp directories.
+- **Evidence:** PR #900's first Greptile review scored 4/5 and flagged
+  `agent-effectiveness.test.ts` at the hard-coded temp root. The production
+  scanner rejects `/home/<user>`, `/Users/<user>`, and
+  `C:\\Users\\<user>` paths; Effect's default temp-directory implementation
+  delegates to the environment-sensitive platform temp resolver.
+- **What would have prevented it:** use a shared, injected-platform test helper
+  from the first repair: `/tmp` for POSIX and the Windows system-root temp
+  directory for `win32`, independent of `TMPDIR`, `TMP`, and `TEMP`. Prove both
+  branches without weakening the production privacy scanner.
+- **Disposition:** actionable review finding; replace both local literals with
+  the shared helper, add Windows/POSIX resolver tests, and rerun the fixtures
+  under the actual managed temp environment before re-review.
+- **Owner:** shared test utilities and Agent Effectiveness fixture maintainers.
+
+## 2026-08-30 — Shared temp helper passes behavior tests before Effect-LSP rejects its API shape
+
+- **What happened:** the first shared portability helper passed all 28 focused
+  behavior tests, but its package build/check failed immediately under the
+  Effect language-service rules because it imported `node:path` and exported a
+  two-argument function without a pipeable overload.
+- **Evidence:** `bunx turbo run check --filter=@beep/test-utils
+  --filter=@beep/repo-ai-metrics --filter=@beep/repo-cli` reported
+  `effect(nodeBuiltinImport)` for `SystemTemp.ts` and
+  `effect(missingPipeableSignature)` for
+  `privacySafeSystemTempRootForTesting`; the preceding three-file Vitest run
+  passed 28/28 tests.
+- **What would have prevented it:** design shared helpers against the configured
+  Effect-LSP contract before behavior-only testing: prefer the Effect platform
+  surface or simple platform-independent string handling, and use one options
+  object when an exported helper does not need data-first/data-last arities.
+- **Disposition:** edit-loop API-shape correction; remove the Node path import,
+  convert the injected test seam to a single options object, and rerun the same
+  scoped check before publication.
+- **Owner:** shared test-utility authors and Effect-LSP guidance maintainers.
+
+## 2026-08-30 — Green repo-cli suite prints unscoped failure-shaped fixture output
+
+- **What happened:** the full package-scoped repo-cli test run printed repeated
+  `TS2589` failures for `@beep/xai` and `@beep/ui` plus `Failed:` task lines,
+  which looked like a live dependency regression while the suite continued for
+  several minutes. Those messages were fixture output: the terminal result was
+  143 passing files and 2,694 passing tests.
+- **Evidence:** `bunx turbo run test --filter=@beep/test-utils
+  --filter=@beep/repo-ai-metrics --filter=@beep/repo-cli` emitted
+  `@beep/xai#build` and `@beep/ui#build` failure-shaped lines mid-run, then
+  completed `3 successful, 3 total` after 4 minutes 32 seconds.
+- **What would have prevented it:** capture expected nested-command stderr in
+  the owning fixture, or prefix replayed failure samples with the test name and
+  an explicit `expected fixture output` marker so operators do not diagnose a
+  green suite as a concurrent workspace failure.
+- **Disposition:** diagnostic-noise friction only; no xai/ui repair is implied
+  by the terminal green package test result.
+- **Owner:** repo-cli command-fixture diagnostics and package-test reporting.
+
+## 2026-08-30 — Scoped check passes a new export that full package docgen rejects
+
+- **What happened:** the shared temp helper passed focused formatting,
+  typecheck, build, and behavior tests, but an independent final-diff reviewer
+  ran the full package verifier and found that its exported JSDoc violated the
+  repository documentation law.
+- **Evidence:** `bun run beep quality package-verify @beep/test-utils` failed
+  docgen on `SystemTemp.ts`: the exported options interface was missing
+  `@since`, and both exported value docs used prohibited `@example` carriers
+  instead of titled `**Example** (...)` sections. The earlier scoped Turbo
+  check had completed 35/35 tasks because it does not include package docgen.
+- **What would have prevented it:** include full package verification whenever
+  a package barrel gains a new export, or add the JSDoc-law lane to the scoped
+  check plan for files under a published `src/` surface.
+- **Disposition:** actionable proof-gap repair; bring all three exports onto the
+  canonical documentation shape and rerun the full test-utils verifier before
+  committing the review iteration.
+- **Owner:** package-verification planning and shared test-utility authors.
+
+## 2026-08-30 — Package verifier passes an unnecessary exported data interface
+
+- **What happened:** after the new helper passed scoped check, tests, and the
+  full test-utils package verifier, the repo-wide cheap-gate schema-first lane
+  rejected its exported options interface as an unmodeled pure-data API.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` reported
+  `PrivacySafeSystemTempRootOptions [exported-interface]` with
+  `schema-first-inventory` severity `error`; the preceding
+  `package-verify @beep/test-utils` had passed audit and docgen.
+- **What would have prevented it:** include schema-first policy in the package
+  verifier or scoped package check when a public barrel changes. Avoid exporting
+  a configuration shape that exists only to inject platform facts into a pure
+  test seam; if it is a genuine public model, define the annotated schema first.
+- **Disposition:** API-surface correction; keep the structural options type
+  module-private and export only the resolver functions consumers need.
+- **Owner:** package-verification composition and shared utility API authors.
+
+## 2026-08-30 — One shared test-helper export fans affected check across 117 packages
+
+- **What happened:** moving the privacy-safe temp resolver into the canonical
+  `@beep/test-utils` package made the required affected CI check typecheck nearly
+  the entire downstream workspace, even though only two test files consume the
+  new helper.
+- **Evidence:** `bun run beep ci lane check --affected --base origin/main
+  --summarize` selected 117 packages and ran 224 successful Turbo tasks in
+  1 minute 36 seconds. It then ran the separate global 952-file Effect-LSP scan
+  for another 167 seconds, despite the same scan already passing in cheap gates.
+- **What would have prevented it:** give narrow cross-package test helpers a
+  leaf support surface with limited reverse dependencies, or let affected proof
+  planning distinguish additive test-only exports from runtime dependency
+  changes while preserving a fail-closed fallback. Reuse the exact-head global
+  Effect scan across cheap-gate and CI-parity invocations.
+- **Disposition:** proof-topology bottleneck only; all 224 affected tasks and
+  the global Effect scan passed. Keep the shared helper to avoid duplicating a
+  privacy boundary, but optimize its downstream proof cost separately.
+- **Owner:** test-support package topology and affected-proof planning.
