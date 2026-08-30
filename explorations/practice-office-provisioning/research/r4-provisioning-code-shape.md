@@ -399,6 +399,19 @@ schema-first as a tagged union with the certificate/assertion path primary
 and any client-secret variant an explicitly limited dev/test fallback —
 never the only shape.
 
+*Correction 2026-08-30 (PR #918 review — superseded by the graduated
+packet contract):* two more deltas in this report are overridden by
+`goals/practice-m365-contacts/SPEC.md`. First, wherever this report says
+the application role is granted "with admin consent", the ratified design
+grants mailbox access exclusively through the Exchange
+RBAC-for-Applications assignment scoped to the attorney's mailbox — the
+unscoped tenant-wide `Contacts.ReadWrite` Entra application role is never
+admin-consented beside it, because Entra and Application RBAC permissions
+are additive (R3 §5). Second, the verb sketches here (driveItem upload,
+MIME drafts) were cut by the align decisions to a contacts-only surface,
+and that surface gained contact-folder create/list so folder-targeted
+creates have a `contactFolders/{folderId}` to address (R3 §3.1).
+
 ### Permission split
 
 | Verb or capability | Delegated PKCE lane | App-only client-credentials lane | Endpoint rule and caution |
