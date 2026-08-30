@@ -768,3 +768,19 @@
   coverage pass unless a metric gate actually fails.
 - **Owner:** coverage/JSDoc baseline provenance, affected recomputation, and
   writer progress telemetry.
+
+## 2026-08-30 — GitHub required-check watch cannot infer the checkout repository
+
+- **What happened:** after optional Vercel failures made the Yeet event watch
+  unsuitable for waiting on required checks, the standard GitHub CLI watch
+  could not infer a repository from the current checkout.
+- **Evidence:** `gh pr checks 906 --required --watch --interval 10` exited 1
+  with `No default remote repository has been set`, even though Git has an
+  `origin` remote and the current branch tracks its remote counterpart.
+- **What would have prevented it:** let the GitHub CLI infer the unique Git
+  remote for PR commands, or have Yeet's required-only watch pass the repository
+  it already resolved for the open PR.
+- **Disposition:** closeout tooling friction; do not mutate user-level GitHub
+  configuration, and rerun the read-only watch with explicit
+  `--repo beep-effect/beep-effect`.
+- **Owner:** Yeet/GitHub CLI repository-context propagation.
