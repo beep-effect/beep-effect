@@ -115,8 +115,11 @@ Source: [Use network upload to import PST files](https://learn.microsoft.com/en-
 # every CSV row must then carry FilePath=<directory name>.
 azcopy.exe copy "<Source directory of PST files>" "<SAS URL>" --recursive=true
 
-# Flat form: uploads the directory CONTENTS to the container root —
-# FilePath stays blank in the CSV. Preferred for this runbook.
+# Flat form: uploads the directory's TOP-LEVEL files to the container
+# root — FilePath stays blank in the CSV. Preferred for this runbook,
+# which is why the staging directory must be flat: move any PSTs out of
+# subdirectories first, or they are silently omitted (use the recursive
+# form with FilePath prefixes if nesting must be preserved).
 azcopy.exe copy "<Source directory of PST files>/*" "<SAS URL>"
 ```
 
