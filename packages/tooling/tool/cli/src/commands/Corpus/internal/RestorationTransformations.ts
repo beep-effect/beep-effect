@@ -4918,6 +4918,37 @@ const familyEvidenceAccepted = (
   familyEvidenceTerminalsMatch(evidence) &&
   transformationSegmentReconciles(context.family, evidence.summary, evidence.segment);
 
+/** Test-only semantic probes for restoration evidence invariants. */
+export const restorationTransformationTesting = {
+  attachmentRepairsReconcile,
+  attemptBindingsReconcile,
+  attemptRetryOrdinalsReconcile,
+  attemptSettlementsReconcile,
+  attemptTerminalBindings,
+  familyEvidenceAccepted,
+  familyEvidenceCeilingsMatch,
+  familyEvidenceDigestsMatch,
+  familyEvidenceTerminalsMatch,
+  familyRunStartReconciles,
+  latestAttemptsAreTerminal,
+  legacySegmentReconciles,
+  mailExceptionIsApproved,
+  mailOwnedEvidenceReconciles,
+  mailPassReconciles,
+  mailSegmentReconciles,
+  mailTerminalCountsReconcile,
+  mailTerminalIdentitiesReconcile,
+  recordIdentityMatches,
+  recycleSegmentReconciles,
+  requireStrictFamilySegment,
+  requireStrictFamilyTerminalRows,
+  resumableAttemptLifecycleReconciles,
+  safeAttemptId,
+  strictEvidenceSha256,
+  transformationAttemptLifecycleReconciles,
+  transformationSegmentReconciles,
+} as const;
+
 const reconcileTransformationAcceptance = Effect.fn("CorpusRestoration.reconcileTransformationAcceptance")(function* (
   context: TransformationRunContext
 ): Effect.fn.Return<RestorationAcceptanceRecord, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
