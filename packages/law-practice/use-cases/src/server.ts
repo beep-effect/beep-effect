@@ -39,7 +39,7 @@ export * as OfficeActionReview from "./OfficeActionReview/index.ts";
 /**
  * Typed patent-claim candidate mapping exports.
  *
- * @category mappings
+ * @category mapping
  * @since 0.0.0
  */
 export * from "./PatentClaimCandidate/index.ts";

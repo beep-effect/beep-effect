@@ -73,7 +73,13 @@ const ExtractionCandidateText = S.NonEmptyString.check(
  * @category schemas
  * @since 0.0.0
  */
-export const AlignmentStatus = LiteralKit(["match_exact", "match_lesser", "match_fuzzy", "unaligned"]).pipe(
+export const AlignmentStatus = LiteralKit([
+  "match_exact",
+  "match_lesser",
+  "match_minimal_fold",
+  "match_fuzzy",
+  "unaligned",
+]).pipe(
   $I.annoteSchema("AlignmentStatus", {
     description: "Deterministic source-alignment status for a parsed extraction candidate.",
   })
@@ -192,6 +198,19 @@ class GroundedExtractionMatchLesser extends S.Class<GroundedExtractionMatchLesse
   })
 ) {}
 
+class GroundedExtractionMatchMinimalFold extends S.Class<GroundedExtractionMatchMinimalFold>(
+  $I`GroundedExtractionMatchMinimalFold`
+)(
+  {
+    ...GroundedExtractionAlignedFields,
+    alignmentStatus: S.tag(AlignmentStatus.Enum.match_minimal_fold),
+  },
+  $I.annote("GroundedExtractionMatchMinimalFold", {
+    description:
+      "Source-grounded extraction aligned by case folding, whitespace collapse, or end-of-line hyphen folding.",
+  })
+) {}
+
 class GroundedExtractionMatchFuzzy extends S.Class<GroundedExtractionMatchFuzzy>($I`GroundedExtractionMatchFuzzy`)(
   {
     ...GroundedExtractionAlignedFields,
@@ -237,6 +256,7 @@ class GroundedExtractionUnaligned extends S.Class<GroundedExtractionUnaligned>($
 export const GroundedExtraction = S.Union([
   GroundedExtractionMatchExact,
   GroundedExtractionMatchLesser,
+  GroundedExtractionMatchMinimalFold,
   GroundedExtractionMatchFuzzy,
   GroundedExtractionUnaligned,
 ]).pipe(

@@ -17,6 +17,7 @@
  * @since 0.0.0
  */
 
+import { AlignedStatus } from "@beep/langextract/Alignment";
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "@beep/law-practice-domain";
 import { TextAnchor } from "@beep/provenance";
@@ -55,12 +56,9 @@ const unalignedExtraction = (extraction: GroundedExtraction): IrToLawExtractionE
     message: `Office-action extraction label "${extraction.label}" is not source-grounded.`,
   });
 
-type AlignedGroundedExtraction =
-  | typeof GroundedExtraction.cases.match_exact.Type
-  | typeof GroundedExtraction.cases.match_lesser.Type
-  | typeof GroundedExtraction.cases.match_fuzzy.Type;
+type AlignedGroundedExtraction = Exclude<GroundedExtraction, { readonly alignmentStatus: "unaligned" }>;
 
-const isAlignedExtraction = GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_fuzzy"]);
+const isAlignedExtraction = GroundedExtraction.isAnyOf(AlignedStatus.Options);
 
 const requiredExtraction = Effect.fn("law_practice.ir_to_law.required_extraction")(function* (
   extractions: ReadonlyArray<GroundedExtraction>,

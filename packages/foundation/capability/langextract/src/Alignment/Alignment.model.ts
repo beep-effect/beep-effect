@@ -162,7 +162,7 @@ export type ScoredMatch = typeof ScoredMatch.Type;
 export const AlignedMatch = S.Tuple([
   AlignedStatus.pipe(
     $I.annoteKey("AlignedMatch.status", {
-      description: "Alignment tier (exact, lesser, fuzzy) that produced the match.",
+      description: "Alignment tier (exact, lesser, minimal fold, or fuzzy) that produced the match.",
     })
   ),
   MatchedText.elements[0].pipe(
