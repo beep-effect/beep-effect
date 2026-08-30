@@ -91,6 +91,7 @@ export class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>(
     nonce: S.String,
     pid: S.Finite,
     releasedAtMillis: S.Finite,
+    memoryPeakBytes: S.optionalKey(S.Finite),
   },
   $I.annote("AdmissionJournalReleased", {
     description: "Durable transition recorded when an active admission lease is released.",

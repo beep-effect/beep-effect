@@ -2693,7 +2693,19 @@ const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: nu
       nowMillis - lease.heartbeatAtMillis > AdmissionConfig.make({}).suspectAfterSeconds * 1000
         ? " [suspect: heartbeat stale]"
         : "";
-    return `- lease pid ${lease.pid} ${lease.kind}(${lease.weightTokens}) ${lease.checkoutRoot} @ ${lease.branch} since ${lease.startedAt}${suspect}`;
+    const runScope = pipe(
+      O.fromUndefinedOr(lease.runScope),
+      O.map((scope) => {
+        const peak = pipe(
+          O.fromUndefinedOr(scope.memoryPeakBytes),
+          O.map((bytes) => ` peak=${bytes} bytes`),
+          O.getOrElse(() => "")
+        );
+        return ` scope=${scope.unitName} support=${scope.support}${peak}`;
+      }),
+      O.getOrElse(() => "")
+    );
+    return `- lease pid ${lease.pid} ${lease.kind}(${lease.weightTokens}) ${lease.checkoutRoot} @ ${lease.branch} since ${lease.startedAt}${runScope}${suspect}`;
   }),
   ...A.map(
     snapshot.tickets,

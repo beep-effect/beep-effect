@@ -39,6 +39,10 @@ workflows in skills.
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
   `... verify`, `... publish --message "..."`, `... monitor`. Keep those
   commands green.
+- Heavy admitted work runs in `agent-run-<ticket>.scope` under
+  `agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
+  stops scopes of dead leases. Without the installed slice file, systemd uses
+  a transient slice with defaults.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also

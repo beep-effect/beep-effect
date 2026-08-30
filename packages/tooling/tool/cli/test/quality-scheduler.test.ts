@@ -13,12 +13,14 @@ import {
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
+  RunScopeRecord,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
   withQualityAdmission,
   YeetAdmissionLease,
 } from "@beep/repo-cli/test/RepoRun";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -30,7 +32,9 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
+  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+);
 
 const DEAD_PID = 2_147_483_647;
 
@@ -46,6 +50,36 @@ const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
+
+const writeExecutable = Effect.fn("QualitySchedulerTest.writeExecutable")(function* (
+  filePath: string,
+  content: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.writeFileString(filePath, content);
+  yield* fs.chmod(filePath, 0o755);
+});
+
+const withPrependedPath = <Value, Failure, Requirements>(
+  binDirectory: string,
+  use: Effect.Effect<Value, Failure, Requirements>
+) =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previousPath = Bun.env.PATH;
+      Bun.env.PATH = previousPath === undefined ? binDirectory : `${binDirectory}:${previousPath}`;
+      return previousPath;
+    }),
+    () => use,
+    (previousPath) =>
+      Effect.sync(() => {
+        if (previousPath === undefined) {
+          delete Bun.env.PATH;
+        } else {
+          Bun.env.PATH = previousPath;
+        }
+      })
+  );
 
 const readJournalEvents = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -102,7 +136,8 @@ const withAdmissionTempRoot = Effect.fn("withAdmissionTempRoot")(
   function* <Result, Error2, Requirements>(
     gibRef: Ref.Ref<number>,
     use: (tempRoot: AdmissionTempRoot) => Effect.Effect<Result, Error2, Requirements>,
-    totalGib = 128
+    totalGib = 128,
+    runScopesEnabled = false
   ) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -115,7 +150,14 @@ const withAdmissionTempRoot = Effect.fn("withAdmissionTempRoot")(
       quarantine: path.join(root, "quarantine"),
     };
     return yield* use(tempRoot).pipe(
-      provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_RUNTIME_DIR: runtimeDir }))),
+      provideScopedLayer(
+        ConfigProvider.layer(
+          ConfigProvider.fromUnknown({
+            BEEP_RUN_SCOPES: runScopesEnabled ? "1" : "0",
+            XDG_RUNTIME_DIR: runtimeDir,
+          })
+        )
+      ),
       provideScopedLayer(memoryLayer(gibRef, totalGib)),
       Effect.onExit(() => fs.remove(runtimeDir, { recursive: true, force: true }).pipe(Effect.ignore))
     );
@@ -251,6 +293,7 @@ describe("quality-scheduler", () => {
               expect(leaseName).toBe(`${lease.nonce}-${lease.pid}.lease.json`);
               expect(lease.enqueuedAtMillis).toBeGreaterThan(0);
               expect(lease.enqueuedAtMillis).toBeLessThanOrEqual(lease.admittedAtMillis);
+              expect(O.getOrThrow(O.fromUndefinedOr(lease.runScope)).support).toBe("disabled");
             }),
             fastConfig
           )
@@ -321,6 +364,39 @@ describe("quality-scheduler", () => {
             );
             expect(released.nonce).toBe(admitted.nonce);
           })
+        );
+      })
+    ));
+
+  it("journals peak memory when an active run scope releases", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(
+          gibRef,
+          (tempRoot) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const binDirectory = path.join(path.dirname(path.dirname(tempRoot.root)), "bin");
+              yield* fs.makeDirectory(binDirectory, { recursive: true });
+              yield* writeExecutable(path.join(binDirectory, "busctl"), "#!/bin/sh\nexit 0\n");
+              yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nprintf '8192\\n5\\n'\n");
+
+              yield* withPrependedPath(
+                binDirectory,
+                withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig)
+              );
+              const events = yield* readJournalEvents(tempRoot.root);
+              const released = pipe(
+                events,
+                A.findFirst(AdmissionJournalEvent.guards["admission-released"]),
+                O.getOrThrow
+              );
+              expect(released.memoryPeakBytes).toBe(8192);
+            }),
+          128,
+          true
         );
       })
     ));
@@ -767,6 +843,52 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("stops a dead lease scope only when reap applies", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const runtimeDirectory = path.dirname(path.dirname(tempRoot.root));
+            const binDirectory = path.join(runtimeDirectory, "bin");
+            const capturePath = path.join(runtimeDirectory, "systemctl.argv");
+            const unitName = "agent-run-deadbeef.scope";
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(
+              path.join(binDirectory, "systemctl"),
+              `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\nexit 0\n`
+            );
+            const dead = yield* writeFakeLease(tempRoot, {
+              pid: DEAD_PID,
+              weightTokens: 5,
+              originKey: "origin-dead-scope",
+              runScope: RunScopeRecord.make({
+                unitName,
+                support: "active",
+                attachedPid: DEAD_PID,
+                attachedAt: "2026-08-29T00:00:00.000Z",
+              }),
+            });
+
+            yield* withPrependedPath(
+              binDirectory,
+              Effect.gen(function* () {
+                const dryRun = yield* reapAdmissionState({ apply: false });
+                expect(dryRun.dead).toStrictEqual([dead]);
+                expect(yield* fs.exists(capturePath)).toBe(false);
+
+                const applied = yield* reapAdmissionState({ apply: true });
+                expect(applied.dead).toStrictEqual([dead]);
+                expect(yield* fs.readFileString(capturePath)).toBe(`--user\nstop\n${unitName}\n`);
+              })
+            );
+          })
+        );
+      })
+    ));
+
   it("skips a head ticket stuck on an externally held origin lock so later origins still admit", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -831,6 +953,7 @@ describe("quality-scheduler", () => {
       ],
       tickets: [],
       dead: [],
+      deadLeases: [],
       quarantined: [],
     };
     // 5 + 5 + 5 against capacity 8: only the oldest admission fits the prefix.
