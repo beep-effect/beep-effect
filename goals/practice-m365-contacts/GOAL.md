@@ -23,8 +23,9 @@ effect-first skills, and the source exploration's decision log
 (`explorations/practice-office-provisioning/DECISIONS.md` — binding). The
 richest implementation reference is
 `explorations/practice-office-provisioning/research/r4-provisioning-code-shape.md`
-(M365 attachment-point table, auth-lane steps with the certificate-first
-correction, HTTP/retry and error-taxonomy sections).
+— read it through this SPEC where they diverge: the SPEC's RBAC-exclusive
+grant (no unscoped Entra consent) and the contacts-only verb set with
+contact-folder create/list supersede r4's broader sketches.
 
 Scope:
 
