@@ -28,16 +28,19 @@ five adversarial rounds, mechanical `--gate` PASSED, **31 terms ratified** by th
 steward (rat-001..031), 216 conceded, 57.75% unresolved-fraction waiver ratified. The
 run is rotated and replayable from
 [`ontology/extraction/s4/beep-ci-ops/runs/`](./ontology/extraction/s4/beep-ci-ops/runs/)
-(manifest, index, observations, the vendored judging engine, replay notes). **S5 IS
-UNDERWAY**: the contract is binding at
+(manifest, index, observations, the vendored judging engine, replay notes). **S5 IS COMPLETE** (TAXONOMY ratified at 38 terms, sitting 4; dispositions projected)
+— previously underway: the contract is binding at
 [`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md), the
 mechanical join pass is committed (`extraction/s5/JOIN.yaml`: 25 accepted-via / 7
 domain leaves / 305 open), the sittings are COMPLETE (1–3 scribed in
 DECISIONS.md: all 337 candidates, all 104 LEDGER entries, the docket policy), the
 dispositions surface is landed and gated (`s5/DISPOSITIONS.yaml` +
 `validate_packet.py --s5`: 0 blockers), and the six-seat TAXONOMY round is running.
-**NEXT: merge the seat fragments into `s5/TAXONOMY.yaml`, clear the adversary and
-blinded divergences with the steward, ratify, and land `apply_s5_dispositions.py`.** After S5: auditor run 2 (`first_run: false`, prior index
+**NEXT: stage S6 — A-Box ratification & predicates** (the runtime ETL that
+enumerates ratified-class individuals: the deferred YeetWeightedAdmissionV1, the
+package census, the deployed LiteralKit members) plus auditor run 2's queue (163
+parked candidates, 76 parked ledger obligations, 4 waived constraints, the
+VerificationLane placement obligation). After S5: auditor run 2 (`first_run: false`, prior index
 `orun-2026-08-29T08:20:55Z.index.yaml`) with the journal/verdict corpus extension and
 adapter v1.1.0. Do NOT rerun §4b.
 
@@ -105,6 +108,16 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-08-30 (fifteenth stint): S5 COMPLETE — TAXONOMY RATIFIED. The six-seat
+  round converged remarkably (blinded grok reproduced the identical 39-term
+  set; three field divergences), the codex adversary's 48 findings were
+  validity-audited and drove a fidelity layer + four sitting-4 rulings
+  (DECISIONS.md), and the ratified 38-term `extraction/s5/TAXONOMY.yaml`
+  passes the `--s5` gate at 0/0 with all 27 constraints bound or
+  reason-waived. `apply_s5_dispositions.py` projected the rulings onto
+  CANDIDATES/FACTS/LEDGER — the §5 completion predicate holds (nothing
+  candidate/open). CQ suite green. NEXT: S6 A-Box ratification & predicates.
 
 - 2026-08-30 (fourteenth stint): S5 DISPOSITIONS SURFACE COMPLETE. Sitting 3
   ratified the four-ruling LEDGER docket policy (76 run-2 / 20 constraints / 7

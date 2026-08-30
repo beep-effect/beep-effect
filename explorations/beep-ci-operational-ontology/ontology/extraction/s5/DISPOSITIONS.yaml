@@ -1912,9 +1912,10 @@ candidates:
 - seq: 316
   candidate: HardFloorException
   kind: literal-domain-member
-  ruling: accepted-via
-  join_ref: rat-020
-  justification: leaf of ratified domain StarvationException (instance_of; sittings 1-2)
+  ruling: parked-run-2
+  join_ref: DECISIONS.md S5 sitting 4b
+  justification: category error in the mechanical join (adversary finding); exception-code vocabulary
+    parks for run 2
 - seq: 317
   candidate: ts2589-no-location
   kind: literal-domain-member
