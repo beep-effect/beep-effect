@@ -36,6 +36,14 @@ const WhitespaceCodePoint = S.String.check(
 /**
  * Internal normalized locator text with raw UTF-16 offset maps.
  *
+ * **Example** (Inspect the normalized text field)
+ *
+ * ```ts
+ * import { NormalizedTextWithRawOffsets } from "@beep/langextract/VerifiedSpan/VerifiedSpan.normalization"
+ *
+ * NormalizedTextWithRawOffsets.fields.text !== undefined // => true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  * @internal
@@ -167,6 +175,14 @@ const appendNormalizedPoint = (
 /**
  * Normalize locator text while retaining the raw UTF-16 range behind every
  * normalized code unit.
+ *
+ * **Example** (Normalize locator text with offsets)
+ *
+ * ```ts
+ * import { normalizeWithRawOffsets } from "@beep/langextract/VerifiedSpan/VerifiedSpan.normalization"
+ *
+ * normalizeWithRawOffsets("office").text // => "office"
+ * ```
  *
  * @category utilities
  * @since 0.0.0
