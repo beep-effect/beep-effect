@@ -1036,6 +1036,35 @@ const runStepWithStallWatchdog = Effect.fn("DocgenLocal.runStepWithStallWatchdog
  */
 export const runDocgenStepWithStallWatchdogForTesting = runStepWithStallWatchdog;
 
+/**
+ * Select the directly changed packages whose documentation metadata must be
+ * checked during a scoped run. Turbo may expand the execution set to include
+ * dependents, but the metadata ratchet applies only to the planner's direct
+ * selections.
+ *
+ * @param packages - Packages in Turbo's expanded docgen task graph.
+ * @param selectedPackages - Packages directly selected from changed files.
+ * @returns Expanded packages that were directly selected by the planner.
+ * @category testing
+ * @since 0.0.0
+ */
+export const selectDirectDocgenPackagesForTesting: {
+  (
+    selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>
+  ): (packages: ReadonlyArray<DocgenWorkspacePackage>) => ReadonlyArray<DocgenWorkspacePackage>;
+  (
+    packages: ReadonlyArray<DocgenWorkspacePackage>,
+    selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>
+  ): ReadonlyArray<DocgenWorkspacePackage>;
+} = dual(
+  2,
+  (
+    packages: ReadonlyArray<DocgenWorkspacePackage>,
+    selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>
+  ): ReadonlyArray<DocgenWorkspacePackage> =>
+    A.filter(packages, (pkg) => A.some(selectedPackages, (selected) => selected.name === pkg.name))
+);
+
 const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan: DocgenLocalPlan, repoRoot: string) {
   const dryRunOutput = yield* collectStepOutput(
     "turbo dry-run",
@@ -1066,9 +1095,7 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
   if (A.every(proofStatuses, (status) => status.status === "current")) {
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
-    const selectedPackages = A.filter(packages, (pkg) =>
-      A.some(plan.selectedPackages, (selected) => selected.name === pkg.name)
-    );
+    const selectedPackages = selectDirectDocgenPackagesForTesting(packages, plan.selectedPackages);
     yield* checkPackageDocumentation(selectedPackages, plan.parallel);
     yield* runStepWithStallWatchdog(
       "turbo docgen",
