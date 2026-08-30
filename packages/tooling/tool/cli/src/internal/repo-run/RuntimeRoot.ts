@@ -1,43 +1,25 @@
 /**
  * One per-user runtime root shared by admission and proof coordination.
  *
- * Both coordinators used to pick their root by testing whether
- * `XDG_RUNTIME_DIR` was configured, so a session launched with a scrubbed
- * environment coordinated under a different root than its siblings and ran
- * proofs unserialised. This module ignores launcher-specific environment state,
- * chooses the base root once, and lets each consumer append its own leaf.
+ * Both coordinators used to choose between launcher-specific environment state,
+ * `/run/user/<uid>`, and the system temporary directory. Any fallible choice can
+ * split sibling sessions across separate trees. This module instead fixes the
+ * host base at POSIX `/tmp`; each consumer appends its existing UID-scoped leaf.
  *
  * @since 0.0.0
  */
-import { tmpdir, userInfo } from "node:os";
+import { userInfo } from "node:os";
 import * as O from "@beep/utils/Option";
-import { Console, Context, Effect, FileSystem, MutableRef, Path } from "effect";
+import { Context, Effect } from "effect";
 import { dual } from "effect/Function";
 import { RuntimeRootChoice, RuntimeRootKind } from "./RuntimeRoot.schemas.ts";
+import type { Path } from "effect";
 
-// The fallback notice is diagnostic; one line per process is enough, and it
-// goes to stderr so `--json` stdout streams stay machine-parseable.
-const fallbackNoticed = MutableRef.make(false);
+const CANONICAL_RUNTIME_ROOT = "/tmp";
 
 class RuntimeRootTestOverride extends Context.Service<RuntimeRootTestOverride, RuntimeRootChoice>()(
   "@beep/repo-cli/internal/repo-run/RuntimeRoot/RuntimeRootTestOverride"
 ) {}
-
-const canCreateChildDirectory = Effect.fnUntraced(function* (
-  directory: string
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const info = yield* fs.stat(directory).pipe(Effect.option);
-  if (!O.exists(info, (entry) => entry.type === "Directory")) {
-    return false;
-  }
-  const probe = yield* fs.makeTempDirectory({ directory, prefix: ".beep-runtime-root-probe-" }).pipe(Effect.option);
-  if (O.isNone(probe)) {
-    return false;
-  }
-  yield* fs.remove(probe.value, { recursive: true, force: true }).pipe(Effect.ignore);
-  return true;
-});
 
 /**
  * Inject a runtime-root choice into an Effect for isolated scheduler tests.
@@ -80,23 +62,18 @@ export const provideRuntimeRootForTesting: {
  *
  * **Details**
  *
- * Resolution order: `/run/user/<uid>` when the `FileSystem` service can create
- * and remove a child directory there; otherwise the system temporary directory,
- * announced once per process on stderr. `XDG_RUNTIME_DIR` is deliberately not
- * consulted, so configured and env-scrubbed sibling sessions converge.
+ * Production always returns literal `/tmp`. It does not consult
+ * `XDG_RUNTIME_DIR`, `TMPDIR`, or a fallible `/run/user/<uid>` probe, so sibling
+ * sessions cannot independently select different coordination trees. Admission
+ * and proof consumers retain their existing UID-scoped leaves below this base.
  *
- * **Example** (Resolve with a temporary fallback)
+ * **Example** (Resolve the invariant host base)
  *
  * ```ts
  * import { perUserRuntimeRoot } from "@beep/repo-cli/test/RepoRun"
- * import * as NodePath from "@effect/platform-node/NodePath"
- * import { Effect, FileSystem } from "effect"
+ * import { Effect } from "effect"
  *
- * const choice = perUserRuntimeRoot().pipe(
- *   Effect.provide(FileSystem.layerNoop({})),
- *   Effect.provide(NodePath.layer)
- * )
- * Effect.runPromise(choice).then((resolved) => console.log(resolved.kind)) // "tmpdir"
+ * Effect.runPromise(perUserRuntimeRoot()).then((resolved) => console.log(resolved.root)) // "/tmp"
  * ```
  *
  * @returns The chosen base root and how it was chosen.
@@ -106,23 +83,13 @@ export const provideRuntimeRootForTesting: {
 export const perUserRuntimeRoot = Effect.fn("RuntimeRoot.perUserRuntimeRoot")(function* (): Effect.fn.Return<
   RuntimeRootChoice,
   never,
-  FileSystem.FileSystem | Path.Path
+  never
 > {
   const override = yield* Effect.serviceOption(RuntimeRootTestOverride);
   if (O.isSome(override)) {
     return override.value;
   }
-  const path = yield* Path.Path;
-  const runUserDirectory = path.join("/run/user", `${userInfo().uid}`);
-  if (yield* canCreateChildDirectory(runUserDirectory)) {
-    return RuntimeRootChoice.make({ kind: "run-user", root: runUserDirectory });
-  }
-  const root = tmpdir();
-  if (!MutableRef.get(fallbackNoticed)) {
-    MutableRef.set(fallbackNoticed, true);
-    yield* Console.warn(`[yeet] runtime root: ${runUserDirectory} unavailable; using ${root}`);
-  }
-  return RuntimeRootChoice.make({ kind: "tmpdir", root });
+  return RuntimeRootChoice.make({ kind: "canonical", root: CANONICAL_RUNTIME_ROOT });
 });
 
 /**
@@ -130,9 +97,9 @@ export const perUserRuntimeRoot = Effect.fn("RuntimeRoot.perUserRuntimeRoot")(fu
  *
  * **Details**
  *
- * Per-user roots get `beep/admit`; the shared temporary directory gets the
- * uid-suffixed `beep-admit-uid-<uid>` leaf it has always used, because
- * `tmpdir()` is not per-user.
+ * The canonical host base gets the historical uid-suffixed
+ * `beep-admit-uid-<uid>` leaf. Test overrides get `beep/admit`, keeping isolated
+ * fixtures self-contained.
  *
  * **Example** (Derive the admission root)
  *
@@ -142,9 +109,9 @@ export const perUserRuntimeRoot = Effect.fn("RuntimeRoot.perUserRuntimeRoot")(fu
  * import { Effect, Path } from "effect"
  *
  * const root = Effect.map(Path.Path, (path) =>
- *   admissionRootFor(path, RuntimeRootChoice.make({ kind: "run-user", root: "/run/user/1000" }))
+ *   admissionRootFor(path, RuntimeRootChoice.make({ kind: "canonical", root: "/tmp" }))
  * ).pipe(Effect.provide(NodePath.layer))
- * Effect.runPromise(root).then(console.log) // "/run/user/1000/beep/admit"
+ * Effect.runPromise(root).then(console.log) // "/tmp/beep-admit-uid-1000"
  * ```
  *
  * @param path - Platform path service.
@@ -157,7 +124,7 @@ export const admissionRootFor: {
   (path: Path.Path, choice: RuntimeRootChoice): string;
   (choice: RuntimeRootChoice): (path: Path.Path) => string;
 } = dual(2, (path: Path.Path, choice: RuntimeRootChoice): string =>
-  RuntimeRootKind.is.tmpdir(choice.kind)
+  RuntimeRootKind.is.canonical(choice.kind)
     ? path.join(choice.root, `beep-admit-uid-${userInfo().uid}`)
     : path.join(choice.root, "beep", "admit")
 );
