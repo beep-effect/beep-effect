@@ -12,34 +12,34 @@ const $I = $RepoCliId.create("internal/repo-run/RuntimeRoot.schemas");
 /**
  * How the per-user runtime root was chosen.
  *
- * **Example** (Recognise the temporary fallback)
+ * **Example** (Recognise the canonical host root)
  *
  * ```ts
  * import { RuntimeRootKind } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(RuntimeRootKind.is.tmpdir("tmpdir")) // true
+ * console.log(RuntimeRootKind.is.canonical("canonical")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const RuntimeRootKind = LiteralKit(["run-user", "tmpdir", "test-override"]).pipe(
+export const RuntimeRootKind = LiteralKit(["canonical", "test-override"]).pipe(
   $I.annoteSchema("RuntimeRootKind", {
     description:
-      "Origin of the chosen runtime root: a usable /run/user/<uid>, the system temporary directory, or an injected test override.",
+      "Origin of the chosen runtime root: the invariant host coordination root or an injected test override.",
   })
 );
 
 /**
  * The chosen per-user base root plus its origin.
  *
- * **Example** (Construct a run-user choice)
+ * **Example** (Construct the canonical choice)
  *
  * ```ts
  * import { RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun"
  *
- * const choice = RuntimeRootChoice.make({ kind: "run-user", root: "/run/user/1000" })
- * console.log(choice.root) // "/run/user/1000"
+ * const choice = RuntimeRootChoice.make({ kind: "canonical", root: "/tmp" })
+ * console.log(choice.root) // "/tmp"
  * ```
  *
  * @category models
