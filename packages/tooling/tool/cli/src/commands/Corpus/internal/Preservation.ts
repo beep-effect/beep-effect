@@ -818,17 +818,15 @@ const isExcludedT7Path = (relativePath: string): boolean => {
   );
 };
 
+type ScopedSourceFile = {
+  readonly absolute: string;
+  readonly identity: PreservationObjectIdentity;
+  readonly relative: string;
+};
+
 const scopedSourceFiles = Effect.fn("Preservation.scopedSourceFiles")(function* (
   options: T7PreservationOptions
-): Effect.fn.Return<
-  ReadonlyArray<{
-    readonly absolute: string;
-    readonly identity: PreservationObjectIdentity;
-    readonly relative: string;
-  }>,
-  PreservationArchiveIoError,
-  FileSystem.FileSystem | Path.Path
-> {
+): Effect.fn.Return<ReadonlyArray<ScopedSourceFile>, PreservationArchiveIoError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const t7Root = path.resolve(options.t7Root);
@@ -1124,10 +1122,10 @@ const destinationFreeBytes = Effect.fn("Preservation.destinationFreeBytes")(func
   return NonNegativeInt.make(parsed * 1024);
 });
 
-const measureCapacity = Effect.fn("Preservation.measureCapacity")(function* (
-  options: T7PreservationOptions
+const measureCapacityForFiles = Effect.fn("Preservation.measureCapacityForFiles")(function* (
+  options: T7PreservationOptions,
+  files: ReadonlyArray<ScopedSourceFile>
 ): Effect.fn.Return<CapacityMeasurement, PreservationArchiveIoError, PreservationRequirements> {
-  const files = yield* scopedSourceFiles(options);
   const sourceBytes = A.reduce(files, 0, (total, file) => total + file.identity.sizeBytes);
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
@@ -1142,6 +1140,12 @@ const measureCapacity = Effect.fn("Preservation.measureCapacity")(function* (
     sourceBytes: NonNegativeInt.make(sourceBytes),
     sourceRoot,
   });
+});
+
+const measureCapacity = Effect.fn("Preservation.measureCapacity")(function* (
+  options: T7PreservationOptions
+): Effect.fn.Return<CapacityMeasurement, PreservationArchiveIoError, PreservationRequirements> {
+  return yield* measureCapacityForFiles(options, yield* scopedSourceFiles(options));
 });
 
 /**
@@ -1302,10 +1306,11 @@ const loadApprovedPreflight = Effect.fn("Preservation.loadApprovedPreflight")(fu
 });
 
 const refreshApprovedPreflight = Effect.fn("Preservation.refreshApprovedPreflight")(function* (
-  options: T7PreservationOptions
+  options: T7PreservationOptions,
+  files: ReadonlyArray<ScopedSourceFile>,
+  approved: ApprovedCapacityPreflight
 ): Effect.fn.Return<ApprovedCapacityPreflight, PreservationCommandError, PreservationRequirements> {
-  const approved = yield* loadApprovedPreflight(options.corpusRoot);
-  const current = yield* measureCapacity(options);
+  const current = yield* measureCapacityForFiles(options, files);
   if (!Str.Equivalence(approved.measurement.sourceRoot, current.sourceRoot)) {
     return yield* PreservationPreflightUnapprovedError.make({
       message: "The approved preflight belongs to a different canonical T7 source root; run preflight again.",
@@ -1475,7 +1480,14 @@ const sourceMatchesVerificationReport = Effect.fn("Preservation.sourceMatchesVer
 export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preservation")(function* (
   options: T7PreservationOptions
 ): Effect.fn.Return<PreservationRunSummary, PreservationCommandError, PreservationRequirements> {
-  yield* refreshApprovedPreflight(options);
+  const approved = yield* loadApprovedPreflight(options.corpusRoot);
+  const path = yield* Path.Path;
+  if (!Str.Equivalence(approved.measurement.sourceRoot, path.resolve(options.t7Root))) {
+    return yield* PreservationPreflightUnapprovedError.make({
+      message: "The approved preflight belongs to a different canonical T7 source root; run preflight again.",
+    });
+  }
+  yield* refreshApprovedPreflight(options, yield* scopedSourceFiles(options), approved);
   const reconciliation = yield* reconcileCollectorManifest(options);
   if (reconciliation.sizeMismatches > 0) {
     return yield* PreservationUnapprovedRowsError.make({
@@ -1487,7 +1499,8 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
   yield* printLines([
     `preservation collector: reconciled=${reconciliation.reconciledDestinations} inheritedMissing=${reconciliation.missingDestinations} collectorErrors=${reconciliation.collectorErrors} deliberateExclusions=${reconciliation.deliberateExclusions}`,
   ]);
-  const path = yield* Path.Path;
+  const files = yield* scopedSourceFiles(options);
+  yield* refreshApprovedPreflight(options, files, approved);
   const archiveRoot = archiveRootFor(options.corpusRoot, path);
   const manifestPath = manifestPathFor(options.corpusRoot, path);
   const services = Layer.mergeAll(ArchiveWriterLive, PreservationManifestStoreLive(manifestPath));
@@ -1497,7 +1510,6 @@ export const runT7PreservationImpl = Effect.fn("CorpusCommandService.runT7Preser
       return yield* Effect.gen(function* () {
         const writer = yield* ArchiveWriter;
         const manifest = yield* PreservationManifestStore;
-        const files = yield* scopedSourceFiles(options);
         const priorRows = yield* manifest.readAll;
         const attemptCounts = MutableHashMap.empty<string, number>();
         for (const row of priorRows) {
