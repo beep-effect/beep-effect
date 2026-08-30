@@ -650,6 +650,9 @@ describe("Docgen operations", () => {
           expect(A.map(selectDirectDocgenPackagesForTesting(packages, [selected[0]!]), (pkg) => pkg.name)).toEqual([
             "@beep/schema",
           ]);
+          expect(A.map(selectDirectDocgenPackagesForTesting([selected[0]!])(packages), (pkg) => pkg.name)).toEqual([
+            "@beep/schema",
+          ]);
         })
       )
     ));
