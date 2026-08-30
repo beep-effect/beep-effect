@@ -319,3 +319,27 @@ and preconditions, and surface `BlockedByEntitlement` entries.
 recommendation. Pulumi (already in the repo for infra) rejected for this
 estate: a second state/reconciliation engine whose read/diff model fits
 poorly with live discovery, entitlement blockers, and resource adoption.
+
+## 2026-08-30 — shape exit and graduation set
+
+**Question:** Does `BRIEF.md` match the operator's picture, and which MAP
+candidates graduate now?
+
+**Answer:** BRIEF confirmed — the operator green-lit execution the same day
+("merged, now let's execute") after the shape PR chain landed. Four
+promised-now goals graduate immediately: `practice-box-provisioning`,
+`practice-m365-contacts`, `practice-mail-backfill`, and `freshbooks-driver`.
+Two candidates stay gated in `MAP.md` as re-entry points:
+`practice-sign-invoice-flow` (gate: live starter tree + the FreshBooks P0
+endpoint verdict) and `practice-walkthroughs` (gate: starter taxonomy
+applied live). The exploration flips to `graduated`; the five VERIFY items
+carry into the owning goals' P0 phases (CSP quote + support case →
+`practice-mail-backfill`; Box quote + CCG approval →
+`practice-box-provisioning`; FreshBooks live limits → `freshbooks-driver`).
+
+**Rationale:** The four promised-now goals need no evidence that does not
+already exist; the two gated flows would otherwise decompose against
+assumptions (an unprovisioned tree, an unverified endpoint). Rejected:
+graduating all six at once (the gated pair would sit fake-active), and
+holding the packet open for the gated pair (the graduation contract keeps
+re-entry in `MAP.md`, not in packet status).

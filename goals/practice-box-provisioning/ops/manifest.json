@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-box-provisioning",
+    "packetId": "goal-packet/v1:cc6d94acb702eb69cb43e9493434780c6e840f5cb66e24cc54f46862703621fa",
+    "title": "Practice Box Provisioning",
+    "status": "active",
+    "created": "2026-08-30",
+    "updated": "2026-08-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-box-provisioning",
+  "lifecycle": "active",
+  "mission": "Expand @beep/box with the provisioning manager surface and ship the Effect-native desired-state reconciler for the service-identity-owned client/matter tree",
+  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First actions: CCG approval verification, SDK provenance repair, package-home choice, Box quote table.",
+  "blockedBy": [],
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/practice-office-provisioning",
+    "graduated": "2026-08-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-box-provisioning/README.md",
+    "goals/practice-box-provisioning/SPEC.md",
+    "goals/practice-box-provisioning/PLAN.md",
+    "goals/practice-box-provisioning/GOAL.md",
+    "goals/practice-box-provisioning/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-box-provisioning/GOAL.md"
+    }
+  ],
+  "provides": ["practice/box-tree", "drivers/box-provisioning-surface"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-box-provisioning/GOAL.md)\" -le 4000",
+    "jq . goals/practice-box-provisioning/ops/manifest.json",
+    "rg -n \"practice-box-provisioning|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-box-provisioning",
+    "git diff --check -- goals/practice-box-provisioning",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "CCG platform-app approval is unavailable on the Business plan.",
+    "The @beep/box type-instantiation budget cannot absorb a required manager family.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
