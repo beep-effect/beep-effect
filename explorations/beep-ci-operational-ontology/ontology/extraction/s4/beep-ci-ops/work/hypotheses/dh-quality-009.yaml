@@ -1,0 +1,23 @@
+id: "dh:quality:009"
+observation_refs:
+  - "so:sha256:104dfcd6e8f97bd13c8e63b5aff056c849fe79ff488708009d46020f8cd34710"
+  - "so:sha256:38aff6c4f283cbeb5a777b6f39404275c7bbacfdb70515b871faac0a43954590"
+  - "po:sha256:aa93e171c0cefc6cbfbb058423b6495491de5e56be9be3fc86be44b67be9e302"
+cq_warrants: []
+proposed_referent:
+  label: "\"not-run-early-stop\" label in GithubCheckLaneRunStatus"
+  description: "The observed token is retained only as a lexical member of the GithubCheckLaneRunStatus source vocabulary. The harvested claim that it denotes a terminal state of a GitHub-check lane execution remains possible but is not established by these records."
+representation_status: lexical_alias
+alternatives:
+  - label: "A GitHub-check lane execution-state phase denoted by \"not-run-early-stop\""
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied observations establish \"not-run-early-stop\" only as a literal or backing-array member of GithubCheckLaneRunStatus. They do not observe an operational bearer, stable specification identity, execution occurrence, or lifecycle corresponding to that token, so the implementation-only null stands."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

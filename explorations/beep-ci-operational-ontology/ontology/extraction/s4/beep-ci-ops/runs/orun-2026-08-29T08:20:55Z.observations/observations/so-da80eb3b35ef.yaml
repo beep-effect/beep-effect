@@ -1,0 +1,23 @@
+id: so:sha256:da80eb3b35ef0d7910c27696869f0c68cbcd8669be4f543e22ad0ef514c9944e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 240
+  end_line: 257
+  content_sha256: 80368dc1ef399b457d47148e330395f9fabcf6496113c67c650a75697e5b323d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runPhaseStep
+  lexical_name: runPhaseStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runPhaseStep = Effect.fn("Yeet.runPhaseStep")(function* (
+epistemic_status: parser_derived

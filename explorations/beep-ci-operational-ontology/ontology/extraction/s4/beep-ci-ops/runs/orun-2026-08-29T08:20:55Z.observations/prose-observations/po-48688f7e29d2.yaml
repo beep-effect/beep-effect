@@ -1,0 +1,10 @@
+id: po:sha256:48688f7e29d2a88756ecca576799f17db6a2ae3bb6c56cfb722f073d072397c1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 38
+  end_line: 38
+quote: '@beep/colors 37'
+epistemic_status: quoted_prose

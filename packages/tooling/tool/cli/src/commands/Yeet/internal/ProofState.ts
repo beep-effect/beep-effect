@@ -172,7 +172,11 @@ const decodeYeetRunState = S.decodeUnknownEffect(S.fromJsonString(YeetRunState))
  */
 export const proofLockPathForContext = Effect.fn("Yeet.proofLockPathForContext")(function* (
   context: RepoRunContext
-): Effect.fn.Return<string, YeetCommandError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const repositoryIdentity = yield* runGitOutput(context.repoRoot, ["config", "--get", "remote.origin.url"]);
   return yield* proofCoordinatorLockPath(repositoryIdentity);
 });

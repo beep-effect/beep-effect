@@ -1,0 +1,23 @@
+id: so:sha256:2fcff2e89d35d38d10b76ba060d72652afa63b7fa848aee9bccd1cfe52f9c3c7
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 54
+  end_line: 54
+  content_sha256: 29ea25ba732abc43e2753b0b06a8035cb869be89607a41f906327eb2aabec046
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::encodeLease
+  lexical_name: encodeLease
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
+epistemic_status: parser_derived

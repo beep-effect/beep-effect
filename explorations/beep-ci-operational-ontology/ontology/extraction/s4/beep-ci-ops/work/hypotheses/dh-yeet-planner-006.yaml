@@ -1,0 +1,25 @@
+id: "dh:yeet-planner:006"
+observation_refs:
+  - "so:sha256:7df674be11942f63ac94e7c586a21e07045ac51ff40a42d31ad62abedbd4b59f"
+  - "so:sha256:d06daf5a00eee2a7d026d25579146cce9773814981c7b60a1f22e6f135801b92"
+  - "po:sha256:8c23b2f32e4377759992d3e14b0348dadffd443b1129caaffed3b0282283b151"
+cq_warrants: []
+proposed_referent:
+  label: "Repository-code gate-input family"
+  description: "A claimed family of changed repository-code inputs that may be relevant to gate-artifact invalidation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Changed-input scope category"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Lexical alias for repository-code paths"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied evidence establishes only membership in a two-value LiteralKit and its derived source alias; it observes no invalidation behavior or domain distinction for the repo-code member."
+epistemic_status: proposed
+confidence:
+  value: 0.87
+  use_for_acceptance: false

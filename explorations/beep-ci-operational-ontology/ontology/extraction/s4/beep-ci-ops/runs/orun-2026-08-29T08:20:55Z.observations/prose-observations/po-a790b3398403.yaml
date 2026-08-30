@@ -1,0 +1,10 @@
+id: po:sha256:a790b3398403b1be2e7ced74bd8a5ef6b741760df1667416c0fa1410f18fbde9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/docs/pre-glossary.csv
+source_span:
+  start_line: 54
+  end_line: 54
+quote: dependsOnTransitive,property,CQ-004,"Datalog fixpoint over dependsOn (rule-compiled)"
+epistemic_status: quoted_prose

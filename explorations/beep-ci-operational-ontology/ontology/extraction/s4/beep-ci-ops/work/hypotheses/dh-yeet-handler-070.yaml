@@ -1,0 +1,24 @@
+id: "dh:yeet-handler:070"
+observation_refs:
+  - "so:sha256:0fd0abf7cb302f4f763b3a58aa6af6407d41aed5e9405aeb5ac6b97970e90ff4"
+  - "so:sha256:559894ea743432ee2425956d8fab59a94f1c385317f35dcbb9aa224dbcfc64fb"
+  - "so:sha256:cd7765aadf2af4d0764d33623bd15e44f0052b381e6e235565dab25c0e4c8958"
+  - "po:sha256:855501fcce91a1abd40a2ac7a2efc3fabe445e244e19e5f7f670097ea07cb9f0"
+cq_warrants: ["CQ-022"]
+proposed_referent:
+  label: "membership of a failure or execution in a VerificationAttempt"
+  description: "A candidate same-attempt relation needed by the stopping query; this lane does not observe an attempt identifier on either proposed bearer."
+representation_status: unresolved
+alternatives:
+  - label: "co-containment in one verdict record"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "same-run implementation association"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The cited lane observations contain failure and lane-record structures but no observed attempt identifier or relation connecting both to the same attempt, so the required same-attempt discriminator is absent."
+epistemic_status: proposed
+confidence: {value: 0.28, use_for_acceptance: false}

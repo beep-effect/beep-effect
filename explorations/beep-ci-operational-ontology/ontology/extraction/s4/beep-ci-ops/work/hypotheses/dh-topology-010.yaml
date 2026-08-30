@@ -1,0 +1,25 @@
+id: "dh:topology:010"
+observation_refs:
+  - "po:sha256:4afe0d9991e80cc20e2f3d4496e2ede5ae4ef82918422d332e93fe865b22e436"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/ai-provider-cli workspace package"
+  description: "The workspace software package information artifact identified by @beep/ai-provider-cli in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/ai-provider-cli as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "The topology-row DTO counterexample wins: @beep/ai-provider-cli 33 can be parsed and consumed by CQ-004 without establishing a governed package-reference artifact or software-package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

@@ -1,0 +1,10 @@
+id: po:sha256:965ef702e781e4ac242a4c1c6de05ece748e16fb63340e1b37edaf87863cc6af
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 337
+  end_line: 344
+quote: '_tag: S.tag("caller-controlled"),'
+epistemic_status: quoted_prose

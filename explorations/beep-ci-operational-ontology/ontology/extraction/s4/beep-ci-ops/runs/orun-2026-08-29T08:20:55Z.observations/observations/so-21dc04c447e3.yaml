@@ -1,0 +1,27 @@
+id: so:sha256:21dc04c447e3bb1755f100c1ed3368874b7e28d033a45d7532bd0bccea558782
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 184
+  end_line: 188
+  content_sha256: 9bac7d64bffe8974cdde0a98406d167561863a5520e8ed7ac860bd3f1f63a8d8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheValueSource
+  lexical_name: TurboCacheValueSource
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: literal
+- predicate: declares_literal_member
+  object: secret-reference
+- predicate: exports_symbol
+  object: TurboCacheValueSource
+source_excerpt: export const TurboCacheValueSource = LiteralKit(["literal", "secret-reference"]).pipe(
+epistemic_status: parser_derived

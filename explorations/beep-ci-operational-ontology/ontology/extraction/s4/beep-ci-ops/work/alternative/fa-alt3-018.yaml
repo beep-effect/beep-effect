@@ -1,0 +1,24 @@
+id: fa:alt3:018
+hypothesis_ref: dh:topology:028
+identity_card_ref: ic:alt3:018
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: 'kind: @beep/cosmos as an identity-providing workspace package unit'
+  still_viable: true
+- label: 'information_object: @beep/cosmos as a software information artifact'
+  still_viable: true
+- label: 'role: being a member of this workspace, borne by a package named @beep/cosmos'
+  still_viable: true
+strongest_counterexample: The cited observation is only the capture line naming @beep/cosmos
+  plus a rank. File contents of @beep/cosmos can change while the workspace still treats it
+  as the same affected-closure participant, which the kind reading uses; a content-addressed
+  tarball with another name would favor the information-object reading.
+verdict: analyzed
+needed_evidence: Whether CI reidentifies @beep/cosmos across content change via the workspace
+  name (kind) or treats a content-identical artifact as the same information object independently
+  of the name; and whether @beep/cosmos outside this workspace is still the same entity (role
+  versus kind). The models are observationally equivalent on the topo-sort line alone.

@@ -1,0 +1,9 @@
+id: rat:8
+proposal_ref: otp:grant-state:001
+proposal_sha256: 76fe9c2a40cda4360a68828cffaab10555de4e9fb34a90a76cc5b438af744d87
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept GrantState — a one-member closed partition is honest; S5 extends it if reality does.

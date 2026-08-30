@@ -1,0 +1,27 @@
+id: so:sha256:f1a03bb449eac818eebe7d56427328233426d2cf8878fcb6a51778ef65fc86fe
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 67
+  end_line: 72
+  content_sha256: 7209141e1a3af00c412ef5e3bc340e87b12088abc2014e7c2610334f8453a865
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::MemoryStatsShape
+  lexical_name: MemoryStatsShape
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: availableGib
+- predicate: declares_field
+  object: totalGib
+- predicate: exports_symbol
+  object: MemoryStatsShape
+source_excerpt: export interface MemoryStatsShape {
+epistemic_status: parser_derived

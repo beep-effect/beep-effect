@@ -1,0 +1,23 @@
+id: so:sha256:912baa68a127d28e25dfadc820ef5f323d631f5f3e9dfd787c78ab0ae7d39593
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 510
+  end_line: 510
+  content_sha256: 88781352394f2d2bf25af14e26ca9c1ec462250ccb1c40e9d9bfc394bffbb809
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::CAPTURE_FORCE_KILL_REAP_GRACE
+  lexical_name: CAPTURE_FORCE_KILL_REAP_GRACE
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const CAPTURE_FORCE_KILL_REAP_GRACE: Duration.Input = "1 second";'
+epistemic_status: parser_derived

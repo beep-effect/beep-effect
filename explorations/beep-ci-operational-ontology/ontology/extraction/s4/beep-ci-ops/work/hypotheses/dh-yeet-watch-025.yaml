@@ -1,0 +1,27 @@
+id: "dh:yeet-watch:025"
+observation_refs:
+  - "so:sha256:357936bd5c10475bb683a73ef496a31521cdf91e52e444875205b73303f7ab1b"
+  - "so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f"
+  - "so:sha256:1e993a781d8287c7d8eaef6ac56a139bd3849cf1fc650a91d7db9ac29c4f5fef"
+  - "so:sha256:e466bc70261aa2bb7050741a68f5378a2eca379f46759857a59d785125efb03e"
+  - "so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350"
+cq_warrants: []
+proposed_referent:
+  label: "versioned Yeet watch event row"
+  description: "A schema-versioned information row encoded as one JSON document in a Yeet watch event stream."
+representation_status: unresolved
+alternatives:
+  - label: "watch-stream schema implementation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "operational transition event"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A version constant, union, encoder, and renderer establish a serialization contract in source, but without an observed emitted row or CQ warrant they do not defeat the implementation-only interpretation."
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

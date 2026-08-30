@@ -1,0 +1,24 @@
+id: "fa:yeet-watch:002"
+hypothesis_ref: "dh:yeet-watch:014"
+identity_card_ref: "ic:yeet-watch:002"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Terminal nonpassing phase of a check execution rather than normalized record content"
+    still_viable: true
+  - label: "Snapshot-bound fail-assignment information object rather than one reusable fail value"
+    still_viable: true
+  - label: "One committed failure event denoted by every fail value"
+    still_viable: false
+  - label: "Fail literal as a selector with no denoted classification content"
+    still_viable: false
+strongest_counterexample: >-
+  The classifier maps ordinary failure, cancellation, error, and timeout
+  evidence to the same fail member and then counts or differences that recorded
+  member. Those raw conditions need not share one cause or event, so fail
+  cannot identify a committed failure occurrence; a broad terminal-nonpassing
+  phase and a snapshot-bound information-token model remain viable.
+verdict: analyzed

@@ -26,6 +26,13 @@ export * from "./Fleet.service.ts";
  */
 export * from "./Worktree.command.ts";
 /**
+ * Public worktree constants export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Worktree.constants.ts";
+/**
  * Public worktree command error exports.
  *
  * @category cli-commands

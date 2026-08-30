@@ -5,13 +5,13 @@
     "title": "Citation Verified Span Substrate",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-29",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-verified-span-substrate",
   "lifecycle": "active",
   "mission": "Deliver generic matter-scoped verified TextAnchor construction with canonical UTF-16 raw offsets, deterministic locator mapping, straddle, and fail-closed source-drift behavior.",
-  "statusNote": "P0 passed 9/9; P1 provenance, langextract, source resolver, live re-verification, and coordinated consumer proof are green. Re-anchor history and negative-attempt persistence remain active.",
+  "statusNote": "P0 and P1 are complete. P2 owned package, persistence, re-anchor, schema-law, docgen, and Yeet repair proof are green; exact-head verify and hosted merge-ready closeout remain.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -56,12 +56,12 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

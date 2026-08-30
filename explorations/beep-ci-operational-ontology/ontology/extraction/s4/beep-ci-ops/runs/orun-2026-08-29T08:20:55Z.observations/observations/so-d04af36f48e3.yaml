@@ -1,0 +1,25 @@
+id: so:sha256:d04af36f48e323964940f6af826755a579e49fadfd4f88d1bec812dbacc5bab6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/github/JobShape.ts
+source_span:
+  start_line: 89
+  end_line: 89
+  content_sha256: 98f77116a29c8b490e95acde7229965b0e5d0b505b7c1db10e3e2ec5d27cd868
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/github/JobShape.ts::GithubJobShapeClass
+  lexical_name: GithubJobShapeClass
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: GithubJobShapeClass
+- predicate: exports_symbol
+  object: GithubJobShapeClass
+source_excerpt: export type GithubJobShapeClass = typeof GithubJobShapeClass.Type;
+epistemic_status: parser_derived

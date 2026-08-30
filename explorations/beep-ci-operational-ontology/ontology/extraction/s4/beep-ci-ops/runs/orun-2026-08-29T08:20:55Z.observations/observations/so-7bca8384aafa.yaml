@@ -1,0 +1,23 @@
+id: so:sha256:7bca8384aafaad080a48a43b44f691e2010a51b931c2a92307236d308094d420
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 547
+  end_line: 561
+  content_sha256: d071554acb414b0cb3172aa46bd9f54e5da0c74f9ecd1e5ce14db625c16a6028
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::turboTaskForStep
+  lexical_name: turboTaskForStep
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: turboTaskForStep
+source_excerpt: 'export const turboTaskForStep: {'
+epistemic_status: parser_derived

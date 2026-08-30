@@ -33,7 +33,7 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import { XMLParser } from "fast-xml-parser";
 import { parse } from "jsonc-parser";
-import { configStringEqualsSync } from "../../internal/cli/EnvConfig.ts";
+import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
@@ -568,8 +568,12 @@ const collectSuccessfulOutput = Effect.fn("QualityScriptCommands.collectSuccessf
   return result.output;
 });
 
-const isTruthyMainPush = (): boolean =>
-  configStringEqualsSync("GITHUB_EVENT_NAME", "push") && configStringEqualsSync("GITHUB_REF_NAME", "main");
+const isTruthyMainPush = Effect.fn("QualityScriptCommands.isTruthyMainPush")(function* () {
+  const eventName = yield* configStringOption("GITHUB_EVENT_NAME");
+  const refName = yield* configStringOption("GITHUB_REF_NAME");
+
+  return O.contains(eventName, "push") && O.contains(refName, "main");
+});
 
 const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function* (
   repoRoot: string
@@ -620,7 +624,7 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
   QualityScriptCommandError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
-  if (isTruthyMainPush()) {
+  if (yield* isTruthyMainPush()) {
     yield* Console.log("[github-checks] quality: skipped changeset status on main push");
     return A.empty<GithubCheckLaneSpec>();
   }
@@ -2693,7 +2697,19 @@ const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: nu
       nowMillis - lease.heartbeatAtMillis > AdmissionConfig.make({}).suspectAfterSeconds * 1000
         ? " [suspect: heartbeat stale]"
         : "";
-    return `- lease pid ${lease.pid} ${lease.kind}(${lease.weightTokens}) ${lease.checkoutRoot} @ ${lease.branch} since ${lease.startedAt}${suspect}`;
+    const runScope = pipe(
+      O.fromUndefinedOr(lease.runScope),
+      O.map((scope) => {
+        const peak = pipe(
+          O.fromUndefinedOr(scope.memoryPeakBytes),
+          O.map((bytes) => ` peak=${bytes} bytes`),
+          O.getOrElse(() => "")
+        );
+        return ` scope=${scope.unitName} support=${scope.support}${peak}`;
+      }),
+      O.getOrElse(() => "")
+    );
+    return `- lease pid ${lease.pid} ${lease.kind}(${lease.weightTokens}) ${lease.checkoutRoot} @ ${lease.branch} since ${lease.startedAt}${runScope}${suspect}`;
   }),
   ...A.map(
     snapshot.tickets,
@@ -2703,6 +2719,33 @@ const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: nu
   ...A.map(snapshot.dead, (path) => `- dead: ${path}`),
   ...A.map(snapshot.quarantined, (path) => `- quarantined: ${path}`),
 ];
+
+/**
+ * Render admission status lines, including run-scope details per lease.
+ *
+ * **Example** (Render an empty snapshot)
+ *
+ * ```ts
+ * import { AdmissionSnapshot } from "@beep/repo-cli/test/RepoRun"
+ * import { renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const snapshot = AdmissionSnapshot.make({
+ *   capacityTokens: 10, activeTokens: 0, memAvailableGib: 64, hardFloorEngaged: false,
+ *   leases: [], tickets: [], dead: [], quarantined: [],
+ * })
+ * console.log(renderAdmissionSnapshotLinesForTesting(snapshot, 0)[0]) // "admission capacity: 0/10 tokens (MemAvailable 64.0 GiB)"
+ * ```
+ *
+ * @param snapshot - Admission snapshot to render.
+ * @param nowMillis - Current time used to flag stale heartbeats.
+ * @returns Operator-facing status lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const renderAdmissionSnapshotLinesForTesting: {
+  (snapshot: AdmissionSnapshot, nowMillis: number): ReadonlyArray<string>;
+  (nowMillis: number): (snapshot: AdmissionSnapshot) => ReadonlyArray<string>;
+} = dual(2, renderAdmissionSnapshotLines);
 
 const schedulerStatusCommand = Command.make(
   "status",
@@ -2762,8 +2805,53 @@ const renderTmpfsCandidateLine = (candidate: TmpfsReapReport["candidates"][numbe
     O.map((reason) => ` reason=${reason}`),
     O.getOrElse(() => "")
   );
-  return `- ${candidate.action} class=${candidate.reapClass} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
+  const root = pipe(
+    O.fromUndefinedOr(candidate.root),
+    O.map((value) => ` root=${value}`),
+    O.getOrElse(() => "")
+  );
+  return `- ${candidate.action} class=${candidate.reapClass}${root} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
 };
+
+const renderTmpfsReportLines = (report: TmpfsReapReport, apply: boolean): ReadonlyArray<string> => [
+  apply
+    ? "TMPFS REAP APPLY — removing only classified, idle artifacts with zero live references"
+    : "TMPFS REAP DRY RUN — nothing will be removed; pass --apply to reap eligible artifacts",
+  `scratch roots: ${A.join(
+    O.getOrElse(O.fromUndefinedOr(report.tmpRoots), () => [report.tmpRoot]),
+    ", "
+  )}`,
+  ...A.map(report.candidates, renderTmpfsCandidateLine),
+  `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
+  ...A.map(report.warnings, (warning) => `warning: ${warning}`),
+];
+
+/**
+ * Render the operator-facing tmpfs janitor report without running the command.
+ *
+ * **Example** (Render a dry-run report)
+ *
+ * ```ts
+ * import { TmpfsReapReport } from "@beep/repo-cli/test/RepoRun"
+ * import { renderTmpfsReportLinesForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const report = TmpfsReapReport.make({
+ *   scannedAt: "2026-08-30T12:00:00.000Z", tmpRoot: "/tmp", applied: false,
+ *   candidates: [], reapedCount: 0, reclaimedBytes: 0, warnings: [],
+ * })
+ * console.log(renderTmpfsReportLinesForTesting(report, false)[1]) // "scratch roots: /tmp"
+ * ```
+ *
+ * @param report - Completed janitor report to render.
+ * @param apply - Whether the command was invoked in apply mode.
+ * @returns Operator-facing summary, candidate, total, and warning lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const renderTmpfsReportLinesForTesting: {
+  (report: TmpfsReapReport, apply: boolean): ReadonlyArray<string>;
+  (apply: boolean): (report: TmpfsReapReport) => ReadonlyArray<string>;
+} = dual(2, renderTmpfsReportLines);
 
 const tmpfsReapCommand = Command.make(
   "tmpfs-reap",
@@ -2784,18 +2872,11 @@ const tmpfsReapCommand = Command.make(
       yield* printLines([yield* jsonStringifyPretty(encoded)]);
       return;
     }
-    yield* printLines([
-      apply
-        ? "TMPFS REAP APPLY — removing only classified, idle artifacts with zero live references"
-        : "TMPFS REAP DRY RUN — nothing will be removed; pass --apply to reap eligible artifacts",
-      ...A.map(report.candidates, renderTmpfsCandidateLine),
-      `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
-      ...A.map(report.warnings, (warning) => `warning: ${warning}`),
-    ]);
+    yield* printLines(renderTmpfsReportLines(report, apply));
   })
 ).pipe(
   Command.withDescription(
-    "Dry-run-first janitor for idle tmpfs worktrees and tool artifacts; pass --apply from the janitor timer"
+    "Dry-run-first janitor for idle artifacts under /tmp and a distinct absolute TMPDIR; includes Vitest forks scratch and dangling worktree stubs"
   )
 );
 

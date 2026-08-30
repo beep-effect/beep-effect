@@ -1,0 +1,23 @@
+id: so:sha256:05480a488ebd78da3e48d161977681cfd57541910c096e3df7af556ccd3a5a3d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 674
+  end_line: 675
+  content_sha256: 885a3ca6edd5eaa02cc04bec877a1ee7c1b2debb87358789ad2863c5aa115c28
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::turboCachePlanNeedsSecretSession
+  lexical_name: turboCachePlanNeedsSecretSession
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: turboCachePlanNeedsSecretSession
+source_excerpt: 'export const turboCachePlanNeedsSecretSession = (plan: TurboCachePlan): boolean =>'
+epistemic_status: parser_derived

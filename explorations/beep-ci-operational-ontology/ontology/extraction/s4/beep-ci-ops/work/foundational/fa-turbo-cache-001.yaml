@@ -1,0 +1,15 @@
+id: "fa:turbo-cache:001"
+hypothesis_ref: "dh:turbo-cache:001"
+identity_card_ref: "ic:turbo-cache:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The referent is a collection of independent configuration assertions rather than one document-level information object."
+    still_viable: true
+  - label: "The file is only a serialization artifact with no operational denotation."
+    still_viable: false
+strongest_counterexample: "A byte-identical copy in a fork could express the same configuration content while remaining a distinct authored document, so neither path nor bytes alone settles document identity."
+verdict: analyzed

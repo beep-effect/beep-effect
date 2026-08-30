@@ -1,0 +1,48 @@
+target: "otp:active-tokens:001"
+target_sha256: "260751bc63ae5a3bc1d9354a1c0f0c7cdd7f76997e954209597784d9f9a7bdd6"
+chain_sha256: "0fecc530568a846969aaf525a704a7ed2894f70f5b124a402842bed9b6ca6184"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The data-property proposal asserts no parents edge; no is-a or subproperty
+    relation exists to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: property-assertion-individuation
+    counterexample: >-
+      Two machines can each have five active tokens, and one machine can return
+      to five after an intervening grant change. The card identifies assertions
+      by admission context, observation boundary, and token convention rather
+      than numeric equality, so it separates all three operational facts.
+    outcome: survived
+  - surface: warrant
+    rule: semantic-support-preserves-derived-value-correctness
+    counterexample: >-
+      A stale or post-grant ETL value can still populate
+      capacityAtAdmissionTokens and make CQ-010 syntactically answerable. The
+      revised property exposes the deployed pre-grant active-charge operand at
+      the same snapshot boundary, so removing it loses the stated check that
+      the decision value is the pre-grant remainder. That is correctness support,
+      not a merely mentioned listing term.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      An inert status DTO can display a sum, but it cannot preserve the cited
+      scheduler behavior that tests the live charge during promotion and rolls
+      back a newly staged lease after a concurrent overshoot. The runtime-grounded
+      admission quantity is therefore not exhausted by its DTO representation.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16"
+  - "CQ-010"

@@ -369,3 +369,26 @@ traceability regen, seed + fixture extension, measurement-rules doc, corpus reba
 lane-contract wiring of the `ontology-foundational-auditor` skill and the two-kind
 admission law; then (b) review-loop round 3 (post-grill delta + disposition audit);
 then (c) S4 lane launch.
+
+## §4b ratification sitting (2026-08-29, steward: Benjamin — grilled via /grilling, all rounds settled)
+
+- **Q: Are measurements first-class UFO qualities or recorded values?** A: recorded values
+  (observedQueueWaitMs precedent; blinded seat's `quality` reading rejected). Rationale: keeps the
+  T-Box lean; the KPI layer reads values. Binds every *Ms/token-count property at S5.
+- **Q: Grant model — endurant record or relator?** A: endurant lease record (pid+procStart
+  identity); relator rival stays recorded for S5 (grant mereology trigger).
+- **Q: MachineProofLock vs generalization?** A: ContendedResource generalization accepted; the
+  proof lock becomes its named INDIVIDUAL at S5 with the 27%-bounce history attached.
+- **Q: VerificationEvidence identity (content / lineage / role)?** A: accepted FLAGGED; the
+  identity/custody contract is a NAMED S5 obligation (needed_evidence text = the work item).
+- **Q: CachePosture — resolver decision or execution-borne?** A: resolver-decision reading;
+  execution attestation deferred to S5 (CQ-024 actual-posture leg).
+- **Q: ScheduleProposal before the retention trace exists?** A: accepted flagged as declared design
+  intent (CQ-020 authored for the projection function); transient-DTO rival stays recorded.
+- **Q: Ticket/lease split permanence?** A: real and load-bearing; a future transition journal
+  becomes an EVENT term, never a merge.
+- **Q: 57.75% unresolved-fraction waiver?** A: RATIFIED — deliberate parking of the CQ
+  measurement/episode vocabulary pending journal/verdict runtime corpus ingestion; next run must
+  re-open every row.
+- All 31 submittable proposals ACCEPTED (rat-001..031); 216 conceded referents stand withdrawn;
+  149 unresolved rows + 104-entry LEDGER = the S5 queue.

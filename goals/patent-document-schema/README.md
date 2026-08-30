@@ -27,13 +27,15 @@ Ship schema-first patent-application section and claim structure in
 
 ## Current Phase
 
-P0 Research: freeze the section/claim/heading contract against live
-law-practice and practice-KG symbols.
+P2 Verify: the domain schema, Markdown normalizer, and typed practice-KG
+consumer are implemented; repository gates and hosted proof remain.
 
 ## Latest Evidence
 
-The ratified D3/D7 contract and live capability check in
-[`document-structure-ontologies/MAP.md`](../../explorations/document-structure-ontologies/MAP.md).
+Focused domain/use-case/server tests pass, including one 13-section Markdown
+fixture persisted as three candidate claims without invoking the legacy
+office-action extractor. The frozen source contract is recorded in
+[`research/SOURCES.md`](./research/SOURCES.md#p0-implementation-confirmation--2026-08-27).
 
 ## Notes
 

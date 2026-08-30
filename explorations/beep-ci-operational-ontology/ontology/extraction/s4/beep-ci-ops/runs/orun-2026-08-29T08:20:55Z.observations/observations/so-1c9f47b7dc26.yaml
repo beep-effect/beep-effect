@@ -1,0 +1,23 @@
+id: so:sha256:1c9f47b7dc26191ea1b6f24b927714939dd99b418fdfb0e0bba9a1f737ddb586
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 429
+  end_line: 432
+  content_sha256: 8bfd038adf55045acb7b5d28a8873d6f23cb9fbc8905f4747779e3a865e96468
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::formatCommandLine
+  lexical_name: formatCommandLine
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: formatCommandLine
+source_excerpt: 'export const formatCommandLine: {'
+epistemic_status: parser_derived

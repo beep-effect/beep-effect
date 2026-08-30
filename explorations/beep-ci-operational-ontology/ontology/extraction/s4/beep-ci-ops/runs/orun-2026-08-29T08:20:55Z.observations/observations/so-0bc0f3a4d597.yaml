@@ -1,0 +1,24 @@
+id: so:sha256:0bc0f3a4d5971c2427a262b3149ba5e6246f47d5bf319c9230e8f6f7c0f6468c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 694
+  end_line: 740
+  content_sha256: bff4791de7e99c32bc0ea34be05b12b3e4b2063e783844d9f82b9251a5c8dde4
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::diffYeetWatchSnapshots
+  lexical_name: diffYeetWatchSnapshots
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: diffYeetWatchSnapshots
+source_excerpt: 'export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray<YeetWatchEvent>
+  => {'
+epistemic_status: parser_derived

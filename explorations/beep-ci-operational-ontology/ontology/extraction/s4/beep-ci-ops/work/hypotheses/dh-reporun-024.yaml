@@ -1,0 +1,25 @@
+id: "dh:reporun:024"
+observation_refs:
+  - "so:sha256:b78c10638ffab60de01ad1bc57cc639ce379fb6e46a3e589c8b9e38329d10828"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+cq_warrants: ["CQ-020"]
+proposed_referent:
+  label: "repository-plan wave designation"
+  description: "A plan-embedded record grouping lane identifiers under a local wave identifier."
+representation_status: unresolved
+alternatives:
+  - label: "Parallel or ordered execution wave in a schedule"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Rendering-only grouping inside a plan DTO"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The record is nested on a planned step, but the observations do not state whether a wave governs execution order, concurrency, or presentation. CQ-020 asks step order, not wave semantics, so the null remains viable."
+epistemic_status: proposed
+confidence:
+  value: 0.49
+  use_for_acceptance: false
+

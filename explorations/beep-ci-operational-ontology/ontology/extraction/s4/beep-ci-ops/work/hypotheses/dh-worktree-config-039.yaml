@@ -1,0 +1,18 @@
+id: "dh:worktree-config:039"
+observation_refs:
+  - "so:sha256:8d756b142505ad541999d5516dd7f477661730415fffb54c9eb1e60e6d7132c2"
+cq_warrants: []
+proposed_referent:
+  label: "FLEET_POLICY_SURFACE source constant"
+  description: "An exported array-valued implementation constant whose members are not represented in the canonical observation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet policy evaluation surface"
+    representation_status: unresolved
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only an exported variable declaration; without observed members or behavior, the policy-surface reading remains lexical speculation."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

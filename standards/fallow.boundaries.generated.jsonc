@@ -396,6 +396,12 @@
         ]
       },
       {
+        "name": "@beep/lejeune-bolt-workbench",
+        "patterns": [
+          "apps/labs/lejeune-bolt-workbench/src/**"
+        ]
+      },
+      {
         "name": "@beep/lexical-schema",
         "patterns": [
           "packages/foundation/modeling/lexical/src/**"
@@ -2015,6 +2021,7 @@
         "allow": [
           "@beep/identity",
           "@beep/law-practice-domain",
+          "@beep/md",
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
@@ -2023,6 +2030,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/law-practice-domain",
+          "@beep/md",
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
@@ -2046,6 +2054,7 @@
           "@beep/law-practice-use-cases",
           "@beep/libpff",
           "@beep/mcp-kit",
+          "@beep/md",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
@@ -2069,6 +2078,7 @@
           "@beep/law-practice-use-cases",
           "@beep/libpff",
           "@beep/mcp-kit",
+          "@beep/md",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
@@ -2124,6 +2134,47 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/lejeune-bolt-workbench",
+        "allow": [
+          "@beep/anthropic",
+          "@beep/doc-text",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/langextract",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/nlp",
+          "@beep/oxigraph",
+          "@beep/pglite",
+          "@beep/provenance",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/test-utils",
+          "@beep/ui",
+          "@beep/venice-ai"
+        ],
+        "allowTypeOnly": [
+          "@beep/anthropic",
+          "@beep/doc-text",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/langextract",
+          "@beep/lejeune-bolt-workbench",
+          "@beep/nlp",
+          "@beep/oxigraph",
+          "@beep/pglite",
+          "@beep/provenance",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/test-utils",
+          "@beep/ui",
+          "@beep/venice-ai"
         ]
       },
       {

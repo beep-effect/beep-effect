@@ -1,0 +1,34 @@
+id: "ic:alt1:009"
+hypothesis_ref: "dh:sched-core:018"
+identity:
+  supplies_identity: false
+  identity_criterion: "Two observed seat-request queue waits are the same iff they are the elapsed
+    duration of the same waiting-contender episode measured from the same wait start to the same
+    later observation instant while the request remains queued. The waitedMillis local is
+    evidence of the quality, never the sameness criterion."
+  reidentification_key:
+    - "waitedMillis"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: false
+  supplies_identity: false
+  unity: "one duration quality of one still-queued wait at one instant"
+  dependence: "intrinsic"
+ufo_analysis:
+  candidate_category: "quality"
+  alternatives:
+    - "information_object"
+    - "process"
+  existential_dependencies:
+    - "the waiting-contender episode"
+    - "the wait start instant"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "A later progress tick of the same wait computes a larger waitedMillis; treating
+      that as state change of one duration individual is possible, but the observed arithmetic
+      is now minus start, a new measurement. Identifying the wait duration with the wait process
+      would make the process's identity jump every tick."
+status: "proposed"

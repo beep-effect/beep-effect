@@ -1,0 +1,10 @@
+id: po:sha256:8365cc378d08ab056860357f85044c15df0fdbc3d23134d891abadab7518f5e0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 174
+  end_line: 174
+quote: '"jsdoc-ratchet",'
+epistemic_status: quoted_prose

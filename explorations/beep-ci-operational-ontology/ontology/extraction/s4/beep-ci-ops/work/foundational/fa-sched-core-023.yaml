@@ -1,0 +1,17 @@
+id: "fa:sched-core:023"
+hypothesis_ref: "dh:sched-core:024"
+identity_card_ref: "ic:sched-core:023"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: false
+rival_models:
+  - label: "QuarantinedCorruptAdmissionRecord is a rigid information-object subkind rather than a temporary phase of an admission record."
+    still_viable: true
+  - label: "The only domain occurrence is the failed decoding event, while the moved file remains an unclassified artifact."
+    still_viable: true
+  - label: "Quarantine is merely a filesystem placement convention and has no ontological phase semantics."
+    still_viable: true
+strongest_counterexample: "The rename preserves the file bearer but changes its operational status, which defeats a new-record interpretation; yet no repair path proves that quarantined membership is actually reversible."
+verdict: "analyzed"

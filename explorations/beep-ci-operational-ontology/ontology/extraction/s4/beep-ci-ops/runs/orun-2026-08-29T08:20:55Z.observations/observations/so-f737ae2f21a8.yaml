@@ -1,0 +1,23 @@
+id: so:sha256:f737ae2f21a8eb7368b04f6ce9e542d721d3e3a962aa187dc211b65b37d88759
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 427
+  end_line: 427
+  content_sha256: 7037d75baad20e5dce8f2b4e7de2233341f53d6547efcfa0e326f49caa44afd8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::WATCH_COMMENT_EXCERPT_LENGTH
+  lexical_name: WATCH_COMMENT_EXCERPT_LENGTH
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const WATCH_COMMENT_EXCERPT_LENGTH = 200;
+epistemic_status: parser_derived

@@ -1,0 +1,24 @@
+id: "dh:yeet-handler:076"
+observation_refs:
+  - "po:sha256:b65e0e68bbb5981ce81ee8b57fa4190ac28002320d6abe0be269266c45a90fcd"
+  - "po:sha256:698e57ebfd5f300db72965bcf84f6b21f63a77c7d7e7d140e18778f9906782aa"
+  - "po:sha256:3bc149ec75d7c1a121f803babb7e571a65fc0ab06d2c64b0e88bd68dd953f5a1"
+cq_warrants: ["CQ-021"]
+proposed_referent:
+  label: "review-fix admission work-kind token"
+  description: "A lexical alias for the review-fix work category assigned to an admission request."
+representation_status: lexical_alias
+alternatives:
+  - label: "review-fix work category"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "arbitrary request discriminator"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The handler uses contrasting values in the same kind slot across admission requests, so this occurrence denotes the admission work category and remains distinct from any similarly spelled assurance tier."
+  discriminator: "Admission call sites populate the same kind slot with review-fix, full-proof, and merged-preview, making review-fix one observed operational work-kind alternative."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

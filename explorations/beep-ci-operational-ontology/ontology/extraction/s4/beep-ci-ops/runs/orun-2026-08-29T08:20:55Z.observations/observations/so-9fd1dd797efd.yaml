@@ -1,0 +1,31 @@
+id: so:sha256:9fd1dd797efd4f30446bfd98b1a4953a4fe79eed088dece8f02fe450d7d28717
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 283
+  end_line: 292
+  content_sha256: 72b3244cd07314e78184ee39ae9db69bfa3ff047bf4a10a31532832b0d2ae166
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetLivenessProbe
+  lexical_name: FleetLivenessProbe
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: claude-session
+- predicate: declares_literal_member
+  object: process-cwd
+- predicate: declares_literal_member
+  object: transcript-mtime
+- predicate: declares_literal_member
+  object: worktree-mtime
+- predicate: exports_symbol
+  object: FleetLivenessProbe
+source_excerpt: export const FleetLivenessProbe = LiteralKit([
+epistemic_status: parser_derived

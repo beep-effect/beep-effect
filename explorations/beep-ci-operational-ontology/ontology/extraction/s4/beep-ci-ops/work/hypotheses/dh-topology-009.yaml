@@ -1,0 +1,24 @@
+id: "dh:topology:009"
+observation_refs:
+  - "po:sha256:6eee0464ac37f589e5371bbfcd42bc11ff956656193a3aa7018e40e1aa462882"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/agents-use-cases workspace package"
+  description: "The workspace software package information artifact identified by @beep/agents-use-cases in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "lexical_alias"
+alternatives:
+  - label: "@beep/agents-use-cases as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort row containing @beep/agents-use-cases can feed the affected-package query while remaining serialized implementation data, so the cited observation establishes only the package-name token."
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

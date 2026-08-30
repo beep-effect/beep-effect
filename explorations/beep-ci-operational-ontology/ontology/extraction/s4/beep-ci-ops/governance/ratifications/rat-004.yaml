@@ -1,0 +1,9 @@
+id: rat:4
+proposal_ref: otp:verification-evidence:001
+proposal_sha256: a6a83fa9aca75d11d8429264f6fa95dba5dc310c3e23b3ec8f686061e6cf742f
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept VerificationEvidence — ratified flagged; the identity/custody contract is a named S5 obligation.

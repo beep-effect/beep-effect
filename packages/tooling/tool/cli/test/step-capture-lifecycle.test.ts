@@ -488,6 +488,27 @@ BunRuntime.runMain(
   );
 
   it.effect(
+    "interrupts and reaps a captured command when its external watchdog fails",
+    Effect.fnUntraced(function* () {
+      const { killCount, spawner } = yield* makeNeverExitSpawner();
+      const fiber = yield* Effect.forkChild(
+        Effect.flip(
+          runCaptured({
+            command: "fake-step",
+            args: ["--flag"],
+            abortWhen: Effect.sleep("1 minute").pipe(Effect.andThen(Effect.fail("watchdog tripped"))),
+          }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+        )
+      );
+
+      yield* TestClock.adjust("1 minute");
+
+      expect(yield* Fiber.join(fiber)).toBe("watchdog tripped");
+      expect(yield* Ref.get(killCount)).toBe(1);
+    })
+  );
+
+  it.effect(
     "returns a typed timeout after bounded cleanup when the child never reports exit",
     Effect.fnUntraced(function* () {
       const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);

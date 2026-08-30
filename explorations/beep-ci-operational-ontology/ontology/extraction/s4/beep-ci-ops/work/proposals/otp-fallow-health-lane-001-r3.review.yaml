@@ -1,0 +1,52 @@
+target: "otp:fallow-health-lane:001"
+target_sha256: "1d92dadf6d4d9cf8b1fda11700fc0c146622801eb63955bf07704e5ab09f2d8f"
+chain_sha256: "5f9c8339cf3746a83e376fa301cae1cb50a9a51a9d69d0ec378e1986dabed2b2"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists
+    to test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: unresolved-procedure-policy-unity
+    counterexample: >-
+      The health command can remain unchanged while an external evaluator
+      revises maxCognitive, yielding one diagnostic procedure under two
+      policies; an implementation that consumes the ceiling internally would
+      instead revise the procedure. The card honestly defers identity pending
+      the dataflow and versioning evidence.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      CQ-002 and WorkUnitSpecification can be answered with other admissible
+      work prescriptions, and CQ-001 can enumerate other verification lanes.
+      Neither requires this named health command individual, so it is not
+      necessary semantic support for the generic decision term.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-config-pair
+    counterexample: >-
+      A CLI inventory can list the Fallow health command while an unrelated
+      configuration section lists complexity ceilings, even when the command
+      never reads those ceilings. The closure contains no dataflow or execution
+      fact that would make the claimed unified threshold-governed procedure
+      false in that implementation-only world.
+    outcome: landed
+rival_models_still_viable:
+  - "One threshold-bearing health procedure specification."
+  - "A health diagnostic procedure plus a separate threshold policy."
+  - "An inventory command entry only."
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:e111144fd959c0d5a1d7f8caf1d62ed2e8b5ea12c9346adfd60c22001c7d26d4"
+  - "po:sha256:38ed56de8a68cd967d27668d420a8c5f46209fa8ecefd523ce74676362c611a6"
+  - "CQ-001"
+  - "CQ-002"

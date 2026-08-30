@@ -1,0 +1,33 @@
+id: "ic:alt1:002"
+hypothesis_ref: "dh:reporun:008"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two quality proof-surface specifications are the same iff they prescribe
+    the same named proof surface together with the same planned command argument sequence that
+    is taken to prove it. The surface token is reidentification evidence, never the sameness
+    criterion."
+  reidentification_key:
+    - "quality"
+    - "full:01-quality"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one planned command prescription whose parts are surface, step id, label, and args"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies:
+    - "RepoProofSurface member quality"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A later execution of bun run beep quality github-checks quality is a dated run,
+      not a second quality specification; collapsing them would make every quality proof consume
+      the spec's identity. The everyday software-quality attribute is likewise not this command
+      prescription."
+status: "proposed"

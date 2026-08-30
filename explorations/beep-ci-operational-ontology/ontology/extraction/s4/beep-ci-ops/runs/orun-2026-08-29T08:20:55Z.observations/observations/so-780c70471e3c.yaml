@@ -1,0 +1,23 @@
+id: so:sha256:780c70471e3ce1d335a5e6744b99a98b06d33fec73423c0446f1c5a34151d7cd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 755
+  end_line: 768
+  content_sha256: 73d50dd8a37f64b006a5aa8a16408936664c1963a89634a01eee2095ac69da7f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::buildYeetRunPlanWithMode
+  lexical_name: buildYeetRunPlanWithMode
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: buildYeetRunPlanWithMode
+source_excerpt: 'export const buildYeetRunPlanWithMode: {'
+epistemic_status: parser_derived

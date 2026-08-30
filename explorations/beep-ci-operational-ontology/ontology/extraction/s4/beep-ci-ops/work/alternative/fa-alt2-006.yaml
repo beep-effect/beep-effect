@@ -1,0 +1,22 @@
+id: fa:alt2:006
+hypothesis_ref: dh:sched-core:006
+identity_card_ref: ic:alt2:006
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: the priority vocabulary plus aging-rank specification'
+  still_viable: true
+- label: 'role: publish/verify as a relationally assigned queue class of a ticket'
+  still_viable: true
+- label: 'phase: aged-verify occupying publish rank by elapsed queue time'
+  still_viable: true
+strongest_counterexample: >-
+  effectivePriorityRank mutates a verify ticket's rank without mutating AdmissionPriority, so collapsing the specification
+  into a role borne by the ticket cannot explain both the literal vocabulary and the time-sensitive promotion.
+verdict: analyzed
+needed_evidence: >-
+  An observation that queued requests are reclassified by rewriting their priority field, versus only the derived rank changing,
+  would split the assigned role from the aging phase.

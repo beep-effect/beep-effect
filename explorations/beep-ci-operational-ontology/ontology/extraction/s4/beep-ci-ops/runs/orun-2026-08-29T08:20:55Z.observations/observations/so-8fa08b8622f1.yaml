@@ -1,0 +1,23 @@
+id: so:sha256:8fa08b8622f1a3ae8f96a2ac04f21c2a8934111606b363b5a6d28c136c0e0d2f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 104
+  end_line: 104
+  content_sha256: a1d103d2eda2cb93124e454fe4e3f72ee1437b88f79f21aefc08c396f754d26c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::PENDING_BUCKETS
+  lexical_name: PENDING_BUCKETS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const PENDING_BUCKETS: ReadonlyArray<string> = ["pending", "running", "queued", "waiting"];'
+epistemic_status: parser_derived

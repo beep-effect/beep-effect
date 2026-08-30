@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:024"
+observation_refs:
+  - "so:sha256:48697f554a99d14878f7ab0a976be3a6c390c682446b8a40451c77a175475819"
+  - "so:sha256:9e9be3cb74b3424a9203b6a679463a1f423ae6727e7a871621d0cf0acd70f153"
+cq_warrants: []
+proposed_referent:
+  label: "runWithFullProofCoordinator implementation and test alias"
+  description: "No domain-ontology referent is proposed for the runWithFullProofCoordinator implementation and test alias; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "full-proof admission procedure"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations show an implementation declaration and a test-facing alias. Aliasing executable code for tests does not establish a domain referent."
+epistemic_status: proposed
+confidence: {value: 0.84, use_for_acceptance: false}

@@ -1,0 +1,22 @@
+id: "dh:worktree-config:016"
+observation_refs:
+  - "po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048"
+  - "po:sha256:805ea8b43e9d37cc3d82a889148ac8fd3aebda4deb587e5a779fa63dd858e9f3"
+  - "po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c"
+cq_warrants:
+  - "CQ-002"
+proposed_referent:
+  label: "origin-main new-only Fallow audit work-unit specification"
+  description: "A repeatable Fallow audit prescription fixed to origin/main as its base and new-only as its finding gate, distinct from its executions."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "an origin-main Fallow audit execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The CLI-inventory DTO counterexample wins: a row can store and repeatedly emit the origin/main and new-only arguments without a separately governed or reidentified work-unit specification."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.94, use_for_acceptance: false}

@@ -1,0 +1,18 @@
+id: "dh:sched-core:039"
+observation_refs:
+  - "so:sha256:f81c5a172da4d0203dfd25e4212402281cd5d97e08481ca34fa12e32c37bf5d4"
+cq_warrants: []
+proposed_referent:
+  label: "LiveAdmissionState internal aggregate"
+  description: "An internal scan result grouping decoded live leases and tickets with dead and quarantined paths."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "live admission-state information artifact"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only an internal aggregate shape. The separately observed AdmissionSnapshot is the explicit point-in-time information artifact, so this scan structure need not duplicate it in the ontology."
+epistemic_status: proposed
+confidence: {value: 0.94, use_for_acceptance: false}

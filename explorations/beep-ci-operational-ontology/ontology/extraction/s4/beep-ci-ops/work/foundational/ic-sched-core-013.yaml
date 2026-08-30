@@ -1,0 +1,34 @@
+id: ic:sched-core:013
+hypothesis_ref: dh:sched-core:014
+identity:
+  supplies_identity: false
+  identity_criterion: 'This data property supplies no identity: two active-total assertions concern the same operational fact
+    only when they relate the same machine-wide admission context at the same observation boundary under the same token convention;
+    equal totals in other contexts or intervals are merely equal values.'
+  reidentification_key:
+  - admission-context reference
+  - observation boundary
+  - token-convention version
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: One assertion relating one admission context and observation boundary to the sum of charges borne by its live grants.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - a reified active-charge quality
+  - a field of an admission snapshot
+  existential_dependencies:
+  - the machine-wide admission context
+  - the live grant set and governing token convention
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - the assertion is replaced when the live grant set, context, boundary, or token convention changes
+counterexamples:
+- description: Two machines can each have five active tokens, and one machine can return to five after an intervening grant
+    change; numeric equality identifies neither the operational facts nor any reified quality.
+status: proposed

@@ -1,0 +1,24 @@
+id: so:sha256:1769be97a8b908a77a1d26bec88b758ee26b867972477ed5afbe325f7d38062d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 402
+  end_line: 413
+  content_sha256: 92f1264cf8ae0a3e5c4b773382fee2c4ecb7b55ad1762b59a9fafbd497e511b9
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::proofLanesForTier
+  lexical_name: proofLanesForTier
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const proofLanesForTier = (context: RepoRunContext, tier: YeetProofTier): ReadonlyArray<GithubCheckLaneSpec>
+  =>'
+epistemic_status: parser_derived

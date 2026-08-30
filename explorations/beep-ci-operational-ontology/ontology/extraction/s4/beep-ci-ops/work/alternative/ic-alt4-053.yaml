@@ -1,0 +1,29 @@
+id: ic:alt4:053
+hypothesis_ref: dh:worktree-config:010
+identity:
+  supplies_identity: true
+  identity_criterion: Two direct workspace package dependencies are the same when they mediate the same ordered pair of importing package and imported workspace package under a declared workspace dependency; the manifest line is evidence, never the criterion of the relation.
+  reidentification_key:
+    - "@beep/identity"
+    - "@beep/test-utils"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: Importer and imported package jointly compose one directed dependency; either package alone is a participant, not the relator.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - information_object
+  existential_dependencies:
+    - importing workspace package
+    - imported workspace package
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "A catalog: or npm dependency on a non-workspace package is a different relation."
+  - description: The architecture sentence about arrow direction without a concrete importer-imported pair would not individuate this relator.
+status: proposed

@@ -1,0 +1,29 @@
+id: "dh:yeet-watch:002"
+observation_refs:
+  - "so:sha256:0ce3a84de808ba01f895a7dcba0ff39a6d37daae78abd3eef57fa9e37a554808"
+  - "so:sha256:5b9f5fa14649c2c0d2570abdda0143dcebd220cefcdd90c677c372e7e6db1fa4"
+  - "so:sha256:61c1bf9440b68549825b36c8f21f161d4eb7214e2703a59c3b8bf34020a06e86"
+  - "so:sha256:ad3a11514430b15854f627f3aa018493ac1534c56719549d71d1b507c534b3bc"
+  - "so:sha256:bd4394a5e448c06cdc4ed80a1a26d97b5875755aacf048c22630ba7a3c968f35"
+  - "so:sha256:e132249931623c34727a29cb5696b1e031836c6c5106e4e46cd145d2c2650593"
+  - "so:sha256:e75ee764c9fa77bcea783080d7e9ad681b83eba6debf4d44d68e6145d651bc31"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo workspace package-catalog information artifact"
+  description: "A possible decoded catalog of workspace package names and paths returned by a Turbo query."
+representation_status: unresolved
+alternatives:
+  - label: "package-query DTO and mapping helpers"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "workspace package"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The lane shows decoding and mapping declarations but no observed catalog instance or persistence boundary, so the structures may be only an adapter representation."
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

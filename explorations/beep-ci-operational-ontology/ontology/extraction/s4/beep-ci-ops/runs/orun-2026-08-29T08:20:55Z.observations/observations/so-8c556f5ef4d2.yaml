@@ -1,0 +1,23 @@
+id: so:sha256:8c556f5ef4d289d44bd8c9eb7978e457af741ef84f6783137601a7552bec4f3b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 37
+  end_line: 37
+  content_sha256: 04da6e61527dfca97cdc61d9e70167ea5054dbcf269f45e626d3bcc1384a6c01
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CiLaneEnvironment
+  lexical_name: CiLaneEnvironment
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: CiLaneEnvironment
+source_excerpt: type CiLaneEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+epistemic_status: parser_derived

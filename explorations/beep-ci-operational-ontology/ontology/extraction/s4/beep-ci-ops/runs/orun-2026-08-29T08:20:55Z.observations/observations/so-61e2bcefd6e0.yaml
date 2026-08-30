@@ -1,0 +1,25 @@
+id: so:sha256:61e2bcefd6e05ffc3c0d0fd4c6e862206ab28a2622f216f5c4daae44daaccb7e
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 386
+  end_line: 386
+  content_sha256: b62a6eae7837ef231a2089e5b0f5b9e60a1edd91748c8e5db55962e961372131
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::FleetProbeReading
+  lexical_name: FleetProbeReading
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: FleetProbeReading
+- predicate: exports_symbol
+  object: FleetProbeReading
+source_excerpt: export type FleetProbeReading = typeof FleetProbeReading.Type;
+epistemic_status: parser_derived

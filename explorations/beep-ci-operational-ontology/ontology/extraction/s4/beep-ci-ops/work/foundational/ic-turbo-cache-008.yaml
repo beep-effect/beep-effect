@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:008"
+hypothesis_ref: "dh:turbo-cache:009"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same serial integration-test specification only when they are the same authored repeatable instruction in the same versioned configuration lineage and their complete resolved prescriptions establish the same serial execution strategy; the lexical serial suffix and build selector alone do not establish identity."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key test:integration:serial"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One versioned task declaration collects the prescriptions intended to govern repeatable serial integration work."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A serial integration-test verification lane realized by the specification"
+    - "A lexically specialized task whose actual serialization policy is supplied elsewhere"
+  existential_dependencies:
+    - "The configuration, package scripts, and runner context that give serial its operational meaning"
+    - "At least one bearer of the task instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A task named serial can start internally concurrent tests, while another runner can serialize an unmarked task; the cited build dependency does not establish serialization."
+status: proposed

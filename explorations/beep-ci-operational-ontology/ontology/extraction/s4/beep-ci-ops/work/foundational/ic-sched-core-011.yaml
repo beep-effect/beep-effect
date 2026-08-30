@@ -1,0 +1,31 @@
+id: "ic:sched-core:011"
+hypothesis_ref: "dh:sched-core:012"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two capacity-token procedures are the same specification only when they preserve one governed algorithmic lineage, including floor, reserve subtraction, slot division, rounding, nonnegative clamp, and maximum cap semantics; equal outputs do not suffice."
+  reidentification_key:
+    - "algorithm version"
+    - "ordered computation clauses"
+    - "input and output quantity conventions"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "One repeatable derivation rule from a memory observation and policy parameters to a whole-token capacity result."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "the current machine admission-capacity quality"
+    - "a local arithmetic helper without an independently governed procedure"
+  existential_dependencies:
+    - "the weighted-admission policy vocabulary"
+    - "memory and token-unit quantity conventions"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by an algorithmic or quantity-convention revision"
+counterexamples:
+  - description: "Distinct algorithms can both return eight tokens for one 50 GiB input while diverging at the hard floor or cap, so one observed result cannot identify the procedure."
+status: "proposed"

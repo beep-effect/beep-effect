@@ -1,0 +1,27 @@
+id: "dh:sched-core:008"
+observation_refs:
+  - "so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf"
+  - "so:sha256:7ed5d7ab988de72117c954ccac2060e758502fa1c727b6f5a725f4e2293e61e8"
+  - "so:sha256:890225b81338cf75b1929fbc02de3d877d860906991499298d41a82f4f59cca8"
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "po:sha256:abc08c224e904cfc5a0878b26ca70b707f559468bf33fde1b9ea74a01bb7edaf"
+  - "po:sha256:b92b48e2e7bcebad1b643f7f05cddc8dd411e43355076cdd384a9c37c0ee6c99"
+cq_warrants: ["CQ-023"]
+proposed_referent:
+  label: "weighted-admission policy specification"
+  description: "An information artifact specifying capacity, hard-floor, heartbeat, aging, progress, and class-cap parameters that govern admission decisions."
+representation_status: information_artifact
+alternatives:
+  - label: "a particular deployed admission policy"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "configuration object with no normative interpretation"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The configuration declaration alone is equivocal, but the cited evidence identifies its values as chartered production defaults and shows those values controlling live admission ranking and class-cap refusal."
+  discriminator: "The chartered production value publishAgingSeconds promotes aged tickets in effectivePriorityRank, while reviewFixClassCap makes isTicketSkippable refuse additional review-fix admissions."
+epistemic_status: proposed
+confidence: {value: 0.87, use_for_acceptance: false}

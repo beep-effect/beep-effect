@@ -1,0 +1,20 @@
+id: "fa:reporun:003"
+hypothesis_ref: "dh:reporun:004"
+identity_card_ref: "ic:reporun:003"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "deterministic dependency or lockfile failure"
+    still_viable: true
+  - label: "infrastructure or network installation failure"
+    still_viable: true
+  - label: "classification information record about a GitHub job"
+    still_viable: true
+strongest_counterexample: >-
+  A broken lockfile creates the same failed-install-then-no-lane ordering, so
+  the situation is not itself evidence of an infrastructure cause and is not
+  identical with the classification record that reports it.
+verdict: analyzed

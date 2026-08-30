@@ -1,0 +1,27 @@
+id: "dh:yeet-watch:033"
+observation_refs:
+  - "so:sha256:e3f2356104df1fa9d5aa571b9d8798309d0c52683abf0a6edcd343bde07ce80e"
+  - "so:sha256:03255e02568fd5e0785e0cced8814142cf8e2f5f73dde7ef19f25365e5cb92d9"
+  - "so:sha256:ac598495fba1ee81174fa211a886c614fa8fc55645ba210c121702df8979a5fc"
+  - "so:sha256:da3363adc7f18c987a1ff10256e90f7f2a1eacee9a98ad57b4eaaed1dc976511"
+  - "so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef"
+cq_warrants: []
+proposed_referent:
+  label: "merge-monitor rerun-budget bookkeeping"
+  description: "The implementation set and key used to remember reruns already spent during one monitoring session."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "rerun allowance obligation"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "rerun planning procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish a set, empty constructor, key, plan container, and update procedure; they do not independently establish a normative rerun obligation, so obligation and procedure remain split."
+epistemic_status: proposed
+confidence:
+  value: 0.93
+  use_for_acceptance: false

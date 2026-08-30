@@ -1,0 +1,14 @@
+id: fa:sched-core:021
+hypothesis_ref: dh:sched-core:022
+identity_card_ref: ic:sched-core:021
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: Reify the temporally qualified admission occurrence instead of relying only on a binary assertion.
+  still_viable: true
+strongest_counterexample: A reusable specification can execute twice under one grant; only execution occurrences can be distinct
+  subjects of the admission relation.
+verdict: analyzed

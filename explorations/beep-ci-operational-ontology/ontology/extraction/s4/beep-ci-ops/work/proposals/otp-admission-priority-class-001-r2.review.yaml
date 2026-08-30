@@ -1,0 +1,52 @@
+target: otp:admission-priority-class:001
+target_sha256: c41db1b5fa9b87c094ffb9e944c20852c521e22df75ba9ccf0f9448a203f655a
+chain_sha256: 7b55d035ca2e672d89b227c4a1015ae30441eae2c97e554674405d319a93a9e7
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: An independent governance or version-lineage artifact showing whether the closed publish/verify vocabulary is retained and revised separately from the aging comparator, plus the replacement identity card for whichever information object that evidence establishes.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: The proposal asserts no parents edge; no subsumption relation is proposed, so no valid subsumption relation is available to test.
+attacks:
+- surface: identity
+  rule: identifier-is-identity
+  counterexample: Two independently governed priority-vocabulary specifications can both contain the publish and verify labels while having different revision histories. Literal equality therefore cannot identify the specification; the revised proposal does not claim that it can and instead keeps the identity card unresolved pending governance evidence.
+  outcome: survived
+- surface: identity
+  rule: unresolved-core-sortal-identity
+  counterexample: One closed publish/verify vocabulary can remain unchanged while several independently versioned aging procedures rank its labels differently. The revision now limits the term to the vocabulary, leaves identity and rigidity unresolved, and explicitly requires a replacement card before reidentification, so it no longer forces the vocabulary and comparator to share one identity criterion.
+  outcome: survived
+- surface: identity
+  rule: identity-card-consistency
+  counterexample: Treating the term as identity-carrying or identity-supplying would resolve the card's unresolved provider booleans by fiat; the proposal also says unresolved, so that polarity inconsistency does not occur.
+  outcome: survived
+- surface: identity
+  rule: foundational-status-mismatch
+  counterexample: An analyzed status would conceal the foundational record's request for a governance or versioning artifact; both records instead say explicitly_deferred.
+  outcome: survived
+- surface: identity
+  rule: rival-model-hidden
+  counterexample: A separate controlled vocabulary plus ranking procedure, or a temporary effective-priority role, changes both individuation and category; both rivals are named in open_issues rather than silently merged.
+  outcome: survived
+- surface: warrant
+  rule: cq-requires-term
+  counterexample: CQ-021 explicitly projects each queued request's priority and declares AdmissionPriorityClass required, so removing the priority-class term would leave the requested priority binding untyped.
+  outcome: survived
+- surface: null_discriminator
+  rule: discriminator-true-of-implementation
+  counterexample: A queue implementation can store publish or verify strings and compute an aged numeric sort rank exactly as observed while those values remain only comparator codes; the rank expression is therefore true in the implementation-only null world and does not establish the narrowed vocabulary as an independently retained information object.
+  outcome: landed
+rival_models_still_viable:
+- AdmissionPriority is one controlled vocabulary, while effectivePriorityRank is a separately versioned procedure.
+- Effective queue priority is an anti-rigid role or phase of a queued request under elapsed-time context.
+evidence:
+- so:sha256:087691ac8ffa02ee24740f022a7665947ce130842e367668ec9b4d4f46280bbf
+- so:sha256:5e87f57f7f30cab771a4bc15b4510264f4a086fed36480da3266357386f66124
+- so:sha256:6e399c3569812e74daffcb4563c47f47164fae6163546e154e5b8f1d966c3e04
+- po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3
+- po:sha256:aa6a7b217122be466e63cfd890c480ef082f6f9d5b24c97731d889dd3a80886b
+- CQ-021

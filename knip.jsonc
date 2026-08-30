@@ -69,6 +69,11 @@
       // imports @beep/ui/styles/globals.css to supply the shared Tailwind foundation.
       "ignoreDependencies": ["@beep/ui"]
     },
+    "apps/labs/lejeune-bolt-workbench": {
+      // Knip does not follow the PostCSS config re-export or the global CSS import that consume
+      // the shared UI package at build time.
+      "ignoreDependencies": ["@beep/ui"]
+    },
     "apps/storybook": {
       // vitest.storybook.config.ts is invoked via `vitest run --config vitest.storybook.config.ts`
       // from scripts/run-storybook-tests.mjs (a CLI flag knip can't trace); it in turn references

@@ -1,0 +1,24 @@
+id: "dh:yeet-watch:003"
+observation_refs:
+  - "so:sha256:0aa319d6e27c8cedd275ca72ea2ce7bc1d03e59e15bbc62f781a8c81041dbf22"
+  - "so:sha256:27b2d6a9616c4eb47acd906017f2522f532f15101dab2093d0836016bdf823dd"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo plan-snapshot collection procedure"
+  description: "The source-level procedure that assembles version, package, and affected-task metadata."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "plan snapshot information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "plan-snapshot collection execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Exporting a collector and declaring a version helper specifies software behavior but does not observe either a collection execution or a resulting snapshot."
+epistemic_status: proposed
+confidence:
+  value: 0.94
+  use_for_acceptance: false

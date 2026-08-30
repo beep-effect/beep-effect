@@ -1,0 +1,48 @@
+target: "otp:docgen-affected-work-unit:001"
+target_sha256: "6232b674fa5886c153bfa891d2c8301050947f4be1d2fa2c419f4461ff5e647c"
+chain_sha256: "91655b841dcd18070805da8cbab459d09d02d299e3404084993e4c56b44f3fb0"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: specification-execution-and-identifier-test
+    counterexample: >-
+      origin/main can advance between two invocations while the symbolic
+      origin/main-to-HEAD plus dirty-files prescription remains unchanged, and
+      another command can reuse the docgen:local name with different semantics.
+      The card correctly identifies the full prescription rather than a dated
+      run, resolved file set, or command key.
+    outcome: survived
+  - surface: warrant
+    rule: support-warrant-self-contradiction
+    counterexample: >-
+      CQ-002 can return an admissible lint or test WorkUnitSpecification and
+      remains answerable without this named docgen individual. The revised
+      definition and open issue call the individual an optional A-Box seed,
+      while operational_warrant still claims it is necessary semantic support
+      for the generic WorkUnitSpecification decision term.
+    outcome: landed
+  - surface: null_discriminator
+    rule: governing-prescription-discriminator
+    counterexample: >-
+      A stale command comment could be implementation-only, but the cited
+      canonical agent policy governs edit-loop behavior by prescribing
+      docgen:local over origin/main through HEAD plus dirty files. That operative
+      prescription is an information object even when carried as policy text.
+    outcome: survived
+rival_models_still_viable:
+  - "A context-bound plan resolves the symbolic prescription for one execution."
+evidence:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:a56b779098239e2c5a7dc016448e4f6c069488fae5ad5719d39843a6d18d323f"
+  - "CQ-002"

@@ -1,0 +1,65 @@
+id: "otp:seat-grant:001"
+hypothesis_ref: "dh:sched-core:002"
+identity_card_ref: "ic:sched-core:002"
+foundational_status: "analyzed"
+term:
+  local_name: "SeatGrant"
+  preferred_label: "seat grant"
+  proposed_iri: "https://oip.law/ontology/ci-ops#SeatGrant"
+  owl_entity_kind: class
+definition:
+  text: >-
+    An active admission-lease information artifact created by one successful
+    promotion and counted against machine-wide capacity while its lease is
+    live, heartbeated, and owned. Cleanup, owner reaping, or overshoot rollback
+    terminates that active lease; whether it records a distinct world-side
+    grant relator remains a steward choice.
+  source:
+    - "CQ-008"
+    - "CQ-009"
+    - "CQ-010"
+    - "so:sha256:4ca539a7a3ef2f6716f98022b42a4b54032476fd6ca39745d1a1b2aa2e9cd150"
+    - "so:sha256:9d883e58d7914e411e29305aba63d9b50f0b29af985e462558a90e0b881c8bbd"
+    - "po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a"
+    - "po:sha256:4ef2f52e3e10c5d60d10993127c32bede76a64096a475cc8a78faf6752821afe"
+    - "po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b"
+    - "po:sha256:67896e490e18f6b629d0f7e95275f3bcf6a24af73eed3a479f3bfb6bb7636f01"
+    - "po:sha256:c317ad442968f0cbbbcc25cc491452db0fffc71620b820dd71dec5165f7e6618"
+    - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+foundational:
+  ufo_category: "information_object"
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: "rigid"
+  identity: "supplies"
+  dependence: "relational"
+revision_log:
+  - from_sha256: "dbb8f5791271db882dae2ac14d70bc73bf20e013898f294d6e3075be13934a83"
+    addressed:
+      - "discriminator-true-of-lease-dto"
+  - from_sha256: "6baffa31125e00899163619f7505066d21f3fcbb108788733c24fa6fa890fd5e"
+    addressed:
+      - "discriminator-true-of-lease-dto"
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+    - "CQ-008"
+    - "CQ-009"
+    - "CQ-010"
+alternatives_rejected:
+  - >-
+    Serialization-only DTO rejected by the hardened discriminator: the runtime
+    stages the live lease, charges its configured weight, refreshes its
+    heartbeat, reaps it on owner-liveness failure, and rolls it back after a
+    concurrent capacity overshoot.
+open_issues:
+  - >-
+    Steward must decide whether the active lease artifact is the deployed
+    SeatGrant or records a distinct relational grant in the operational world;
+    the runtime transitions settle the artifact's governed role but not that
+    world-versus-information choice.
+revision_requests: []
+status: proposed

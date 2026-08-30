@@ -1,0 +1,222 @@
+- candidate: install-failure
+  kind: literal-domain-member
+  source_domain: GithubJobShapeClass
+  definition: The install-failure infrastructure-failure class decidable from a GitHub job record without
+    its log.
+  admission_kind: semantic-support
+  supports:
+  - FailureSignature
+  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution
+    and cheapest-surfacing analysis.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss",
+    "install-failure"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: runner-loss
+  kind: literal-domain-member
+  source_domain: GithubJobShapeClass
+  definition: The runner-loss infrastructure-failure class decidable from a GitHub job record without
+    its log.
+  admission_kind: semantic-support
+  supports:
+  - FailureSignature
+  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution
+    and cheapest-surfacing analysis.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss",
+    "install-failure"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: setup-5xx
+  kind: literal-domain-member
+  source_domain: GithubJobShapeClass
+  definition: The setup-5xx infrastructure-failure class decidable from a GitHub job record without its
+    log.
+  admission_kind: semantic-support
+  supports:
+  - FailureSignature
+  decision_relevance: Disambiguates infrastructure failure observations used by CQ-013 delay attribution
+    and cheapest-surfacing analysis.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — 'LiteralKit(["setup-5xx", "runner-loss",
+    "install-failure"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: publish
+  kind: literal-domain-member
+  source_domain: RepoPlanStepMutability
+  definition: The publish mutability classification of a planned repository step.
+  admission_kind: semantic-support
+  supports:
+  - CancelClass
+  - WorkUnitExecution
+  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight
+    WorkUnit execution.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly",
+    "write", "publish"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: readonly
+  kind: literal-domain-member
+  source_domain: RepoPlanStepMutability
+  definition: The readonly mutability classification of a planned repository step.
+  admission_kind: semantic-support
+  supports:
+  - CancelClass
+  - WorkUnitExecution
+  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight
+    WorkUnit execution.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly",
+    "write", "publish"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: write
+  kind: literal-domain-member
+  source_domain: RepoPlanStepMutability
+  definition: The write mutability classification of a planned repository step.
+  admission_kind: semantic-support
+  supports:
+  - CancelClass
+  - WorkUnitExecution
+  decision_relevance: Constrains the source derivation of clean versus dirty cancellation for an in-flight
+    WorkUnit execution.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — 'LiteralKit(["readonly",
+    "write", "publish"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: fingerprint-match
+  kind: literal-domain-member
+  source_domain: RepoPlanStepResume
+  definition: The fingerprint-match resume eligibility assigned to a planned repository step.
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  - CacheEpoch
+  - TreeState
+  decision_relevance: Constrains whether a source fingerprint may permit a skipped step while evidence
+    remains valid for the relevant epoch and tree.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — 'LiteralKit(["never",
+    "fingerprint-match"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: never
+  kind: literal-domain-member
+  source_domain: RepoPlanStepResume
+  definition: The never resume eligibility assigned to a planned repository step.
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  - CacheEpoch
+  - TreeState
+  decision_relevance: Constrains whether a source fingerprint may permit a skipped step while evidence
+    remains valid for the relevant epoch and tree.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — 'LiteralKit(["never",
+    "fingerprint-match"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: cheap-gates
+  kind: literal-domain-member
+  source_domain: RepoProofSurface
+  definition: The cheap-gates named repository proof surface backed by a GitHub checks mode.
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  - AssuranceTier
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: pre-push
+  kind: literal-domain-member
+  source_domain: RepoProofSurface
+  definition: The pre-push named repository proof surface backed by a GitHub checks mode.
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  - AssuranceTier
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: quality
+  kind: literal-domain-member
+  source_domain: RepoProofSurface
+  definition: The quality named repository proof surface backed by a GitHub checks mode.
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  - AssuranceTier
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: review-fix
+  kind: literal-domain-member
+  source_domain: RepoProofSurface
+  definition: The review-fix named repository proof surface backed by a GitHub checks mode.
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  - AssuranceTier
+  decision_relevance: Disambiguates the source proof surface whose evidence contributes toward a target
+    assurance tier.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — 'LiteralKit(["cheap-gates",
+    "quality", "review-fix", "pre-push"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: ts2589-no-location
+  kind: literal-domain-member
+  source_domain: StepFlakeQuarantinePolicy
+  definition: The ts2589-no-location established environment-only failure signature a quality step may
+    quarantine.
+  admission_kind: decision
+  cq_justification:
+  - CQ-013
+  decision_relevance: Names a failure signature whose attributed delay and cheapest surfacing lane are
+    queried by CQ-013.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/process/StepExec.ts:191-194 — 'LiteralKit(["ts2589-no-location"])'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits

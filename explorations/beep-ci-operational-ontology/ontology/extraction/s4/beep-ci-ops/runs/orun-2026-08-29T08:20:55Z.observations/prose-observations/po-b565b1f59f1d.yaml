@@ -1,0 +1,10 @@
+id: po:sha256:b565b1f59f1de2fb2810a5cbba36c6c707705f294baf25d0b54bc812b7104d91
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 380
+  end_line: 385
+quote: 'full: () => repoProofStepDefinition("pre-push"),'
+epistemic_status: quoted_prose

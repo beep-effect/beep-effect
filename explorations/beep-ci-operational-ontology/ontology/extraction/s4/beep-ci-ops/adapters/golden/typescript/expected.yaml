@@ -1,0 +1,293 @@
+- id: so:sha256:23d9e73d1524c2c2c336c495535e02be2d008ebd85a7096c103d245ba4171e9d
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 5
+    end_line: 5
+    content_sha256: b45654dec122d1bf2494dd2060085501f03bcf76442c3dfbd32e9084653176e4
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenPriority
+    lexical_name: GoldenPriority
+    syntactic_kind: variable_declaration
+  observed_facts:
+  - predicate: declares_literal_member
+    object: publish
+  - predicate: declares_literal_member
+    object: verify
+  - predicate: exports_symbol
+    object: GoldenPriority
+  source_excerpt: export const GoldenPriority = LiteralKit("publish", "verify");
+  epistemic_status: parser_derived
+- id: so:sha256:b4aa307f7804bdf354eb200e5369344e081de7af5402d2ad5ad777a853fa6345
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 7
+    end_line: 7
+    content_sha256: dc3854bf8c5a38b31043c0758d74f5f67069d678e47dd1d24248f68adf8744ac
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenModes
+    lexical_name: GoldenModes
+    syntactic_kind: variable_declaration
+  observed_facts:
+  - predicate: declares_literal_member
+    object: local
+  - predicate: declares_literal_member
+    object: remote
+  - predicate: exports_symbol
+    object: GoldenModes
+  source_excerpt: export const GoldenModes = LiteralKit(["local", "remote"]);
+  epistemic_status: parser_derived
+- id: so:sha256:2e7d5e5369c84574d37335d753447fb3e81dfc21b05c42835ef1ba88d0312135
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 9
+    end_line: 9
+    content_sha256: c10c50d3a8672b7c81be04fccf21b0fee5ae5821f76e760630544bd5487ebfb6
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::internalLimit
+    lexical_name: internalLimit
+    syntactic_kind: variable_declaration
+  observed_facts:
+  - predicate: unrepresentable_construct
+    object: variable_declaration
+  source_excerpt: const internalLimit = 42;
+  epistemic_status: parser_derived
+- id: so:sha256:61bcab60f2d31ce049fb2709c67519e7152376e655f556918fe489eff40f3bbb
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 11
+    end_line: 11
+    content_sha256: fcbc4e8825ff5461cc6b13d010a5611e28407b7255bcbbbb976c17e3f417074e
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenTier
+    lexical_name: GoldenTier
+    syntactic_kind: type_alias_declaration
+  observed_facts:
+  - predicate: declares_type_alias
+    object: GoldenTier
+  - predicate: declares_union_member
+    object: '"quick"'
+  - predicate: declares_union_member
+    object: '"standard"'
+  - predicate: declares_union_member
+    object: GoldenAlias
+  - predicate: exports_symbol
+    object: GoldenTier
+  source_excerpt: export type GoldenTier = "quick" | "standard" | GoldenAlias;
+  epistemic_status: parser_derived
+- id: so:sha256:ca1087294834ebdddba76807f305b108b084b022af8d2e731dc639efae747987
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 13
+    end_line: 13
+    content_sha256: 463ab92208c834af5d9702c5dca3ed15fc0cfc15331f049d00957aa622045a94
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenAlias
+    lexical_name: GoldenAlias
+    syntactic_kind: type_alias_declaration
+  observed_facts:
+  - predicate: declares_type_alias
+    object: GoldenAlias
+  - predicate: exports_symbol
+    object: GoldenAlias
+  source_excerpt: export type GoldenAlias = string;
+  epistemic_status: parser_derived
+- id: so:sha256:0fc5a27103326bafcbd0e020b1f19357372c31fd7626117c439baf88f0bdcbb5
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 15
+    end_line: 18
+    content_sha256: a4f7dde629d61f9d71106e15dbe9afab58de5de3384e74d35bfe4fb3582094b2
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenShape
+    lexical_name: GoldenShape
+    syntactic_kind: interface_declaration
+  observed_facts:
+  - predicate: declares_field
+    object: tier
+  - predicate: declares_field
+    object: weight
+  - predicate: exports_symbol
+    object: GoldenShape
+  - predicate: extends_syntactically
+    object: BaseShape
+  source_excerpt: export interface GoldenShape extends BaseShape {
+  epistemic_status: parser_derived
+- id: so:sha256:5e2ebcc415034c033c4d2535b326a7c34a4f2fc51d5d07aaddecd33fb2c8c6c1
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 20
+    end_line: 22
+    content_sha256: f2f8aabc76b64e621465f06a4061f3eed1f1cc12580446f8196a8b0dd189fc37
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::BaseShape
+    lexical_name: BaseShape
+    syntactic_kind: interface_declaration
+  observed_facts:
+  - predicate: declares_field
+    object: id
+  source_excerpt: interface BaseShape {
+  epistemic_status: parser_derived
+- id: so:sha256:85e3e0952416b2ac4a84b942d809e0915db695694ce4650ac2f54ee637d45916
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 24
+    end_line: 32
+    content_sha256: 16e27bb9b9ab81120f5a353af8bc578774beee6360abaa074fb04b21bf1e88dc
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenTicket
+    lexical_name: GoldenTicket
+    syntactic_kind: class_declaration
+  observed_facts:
+  - predicate: declares_member
+    object: describe
+  - predicate: declares_member
+    object: fromWire
+  - predicate: exports_symbol
+    object: GoldenTicket
+  - predicate: extends_syntactically
+    object: S.Class
+  source_excerpt: export class GoldenTicket extends S.Class<GoldenTicket>("GoldenTicket")({
+  epistemic_status: parser_derived
+- id: so:sha256:9a527a8e953ac9878d5e14fabfb0223bbd895eca5eaf93fa8d28504aa476f5a5
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 34
+    end_line: 37
+    content_sha256: 52ced12f2800785494df1d92822b9c70543598f7bc8b184f4ed4adcc65a8ec13
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenState
+    lexical_name: GoldenState
+    syntactic_kind: enum_declaration
+  observed_facts:
+  - predicate: declares_member
+    object: Granted
+  - predicate: declares_member
+    object: Queued
+  - predicate: exports_symbol
+    object: GoldenState
+  source_excerpt: export enum GoldenState {
+  epistemic_status: parser_derived
+- id: so:sha256:b8e1a3bd04c654bbb6b8dcc67d118489a3afd0bcff9d91d063d3da0b28192662
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 39
+    end_line: 41
+    content_sha256: 57767bff0fa011ea5d526c253b1fe1ad31b8f116fabef6367bd0cbc3547b6c97
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::goldenAdmit
+    lexical_name: goldenAdmit
+    syntactic_kind: function_declaration
+  observed_facts:
+  - predicate: declares_parameter
+    object: capacity
+  - predicate: declares_parameter
+    object: ticket
+  - predicate: exports_symbol
+    object: goldenAdmit
+  source_excerpt: 'export function goldenAdmit(ticket: GoldenTicket, capacity: number): boolean {'
+  epistemic_status: parser_derived
+- id: so:sha256:d8cea646e0b6e74f15a6a991891c9c3c5ca940db3db46c1637aa27a3f5a599e8
+  schema_version: 1
+  repository:
+    commit: GOLDEN
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts
+  source_span:
+    start_line: 43
+    end_line: 45
+    content_sha256: 2858e30faed6365eb0865b523c4532b2edd6dd24eae07dec581217b1ea4ff38d
+  extractor:
+    id: adapter-typescript
+    version: 1.0.0
+    parser: typescript@6.0.3
+    script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+  symbol:
+    qualified_name: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/typescript/input.ts::GoldenTicket
+    lexical_name: GoldenTicket
+    syntactic_kind: module_declaration
+  observed_facts:
+  - predicate: declares_member
+    object: Encoded
+  - predicate: exports_symbol
+    object: GoldenTicket
+  source_excerpt: export declare namespace GoldenTicket {
+  epistemic_status: parser_derived

@@ -1,0 +1,10 @@
+id: po:sha256:416c9ae2c9e272ba772cfe1f9bbd39e901d2c3cc6f95cac34660d28c65685a2d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 89
+  end_line: 89
+quote: '@beep/anthropic 88'
+epistemic_status: quoted_prose

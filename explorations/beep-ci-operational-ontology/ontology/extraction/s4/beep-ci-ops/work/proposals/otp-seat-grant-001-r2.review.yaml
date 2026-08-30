@@ -1,0 +1,42 @@
+target: otp:seat-grant:001
+target_sha256: 6baffa31125e00899163619f7505066d21f3fcbb108788733c24fa6fa890fd5e
+chain_sha256: 58131568f1d9015dfca52f24e402266953c51c9e338455f2b2679780fd5dd4ad
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: The revised proposal asserts no parents edges; there is no is-a edge to test, and no valid subsumption relation
+    is proposed.
+attacks:
+- surface: identity
+  rule: identifier-is-not-identity
+  counterexample: The same process can receive two grants with equal encoded owner and work fields. The card distinguishes
+    them by exclusive creation lineage and treats path and timestamps as supporting evidence, so it does not reduce grant
+    identity to a technical key.
+  outcome: survived
+- surface: warrant
+  rule: decision-term-warrant
+  counterexample: CQ-008, CQ-009, and CQ-010 explicitly require SeatGrant to identify active holders, detect origin conflicts,
+    and bind admission charge and capacity. A correctly modeled SeatGrant term is necessary for those decisions.
+  outcome: survived
+- surface: null_discriminator
+  rule: discriminator-true-of-lease-dto
+  counterexample: A mutable JSON lease used only for interprocess bookkeeping can truthfully be described as active while
+    its weight is counted against capacity. The quoted operational use therefore remains true in the pure-DTO null world and
+    does not prove independent record identity or a grant beyond the carrier.
+  outcome: landed
+rival_models_still_viable:
+- A SeatGrant is a relational grant or lease in the operational world, with the lease file only recording it.
+evidence:
+- so:sha256:4ca539a7a3ef2f6716f98022b42a4b54032476fd6ca39745d1a1b2aa2e9cd150
+- so:sha256:9d883e58d7914e411e29305aba63d9b50f0b29af985e462558a90e0b881c8bbd
+- po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a
+- po:sha256:67896e490e18f6b629d0f7e95275f3bcf6a24af73eed3a479f3bfb6bb7636f01
+- CQ-008
+- CQ-009
+- CQ-010

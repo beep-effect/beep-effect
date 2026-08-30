@@ -1,0 +1,33 @@
+id: "ic:sched-core:019"
+hypothesis_ref: "dh:sched-core:020"
+identity:
+  supplies_identity: "unresolved"
+  identity_criterion: "Two recent-origin-busy observation artifacts would be the same only if they report one gate-acquisition failure for the same SeatRequest, origin resource, and observation act; a shared or overwritten timestamp value cannot establish that sameness."
+  reidentification_key:
+    - "SeatRequest and origin resource"
+    - "busy-detection event provenance not retained"
+    - "blockedOnOriginAtMillis as supporting evidence"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: "unresolved"
+  supplies_identity: "unresolved"
+  unity: "One assertion about one origin-busy detection event; the implementation stores only the most recent timestamp inside a mutable ticket record."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "anti-rigid phase of a request being blocked on its origin"
+    - "mutable retry-loop field with no separate observation individual"
+  existential_dependencies:
+    - "a SeatRequest and origin-scoped resource"
+    - "a failed acquisition observation and information carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: "unresolved"
+  terminal_states:
+    - "expires after the configured freshness interval"
+    - "is overwritten by a later busy detection"
+    - "ends when the ticket is deleted"
+counterexamples:
+  - description: "Repeated busy detections overwrite blockedOnOriginAtMillis on the same ticket, erasing earlier events and providing no stable token by which two observation records could be reidentified."
+status: "proposed"

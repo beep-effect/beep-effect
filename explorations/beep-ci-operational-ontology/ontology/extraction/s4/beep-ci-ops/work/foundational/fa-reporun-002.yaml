@@ -1,0 +1,20 @@
+id: "fa:reporun:002"
+hypothesis_ref: "dh:reporun:003"
+identity_card_ref: "ic:reporun:002"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "actual runner-reporting stoppage situation"
+    still_viable: true
+  - label: "incomplete or stale GitHub job payload"
+    still_viable: true
+  - label: "classification information record about a GitHub job"
+    still_viable: true
+strongest_counterexample: >-
+  The detector sees only one payload snapshot; an incomplete payload can have
+  the required nonempty all-null step shape without a real runner-reporting
+  loss, so the causal reading remains defeasible.
+verdict: analyzed

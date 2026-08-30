@@ -1,0 +1,21 @@
+id: "dh:reporun:034"
+observation_refs:
+  - "so:sha256:e77a2c5eff8745caabbb04d3987fa6d4e7898620ea128075a51ec06a96c48337"
+cq_warrants: []
+proposed_referent:
+  label: "quality-step output-bound constant"
+  description: "The implementation configuration value used to cap grouped quality-step output."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Evidence-retention policy for quality-step logs"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation exposes another OutputBound construction without a domain policy carrier or CQ warrant. Its distinction from the repository-run cap is implementation configuration."
+epistemic_status: proposed
+confidence:
+  value: 0.92
+  use_for_acceptance: false
+

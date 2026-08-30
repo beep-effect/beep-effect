@@ -1,0 +1,24 @@
+id: "dh:quality:039"
+observation_refs:
+  - "so:sha256:4a64226d4f4e79c645be3905c847727726f5d1d1488e204b446f2d31bf100854"
+cq_warrants: []
+proposed_referent:
+  label: "Possible package workspace referent denoted by PackageVerifyWorkspace"
+  description: "A package workspace is a plausible domain bearer, while a workspace configuration or decoded DTO is also plausible. The supplied declaration does not discriminate among them."
+representation_status: unresolved
+alternatives:
+  - label: "An information artifact describing a package workspace"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "PackageVerifyWorkspace schema or DTO only"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation supplies only an exported S.Class-based declaration. It provides no observed package identity, filesystem persistence, dependency relation, or operational participation that would be false of a DTO."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.51
+  use_for_acceptance: false

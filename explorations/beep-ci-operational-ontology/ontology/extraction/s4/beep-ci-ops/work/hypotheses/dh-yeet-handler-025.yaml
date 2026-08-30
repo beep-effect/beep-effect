@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:025"
+observation_refs:
+  - "so:sha256:4915ab3bd330301ca8f7b150290b377b0216aee0dfd700912216cb04e0f20d82"
+cq_warrants: []
+proposed_referent:
+  label: "runPlanExecution helper"
+  description: "No domain-ontology referent is proposed for the runPlanExecution helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "dated plan-execution occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation identifies a reusable executable declaration, not a dated execution occurrence. No observed result, participant relation, or operational identity criterion distinguishes it from implementation code."
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

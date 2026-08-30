@@ -1,0 +1,20 @@
+id: fa:alt4:058
+hypothesis_ref: dh:yeet-watch:027
+identity_card_ref: ic:alt4:058
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: ci-timeout flake-signature specification"
+    still_viable: true
+  - label: "kind: environment-only timeout-failure class (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: timeout failure occurrence as this referent
+    still_viable: false
+  - label: ci-timeout as a mere lexical token
+    still_viable: false
+strongest_counterexample: detectYeetMonitorFlakeClass maps timeout patterns to ci-timeout and planYeetMonitorReruns consumes that class for a once-per-head-and-job rerun that applyYeetMonitorJobDecision executes; that is a repeatable signature, not the timeout occurrent.
+verdict: analyzed
+needed_evidence: A timeout occurrence whose log does not match these patterns, or a signature match that does not produce a rerun decision, would further separate the occurrent from this specification.

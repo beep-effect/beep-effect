@@ -1,0 +1,25 @@
+id: so:sha256:fd571922e63548144b22f2138d95da60be21ad39b2f6363461fa1729c859c7dd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 970
+  end_line: 973
+  content_sha256: 65d7670425d38e90e8048f97c0f4bd3d652fdb38553ee1de410baed7bb2f0d50
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::AdmissionWaitProgress
+  lexical_name: AdmissionWaitProgress
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: escalated
+- predicate: declares_field
+  object: lastProgressMillis
+source_excerpt: interface AdmissionWaitProgress {
+epistemic_status: parser_derived

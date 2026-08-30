@@ -1,0 +1,34 @@
+id: "ic:alt1:025"
+hypothesis_ref: "dh:topology:054"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two workspace packages are the same iff they occupy the same declared
+    package slot in this repository's captured workspace topology, the slot currently labeled
+    @beep/ffmpeg. The printed name and the trailing topo-sort index are reidentification
+    evidence, never the sameness criterion; the numeric token is not part of the package."
+  reidentification_key:
+    - "@beep/ffmpeg"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one workspace package information object currently labeled @beep/ffmpeg; the topo-sort
+    row recording it is not a part of the package"
+  dependence: "none"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "removed from the workspace"
+counterexamples:
+  - description: "The capture line \"@beep/ffmpeg N\" also contains a trailing sort index, and
+      earlier lines name dependency-kinds such as devDependencies. If that line were the
+      package, changing the sort index or capturing the same name on another line would create a
+      new package. If the printed name were itself the package, renaming without replacing the
+      software unit would be identity change rather than a state change of one package."
+status: "proposed"

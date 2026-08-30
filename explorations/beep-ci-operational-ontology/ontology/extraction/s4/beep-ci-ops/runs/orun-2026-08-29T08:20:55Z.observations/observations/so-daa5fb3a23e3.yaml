@@ -1,0 +1,25 @@
+id: so:sha256:daa5fb3a23e3cbbdec1476739ba3b13dc3b6677d54ab40d0125a26479514cfcc
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 225
+  end_line: 225
+  content_sha256: 2c3b0330834b2e7a50ef5bd8ca3f0f64fba6ff0ff282150b15f77ab4984c4605
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheCallerReason
+  lexical_name: TurboCacheCallerReason
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: TurboCacheCallerReason
+- predicate: exports_symbol
+  object: TurboCacheCallerReason
+source_excerpt: export type TurboCacheCallerReason = typeof TurboCacheCallerReason.Type;
+epistemic_status: parser_derived

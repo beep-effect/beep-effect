@@ -1,0 +1,31 @@
+id: "dh:reporun:003"
+observation_refs:
+  - "so:sha256:34b48a9193cc6492f7d9dc29870607f32b095b278c89c94ca42778403c80271d"
+  - "so:sha256:d04af36f48e323964940f6af826755a579e49fadfd4f88d1bec812dbacc5bab6"
+  - "po:sha256:fa61728f315583616a5f480898459fd11490e806fb3e45aa9d494ab6d4d4291d"
+  - "so:sha256:0277f1c842a57e6b4661bcb5c4322652755a4f40781e23e26013fc13dcbffb6f"
+  - "so:sha256:393aa76baec79587745218d551a7847a929f7b6289d65373194454f4a59a3061"
+  - "so:sha256:c4609511021730abce805c627e8ac39fb16a03089ebf2edff20a186e2f2c05af"
+  - "so:sha256:0e80d676e52c56b59dd8ea000f3f88c70c6909505051e24cb53897f2aa66cef0"
+  - "so:sha256:1f683086a8f3d62635b93bd05ecc2c2c67a6b96894eb14b86059bf79a7b873e4"
+cq_warrants: ["CQ-013"]
+proposed_referent:
+  label: "runner-reporting-loss job-shape pattern"
+  description: "A failed GitHub job with a nonempty step list in which no step ever acquired a conclusion."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Incomplete GitHub job payload rather than runner loss"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Classification label recorded about a GitHub job"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The adversary's incomplete-or-stale job DTO is decisive: a pure classifier can expose the cited declarations and emit runner-loss for an all-null payload without any runner-reporting-loss occurrence, and the observations record no runtime stoppage."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.78
+  use_for_acceptance: false

@@ -1,0 +1,23 @@
+id: so:sha256:f0d5396e557c47cdc8fca260987c5c6f8643e9936af3cbf37b4348445fa4eb5d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 797
+  end_line: 798
+  content_sha256: 3bfb8586ac0cd058e528d5180048fbf988ed1fb78c5c9d55004afc98566c0d07
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::codegenDriverSteps
+  lexical_name: codegenDriverSteps
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>'
+epistemic_status: parser_derived

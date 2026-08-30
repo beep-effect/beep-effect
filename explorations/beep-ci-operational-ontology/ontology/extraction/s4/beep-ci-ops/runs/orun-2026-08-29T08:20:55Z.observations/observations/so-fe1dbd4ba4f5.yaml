@@ -1,0 +1,23 @@
+id: so:sha256:fe1dbd4ba4f52a6957d7a51e6e130fa5ce90e9eb74deab72b30589aaf6973759
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 40
+  end_line: 47
+  content_sha256: 26da44c53a4884ecbf156a6ad2ed7ff48f6d0b5becbda2090eba10ca9660c2f7
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts::TurboQueryAffectedPackageRef
+  lexical_name: TurboQueryAffectedPackageRef
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: class TurboQueryAffectedPackageRef extends S.Class<TurboQueryAffectedPackageRef>($I`TurboQueryAffectedPackageRef`)(
+epistemic_status: parser_derived

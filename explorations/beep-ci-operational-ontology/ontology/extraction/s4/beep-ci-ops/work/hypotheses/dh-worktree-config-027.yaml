@@ -1,0 +1,18 @@
+id: "dh:worktree-config:027"
+observation_refs:
+  - "so:sha256:0d3a013019417d3e867832ab9064c3d5a47b92384c531fb4284d9da022345a7b"
+cq_warrants: []
+proposed_referent:
+  label: "$I schema-identifier helper"
+  description: "An internal module-scoped variable whose excerpt invokes an implementation identifier factory."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "module identity in the operational domain"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation contains only an unrepresentable variable declaration and a source excerpt constructing an implementation identifier."
+epistemic_status: proposed
+confidence: {value: 0.98, use_for_acceptance: false}

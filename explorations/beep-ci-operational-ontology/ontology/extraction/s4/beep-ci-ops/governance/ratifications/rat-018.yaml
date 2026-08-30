@@ -1,0 +1,9 @@
+id: rat:18
+proposal_ref: otp:admission-work-kind:001
+proposal_sha256: f11744eec5780d82d58eed6a04bcbba43dba6030cecf770fd83c41a2d8656710
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept AdmissionWorkKind — the closed deployed work-kind enumeration.

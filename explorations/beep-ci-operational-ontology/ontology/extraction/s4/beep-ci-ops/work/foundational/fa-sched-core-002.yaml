@@ -1,0 +1,15 @@
+id: "fa:sched-core:002"
+hypothesis_ref: "dh:sched-core:002"
+identity_card_ref: "ic:sched-core:002"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "A SeatGrant is a relational grant or lease in the operational world, with the lease file only recording it."
+    still_viable: true
+  - label: "The active lease is only JSON used for interprocess bookkeeping."
+    still_viable: false
+strongest_counterexample: "Owner-field equality cannot join a deleted ticket to a lease or join two later leases: the handoff copies fields, the ticket dies, and the lease body has no nonce."
+verdict: "analyzed"

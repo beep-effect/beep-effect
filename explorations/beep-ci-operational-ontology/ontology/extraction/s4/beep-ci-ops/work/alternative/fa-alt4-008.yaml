@@ -1,0 +1,18 @@
+id: fa:alt4:008
+hypothesis_ref: dh:sched-core:017
+identity_card_ref: ic:alt4:008
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "event: the ticket's entry into the durable queue"
+    still_viable: true
+  - label: "quality: temporal location inhering in the ticket (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: "information object: millisecond field used only to sort"
+    still_viable: false
+strongest_counterexample: withQualityAdmission stamps a newly created ticket with the current time, and effectivePriorityRank later compares that instant with now to represent elapsed waiting, so the stamp is not a sort-only field.
+verdict: analyzed
+needed_evidence: An enqueue that creates a durable ticket without writing enqueuedAtMillis, or a stamp rewrite without exclusive create, would discriminate the occurrent from the recorded quality.

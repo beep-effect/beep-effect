@@ -1,0 +1,27 @@
+id: ic:alt4:018
+hypothesis_ref: dh:topology:029
+identity:
+  supplies_identity: true
+  identity_criterion: Two catalog entries for @beep/data are the same when they occupy the same topology-capture package-name slot for that workspace package; the trailing numeric token is not part of the referent, and the spelled package name is evidence, never the sameness criterion of a source tree.
+  reidentification_key:
+    - "@beep/data"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: Informational unity as one topology-capture slot whose package-name token @beep/data is the whole entry, not a mere sort-key fragment.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies:
+    - workspace package catalog
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: A generated topo-sort row that mentioned @beep/data only as a sort key, with no bound affected-package closure use, would collapse this referent into a serialization token.
+  - description: A later rename of the published package while the capture still listed @beep/data would split the catalog slot from any software-unit continuant, showing the name is evidence rather than the package itself.
+status: proposed

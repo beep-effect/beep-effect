@@ -1,0 +1,47 @@
+target: otp:fallow-audit-lane:001
+target_sha256: 387afb024c155b459db1ed0017d745a7b48c5ccdcbced99c1047c1e91e20919c
+chain_sha256: a90b0949deb27b92b54bb3b422dbbed6e180b95c623c5d79dcc7b289344ab2f1
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ''
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: The revised proposal asserts no parents edges; there is no is-a edge to test, and no valid subsumption relation
+    is proposed.
+attacks:
+- surface: identity
+  rule: content-lineage-identity-conflict
+  counterexample: Two repositories can carry semantically identical Fallow audit prescriptions while their policy lineages
+    differ. The card makes lineage and revision identity-defining even though the proposal defines the individual by the prescription's
+    content, wrongly separating equal information content.
+  outcome: landed
+- surface: warrant
+  rule: listing-cq-warrant
+  counterexample: CQ-001 requires the generic VerificationLane and LaneKind vocabulary needed to enumerate data. It neither
+    names FallowAuditLane nor requires its base, gate, or command prescription as an ontology individual.
+  outcome: landed
+- surface: warrant
+  rule: obligation-procedure-split
+  counterexample: The same Fallow procedure can realize different policy obligations, but the revised definition now denotes
+    only the audit instruction and gate and explicitly excludes the obligation, finding, execution, and organizing lane. That
+    counterexample no longer contradicts the revised term shape.
+  outcome: survived
+- surface: null_discriminator
+  rule: discriminator-true-of-config-entry
+  counterexample: A command catalog entry can bind origin/main and new-only and remain only executable configuration. That
+    pure config twin has the same command and gate facts without a separately individuated verification-lane artifact.
+  outcome: landed
+rival_models_still_viable:
+- Parameterized Fallow audit plan information content
+- Abstract Fallow audit process type instantiated by dated activities
+- Inventory command-entry information object only
+evidence:
+- so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208
+- po:sha256:30771b17c0f19f1389d3cd718fceb28eb0ad3a1973b4d438cd7df9db7b726048
+- po:sha256:805ea8b43e9d37cc3d82a889148ac8fd3aebda4deb587e5a779fa63dd858e9f3
+- po:sha256:000a85bb74164c11935ccbff0537657768d5fa95793ca0a98f66fa8a77bd159c
+- CQ-001

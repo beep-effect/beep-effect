@@ -1,0 +1,87 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-08-30",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "window": {
+    "start": "2026-08-29T08:27:00-05:00",
+    "end": "2026-08-30T08:14:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta since lastAttemptedRun of merged 2026-08-29 packet (#883). #883 merged 2026-08-29T20:28Z. lastSuccessfulRun stamp on main still pointed at 2026-08-29 until this packet advances it."
+  },
+  "claimsEmitted": 21,
+  "collisionRate": 0.19,
+  "collisionNote": "4/21 URL collisions are intentional refute re-cites (ODP, drizzle, Instant, SEP-2640). Novel-URL collision rate 0. Standing rc.112/no-rc.113 holds published artifacts and moves to Changesets #7446 (new URL).",
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 16,
+    "arxiv": 12,
+    "github": 28,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+gh+arxiv",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 5,
+    "held": 5,
+    "heldAndMoved": 1,
+    "broken": 0,
+    "standingClaims": [
+      "USPTO ODP four fields",
+      "drizzle TaggedErrorClass #6162",
+      "Instant Cloud sunset 2027-08-31",
+      "SEP-2640 skills extension",
+      "effect@4.0.0-rc.112 / no rc.113"
+    ],
+    "note": "All five hold. rc.112/no rc.113 holds published artifacts and moves because Changesets #7446 now stages unpublished rc.113."
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "severity": "source-gap",
+      "detail": "user-X MCP connected but get_users_me / search return client-not-enrolled Client Forbidden. No x.com posts in this packet."
+    },
+    {
+      "id": "no-cross-provider-verify",
+      "severity": "process-gap",
+      "detail": "SPEC verify seats (Sol/Luna) unavailable. Writer used structured records only."
+    },
+    {
+      "id": "github-mcp-needsAuth",
+      "severity": "auth",
+      "detail": "GitHub MCP needsAuth. Publisher uses gh + cloud agent."
+    },
+    {
+      "id": "arxiv-sunday-gap",
+      "severity": "source-gap",
+      "detail": "arXiv Sunday announcement gap: zero new ids (cs.AI/new still tops at 2608.27454). Retry Monday 2026-08-31 20:00 ET."
+    }
+  ],
+  "resume": {
+    "retry": ["x-search", "verify", "arxiv-monday"],
+    "cursor": "enroll X developer App in a Project at https://console.x.com, then re-search window 2026-08-29T08:27-05:00/2026-08-30T08:14-05:00; retry arXiv after Monday 2026-08-31 20:00 ET announcement"
+  },
+  "repoReplay": {
+    "merged": [
+      883, 880, 881, 884, 865, 867, 871, 872, 889, 869, 874, 878, 879, 886, 888,
+      891, 892, 893, 894, 895
+    ],
+    "open": [],
+    "blockingResearchPr": null,
+    "closedUnmergedResearchPr": 862,
+    "lastMergedResearchPr": 883
+  },
+  "weekly": {
+    "sunday": true,
+    "tombstonesEmitted": 25,
+    "tombstonePath": "research/ledger/tombstones/2026-08-30.jsonl",
+    "note": "First full week of this harness (08-26 merged #854, 08-27 closed-unmerged #862, 08-28 merged #875, 08-29 merged #883). 25 suggested actions from 2026-08-26 that were never recaptured on 08-28 or 08-29, and are not standing watchlist claims, land in the tombstone file."
+  }
+}

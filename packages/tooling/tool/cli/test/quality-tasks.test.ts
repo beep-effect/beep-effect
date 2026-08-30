@@ -53,6 +53,7 @@ import {
   GithubCheckMode,
   GithubCheckRunReport,
   GithubChecksFallowFeatureMatrix,
+  githubCheckChangesetStatusLane,
   githubCheckCheapGateLanes,
   githubCheckLanePlan,
   githubCheckLanesForModeForTesting,
@@ -144,6 +145,12 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer
+);
+const PullRequestConfigLayer = ConfigProvider.layer(
+  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
+);
+const MainPushConfigLayer = ConfigProvider.layer(
+  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
 );
 const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
@@ -1305,22 +1312,58 @@ describe("quality task adapter", () => {
   it("runs every cheap gate through the collected runner when all lanes pass", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
 
     return Effect.runPromise(
       withEnvVarEffect(
         "BEEP_YEET_LANE_PROOF_MODE",
         "off",
-        withEnvVarEffect("GITHUB_EVENT_NAME", "pull_request", runGithubChecks("cheap-gates")).pipe(
-          Effect.tap(() =>
-            Effect.gen(function* () {
+        runGithubChecks("cheap-gates").pipe(
+          Effect.tap(
+            Effect.fnUntraced(function* () {
               const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
               expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
               expect(logText).toContain('"failurePolicy":"collect-all"');
               expect(logText).toContain('"status":"passed"');
-              expect(spawned).toHaveLength(A.length(cheapGateLanes) + 4);
+              expect(spawned).toContain(changesetStatusCommand);
+              expect(
+                A.every(cheapGateLanes, (lane) =>
+                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
+                )
+              ).toBe(true);
             })
           ),
-          provideScopedLayer(cheapGatesTestLayer(spawned, A.empty()))
+          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), PullRequestConfigLayer))
+        )
+      )
+    );
+  });
+
+  it("skips changeset status on a main push while running every cheap gate", () => {
+    const spawned: Array<string> = [];
+    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
+
+    return Effect.runPromise(
+      withEnvVarEffect(
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "off",
+        runGithubChecks("cheap-gates").pipe(
+          Effect.tap(
+            Effect.fnUntraced(function* () {
+              const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+              expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
+              expect(spawned).not.toContain(changesetStatusCommand);
+              expect(
+                A.every(cheapGateLanes, (lane) =>
+                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
+                )
+              ).toBe(true);
+            })
+          ),
+          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), MainPushConfigLayer))
         )
       )
     );
@@ -1340,34 +1383,30 @@ describe("quality task adapter", () => {
       withEnvVarEffect(
         "BEEP_YEET_LANE_PROOF_MODE",
         "off",
-        withEnvVarEffect(
-          "GITHUB_EVENT_NAME",
-          "pull_request",
-          Effect.gen(function* () {
-            const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
+        Effect.gen(function* () {
+          const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
 
-            expect(Exit.isFailure(exit)).toBe(true);
-            if (Exit.isFailure(exit)) {
-              const failure = Cause.squash(exit.cause);
-              expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-              if (isQualityTaskGroupFailed(failure)) {
-                expect(A.map(failure.failures, (step) => step.label)).toEqual([
-                  "cheap-gates:config-sync",
-                  "cheap-gates:effect-imports",
-                ]);
-              }
+          expect(Exit.isFailure(exit)).toBe(true);
+          if (Exit.isFailure(exit)) {
+            const failure = Cause.squash(exit.cause);
+            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+            if (isQualityTaskGroupFailed(failure)) {
+              expect(A.map(failure.failures, (step) => step.label)).toEqual([
+                "cheap-gates:config-sync",
+                "cheap-gates:effect-imports",
+              ]);
             }
+          }
 
-            expect(spawned).toContain(lastCommand);
-            const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-            expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
-            expect(logText).toContain('"failurePolicy":"collect-all"');
-            expect(logText).toContain('"id":"cheap-gates:config-sync","stage":"repo-sanity","status":"failed"');
-            expect(logText).toContain('"id":"cheap-gates:effect-imports","stage":"repo-quality","status":"failed"');
-            expect(logText).toContain('"status":"passed"');
-          })
-        )
-      ).pipe(provideScopedLayer(cheapGatesTestLayer(spawned, failedCommands)))
+          expect(spawned).toContain(lastCommand);
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+          expect(logText).toContain('"failurePolicy":"collect-all"');
+          expect(logText).toContain('"id":"cheap-gates:config-sync","stage":"repo-sanity","status":"failed"');
+          expect(logText).toContain('"id":"cheap-gates:effect-imports","stage":"repo-quality","status":"failed"');
+          expect(logText).toContain('"status":"passed"');
+        })
+      ).pipe(provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, failedCommands), PullRequestConfigLayer)))
     );
   });
 

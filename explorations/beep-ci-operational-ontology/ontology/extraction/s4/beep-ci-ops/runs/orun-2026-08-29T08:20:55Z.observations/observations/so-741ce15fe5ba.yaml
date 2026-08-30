@@ -1,0 +1,23 @@
+id: so:sha256:741ce15fe5bafd84120cdd84e7399cb37e9a2ddc897f146a316523d1065fe04c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 472
+  end_line: 480
+  content_sha256: c78eb0e262342ded2e5c3e8cda885ef2ed39379b77abed38a9bfb72e0537f1f1
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::isTurboCacheControlArg
+  lexical_name: isTurboCacheControlArg
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: isTurboCacheControlArg
+source_excerpt: 'export const isTurboCacheControlArg = (arg: string): boolean =>'
+epistemic_status: parser_derived

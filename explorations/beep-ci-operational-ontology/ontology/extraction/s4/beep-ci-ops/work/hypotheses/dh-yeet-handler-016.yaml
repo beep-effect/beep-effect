@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:016"
+observation_refs:
+  - "so:sha256:2ef38e14bf92868696028ba454d96e9411b5579e64075601a162aa5dbb080475"
+cq_warrants: []
+proposed_referent:
+  label: "Verdict module identifier helper"
+  description: "No domain-ontology referent is proposed for the Verdict module identifier helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "module identifier token"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

@@ -1,0 +1,32 @@
+id: "dh:yeet-watch:030"
+observation_refs:
+  - "so:sha256:44d7fdedf0dc4125ca3980265b33580cbf1e77466cf41381319cf3d103b5146b"
+  - "so:sha256:eead03dc8d17aff2cc13199838c2c6022bf2615917539e7f9f287627ca3d6f20"
+  - "so:sha256:0a2c5f86ed363ec9af7d18b61cde9a0bd8f3332c6e23b7d14371b102026aa2b0"
+  - "so:sha256:a54ed495f8b367b873cce3eeb1d1ca8c0baa31727fe130d5b42091d0080359cc"
+  - "so:sha256:2be3b248a3b888f63aa21e0598782e2efec976842e70e3d18420d1051487f9ef"
+  - "so:sha256:a2352db33ca14ce4c1da0bf89decf6bc399e46f050d701ba267129ce31cda2e2"
+  - "po:sha256:14f257e298db255a69389e25e0d5f008b17f9fe76b0dfd030796a21ce21c64b1"
+  - "po:sha256:aee827b131144943a11501c5c91faf52917d871d2de3f937b55887708e44b8a1"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "install-failure failure signature specification"
+  description: "A repeatable hosted-job shape criterion treated by the merge monitor as an allowed environment-only rerun signature."
+representation_status: lexical_alias
+alternatives:
+  - label: "install-failure literal token"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "installation failure occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "No-op classifier, rerun-planner, and applier bodies preserve every cited declaration and the install-failure token; the observations therefore establish only a lexical classification value."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.85
+  use_for_acceptance: false

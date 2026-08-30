@@ -1,0 +1,21 @@
+id: "dh:quality:094"
+observation_refs:
+  - "so:sha256:c9b6e361705aac39be3e4fe44148cee5933dbb239facc1db9c9db7894dd312bc"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation error declaration TurboConfigProofError in TurboConfigProof.ts"
+  description: "A source-level tagged-error mechanism; the records do not establish a distinct failure occurrence or failure kind in the operational domain."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "An operational failure occurrence represented by TurboConfigProofError"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes inheritance from S.TaggedError plus source members and export. Error inheritance and helper members are representational facts that do not observe an operational failure occurrence or stable domain classification."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

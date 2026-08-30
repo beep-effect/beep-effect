@@ -1,0 +1,50 @@
+target: "otp:split-stream-captured-subprocess-result:001"
+target_sha256: "c1b6d3f79a90d9c291aedb5de5a9c793d44bb045d7ba8fd6422437d044720327"
+chain_sha256: "6f49ff78cafb4ad01256564f19f53937e6c9c09b416f88cbe39bb76cc1956887"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: capture-provenance-identity
+    counterexample: >-
+      Two independent subprocess executions can produce identical exit status,
+      stdout, stderr, and truncation values. The revised card separates them by
+      capture act and recorded execution rather than by equal technical fields,
+      while candidly noting that current records do not expose that provenance.
+    outcome: survived
+  - surface: warrant
+    rule: conditional-support-not-established
+    counterexample: >-
+      CQ-005 and CQ-006 require applicable VerificationEvidence, but they can
+      be answered with any retained result record that preserves the necessary
+      provenance. The observations do not show that a split-stream result is
+      retained or used as evidence, so this specialized class is not presently
+      necessary for the decision term.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-not-in-observations
+    counterexample: >-
+      A transient return DTO can hold separately bounded stdout and stderr,
+      exit status, and a combined truncation flag and be discarded immediately.
+      The cited structural declarations make every claimed shape fact true in
+      that null world and supply no call-site retention or evidence-use fact.
+    outcome: landed
+rival_models_still_viable:
+  - "A transient split-stream return DTO with no retained operational role."
+  - "A retained diagnostic record that is not VerificationEvidence."
+evidence:
+  - "so:sha256:d6da940a42fe3f10b270c35bafa732393f880e72d9f71994a334d87ac56f373d"
+  - "so:sha256:ca5e01bb598282d204b571b9567ae92a62782dc0dea487b412200725b31fde49"
+  - "so:sha256:8e9ac56f7faaa4343dc5e43ba0d5db57423412ece68eb4b5d65adbce396d5976"
+  - "CQ-005"
+  - "CQ-006"

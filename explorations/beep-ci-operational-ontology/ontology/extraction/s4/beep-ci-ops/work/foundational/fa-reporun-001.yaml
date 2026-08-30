@@ -1,0 +1,20 @@
+id: "fa:reporun:001"
+hypothesis_ref: "dh:reporun:002"
+identity_card_ref: "ic:reporun:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "deterministic workflow setup defect"
+    still_viable: true
+  - label: "hosted control-plane setup failure"
+    still_viable: true
+  - label: "classification information record about a GitHub job"
+    still_viable: true
+strongest_counterexample: >-
+  A deterministic bad action reference produces the same failed setup-step
+  configuration, so the observed situation does not identify a hosted 5xx
+  mechanism and must remain separate from the setup-5xx information label.
+verdict: analyzed

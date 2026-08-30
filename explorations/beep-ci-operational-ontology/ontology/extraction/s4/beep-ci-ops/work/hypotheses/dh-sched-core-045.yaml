@@ -1,0 +1,18 @@
+id: "dh:sched-core:045"
+observation_refs:
+  - "so:sha256:58a28f18980ba99533e3d14c566516402033b8f9ea4c6cb4dac797b89d2e6c8e"
+cq_warrants: []
+proposed_referent:
+  label: "scheduler-schema annotation identifier helper"
+  description: "A module-local identifier factory value used to annotate schema declarations."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "namespace identifier for scheduler schema artifacts"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole observed fact is an unrepresentable variable declaration creating a module identifier; no discriminator supports a domain-ontology referent."
+epistemic_status: proposed
+confidence: {value: 0.99, use_for_acceptance: false}

@@ -1,0 +1,29 @@
+id: "dh:reporun:014"
+observation_refs:
+  - "so:sha256:fc13da4a27d636493bf0caed7e01a55c91e31a45fe97c80ad34f40e7d9948b43"
+  - "so:sha256:193bdccb773affb34025f7d4b136568a01d2a47582a8f3f44e1381a3038fa092"
+  - "po:sha256:64d90805ebfbc6afee58171bc8f40cc34294e5a165e1e68ee59c3941f5878eea"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb"
+  - "so:sha256:906f9d719b7531f4c878c535e72c3cdae60b54bd8ef3ea349d1887b118f54cc9"
+cq_warrants: []
+proposed_referent:
+  label: "write planned-step designation"
+  description: "A mutability code attached to a repository command specification."
+representation_status: unresolved
+alternatives:
+  - label: "Dirty-cancel classification of a WorkUnitExecution"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Plan-field value used only by repository-run code"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations declare the write value and show that non-readonly steps are ineligible for conservative resume, but they do not show what is mutated or what cancellation would corrupt. The null therefore stands."
+epistemic_status: proposed
+confidence:
+  value: 0.53
+  use_for_acceptance: false
+

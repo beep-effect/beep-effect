@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:018"
+observation_refs:
+  - "so:sha256:1b6ffa3f3a247f78edd113cdd51b8cfb23b2fb2aae694c7caddd7720c39f1028"
+  - "po:sha256:01975817f76639b0451909d8b3ca5ac740722c21b42033af850aff0282fb6a37"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo task specification named storybook:build"
+  description: "A repeatable configured task carrying an observed upstream build dependency."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A Storybook-build procedure specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A verification lane"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A turbo.json storybook:build entry can carry an upstream build selector purely as implementation scheduling configuration; the cited selector establishes neither an independently governed procedure nor a verification lane."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.69
+  use_for_acceptance: false

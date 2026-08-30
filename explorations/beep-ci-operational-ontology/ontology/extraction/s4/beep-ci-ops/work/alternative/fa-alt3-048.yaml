@@ -1,0 +1,20 @@
+id: fa:alt3:048
+hypothesis_ref: dh:turbo-cache:008
+identity_card_ref: ic:alt3:048
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Turbo task specification named test:integration:parallel'
+  still_viable: true
+- label: 'kind: a parallel integration-test verification lane'
+  still_viable: true
+strongest_counterexample: The observed dependsOn is ^build and cache is false; nothing in
+  the cited span states a parallel execution strategy beyond the task name. Treating the suffix
+  as the strategy would be enum-as-taxonomy.
+verdict: analyzed
+needed_evidence: A runner or schedule observation that this task is obligated as a verification
+  lane, or a pipeline observation that it actually fans out in parallel, which would discriminate
+  lane-kind and execution-strategy readings from the task specification.

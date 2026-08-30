@@ -1,0 +1,18 @@
+id: "fa:sched-core:027"
+hypothesis_ref: "dh:sched-core:028"
+identity_card_ref: "ic:sched-core:027"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: true
+rival_models:
+  - label: "The ontology should model a successful lease-staging event, with the admission instant as its temporal boundary."
+    still_viable: true
+  - label: "The admission time is a dependent temporal quality of a SeatGrant."
+    still_viable: true
+  - label: "Only admittedAtMillis as a lease-record timestamp value is warranted."
+    still_viable: true
+strongest_counterexample: "Concurrent leases may have the same millisecond timestamp but are distinct staging occurrences, while the source provides no event reference that decides event-boundary versus temporal-quality modeling."
+verdict: "explicitly_deferred"
+needed_evidence: "A durable admission or lease-staging event reference, clock provenance, and a ruling on whether successful staging itself constitutes the grant would decide the category."

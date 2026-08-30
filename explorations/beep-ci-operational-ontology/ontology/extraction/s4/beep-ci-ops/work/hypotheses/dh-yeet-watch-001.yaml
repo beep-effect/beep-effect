@@ -1,0 +1,37 @@
+id: "dh:yeet-watch:001"
+observation_refs:
+  - "so:sha256:063b491d829da6eaa4c707755a967c56089edda951d9f7b886602d133580132c"
+  - "so:sha256:1a56cc8fed67d02b42159c7b862ffd919b182676dfc04714df67e4fa93e522d4"
+  - "so:sha256:1d941902418d68b92d953faca963a79e2b714519a16b3719441e1b0919e5e18b"
+  - "so:sha256:21fd15adfc632d3c13e0b52ed7a7b241aa285daf9e695b7a4f91880efd71422e"
+  - "so:sha256:29b24028f0dfacf53ea6e68e56831a4a30aedbe593714f54fc38a7ff1ffcf755"
+  - "so:sha256:308d8cf8a291855a224ef1088b124e39afc4b15550f72bb003ec4966b40acce8"
+  - "so:sha256:39221ec0124c17dffbcbed38afe8367929660e07f7f5decf79df8cb8bfb4dc7d"
+  - "so:sha256:6bc0f2e3af7672616e5fe40dacbc6a0a54ae24399ddd632e6448319c30bf7510"
+  - "so:sha256:cb07da8d79b7e08665aef93f87331c6c1f2a20597d1b955afbc2c526ef643643"
+  - "so:sha256:d80b78a8b525a1d9d3429688e5907aaa7a926b965d94a29efb3fb9dd1080795f"
+  - "so:sha256:e73e59e05d75c99be979d34477d3154c2f6b9dfff5c6634f1fdd2b09e7adc672"
+  - "so:sha256:f6977b2c103b2fca6391ffa410004dbf60ace56249edb4d4aee674e43ca26ac3"
+  - "so:sha256:fe1dbd4ba4f52a6957d7a51e6e130fa5ce90e9eb74deab72b30589aaf6973759"
+  - "po:sha256:c9742edfc85a5c11f0217252b9961631a94a3b86c634c01f2cff9c08508d0533"
+cq_warrants:
+  - "CQ-019"
+proposed_referent:
+  label: "affected-set computation execution"
+  description: "A possible occurrence in which Turbo determines an affected task set and Yeet decodes it for planning."
+representation_status: unresolved
+alternatives:
+  - label: "affected-set computation procedure specification"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "affected-query result document"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish declarations, decoding structures, and a command label, but no occurrence record; the required specification-versus-execution split therefore leaves an actual computation execution ungrounded."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

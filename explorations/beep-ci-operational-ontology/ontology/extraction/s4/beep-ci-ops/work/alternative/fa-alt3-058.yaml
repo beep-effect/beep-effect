@@ -1,0 +1,23 @@
+id: fa:alt3:058
+hypothesis_ref: dh:yeet-watch:026
+identity_card_ref: ic:alt3:058
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: repeatable TS2589-no-location recognition criterion'
+  still_viable: true
+- label: 'situation: a hosted job whose log exhibits that fingerprint'
+  still_viable: true
+- label: 'lexical alias: the ts2589-no-location token only'
+  still_viable: false
+strongest_counterexample: detectYeetMonitorFlakeClass delegates the TS2589 arm to detectNoLocationTs2589Flake
+  after stripping GitHub log decoration; planYeetMonitorReruns then builds a bounded rerun.
+  A string token that never fed the planner would not be this specification.
+verdict: analyzed
+needed_evidence: Whether the ontology needs the criterion (specification) and the matching
+  job-history (situation) as two individuals. Current evidence shows a detector consumed by
+  rerun policy, which supports the specification reading without eliminating the situation
+  reading of a match.

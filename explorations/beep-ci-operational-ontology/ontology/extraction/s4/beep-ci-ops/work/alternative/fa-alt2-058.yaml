@@ -1,0 +1,24 @@
+id: fa:alt2:058
+hypothesis_ref: dh:yeet-watch:016
+identity_card_ref: ic:alt2:058
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: 'phase: skipped condition of a watched check'
+  still_viable: true
+- label: 'information_object: normalized skip classification value'
+  still_viable: true
+- label: 'quality: outcome quality of a check taking the skip determinate'
+  still_viable: true
+- label: 'process: a non-executed check occurrence'
+  still_viable: false
+strongest_counterexample: >-
+  diffYeetWatchSnapshots compares stored outcomes across snapshots to emit transitions, which is phase change of a persisting
+  check; treating skip as a non-execution occurrence cannot explain a check that moves from skip to pass.
+verdict: analyzed
+needed_evidence: >-
+  An observation that skip is stored only as a token with no transition semantics, or that skipped checks are dropped from
+  the watch rather than retained, would revive a pure information-value reading.

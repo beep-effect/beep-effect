@@ -1,0 +1,10 @@
+id: po:sha256:96adb15e475d44e88cd7f1edd0a0beb3af5c5dac0aea1a42f03a59bd4b84b3d3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 143
+  end_line: 152
+quote: 'id: S.String,'
+epistemic_status: quoted_prose

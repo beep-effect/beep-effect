@@ -3,15 +3,15 @@
   "initiative": {
     "id": "court-reporter-vocabulary",
     "title": "Court Reporter Vocabulary",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
-    "updated": "2026-07-25",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/court-reporter-vocabulary",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Deliver deterministic versioned courts-db and reporters-db artifacts with stable public IDs, lifecycle-safe drift, and a machine-readable compatibility contract.",
-  "statusNote": "P1a in progress: implement and verify pinned reporters-db and courts-db ingestion under law-practice internals; public domain compatibility remains P1b.",
+  "statusNote": "P0-P3 complete: deterministic ingestion, public stable vocabulary, lifecycle compatibility, evidence, reflection, and Yeet PR-to-mergeable proof.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -57,10 +57,10 @@
     {
       "id": "P1",
       "name": "Ingestion substrate and public domain contract",
-      "status": "in-progress"
+      "status": "complete"
     },
-    { "id": "P2", "name": "Verify", "status": "pending" },
-    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
+    { "id": "P2", "name": "Verify", "status": "complete" },
+    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "complete" }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/court-reporter-vocabulary/GOAL.md)\" -le 4000",

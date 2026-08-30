@@ -1,0 +1,23 @@
+id: so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 165
+  end_line: 174
+  content_sha256: 8781f6ca80021f3f4d6f8e78dd6eee77612357245b3b9105c20b6400998bfbb1
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::admissionCapacityTokensFor
+  lexical_name: admissionCapacityTokensFor
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: admissionCapacityTokensFor
+source_excerpt: 'export const admissionCapacityTokensFor: {'
+epistemic_status: parser_derived

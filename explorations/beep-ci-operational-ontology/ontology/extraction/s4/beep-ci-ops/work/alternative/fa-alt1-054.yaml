@@ -1,0 +1,22 @@
+id: "fa:alt1:054"
+hypothesis_ref: "dh:worktree-config:011"
+identity_card_ref: "ic:alt1:054"
+tests:
+  spec_vs_execution: "separated"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "browser-QA as a process kind whose instances are sessions"
+    still_viable: true
+  - label: "browser-QA workflow documentation only"
+    still_viable: true
+strongest_counterexample: "The quotation associates an executable record-extract-judge sequence
+  with gesture-bearing UI verification. That is more than a code label, but the only observation
+  is documentation, so the documentation-only rival is not yet dead."
+verdict: "analyzed"
+needed_evidence: "A runnable-command observation (package script or CLI entry) for bun run beep
+  qa that would be false of documentation-only, and a dated QA session reidentified
+  independently of the prescription. Until the session is observed, procedure-spec and
+  process-kind are observationally equivalent; until the command entry is observed,
+  documentation-only remains viable."

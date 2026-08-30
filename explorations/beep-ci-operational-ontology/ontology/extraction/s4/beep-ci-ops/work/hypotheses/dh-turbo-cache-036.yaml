@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:036"
+observation_refs:
+  - "so:sha256:19012ca4ecf9359ead8eb5c320cd6d02b5cb0c5ece97c73fe6f6f82206d0bfe6"
+cq_warrants: []
+proposed_referent:
+  label: "Internal cache-argument prefix constant"
+  description: "The source constant containing the --cache= token used by the implementation."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A lexical alias for the Turbo cache command-line option"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "A cache-control instruction"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A string constant and unrepresentable declaration do not establish an instruction instance or domain entity beyond implementation token reuse."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

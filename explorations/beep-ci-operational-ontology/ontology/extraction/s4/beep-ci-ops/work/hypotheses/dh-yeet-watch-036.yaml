@@ -1,0 +1,22 @@
+id: "dh:yeet-watch:036"
+observation_refs:
+  - "so:sha256:523601e5942d9f65f9b7b977b30dc1f9dd2509255447f7b4a6a31b49e00bc2ad"
+  - "so:sha256:004db447c4b0b59bee6d9470db83115234847dc85d2e9b627cb12464991e885f"
+  - "so:sha256:538ac118dd5cd92616c9fe8d60133d6795e073e9433a44f749cce9951f291f2e"
+cq_warrants: []
+proposed_referent:
+  label: "flake-evidence decision rendering helpers"
+  description: "Implementation predicates and formatting helpers that add evidence text to operator-facing monitor decisions."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "operator-facing decision message"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations expose a guard, an unrepresentable suffix helper, and a renderer; these are presentation plumbing and do not establish a separate operational referent."
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

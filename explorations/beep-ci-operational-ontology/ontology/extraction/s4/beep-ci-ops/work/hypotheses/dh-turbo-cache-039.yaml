@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:039"
+observation_refs:
+  - "so:sha256:741ce15fe5bafd84120cdd84e7399cb37e9a2ddc897f146a316523d1065fe04c"
+cq_warrants: []
+proposed_referent:
+  label: "Internal predicate for recognizing Turbo cache-control arguments"
+  description: "An exported boolean helper declaration over a string argument."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A classification relation between invocation arguments and cache control"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A lexical test over command-line syntax"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Export and signature facts are compatible with a pure parsing helper and provide no observed argument, classification result, or operational consequence."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.93
+  use_for_acceptance: false

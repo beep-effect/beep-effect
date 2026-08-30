@@ -1,0 +1,49 @@
+target: "otp:admitted-by:001"
+target_sha256: "8093615c5f57f8285587155b97480f58380c0cd4bfcb5591a1c55bc00114a617"
+chain_sha256: "84e6590e55d9c68581a3e115bd5b85a674091f88824505131cc341d88dddca50"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The object-property proposal asserts no parents edge; no is-a or
+    subproperty relation exists to test, so no valid subsumption relation is
+    presumed.
+attacks:
+  - surface: identity
+    rule: projection-does-not-individuate-executions
+    counterexample: >-
+      One WorkUnit specification can execute twice under the same SeatGrant,
+      leaving one specification-to-grant projection. The adopted property
+      supplies no identity and does not claim that the projection individuates
+      either execution; it explicitly reserves a reified admission occurrence
+      for execution-level multiplicity and provenance.
+    outcome: survived
+  - surface: warrant
+    rule: cq-domain-and-projection-match
+    counterexample: >-
+      A graph containing only an execution-to-grant edge cannot satisfy
+      CQ-010's WorkUnit subject. The revision declares the reusable WorkUnit
+      specification as the property subject and the SeatGrant as its object,
+      exactly matching the query's required projection.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-admission-relation
+    counterexample: >-
+      A generic acquire-use-release wrapper can be plumbing, but it cannot
+      preserve the deployed rule that an overshooting admission is rolled back
+      before guarded work begins and that admitted work remains capacity-charged
+      under the live grant. The operational admission relation survives.
+    outcome: survived
+rival_models_still_viable:
+  - "A reified admission occurrence can additionally connect the WorkUnit specification, execution, and SeatGrant."
+evidence:
+  - "so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98"
+  - "po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85"
+  - "po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f"
+  - "CQ-010"

@@ -1,0 +1,25 @@
+id: so:sha256:5b05efc61c2fd7de3c28414678dfa7302018d4fafd6f02a307ac897623489193
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 347
+  end_line: 361
+  content_sha256: 38e12e2213a7bbb50af1dc64566b212c70fcb85b1e57314c8b4321ee21d5bf13
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts::AdmissionSnapshot
+  lexical_name: AdmissionSnapshot
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: AdmissionSnapshot
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class AdmissionSnapshot extends S.Class<AdmissionSnapshot>($I`AdmissionSnapshot`)(
+epistemic_status: parser_derived
