@@ -716,7 +716,7 @@ describe("tmpfs reap", () => {
           if (O.isSome(name) && name.value === "TMPDIR") {
             return Effect.fail(new ConfigProvider.SourceError({ message: "fixture TMPDIR source failure" }));
           }
-          return Effect.succeed(undefined);
+          return Effect.void.pipe(Effect.as(undefined));
         });
         const cacheRoot = yield* resolveBeepCacheRoot().pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, configProvider)

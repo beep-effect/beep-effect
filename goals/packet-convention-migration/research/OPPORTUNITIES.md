@@ -1291,3 +1291,55 @@
   terminal coverage comparator output before editing.
 - **Owner:** GitHub Actions job-log availability and Yeet first-red evidence
   collection.
+
+## 2026-08-30 — Property-law timing fixture can reject its own intended in-flight mutation
+
+- **What happened:** after the coverage repair was pushed to PR #906, the
+  unrelated corpus-restoration property test that intentionally mutates a
+  same-size source in flight failed its preservation-directory inventory guard.
+- **Evidence:** exact-head Actions run `33339667950`, job `99332886723`, failed
+  `test/corpus-command.test.ts > corpus restoration preservation > recopies a
+  same-size source that stabilizes after changing in flight`; the check-run
+  annotation points to `Restoration.ts:1410` with `Preservation source directory
+  no longer matches its approved inventory evidence.` The PR head changes only
+  the tmpfs fallback test, coverage baseline, and this goal ledger.
+- **What would have prevented it:** make the in-flight mutation fixture wait on
+  a deterministic copy-phase barrier that occurs after directory evidence is
+  consumed, rather than relying on filesystem timing around an observably open
+  source; alternatively classify and automatically retry this known
+  concurrency-sensitive property case independently of unrelated PR changes.
+- **Disposition:** the exact focused Vitest command passed locally (1 passed,
+  53 skipped) in 7.12 seconds against the failed head, so treat the hosted
+  result as a rerunnable concurrency flake unless it recurs on the next head.
+- **Owner:** corpus-restoration property-test synchronization and Property Laws
+  lane retry policy.
+
+## 2026-08-30 — Package-scoped check omits an Effect-LSP rule enforced by Heavy Check
+
+- **What happened:** the focused tmpfs test, full repo-cli coverage run, and
+  `turbo run check --filter=@beep/repo-cli` all passed, but hosted Heavy Check
+  rejected the new test provider's `Effect.succeed(undefined)` fallback.
+- **Evidence:** PR #906 exact-head run `33339667950`, Heavy Check job
+  `99332886807`, annotated `tmpfs-reap.test.ts:719` twice with
+  `Effect.void represents the same outcome as Effect.succeed(undefined)` and
+  rule `effectSucceedWithVoid`; the preceding scoped check reported 33/33 tasks
+  successful.
+- **Follow-on evidence:** applying the diagnostic's direct `Effect.void`
+  replacement made `bun run beep quality test-tsgo` fail the repo-cli test
+  tsconfig because `Effect<void>` is not assignable to the provider callback's
+  required `Effect<ConfigProvider.Node | undefined>` under exact optional
+  property types. Attempting to shorten the retry with `bunx tsgo -p
+  test/tsconfig.json` inside repo-cli instead emitted `TS6059` for every test
+  because the inherited `rootDir` remains `src`, leaving the 953-file root
+  command as the only usable local test-source diagnostic.
+- **What would have prevented it:** provide a package-scoped Effect-LSP command
+  or include the Effect rules in each package's normal `check` task, so an
+  author can run the authoritative source rule without entering the full CI
+  lane. The diagnostic should suggest a type-preserving equivalent such as
+  deriving explicit `undefined` from `Effect.void` when the target distinguishes
+  `undefined` from `void`. Make the package test tsconfig directly invocable or
+  offer a file/package filter on the root `test-tsgo` command.
+- **Disposition:** authoritative-lane correction; use
+  `Effect.void.pipe(Effect.as(undefined))`. The focused test and supported
+  953-file test-source diagnostic both pass; publish with this ledger update.
+- **Owner:** Effect-LSP check routing and repo-cli test-fixture guidance.
