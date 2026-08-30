@@ -1,0 +1,25 @@
+id: "dh:cilane:002"
+observation_refs:
+  - "po:sha256:6b80aec99930cb6f59c239eedb9cb2a7b9aacc3dae5f01770fba11e1e78417e3"
+  - "po:sha256:89eb6f6802438278dec020f020b1afcd18a16df2669e5140f55964ff8f6b816d"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "check verification lane"
+  description: "A possible operational verification lane named by the quoted check token; its existence is not established by these records."
+representation_status: lexical_alias
+alternatives:
+  - label: "check command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "check task-family label"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations repeat check as a neighboring list literal but supply no canonical fact about an independently identifiable lane or any execution selected by the token. Repetition does not defeat the routing-token null."
+epistemic_status: proposed
+confidence:
+  value: 0.44
+  use_for_acceptance: false

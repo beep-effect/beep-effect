@@ -1,0 +1,21 @@
+id: "dh:quality:107"
+observation_refs:
+  - "so:sha256:eb583bd1486412aad179ccf2cb4ad553c5b970e016ab7330ce6a1234faa02caa"
+cq_warrants: []
+proposed_referent:
+  label: "Source-level alias CommandOutput in TurboConfigProof.ts"
+  description: "A TypeScript alias or exported aliasing surface. The safest denotation is lexical or representational only."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational concept suggested by CommandOutput"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied facts record aliasing and possibly export only. Alias declarations can exist solely to present an implementation surface, and no independent bearer, event, information-object lifecycle, or external use is observed."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

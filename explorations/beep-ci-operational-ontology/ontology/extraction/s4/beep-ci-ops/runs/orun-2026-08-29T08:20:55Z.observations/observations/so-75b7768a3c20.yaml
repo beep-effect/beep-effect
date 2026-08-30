@@ -1,0 +1,25 @@
+id: so:sha256:75b7768a3c203a51ef44195675fff86f932a9fcfecba05f0a81cdbfd23ebac5d
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 594
+  end_line: 613
+  content_sha256: 6e672eb4c3608ec62dc6665b6366ae12ee04150f64b5228292586b7cc1465b1f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CiLaneRunOptions
+  lexical_name: CiLaneRunOptions
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CiLaneRunOptions
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOptions`)(
+epistemic_status: parser_derived

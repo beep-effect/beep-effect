@@ -1,0 +1,23 @@
+id: so:sha256:e90453d3e397cf365d5cd3452190942a0772911e79cc4e9b833cbc7a85d062ed
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 381
+  end_line: 405
+  content_sha256: 561492fcbe2e312c1dc7331c480c375fbcb0f2694223948828a97d10e12d6a7c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::ensureAdmissionDirectories
+  lexical_name: ensureAdmissionDirectories
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Return<'
+epistemic_status: parser_derived

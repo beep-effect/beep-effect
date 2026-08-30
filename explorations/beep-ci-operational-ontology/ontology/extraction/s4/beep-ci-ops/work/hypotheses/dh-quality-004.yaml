@@ -1,0 +1,22 @@
+id: "dh:quality:004"
+observation_refs:
+  - "so:sha256:0b92e99cdea45d75eb0592f12fae3eba3f09319287758f873222c1b1e30d4c66"
+  - "so:sha256:eccc8695438a56aecd9ba26e1939f39d306c936b2b495ffa6b619d5cd4f54ccb"
+cq_warrants: []
+proposed_referent:
+  label: "Source-level alias LintPolicySubcommand in Quality.schemas.ts"
+  description: "A TypeScript alias or exported aliasing surface. The safest denotation is lexical or representational only."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational concept suggested by LintPolicySubcommand"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied facts record aliasing and possibly export only. Alias declarations can exist solely to present an implementation surface, and no independent bearer, event, information-object lifecycle, or external use is observed."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

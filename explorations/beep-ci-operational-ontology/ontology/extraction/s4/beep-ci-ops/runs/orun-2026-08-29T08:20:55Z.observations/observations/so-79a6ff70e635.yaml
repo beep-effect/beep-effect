@@ -1,0 +1,35 @@
+id: so:sha256:79a6ff70e63527a278ad68626ae995f28c6596b525dfdd74f6b168d97cc5d0f3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: standards/fallow.boundaries.provenance.schema.json
+source_span:
+  start_line: 1
+  end_line: 127
+  content_sha256: 6d4375778366086f0bc4ec9eb00d50fde4b9f161198cbf1fe2ccaae3159ba20b
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: standards/fallow.boundaries.provenance.schema.json::$schema
+  lexical_name: $schema
+  syntactic_kind: config_document
+observed_facts:
+- predicate: config_key_value
+  object: const=fallow-quality-enforcement-validator/v1
+- predicate: config_key_value
+  object: const=fallow-quality-enforcement/boundary-provenance/v1
+- predicate: config_key_value
+  object: const=standards/fallow.boundaries.generated.jsonc
+- predicate: config_key_value
+  object: type=array
+- predicate: config_key_value
+  object: type=object
+- predicate: config_key_value
+  object: type=string
+- predicate: config_key_value
+  object: x-effectSchemaAuthority=goals/fallow-quality-enforcement/ops/validate-packet.ts
+source_excerpt: '{'
+epistemic_status: parser_derived

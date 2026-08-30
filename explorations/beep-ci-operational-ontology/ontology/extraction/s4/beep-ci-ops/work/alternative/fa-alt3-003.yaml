@@ -1,0 +1,22 @@
+id: fa:alt3:003
+hypothesis_ref: dh:reporun:025
+identity_card_ref: ic:alt3:003
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: RepoPlanStep as a repeatable command prescription'
+  still_viable: true
+- label: 'information_object: WorkUnitSpecification corresponding to the plan step'
+  still_viable: true
+- label: 'event: the WorkUnitExecution that realizes the step'
+  still_viable: false
+strongest_counterexample: commandTextForStep, byRepoPlanStepAscending, and isConservativeResumeCandidate
+  all consume the step as a rerunnable prescription; none of them start a process. The WorkUnitSpecification
+  rival is observationally equivalent on current evidence.
+verdict: analyzed
+needed_evidence: A join from RepoPlanStep to a WorkUnitSpecification record with its own identity,
+  or a dated execution object that reuses the step's identity, which would split prescription
+  from work-unit spec or wrongly merge spec with run.

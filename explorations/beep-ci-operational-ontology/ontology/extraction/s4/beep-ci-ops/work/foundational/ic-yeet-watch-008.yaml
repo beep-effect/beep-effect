@@ -1,0 +1,54 @@
+id: "ic:yeet-watch:008"
+hypothesis_ref: "dh:yeet-watch:029"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Membership check against the Yeet monitor failure-signature specification
+    domain in ic:yeet-watch:005: two occurrences represent the same runner-loss
+    specification only when they preserve the same failed-job prerequisite,
+    nonempty-step-list requirement, all-step-conclusions-absent predicate,
+    classifier priority, applicability context, and version lineage. Matching
+    records and runner incidents remain distinct, and the runner-loss spelling
+    is evidence rather than the criterion.
+  reidentification_key:
+    - "job conclusion must be failure"
+    - "step list must be present and nonempty"
+    - "every step conclusion must be absent"
+    - "classifier priority, applicability context, and version lineage"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One structural recognition prescription joins a failed job, a nonempty
+    observed step list, and absence of every step conclusion. No matching job,
+    runner, causal loss incident, detector call, or rerun is part of its unity.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "subkind: failed hosted jobs with a nonempty all-unconcluded step shape"
+    - "event: an actual runner-reporting-loss occurrence"
+    - "role: a matching failed job currently eligible for a bounded rerun"
+    - "situation: an incomplete or stale GitHub job record presenting the same shape"
+    - "none: the runner-loss token as only a lexical selector"
+  existential_dependencies:
+    - "At least one faithful bearer of the runner-loss recognition prescription, generically rather than this token"
+    - "The GitHub job-record vocabulary and completeness context in which absent step conclusions are interpreted"
+    - "A Yeet policy revision for its current rerun-authorized role, but no particular runner or failure occurrence"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded while retained as a historical specification"
+    - "withdrawn from the current rerun policy"
+    - "ceased when no faithful bearer of the specification remains"
+counterexamples:
+  - description: >-
+      A delayed, incomplete, or stale job payload can present a nonempty list
+      whose step conclusions are all absent, so the observed shape alone does
+      not establish a causal runner-reporting-loss event.
+  - description: >-
+      Separate failed jobs can satisfy the same all-unconcluded predicate while
+      remaining distinct job failures and potentially distinct runner losses.
+status: proposed

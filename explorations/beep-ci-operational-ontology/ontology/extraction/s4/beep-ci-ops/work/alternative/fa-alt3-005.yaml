@@ -1,0 +1,24 @@
+id: fa:alt3:005
+hypothesis_ref: dh:sched-core:003
+identity_card_ref: ic:alt3:005
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+- label: 'kind: the OS process incarnation that owns a ticket or lease'
+  still_viable: true
+- label: 'role: admission-owner, played by a process only while a ticket or lease holds'
+  still_viable: true
+- label: 'information_object: the serialized pid/procStart coordinate tuple'
+  still_viable: true
+strongest_counterexample: 'The schema comment ties pid plus procStart to reaping: a live pid
+  with a mismatched start is treated as a different incarnation. That is bearer identity,
+  not owner-role identity. A process can exist with no ticket, so owner is a role on this
+  bearer.'
+verdict: analyzed
+needed_evidence: Whether a process without any ticket or lease is still tracked as an admission
+  owner (kind/bearer) or owner-ness begins only when a ticket or lease relates it to the queue
+  (role). The serialized-tuple reading is discriminated by a live process whose coordinates
+  were never written.

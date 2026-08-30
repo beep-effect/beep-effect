@@ -1,0 +1,23 @@
+id: so:sha256:1979940815dd6ac7d4f168970a3269ab04f9c571f651ddacfe40016f9163101f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 228
+  end_line: 229
+  content_sha256: 87207e58f9c113a4bbe383ca512c473903d08ce1c6aae022d38a2e1a482affda
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::stripYeetMonitorLogDecoration
+  lexical_name: stripYeetMonitorLogDecoration
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: stripYeetMonitorLogDecoration
+source_excerpt: 'export const stripYeetMonitorLogDecoration = (log: string): string =>'
+epistemic_status: parser_derived

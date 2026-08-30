@@ -1,0 +1,10 @@
+id: po:sha256:2b64e2142eac08b9cd7f1d655caa43c80b1393910f15ac892f734e341dad3f7f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: standards/fallow.pilot.inventory.jsonc
+source_span:
+  start_line: 37
+  end_line: 47
+quote: '"boundaryViolations": 0'
+epistemic_status: quoted_prose

@@ -1,0 +1,27 @@
+id: ic:alt4:011
+hypothesis_ref: dh:topology:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two workspace-package identity descriptors are the same when they pick out the same @beep workspace catalog slot used as an affected-package closure participant; the PackageRef spelling is evidence, never the sameness criterion of a software unit.
+  reidentification_key:
+    - PackageRef
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One catalog-identity descriptor per workspace package slot; the pre-glossary row names that descriptor type, not a heap of query labels.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies:
+    - "@beep workspace catalog"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: A query-vocabulary label that never participates in affected-package closure would not be this identity descriptor.
+  - description: Collapsing PackageRef into the software package Kind would treat a naming descriptor as the package itself.
+status: proposed

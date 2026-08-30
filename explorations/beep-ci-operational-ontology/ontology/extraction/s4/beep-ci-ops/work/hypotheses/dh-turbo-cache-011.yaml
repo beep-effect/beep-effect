@@ -1,0 +1,26 @@
+id: "dh:turbo-cache:011"
+observation_refs:
+  - "so:sha256:ccbe7f4010f5b71be4f9e4fb5602a04da974667632a189e853714ba82f3f6fc3"
+  - "po:sha256:0eb1b8e4594a85b24a6885cf9ac2b50c084364f081a7368e59a83aee16d5f2d7"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named audit"
+  description: "A repeatable task specification with an observed upstream audit dependency selector."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "An audit verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A source-only configuration key"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A turbo.json audit entry can carry an upstream audit selector as reusable build-tool ordering configuration; the cited fragment establishes neither a governed instruction artifact nor an audit lane."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

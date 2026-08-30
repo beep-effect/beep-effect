@@ -1,0 +1,23 @@
+id: so:sha256:4912fb7b583577e58c55e5c3a1b0da0703adebd8baf20e03e545c4e0de40d2a3
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 178
+  end_line: 182
+  content_sha256: f12b0903d95a6d97dd2b085567dea68149fa90e14e02c58bb212ff1360cf2bb4
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::codegen
+  lexical_name: codegen
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^codegen
+source_excerpt: '"codegen": {'
+epistemic_status: parser_derived

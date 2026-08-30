@@ -1,0 +1,18 @@
+id: "dh:worktree-config:002"
+observation_refs:
+  - "so:sha256:224953450ba88d781df4d38eee5612e1729518fa106aa66e289084f57a47bc93"
+cq_warrants: []
+proposed_referent:
+  label: "Fallow configuration representation"
+  description: "The concrete configuration document carrying Fallow gate and diagnostic settings."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "operational Fallow policy record"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes configuration key-value syntax, but supplies no fact showing that the configuration document itself warrants a domain-ontology referent."
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

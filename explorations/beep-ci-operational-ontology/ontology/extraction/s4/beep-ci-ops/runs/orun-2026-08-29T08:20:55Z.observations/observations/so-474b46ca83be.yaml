@@ -1,0 +1,23 @@
+id: so:sha256:474b46ca83be65473d5ec38e301c95d3cb12e30621aef841cc5fbf6f6fcb6531
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 399
+  end_line: 399
+  content_sha256: f7e31874e508a763538216ba4db1ce87d0a84605e409be8c93ac388af1592ad4
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts::runProofPhaseForTesting
+  lexical_name: runProofPhaseForTesting
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: runProofPhaseForTesting
+source_excerpt: export const runProofPhaseForTesting = runProofPhase;
+epistemic_status: parser_derived

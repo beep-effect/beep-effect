@@ -1,0 +1,21 @@
+id: "dh:reporun:023"
+observation_refs:
+  - "so:sha256:f9ff896ab85e892800a541b68651b2f1827025998e2acf58e3c18b7bd73d9c5d"
+cq_warrants: []
+proposed_referent:
+  label: "repository-run in-process context record"
+  description: "A container for paths, revisions, arguments, and Turbo metadata used while planning a repository run."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information artifact describing a VerificationEpisode context"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observed record collects process-local values for orchestration, and no observation shows a durable event, externally exchanged record, or domain identity. The implementation-context null stands."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false
+

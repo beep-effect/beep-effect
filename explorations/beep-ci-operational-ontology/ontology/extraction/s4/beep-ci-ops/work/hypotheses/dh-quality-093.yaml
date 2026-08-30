@@ -1,0 +1,21 @@
+id: "dh:quality:093"
+observation_refs:
+  - "so:sha256:c47da7ac6e80e6c5b1c83d9a919f50c9bef2be03cbe0c43c59e29b99f1aef410"
+cq_warrants: []
+proposed_referent:
+  label: "Implementation declaration collectStepOutput in PackageVerify.ts"
+  description: "The observed source declaration itself, with no warranted domain-ontology referent."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A domain operation or information artifact suggested by collectStepOutput"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole canonical fact is unrepresentable_construct for the source declaration. By contract that fact cannot ground a surviving referent, and it supplies no observed domain behavior, lifecycle, persistence, or exchange."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.97
+  use_for_acceptance: false

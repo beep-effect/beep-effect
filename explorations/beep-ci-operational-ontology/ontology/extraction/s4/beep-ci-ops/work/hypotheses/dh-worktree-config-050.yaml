@@ -1,0 +1,18 @@
+id: "dh:worktree-config:050"
+observation_refs:
+  - "so:sha256:f8a863b6f0024090be5381d921275e379410f80a051f3541e850691192010875"
+cq_warrants: []
+proposed_referent:
+  label: "FleetSessionRegistryEntry schema declaration"
+  description: "An exported Effect Schema representation named for a session-registry entry."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet session-registry information record"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Only export and schema-extension syntax is observed; no session identity, registry persistence, ownership, or CQ-relevant role is supplied."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}

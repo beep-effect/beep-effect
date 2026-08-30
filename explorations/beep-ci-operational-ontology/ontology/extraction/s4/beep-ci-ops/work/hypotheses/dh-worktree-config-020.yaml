@@ -1,0 +1,19 @@
+id: "dh:worktree-config:020"
+observation_refs:
+  - "po:sha256:7a5e2d311954ba1aa280d7ef414518175d8eaec932480eeb9784d34f6c2da194"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Yeet as an alias for the canonical repo-quality workflow"
+  description: "A lexical designation for the canonical repo-quality path; the quotation does not isolate a distinct verify lane."
+representation_status: lexical_alias
+alternatives:
+  - label: "Yeet verify verification lane"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotation establishes only that Yeet names the canonical path; it does not identify the verify subcommand, lane boundaries, or a separate domain individual."
+epistemic_status: proposed
+confidence: {value: 0.56, use_for_acceptance: false}

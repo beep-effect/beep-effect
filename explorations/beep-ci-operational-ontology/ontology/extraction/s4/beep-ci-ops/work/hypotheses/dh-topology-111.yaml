@@ -1,0 +1,24 @@
+id: "dh:topology:111"
+observation_refs:
+  - "po:sha256:f37e81676e44e659c161b0eb15b7bbf281fba0a0a88d9acec3c849325f8a938a"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/repo-utils workspace package"
+  description: "The workspace software package information artifact identified by @beep/repo-utils in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "lexical_alias"
+alternatives:
+  - label: "@beep/repo-utils as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort row containing @beep/repo-utils can feed the affected-package query while remaining serialized implementation data, so the cited observation establishes only the package-name token."
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

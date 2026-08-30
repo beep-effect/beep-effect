@@ -1,0 +1,53 @@
+id: otp:work-unit-specification:001
+hypothesis_ref: dh:worktree-config:009
+identity_card_ref: ic:worktree-config:005
+foundational_status: analyzed
+term:
+  local_name: WorkUnitSpecification
+  preferred_label: work unit specification
+  proposed_iri: https://oip.law/ontology/ci-ops#WorkUnitSpecification
+  owl_entity_kind: class
+definition:
+  text: >-
+    A reusable verification prescription whose identity-bearing content fixes
+    one lane, scope rule, parameters, ordering-relevant semantics, completion
+    criteria, and failure semantics, independently of any dated execution or
+    carrier copy. CQ-002 requires this lane-by-scope scheduling object; an
+    unrelated governing-policy revision is provenance, not an identity change.
+  source:
+    - CQ-002
+    - po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6
+    - po:sha256:60ee0a392b7109f8914e89df188cdd5bd8e18390ddde480b96f362408411fdd4
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: intrinsic
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+    - CQ-002
+alternatives_rejected:
+  - >-
+    Implementation-only command text rejected by the hardened discriminator:
+    canonical agent policy governs which affected-scope and full-repository
+    docgen prescriptions agents may execute, making lane and scope normative
+    work content rather than an incidental command literal.
+  - "Rejected category alternative: a dated verification execution."
+open_issues: []
+revision_requests: []
+revision_log:
+  - from_sha256: 5d0e441fbae90e6bfbc03103284b34de69a73a57b743eb0c7972fc9f01a02610
+    addressed:
+      - policy-version-identity-conflict
+      - discriminator-true-of-policy-text
+  - from_sha256: 4b4eba7e966ddd273daad3699e2f79878f594d8e8630399b378af8b57a234593
+    addressed:
+      - policy-version-identity-conflict
+      - discriminator-true-of-policy-text
+status: proposed

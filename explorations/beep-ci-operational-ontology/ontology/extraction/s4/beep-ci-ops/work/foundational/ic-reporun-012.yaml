@@ -1,0 +1,46 @@
+id: "ic:reporun:012"
+hypothesis_ref: "dh:reporun:026"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two ordered repository-run plan specifications are the same when they are
+    the same product of one planning and revision lineage, preserve the same
+    repository-run applicability context, and prescribe the same ordered
+    collection of step specifications. Copies in different media can realize
+    one plan, but equal step arrays from separate planning acts need not be the
+    same plan.
+  reidentification_key:
+    - "planning-act provenance and plan revision"
+    - "repository base, head, branch, and run context"
+    - "ordered step identifiers as technical comparison evidence"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One plan is unified by one applicability context and one phase-then-id
+    ordered prescription over its component plan-step information objects.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "ScheduleProposal for a repository verification episode"
+    - "VerificationEpisode execution that follows the plan"
+    - "planner DTO with no retained domain role"
+  existential_dependencies:
+    - "the repository-run context for which the plan is applicable"
+    - "the component plan-step specifications"
+    - "at least one digital realization of the plan"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "executed"
+    - "superseded"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      The same ordered step list applied to a different base commit, head, or
+      hydrated Turbo snapshot is a different operational plan even when every
+      step identifier and command string is equal.
+status: proposed

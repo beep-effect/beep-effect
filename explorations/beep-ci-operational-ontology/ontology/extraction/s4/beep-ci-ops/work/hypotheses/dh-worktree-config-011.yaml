@@ -1,0 +1,19 @@
+id: "dh:worktree-config:011"
+observation_refs:
+  - "po:sha256:3208242164204b626fdec9ccef8311690ae6f88aa2054338d6cffee34f6d0a4a"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "browser-QA verification-lane procedure"
+  description: "The repeatable browser-QA procedure composed of record, extract, and judge stages; it is distinct from both its execution and its recorded evidence."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "browser-QA workflow documentation"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An unexecuted AGENTS.md instruction can contain the exact record, extract, and judge sequence while remaining workflow documentation; the sole quote attests neither execution nor retained authority for a separate browser-QA procedure referent."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

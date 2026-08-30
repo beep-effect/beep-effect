@@ -1,0 +1,44 @@
+id: "ic:worktree-config:006"
+hypothesis_ref: "dh:worktree-config:010"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    A direct workspace-package dependency is a relational fact with no
+    identity beyond the same ordered importing and imported package
+    individuals, dependency kind, and repository-tree validity context;
+    package names and manifest keys are evidence for the participants, not an
+    independent identity criterion.
+  reidentification_key:
+    - "importing workspace-package identity"
+    - "imported workspace-package identity"
+    - "dependency or dev-dependency kind"
+    - "repository-tree validity context"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    One ordered importer-to-imported dependency fact obtaining under one
+    dependency kind and repository-tree context.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "information_object: a package-manifest dependency assertion record"
+    - "relator: a reified dependency declaration carrying version constraint, kind, and provenance"
+  existential_dependencies:
+    - "The importing and imported workspace-package individuals"
+    - "A repository-tree and dependency-declaration context in which the relation obtains"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "the direct declaration is removed"
+    - "either package participant is replaced"
+    - "the dependency kind changes, ending this relational fact"
+counterexamples:
+  - description: >-
+      The same package pair can occur in dependency and devDependency contexts
+      or in separate manifests with different constraints, so endpoint names
+      alone do not individuate a declaration, relator, or validity context.
+status: proposed

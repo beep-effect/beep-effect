@@ -1,0 +1,22 @@
+id: fa:alt3:055
+hypothesis_ref: dh:worktree-config:017
+identity_card_ref: ic:alt3:055
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Fallow dead-code diagnostic procedure specification'
+  still_viable: true
+- label: 'process: the repeatable dead-code diagnostic activity type'
+  still_viable: true
+- label: 'kind: Fallow dead-code as a verification lane'
+  still_viable: true
+strongest_counterexample: The inventory quotes the invocable command and also stores a dated
+  run (elapsedMs, exitStatus, totals). .fallowrc.jsonc assigns boundary-violation error. Merging
+  those would make the procedure consume the 880 milliseconds of one capture.
+verdict: analyzed
+needed_evidence: Whether CQ-001 treats this command as a verification lane participant (kind)
+  or only as a diagnostic prescription (information object / process type). Observationally
+  equivalent on the inventory plus the severity setting.

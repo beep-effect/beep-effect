@@ -1,0 +1,17 @@
+id: "fa:turbo-cache:006"
+hypothesis_ref: "dh:turbo-cache:007"
+identity_card_ref: "ic:turbo-cache:006"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "An integration-test verification lane is realized by the specification but is a distinct operational referent."
+    still_viable: true
+  - label: "The entry is an umbrella template related to several integration-test specifications."
+    still_viable: true
+  - label: "The referent is one particular integration-test execution."
+    still_viable: false
+strongest_counterexample: "Parallel, serial, and generic integration tasks can all satisfy the cited build-ordering prescription, so the observation does not individuate one complete specification or lane."
+verdict: analyzed

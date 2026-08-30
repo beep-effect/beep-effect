@@ -11,3 +11,35 @@
 - **Prevention:** install a Firecrawl CLI version that provides the documented `research
   search-papers`, `related-papers`, `inspect-paper`, and `read-paper` commands, or make the skill
   detect the installed CLI capabilities and name the supported paper-retrieval fallback.
+
+## 2026-08-29: auditor engine churn during the §4b normalization run
+
+- **Work:** running the `ontology-foundational-auditor` skill over the S4 harvest in a dedicated
+  worktree while the skill itself was being hardened in a parallel session.
+- **Evidence:** the archived run manifest (`ontology/extraction/s4/beep-ci-ops/runs/`) records five
+  mid-run engine re-locks (validator `c8229fc304bd` → `039564222bd0` → `982650ee041d` →
+  `04b06d94567a` → `6aec64cde23f`; contracts `ee9e30584f63` → `fd8cb801a7b3` → `e1338e75966c`)
+  and, before the final freeze, the canonical Claude skill installation was emptied by that
+  restructuring session; the run finished on the Codex skills-mirror snapshot of the engine.
+- **Cost:** every re-lock re-verified the whole tree (1,097 observations, 692 hypotheses, later
+  235 reviews) before the next stage could start, and the repository-shipped skill (vendored by
+  PR #880 at validator `c036e5316511`) no longer reproduces the pinned digests, so the judging
+  engine had to be vendored post hoc as `runs/history/<run-id>.engine/`.
+- **Prevention:** vendor the engine snapshot (validator, `_shared` contracts closure, prompts,
+  templates) into the packet at run START and point every seat at that snapshot; treat the
+  skills checkout as frozen for the run's duration (branch or tag it); have the validator print
+  the digests it will demand at run start so a drift is caught before seats spend tokens.
+
+## 2026-08-29: proposal revisions overwrote the bytes earlier review rounds bound
+
+- **Work:** the adversary → revision → re-review loop of the same run (five rounds).
+- **Evidence:** each `*.review.yaml` round binds a `target_sha256` of the proposal bytes it judged,
+  but revisions rewrote `work/proposals/otp-*.yaml` in place while `work/` was untracked, so only
+  the latest round's target and chain digests are reconstructible from the committed tree.
+- **Cost:** earlier FAIL rounds and the `revision_log` entries that answer them are recorded
+  history rather than independently re-verifiable bindings; an auditor can replay the ratified
+  (latest) round only.
+- **Prevention:** the skill should retain every reviewed proposal revision under a
+  content-addressed path (for example `work/proposals/history/<sha256>.yaml`) and the validator
+  should verify each round's `target_sha256` against it; commit `work/` at every round boundary
+  so git history keeps the bytes even before the skill does.

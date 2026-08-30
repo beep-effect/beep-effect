@@ -1,0 +1,23 @@
+id: so:sha256:410d457e40feab955a02969218de4a984c63d927198c2364ff8c85933b4ac750
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 291
+  end_line: 319
+  content_sha256: 4821f44b01fe6954cf35a85ee0805aa1ebe551a275db2315d32707a1d66f149e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetMergeReadyCoherenceCheck
+  lexical_name: YeetMergeReadyCoherenceCheck
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const YeetMergeReadyCoherenceCheck = S.makeFilter(
+epistemic_status: parser_derived

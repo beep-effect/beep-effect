@@ -1,0 +1,39 @@
+target: "otp:hosted-required-check-merge-obligation:001"
+target_sha256: "21382b31c7032c466380b3dd5b0d618cd2d7dbd4d940ff61bcd7ca03c0a99929"
+chain_sha256: "5107ca1e75a9f5fc6557fbc8a2c1bf030ef171b7242bcab794cf4111b3ce837d"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a relation to test."
+attacks:
+  - surface: identity
+    rule: "identity-activation-conflict"
+    counterexample: "The same candidate head can fail, satisfy, and later reacquire the same required-check condition after the required set is re-evaluated under one policy version. Candidate, target, check designation, and policy version can remain equal while two obligation activations have distinct lifecycles; the card lacks activation and discharge provenance to distinguish them."
+    outcome: landed
+  - surface: warrant
+    rule: "support-term-not-necessary"
+    counterexample: "YeetMonitorLane can test hosted-check status as a termination condition without admitting obligation tokens. CQ-001 lists lanes, while CQ-006 and CQ-017 concern tier-to-lane requiresLane relations; none requires a HostedRequiredCheckMergeObligation class, so the cited decision term remains answerable without it."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "normative-prose-discriminator"
+    counterexample: "A passive hosted-check DTO does not make checks gate merge. The policy quotation explicitly assigns that normative consequence, so an implementation-only record with the same check labels but no governing rule would not preserve the cited fact."
+    outcome: survived
+  - surface: identity
+    rule: "obligation-procedure-split"
+    counterexample: "A monitor process can stop or restart while the merge obligation borne by a candidate persists. The proposal keeps the obligation distinct from YeetMonitorLane, so it does not collapse the mandated obligation/procedure split."
+    outcome: survived
+rival_models_still_viable:
+  - "A hosted-check policy statement without obligation tokens"
+  - "A merge-ineligibility situation"
+  - "A normative relator joining candidate, target, checks, and policy"
+evidence:
+  - "po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b"
+  - "CQ-001"
+  - "CQ-006"
+  - "CQ-017"

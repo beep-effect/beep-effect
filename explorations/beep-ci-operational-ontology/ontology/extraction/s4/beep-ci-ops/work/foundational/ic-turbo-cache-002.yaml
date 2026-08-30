@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:002"
+hypothesis_ref: "dh:turbo-cache:002"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same build work-unit specification only when they are the same authored normative instruction in the same versioned configuration lineage, including the intended task and its complete dependency, input, environment, cache, persistence, and output declarations; the build key alone is insufficient."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key build"
+    - "complete task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "One task declaration unifies all prescriptions that govern repeatable build work under the versioned Turbo configuration."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A verification lane realized by the build task specification"
+    - "A family-level template that yields package-specific build specifications"
+  existential_dependencies:
+    - "The enclosing Turbo configuration context in which selectors and declarations receive their meaning"
+    - "At least one encoding that bears the repeatable instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "The root build entry can be inherited by several packages and combined with package-local scripts or overrides, yielding multiple executable task specifications from one declaration."
+status: proposed

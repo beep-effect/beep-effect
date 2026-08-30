@@ -1,0 +1,23 @@
+id: so:sha256:b4f2001b4007a0f71e2f29d05143ca181f19722ff84a0db5de252fcfc1a040f7
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 885
+  end_line: 897
+  content_sha256: bcaf19d206fcc1019dc9bf8eade386c9c45660311039061415763e7d790879a6
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::rerunJob
+  lexical_name: rerunJob
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
+epistemic_status: parser_derived

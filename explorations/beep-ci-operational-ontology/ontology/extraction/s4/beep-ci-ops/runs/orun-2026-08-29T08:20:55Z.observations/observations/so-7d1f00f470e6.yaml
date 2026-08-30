@@ -1,0 +1,24 @@
+id: so:sha256:7d1f00f470e6d72fd37ad373fae4a2fab1cce083112201027b7e48e07c4d7aa5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 165
+  end_line: 176
+  content_sha256: 8305a62d83844db3ab8a239a734d3a05e68477df89c7b8c158f5a7be5fef5fc5
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts::hasTornTrailingRecord
+  lexical_name: hasTornTrailingRecord
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const hasTornTrailingRecord = (lines: ReadonlyArray<string>): Effect.Effect<boolean>
+  =>'
+epistemic_status: parser_derived

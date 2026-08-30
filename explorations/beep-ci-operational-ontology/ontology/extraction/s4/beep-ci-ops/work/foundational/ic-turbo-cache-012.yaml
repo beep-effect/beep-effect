@@ -1,0 +1,30 @@
+id: "ic:turbo-cache:012"
+hypothesis_ref: "dh:turbo-cache:013"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same code-generation task specification only when they are the same authored generation instruction in the same versioned configuration lineage with the same complete inherited dependency, cache, and input prescriptions; the codegen key and upstream selector alone do not decide sameness."
+  reidentification_key:
+    - "enclosing configuration document and revision"
+    - "task key codegen"
+    - "resolved task-declaration digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The declarations form one repeatable code-generation instruction, distinct from generated outputs and generation executions."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A code-generation procedure specification"
+    - "A verification lane"
+  existential_dependencies:
+    - "The versioned configuration, package scripts, and source context that complete the generation instruction"
+    - "At least one bearer of the instruction content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "A codegen task can produce artifacts without checking their correctness, and distinct package generators can inherit the same root selector while remaining different procedures."
+status: proposed

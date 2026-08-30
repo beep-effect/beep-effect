@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:020"
+observation_refs:
+  - "so:sha256:5ff307f1cd43e91c637c9b4b9bdc772c0dd6ccbecde60fd9bfc8c14c41a25a19"
+  - "po:sha256:30645d57d2d815216bdd2dcc76842aefe0227a62f2149bee304adc46ad646e28"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named test:storybook"
+  description: "A repeatable configured task carrying an observed upstream build dependency."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A Storybook-test verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A particular Storybook-test execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A root Turbo configuration row can carry test:storybook and its upstream build selector and prescribe ordering exactly as cited, without evidence of a separately governed task-specification artifact."
+epistemic_status: proposed
+confidence:
+  value: 0.75
+  use_for_acceptance: false

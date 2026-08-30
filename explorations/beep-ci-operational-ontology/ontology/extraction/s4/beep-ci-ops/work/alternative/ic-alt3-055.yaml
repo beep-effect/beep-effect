@@ -1,0 +1,30 @@
+id: ic:alt3:055
+hypothesis_ref: dh:worktree-config:017
+identity:
+  supplies_identity: true
+  identity_criterion: Two such procedures are the same iff they prescribe the same Fallow
+    dead-code diagnostic command with boundary-violation severity set to error. A dated inventory
+    row that records exitStatus and elapsedMs is an execution record, not the procedure.
+  reidentification_key:
+  - bunx fallow dead-code --format json --quiet
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one dead-code diagnostic prescription plus its boundary-violation severity
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: The inventory's fallowDeadCode object records exitStatus 1, elapsedMs 880,
+    and issue counts from one run. That row is not the procedure; rerunning the same command
+    would mint a new row.
+status: proposed

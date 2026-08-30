@@ -1,0 +1,67 @@
+target: "otp:caller-controlled:001"
+target_sha256: "f3762d40c1dcce3aba6a922e22b7b92a5a4004524d43f0d4016bcf27702c2643"
+chain_sha256: "ebf9d2dbabbdd277dce5def292a5bfda8b237e15ec45d1e96df2eeff0f5f5964"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edges, so there is no proposed
+    is-a or subsumption relation, including no edge for which a no-relation result
+    could be preferred.
+attacks:
+  - surface: identity
+    rule: unresolved-takes-precedence
+    counterexample: >-
+      CI run E1 can preserve sanctioned remote cache access while explicit-argument
+      run E2 can disable caching; both receive the caller-controlled tag. The card
+      says it is unresolved whether these are two invocation modes, two situations,
+      or occurrences of one vocabulary value, yet the proposal commits one
+      individual and records identity as none rather than unresolved.
+    outcome: landed
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      E1 and E2 share the same _tag and proposed IRI while having incompatible
+      effective permissions. The technical tag cannot decide whether they share a
+      referent; using the tag as the individual before the reading is settled
+      launders the identifier into identity.
+    outcome: landed
+  - surface: identity
+    rule: foundational-status-and-rival-disclosure
+    counterexample: >-
+      Marking this proposal analyzed would suppress the unresolved mode, situation,
+      controlled-vocabulary, and record-content readings. The proposal correctly
+      remains explicitly_deferred, matches the FA verdict, and names the evidence
+      and rivals, so the status portion of the attack survives.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-necessity
+    counterexample: >-
+      CQ-024's notes close CachePosture over three deployed arms and explicitly
+      distinguish CallerControlled for CI and explicit cache arguments. Omitting
+      that value makes the required posture domain semantically incomplete.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-tagged-dto
+    counterexample: >-
+      A tagged resolver DTO can return {_tag: caller-controlled, reason: ci} or the
+      same tag with reason explicit-cache-arg solely to control CLI flag injection.
+      Both branches and their invocation dependence remain true without any
+      world-level posture individual.
+    outcome: landed
+rival_models_still_viable:
+  - "Information content in an invocation-scoped cache-plan record"
+  - "A control-allocation situation among caller, CLI, and invocation"
+  - "One controlled-vocabulary value in the CachePosture domain"
+evidence:
+  - "so:sha256:5455a88353a08e19104c4f4ed27714d39b682fb71f40c78b8067c3133c293860"
+  - "po:sha256:965ef702e781e4ac242a4c1c6de05ece748e16fb63340e1b37edaf87863cc6af"
+  - "po:sha256:a80f038daedf2c71bea1668827cbbc142980330748649efdca731e65d579b5e5"
+  - "po:sha256:dd48678c8672ee7a4946a0580eb95b51e38bd4f507cc311f667b778a2575ef6a"
+  - "CQ-024"

@@ -1,0 +1,33 @@
+id: "ic:alt1:051"
+hypothesis_ref: "dh:turbo-cache:019"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two Turbo task specifications named storybook:start are the same iff they
+    are the same named task prescription in this repository's Turbo configuration document at
+    the observed corpus commit, carrying the observed declared dependency on storybook:build,
+    plus persistent and cache-false flags. The task key spelling is reidentification evidence,
+    never the sameness criterion."
+  reidentification_key:
+    - "storybook:start"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: true
+  supplies_identity: true
+  unity: "one named task specification storybook:start as a single information object inside the
+    Turbo document; a run of the task is not a part of the specification"
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "kind"
+  existential_dependencies:
+    - "Turbo configuration document at the observed commit"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "Starting Storybook is an execution; the turbo.json storybook:start entry is the
+      specification that orders that start after storybook:build. Persistent cache-false is
+      specification content, not a running server."
+status: "proposed"

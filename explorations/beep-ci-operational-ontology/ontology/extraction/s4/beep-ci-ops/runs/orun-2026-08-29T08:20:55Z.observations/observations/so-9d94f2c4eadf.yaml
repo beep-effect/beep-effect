@@ -1,0 +1,24 @@
+id: so:sha256:9d94f2c4eadf05ef6bb8063baffc7078f457c7e49fa37804ee1a9d4eb41cae85
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 620
+  end_line: 621
+  content_sha256: d54d194e792dcba5705e7055feeb0c16f8765e99b6b3a67fcc1f75e9d99425b2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::checkOutcomes
+  lexical_name: checkOutcomes
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const checkOutcomes = (snapshot: YeetWatchSnapshot): HashMap.HashMap<string, YeetCheckOutcome>
+  =>'
+epistemic_status: parser_derived

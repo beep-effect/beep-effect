@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:031"
+observation_refs:
+  - "so:sha256:a9a19668cee5ef2356a7ed5b2fd67a47cddde2277645e9ad21adb5a88d9f7525"
+  - "so:sha256:daa5fb3a23e3cbbdec1476739ba3b13dc3b6677d54ab40d0125a26479514cfcc"
+cq_warrants: []
+proposed_referent:
+  label: "Internal caller-reason vocabulary for cache-plan resolution"
+  description: "A software vocabulary containing ci and explicit-cache-arg labels."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Operational reasons for assigning a caller-controlled cache posture"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Lexical aliases for two invocation conditions"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only a literal vocabulary and alias; the separate resolver quotations ground the posture, but these two records alone do not ground reason entities."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.77
+  use_for_acceptance: false

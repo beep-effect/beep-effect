@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:015"
+observation_refs:
+  - "so:sha256:e24d10c12effe8bb304b998dc862af84eb0dfe4233402d58e7861386adac82fa"
+  - "po:sha256:e1cd992f68e4e87e6bb2867d484938e71f6f210ed2aa651055b6f96f1bbf738e"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo task specification named docgen"
+  description: "A repeatable configured task carrying an observed dependency on transit."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A documentation-generation procedure specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A documentation verification lane"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A pure Turbo configuration entry can state that docgen depends on transit while remaining ordinary task configuration; the cited key and ordering declaration establish neither independent governance nor a separately individuated procedure artifact."
+epistemic_status: proposed
+confidence:
+  value: 0.69
+  use_for_acceptance: false

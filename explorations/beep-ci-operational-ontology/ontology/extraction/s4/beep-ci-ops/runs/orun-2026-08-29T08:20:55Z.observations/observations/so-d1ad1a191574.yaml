@@ -1,0 +1,23 @@
+id: so:sha256:d1ad1a19157489bb13d07d761f1c75e0341a9db09845456e94b71cd2dbe4a369
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 304
+  end_line: 308
+  content_sha256: 39e0ca976f1901a6bcd8f0752af583f1214a11cdaa8b289ae829a0af536d7ddc
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::currentEffectiveUserIdOption
+  lexical_name: currentEffectiveUserIdOption
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: currentEffectiveUserIdOption
+source_excerpt: 'export const currentEffectiveUserIdOption = (): O.Option<number> =>'
+epistemic_status: parser_derived

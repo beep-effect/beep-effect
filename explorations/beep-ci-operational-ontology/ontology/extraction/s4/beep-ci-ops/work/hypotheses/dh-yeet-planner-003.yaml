@@ -1,0 +1,25 @@
+id: "dh:yeet-planner:003"
+observation_refs:
+  - "so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f"
+  - "po:sha256:86e624235b616a7cec93d1021d31f6e3b7de441af825fd16034e8e7cde6621b0"
+cq_warrants:
+  - "CQ-025"
+proposed_referent:
+  label: "Actual wall duration of a completed WorkUnit execution"
+  description: "A measured wall-clock duration of an execution occurrence, distinct from an estimate and from whole-attempt elapsed time."
+representation_status: unresolved
+alternatives:
+  - label: "Whole-attempt elapsed measurement"
+    representation_status: unresolved
+    plausibility: viable
+  - label: "Serialized duration field"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "No supplied lane observation quotes or records a lane-duration or elapsed-duration field; a terminal verdict field alone cannot discriminate an execution measurement from representation plumbing."
+epistemic_status: proposed
+confidence:
+  value: 0.18
+  use_for_acceptance: false

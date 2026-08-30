@@ -1,0 +1,23 @@
+id: so:sha256:71e3e16a3652fc235d93db93c33262fec3e3aee83b235e7c58d00f4779db25a9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 721
+  end_line: 724
+  content_sha256: 37c4f151f525d52c75173ee30c5989e820b39a07bb438686f1fd9ee1750e79e4
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::decodeGithubChecksFallowFeatureMatrix
+  lexical_name: decodeGithubChecksFallowFeatureMatrix
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: decodeGithubChecksFallowFeatureMatrix
+source_excerpt: 'export const decodeGithubChecksFallowFeatureMatrix: {'
+epistemic_status: parser_derived

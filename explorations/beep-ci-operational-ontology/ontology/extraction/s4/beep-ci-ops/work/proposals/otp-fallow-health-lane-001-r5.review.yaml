@@ -1,0 +1,48 @@
+target: "otp:fallow-health-lane:001"
+target_sha256: "969df00a552d007dab339adf248e497a852092cc1f9f1cdaa1a6e8f36461fc69"
+chain_sha256: "834a4c3e303654f767177e9a225489abc056404a15b39e1ec2e4df3049f5094c"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: procedure-policy-unity-deferred
+    counterexample: >-
+      The health command can remain unchanged while an external evaluator
+      revises complexity ceilings. The adopted term now denotes only the
+      inventory-declared diagnostic prescription, treats the ceiling policy as
+      separate absent dataflow evidence, and leaves any future relation to that
+      policy open rather than using it for lane identity.
+    outcome: survived
+  - surface: warrant
+    rule: governed-lane-inventory-completeness
+    counterexample: >-
+      Listing other verification lanes does not answer CQ-001's question about
+      all governed lanes. The inventory records an independently invocable
+      Fallow health diagnostic, so a complete lane inventory must identify this
+      prescription even though its relation to ceilings remains unasserted.
+    outcome: survived
+  - surface: null_discriminator
+    rule: invocable-diagnostic-prescription
+    counterexample: >-
+      An unrelated ceiling configuration does not establish a threshold-bearing
+      procedure, and the revision makes no such claim. The dated governed
+      inventory nevertheless supplies an invocable Fallow health diagnostic;
+      its repeatable prescription is not erased merely because a command entry
+      carries it.
+    outcome: survived
+rival_models_still_viable:
+  - "A separate complexity-threshold policy may later be linked to the diagnostic if dataflow evidence supports it."
+evidence:
+  - "so:sha256:8311d688a9fad6ae06c0df8af02d2a5977afe618e8051fd847833912ec7d7208"
+  - "po:sha256:e111144fd959c0d5a1d7f8caf1d62ed2e8b5ea12c9346adfd60c22001c7d26d4"
+  - "CQ-001"

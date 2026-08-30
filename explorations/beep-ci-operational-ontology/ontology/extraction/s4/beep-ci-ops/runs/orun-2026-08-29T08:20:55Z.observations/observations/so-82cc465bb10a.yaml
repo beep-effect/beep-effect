@@ -1,0 +1,23 @@
+id: so:sha256:82cc465bb10ae2a8bcbba7efecaf89eeef1a167bd40b5486c7af26b8f6471a7a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 241
+  end_line: 244
+  content_sha256: 263c6affda609c58533ecb6fed5ccebdfb72218e892638a151429881bd80de93
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::storybook
+  lexical_name: storybook
+  syntactic_kind: config_task
+observed_facts:
+- predicate: unrepresentable_construct
+  object: config_task
+source_excerpt: '"storybook": {'
+epistemic_status: parser_derived

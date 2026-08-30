@@ -1,0 +1,14 @@
+id: fa:sched-core:017
+hypothesis_ref: dh:sched-core:018
+identity_card_ref: ic:sched-core:017
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: Reify each queue-wait duration as a quality in addition to the CQ-required data relation.
+  still_viable: false
+strongest_counterexample: Two collectors can emit equal records for one request and boundary, while the request has a different
+  wait at every later boundary; records and numeric values are not quality identities.
+verdict: analyzed

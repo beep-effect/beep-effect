@@ -1,0 +1,27 @@
+id: so:sha256:a9a19668cee5ef2356a7ed5b2fd67a47cddde2277645e9ad21adb5a88d9f7525
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 213
+  end_line: 217
+  content_sha256: 379f9a0550fedcc9084cd090be690824b8dc4c9213ec27d97d0fe6145180c600
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheCallerReason
+  lexical_name: TurboCacheCallerReason
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: ci
+- predicate: declares_literal_member
+  object: explicit-cache-arg
+- predicate: exports_symbol
+  object: TurboCacheCallerReason
+source_excerpt: export const TurboCacheCallerReason = LiteralKit(["ci", "explicit-cache-arg"]).pipe(
+epistemic_status: parser_derived

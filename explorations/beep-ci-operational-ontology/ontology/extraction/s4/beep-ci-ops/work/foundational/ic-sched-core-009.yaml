@@ -1,0 +1,31 @@
+id: "ic:sched-core:009"
+hypothesis_ref: "dh:sched-core:010"
+identity:
+  supplies_identity: "unresolved"
+  identity_criterion: "Two admission snapshots would be the same artifact only if they are outputs of one capture act over one machine-wide admission scope and observation instant; identical arrays and quantities from separate reads would remain distinct snapshots."
+  reidentification_key:
+    - "capture-event provenance not present in the schema"
+    - "observation instant not present in the schema"
+    - "machine and policy scope"
+ontoclean:
+  rigidity: "rigid"
+  carries_identity: "unresolved"
+  supplies_identity: "unresolved"
+  unity: "One coordinated capture of capacity, active charges, live leases, queued tickets, memory, dead entries, and quarantined entries at a single observation boundary."
+  dependence: "relational"
+ufo_analysis:
+  candidate_category: "information_object"
+  alternatives:
+    - "the live admission-state situation at an instant"
+    - "an extensional status-response value with no token identity"
+  existential_dependencies:
+    - "a capture act and machine-wide admission scope"
+    - "at least one transient or durable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded for current-state purposes by a later capture"
+counterexamples:
+  - description: "Two status calls can return structurally identical values while being distinct observation acts, but the snapshot schema records neither capture time nor capture provenance."
+status: "proposed"

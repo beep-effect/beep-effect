@@ -1,0 +1,60 @@
+id: otp:full-verification-plan-specification:001
+hypothesis_ref: dh:yeet-planner:008
+identity_card_ref: ic:yeet-planner:002
+foundational_status: explicitly_deferred
+term:
+  local_name: VerificationPlanSpecification
+  preferred_label: verification plan specification
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationPlanSpecification
+  owl_entity_kind: class
+definition:
+  text: A repeatable information object prescribing an ordered verification WorkUnit sequence and its applicable scope. CQ-020
+    requires that plan content to distinguish an episode's current ScheduleProposal from the dated execution that realizes it.
+    A full-proof selection, its cheap-gates and pre-push members, and context-bound plan steps are accommodated as plans or
+    constituent specifications; a transient dispatcher DTO may carry the content without changing its denotation.
+  source:
+  - CQ-020
+  - so:sha256:1adbba90ffeca74bb7274f9ac7af8f6887553ab1344981fdce3e7ab86aaa9f4f
+  - so:sha256:82a07ab0edbc59f82a4a3bd5ed6791d927df50a924aeb2a8898636b1d7c344aa
+  - po:sha256:df2d4797ee69893a15a3519ee92e6b1b3612ee21d681769dc857b59731ffdd05
+  - po:sha256:b565b1f59f1de2fb2810a5cbba36c6c707705f294baf25d0b54bc812b7104d91
+foundational:
+  ufo_category: information_object
+  gufo_alignment: gufo:Endurant
+ontoclean:
+  rigidity: rigid
+  identity: carries
+  dependence: intrinsic
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  semantic_support_for:
+  - otp:schedule-proposal:001
+alternatives_rejected:
+- 'Rejected category collapse: The assurance tier itself is distinct from any member-level or composite plan specification.'
+open_issues:
+- 'Steward choice remains open for the internal full-selector boundary: define whether full identifies one composite plan,
+  a member-level pre-push prescription, or a family of context-bound plan-step specifications. All are covered by the generic
+  VerificationPlanSpecification class and do not affect its CQ-020 warrant.'
+- 'An identity contract must define revision and contextual-copy identity; retention is a carrier concern because both retained
+  artifacts and transient plan DTOs may concretize the same prescribed plan content.'
+revision_requests: []
+revision_log:
+- from_sha256: 37c95c1aa3b278c2b5458bbd0e8309a96b1b3f9269585d7efaa25186aade99a5
+  addressed:
+  - unresolved-takes-precedence
+  - support-term-not-necessary
+  - discriminator-true-of-dto
+- from_sha256: 9013abf41754b378e19aaee58a6c08e5acf9d3450ca008c68efa82bd594675f1
+  addressed:
+  - discriminator-true-of-dto
+- from_sha256: 9b241779d74062449ac37a7ed81c5c8451f375d1500b97680be2b59f52b8e757
+  addressed:
+  - support-term-not-necessary
+  - discriminator-true-of-dto
+- from_sha256: 87f582456317418efcab06e6a9d8c92c8db1781af3db7679fd8ccbe8c115e4d0
+  addressed:
+  - support-warrant-self-contradiction
+status: proposed

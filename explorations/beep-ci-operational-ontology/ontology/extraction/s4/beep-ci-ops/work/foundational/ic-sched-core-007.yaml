@@ -1,0 +1,34 @@
+id: ic:sched-core:007
+hypothesis_ref: dh:sched-core:007
+identity:
+  supplies_identity: false
+  identity_criterion: 'This data property supplies no identity: an admission-charge assertion is the same operational fact
+    only for the same charged request or grant, the same policy assignment, and the same token magnitude and convention; two
+    subjects bearing three tokens remain distinct charge facts.'
+  reidentification_key:
+  - charged subject reference
+  - policy-assignment provenance
+  - token magnitude and convention
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: One assertion relating one admission subject to the policy-assigned token magnitude used by admission.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - a reified admission-charge quality
+  - a policy-assignment relator
+  existential_dependencies:
+  - an admission request or grant
+  - the governing charge policy and token convention
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - the assertion ends with its subject or is replaced by a new policy assignment
+counterexamples:
+- description: Two unrelated full-proof requests can each have a value of three; equal values do not create one charge individual,
+    and the property introduces no such individual.
+status: proposed

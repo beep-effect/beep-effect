@@ -1,0 +1,27 @@
+id: so:sha256:0934b8304d165fd5d783f340935f7cefb2cce0a4c1c0f71dbee8ee4f205431bb
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 708
+  end_line: 712
+  content_sha256: a42b22367044712fa70f51f0a27c5e7c0027c5731eac12a5094236ce31347d15
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::AdmittedState
+  lexical_name: AdmittedState
+  syntactic_kind: interface_declaration
+observed_facts:
+- predicate: declares_field
+  object: lease
+- predicate: declares_field
+  object: leasePath
+- predicate: declares_field
+  object: originLease
+source_excerpt: interface AdmittedState<OriginLease> {
+epistemic_status: parser_derived

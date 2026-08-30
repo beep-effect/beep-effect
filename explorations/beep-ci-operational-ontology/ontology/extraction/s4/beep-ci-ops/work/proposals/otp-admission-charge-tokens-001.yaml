@@ -1,0 +1,51 @@
+id: otp:admission-charge-tokens:001
+hypothesis_ref: dh:sched-core:007
+identity_card_ref: ic:sched-core:007
+foundational_status: analyzed
+term:
+  local_name: admissionChargeTokens
+  preferred_label: admission charge tokens
+  proposed_iri: https://oip.law/ontology/ci-ops#admissionChargeTokens
+  owl_entity_kind: data_property
+definition:
+  text: A data relation that assigns a SeatRequest or SeatGrant the policy-defined token charge used by the live admission
+    gate. CQ-021 requires the charge on each queued request, and CQ-010 requires the copied charge on the admitted grant to
+    test whether that WorkUnit exceeded its immediately pre-grant capacity.
+  source:
+  - CQ-010
+  - CQ-021
+  - so:sha256:c463be99668201978e2d90e27e0548f2fbf9684915fc3be3d0c402513f2c02c5
+  - po:sha256:2c227cbceae0143018a7fc38f9991187fa3ac7184b0bf3bb450fa911e74ffd56
+  - po:sha256:7133fd16712631ed47e3cc1618eb4043126bbb8ad13ddcc94dd120afebb1c174
+  - po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f
+foundational:
+  ufo_category: none
+  gufo_alignment: not applicable to an OWL property
+ontoclean:
+  rigidity: unresolved
+  identity: none
+  dependence: relational
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-010
+  - CQ-021
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The scheduler permits a candidate to stage only when activeTokenTotal(state)
+  plus ticket.weightTokens is no greater than capacityTokens, so this charge directly controls admission.'
+- 'Rejected weak alternative: implementation counter unrelated to a policy quantity.'
+open_issues: []
+revision_requests: []
+revision_log:
+- from_sha256: afb11ada490bdb5a6dc128c67de1aeda74aedc2d80bfee8ca34bee14e401f8b6
+  addressed:
+  - entity-kind-analysis-mismatch
+  - discriminator-true-of-dto
+- from_sha256: 299f2b7ac0599275c7a7955c4c1b801e1f9444c744892e8a85da8d61d75e294a
+  addressed:
+  - entity-kind-analysis-mismatch
+  - discriminator-true-of-dto
+status: proposed

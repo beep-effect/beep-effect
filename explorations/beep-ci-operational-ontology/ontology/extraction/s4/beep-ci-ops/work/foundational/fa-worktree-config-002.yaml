@@ -1,0 +1,16 @@
+id: fa:worktree-config:002
+hypothesis_ref: dh:worktree-config:006
+identity_card_ref: ic:worktree-config:002
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: Model only the standing merge-policy specification and not each activated obligation.
+  still_viable: true
+strongest_counterexample: A candidate may discharge and later reacquire the same designated requirement; activation continuity,
+  not equal participant fields, separates the two obligation tokens.
+verdict: explicitly_deferred
+needed_evidence: Activation, discharge, waiver, and reacquisition provenance is needed to reidentify hosted-required-check
+  obligation activations under one policy.

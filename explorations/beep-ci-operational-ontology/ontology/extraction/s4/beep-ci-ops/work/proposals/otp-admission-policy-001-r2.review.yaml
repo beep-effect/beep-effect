@@ -1,0 +1,56 @@
+target: "otp:admission-policy:001"
+target_sha256: "763e890773b0bab8d2401877030d006e43c4e9b968447eae203090541b9d60e5"
+chain_sha256: "e1a61c445ed7202a749520a70370b7cb985619b488e781f0a2f5eb38ac17599b"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge, so it proposes no is-a relation
+    whose rigidity, inherited identity, dependence, unity, or no-valid-
+    subsumption alternative can be tested.
+attacks:
+  - surface: identity
+    rule: identity-criterion-counterexample
+    counterexample: >-
+      Fleet A and fleet B can deploy byte-identical AdmissionConfig values while
+      different authorities govern different applicability scopes. The card
+      correctly keeps the two policy specifications distinct through authority,
+      scope, and lineage rather than identifying them by value equality.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Two independent authorities can both label a policy admission-v1. The card
+      requires authoritative lineage, normative rule content, and applicability
+      scope, so the shared version key remains evidence rather than identity.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-necessity
+    counterexample: >-
+      Removing AdmissionPolicy from a CQ-023 dataset leaves the node carrying
+      starvationBoundMs without the class the query explicitly requires as the
+      governing policy. The decision invariant cannot retain its stated typing.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-config-dto
+    counterexample: >-
+      A pure AdmissionConfig DTO can feed effectivePriorityRank and
+      isTicketSkippable, changing queue rank and enforcing the review-fix cap,
+      without being issued by an authority as a policy specification. The revised
+      open issue concedes this null twin, but the hypothesis still rejects it and
+      the analyzed card still commits the information-object reading.
+    outcome: landed
+rival_models_still_viable:
+  - "A deployed admission-policy regime as a normative mode or situation"
+  - "An AdmissionConfig value object without policy authority"
+evidence:
+  - "po:sha256:9cc171cbc261b6e9eab5fc7a3db808757460d12ed274577d49591cddc54c15b3"
+  - "po:sha256:abc08c224e904cfc5a0878b26ca70b707f559468bf33fde1b9ea74a01bb7edaf"
+  - "po:sha256:b92b48e2e7bcebad1b643f7f05cddc8dd411e43355076cdd384a9c37c0ee6c99"
+  - "CQ-023"

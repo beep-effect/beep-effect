@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:021"
+observation_refs:
+  - "so:sha256:410d457e40feab955a02969218de4a984c63d927198c2364ff8c85933b4ac750"
+cq_warrants: []
+proposed_referent:
+  label: "YeetMergeReadyCoherenceCheck filter"
+  description: "No domain-ontology referent is proposed for the YeetMergeReadyCoherenceCheck filter; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "merge-readiness coherence constraint"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

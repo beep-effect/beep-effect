@@ -1,0 +1,23 @@
+id: so:sha256:6a94b0e67793f64fe5809c7aef1a93f2a5e8a8b44ec3b3605da83387b80720e9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 415
+  end_line: 441
+  content_sha256: 53b045a12f6d6afc82bfb48b9166f38a76b969f51549411bea6c4b05c078e36c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::runCommandOutput
+  lexical_name: runCommandOutput
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function* (
+epistemic_status: parser_derived

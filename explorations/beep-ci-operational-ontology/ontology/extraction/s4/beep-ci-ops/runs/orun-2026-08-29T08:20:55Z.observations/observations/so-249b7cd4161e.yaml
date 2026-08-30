@@ -1,0 +1,23 @@
+id: so:sha256:249b7cd4161e3ec8e62596c2cb8528e536b1b4f17f0f792b19ee266a83204351
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1593
+  end_line: 1617
+  content_sha256: ba14172be7c68005fd216ca529095cdc87fe32c284a0c6fb212e3c4f9a5b16dc
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CI_LOCAL_DEFAULT_LANES
+  lexical_name: CI_LOCAL_DEFAULT_LANES
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = ['
+epistemic_status: parser_derived

@@ -1,0 +1,34 @@
+id: ic:sched-core:016
+hypothesis_ref: dh:sched-core:017
+identity:
+  supplies_identity: false
+  identity_criterion: 'This data property supplies no identity: one enqueuedAt assertion concerns the same operational fact
+    only for the same SeatRequest enqueue occurrence and the same recorded instant; equal millisecond values on different
+    requests or later re-enqueues do not identify an event.'
+  reidentification_key:
+  - SeatRequest reference
+  - enqueue occurrence provenance
+  - recorded instant and clock basis
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: One assertion relating one queued SeatRequest to the instant from which its elapsed wait is measured.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - a reified enqueue event
+  - a temporal quality of the request
+  existential_dependencies:
+  - a SeatRequest enqueue occurrence
+  - a clock basis
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - the assertion remains fixed for that enqueue occurrence and is replaced on a later enqueue
+counterexamples:
+- description: The same request can be enqueued twice within one millisecond; equal values do not merge the two occurrences,
+    and this property does not itself introduce either occurrence as an individual.
+status: proposed

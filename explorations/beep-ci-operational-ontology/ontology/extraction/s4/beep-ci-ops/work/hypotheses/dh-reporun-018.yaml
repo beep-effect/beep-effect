@@ -1,0 +1,29 @@
+id: "dh:reporun:018"
+observation_refs:
+  - "so:sha256:144feee4f8fcced0da17183fc1c52a2c3e24a8d760fd8174b67bfd3406c53ed1"
+  - "so:sha256:d6168d2c3d304ab7f89b4d3fa7a1f4e7a3227aa5fe6af21cc9c58320c8cee633"
+  - "po:sha256:2742825e7991f34d718c33b5a1c5fd4f4b94bee31b7389a60deef872b19a3859"
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb"
+  - "so:sha256:906f9d719b7531f4c878c535e72c3cdae60b54bd8ef3ea349d1887b118f54cc9"
+cq_warrants: ["CQ-005"]
+proposed_referent:
+  label: "never-resume designation"
+  description: "A policy designation requiring a planned step not to be skipped through conservative resume."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A WorkUnitExecution that was not resumed"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Uninterpreted planner enum member"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A planner can use never and fingerprint-match and rewrite unsafe step rows to never as internal control flow; no cited observation establishes an issued or governed resume-policy artifact."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.75
+  use_for_acceptance: false

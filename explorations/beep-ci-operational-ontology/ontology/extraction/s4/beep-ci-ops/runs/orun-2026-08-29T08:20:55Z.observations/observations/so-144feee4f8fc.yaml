@@ -1,0 +1,27 @@
+id: so:sha256:144feee4f8fcced0da17183fc1c52a2c3e24a8d760fd8174b67bfd3406c53ed1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 126
+  end_line: 130
+  content_sha256: 249dee0c05fe49b613f19e2a0024c81fe195d5b49e815a0d01bb4f722f5468d6
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::RepoPlanStepResume
+  lexical_name: RepoPlanStepResume
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: fingerprint-match
+- predicate: declares_literal_member
+  object: never
+- predicate: exports_symbol
+  object: RepoPlanStepResume
+source_excerpt: export const RepoPlanStepResume = LiteralKit(["never", "fingerprint-match"]).pipe(
+epistemic_status: parser_derived

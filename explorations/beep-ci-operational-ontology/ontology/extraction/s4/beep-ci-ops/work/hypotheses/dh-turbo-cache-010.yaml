@@ -1,0 +1,26 @@
+id: "dh:turbo-cache:010"
+observation_refs:
+  - "so:sha256:aae014e06dd7cf6594966de1803b294a705ac68bf068a9c337645e31ec42a792"
+  - "po:sha256:a6c14b57367be8960caa90b9d5217b31bdb24ec38d0a46d2ba2b02d5d8428e44"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task specification named coverage"
+  description: "A repeatable task specification with an observed upstream build dependency."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A coverage verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A particular coverage execution"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The adversary's configuration-row counterexample wins: a Turbo entry named coverage can carry an upstream build selector and prescribe ordering while remaining implementation configuration, with no observed lane, execution, governance, or continuing specification identity."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.75
+  use_for_acceptance: false

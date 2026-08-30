@@ -1,0 +1,24 @@
+id: so:sha256:32958d46f3f0c73fbe8e62676360c9a27901cb4017a92f88b3518494258c82bd
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 26
+  end_line: 26
+  content_sha256: e3f46a0734b914657e0e2021d5ec49cb89e22fe55ba35ac66672d2ab4dd1d992
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::TURBO_CONFIG_PROOF_TASK_VALUES
+  lexical_name: TURBO_CONFIG_PROOF_TASK_VALUES
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as
+  const;
+epistemic_status: parser_derived

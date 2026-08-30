@@ -1,0 +1,23 @@
+id: "fa:alt1:012"
+hypothesis_ref: "dh:topology:002"
+identity_card_ref: "ic:alt1:012"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "unresolved"
+  role_vs_bearer: "separated"
+  context_reification_needed: false
+rival_models:
+  - label: "dependency-manifest assertion record (information object about the edge)"
+    still_viable: true
+  - label: "dependsOn as only a pre-glossary property token"
+    still_viable: false
+strongest_counterexample: "The sole cited observation is a pre-glossary CSV row describing
+  dependsOn as the direct workspace dependency edge supporting dependsOnTransitive. That
+  sentence cannot settle whether affected-package closure walks world-level declared edges or
+  only manifest records."
+verdict: "explicitly_deferred"
+needed_evidence: "A source observation of a concrete workspace package.json or equivalent
+  manifest edge between two @beep/* packages, together with the affected-package closure reading
+  that edge. If closure operates on declared world-level edges, the relator stands; if it
+  operates only on serialized manifest records, the information-object rival stands. The models
+  are observationally equivalent on the current glossary quotation."

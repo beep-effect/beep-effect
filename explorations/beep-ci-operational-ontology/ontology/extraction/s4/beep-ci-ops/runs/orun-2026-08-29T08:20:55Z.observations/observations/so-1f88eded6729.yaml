@@ -1,0 +1,23 @@
+id: so:sha256:1f88eded672916b2f37ae5c8ecb0f4b3d540f5e93d95d1969228a46aa808fa01
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 95
+  end_line: 103
+  content_sha256: 0cea9bc1de85c63fb9fa7ed9ef244fbe05100b693773c93a51be04574f1d5747
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::parseMeminfoFieldGib
+  lexical_name: parseMeminfoFieldGib
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const parseMeminfoFieldGib = (meminfo: string, field: string): O.Option<number> =>'
+epistemic_status: parser_derived

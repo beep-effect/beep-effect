@@ -1,0 +1,42 @@
+id: "ic:reporun:016"
+hypothesis_ref: "dh:reporun:045"
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two captured-command timeout events are the same only when they are the
+    same budget-expiry boundary in the same capture attempt, with the same
+    child execution and associated interruption sequence; equal command text,
+    timeout duration, or tagged error values do not establish event identity.
+  reidentification_key:
+    - "capture-attempt and child-process provenance"
+    - "budget start instant, supplied duration, and expiry boundary"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    One event is unified by one capture attempt crossing its applied duration
+    boundary and the interruption cleanup initiated by that crossing.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - "configured-budget violation situation"
+    - "child-interruption cleanup process"
+    - "CaptureCommandTimedOutError information object reporting the event"
+  existential_dependencies:
+    - "the particular captured child-command execution"
+    - "the caller-supplied duration budget and its clock origin"
+    - "the capture attempt within which interruption is initiated"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "interruption cleanup completes"
+    - "cleanup detaches after its force-kill grace"
+counterexamples:
+  - description: >-
+      The same command execution pattern can exceed a one-second caller budget
+      but finish within a sixty-second budget, so being timed out is not an
+      intrinsic quality of the command or its executable specification.
+status: proposed

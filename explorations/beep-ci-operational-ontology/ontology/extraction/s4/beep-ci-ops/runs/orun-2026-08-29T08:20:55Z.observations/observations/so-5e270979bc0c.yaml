@@ -1,0 +1,23 @@
+id: so:sha256:5e270979bc0c935338c978f766a4a0cfd7a8c59839257bc90921929c26dbe23f
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 549
+  end_line: 565
+  content_sha256: 612e04618e8fae49d9918e353227e6040a41070d8335d9fccc696ff2d2667982
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::capturePipeDeadline
+  lexical_name: capturePipeDeadline
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const capturePipeDeadline = (
+epistemic_status: parser_derived

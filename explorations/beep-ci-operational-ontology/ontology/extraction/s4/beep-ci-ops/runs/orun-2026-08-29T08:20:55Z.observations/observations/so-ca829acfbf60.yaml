@@ -1,0 +1,25 @@
+id: so:sha256:ca829acfbf607930c1a23d71156802ade713d9363e4a409b4ce1087fa97e8790
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 283
+  end_line: 293
+  content_sha256: 88a524bf37c953e425f49cb31585e100796e17aca92b818790f33f5761f7eb3d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCacheEnvironment
+  lexical_name: TurboCacheEnvironment
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: TurboCacheEnvironment
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class TurboCacheEnvironment extends S.Class<TurboCacheEnvironment>($I`TurboCacheEnvironment`)(
+epistemic_status: parser_derived

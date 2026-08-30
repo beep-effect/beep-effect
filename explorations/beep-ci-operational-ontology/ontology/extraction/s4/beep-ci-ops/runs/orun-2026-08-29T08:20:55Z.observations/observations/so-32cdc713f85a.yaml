@@ -1,0 +1,23 @@
+id: so:sha256:32cdc713f85a9f65a6eda90b565c87676a3fb7269b779bcaf4a43fb9e3735a74
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 72
+  end_line: 80
+  content_sha256: 3599af24ea4bacff68b90f929155add0bf6223e63316a435a2d111a1f81153ce
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::accumulatorEntry
+  lexical_name: accumulatorEntry
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const accumulatorEntry = (accumulator: PorcelainAccumulator): WorktreeListEntry =>'
+epistemic_status: parser_derived

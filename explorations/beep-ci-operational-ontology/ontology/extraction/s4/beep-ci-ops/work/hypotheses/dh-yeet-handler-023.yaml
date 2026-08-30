@@ -1,0 +1,19 @@
+id: "dh:yeet-handler:023"
+observation_refs:
+  - "so:sha256:481ef22f3a0f0cce7cd6630fd9e0db7c702596ef73baf442048dbedaaaa248d5"
+  - "so:sha256:948b7584b0dbe0ac5328043577feee889eb3d9509ba371daf2a73fc228a461c5"
+cq_warrants: []
+proposed_referent:
+  label: "YeetMergeReadyCriterion code vocabulary"
+  description: "No domain-ontology referent is proposed for the YeetMergeReadyCriterion code vocabulary; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "merge-protocol criterion vocabulary"
+    representation_status: lexical_alias
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes a closed literal declaration, but a code vocabulary alone does not establish that its members denote domain categories."
+epistemic_status: proposed
+confidence: {value: 0.76, use_for_acceptance: false}

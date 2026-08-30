@@ -1,0 +1,33 @@
+id: ic:alt3:057
+hypothesis_ref: dh:yeet-watch:013
+identity:
+  supplies_identity: false
+  identity_criterion: Two pass classifications are the same iff they are the same assigned
+    outcome value on one PR check inside a Yeet watch snapshot after raw bucket or state evidence
+    was classified as passing. The pass token is the recorded value, not the GitHub check
+    occurrence.
+  reidentification_key:
+  - YeetCheckOutcome.pass
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: one classified outcome on one watch-check in one snapshot
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+  - phase
+  - information_object
+  existential_dependencies:
+  - the YeetWatchCheck that bears the outcome
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - classified fail, pending, or skip on a later snapshot
+counterexamples:
+- description: classifyYeetCheckOutcome returns fail when bucket or state is in the failing
+    lists even if some other field looks green; that check is not a pass classification. Unknown
+    vocabulary falls back to pending, not pass.
+status: proposed

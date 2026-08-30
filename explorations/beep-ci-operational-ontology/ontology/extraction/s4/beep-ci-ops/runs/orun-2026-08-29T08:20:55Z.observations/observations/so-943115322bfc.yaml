@@ -1,0 +1,23 @@
+id: so:sha256:943115322bfc18e9c805fb051e1bf63831d2bfe136784466657e522cd9437bd9
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 328
+  end_line: 354
+  content_sha256: eb154c7c7b60165a0f4ac5342cf6fd88d4071fe531e6b9ca5ea91443185ffee4
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::boundedChunkReducer
+  lexical_name: boundedChunkReducer
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: boundedChunkReducer
+source_excerpt: export const boundedChunkReducer =
+epistemic_status: parser_derived

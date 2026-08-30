@@ -1,0 +1,35 @@
+id: ic:alt2:007
+hypothesis_ref: dh:sched-core:011
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two live machine-memory observations are the same iff they are the same GiB reading of currently available and total physical
+    memory supplied to one admission snapshot; repeating the same numeric GiB later is a different observation.
+  reidentification_key:
+  - AdmissionSnapshot.memAvailableGib
+  - MemAvailable/MemTotal fields of /proc/meminfo
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One observation per snapshot reading of availableGib and totalGib.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - quality
+  existential_dependencies:
+  - host machine
+  - AdmissionSnapshot
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: >-
+    The machine's memory-availability quality persists and changes; this observation is the dated reading copied into memAvailableGib,
+    not that quality.
+- description: >-
+    A test MemoryStats layer that returns a fixed 50 GiB still produces an observation; it is not the worldly quality of a
+    real machine.
+status: proposed

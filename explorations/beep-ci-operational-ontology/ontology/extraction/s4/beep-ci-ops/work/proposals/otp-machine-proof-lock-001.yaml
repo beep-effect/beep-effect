@@ -1,0 +1,64 @@
+id: otp:machine-proof-lock:001
+hypothesis_ref: dh:sched-core:021
+identity_card_ref: ic:sched-core:020
+foundational_status: analyzed
+term:
+  local_name: ContendedResource
+  preferred_label: contended resource
+  proposed_iri: https://oip.law/ontology/ci-ops#ContendedResource
+  owl_entity_kind: class
+definition:
+  text: 'An anti-rigid resource role borne by a coordination target while multiple agents or executions can compete for its
+    exclusive or capacity-limited use. CQ-008 directly requires this generic class so SeatGrants can identify which resource
+    they hold. A repository-origin proof lock is one grounded bearer identified by originKey; holder changes leave the resource
+    role intact and do not require a MachineProofLock subclass.'
+  source:
+  - CQ-008
+  - so:sha256:35e4fb37b45559b198eb68bd4a8c1f339456c7505089a9baeacc2af4658ef5e0
+  - po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807
+  - po:sha256:464f27578af7c6ee1884ce4ba45cb5b11c4375e3b0f3766562da238b43c4ea83
+  - po:sha256:662109a43c1cd5544d17168834af3e8c49b307ecf0e4f15ae40e623a3255e12c
+  - po:sha256:8dddff995d4175e482cb81b4ecb5bbeac10bb64ef9b504432cddbd7c9e3ed5b1
+  - po:sha256:9cff923770c88f07abedd29fe1a4b5a700805f3fab2234902793d907998339ba
+  - po:sha256:ad52fe14aa84aba44e09e8ae94d1032952341c19802c314700e38194b7869f42
+foundational:
+  ufo_category: role
+  gufo_alignment: gufo:Role
+ontoclean:
+  rigidity: anti_rigid
+  identity: carries
+  dependence: relational
+revision_log:
+- from_sha256: 11b9e9e272bc65a86526e6bccabd5a31a549f50131e425406e9d0c1f4340f5a0
+  addressed:
+  - individual-identity-underdetermined
+  - listing-cq-warrant
+  - discriminator-true-of-service-abstraction
+- from_sha256: 5107c3f5f55abb279cb1ec546fd4ce969b08ed8d7cce155bddb155e8e602dd66
+  addressed:
+  - listing-cq-warrant
+  - discriminator-true-of-service-abstraction
+- from_sha256: 63bb94e71e3d3e1585f5abd57661a219c4e5e8485685927f62ea4fc82f332858
+  addressed:
+  - support-term-not-necessary
+- from_sha256: db321cb4ef9a92ba8d87f94adde685577a40ef406f935e024d6e3cd3824146e5
+  addressed:
+  - support-warrant-self-contradiction
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-008
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The branch-scoped attempt journal records lock-contention
+  verdicts that the KPI baseline counts as real proof-lock bounces with owner and lock-path evidence.'
+- 'Rejected weak alternative: generic acquisition-and-release interface only.'
+open_issues:
+- 'Steward choice remains open for the concrete bearer: the gate service, lock artifact, or repository-origin coordination
+  target may bear ContendedResource when the identity contract supplies originKey and persistence rules.'
+- 'A lock-acquisition relator connecting holder, grant, and resource is a distinct optional model for each holding episode;
+  it does not replace the generic ContendedResource role required by CQ-008.'
+status: proposed
+revision_requests: []

@@ -1,0 +1,17 @@
+id: "fa:turbo-cache:017"
+hypothesis_ref: "dh:turbo-cache:019"
+identity_card_ref: "ic:turbo-cache:017"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The information object is specifically a Storybook-start service procedure specification."
+    still_viable: true
+  - label: "The referent is a running Storybook service process."
+    still_viable: false
+  - label: "The task denotes a verification lane."
+    still_viable: false
+strongest_counterexample: "A persistent start declaration can instantiate many server processes across restarts, so neither process identity nor verification status belongs to the reusable specification."
+verdict: analyzed

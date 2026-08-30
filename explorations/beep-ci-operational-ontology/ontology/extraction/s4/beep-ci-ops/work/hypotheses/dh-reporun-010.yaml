@@ -1,0 +1,30 @@
+id: "dh:reporun:010"
+observation_refs:
+  - "so:sha256:df322b0df958c90b249a83c5c8f6364640df5d2deaf2a31c7dd256b93cb2a695"
+  - "so:sha256:91ee45e52289fef6fe8ca97850cf9d9f8bfe7ce386a3ae507a9897fce55dfb91"
+  - "po:sha256:739f0cd9ad56521b40ac56e405e7f1abbb66197d2a25c5263b7375cb85a814ed"
+  - "so:sha256:7256273f9b51e14aa53443480beb67f5244cb3da832d9075367d148574cb5b29"
+  - "so:sha256:868b51cdf31aff709a4f3f3236596bfd0feb64c578e3e448fd18679dc8a16fac"
+cq_warrants: ["CQ-001", "CQ-006"]
+proposed_referent:
+  label: "pre-push verification procedure specification"
+  description: "The repeatable command specification selected by the pre-push proof-surface designation."
+representation_status: lexical_alias
+alternatives:
+  - label: "Pre-push verification lane"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "A particular pre-push execution"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "CLI selector token"
+    representation_status: lexical_alias
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A pure CLI dispatch table can expose the pre-push literal, step-record declarations, and constructor, and could map that token to fixed arguments without any independently governed verification procedure; the cited observations do not record even that mapping."
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

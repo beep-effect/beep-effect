@@ -1,0 +1,26 @@
+id: "dh:yeet-watch:018"
+observation_refs:
+  - "so:sha256:0a4f739115410696b1dd37319d309416d71e1094c50953656b87e9fc27561c68"
+  - "so:sha256:1d6e22c81b4f8811f19b0ae4080b38b605c459c696d3715f7bc238441092f17f"
+  - "so:sha256:0850d3a983d8a8f44ce9a2adb228ff9120ae1c83d5543c1dacfd24223bf46350"
+  - "so:sha256:357936bd5c10475bb683a73ef496a31521cdf91e52e444875205b73303f7ab1b"
+cq_warrants: []
+proposed_referent:
+  label: "watch-start row schema"
+  description: "The source representation for a possible first row of a Yeet watch stream."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "watch-start information record"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "watch execution start event"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The lane declares and permits encoding this row shape but supplies no producer or observed start row, so neither a record instance nor a watch-start occurrence is established."
+epistemic_status: proposed
+confidence:
+  value: 0.86
+  use_for_acceptance: false

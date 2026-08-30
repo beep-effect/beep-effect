@@ -1,0 +1,17 @@
+id: "fa:topology:002"
+hypothesis_ref: "dh:topology:002"
+identity_card_ref: "ic:topology:002"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Dependency-manifest assertion modeled as an information object"
+    still_viable: true
+  - label: "Dependency declaration reified as a relator with kind, constraint, and provenance"
+    still_viable: true
+  - label: "dependsOn as only a pre-glossary property token"
+    still_viable: false
+strongest_counterexample: "Two manifest entries can ground the same source-to-target dependency extension while differing in dependency kind, version constraint, or provenance; collapsing the relation, its reified declaration, and its record loses those distinctions."
+verdict: analyzed

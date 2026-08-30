@@ -1,0 +1,34 @@
+id: ic:alt2:059
+hypothesis_ref: dh:yeet-watch:029
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two runner-loss failure signature specifications are the same iff they are the same repeatable hosted-job shape criterion
+    that the merge monitor treats as an allowed environment-only rerun signature; the flake-class member is evidence rather
+    than the criterion.
+  reidentification_key:
+  - YeetMonitorFlakeClass.runner-loss
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One signature specification per distinct allowed environment-only rerun criterion.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - situation
+  - event
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    A particular lost-runner occurrence is not this specification: classifyJob attaches a recognized shape to a failed-job
+    record, and the planner converts any present signature into a bounded rerun decision.
+- description: >-
+    The detector-side runner-loss job-shape situation (failed job, nonempty steps, no conclusions) is an obtaining; this monitor
+    signature is the policy criterion that licenses reruns, even if they co-occur.
+status: proposed

@@ -1,0 +1,345 @@
+- candidate: build
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The build runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:164 — '"build",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: check
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The check runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:165 — '"check",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: codegen
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The codegen runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:166 — '"codegen",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: commitlint
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The commitlint runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:167 — '"commitlint",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: coverage
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The coverage runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:168 — '"coverage",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: desktop-ipc
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The desktop-ipc runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:169 — '"desktop-ipc",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: docgen
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The docgen runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:170 — '"docgen",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: doctest
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The doctest runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:171 — '"doctest",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: ecosystem
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The ecosystem runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:172 — '"ecosystem",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: fallow
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The fallow runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:173 — '"fallow",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: jsdoc-ratchet
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The jsdoc-ratchet runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:174 — '"jsdoc-ratchet",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: knip
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The knip runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:175 — '"knip",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: labs
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The labs runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:176 — '"labs",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: lint
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The lint runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:177 — '"lint",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: lint-policy
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The lint-policy runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:178 — '"lint-policy",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: nix
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The nix runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:179 — '"nix",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: property
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The property runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:180 — '"property",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: repo-sanity
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The repo-sanity runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:181 — '"repo-sanity",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: sast
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The sast runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:182 — '"sast",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: secrets
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The secrets runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:183 — '"secrets",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: security
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The security runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:184 — '"security",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: test-integration
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The test-integration runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:185 — '"test-integration",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits
+- candidate: test-unit
+  kind: literal-domain-member
+  source_domain: CiLaneId
+  definition: The test-unit runnable CI lane identifier handled by beep ci lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Enumerates a runnable validation surface for the CQ-001 lane inventory.
+  evidence:
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:186 — '"test-unit",'
+  - packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — 'export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-literalkits

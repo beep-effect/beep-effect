@@ -1,0 +1,25 @@
+id: "dh:reporun:022"
+observation_refs:
+  - "so:sha256:55c95d54d18f2b82756fa2bd7f23cc3fd7d294e693d77cea47f15b2d0196abfa"
+  - "so:sha256:f9ff896ab85e892800a541b68651b2f1827025998e2acf58e3c18b7bd73d9c5d"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo planning snapshot record"
+  description: "A compound record of graph-health, task, package, and version metadata held in a repository-run context."
+representation_status: unresolved
+alternatives:
+  - label: "Information artifact recording an AffectedComputation input or result"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Transient in-process aggregation DTO"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish composition inside an in-process context but do not show emission, persistence, snapshot time, or a CQ-required computation outcome. Calling the carrier a snapshot is not itself a null discriminator."
+epistemic_status: proposed
+confidence:
+  value: 0.5
+  use_for_acceptance: false
+

@@ -1,0 +1,22 @@
+id: fa:alt2:052
+hypothesis_ref: dh:turbo-cache:024
+identity_card_ref: ic:alt2:052
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: 'mode: local-write/remote-read characterization of a Turbo invocation'
+  still_viable: true
+- label: 'role: the invocation playing remote-reader relative to a shared cache'
+  still_viable: true
+- label: 'information_object: remote-read tag inside a resolved cache-plan record'
+  still_viable: true
+strongest_counterexample: >-
+  RemoteReadTurboCache is a tagged record of a sanctioned configuration, so mode-of-invocation and information-content-of-plan
+  are observationally equivalent until an invocation in that posture is observed independently of the record.
+verdict: analyzed
+needed_evidence: >-
+  An observed Turbo process running with local:rw,remote:r whose plan record is absent or stale, or a plan record whose process
+  is local-only, would split the mode from the information object.

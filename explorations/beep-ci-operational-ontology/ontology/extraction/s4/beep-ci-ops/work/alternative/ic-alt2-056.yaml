@@ -1,0 +1,37 @@
+id: ic:alt2:056
+hypothesis_ref: dh:yeet-handler:007
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two Yeet verdict-lane summary records are the same iff they summarize the same planned lane inside one yeet verdict, carrying
+    that lane's recorded disposition and optional duration, regardless of whether the summary was filled from an executed
+    step, a planned step, or a GitHub-lane run; the lane id is evidence rather than the criterion.
+  reidentification_key:
+  - YeetVerdictLane.id
+  - YeetVerdictLane.status
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One summary record per planned lane slot in one yeet verdict.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  - kind
+  existential_dependencies:
+  - yeet verdict
+  - planned lane
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    laneFromExecuted, laneFromPlanned, and laneFromGithubCheckRun all construct YeetVerdictLane, so the summary is not identical
+    with a WorkUnitExecution even when durationMs is present.
+- description: >-
+    A planned step with status not-run is still a verdict-lane summary; treating it as an execution occurrence would mint
+    executions that never ran.
+status: proposed

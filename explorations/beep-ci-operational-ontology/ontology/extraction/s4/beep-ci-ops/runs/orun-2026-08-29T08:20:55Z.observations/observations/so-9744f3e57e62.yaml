@@ -1,0 +1,23 @@
+id: so:sha256:9744f3e57e6263bc7f103804c6f95844825a883349625765b6e7241721b4e0f8
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1198
+  end_line: 1208
+  content_sha256: 01f01b7b069d00273d0dd48bf56a2994d10f578d5f5d98b868265662a7d67bb1
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::packageDependencies
+  lexical_name: packageDependencies
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const packageDependencies = (manifest: {'
+epistemic_status: parser_derived

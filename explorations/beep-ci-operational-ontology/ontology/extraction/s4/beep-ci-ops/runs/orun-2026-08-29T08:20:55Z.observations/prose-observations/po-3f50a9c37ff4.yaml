@@ -1,0 +1,10 @@
+id: po:sha256:3f50a9c37ff4afe25afd147a868f2bb7382fddf035db62fb6fd286b3a14ac916
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/inputs/topo-sort.txt
+source_span:
+  start_line: 58
+  end_line: 58
+quote: '@beep/exiftool 57'
+epistemic_status: quoted_prose

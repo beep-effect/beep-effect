@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:056"
+observation_refs:
+  - "so:sha256:da80eb3b35ef0d7910c27696869f0c68cbcd8669be4f543e22ad0ef514c9944e"
+cq_warrants: []
+proposed_referent:
+  label: "runPhaseStep helper"
+  description: "No domain-ontology referent is proposed for the runPhaseStep helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "dated WorkUnitExecution occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation identifies a reusable executable declaration, not a dated execution occurrence. No observed result, participant relation, or operational identity criterion distinguishes it from implementation code."
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

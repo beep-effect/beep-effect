@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:019"
+observation_refs:
+  - "so:sha256:34a5340b5a0732e78f33e8b457b196ec85c08dc8a4e35fae42f74234642956c2"
+cq_warrants: []
+proposed_referent:
+  label: "runYeet implementation function"
+  description: "No domain-ontology referent is proposed for the runYeet implementation function; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Yeet run procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only export visibility and a declaration header. Exported implementation access does not distinguish a domain referent from code plumbing."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

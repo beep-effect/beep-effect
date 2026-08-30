@@ -1,0 +1,24 @@
+id: so:sha256:a8e5afcbed259a4b11c69d09254565f4a7de559a55c53a956a037c22dd6b4e56
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 57
+  end_line: 57
+  content_sha256: 845b6e71ab5a121df19ac6728ebc30e729255cdce0ab8f4894f46b8e11e418aa
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CI_LANE_CLASS_VALUES
+  lexical_name: CI_LANE_CLASS_VALUES
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CI_LANE_CLASS_VALUES
+source_excerpt: export const CI_LANE_CLASS_VALUES = ["cli-runnable", "workflow-gated", "ci-native"] as
+  const;
+epistemic_status: parser_derived

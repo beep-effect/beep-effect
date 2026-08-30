@@ -1,0 +1,27 @@
+id: "dh:yeet-planner:004"
+observation_refs:
+  - "so:sha256:7796f616a217b54e8df2f48fbb0f01d5db11232605b3d1b24cb97268fc2a0113"
+  - "so:sha256:b96ad0207aebf7cdd3bf8767dd9d9e076a79928a1d0bad52c86b25a161260e9f"
+  - "po:sha256:906d0d377522942bb9220bd290bcb71907aa56c1ce497dc2cca550419419d2f8"
+  - "po:sha256:de71f16e82547bcd1c61213b48a0db513d48052cf55563ebb1634d1680d59f53"
+cq_warrants:
+  - "CQ-022"
+proposed_referent:
+  label: "Attempt-membership relation"
+  description: "A relation that would place a committed failure or WorkUnit execution occurrence within one verification attempt."
+representation_status: unresolved
+alternatives:
+  - label: "Journal-record correlation by repeated UUID"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Repeated serialization field"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quotations show an attemptId field on start and finish records, but no supplied observation links either a committed failure or a WorkUnit execution occurrence to that identifier."
+epistemic_status: proposed
+confidence:
+  value: 0.31
+  use_for_acceptance: false

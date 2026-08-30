@@ -1,0 +1,23 @@
+id: so:sha256:4d9292a3359de9c6beeeebc378e698b7672496b54f8b5743e943bce8857b33d8
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 599
+  end_line: 627
+  content_sha256: ae65c93b3bc2c416631d546ad92bafc43fe44e4dba604e4b8a5c6d38f9f9c916
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::resolveTurboCachePlan
+  lexical_name: resolveTurboCachePlan
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: resolveTurboCachePlan
+source_excerpt: 'export const resolveTurboCachePlan: {'
+epistemic_status: parser_derived

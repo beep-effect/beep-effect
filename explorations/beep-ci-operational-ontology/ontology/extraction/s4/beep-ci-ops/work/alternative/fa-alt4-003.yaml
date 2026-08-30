@@ -1,0 +1,20 @@
+id: fa:alt4:003
+hypothesis_ref: dh:reporun:026
+identity_card_ref: ic:alt4:003
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: ordered repository-run plan specification"
+    still_viable: true
+  - label: ScheduleProposal as a synonymous plan artifact
+    still_viable: true
+  - label: VerificationEpisode execution of the plan
+    still_viable: false
+  - label: planner DTO with no retained prescription
+    still_viable: false
+strongest_counterexample: The plan class composes a context with an array of planned steps and a comparator orders those steps; treating the plan as the dated run would make reruns of the same prescription distinct plans.
+verdict: analyzed
+needed_evidence: A mapping from this plan object to a separately persisted schedule-proposal record, or a run that executes without such a plan, would discriminate synonymous plan artifacts from a mere DTO.

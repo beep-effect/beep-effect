@@ -1,0 +1,67 @@
+id: otp:admitted-by:001
+hypothesis_ref: dh:sched-core:022
+identity_card_ref: ic:sched-core:021
+foundational_status: analyzed
+term:
+  local_name: admittedBy
+  preferred_label: admitted by
+  proposed_iri: https://oip.law/ontology/ci-ops#admittedBy
+  owl_entity_kind: object_property
+definition:
+  text: >-
+    An object relation from a reusable WorkUnit specification to the SeatGrant
+    under which an execution realizing that specification is admitted and remains
+    capacity-charged. The binary assertion is the CQ-010 projection: an admission
+    occurrence may witness it by connecting the specification, its execution, and
+    the grant, but the property's declared subject remains the WorkUnit specification
+    used by CQ-002 and CQ-010.
+  source:
+  - CQ-010
+  - so:sha256:1601798f4f445cca976d5dc7a22813e1d25c8b35d6c1a0a2b3fc8dc02efc5e98
+  - so:sha256:d2b4a5bf30882ca8d4461695fdad5bf0d338847d2996011bb75358e374c71ec1
+  - po:sha256:09e2c1fa5575350ab89398c7e5703da54b30129275beb0af2a7ba6fa3b0fcf85
+  - po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a
+  - po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b
+  - po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f
+foundational:
+  ufo_category: none
+  gufo_alignment: not applicable to an OWL property
+ontoclean:
+  rigidity: unresolved
+  identity: none
+  dependence: relational
+revision_log:
+- from_sha256: 2e50ce64c12afdd96c595acecd5c57b3ad3eb1933f4e7a4346b98d672ad4ba0f
+  addressed:
+  - foundational-category-identity-mismatch
+  - workunit-specification-execution-split
+  - cq-domain-mismatch
+  - discriminator-true-of-resource-wrapper
+- from_sha256: c7e15f235fa220e8fdaa6f106b13d9fa84706563690da506ec5b068c92cf9c77
+  addressed:
+  - foundational-category-identity-mismatch
+  - workunit-specification-execution-split
+  - discriminator-true-of-resource-wrapper
+- from_sha256: c186d632cc15afd0a18fba0053bc44b386153e81dc8e250caddfc822f428f166
+  addressed:
+  - cq-domain-mismatch
+- from_sha256: 690016db03b562889417f85de6b4cc6eae4513824a9ee7f4135eb6f88346366d
+  addressed:
+  - cq-domain-mismatch
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-010
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: The scheduler rolls back an overshooting admission before
+  the work callback starts; admitted work proceeds only after a fitting lease wins promotion and remains charged.'
+- 'Rejected weak alternative: generic acquire-use-release wrapper.'
+open_issues:
+- 'Steward choice remains open: Reify the temporally qualified admission occurrence when execution-level provenance is needed;
+  if adopted, admittedBy remains its WorkUnit-specification-to-SeatGrant projection rather than changing to an execution-domain
+  property.'
+revision_requests: []
+status: proposed

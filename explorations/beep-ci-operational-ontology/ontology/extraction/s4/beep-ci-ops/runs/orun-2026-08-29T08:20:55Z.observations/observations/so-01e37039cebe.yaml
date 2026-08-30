@@ -1,0 +1,25 @@
+id: so:sha256:01e37039cebeb141034280ea9064d32ad90e9c6042b222c941260520dc67e9aa
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts
+source_span:
+  start_line: 334
+  end_line: 348
+  content_sha256: 3611cf78262e416e61811b3c6d5f397eb242c3234384e4a4069a3d72e675f574
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts::YeetMergeabilityChanged
+  lexical_name: YeetMergeabilityChanged
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetMergeabilityChanged
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetMergeabilityChanged extends S.Class<YeetMergeabilityChanged>($I`YeetMergeabilityChanged`)(
+epistemic_status: parser_derived

@@ -1,0 +1,24 @@
+id: "dh:cilane:007"
+observation_refs:
+  - "po:sha256:75580936a4109c0d77f4a935dd73bb37bcda688defa33be669b738a3b32e72ca"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "docgen verification lane"
+  description: "A possible documentation-generation verification lane named by the quoted docgen token."
+representation_status: lexical_alias
+alternatives:
+  - label: "docgen command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "documentation-generation verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation quotes docgen beside another identifier but records no execution mode, generated artifact, validation criterion, or procedure identity. An internal selector fully explains the supplied evidence."
+epistemic_status: proposed
+confidence:
+  value: 0.42
+  use_for_acceptance: false

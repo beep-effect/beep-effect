@@ -1,0 +1,16 @@
+id: "fa:sched-core:019"
+hypothesis_ref: "dh:sched-core:020"
+identity_card_ref: "ic:sched-core:019"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "separated"
+  context_reification_needed: true
+rival_models:
+  - label: "The request temporarily bears an origin-blocked phase while the timestamp is fresh."
+    still_viable: true
+  - label: "blockedOnOriginAtMillis is only mutable retry state inside the ticket and no observation artifact exists."
+    still_viable: true
+strongest_counterexample: "One ticket can encounter the same busy gate many times, but only its latest timestamp survives; an information-record model would invent distinct records the source never preserves."
+verdict: "explicitly_deferred"
+needed_evidence: "A stable busy-observation event reference or append-only history, with request and origin-resource provenance, would decide whether record tokens exist rather than only a current-state field."

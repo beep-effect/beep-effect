@@ -1,0 +1,24 @@
+id: "dh:cilane:009"
+observation_refs:
+  - "po:sha256:15b1eeaefbcb25769c45337eeb838e98c6f1ca1b56c1f1238111939a0f93ff23"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "ecosystem verification lane"
+  description: "A possible operational verification lane named by the quoted ecosystem token; its intended extension is unobserved."
+representation_status: lexical_alias
+alternatives:
+  - label: "ecosystem command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "ecosystem-contract verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Ecosystem is broad natural language embedded as one code literal. The observation does not delimit what is verified, by which work, or with what result, so it cannot distinguish a lane referent from a label."
+epistemic_status: proposed
+confidence:
+  value: 0.4
+  use_for_acceptance: false

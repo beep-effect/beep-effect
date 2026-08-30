@@ -1,0 +1,615 @@
+- candidate: CachePosture
+  kind: class
+  definition: A resolved cache decision for one Turbo invocation that is local-only, local-write-remote-read,
+    or caller-controlled.
+  admission_kind: decision
+  cq_justification:
+  - CQ-024
+  decision_relevance: Makes each execution's cache-transfer posture queryable for evidence-transfer and
+    scheduling economics.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — ''description: "The resolved local
+    Turbo cache decision for one invocation."'''
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:309-313 — 'export const TurboCachePlanTag
+    = LiteralKit(["caller-controlled", "local-only", "remote-read"]).pipe('
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: TurboConfiguration
+  kind: class
+  definition: An information artifact that declares Turbo task, affected-selection, hash-input, and cache
+    behavior.
+  admission_kind: semantic-support
+  supports:
+  - VerificationLane
+  - AffectedComputation
+  - HashSurface
+  decision_relevance: Provides the configuration bearer needed to interpret CQ-001, CQ-004, CQ-011, and
+    CQ-019 source facts.
+  evidence:
+  - 'turbo.json:3-8 — ''"futureFlags": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: affectedUsingTaskInputs
+  kind: property
+  definition: Relates a Turbo configuration to whether affected selection uses task input declarations.
+  domain: TurboConfiguration
+  range: xsd:boolean
+  admission_kind: semantic-support
+  supports:
+  - AffectedComputation
+  - HashSurface
+  decision_relevance: Constrains affected-set and hash-surface interpretation for CQ-004, CQ-011, and
+    CQ-019.
+  evidence:
+  - 'turbo.json:4 — ''"affectedUsingTaskInputs": true,'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: filterUsingTasks
+  kind: property
+  definition: Relates a Turbo configuration to whether filtering is evaluated using task definitions.
+  domain: TurboConfiguration
+  range: xsd:boolean
+  admission_kind: semantic-support
+  supports:
+  - AffectedComputation
+  - VerificationLane
+  decision_relevance: Constrains which task lanes participate in affected and scheduling decisions.
+  evidence:
+  - 'turbo.json:5 — ''"filterUsingTasks": true,'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: globalConfiguration
+  kind: property
+  definition: Relates a Turbo configuration to whether its global configuration participates in task behavior.
+  domain: TurboConfiguration
+  range: xsd:boolean
+  admission_kind: semantic-support
+  supports:
+  - HashSurface
+  decision_relevance: Constrains the global-input contribution to CQ-011 invalidation and CQ-015 evidence
+    transferability.
+  evidence:
+  - 'turbo.json:6 — ''"globalConfiguration": true'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasCachePosture
+  kind: property
+  definition: Relates a work-unit execution to the resolved Turbo cache plan posture used for that invocation.
+  domain: WorkUnitExecution
+  range: CachePosture
+  admission_kind: decision
+  cq_justification:
+  - CQ-024
+  decision_relevance: Projects the per-invocation cache decision onto the execution queried by the cache-posture
+    CQ.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:408-435 — 'The resolved cache decision for
+    one Turbo invocation.'
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:559-560 — 'Resolve the cache plan for one
+    Turbo invocation.'
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: hasDeclaredTaskDependency
+  kind: property
+  definition: Relates a verification lane to one raw Turbo task-dependency selector literal.
+  domain: VerificationLane
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - VerificationLane
+  - ScheduleProposal
+  decision_relevance: Constrains lane dependency ordering for CQ-001 inventory and CQ-020 schedule interpretation.
+  evidence:
+  - 'turbo.json:37 — ''"dependsOn": ["^build"],'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasEmptyTaskOutputDeclaration
+  kind: property
+  definition: Relates a verification lane to whether it explicitly declares an empty cached-output list.
+  domain: VerificationLane
+  range: xsd:boolean
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  decision_relevance: Preserves the check lane's explicit zero-output declaration for CQ-005 and CQ-015
+    validity reasoning.
+  evidence:
+  - 'turbo.json:98 — ''"outputs": []'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasGlobalHashEnvironmentVariable
+  kind: property
+  definition: Relates a Turbo configuration to a globally declared hash-environment variable pattern.
+  domain: TurboConfiguration
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - HashSurface
+  decision_relevance: Preserves global environment inputs that can alter task hashes and invalidation
+    decisions.
+  evidence:
+  - 'turbo.json:18 — ''"env": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE"],'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasGlobalInputPattern
+  kind: property
+  definition: Relates a Turbo configuration to a declared global task-input selector literal.
+  domain: TurboConfiguration
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - HashSurface
+  decision_relevance: Defines the global portion of task hash surfaces needed by CQ-011 and CQ-015.
+  evidence:
+  - 'turbo.json:10 — ''"inputs": ['''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasGlobalPassThroughEnvironmentVariable
+  kind: property
+  definition: Relates a Turbo configuration to one globally declared pass-through environment variable
+    pattern.
+  domain: TurboConfiguration
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  decision_relevance: Disambiguates runtime inputs from declared hash inputs when judging evidence transferability.
+  evidence:
+  - 'turbo.json:19 — ''"passThroughEnv": ['''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasHashEnvironmentVariable
+  kind: property
+  definition: Relates a verification lane to one declared task hash-environment variable pattern.
+  domain: VerificationLane
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - HashSurface
+  decision_relevance: Preserves lane environment inputs needed for task-hash and evidence-validity decisions.
+  evidence:
+  - 'turbo.json:39-40 — ''"env": ['''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasPassThroughEnvironmentVariable
+  kind: property
+  definition: Relates a verification lane to one declared task pass-through environment variable pattern.
+  domain: VerificationLane
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  decision_relevance: Separates pass-through runtime context from lane hash inputs for CQ-015 validity
+    judgments.
+  evidence:
+  - 'turbo.json:101 — ''"passThroughEnv": ['''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasTaskInputPattern
+  kind: property
+  definition: Relates a verification lane to one declared task-input selector literal.
+  domain: VerificationLane
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - HashSurface
+  decision_relevance: Defines each lane-specific input surface for CQ-011 invalidation and CQ-015 transferability.
+  evidence:
+  - 'turbo.json:38 — ''"inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.env*", "!.beep/**"],'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: hasTaskOutputPattern
+  kind: property
+  definition: Relates a verification lane to one declared cached-output selector literal.
+  domain: VerificationLane
+  range: xsd:string
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  decision_relevance: Defines the declared artifact surface whose reuse bears on CQ-005 and CQ-015 evidence
+    validity.
+  evidence:
+  - 'turbo.json:53-54 — ''"outputs": ['''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: isPersistentTask
+  kind: property
+  definition: Relates a verification-lane candidate to its explicitly declared persistent-execution boolean.
+  domain: VerificationLane
+  range: xsd:boolean
+  admission_kind: semantic-support
+  supports:
+  - VerificationLane
+  - WorkUnitExecution
+  decision_relevance: Distinguishes finite verification executions from persistent task services during
+    CQ-001 ratification.
+  evidence:
+  - 'turbo.json:35 — ''"persistent": false,'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: taskCacheEnabled
+  kind: property
+  definition: Relates a verification lane to its explicitly declared Turbo task-result cache boolean.
+  domain: VerificationLane
+  range: xsd:boolean
+  admission_kind: semantic-support
+  supports:
+  - VerificationEvidence
+  decision_relevance: Constrains whether lane results can be reused when CQ-015 evaluates evidence transferability.
+  evidence:
+  - 'turbo.json:36 — ''"cache": true,'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneAudit
+  kind: individual
+  definition: The Turbo task named audit, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:183 — ''"audit": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneBuild
+  kind: individual
+  definition: The Turbo task named build, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:34 — ''"build": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneCheck
+  kind: individual
+  definition: The Turbo task named check, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:91 — ''"check": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneCodegen
+  kind: individual
+  definition: The Turbo task named codegen, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:178 — ''"codegen": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneCoverage
+  kind: individual
+  definition: The Turbo task named coverage, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:162 — ''"coverage": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneDev
+  kind: individual
+  definition: The Turbo task named dev, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:236 — ''"dev": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneDocgen
+  kind: individual
+  definition: The Turbo task named docgen, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:230 — ''"docgen": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneLint
+  kind: individual
+  definition: The Turbo task named lint, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:68 — ''"lint": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneLintFix
+  kind: individual
+  definition: The Turbo task named lint:fix, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:81 — ''"lint:fix": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneStorybook
+  kind: individual
+  definition: The Turbo task named storybook, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:241 — ''"storybook": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneStorybookBuild
+  kind: individual
+  definition: The Turbo task named storybook:build, proposed for ratification as a turbo-task verification
+    lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:245 — ''"storybook:build": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneStorybookStart
+  kind: individual
+  definition: The Turbo task named storybook:start, proposed for ratification as a turbo-task verification
+    lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:261 — ''"storybook:start": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneTest
+  kind: individual
+  definition: The Turbo task named test, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:100 — ''"test": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneTestIntegration
+  kind: individual
+  definition: The Turbo task named test:integration, proposed for ratification as a turbo-task verification
+    lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:120 — ''"test:integration": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneTestIntegrationParallel
+  kind: individual
+  definition: The Turbo task named test:integration:parallel, proposed for ratification as a turbo-task
+    verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:136 — ''"test:integration:parallel": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneTestIntegrationSerial
+  kind: individual
+  definition: The Turbo task named test:integration:serial, proposed for ratification as a turbo-task
+    verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:152 — ''"test:integration:serial": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneTestProperty
+  kind: individual
+  definition: The Turbo task named test:property, proposed for ratification as a turbo-task verification
+    lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:111 — ''"test:property": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneTestStorybook
+  kind: individual
+  definition: The Turbo task named test:storybook, proposed for ratification as a turbo-task verification
+    lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:266 — ''"test:storybook": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: LaneTransit
+  kind: individual
+  definition: The Turbo task named transit, proposed for ratification as a turbo-task verification lane.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: Supplies a candidate lane for the CQ-001 verification-lane inventory.
+  evidence:
+  - 'turbo.json:227 — ''"transit": {'''
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: TurboConfiguration469136d2a872
+  kind: individual
+  definition: The Turbo configuration information artifact pinned to corpus commit 469136d2a872.
+  admission_kind: semantic-support
+  supports:
+  - VerificationLane
+  - AffectedComputation
+  - HashSurface
+  decision_relevance: Bears the extracted configuration values used by the lane and hash-surface decisions.
+  evidence:
+  - turbo.json:1-8 — '{'
+  already_in_glossary: false
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
+- candidate: CallerControlled
+  kind: literal-domain-member
+  source_domain: CachePosture
+  definition: The CachePosture member for CI or an invocation with an explicit cache-control argument,
+    where the CLI injects no cache flag.
+  admission_kind: decision
+  cq_justification:
+  - CQ-024
+  decision_relevance: Prevents caller-owned cache behavior from being misclassified as the CLI's local-only
+    fallback or sanctioned remote-read plan.
+  evidence:
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:337-344 — ''_tag: S.tag("caller-controlled"),'''
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:602-609 — ''return CallerControlledTurboCache.make({
+    reason: "ci" });'''
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:602-609 — ''return CallerControlledTurboCache.make({
+    reason: "explicit-cache-arg" });'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: LocalOnly
+  kind: literal-domain-member
+  source_domain: CachePosture
+  definition: The CachePosture member whose resolved plan tag is local-only and whose emitted fail-closed
+    cache argument is local:rw, not an honored remote-configuration input.
+  admission_kind: decision
+  cq_justification:
+  - CQ-024
+  decision_relevance: Distinguishes executions whose Turbo arguments are forced to machine-local reads
+    and writes.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:54-59 — '["local:rw", "LocalOnly"],'
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:362-370 — ''_tag: S.tag("local-only"),'''
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:648-654 — ''"local-only": () => [`${CACHE_ARG_PREFIX}${TurboCacheMode.Enum.LocalOnly}`],'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: LocalWriteRemoteRead
+  kind: literal-domain-member
+  source_domain: CachePosture
+  definition: The CachePosture member whose deployed mode is local:rw,remote:r and whose resolved plan
+    tag is remote-read.
+  admission_kind: decision
+  cq_justification:
+  - CQ-024
+  decision_relevance: Distinguishes executions that may reuse shared remote evidence while keeping writes
+    local.
+  evidence:
+  - packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:54-59 — '["local:rw,remote:r", "LocalWriteRemoteRead"],'
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:397-405 — ''_tag: S.tag("remote-read"),'''
+  - 'packages/tooling/tool/cli/src/internal/cli/TurboCache.ts:616-624 — ''onSome: (mode) =>'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-yeet-internals
+- candidate: TurboTaskLane
+  kind: literal-domain-member
+  source_domain: LaneKind
+  definition: The LaneKind member for a verification lane realized by a Turbo task.
+  admission_kind: decision
+  cq_justification:
+  - CQ-001
+  decision_relevance: CQ-001 requires every admitted Turbo task lane to carry its lane kind.
+  evidence:
+  - 'turbo.json:33-34 — ''"tasks": {'''
+  already_in_glossary: true
+  status: candidate
+  source_lanes:
+  - s4-turbo-tasks
