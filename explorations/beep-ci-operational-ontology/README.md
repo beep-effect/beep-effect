@@ -100,6 +100,16 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-08-30 (thirteenth stint): S5 SCAFFOLDING LANDED. The locked eight-ruling
+  design became [`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md)
+  plus the committed mechanical join pass
+  (`ontology/extraction/s5/scripts/join_s4b.py` → `s5/JOIN.yaml`, idempotent):
+  337 candidates → 25 accepted-via ratified terms, 7 leaves of ratified
+  domains, 305 open (167 individuals — 152 of them the package census, 79
+  literal members across 19 unratified domains, 45 properties, 14 classes).
+  Next: bulk steward sittings over the open buckets, then the six-seat round,
+  the `--s5` gate, and `apply_s5_dispositions.py`.
+
 - 2026-08-30 (twelfth stint): frozen-evidence integrity repair + S5 design grill.
   PR #865's repo-wide Biome write sweep had rewritten the digest-locked §4b
   adapter engine and its golden input without the sidecar (engine check broken
