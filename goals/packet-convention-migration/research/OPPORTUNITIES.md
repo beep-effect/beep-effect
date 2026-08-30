@@ -656,3 +656,72 @@
   files and carry only the portable temp helper, its consumers, acceptance
   wording, changeset, tests, and contemporaneous ledger additions.
 - **Owner:** post-merge review recovery tooling and branch lifecycle guidance.
+
+## 2026-08-30 — Prescribed scheduler probe now requires an unstated flag
+
+- **What happened:** the machine-wide scheduler operator instruction says to
+  probe the lane with `bun run beep quality scheduler status`, but the current
+  CLI rejects that exact read-only command instead of printing the status.
+- **Evidence:** the command exited 1 with `Missing required flag: --json` and
+  printed usage showing `--json` as the only command flag, even though the
+  operator instruction omits it.
+- **What would have prevented it:** make human-readable status the no-flag
+  default and keep `--json` optional, or update the canonical operator
+  instruction and command examples atomically when the flag becomes required.
+- **Disposition:** scheduler-observability friction; retry the probe with
+  `--json` and continue package-scoped iteration without entering admission.
+- **Owner:** quality-scheduler CLI compatibility and operator documentation.
+
+## 2026-08-30 — Squash follow-up edits an already-landed changeset outside the proof range
+
+- **What happened:** the first post-merge follow-up retained and extended
+  #900's changeset file, but cheap gates correctly treated that file as part of
+  the base rather than as a new in-range release declaration.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` refreshed
+  `origin/main`, then `quality changeset-status --since origin/main` exited 1
+  and reported changed product workspaces `@beep/repo-ai-metrics` and
+  `@beep/test-utils` missing an in-range changeset.
+- **What would have prevented it:** a post-squash recovery helper should detect
+  changeset paths already present in the merge commit and generate a fresh
+  follow-up changeset instead of carrying an amendment to the merged file.
+- **Disposition:** actionable publication repair; restore the landed changeset
+  byte-for-byte and add a new changeset scoped to both follow-up packages.
+- **Owner:** changeset-range diagnostics and post-merge review recovery tooling.
+
+## 2026-08-30 — Non-admission Effect scan slows under an admitted full proof
+
+- **What happened:** cheap gates correctly avoided the admission queue, but its
+  global Effect-LSP test scan still competed with a concurrently admitted full
+  proof and produced no progress output for several minutes.
+- **Evidence:** scheduler status showed one active three-token full-proof lease
+  and three queued tickets while `cheap-gates:test-tsgo` checked 952 files
+  across 135 packages. The scan completed green in 247,006 ms, versus 167
+  seconds for the same 952-file lane earlier in this recovery.
+- **What would have prevented it:** either account heavyweight non-admission
+  scans in the machine capacity model, reuse an exact-tree Effect-LSP result
+  across proof commands, or emit periodic file/package progress so slower
+  resource sharing is distinguishable from a hang.
+- **Disposition:** performance and observability regression only; the scan is
+  green and no duplicate was launched.
+- **Owner:** quality-scheduler resource accounting, Effect-LSP proof caching,
+  and progress reporting.
+
+## 2026-08-30 — Generated-document checks fail transiently without byte drift
+
+- **What happened:** cheap gates failed both generated-document checks even
+  though the follow-up has no net changes to their sources or outputs relative
+  to `origin/main`. Both canonical writers then reported writes but changed no
+  tracked bytes, and immediate standalone checks passed.
+- **Evidence:** at `origin/main` `9c0f2eacc760c246fa686fefb911a090b2bd5275`,
+  `bun run beep goals index --check` reported `goals/INDEX.md` drift and
+  `bun run beep explore atlas --check` exited 1. `git diff --name-status
+  origin/main` contained neither goal manifests nor exploration sources before
+  those checks. `goals index --write` and `explore atlas --write` left the tree
+  unchanged; direct `--check` reruns then both exited 0.
+- **What would have prevented it:** report the mismatching path or digest on
+  check failure and make projection reads/writes atomic so a transient cache or
+  concurrent-read condition cannot masquerade as committed drift.
+- **Disposition:** transient proof-orchestration failure; retain no generated
+  artifact diff and rely on the immediate green standalone reruns plus a fresh
+  cheap-gate pass after the changeset commit.
+- **Owner:** goal-index and exploration-atlas check determinism and diagnostics.
