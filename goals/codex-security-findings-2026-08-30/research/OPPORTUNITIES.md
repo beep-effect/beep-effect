@@ -73,3 +73,14 @@
   coverage is independent of whether the operator is proving a staged tree,
   or have pre-publish verification measure the staged virtual tree from a
   clean detached worktree.
+
+## 2026-08-30 — a moving base invalidated the full publish proof late
+
+- Work: ran the clean committed Yeet publish proof for the security batch.
+- Evidence: `origin/main` advanced during the 40-minute proof with a merged PR
+  that rewrote the same tmpfs janitor and tests. Every completed lane except
+  coverage passed, but the branch then required an overlapping merge and a
+  second proof. The post-merge janitor suite passed all 28 tests.
+- Prevention: snapshot the admitted base for every lane and recheck base
+  freshness before starting expensive coverage, or cancel early when a newly
+  fetched base overlaps the candidate diff.
