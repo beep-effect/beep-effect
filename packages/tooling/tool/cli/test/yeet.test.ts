@@ -190,7 +190,7 @@ const withTempDirectory = <Result, Error, Requirements>(
     (tmpDir) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true });
+        yield* fs.remove(tmpDir, { force: true, recursive: true });
       })
   ).pipe(provideScopedLayer(PlatformLayer));
 

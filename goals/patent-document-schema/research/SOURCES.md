@@ -75,6 +75,23 @@ remain next to the claims they support.
 | USPTO MCP driver | `packages/drivers/uspto-mcp/` |
 | Professional Desktop (agent surface) | `apps/professional-desktop` |
 
+## P0 implementation confirmation — 2026-08-27
+
+The implementation contract was rechecked against the live sources before the
+schema surface was frozen:
+
+| Contract | Primary evidence | Frozen implementation consequence |
+| --- | --- | --- |
+| Preferred patent-specification arrangement | [37 CFR 1.77(b)](https://www.ecfr.gov/current/title-37/section-1.77) and [MPEP § 608](https://www.uspto.gov/web/offices/pac/mpep/s608.html) | `PatentApplicationSectionRole.Options` contains the 13 section roles in regulatory order; decoded collections are unique and retain that relative order. |
+| Claim interchange names | [WIPO ST.96 ClaimType](https://www.wipo.int/standards/en/st96/v10-0/annex-iv/Index_ClaimType.html) and [ClaimReference](https://www.wipo.int/standards/en/st96/v10-0/annex-iv/Index_ClaimReference.html) | Claims preserve `claimNumber`, `claimText`, and parent `claimReferences` while retaining editor-useful preamble/transition/body structure. |
+| Dependent-claim semantics | [EPO Guidelines F-IV 3.4](https://www.epo.org/en/legal/guidelines-epc/2026/f_iv_3_4.html) | The tagged union separates independent and dependent claims; graph validation reports missing, self, forward, and cyclic edges. |
+| Canonical document boundary | `packages/foundation/modeling/md/src/Md.model.ts` and `Md.behavior.ts` | Only level-one `Md.Heading` nodes select patent sections; lower headings stay section content and plain text is projected once. |
+| First consumer seam | `packages/law-practice/server/src/PracticeKg.claims.ts` | The batch accepts `PatentApplicationDocument` directly and maps its claims to candidate/evidence rows without invoking office-action extraction. |
+
+No source conflict or stop condition was found. The implementation remains in
+the law-practice slice and does not add syntax-AST rhetoric tags, an ontology
+runtime, or a foundation-level patent package.
+
 ## Cross-links
 
 - `explorations/lynx-lkg-ontology-grounding/research/` — 15 reference legal

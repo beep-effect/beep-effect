@@ -556,6 +556,13 @@ export * from "./ParentheticalType/index.ts";
  */
 export * from "./PartyKind/index.ts";
 /**
+ * Patent-document section, claim, and Markdown-normalization exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PatentDocument/index.ts";
+/**
  * Canonical patent document triplet value-object exports.
  *
  * @category value-objects
