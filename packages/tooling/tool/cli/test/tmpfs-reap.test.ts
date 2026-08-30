@@ -125,6 +125,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
   const stubRelativeGitDir = path.join(worktreesRoot, "relative-gitdir");
   const stubExistingTarget = path.join(worktreesRoot, "target-exists");
   const stubParentPresent = path.join(worktreesRoot, "parent-present");
+  const stubContentsPresent = path.join(worktreesRoot, "contents-present");
   const soleWorktreesRoot = path.join(tmpRoot, "sole-worktrees");
   const stubSoleEligible = path.join(soleWorktreesRoot, "eligible");
   const missingRepo = path.join(root, "missing-repo");
@@ -149,6 +150,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       stubRelativeGitDir,
       stubExistingTarget,
       stubParentPresent,
+      stubContentsPresent,
       stubSoleEligible,
       existingGitDir,
       parentPresentRepo,
@@ -169,6 +171,11 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     `gitdir: ${parentPresentRepo}/.git/worktrees/missing\n`
   );
   yield* fs.writeFileString(
+    path.join(stubContentsPresent, ".git"),
+    `gitdir: ${missingRepo}/.git/worktrees/contents-present\n`
+  );
+  yield* fs.writeFileString(path.join(stubContentsPresent, "unsaved.bin"), Str.repeat(1024 * 1024 + 1)("x"));
+  yield* fs.writeFileString(
     path.join(vitestWrongShape, ".git"),
     `gitdir: ${missingRepo}/.git/worktrees/nanoid-git-worktree\n`
   );
@@ -182,6 +189,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       stubRelativeGitDir,
       stubExistingTarget,
       stubParentPresent,
+      stubContentsPresent,
       stubSoleEligible,
       unclassifiedWorktree,
       vitestWrongShape,
@@ -212,6 +220,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     stubLive,
     stubMalformedGitFile,
     stubParentPresent,
+    stubContentsPresent,
     stubRelativeGitDir,
     stubSoleEligible,
     stubWrongShape,
@@ -372,20 +381,57 @@ describe("tmpfs reap", () => {
 
           const stubExistingTarget = candidateByPath(report, fixture.stubExistingTarget);
           expect(stubExistingTarget.skipReason).toBe("gitdir-target-exists");
+          expect(stubExistingTarget.bytes).toBeUndefined();
           expect(yield* fs.exists(fixture.stubExistingTarget)).toBe(true);
 
           const stubParentPresent = candidateByPath(report, fixture.stubParentPresent);
           expect(stubParentPresent.skipReason).toBe("parent-repo-present");
+          expect(stubParentPresent.bytes).toBeUndefined();
           expect(yield* fs.exists(fixture.stubParentPresent)).toBe(true);
+
+          const stubContentsPresent = candidateByPath(report, fixture.stubContentsPresent);
+          expect(stubContentsPresent.skipReason).toBe("contents-present");
+          expect(stubContentsPresent.bytes).toBeUndefined();
+          expect(yield* fs.exists(fixture.stubContentsPresent)).toBe(true);
 
           expect(candidateByPath(report, fixture.unclassifiedWorktree).skipReason).toBe("unclassified");
 
           expect(candidateByPath(report, fixture.stubSoleEligible).action).toBe("remove-dir");
           expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(false);
-          expect(yield* fs.exists(fixture.soleWorktreesRoot), A.join(report.warnings, "\n")).toBe(false);
           expect(report.reapedCount).toBe(4);
         })
       )
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("preserves a container child created when non-recursive cleanup begins", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const racedChild = path.join(fixture.soleWorktreesRoot, "concurrent-worktree");
+        const racingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          remove: (target, options) =>
+            Str.Equivalence(target, fixture.soleWorktreesRoot)
+              ? fs.makeDirectory(racedChild).pipe(Effect.andThen(fs.remove(target, options)))
+              : fs.remove(target, options),
+        });
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot: fixture.cacheRoot,
+          classes: ["dangling-worktree-stub"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+        expect(candidateByPath(report, fixture.stubSoleEligible).action).toBe("remove-dir");
+        expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(false);
+        expect(yield* fs.exists(racedChild)).toBe(true);
+        expect(A.some(report.warnings, Str.includes(fixture.soleWorktreesRoot))).toBe(false);
+      })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 

@@ -14,7 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Clock, Config, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { BigInt, Clock, Config, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -40,6 +40,8 @@ const GIT_WORKTREE_MARKER = "/.git/worktrees/";
 const VitestForksChild = LiteralKit(["ssr", "client"]);
 const PROC_ROOT = "/proc";
 const PROC_LOCKS = "/proc/locks";
+const DANGLING_STUB_ENTRY_LIMIT = 16;
+const DANGLING_STUB_BYTE_LIMIT = FileSystem.Size(1024 * 1024);
 
 const ProcPidName = S.String.pipe(
   S.check(S.isPattern(/^[0-9]+$/u)),
@@ -95,6 +97,12 @@ type MeasuredCandidate = {
   readonly bytes: O.Option<number>;
   readonly liveness: CandidateLiveness;
   readonly skipReason: O.Option<TmpfsReapSkipReason>;
+};
+
+type DanglingStubCensus = {
+  readonly bytes: bigint;
+  readonly complete: boolean;
+  readonly entries: number;
 };
 
 type ApplyOutcome = {
@@ -238,6 +246,76 @@ const danglingStubShape = (
   return { classified, shapeSkipReason: classified ? O.none() : shapeSkipReason };
 };
 
+const censusWithinLimits = (census: DanglingStubCensus): boolean =>
+  census.complete &&
+  census.entries <= DANGLING_STUB_ENTRY_LIMIT &&
+  BigInt.isLessThanOrEqualTo(census.bytes, DANGLING_STUB_BYTE_LIMIT);
+
+const censusDirectory = (
+  candidateRoot: string,
+  directory: string,
+  initial: DanglingStubCensus
+): Effect.Effect<DanglingStubCensus, never, FileSystem.FileSystem | Path.Path> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const pathService = yield* Path.Path;
+    const names = yield* readDirectoryOption(directory);
+    if (O.isNone(names)) {
+      return { ...initial, complete: false };
+    }
+    return yield* Effect.reduce(
+      names.value,
+      () => initial,
+      (census, name) => {
+        if (!censusWithinLimits(census)) {
+          return Effect.succeed(census);
+        }
+        const entryPath = pathService.join(directory, name);
+        if (Str.Equivalence(directory, candidateRoot) && Str.Equivalence(name, ".git")) {
+          return fs.stat(entryPath).pipe(
+            Effect.option,
+            Effect.map(
+              O.match({
+                onNone: () => ({ ...census, complete: false }),
+                onSome: (info) => ({ ...census, bytes: BigInt.sum(census.bytes, info.size) }),
+              })
+            )
+          );
+        }
+        return Effect.gen(function* () {
+          if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+            return { ...census, complete: false };
+          }
+          const info = yield* fs.stat(entryPath).pipe(Effect.option);
+          if (O.isNone(info)) {
+            return { ...census, complete: false };
+          }
+          const next = {
+            bytes: Str.Equivalence(info.value.type, "Directory")
+              ? census.bytes
+              : BigInt.sum(census.bytes, info.value.size),
+            complete: true,
+            entries: N.increment(census.entries),
+          } satisfies DanglingStubCensus;
+          return Str.Equivalence(info.value.type, "Directory") && censusWithinLimits(next)
+            ? yield* censusDirectory(candidateRoot, entryPath, next)
+            : next;
+        });
+      }
+    );
+  });
+
+const danglingStubContentsWithinLimits = Effect.fnUntraced(function* (
+  candidatePath: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+  const census = yield* censusDirectory(candidatePath, candidatePath, {
+    bytes: BigInt.BigInt(0),
+    complete: true,
+    entries: 0,
+  });
+  return censusWithinLimits(census);
+});
+
 const discoverGitWorktree = Effect.fnUntraced(function* (
   root: string,
   candidatePath: string,
@@ -354,12 +432,15 @@ const discoverDanglingWorktreeStub = Effect.fnUntraced(function* (
   );
   const gitDirMissing = yield* optionalStatIsMissing(gitDir);
   const parentRepoMissing = yield* optionalStatIsMissing(parentRepo);
+  const shape = danglingStubShape(gitDirMissing, parentRepoMissing);
+  const contentsWithinLimits = shape.classified ? yield* danglingStubContentsWithinLimits(candidatePath) : false;
   return {
     root,
     path: candidatePath,
     reapClass: "dangling-worktree-stub",
     idleSinceMillis,
-    ...danglingStubShape(gitDirMissing, parentRepoMissing),
+    classified: shape.classified && contentsWithinLimits,
+    shapeSkipReason: shape.classified && !contentsWithinLimits ? O.some("contents-present") : shape.shapeSkipReason,
     parentRepo,
   };
 });
@@ -815,19 +896,8 @@ const removeDirectoryCandidate = Effect.fnUntraced(function* (
   if (!A.isReadonlyArrayEmpty(parentEntries.value) || !pathIsWithin(pathService, candidate.root, parent)) {
     return { reaped: true, warnings: nestedWarnings };
   }
-  const removedParent = yield* fs.remove(parent, { force: true, recursive: true }).pipe(
-    Effect.as(true),
-    Effect.orElseSucceed(() => false)
-  );
-  return removedParent
-    ? { reaped: true, warnings: nestedWarnings }
-    : {
-        reaped: true,
-        warnings: A.append(
-          nestedWarnings,
-          `Removed ${candidate.path}, but failed to remove empty container ${parent}.`
-        ),
-      };
+  yield* fs.remove(parent).pipe(Effect.ignore);
+  return { reaped: true, warnings: nestedWarnings };
 });
 
 const removeGitWorktreeCandidate = Effect.fnUntraced(function* (
@@ -1097,14 +1167,18 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
     Effect.fnUntraced(function* (candidate: DiscoveredCandidate) {
       const liveness = yield* candidateLiveness(candidate, proc, heldLockInodes, pathService.sep);
       const ageHours = Duration.toHours(Duration.millis(N.max(0, effectiveNowMillis - candidate.idleSinceMillis)));
-      const bytes = yield* measureBytes(candidate.path);
       const dirtyWorktree = yield* worktreeIsDirty(candidate);
+      const skipReason = skipReasonFor(candidate, ageHours, liveness, dirtyWorktree, proc.vitestRunning);
+      const bytes =
+        O.isNone(skipReason) && !Str.Equivalence(candidate.reapClass, "git-worktree")
+          ? yield* measureBytes(candidate.path)
+          : O.none<number>();
       return {
         discovered: candidate,
         ageHours,
         bytes,
         liveness,
-        skipReason: skipReasonFor(candidate, ageHours, liveness, dirtyWorktree, proc.vitestRunning),
+        skipReason,
       } satisfies MeasuredCandidate;
     }),
     { concurrency: 8 }

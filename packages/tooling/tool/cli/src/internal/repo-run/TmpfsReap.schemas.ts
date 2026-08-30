@@ -104,6 +104,7 @@ export const TmpfsReapSkipReason = LiteralKit([
   "wrong-shape",
   "gitdir-target-exists",
   "parent-repo-present",
+  "contents-present",
   "live-runner",
   "unclassified",
 ]).pipe(
