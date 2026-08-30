@@ -6,19 +6,19 @@
     "issues": [],
     "packet": "semantic-foundation",
     "resumeStage": "M2",
-    "revision": 1,
+    "revision": 2,
     "root": "goals",
-    "status": "active",
+    "status": "completed-retained",
     "tip": {
-      "id": "08395172e4794b7eb75c708ddec5cf2d1ffc953ea6a817a6486504c98ae9caa6",
-      "seq": 1
+      "id": "80edc50ae267b2673866e960a4d79a756aa1fe72c6b3fbf792888e6f6bdc83b7",
+      "seq": 2
     }
   },
   "projectorVersion": 2,
   "schemaVersion": "packet-trace/v1",
   "sourceTip": {
-    "id": "08395172e4794b7eb75c708ddec5cf2d1ffc953ea6a817a6486504c98ae9caa6",
-    "seq": 1
+    "id": "80edc50ae267b2673866e960a4d79a756aa1fe72c6b3fbf792888e6f6bdc83b7",
+    "seq": 2
   },
   "timeline": [
     {
@@ -32,6 +32,17 @@
       },
       "id": "08395172e4794b7eb75c708ddec5cf2d1ffc953ea6a817a6486504c98ae9caa6",
       "seq": 1
+    },
+    {
+      "actor": "operator",
+      "at": "2026-08-30T14:33:55.019Z",
+      "body": {
+        "previous": "active",
+        "status": "completed-retained",
+        "type": "status-set"
+      },
+      "id": "80edc50ae267b2673866e960a4d79a756aa1fe72c6b3fbf792888e6f6bdc83b7",
+      "seq": 2
     }
   ]
 }

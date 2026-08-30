@@ -1,0 +1,113 @@
+terms:
+  - term: FullProofWork
+    kind: literal-domain-member
+    parents: []
+    instance_of: AdmissionWorkKind
+    rigidity: rigid
+    identity_ref: "ic:sched-core:004"
+    parameters: []
+    constraint_refs: []
+  - term: MergedPreviewWork
+    kind: literal-domain-member
+    parents: []
+    instance_of: AdmissionWorkKind
+    rigidity: rigid
+    identity_ref: "ic:sched-core:004"
+    parameters: []
+    constraint_refs: []
+  - term: PublishWork
+    kind: literal-domain-member
+    parents: []
+    instance_of: AdmissionWorkKind
+    rigidity: rigid
+    identity_ref: "ic:sched-core:004"
+    parameters: []
+    constraint_refs:
+      - con:admission-scheduler-I05
+  - term: ReviewFixWork
+    kind: literal-domain-member
+    parents: []
+    instance_of: AdmissionWorkKind
+    rigidity: rigid
+    identity_ref: "ic:sched-core:004"
+    parameters: []
+    constraint_refs: []
+  - term: PublishPriority
+    kind: literal-domain-member
+    parents: []
+    instance_of: AdmissionPriorityClass
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:006"
+    parameters: []
+    constraint_refs: []
+  - term: VerifyPriority
+    kind: literal-domain-member
+    parents: []
+    instance_of: AdmissionPriorityClass
+    rigidity: unresolved
+    identity_ref: "ic:sched-core:006"
+    parameters: []
+    constraint_refs: []
+  - term: ActiveGrant
+    kind: literal-domain-member
+    parents: []
+    instance_of: GrantState
+    rigidity: rigid
+    identity_ref: "ic:sched-core:022"
+    parameters: []
+    constraint_refs: []
+  - term: ReleasedGrant
+    kind: literal-domain-member
+    parents: []
+    instance_of: GrantState
+    rigidity: rigid
+    identity_ref: "ic:sched-core:022"
+    parameters: []
+    constraint_refs: []
+  - term: CallerControlled
+    kind: literal-domain-member
+    parents: []
+    instance_of: CachePosture
+    rigidity: rigid
+    identity_ref: "ic:turbo-cache:019"
+    parameters: []
+    constraint_refs:
+      - con:turbo-tasks-I02
+  - term: LocalOnly
+    kind: literal-domain-member
+    parents: []
+    instance_of: CachePosture
+    rigidity: rigid
+    identity_ref: "ic:turbo-cache:019"
+    parameters: []
+    constraint_refs:
+      - con:turbo-tasks-I02
+  - term: LocalWriteRemoteRead
+    kind: literal-domain-member
+    parents: []
+    instance_of: CachePosture
+    rigidity: rigid
+    identity_ref: "ic:turbo-cache:019"
+    parameters: []
+    constraint_refs:
+      - con:turbo-tasks-I02
+      - con:yeet-internals-I05
+  - term: HardFloorException
+    kind: literal-domain-member
+    parents: []
+    instance_of: StarvationException
+    rigidity: rigid
+    identity_ref: "ic:sched-core:015"
+    parameters: []
+    constraint_refs:
+      - con:admission-scheduler-I06
+  - term: MachineProofLock
+    kind: individual
+    parents: []
+    instance_of: ContendedResource
+    rigidity: anti_rigid
+    identity_ref: "ic:sched-core:020"
+    parameters: []
+    constraint_refs:
+      - con:literalkits-I12
+waived_constraints_proposed: []
