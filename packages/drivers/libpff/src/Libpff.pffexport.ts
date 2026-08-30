@@ -640,7 +640,6 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         (runtimePrefix) => !sandboxRuntimeCovers(runtimePrefix)
       )
     );
-    if (A.isReadonlyArrayEmpty(envRuntimePrefixes)) return [];
     if (A.some(envRuntimePrefixes, (runtimePrefix) => runtimePrefix === path.parse(runtimePrefix).root)) {
       return yield* makeLibpffError("config", { cause: "sandbox env interpreter bind cannot expose the host root" });
     }

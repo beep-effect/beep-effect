@@ -402,7 +402,11 @@ describe("makePffexportFileProcessingEngine", () => {
         const path = yield* Path.Path;
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
-        yield* fs.writeFileString(bwrapPath, bwrapStub);
+        const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
+        yield* fs.writeFileString(
+          bwrapPath,
+          bwrapStub.replace("set -eu", `set -eu\nprintf '%s\\n' "$@" > ${bwrapArgumentsPath}`)
+        );
         yield* fs.chmod(bwrapPath, 0o755);
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
@@ -414,6 +418,7 @@ describe("makePffexportFileProcessingEngine", () => {
         );
 
         expect(result.children.length).toBeGreaterThan(0);
+        expect(yield* fs.readFileString(bwrapArgumentsPath)).toContain("--setenv\nPATH\n/usr/bin:/usr/bin:/bin\n");
       },
       Effect.scoped,
       provideTestLayer
