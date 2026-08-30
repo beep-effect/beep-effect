@@ -90,7 +90,7 @@ export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Opti
  * registry.dispose()
  * ```
  *
- * @category actions
+ * @category atoms
  * @since 0.0.0
  */
 export const composerDocumentSafetyGateAtoms = Atom.family((_threadId: WorkspaceIdentity.ThreadId) =>
@@ -200,7 +200,7 @@ const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
  * console.log(typeof dispatchTurnWithConfirm === "function") // true
  * ```
  *
- * @category atoms
+ * @category actions
  * @since 0.0.0
  */
 export const dispatchTurnWithConfirm: {
