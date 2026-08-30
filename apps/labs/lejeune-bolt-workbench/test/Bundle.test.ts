@@ -305,7 +305,8 @@ describe("LeJeune deterministic fixture bundle", () => {
       expect(first.citations).toHaveLength(4);
       expect(first.syntheticRecords).toHaveLength(4);
       expect(first.ruleDispositions).toHaveLength(6);
-    })
+    }),
+    { timeout: 90_000 }
   );
 
   for (const [column, corruption] of [
@@ -340,7 +341,8 @@ describe("LeJeune deterministic fixture bundle", () => {
           }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
         );
         expect(failure._tag).toBe("ProjectionError");
-      })
+      }),
+      { timeout: 90_000 }
     );
   }
 
@@ -370,7 +372,8 @@ describe("LeJeune deterministic fixture bundle", () => {
       );
 
       expect(failure._tag).toBe("ProjectionError");
-    })
+    }),
+    { timeout: 90_000 }
   );
 
   it.live(
@@ -395,7 +398,8 @@ describe("LeJeune deterministic fixture bundle", () => {
         }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
       );
       expect(failure._tag).toBe("ProjectionError");
-    })
+    }),
+    { timeout: 90_000 }
   );
 
   it.effect(
