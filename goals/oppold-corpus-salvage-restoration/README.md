@@ -39,4 +39,11 @@ re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
 
-Not started.
+2026-08-27 — P0 in progress. Bar-v2 preservation schemas landed in the repo
+CLI Corpus command family (`Preservation.schemas.ts`): occurrence identity,
+six attempt outcomes with pre/post source-stability observations, the
+five-class inherited-loss opening balance, two-state capacity preflight with
+an approved ceiling, fresh-process verification outcomes, and the tagged
+provenance-ledger record decoding beside legacy salvage rows. Services,
+streaming runners, and synthetic proofs are next; no archive run has
+occurred.

@@ -2734,6 +2734,7 @@
         "@effect/doctest": "catalog:",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",
+        "@noble/hashes": "catalog:",
         "@openai/codex-sdk": "catalog:",
         "effect": "catalog:",
         "fast-xml-parser": "catalog:",
