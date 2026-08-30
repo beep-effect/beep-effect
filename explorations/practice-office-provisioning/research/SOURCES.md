@@ -1,9 +1,10 @@
 # Practice Office Provisioning — Sources & Provenance
 
 - **Cluster / origin:** 2026-08-30 /grill-with-docs session (decisions in
-  [`../DECISIONS.md`](../DECISIONS.md)) plus the five-lane research sweep
-  (R1–R5) recorded in `ops/manifest.json` `openQuestions`; lane reports land
-  beside this file.
+  [`../DECISIONS.md`](../DECISIONS.md)) plus the research sweep — lanes
+  R1–R5 and the operator-run r7 gap session; lane reports sit beside this
+  file, and every distinct URL they cite is registered in
+  [`SOURCES-lane-citations.md`](./SOURCES-lane-citations.md).
 - **Provenance:** operator scratch prompt reproduced verbatim in
   [`../CAPTURE.md`](../CAPTURE.md).
 
@@ -21,13 +22,19 @@
 | Auto-expanding archiving | https://learn.microsoft.com/en-us/purview/autoexpanding-archiving | 1.5 TB, 30-day provision, 1 GB/day, classic Outlook search does not hit auxiliaries | 2026-08-30 |
 | Hidden archive PST content | https://learn.microsoft.com/en-us/troubleshoot/exchange/administration/imported-pst-file-content-hidden-in-archive-mailbox | IsArchive=TRUE + TargetRootFolder=/ lands in non-IPM folders | 2026-08-30 |
 | PST import troubleshoot (quota) | https://learn.microsoft.com/en-us/troubleshoot/microsoft-365/purview/pst-import-service/issues-with-pst-import-job | Conflicts with overview: claims auto-expand does not support PST import | 2026-08-30 |
-| FreshBooks API authentication | https://www.freshbooks.com/api/authentication | OAuth2 auth-code; exact-match HTTPS redirect URI, localhost allowed for dev — grounds the R6 dev-app redirect answer | 2026-08-30 |
+| FreshBooks API authentication | https://www.freshbooks.com/api/authentication | OAuth2 auth-code; exact-match HTTPS redirect URI, localhost allowed for dev — grounds the FreshBooks dev-app redirect answer (see `../CAPTURE.md`) | 2026-08-30 |
+
+The table above holds only the load-bearing citations this packet's
+decisions lean on directly. The complete per-lane URL inventory (every
+distinct URL each committed report cites, 226 across six reports) is
+generated into [`SOURCES-lane-citations.md`](./SOURCES-lane-citations.md);
+per-claim context stays in the reports.
 
 ## 4. In-repo bricks
 
 | Brick | Path | Role here |
 |-------|------|-----------|
-| `@beep/box` driver | `packages/drivers/box/` | Complete generated Box SDK surface (goals/box-driver 10/10); provisioning verbs ride it |
+| `@beep/box` driver | `packages/drivers/box/` | Complete for its PRIOR demand only (goals/box-driver 10/10 is demand-scoped): folder CRUD is generated, but metadata templates, cascade policies, retention, collaborations, Box Sign requests, and webhooks are compile-time absent from `GENERATED_MANAGERS` (r4, `file:line` evidence) — expanding the demand manifest for those managers is NET-NEW driver work under the package's type-instantiation budget |
 | `@beep/m365` driver | `packages/drivers/m365/` | Read-only Graph driver, write-ready shape; write-verbs goal graduates from this packet |
 | `@beep/m365-mcp` | `packages/drivers/m365-mcp/` | Read-verb MCP exposure precedent |
 | Corpus CLI family | `packages/tooling/tool/cli/src/commands/Corpus/` | Source of extracted client/matter entities at population time |
@@ -42,7 +49,8 @@
 | `r3-graph-write-surface.md` | GPT-5.6 Sol xhigh | Complete |
 | `r4-provisioning-code-shape.md` | GPT-5.6 Sol xhigh, repo cwd | Complete, `file:line` evidence |
 | `r5-sku-preflight-and-process.md` | GPT-5.6 Sol medium | Complete, 41 citations |
-| `r7-sol-pro-gap-report.md` | GPT-5.6 Sol Pro (operator-run, prompt: `sol-pro-oracle-prompt.md`) | Complete same day — 26 cited sources, CONFIRMED/LIKELY/UNVERIFIED tagging, six deltas to lane findings |
+| `r7-sol-pro-gap-report.md` | GPT-5.6 Sol Pro (operator-run, prompt: `sol-pro-oracle-prompt.md`) | Complete same day — 48 numbered sources, CONFIRMED/LIKELY/UNVERIFIED tagging, six deltas to lane findings |
+| `SOURCES-lane-citations.md` | Generated registry (scripted URL extraction, 2026-08-30) | 226 distinct URLs across the six reports above — the full provenance inventory behind the load-bearing table in §3 |
 
 Live tenant probes (Box/M365 MCP connectors, `az rest` Graph reads) are
 recorded in [`../CAPTURE.md`](../CAPTURE.md) and distilled in

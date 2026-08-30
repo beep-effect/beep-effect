@@ -390,6 +390,15 @@ No client secret belongs in the desired-state file, plan artifact, receipt,
 Pulumi state, test fixture, or log. The config schema should continue using
 `Redacted`, and the host should inject the secret at runtime.
 
+*Correction 2026-08-30 (review finding):* steps 3–4 above model the
+confidential client as secret-based, which contradicts R3's and r7's own
+conclusion that certificate-based credentials (`clientCertificate` /
+`clientAssertion`) are the production lane and secrets are discouraged.
+The goal generated from this section must model the app-only credential
+schema-first as a tagged union with the certificate/assertion path primary
+and any client-secret variant an explicitly limited dev/test fallback —
+never the only shape.
+
 ### Permission split
 
 | Verb or capability | Delegated PKCE lane | App-only client-credentials lane | Endpoint rule and caution |
