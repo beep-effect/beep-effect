@@ -20497,14 +20497,14 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 78.79,
-      "statements": 78.58,
+      "lines": 78.77,
+      "statements": 78.57,
       "branches": 67.83,
-      "functions": 72.61,
+      "functions": 72.62,
       "uncovered": {
-        "lines": 8298,
-        "statements": 8772,
-        "branches": 4745,
+        "lines": 8305,
+        "statements": 8779,
+        "branches": 4747,
         "functions": 3202
       },
       "files": {
@@ -21901,14 +21901,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts": {
-          "lines": 68.36,
-          "statements": 69.13,
-          "branches": 51.35,
-          "functions": 65.59,
+          "lines": 66.99,
+          "statements": 67.81,
+          "branches": 51.3,
+          "functions": 65.95,
           "uncovered": {
-            "lines": 93,
-            "statements": 96,
-            "branches": 54,
+            "lines": 100,
+            "statements": 103,
+            "branches": 56,
             "functions": 32
           }
         },

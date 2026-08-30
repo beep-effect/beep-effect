@@ -921,3 +921,87 @@
   exact head without entering local admission.
 - **Owner:** GitHub Actions runner-fleet observability and Yeet hosted-state
   classification.
+
+## 2026-08-30 — Remote closeout discovers three timestamp-stale baselines after hosted Heavy Check passes
+
+- **What happened:** the exact pushed PR head passed hosted `Heavy / Check`,
+  but the remote Yeet status still rejected closeout because adding the shared
+  `SystemTemp.ts` source made three repository baselines older than their input.
+  None of the earlier package-scoped, affected-lane, cheap-gate, or hosted
+  Heavy Check results surfaced the stale closeout metadata before publication.
+- **Evidence:** `bun run beep yeet status --remote` on PR #906 head
+  `89f9a9f990` reported `3 stale, 0 unproven`: `coverage-regression` for
+  `standards/coverage.regression-baseline.jsonc`, `knip-ratchet` for
+  `standards/knip.regression-baseline.jsonc`, and
+  `test-typecheck-blindspot` for
+  `standards/test-typecheck.blindspot-baseline.jsonc`, all older than
+  `packages/tooling/test-kit/test-utils/src/SystemTemp.ts`.
+- **What would have prevented it:** make cheap-gates or the authoritative
+  affected CI lane run the same closeout staleness preflight, and have Heavy
+  Check fail or annotate when any required baseline is older than a changed
+  governed source.
+- **Disposition:** actionable closeout repair; regenerate only the three named
+  baselines, verify their diffs, and publish a replacement exact head without
+  entering local full-Yeet admission.
+- **Owner:** Yeet pre-publication staleness parity and hosted Heavy Check gate
+  coverage.
+
+## 2026-08-30 — Package-local coverage staleness prescribes a whole-repository baseline rewrite
+
+- **What happened:** Yeet correctly identified a stale coverage baseline after
+  the new `@beep/test-utils` helper, but its only rendered repair command was
+  the unscoped whole-document writer. That command prebuilt 134 packages and
+  launched ten coverage shards even though the changed governed source was
+  confined to `@beep/test-utils` and Repo CLI.
+- **Evidence:** `bun run beep yeet status --remote` prescribed `bun run
+  coverage:baseline:write`; the command reported `coverage:full: prebuild once,
+  then 10 weighted in-job shard(s)`, `Running build in 134 packages`, and was
+  still executing active package coverage after more than four minutes. The
+  baseline header separately documents the narrower supported form `bun run
+  coverage -- --filter=<package> --write-baseline`.
+- **What would have prevented it:** derive affected coverage packages from the
+  same branch diff used by gate staleness and render a safe multi-filter
+  regeneration command, falling back to the whole-document writer only when
+  affected-package resolution is ambiguous.
+- **Disposition:** command-routing and acceptance-latency friction; allow the
+  already-running authoritative writer to finish, but do not repeat it for this
+  head.
+- **Owner:** Yeet coverage-staleness remediation hints and affected-package
+  selection.
+
+## 2026-08-30 — Knip baseline writer emits JSONC that the repository formatter rejects
+
+- **What happened:** the canonical Knip baseline writer completed successfully
+  with zero findings, but reformatted `normalization.omitted_fields` onto
+  multiple lines. The repository's Biome policy requires that three-item array
+  on one line, so generator output was immediately non-canonical.
+- **Evidence:** `bun run beep quality knip --write-baseline` wrote
+  `standards/knip.regression-baseline.jsonc` with zero findings; the subsequent
+  `bunx biome check` failed only that file and proposed changing the multiline
+  `omitted_fields` array back to `["line", "col", "pos"]`.
+- **What would have prevented it:** run generated Knip JSONC through the same
+  Biome formatter configuration before the writer reports success, or serialize
+  compact arrays in the already-canonical shape.
+- **Disposition:** generator-formatting friction; apply the canonical formatter
+  and verify the baseline still contains zero findings before publication.
+- **Owner:** Knip baseline serialization and generator post-formatting.
+
+## 2026-08-30 — Exploration Atlas check exits silently until an idempotent rewrite
+
+- **What happened:** cheap-gates reported the exploration Atlas check as failed
+  without a diagnostic. Running the canonical writer changed no tracked file,
+  but the immediately repeated check passed, so there was no reviewable
+  projection drift explaining the initial nonzero exit.
+- **Evidence:** `bun run beep explore atlas --check` inside cheap-gates exited 1
+  with no command output; `bun run beep explore atlas --write` then reported it
+  wrote `explorations/ATLAS.md` and README status projections, `git status`
+  showed neither file changed, and the next `--check` reported the projections
+  current.
+- **What would have prevented it:** make check mode compare normalized content
+  independently of output mtimes and always print the path and mismatch class
+  that caused a nonzero exit; if freshness is intentional, label it separately
+  from projection drift.
+- **Disposition:** transient projection-check and diagnostic friction; retain no
+  projection diff, rerun the check after the final ledger edit, and publish only
+  if it remains green.
+- **Owner:** exploration projection check determinism and failure diagnostics.
