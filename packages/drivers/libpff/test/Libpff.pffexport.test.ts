@@ -418,7 +418,9 @@ describe("makePffexportFileProcessingEngine", () => {
         );
 
         expect(result.children.length).toBeGreaterThan(0);
-        expect(yield* fs.readFileString(bwrapArgumentsPath)).toContain("--setenv\nPATH\n/usr/bin:/usr/bin:/bin\n");
+        const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
+        expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/usr/bin:/bin\n");
+        expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
       },
       Effect.scoped,
       provideTestLayer

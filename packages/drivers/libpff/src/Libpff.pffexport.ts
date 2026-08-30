@@ -635,9 +635,12 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       return yield* makeLibpffError("engine-unavailable", { cause: "env shebang interpreter is not a regular file" });
     }
     const envRuntimePrefixes = A.dedupe(
-      A.filter(
-        [runtimePrefixFor(resolvedEnvInterpreter), runtimePrefixFor(canonicalEnvInterpreter)],
-        (runtimePrefix) => !sandboxRuntimeCovers(runtimePrefix)
+      A.map(
+        A.filter(
+          [resolvedEnvInterpreter, canonicalEnvInterpreter],
+          (interpreter) => !sandboxRuntimeCovers(interpreter)
+        ),
+        runtimePrefixFor
       )
     );
     if (A.some(envRuntimePrefixes, (runtimePrefix) => runtimePrefix === path.parse(runtimePrefix).root)) {
