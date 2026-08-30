@@ -2,7 +2,7 @@
 # PROVISIONAL census; closure OPEN; excluded from negation and ratified typing.
 # Workspace membership derives only from root package.json workspaces globs.
 generated_by: scripts/etl_census.py
-corpus_commit: 3b27a0c17900a28578ec6a0d59dc70a2887c5bc9
+corpus_commit: 2c5bc5974742ef982a808826dea589422cf7a52e
 count: 138
 edge_count: 804
 packages:

@@ -14,7 +14,17 @@ from __future__ import annotations
 
 import re
 
-from _common import REPO, S4, S5, S6, corpus_commit, load_yaml, repo_path, write_generated_yaml
+from _common import (
+    REPO,
+    S4,
+    S5,
+    S6,
+    assert_sources_clean,
+    corpus_commit,
+    load_yaml,
+    repo_path,
+    write_generated_yaml,
+)
 
 SOURCE = REPO / "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts"
 POLICY_SUBJECT = "YeetWeightedAdmissionV1"
@@ -64,6 +74,10 @@ def literal_members(text: str, name: str, expected: int) -> tuple[list[str], int
 
 
 def main() -> None:
+    assert_sources_clean(
+        ["packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts"],
+        "etl_policy.py",
+    )
     text = SOURCE.read_text()
     source_file = repo_path(SOURCE)
 

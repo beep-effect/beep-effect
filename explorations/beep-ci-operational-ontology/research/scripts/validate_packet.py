@@ -427,6 +427,37 @@ if _args.s6:
     all_refs_filled = not pending_refs and bool(ratifications)
     if pending_refs:
         warn(f"pending steward sitting: {len(pending_refs)} ABOX ratification refs are null")
+
+    # Generator-digest ratifications are ratifications OF BYTES: the digests the
+    # steward ratified must match the artifacts on disk right now (PR #919 review).
+    import hashlib as _hashlib
+
+    def _sha12(path):
+        return _hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+
+    census_rec = abox_doc.get("census") or {}
+    census_file = S6 / "CENSUS.yaml"
+    if census_file.is_file() and census_rec.get("sha256_12"):
+        if _sha12(census_file) != census_rec["sha256_12"]:
+            blocker(
+                f"CENSUS.yaml bytes ({_sha12(census_file)}) do not match the ratified "
+                f"digest {census_rec['sha256_12']} in ABOX.yaml"
+            )
+    snapshot_rec = abox_doc.get("snapshot") or {}
+    manifest_file = S6 / "snapshot/raw/MANIFEST.yaml"
+    raw_file = S6 / "snapshot/raw/journal.ndjson"
+    if manifest_file.is_file() and snapshot_rec.get("manifest_sha256_12"):
+        if _sha12(manifest_file) != snapshot_rec["manifest_sha256_12"]:
+            blocker(
+                f"snapshot MANIFEST.yaml bytes ({_sha12(manifest_file)}) do not match the "
+                f"ratified digest {snapshot_rec['manifest_sha256_12']} in ABOX.yaml"
+            )
+    if raw_file.is_file() and snapshot_rec.get("redacted_sha256_12"):
+        if _sha12(raw_file) != snapshot_rec["redacted_sha256_12"]:
+            blocker(
+                f"redacted journal bytes ({_sha12(raw_file)}) do not match the ratified "
+                f"digest {snapshot_rec['redacted_sha256_12']} in ABOX.yaml"
+            )
     if all_refs_filled:
         # The historical S5 ruling stays deferred-s6 forever; discharge is the
         # s6_ratification_ref recorded beside it by apply_s6_dispositions.
@@ -493,7 +524,10 @@ if _args.s6:
             "No module named 'pyshacl'",
         )
         if any(marker in diagnostic for marker in unavailable_markers):
-            warn("SHACL skipped: pyshacl unavailable in the offline/managed environment")
+            # SHACL conformance is a contract blocker (s6-abox-contract SS4); an
+            # environment that cannot run it cannot certify the stage (PR #919
+            # review: skip-with-warn was fail-open).
+            blocker("SHACL could not run (pyshacl unavailable) — the S6 gate fails closed; run with network or preinstalled pyshacl")
         else:
             tail = diagnostic.splitlines()[-1] if diagnostic else f"exit {shacl_run.returncode}"
             blocker(f"SHACL runner failed: {tail}")

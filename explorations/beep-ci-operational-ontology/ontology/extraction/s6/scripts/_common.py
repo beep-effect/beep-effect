@@ -47,6 +47,27 @@ def corpus_commit() -> str:
     ).stdout.strip()
 
 
+def assert_sources_clean(pathspecs: list[str], script_name: str) -> None:
+    """Refuse to extract from dirty source bytes.
+
+    corpus_commit() pins HEAD, but the generators read worktree files — a dirty
+    input would emit facts falsely attributed to the pin (PR #919 review).
+    Pathspecs are repo-relative; only tracked modifications count.
+    """
+
+    status = subprocess.run(
+        ["git", "-C", str(REPO), "status", "--porcelain", "-uno", "--", *pathspecs],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if status:
+        raise SystemExit(
+            f"{script_name}: refusing to extract — source paths are dirty vs HEAD "
+            f"(commit them or stash first):\n{status}"
+        )
+
+
 def sha256_12(data: bytes) -> str:
     """Return the packet's canonical twelve-hex SHA-256 receipt."""
 

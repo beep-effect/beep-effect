@@ -15,6 +15,7 @@ from __future__ import annotations
 import collections
 import datetime as dt
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -23,7 +24,9 @@ import yaml
 
 from _common import S6, corpus_commit, sha256_12, write_generated_yaml
 
-SOURCE = Path("/tmp/beep-admit-uid-1000/journal.ndjson")
+# The scheduler constructs its admission root per-user (beep-admit-uid-<uid>);
+# fresh captures must follow the running uid, never a hardcoded one.
+SOURCE = Path(f"/tmp/beep-admit-uid-{os.getuid()}/journal.ndjson")
 RAW = S6 / "snapshot/raw/journal.ndjson"
 MANIFEST = S6 / "snapshot/raw/MANIFEST.yaml"
 CI_IRI = "https://oip.law/ontology/ci-ops#"
@@ -233,26 +236,26 @@ def main() -> None:
         if stale != graph_path:
             stale.unlink()
 
+    # Closure is declared ONLY for predicates the snapshot graph actually asserts:
+    # declaring an unmaterialized predicate closed would license absence-as-evidence
+    # over triples that were never emitted (PR #919 review). hasGrantState stays a
+    # vocabulary gap — its active/released tallies live in counts, never as closure.
     complete = []
     for predicate in (
         "enqueuedAt",
         "admissionChargeTokens",
         "observedQueueWaitMs",
         "hasOriginKey",
-        "hasGrantState",
     ):
-        record = {
-            "predicate": predicate,
-            "world": "closed",
-            "complete_within": f"redacted yeet-admission-journal/v1 window through {instant}",
-            "source": "snapshot/raw/journal.ndjson",
-            "freshness": "snapshot_instant",
-        }
-        if predicate == "hasGrantState":
-            record["note"] = (
-                "complete as active/released manifest tallies only; predicate unratified and not asserted"
-            )
-        complete.append(record)
+        complete.append(
+            {
+                "predicate": predicate,
+                "world": "closed",
+                "complete_within": f"redacted yeet-admission-journal/v1 window through {instant}",
+                "source": "snapshot/raw/journal.ndjson",
+                "freshness": "snapshot_instant",
+            }
+        )
 
     manifest = {
         "generated_by": "scripts/etl_snapshot.py",

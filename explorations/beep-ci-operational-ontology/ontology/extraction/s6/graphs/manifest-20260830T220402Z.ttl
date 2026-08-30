@@ -5,7 +5,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
 manifest:snapshot-20260830T220402Z rdf:type manifest:SnapshotManifest ;
-    manifest:hasClosureDeclaration manifest:closure-01, manifest:closure-02, manifest:closure-03, manifest:closure-04, manifest:closure-05 .
+    manifest:hasClosureDeclaration manifest:closure-01, manifest:closure-02, manifest:closure-03, manifest:closure-04 .
 
 manifest:closure-01 rdf:type manifest:ClosureDeclaration ;
     manifest:completeForPredicate ciops:enqueuedAt ;
@@ -30,13 +30,6 @@ manifest:closure-03 rdf:type manifest:ClosureDeclaration ;
 
 manifest:closure-04 rdf:type manifest:ClosureDeclaration ;
     manifest:completeForPredicate ciops:hasOriginKey ;
-    manifest:world "closed" ;
-    manifest:completeWithin "redacted yeet-admission-journal/v1 window through 2026-08-30T22:04:02.475Z" ;
-    manifest:source "snapshot/raw/journal.ndjson" ;
-    manifest:freshness "snapshot_instant" .
-
-manifest:closure-05 rdf:type manifest:ClosureDeclaration ;
-    manifest:completeForPredicate ciops:hasGrantState ;
     manifest:world "closed" ;
     manifest:completeWithin "redacted yeet-admission-journal/v1 window through 2026-08-30T22:04:02.475Z" ;
     manifest:source "snapshot/raw/journal.ndjson" ;

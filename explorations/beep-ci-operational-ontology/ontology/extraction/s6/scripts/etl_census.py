@@ -15,7 +15,7 @@ import glob
 import json
 from pathlib import Path
 
-from _common import REPO, S6, corpus_commit, repo_path, write_generated_yaml
+from _common import REPO, S6, assert_sources_clean, corpus_commit, repo_path, write_generated_yaml
 
 DEPENDENCY_SECTIONS = ("dependencies", "devDependencies", "peerDependencies")
 PROV_IRI = "https://oip.law/ontology/ci-ops-prov#"
@@ -30,6 +30,7 @@ def local_name(package_name: str) -> str:
 
 
 def main() -> None:
+    assert_sources_clean(["package.json", "*package.json"], "etl_census.py")
     root_manifest = json.loads((REPO / "package.json").read_text())
     workspaces = root_manifest.get("workspaces")
     if not isinstance(workspaces, list) or not all(isinstance(item, str) for item in workspaces):

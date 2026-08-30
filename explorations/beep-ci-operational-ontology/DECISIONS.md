@@ -581,3 +581,25 @@ only" to the full bundle — the correction is authoritative.
 S6 IS COMPLETE once the projection lands and the gate reports zero pending
 refs. Next stage: auditor run 2 (journal/verdict corpus extension, adapter
 v1.1.0), then S7 projection function.
+
+### S6 sitting 2 — post-review amendment (2026-08-30, PR #919)
+
+Five review findings (4 P1 + 1 P2) fixed under the steward's direction to
+address PR comments; all five strengthen the ratified machinery without
+touching ratified content:
+
+- generators refuse dirty source bytes (`assert_sources_clean` — the pin claim
+  is now enforced, not assumed);
+- the `--s6` gate byte-verifies every generator-digest ratification against
+  the artifacts on disk;
+- SHACL unavailability now fails the gate closed (contract §4 conformance is a
+  blocker, never a skip);
+- the snapshot ETL derives the admission root from the running uid;
+- the manifest no longer declares `hasGrantState` closed — closure is declared
+  ONLY for predicates the snapshot graph actually asserts; the grant-state
+  tallies remain manifest counts and the predicate stays a vocabulary gap.
+
+The closure amendment and the moving corpus pin change the CENSUS/MANIFEST
+digests (now cd197cd7a7a8 / bc3375beb3b2 in ABOX.yaml); the ratified snapshot
+content — the redacted journal bytes cf30b993a38d and every policy/enumeration
+fact — is byte-identical to what sitting 2 ratified.
