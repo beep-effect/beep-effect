@@ -28,12 +28,17 @@ five adversarial rounds, mechanical `--gate` PASSED, **31 terms ratified** by th
 steward (rat-001..031), 216 conceded, 57.75% unresolved-fraction waiver ratified. The
 run is rotated and replayable from
 [`ontology/extraction/s4/beep-ci-ops/runs/`](./ontology/extraction/s4/beep-ci-ops/runs/)
-(manifest, index, observations, the vendored judging engine, replay notes). **NEXT:
-S5 adversarial taxonomy** over the 104-entry `LEDGER.yaml` + the 149 unresolved
-dispositions rows + the 31 ratified terms; after that, auditor run 2 (`first_run:
-false`, prior index `orun-2026-08-29T08:20:55Z.index.yaml`) once the corpus extension
-ingests the journal/verdict runtime records the waiver parked, with adapter v1.1.0
-(limitations recorded in the adapters README). Do NOT rerun §4b.
+(manifest, index, observations, the vendored judging engine, replay notes). **S5 IS
+UNDERWAY**: the contract is binding at
+[`ontology/docs/s5-taxonomy-contract.md`](./ontology/docs/s5-taxonomy-contract.md), the
+mechanical join pass is committed (`extraction/s5/JOIN.yaml`: 25 accepted-via / 7
+domain leaves / 305 open), and sitting 1's bulk rulings (19 parked domains, the
+138-package census rejection as A-Box ETL material, the 45 parked properties,
+merge-pair + residual-individual passes) are being scribed. **NEXT: finish the S5
+sittings, run the six-seat round, land DISPOSITIONS/TAXONOMY + the `--s5` gate +
+`apply_s5_dispositions.py`.** After S5: auditor run 2 (`first_run: false`, prior index
+`orun-2026-08-29T08:20:55Z.index.yaml`) with the journal/verdict corpus extension and
+adapter v1.1.0. Do NOT rerun §4b.
 
 **The 3-round pre-S4 review loop is COMPLETE** (2026-08-27). Round 3 (seat H codex
 ultra delta-attack, seat I codex max disposition audit, seat J grok xhigh carrier

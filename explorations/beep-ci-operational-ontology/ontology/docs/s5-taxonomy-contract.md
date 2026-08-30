@@ -30,16 +30,21 @@ distinct `merged-into` ruling; steward sittings land in DECISIONS.md only.
   committed): one row per S4 candidate with its mechanical §4b join bucket.
   Exact-name and source-domain joins only; the script never guesses merges.
 - `s5/DISPOSITIONS.yaml` — the S5 loop log, TOTAL: one row per LEDGER entry
-  (104) and per candidate (337) with ruling ∈ {accepted-via, merged-into,
-  rejected, parked-run-2, deferred-s6} + justification + join_ref
-  (rat-NNN / DECISIONS.md ruling / waiver); plus one row per FACT-CLASS keyed
-  by (predicate, subject-disposition) whose `covers` union is exactly the
-  1,038 fact keys. `deferred-s6` is legal ONLY for individuals whose class is
+  (104), one per candidate (337, keyed by the JOIN row's `seq`), and one per
+  archived §4b unresolved observation (149, keyed by observation id — these
+  must each rule exactly `parked-run-2` with the waiver as join_ref), with
+  ruling ∈ {accepted-via, merged-into, rejected, parked-run-2, deferred-s6} +
+  justification + join_ref (rat-NNN / DECISIONS.md ruling / waiver); plus one
+  row per FACT-CLASS keyed by (predicate, subject-disposition) whose `covers`
+  union is exactly the 1,038 fact keys. `deferred-s6` is legal ONLY for individuals whose class is
   accepted: the A-Box ratifies them at S6.
 - `s5/TAXONOMY.yaml` — the assembled T-Box: one record per accepted term
-  {term, kind, parents, rigidity, identity_ref, parameters}; all 89 accepted
-  literal-domain members as leaf records under their domains; subsumption
-  acyclic, kind-consistent, parents accepted.
+  {term, kind, parents, rigidity, identity_ref, parameters}; `parents` is
+  CLASS SUBSUMPTION only. Accepted literal-domain members and other accepted
+  individuals appear as leaf records carrying `instance_of: <accepted class>`
+  (the type relation, per literal-domains.md: a member is an individual of its
+  domain class), never a `parents` edge. Subsumption acyclic, kind-consistent,
+  parents accepted; every `instance_of` target accepted.
 - `s5/scripts/apply_s5_dispositions.py` — the status-flip projection onto the
   generated s4 YAMLs; idempotent; the ONLY writer of those statuses.
 
@@ -50,9 +55,10 @@ distinct `merged-into` ruling; steward sittings land in DECISIONS.md only.
    domain, 14 open classes, 45 open properties, 79 open literal members in 19
    unratified domains, 167 open individuals (152 = the @beep/* package census).
 2. Steward sittings (bulk-first): per-domain rulings for the 19 unratified
-   literal domains; the package-census individuals as one ruling; merge
-   rulings onto the six reshaped terms; then the residual classes/properties
-   one by one. Rulings scribe into DECISIONS.md; DISPOSITIONS.yaml carries the
+   literal domains; the 138 package-census individuals as one ruling; a
+   residual-individuals pass over the 29 non-census individuals; merge
+   rulings onto the six reshaped terms; the `dependsOn` naming collision;
+   then the residual classes/properties one by one. Rulings scribe into DECISIONS.md; DISPOSITIONS.yaml carries the
    machine rows.
 3. Seats (one round): assembly lanes per kind cluster (codex Sol max) build
    TAXONOMY.yaml over the accepted set; an independent adversary (codex max)
@@ -61,9 +67,10 @@ distinct `merged-into` ruling; steward sittings land in DECISIONS.md only.
 4. Facts: bulk-class rows derived from subject dispositions; orphans and
    conflicts ruled individually in the sittings.
 5. Gate: `validate_packet.py --s5` (blockers): DISPOSITIONS totality and
-   uniqueness; every join_ref resolves; every unresolved-149 row ruled exactly
-   `parked-run-2`; TAXONOMY parents accepted + acyclic + kind-consistent; all
-   accepted literal members present as leaves; no `*Ms`/token-count parameter
+   uniqueness (seq-keyed candidates, id-keyed observations); every join_ref
+   resolves; every one of the 149 archived unresolved observation rows present
+   and ruled exactly `parked-run-2`; TAXONOMY parents accepted + acyclic + kind-consistent; all
+   accepted literal members present as `instance_of` leaves; no `*Ms`/token-count parameter
    typed as anything but a recorded-value data property; `deferred-s6` only on
    individuals with accepted classes.
 6. `apply_s5_dispositions.py`, packet state surfaces, yeet. Completion: nothing
