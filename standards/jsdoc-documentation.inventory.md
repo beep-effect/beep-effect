@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-30T00:14:38.060Z
+Generated: 2026-08-30T08:12:48.595Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 73 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 58 |
-| publicModules | 2935 |
-| publicExports | 20407 |
+| publicModules | 2943 |
+| publicExports | 20475 |
 | openModules | 347 |
-| openExports | 98 |
+| openExports | 99 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 0 |
+| exampleImportFindings | 1 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -73,14 +73,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 216 | 1704 | 46 | 9 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 220 | 1741 | 46 | 10 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
 | 23 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 46 | 1 | 0 |
 | 24 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 36 | 241 | 14 | 0 |
 | 25 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
-| 26 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 207 | 582 | 9 | 4 |
+| 26 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 211 | 628 | 9 | 4 |
 | 27 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | clean | 10 | 86 | 0 | 0 |
 | 28 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 26 | 130 | 0 | 0 |
 | 29 | `@beep/ontology-config` | `packages/ontology/config` | needs-remediation | 7 | 19 | 1 | 0 |
@@ -112,7 +112,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 25 | 102 | 0 | 0 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | clean | 469 | 4233 | 0 | 0 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 256 | 4 | 0 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 240 | 4 | 0 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 7 | 14 | 0 | 0 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 30 | 108 | 4 | 0 |
@@ -126,7 +126,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 69 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
 | 70 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 71 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
-| 72 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 225 | 0 | 0 |
+| 72 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 226 | 0 | 0 |
 | 73 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 74 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 75 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 3 | 10 | 2 | 0 |
@@ -358,8 +358,9 @@ Module findings:
 
 Export findings:
 - `src/commands/Ci/CiLane.ts:339` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:903` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:916` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:107` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
+- `src/commands/Explore/Atlas.ts:659` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:570` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
