@@ -349,3 +349,22 @@ ratifies.
   contradictory wrapper result made the overall repair verdict fail. Prevention: the Fallow
   wrapper must treat an `ok` envelope with zero introduced findings as success regardless of
   non-applicable baseline rows, or emit a non-`ok` status explaining the actual gate.
+
+- **2026-08-30 — The first hosted review found two aligned-status consumers omitted the new
+  minimal-fold case.** LangExtract's own handoff and service metrics accepted
+  `match_minimal_fold`, but the LeJeune provider recorder and IrToLaw each repeated an older
+  three-member aligned-status list. A valid folded match would therefore be silently discarded
+  by one consumer and reported as unaligned by the other. Fix: both consumers now derive their
+  predicate from `AlignedStatus.Options`, while IrToLaw derives its narrowed type by excluding
+  only the `unaligned` case. Prevention: downstream consumers must derive a positive capability
+  family from its authoritative literal domain instead of copying the current member list.
+
+- **2026-08-30 — The full review-thread audit exposed two missing parts of the E1 uniqueness
+  law.** The first implementation returned an exact or lesser occurrence before asking whether a
+  second fold-equivalent source slice existed, and it applied one keep/drop choice to every
+  end-of-line hyphen in a candidate instead of interpreting each independently. Both behaviors
+  could admit an arbitrary evidence span or miss a mixed split-word/hyphenated-compound quote.
+  Fix: minimal-fold matching now uses one encoded optional-hyphen automaton, rejects multiple raw
+  source spans before preserving a higher-tier status, and covers mixed source and candidate
+  choices. Prevention: translate decision phrases such as "unique across variants" into explicit
+  cross-tier ambiguity and multiple-choice tests before the first hosted review.

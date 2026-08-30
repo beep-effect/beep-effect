@@ -152,6 +152,53 @@ describe("alignCandidate", () => {
     });
   });
 
+  it("interprets each end-of-line hyphen independently", () => {
+    const sourceText = "probabil-\nistic evidence-\nbased";
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "relation", text: "probabilistic evidence-based" }),
+      sourceOf(sourceText)
+    );
+
+    expect(extraction).toMatchObject({
+      alignmentStatus: "match_minimal_fold",
+      matchedText: sourceText,
+      span: { end: Str.length(sourceText), start: 0 },
+    });
+  });
+
+  it("interprets each candidate end-of-line hyphen independently", () => {
+    const sourceText = "probabilistic evidence-based";
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "relation", text: "probabil-\nistic evidence-\nbased" }),
+      sourceOf(sourceText)
+    );
+
+    expect(extraction).toMatchObject({
+      alignmentStatus: "match_minimal_fold",
+      matchedText: sourceText,
+      span: { end: Str.length(sourceText), start: 0 },
+    });
+  });
+
+  it("retains a hyphen when dropping every candidate segment would be empty", () => {
+    const extraction = alignCandidate(ExtractionCandidate.make({ label: "relation", text: "-\n" }), sourceOf("-"));
+
+    expect(extraction).toMatchObject({
+      alignmentStatus: "match_minimal_fold",
+      matchedText: "-",
+      span: { end: 1, start: 0 },
+    });
+  });
+
+  it("fails closed when a trailing optional candidate segment yields two source spans", () => {
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "relation", text: "alpha-\n" }),
+      sourceOf("alpha-\n")
+    );
+
+    expect(extraction.alignmentStatus).toBe("unaligned");
+  });
+
   it("fails closed when the two end-of-line-hyphen variants locate different source slices", () => {
     const extraction = alignCandidate(
       ExtractionCandidate.make({ label: "relation", text: "well-\nbeing" }),
@@ -170,6 +217,24 @@ describe("alignCandidate", () => {
     expect(extraction.alignmentStatus).toBe("unaligned");
   });
 
+  it("fails closed when an exact occurrence has a second fold-equivalent occurrence", () => {
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "relation", text: "Alpha beta" }),
+      sourceOf("Alpha beta differs from Alpha\n beta")
+    );
+
+    expect(extraction.alignmentStatus).toBe("unaligned");
+  });
+
+  it("fails closed when a lesser occurrence has a second fold-equivalent occurrence", () => {
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "relation", text: "alpha beta" }),
+      sourceOf("Alpha beta differs from Alpha\n beta")
+    );
+
+    expect(extraction.alignmentStatus).toBe("unaligned");
+  });
+
   it("uses bounded fuzzy matching", () => {
     const extraction = alignCandidate(
       ExtractionCandidate.make({ label: "organization", text: "Acmee" }),
@@ -177,6 +242,18 @@ describe("alignCandidate", () => {
     );
 
     expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", matchedText: "Acme." });
+  });
+
+  it("retains the earlier fuzzy window when a later candidate does not score higher", () => {
+    const extraction = alignCandidate(
+      ExtractionCandidate.make({ label: "relation", text: "Alpha beta" }),
+      AlignmentSource.make({
+        fuzzyThreshold: UnitInterval.make(0.7),
+        sourceText: "Alpha betta. Alpha betu.",
+      })
+    );
+
+    expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", matchedText: "Alpha betta." });
   });
 
   it("skips fuzzy work when the caller requests exact similarity", () => {
