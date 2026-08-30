@@ -1888,7 +1888,10 @@ describe("corpus restoration preservation", () => {
           records,
           (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
         );
-        if (O.isNone(seal) || O.isNone(terminal)) return yield* Effect.die("Expected sealed terminal fixture rows.");
+        const preflight = A.findFirst(records, (record) => record.recordType === "archive-preflight");
+        if (O.isNone(seal) || O.isNone(terminal) || O.isNone(preflight)) {
+          return yield* Effect.die("Expected sealed preflight and terminal fixture rows.");
+        }
         const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
         const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (
           unsealed: ReadonlyArray<ArchiveLedgerRecord>
@@ -1909,6 +1912,31 @@ describe("corpus restoration preservation", () => {
         const withoutInheritedLoss = yield* reseal(
           A.filter(withoutSeal, (record) => record.recordType !== "inherited-loss")
         );
+        const duplicatePreflight = yield* reseal(A.append(withoutSeal, preflight.value));
+        const unapprovedPreflight = yield* reseal(
+          A.map(withoutSeal, (record) =>
+            record === preflight.value
+              ? ArchiveLedgerRecord.cases["archive-preflight"].make({ ...preflight.value, approved: false })
+              : record
+          )
+        );
+        const withFailure = yield* reseal(
+          A.append(
+            withoutSeal,
+            ArchiveLedgerRecord.cases["archive-failure"].make({
+              approved: false,
+              failureKind: "unreadable",
+              message: "synthetic sealed failure",
+              objectId: terminal.value.objectId,
+              recordedAt: terminal.value.recordedAt,
+              recordType: "archive-failure",
+              runId: terminal.value.runId,
+              schemaVersion: terminal.value.schemaVersion,
+              sourceLabel: terminal.value.sourceLabel,
+              sourceRelativePath: terminal.value.sourceRelativePath,
+            })
+          )
+        );
         const variants: ReadonlyArray<ReadonlyArray<ArchiveLedgerRecord>> = [
           withoutSeal,
           A.append(records, seal.value),
@@ -1916,6 +1944,9 @@ describe("corpus restoration preservation", () => {
           duplicateTerminal,
           withoutTerminal,
           withoutInheritedLoss,
+          duplicatePreflight,
+          unapprovedPreflight,
+          withFailure,
         ];
 
         yield* Effect.forEach(
