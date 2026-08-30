@@ -76,6 +76,11 @@ type MailCandidate = {
   readonly sourcePath: string;
 };
 
+type PstMailCandidate = MailCandidate & {
+  readonly family: "pst";
+  readonly pass: O.Some<PreservedFilePass>;
+};
+
 type WalkedTransformationFile = {
   readonly absolutePath: string;
   readonly relativePath: string;
@@ -624,25 +629,17 @@ const selectMailCandidates = (
   if (scope === "full") return candidates;
   const eligible = A.filter(
     candidates,
-    (candidate) =>
+    (candidate): candidate is PstMailCandidate =>
       candidate.family === "pst" &&
-      O.exists(
-        candidate.pass,
-        (pass) =>
-          pass.sizeBytes >= 1024 * 1024 &&
-          (Str.includes("$Recycle.Bin")(pass.sourceRelativePath) ||
-            Str.startsWith("$R")(path.basename(pass.sourceRelativePath)))
-      )
+      O.isSome(candidate.pass) &&
+      candidate.pass.value.sizeBytes >= 1024 * 1024 &&
+      (Str.includes("$Recycle.Bin")(candidate.pass.value.sourceRelativePath) ||
+        Str.startsWith("$R")(path.basename(candidate.pass.value.sourceRelativePath)))
   );
   return A.take(
     A.sort(
       eligible,
-      Order.mapInput(Order.Number, (candidate: MailCandidate) =>
-        O.getOrElse(
-          O.map(candidate.pass, (pass) => pass.sizeBytes),
-          () => 0
-        )
-      )
+      Order.mapInput(Order.Number, (candidate: PstMailCandidate) => candidate.pass.value.sizeBytes)
     ),
     1
   );
@@ -4925,6 +4922,7 @@ const familyEvidenceAccepted = (
  */
 export const restorationTransformationTesting = {
   addFamilyTerminal,
+  appendAttachmentRepair,
   attachmentRepairsReconcile,
   attemptBindingsReconcile,
   attemptRetryOrdinalsReconcile,
@@ -4967,6 +4965,7 @@ export const restorationTransformationTesting = {
   measureTransformationTreeBytes,
   nonNegative,
   parseNormalizedRmse,
+  processPstCandidate,
   quarantineDisposition,
   recordIdentityMatches,
   recycleCheckpointOrderValid,
@@ -4988,6 +4987,7 @@ export const restorationTransformationTesting = {
   rejectFamilyPreflight,
   requireMailScope,
   resumableFamilyStart,
+  resumeFamilyCandidates,
   runLegacyStep,
   resumableAttemptLifecycleReconciles,
   safeAttemptId,
