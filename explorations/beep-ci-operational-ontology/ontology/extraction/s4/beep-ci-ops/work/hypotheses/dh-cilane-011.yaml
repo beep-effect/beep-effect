@@ -1,0 +1,25 @@
+id: "dh:cilane:011"
+observation_refs:
+  - "po:sha256:8365cc378d08ab056860357f85044c15df0fdbc3d23134d891abadab7518f5e0"
+  - "po:sha256:c1f31ecfab7c74c39a6bfade2e54499f3c659caa77e253120e6a600fd3a7d8ac"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "JSDoc ratchet verification lane"
+  description: "A possible documentation-ratchet verification lane named by the quoted jsdoc-ratchet token."
+representation_status: lexical_alias
+alternatives:
+  - label: "jsdoc-ratchet command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "JSDoc regression-control procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Repeated spelling across overlapping quotations does not establish a procedure. The observations contain no inventory, threshold, execution, or verdict fact, so an internal command token remains the sufficient account."
+epistemic_status: proposed
+confidence:
+  value: 0.44
+  use_for_acceptance: false

@@ -1,0 +1,24 @@
+id: "dh:cilane:004"
+observation_refs:
+  - "po:sha256:6394a000c4693839548ee1dec8c121eafb8c4b0d7f2adcae8fee3fbab3b6c574"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "commitlint verification lane"
+  description: "A possible operational verification lane named by the quoted commitlint token; the record establishes only the token."
+representation_status: lexical_alias
+alternatives:
+  - label: "commitlint command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "commit-message validation procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A quoted commitlint list member can be an internal selector even when its wording suggests a validation procedure. No supplied observation records a procedure, invocation range, execution, or verdict for it."
+epistemic_status: proposed
+confidence:
+  value: 0.42
+  use_for_acceptance: false

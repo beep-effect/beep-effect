@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:057"
+observation_refs:
+  - "so:sha256:dd2af5c55a9cfe200ae0b62da73672ae4a0d84fbe061e6a8e1506c2a96644cf6"
+cq_warrants: []
+proposed_referent:
+  label: "schedulerErrorToYeetError helper"
+  description: "No domain-ontology referent is proposed for the schedulerErrorToYeetError helper; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "scheduler failure translation event"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation records only an unrepresentable variable declaration and its declaration header. That does not establish a domain occurrence, a procedure instance, or an independently governed information artifact."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

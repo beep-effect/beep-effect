@@ -1,0 +1,34 @@
+id: ic:alt3:052
+hypothesis_ref: dh:worktree-config:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two such obligations are the same iff they are the same standing requirement
+    that a contradicting slice, package, adapter, or dependency proposal must change or the
+    architecture document must be amended. The prose paragraph is how the obligation is stated,
+    not what makes it the same obligation.
+  reidentification_key:
+  - standards/ARCHITECTURE.md
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one standing architecture-boundary obligation
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+  - information_object
+  - mode
+  existential_dependencies:
+  - the architecture constitution document
+  - a contradicting proposal
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - document amended
+  - proposal changed to comply
+counterexamples:
+- description: A lint or Fallow run that reports a boundary violation is a check procedure,
+    not this obligation; the quoted rule can bind while no checker is running.
+status: proposed

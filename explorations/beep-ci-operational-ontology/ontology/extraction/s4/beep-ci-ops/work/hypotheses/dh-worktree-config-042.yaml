@@ -1,0 +1,19 @@
+id: "dh:worktree-config:042"
+observation_refs:
+  - "so:sha256:9fd1dd797efd4f30446bfd98b1a4953a4fe79eed088dece8f02fe450d7d28717"
+  - "so:sha256:e077af98cecf26f2765cbc47cf999b2ee0e5b2823043dd566ef192eeef56793a"
+cq_warrants: []
+proposed_referent:
+  label: "FleetLivenessProbe code vocabulary"
+  description: "The source vocabulary of claude-session, process-cwd, transcript-mtime, and worktree-mtime probe codes together with its generated alias."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet liveness-probe procedure kinds"
+    representation_status: unresolved
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Literal codes and an alias do not establish whether the members denote procedures, data sources, evidence kinds, or only dispatch tokens."
+epistemic_status: proposed
+confidence: {value: 0.8, use_for_acceptance: false}

@@ -1,0 +1,30 @@
+id: ic:alt2:055
+hypothesis_ref: dh:worktree-config:016
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two origin-main new-only Fallow audit work-unit specifications are the same iff they prescribe the same repeatable audit
+    with base origin/main and gate new-only; a particular audit run is not this specification.
+  reidentification_key:
+  - fallow:audit --base origin/main --gate new-only
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One work-unit specification per distinct base-plus-gate audit prescription.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: The same command executed twice is two executions of one specification.
+- description: >-
+    A Fallow audit with a different base or gate (for example gate all) is a different work-unit specification, even if it
+    shares the fallow:audit executable.
+status: proposed

@@ -1,0 +1,22 @@
+id: "dh:quality:091"
+observation_refs:
+  - "so:sha256:c387b11a71747137e41574b0b4b05740ddb1467ac82721e5a76d2fd8f32e549d"
+  - "so:sha256:df26fcaa8c2f32e1de1c79a625a66bc8d42a29d4b4f57fb4eb5e08d313aed90e"
+cq_warrants: []
+proposed_referent:
+  label: "FallowQualityFeatureFamily source vocabulary"
+  description: "A source-controlled lexical vocabulary containing \"audit\", \"boundaries\", \"dead-code\", \"editor-mcp-hooks\", \"fix-preview\", \"flags\", \"health\", \"runtime-coverage\", \"security\". The record supports those spellings, not independently existing domain individuals or kinds."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational classification corresponding to FallowQualityFeatureFamily"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observations establish only literal membership, aliasing, or export facts for FallowQualityFeatureFamily. Those facts are fully compatible with a code-only vocabulary and do not observe policies, states, events, or other domain instances carrying the labels."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.82
+  use_for_acceptance: false

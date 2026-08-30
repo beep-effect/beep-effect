@@ -1,0 +1,25 @@
+id: "dh:turbo-cache:014"
+observation_refs:
+  - "so:sha256:0e3b8e1c6adf38de2dc40769ce5e0ae43ed0535bbc90d08a4c2b2fc7fee0aa97"
+  - "po:sha256:f75cc7dc89b253040128c70c225d394adf0e8d7e5439b74755fe82ca66aefb4f"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo task specification named transit"
+  description: "A repeatable configured task carrying an observed dependency selector."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A transit work procedure specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "A verification lane"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The build-graph configuration counterexample wins: a transit entry can select ^transit in a serialized task map without establishing a governed procedure or verification lane beyond that configuration row."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.66
+  use_for_acceptance: false

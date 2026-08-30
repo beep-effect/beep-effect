@@ -1,0 +1,9 @@
+id: rat:31
+proposal_ref: otp:fallow-health-lane:001
+proposal_sha256: 969df00a552d007dab339adf248e497a852092cc1f9f1cdaa1a6e8f36461fc69
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept FallowHealthLane — same basis as its sibling; the pair ships together.

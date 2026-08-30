@@ -1,0 +1,24 @@
+id: so:sha256:0cf74c6ebad83eb8183484044d375af828314a63f7c3f9eb6a6264fa13cf4426
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 386
+  end_line: 411
+  content_sha256: 51637b8be2159ca54186067ea4258f11c73916ed21196e9872f590e27c3d5715
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts::summarizeTurboDryRunOutput
+  lexical_name: summarizeTurboDryRunOutput
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: summarizeTurboDryRunOutput
+source_excerpt: export const summarizeTurboDryRunOutput = Effect.fn("TurboConfigProof.summarizeTurboDryRunOutput")(function*
+  (
+epistemic_status: parser_derived

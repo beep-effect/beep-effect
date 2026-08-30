@@ -1,0 +1,30 @@
+id: ic:alt4:007
+hypothesis_ref: dh:sched-core:013
+identity:
+  supplies_identity: true
+  identity_criterion: Two weighted-admission capacity obligations are the same when they mediate the same ticket, the same active-lease charge total, and the same capacity threshold in one promotion attempt; the boolean helper is a procedure, never the relation.
+  reidentification_key:
+    - selfMayAttempt
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: Ticket charge, active-lease charge sum, and current capacity jointly compose one capacity-binding.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - situation
+    - information_object
+  existential_dependencies:
+    - YeetAdmissionTicket
+    - active admission leases
+    - current capacity
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: "selfMayAttempt also encodes head-of-line waiting: a ticket can fail the helper while capacity would admit it, because an earlier unblocked ticket is waiting, so the helper is not identical to the capacity obligation."
+  - description: A Boolean guard used only in tests without tickets or leases would not mediate this relation.
+status: proposed

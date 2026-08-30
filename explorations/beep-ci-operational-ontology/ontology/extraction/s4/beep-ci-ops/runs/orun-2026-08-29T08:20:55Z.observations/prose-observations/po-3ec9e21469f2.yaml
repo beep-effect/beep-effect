@@ -1,0 +1,10 @@
+id: po:sha256:3ec9e21469f254e3b0f8e2a60ef859b55b00bce90ea455a9f84f54c73b861b78
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 620
+  end_line: 628
+quote: lease.originKey === ticket.originKey
+epistemic_status: quoted_prose

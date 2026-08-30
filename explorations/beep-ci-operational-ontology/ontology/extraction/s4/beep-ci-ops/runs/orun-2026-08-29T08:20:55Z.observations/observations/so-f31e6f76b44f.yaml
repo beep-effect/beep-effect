@@ -1,0 +1,25 @@
+id: so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts
+source_span:
+  start_line: 342
+  end_line: 363
+  content_sha256: 6f79cad5b080d0223ed6103e9bb0d01c483d1e5610197e717421a133528054b7
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts::RepoPlanStep
+  lexical_name: RepoPlanStep
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: RepoPlanStep
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class RepoPlanStep extends S.Class<RepoPlanStep>($I`RepoPlanStep`)(
+epistemic_status: parser_derived

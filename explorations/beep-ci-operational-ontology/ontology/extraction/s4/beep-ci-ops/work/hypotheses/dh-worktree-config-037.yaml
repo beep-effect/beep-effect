@@ -1,0 +1,19 @@
+id: "dh:worktree-config:037"
+observation_refs:
+  - "so:sha256:7fce54fc24379f89f3d98edcff12951a680ae3ad4ec2b7add61e2576c4d7a2f1"
+  - "so:sha256:ee5eb71145b5266dac148b60213a2d24a9a6ddce8f395be81c54b035cf209be4"
+cq_warrants: []
+proposed_referent:
+  label: "FleetLiveness code vocabulary"
+  description: "The source vocabulary of live, dormant, and unknown codes together with its generated TypeScript alias."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet checkout liveness phase domain"
+    representation_status: unresolved
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An enum-like code family does not establish phase semantics, a bearer, transition criteria, or persistence through status change."
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

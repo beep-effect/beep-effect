@@ -1,0 +1,27 @@
+id: "dh:cilane:028"
+observation_refs:
+  - "so:sha256:5b7740150ddad05395a9b42cf724780f03f965e83221a8fdda93719a468cd1c0"
+  - "so:sha256:68873bb4e05d5b7aea9abb4f56d69c1b609593aa66c1c0fddda658e64406310f"
+  - "so:sha256:bfc241df59a4ac6583bb3055885ebad66526bb68a7dd66a5ea43b1f9147d9990"
+  - "so:sha256:ca44f62bcf408a3f53dc073516094eee357895e6e7dcc2d2ffb67cf4b660c15d"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "CI lane descriptor inventory implementation"
+  description: "The descriptor schema, exported descriptor collection, encoder binding, and printing helper declared in the lane module."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "machine-readable verification-lane inventory"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "collection of verification-lane specifications"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The records expose declarations whose names suggest an inventory, but their canonical facts are schema inheritance, export, or unrepresentable declarations. They do not record emitted inventory content or correspondence to observed CI lanes."
+epistemic_status: proposed
+confidence:
+  value: 0.81
+  use_for_acceptance: false

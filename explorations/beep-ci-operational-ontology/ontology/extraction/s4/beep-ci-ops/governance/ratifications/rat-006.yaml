@@ -1,0 +1,10 @@
+id: rat:6
+proposal_ref: otp:schedule-proposal:001
+proposal_sha256: 4cc92149ded4fbeb74b1479d2fd4441def778a4bbce05f074ca7f07c98d3ef9c
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept ScheduleProposal — ratified flagged as declared design intent; the retention trace is
+  named S5/S7 evidence.

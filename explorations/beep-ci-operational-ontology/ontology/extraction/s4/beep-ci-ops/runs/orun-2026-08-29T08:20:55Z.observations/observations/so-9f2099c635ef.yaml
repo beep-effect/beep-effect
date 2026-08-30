@@ -1,0 +1,23 @@
+id: so:sha256:9f2099c635ef34ad3043590638b518c6f513ccc8c08bf1bc20d9b1796f321b52
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 248
+  end_line: 264
+  content_sha256: 0bc566e8a3a8ef528d771db4ff9300300259a09f5c7a85620434125a41e1544e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::isAdmissionOwnerAlive
+  lexical_name: isAdmissionOwnerAlive
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const isAdmissionOwnerAlive = Effect.fnUntraced(function* (owner: {'
+epistemic_status: parser_derived

@@ -1,0 +1,10 @@
+id: po:sha256:9c89bf17f35f4e9ac5dd3791656461492478cbd1e99258fd1e95b5babec7f0e6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 313
+  end_line: 320
+quote: 'originKey: path.basename(lockPath, ".lock")'
+epistemic_status: quoted_prose

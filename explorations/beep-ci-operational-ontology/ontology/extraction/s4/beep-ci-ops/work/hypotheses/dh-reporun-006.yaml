@@ -1,0 +1,26 @@
+id: "dh:reporun:006"
+observation_refs:
+  - "so:sha256:dd4ce73b5f90b6a2cc48a40c200e4ab2a0f7353fbfbd20f5e53251a0d390ee71"
+  - "so:sha256:704700c3569c97c04ce6698d167bf38c6ee95850d1a68bd3c0d8a3732107994f"
+  - "so:sha256:cffc9352dab29999a8fea11c29898375fb9f5d0140582e5b325a5e361eafdf5a"
+cq_warrants: []
+proposed_referent:
+  label: "GitHub-check mode vocabulary"
+  description: "A code-level vocabulary accepted by the repository CLI's GitHub-check command."
+representation_status: unresolved
+alternatives:
+  - label: "Verification-lane kind vocabulary"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "CLI argument validation artifact"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The cited observations establish an exported value array, schema, and derived alias, but they do not establish that every mode has a stable operational identity required by a Must or Should CQ. The null therefore remains viable."
+epistemic_status: proposed
+confidence:
+  value: 0.63
+  use_for_acceptance: false
+

@@ -1,0 +1,10 @@
+id: po:sha256:38ed56de8a68cd967d27668d420a8c5f46209fa8ecefd523ce74676362c611a6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: .fallowrc.jsonc
+source_span:
+  start_line: 302
+  end_line: 312
+quote: Complexity ceilings
+epistemic_status: quoted_prose

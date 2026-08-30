@@ -1,0 +1,18 @@
+id: "dh:worktree-config:031"
+observation_refs:
+  - "so:sha256:32cdc713f85a9f65a6eda90b565c87676a3fb7269b779bcaf4a43fb9e3735a74"
+cq_warrants: []
+proposed_referent:
+  label: "accumulatorEntry conversion helper"
+  description: "An internal variable declaration named accumulatorEntry whose construct is otherwise unrepresented by the observation vocabulary."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "worktree-list record construction operation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The sole fact is an unrepresentable variable declaration, so no domain referent can survive from this observation."
+epistemic_status: proposed
+confidence: {value: 0.97, use_for_acceptance: false}

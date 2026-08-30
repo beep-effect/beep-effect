@@ -1,0 +1,24 @@
+id: fa:alt2:023
+hypothesis_ref: dh:topology:047
+identity_card_ref: ic:alt2:023
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: @beep/epistemic-server as a workspace software-package information unit'
+  still_viable: true
+- label: 'kind: @beep/epistemic-server as an identity-supplying software-package sortal'
+  still_viable: true
+- label: 'lexical_alias: the scoped name token only'
+  still_viable: true
+- label: 'implementation_artifact_only: generated topology-capture row only'
+  still_viable: true
+strongest_counterexample: >-
+  The only cited observation of @beep/epistemic-server is a generated topo-sort line pairing the scoped name with a sort index,
+  so information-object, kind, name-token, and row-only readings remain observationally equivalent.
+verdict: analyzed
+needed_evidence: >-
+  A package.json name plus directory (and optionally a rename history) for @beep/epistemic-server would show whether the topology
+  row names an enduring software unit or only a serialization token.

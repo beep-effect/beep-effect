@@ -1,0 +1,25 @@
+id: so:sha256:0a2c5f86ed363ec9af7d18b61cde9a0bd8f3332c6e23b7d14371b102026aa2b0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 299
+  end_line: 310
+  content_sha256: cccbb2f63fd5d14f3d3009d4e698b88e05f41515ffc2bf4d30f86082415540bc
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::YeetMonitorFailedJob
+  lexical_name: YeetMonitorFailedJob
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetMonitorFailedJob
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetMonitorFailedJob extends S.Class<YeetMonitorFailedJob>($I`YeetMonitorFailedJob`)(
+epistemic_status: parser_derived

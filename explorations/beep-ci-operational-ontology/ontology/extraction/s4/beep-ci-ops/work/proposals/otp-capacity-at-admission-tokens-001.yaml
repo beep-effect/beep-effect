@@ -1,0 +1,51 @@
+id: otp:capacity-at-admission-tokens:001
+hypothesis_ref: dh:sched-core:015
+identity_card_ref: ic:sched-core:014
+foundational_status: analyzed
+term:
+  local_name: capacityAtAdmissionTokens
+  preferred_label: capacity at admission tokens
+  proposed_iri: https://oip.law/ontology/ci-ops#capacityAtAdmissionTokens
+  owl_entity_kind: data_property
+definition:
+  text: A data relation from a SeatGrant admission occurrence to the token capacity remaining immediately before the candidate
+    charge is added, reconstructed as computed capacity minus active admission charges under the same token convention. CQ-010
+    requires this pre-grant value; using a post-grant snapshot would change the intension and falsely report a compliant admission
+    as an overrun.
+  source:
+  - CQ-010
+  - so:sha256:a60f427f58284fc547221dc3bcc40e9f775210223445b249855550c984161b7f
+  - so:sha256:bd4d9d95ea3664e0b47b1f4d327e89339b981cbbdac3508b0ecd1853b610c278
+  - so:sha256:d90705f0e7f21da09d5ee0241b81225a3536c9c519f38abe2cdfb08b3b9cd451
+  - po:sha256:514fa1f6470b636abfcba8311fc7430e3b559392a4a035306585a7ec51d09d4b
+  - po:sha256:caf162bd83e32f7cbddef5adf2e9da36225d4d64ce2662e20e5a5fe0847b9f9f
+  - po:sha256:cdd95c51618c05a2cbcaa580fa2541af3e9db162e8d597cae02584a522df1f0f
+  - po:sha256:f200b53992aa999c6504338bd747802aacaf5b8d4bcd1e0d35c7037643dffd16
+foundational:
+  ufo_category: none
+  gufo_alignment: not applicable to an OWL property
+ontoclean:
+  rigidity: unresolved
+  identity: none
+  dependence: relational
+revision_log:
+- from_sha256: 54c474d940a2ddd5074180a86105f1a60e1aeb6790bb43489ce706883c60e1fc
+  addressed:
+  - discriminator-true-of-derived-value
+- from_sha256: cb343577135cdae83f349d136d63085e39192edea24d1bb7fca12f47df973c12
+  addressed:
+  - property-quality-category-conflict
+  - discriminator-true-of-derived-value
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-010
+alternatives_rejected:
+- 'Implementation-only null rejected by the hardened discriminator: A candidate is promoted only when its charge fits the
+  remaining live capacity, and an overshooting concurrent admission is rolled back before work begins.'
+open_issues: []
+status: proposed
+revision_requests: []

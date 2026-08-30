@@ -1,0 +1,10 @@
+id: rat:30
+proposal_ref: otp:fallow-audit-lane:001
+proposal_sha256: d5429a33ec39fc23bab9331de3e8885859cccf7ae78c912b5da50abe1e553d97
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept FallowAuditLane — stronger evidence than the token lanes; the asymmetry is honest and
+  S5 re-opens the rest.

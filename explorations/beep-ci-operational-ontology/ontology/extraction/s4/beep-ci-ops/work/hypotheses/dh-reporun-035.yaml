@@ -1,0 +1,25 @@
+id: "dh:reporun:035"
+observation_refs:
+  - "so:sha256:e08e9941c6416af670e72e47099dcf2f6afc7403df4e34cfc9187ade20831f8e"
+  - "so:sha256:ab93ba29883568a9e78ce103ff0ad1931ad4ba730542c0f44d155d2ba533e7b5"
+  - "so:sha256:943115322bfc18e9c805fb051e1bf63831d2bfe136784466657e522cd9437bd9"
+  - "so:sha256:e30858581ec4ef8d08fe7c67b3fd7d857d6482e61a38ed5f5277ed7faa6c51ab"
+  - "so:sha256:b969dc5e5c37c3f067903f81e23ef21f0fde93c85dbdf5b2737d44762567cc31"
+cq_warrants: []
+proposed_referent:
+  label: "bounded-output fold accumulator mechanism"
+  description: "The transient text-and-truncation state plus helpers used while folding captured subprocess streams."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Partial log information artifact"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The cited state is initialized, mutated, and returned inside stream-folding implementation. No observation shows it as a durable log record or CQ-facing evidence carrier, so the null stands."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false
+

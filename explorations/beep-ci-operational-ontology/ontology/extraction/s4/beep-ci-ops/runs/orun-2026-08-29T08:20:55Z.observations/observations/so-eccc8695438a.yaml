@@ -1,0 +1,23 @@
+id: so:sha256:eccc8695438a56aecd9ba26e1939f39d306c936b2b495ffa6b619d5cd4f54ccb
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 134
+  end_line: 138
+  content_sha256: b20d3dc15a31c90659e8349c1a4b769c23a02a4475aea7391016fdb7d91236fe
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::LintPolicySubcommand
+  lexical_name: LintPolicySubcommand
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: LintPolicySubcommand
+source_excerpt: export const LintPolicySubcommand = LiteralKit(LINT_POLICY_SUBCOMMANDS).pipe(
+epistemic_status: parser_derived

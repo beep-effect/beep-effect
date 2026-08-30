@@ -1,0 +1,34 @@
+target: "otp:work-unit-specification:001"
+target_sha256: "4b4eba7e966ddd273daad3699e2f79878f594d8e8630399b378af8b57a234593"
+chain_sha256: "ef418c75bedc32672125758ba9fe345b8f986484237d51ea01f75950cbd2faf4"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a edge to test; no valid subsumption relation is asserted."
+attacks:
+  - surface: identity
+    rule: "policy-version-identity-conflict"
+    counterexample: "A policy revision can change an unrelated lint rule while leaving the lane, scope rule, parameters, and completion semantics of a WorkUnitSpecification word for word. The revised proposal says such provenance must not change identity, but the unchanged IdentityCard still makes governing policy version identity-defining and supplies identity, so it wrongly separates the unchanged specification."
+    outcome: landed
+  - surface: warrant
+    rule: "cq-required-term"
+    counterexample: "Without a reusable lane-by-scope WorkUnit specification, CQ-002 cannot return the admissible work object separately from the dated execution. Its natural language, query, and required WorkUnit class make the generic term necessary."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-policy-text"
+    counterexample: "A stale policy document can contain the same affected-scope and full-repository docgen prescriptions while no scheduler retains WorkUnitSpecification objects. Both quotations remain true in that documentation-only null world."
+    outcome: landed
+rival_models_still_viable:
+  - "Reusable lane-by-scope plan information content"
+  - "A bound scheduling-request information object"
+  - "Inactive policy documentation with no retained scheduling object"
+evidence:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:60ee0a392b7109f8914e89df188cdd5bd8e18390ddde480b96f362408411fdd4"
+  - "CQ-002"

@@ -1,0 +1,23 @@
+id: so:sha256:aae98d5927e0b5760e2cd21c7eb757857be3c4a618f5c59c83191a9311cff21b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 975
+  end_line: 1014
+  content_sha256: 9e42822ac30d47ec732664d6a90e0baff2293effd27773ee6adf86ebf9d19007
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::noteAdmissionWait
+  lexical_name: noteAdmissionWait
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const noteAdmissionWait = Effect.fnUntraced(function* (
+epistemic_status: parser_derived

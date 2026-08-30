@@ -1,0 +1,33 @@
+id: ic:alt3:037
+hypothesis_ref: dh:topology:104
+identity:
+  supplies_identity: true
+  identity_criterion: Two appearances are the same workspace package iff they are the same
+    software-package unit in this workspace known as @beep/qa-capture. The published name
+    is reidentification evidence rather than the criterion; the trailing topo-sort rank is
+    not part of sameness, and a capture row is not the package.
+  reidentification_key:
+  - '@beep/qa-capture'
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: the @beep/qa-capture package as unified by its workspace manifest
+  dependence: none
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+  - information_object
+  - role
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - removed from the workspace
+  - renamed as a different package unit
+counterexamples:
+- description: A topo-sort line that mentions @beep/qa-capture with a different trailing rank
+    is not a different package. A second checkout that happens to print the same name is not
+    this workspace unit.
+status: proposed

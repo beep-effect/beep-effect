@@ -1,0 +1,30 @@
+id: ic:alt4:008
+hypothesis_ref: dh:sched-core:017
+identity:
+  supplies_identity: true
+  identity_criterion: Two seat-request enqueue instants are the same when they are the same ticket's entry into the durable queue at that clock reading; the millisecond stamp stored on the ticket is evidence, never the criterion.
+  reidentification_key:
+    - enqueuedAtMillis
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: The ticket's entry into the queue is one occurrent; later heartbeats are different events.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - quality
+    - information_object
+  existential_dependencies:
+    - YeetAdmissionTicket
+    - admission queue
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - stamped-on-ticket
+counterexamples:
+  - description: heartbeatAtMillis is a later stamp on the same ticket and is not the enqueue instant.
+  - description: Rewriting enqueuedAtMillis on disk without a new exclusive create would forge a stamp without an enqueue occurrence.
+status: proposed

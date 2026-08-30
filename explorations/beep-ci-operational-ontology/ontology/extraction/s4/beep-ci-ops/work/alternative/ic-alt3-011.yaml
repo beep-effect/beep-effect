@@ -1,0 +1,35 @@
+id: ic:alt3:011
+hypothesis_ref: dh:sched-core:028
+identity:
+  supplies_identity: true
+  identity_criterion: Two grant-admission instants are the same iff they are the same staging
+    occurrence that writes one lease and stamps the then-current time used later to order
+    overshoot rollback. admittedAtMillis is evidence of that instant rather than the criterion.
+  reidentification_key:
+  - admittedAtMillis
+  - pid
+  - startedAt
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one staging occurrence of one lease
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - quality
+  - information_object
+  existential_dependencies:
+  - the staged lease
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - lease rolled back as overshoot loser
+  - lease becomes the active grant
+counterexamples:
+- description: heartbeatAtMillis is refreshed continuously and is explicitly not used for
+    overshoot order; two leases with the same heartbeat and different admission instants are
+    not the same instant.
+status: proposed

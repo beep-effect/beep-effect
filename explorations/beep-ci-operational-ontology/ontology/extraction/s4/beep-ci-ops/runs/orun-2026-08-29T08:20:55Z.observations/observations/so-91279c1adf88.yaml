@@ -1,0 +1,25 @@
+id: so:sha256:91279c1adf88d29ca0968f9abc4ff9c2ddbeb57de25df9f432b1a272bb20c983
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 243
+  end_line: 252
+  content_sha256: 836e54ffc717ae3ee140abc1091f3feb198d286c17c00e39f917574db73e5bae
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::QualityTaskInvocation
+  lexical_name: QualityTaskInvocation
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: QualityTaskInvocation
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class QualityTaskInvocation extends S.Class<QualityTaskInvocation>($I`QualityTaskInvocation`)(
+epistemic_status: parser_derived

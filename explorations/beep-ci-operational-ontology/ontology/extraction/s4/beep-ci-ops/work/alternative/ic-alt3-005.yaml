@@ -1,0 +1,33 @@
+id: ic:alt3:005
+hypothesis_ref: dh:sched-core:003
+identity:
+  supplies_identity: true
+  identity_criterion: 'Two owner-processes are the same iff they are the same operating-system
+    process incarnation: the same pid together with the same process start value. The pid
+    alone is reidentification evidence rather than the criterion, because pid reuse would
+    otherwise collapse a dead owner with a later process.'
+  reidentification_key:
+  - pid
+  - procStart
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one OS process incarnation (pid plus start time as a single whole)
+  dependence: none
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+  - role
+  - information_object
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - process dead
+  - procStart no longer matches /proc/<pid>/stat
+counterexamples:
+- description: A new process that reuses a reaped pid is not the previous owner; leases are
+    reaped when the pid is dead or the recorded start time no longer matches.
+status: proposed

@@ -1,0 +1,34 @@
+id: ic:sched-core:021
+hypothesis_ref: dh:sched-core:022
+identity:
+  supplies_identity: false
+  identity_criterion: 'This object property supplies no identity: one admittedBy assertion holds for a particular WorkUnit
+    execution occurrence and the SeatGrant activation under which that occurrence begins and remains charged; repeated executions
+    of one specification are different subjects even under the same grant.'
+  reidentification_key:
+  - WorkUnit execution occurrence
+  - SeatGrant activation
+  - guarded execution interval
+ontoclean:
+  rigidity: unresolved
+  carries_identity: false
+  supplies_identity: false
+  unity: One relational assertion between one execution occurrence and one continuously active grant.
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+  - a reified admission occurrence or relator
+  - a relation incorrectly borne by the reusable WorkUnit specification
+  existential_dependencies:
+  - a WorkUnit execution occurrence
+  - an active SeatGrant
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - the assertion ends when the guarded execution or grant activation ends
+counterexamples:
+- description: One WorkUnit specification can execute twice as E1 and E2 under grant G; the property must relate E1 and E2
+    separately rather than collapse both into one specification-to-grant triple.
+status: proposed

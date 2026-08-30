@@ -1,0 +1,23 @@
+id: so:sha256:aa27be879e233ca36dcecec3f679542311bebe32151e815c1f40f6e4b6e3bf66
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 755
+  end_line: 755
+  content_sha256: 1a4bdef6c60671a32d6263447d2e5939276b723fa35ca869187ec0cfe3d405ef
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::decodeGhMonitorRunJobs
+  lexical_name: decodeGhMonitorRunJobs
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const decodeGhMonitorRunJobs = S.decodeUnknownEffect(S.fromJsonString(GhMonitorRunJobs));
+epistemic_status: parser_derived

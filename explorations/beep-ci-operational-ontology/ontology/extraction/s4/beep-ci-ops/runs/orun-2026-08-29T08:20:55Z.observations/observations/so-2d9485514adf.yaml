@@ -1,0 +1,25 @@
+id: so:sha256:2d9485514adf5b58c4a125bf19746ea1daf349f249874e380bb722e1dd86c10b
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 112
+  end_line: 121
+  content_sha256: e01d8ddf9feb3748f8e535c0b6835ad06ef9a7263088db0518dd5c97f2addbee
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetBaseFreshness
+  lexical_name: YeetBaseFreshness
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: YeetBaseFreshness
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class YeetBaseFreshness extends S.Class<YeetBaseFreshness>($I`YeetBaseFreshness`)(
+epistemic_status: parser_derived

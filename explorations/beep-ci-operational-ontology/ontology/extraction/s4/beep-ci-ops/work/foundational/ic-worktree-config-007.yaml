@@ -1,0 +1,43 @@
+id: "ic:worktree-config:007"
+hypothesis_ref: "dh:worktree-config:011"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two browser-QA procedure specifications are the same when they preserve
+    the same authoritative ordered record, extract, and judge prescription,
+    applicability conditions, evidence and judgment requirements, and revision
+    lineage; separate dated QA runs do not multiply the specification.
+  reidentification_key:
+    - "ordered record-extract-judge semantics"
+    - "gesture-bearing UI applicability condition"
+    - "evidence and judgment completion requirements"
+    - "repository-policy revision lineage"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One authoritative plan whose ordered stages jointly prescribe how a
+    browser-QA verification obligation is performed and evidenced.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "process: the dated browser-QA activity that realizes the procedure"
+    - "none: an abstract procedure universal instantiated by several plan descriptions"
+    - "information_object: the particular workflow-document token rather than its prescriptive content"
+  existential_dependencies:
+    - "At least one faithful digital or material realization of the prescription"
+    - "The repository policy and interpretation context that give the prescription authority"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by a semantically revised workflow"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      Two browser-QA sessions can execute the same record-extract-judge plan at
+      overlapping times and produce different videos and judgments; their
+      temporal parts and outputs prevent them from being the plan individual.
+status: proposed

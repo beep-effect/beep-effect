@@ -1,0 +1,24 @@
+id: so:sha256:d7a0f61ba65081db0a312062314292f042b24fa17180fd4271bc61e67bde6be1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 250
+  end_line: 255
+  content_sha256: a5881cd143a76fd78e74ba54d4c084804e1c3b4e4cf1df2da56d249d51f2d25e
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::emptyTurboPlanSnapshot
+  lexical_name: emptyTurboPlanSnapshot
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: emptyTurboPlanSnapshot
+source_excerpt: 'export const emptyTurboPlanSnapshot = (warnings: ReadonlyArray<string>): TurboPlanSnapshot
+  =>'
+epistemic_status: parser_derived

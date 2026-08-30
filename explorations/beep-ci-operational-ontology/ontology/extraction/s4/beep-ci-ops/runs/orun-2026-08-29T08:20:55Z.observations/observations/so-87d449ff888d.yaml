@@ -1,0 +1,26 @@
+id: so:sha256:87d449ff888d29a0136c794f9ff08fd794d8bfabb19775a22e4a01ce036c20a6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 93
+  end_line: 93
+  content_sha256: 031c095b284bfa495b68a5b8a01951e6a27c43cba699cb51d17c332f6d5ec8ca
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts::MemoryStats
+  lexical_name: MemoryStats
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: MemoryStats
+- predicate: extends_syntactically
+  object: Context.Service
+source_excerpt: export class MemoryStats extends Context.Service<MemoryStats, MemoryStatsShape>()($I`MemoryStats`)
+  {}
+epistemic_status: parser_derived

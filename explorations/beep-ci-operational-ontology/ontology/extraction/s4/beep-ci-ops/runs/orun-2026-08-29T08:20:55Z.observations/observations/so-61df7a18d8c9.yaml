@@ -1,0 +1,23 @@
+id: so:sha256:61df7a18d8c9ef5297166cf626036f7e12ea1f2b9a5631d1b5c793facc39ad76
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: turbo.json
+source_span:
+  start_line: 91
+  end_line: 99
+  content_sha256: 47a425efa6e9ca59eafa4892a58d98373c7601549ae4ceb9a8fa9a2936d4e4e2
+extractor:
+  id: adapter-config
+  version: 1.0.0
+  parser: python-json+positioned-scanner
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-config.py
+symbol:
+  qualified_name: turbo.json::check
+  lexical_name: check
+  syntactic_kind: config_task
+observed_facts:
+- predicate: task_depends_on_syntactically
+  object: ^build
+source_excerpt: '"check": {'
+epistemic_status: parser_derived

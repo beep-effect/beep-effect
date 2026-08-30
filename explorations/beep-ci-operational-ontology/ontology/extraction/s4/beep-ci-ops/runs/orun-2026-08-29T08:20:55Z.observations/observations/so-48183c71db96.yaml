@@ -1,0 +1,23 @@
+id: so:sha256:48183c71db969a8df3fa0149e20c439726671c3f05906e08dc56af50dab87bc0
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 126
+  end_line: 130
+  content_sha256: 36f92e56656698fc7f8953833e24bb673afbe18a27347976b45ecb418dfaff47
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::CiLaneReplay
+  lexical_name: CiLaneReplay
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CiLaneReplay
+source_excerpt: export const CiLaneReplay = LiteralKit(CI_LANE_REPLAY_VALUES).pipe(
+epistemic_status: parser_derived

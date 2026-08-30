@@ -1,0 +1,15 @@
+id: "fa:turbo-cache:014"
+hypothesis_ref: "dh:turbo-cache:015"
+identity_card_ref: "ic:turbo-cache:014"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The task information object is specifically a documentation-generation procedure specification."
+    still_viable: true
+  - label: "The task denotes a documentation verification lane."
+    still_viable: false
+strongest_counterexample: "Documentation generation can complete successfully while producing incorrect or stale content, so the repeatable procedure is not thereby a verification lane or its execution result."
+verdict: analyzed

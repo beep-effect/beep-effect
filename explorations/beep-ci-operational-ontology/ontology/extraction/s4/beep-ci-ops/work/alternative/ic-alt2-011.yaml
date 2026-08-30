@@ -1,0 +1,34 @@
+id: ic:alt2:011
+hypothesis_ref: dh:sched-core:027
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two capacity-overshoot rollback procedures are the same iff they prescribe the same admission-instant ordering of concurrently
+    staged leases and the same cumulative-prefix test that names a lease the loser when its prefix exceeds live capacity;
+    a particular rollback occurrence is not this procedure.
+  reidentification_key:
+  - admissionInstantOrder
+  - isOvershootLoser
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One procedure per distinct loser-selection rule over concurrently staged leases.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: >-
+    A three-way over-admission in which two excess leases roll themselves back is two (or more) recovery occurrences of one
+    procedure, not two procedures.
+- description: >-
+    Ordering by heartbeat would be a different procedure: the cited order uses immutable admittedAtMillis, then pid, then
+    startedAt, never the refreshed heartbeat.
+status: proposed

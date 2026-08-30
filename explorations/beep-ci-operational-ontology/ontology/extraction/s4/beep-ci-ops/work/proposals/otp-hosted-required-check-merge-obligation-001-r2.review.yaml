@@ -1,0 +1,35 @@
+target: "otp:hosted-required-check-merge-obligation:001"
+target_sha256: "e5f02caaa00f1fedead6e9625ca54ffcf9668d8ef4a8ca220bb8ab31f4d51dca"
+chain_sha256: "84bbb86e8ab84164d89deaed07e2bd9ad207a282befa34d8e979542758e5e83b"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge; there is no candidate subsumption to test, and no valid subsumption relation is presumed."
+attacks:
+  - surface: identity
+    rule: "identity-activation-conflict"
+    counterexample: "One candidate can satisfy a required-check condition and later reacquire the same condition under the same target, designation, and policy version. The IdentityCard still uses exactly those equal fields and omits activation continuity, so it wrongly identifies the two obligation activations despite the revised proposal prose."
+    outcome: landed
+  - surface: warrant
+    rule: "support-target-not-decision-term"
+    counterexample: "CQ-001, CQ-006, and CQ-017 use generic lane and requiresLane relations and never require a named YeetMonitorLane procedure. That target's own revised open issue admits all three CQs remain answerable without it, so it is not a real decision term that can warrant this support class."
+    outcome: landed
+  - surface: null_discriminator
+    rule: "normative-prose-discriminator"
+    counterexample: "A passive hosted-check DTO does not make checks gate a merge. The quoted policy assigns that consequence directly, so a label-only countermodel cannot preserve the evidence even though policy-versus-obligation category remains a separate steward question."
+    outcome: survived
+rival_models_still_viable:
+  - "Hosted-check policy statement modeled only as an information object"
+  - "Merge-ineligibility situation rather than an obligation mode"
+  - "Normative relator joining merge candidate, target, required checks, and policy"
+evidence:
+  - "po:sha256:e63d1e780b8cc9a620f5b2f32db59a0cf9eb266d016c221e57f7a8bbe0333c7b"
+  - "CQ-001"
+  - "CQ-006"
+  - "CQ-017"

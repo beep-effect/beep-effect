@@ -1,0 +1,56 @@
+target: "otp:observed-queue-wait-ms:001"
+target_sha256: "19a648f097c8afed62c587597b88732a664f6bb645f8c985b4d9896b9328153f"
+chain_sha256: "f0c0d25c196454f853a8dab03bec3b191056ac4febb709082edbac0e13b43809"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The revised proposal asserts no parents edge, so there is no proposed is-a relation to test;
+    no valid subsumption relation is asserted or inferred.
+attacks:
+  - surface: identity
+    rule: "identity-card-entity-kind-mismatch"
+    counterexample: >-
+      Collector A and collector B can compute the same waitedMillis for one request at the same
+      boundaries. The revised proposal correctly makes one data-property assertion and denies a
+      distinct quality token, but its analyzed IdentityCard still individuates observation-bound
+      qualities. The closure therefore analyzes entities the proposed property expressly does not
+      introduce.
+    outcome: landed
+  - surface: identity
+    rule: "identifier-is-identity"
+    counterexample: >-
+      Equal numeric duration, request id, or collector key cannot identify a quality observation.
+      The card correctly requires request, enqueue boundary, observation boundary, and clock
+      convention, so the identifier shortcut is rejected even though the card targets the wrong
+      entity kind.
+    outcome: survived
+  - surface: warrant
+    rule: "cq-term-required"
+    counterexample: >-
+      Without observedQueueWaitMs, CQ-023 cannot bind waited or compare it with starvationBoundMs,
+      and the property is listed as required. The Must constraint genuinely requires this data
+      relation.
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-logging-value"
+    counterexample: >-
+      A progress logger can compute nowMillis minus startMillis into a temporary waitedMillis and
+      use it for logging or escalation without persisting a semantic assertion. The revised proposal
+      asks for an ETL contract but retains an analyzed closure and rejected null, so the pure
+      logging twin still defeats the discriminator.
+    outcome: landed
+rival_models_still_viable:
+  - "A computed duration value in a timestamped snapshot or log."
+  - "The ongoing queue-wait process or temporal interval."
+evidence:
+  - "so:sha256:aae98d5927e0b5760e2cd21c7eb757857be3c4a618f5c59c83191a9311cff21b"
+  - "po:sha256:452b4ed8ff3e6ac37d200a6c3d8a5737000078258fbde7864a0186d709407c89"
+  - "CQ-023"
+

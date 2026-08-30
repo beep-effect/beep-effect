@@ -1,0 +1,24 @@
+id: "dh:turbo-cache:037"
+observation_refs:
+  - "so:sha256:4b2bd99e9052f582c969b0608c56212bed526566b5ac78899683e7992c8b494d"
+cq_warrants: []
+proposed_referent:
+  label: "Internal remote-cache mode-segment constant"
+  description: "The source constant containing the remote: token used by implementation parsing."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "A lexical alias for remote cache access in a composite cache-mode string"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "A remote cache-access mode"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation exposes only a string constant in an unrepresentable declaration, without a mode instance, access relation, or invocation."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

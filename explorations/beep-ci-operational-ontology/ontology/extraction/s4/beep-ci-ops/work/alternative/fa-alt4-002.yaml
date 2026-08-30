@@ -1,0 +1,20 @@
+id: fa:alt4:002
+hypothesis_ref: dh:reporun:017
+identity_card_ref: ic:alt4:002
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "quality: resume-eligibility inhering in a planned step"
+    still_viable: true
+  - label: "role: the plan step as fingerprint-resume candidate (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: "information object: controlled-vocabulary code without inherence"
+    still_viable: true
+  - label: a skipped WorkUnitExecution
+    still_viable: false
+strongest_counterexample: Conservative resume is jointly conditioned on feedback phase, package scope, and readonly mutability; flattening that to a lone enum member misses the n-ary context the enforcement function reifies by rewriting everything else to never.
+verdict: analyzed
+needed_evidence: A planned step that keeps fingerprint-match through a later phase or mutability change without a new designation, versus a vocabulary code reused across unrelated specs, would discriminate quality from role from mere code.

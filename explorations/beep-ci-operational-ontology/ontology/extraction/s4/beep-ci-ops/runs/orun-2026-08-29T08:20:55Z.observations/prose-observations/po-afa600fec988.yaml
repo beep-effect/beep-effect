@@ -1,0 +1,10 @@
+id: po:sha256:afa600fec9889222d94fb5a29bc4aa8e748edd9baaa22ceb1f64db174a9be2a6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts
+source_span:
+  start_line: 347
+  end_line: 356
+quote: 'capacityTokens: S.Finite'
+epistemic_status: quoted_prose

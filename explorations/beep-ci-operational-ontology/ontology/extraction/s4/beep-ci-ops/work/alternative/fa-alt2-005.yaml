@@ -1,0 +1,22 @@
+id: fa:alt2:005
+hypothesis_ref: dh:sched-core:002
+identity_card_ref: ic:alt2:005
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: the encoded active-lease record'
+  still_viable: true
+- label: 'relator: the admission grant relating owner, origin, and capacity tokens'
+  still_viable: true
+- label: 'implementation_artifact_only: lease JSON used only for interprocess bookkeeping'
+  still_viable: false
+strongest_counterexample: >-
+  File presence of the lease JSON is currently the operational stand-in for the grant, so a stale file after the owner is
+  reaped, or a charging grant with no file, is unobserved; record and relator are observationally equivalent on present evidence.
+verdict: analyzed
+needed_evidence: >-
+  A live charging grant whose lease JSON is absent, or a present lease file whose owner is already reaped, would split the
+  grant relator from the information record.

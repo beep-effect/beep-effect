@@ -1,0 +1,34 @@
+id: "ic:topology:003"
+hypothesis_ref: "dh:topology:003"
+identity:
+  supplies_identity: false
+  identity_criterion: "A transitive dependency relational fact has no independent identity beyond the same ordered package participants under the same direct-dependency graph, closure rule semantics, and repository-tree context; an endpoint pair alone is insufficient."
+  reidentification_key:
+    - "reachable package identity"
+    - "touched package identity"
+    - "direct-dependency graph snapshot"
+    - "closure rule version"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: "One ordered reachability fact entailed by a specified closure rule over one direct-dependency graph context."
+  dependence: relational
+ufo_analysis:
+  candidate_category: none
+  alternatives:
+    - "information_object: a materialized dependency-closure assertion set"
+    - "process: the fixpoint computation that derives the closure"
+    - "information_object: the closure-rule specification"
+  existential_dependencies:
+    - "The two workspace package identities related by reachability"
+    - "The supporting direct-dependency graph and the closure rule semantics"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "the supporting graph or rule context no longer entails the ordered pair"
+    - "either participant is replaced in the topology context"
+counterexamples:
+  - description: "The same endpoint pair can remain reachable after its supporting path changes, or be reachable under two different graph snapshots, so neither one path nor the endpoint names alone provide identity."
+status: proposed

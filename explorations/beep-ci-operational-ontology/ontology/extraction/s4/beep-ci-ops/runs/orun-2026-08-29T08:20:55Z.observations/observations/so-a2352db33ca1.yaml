@@ -1,0 +1,24 @@
+id: so:sha256:a2352db33ca14ce4c1da0bf89decf6bc399e46f050d701ba267129ce31cda2e2
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 924
+  end_line: 933
+  content_sha256: 2f48ba64b75ab82270711683a2965466f1b086f7448512106e339edf985422e8
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts::applyYeetMonitorJobDecision
+  lexical_name: applyYeetMonitorJobDecision
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: applyYeetMonitorJobDecision
+source_excerpt: export const applyYeetMonitorJobDecision = Effect.fn("YeetMonitorLoop.applyDecision")(function*
+  (
+epistemic_status: parser_derived

@@ -1,0 +1,23 @@
+id: so:sha256:a80d3f20467272a80ccc483506972923d50ee4683ee74837f05a7489780025a4
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 485
+  end_line: 486
+  content_sha256: bc1287f273ca8d4f602cd8144e9374a09a34a42f94306656b1240f079d41a837
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::isConfigured
+  lexical_name: isConfigured
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const isConfigured = (value: string | undefined): boolean =>'
+epistemic_status: parser_derived

@@ -1,0 +1,22 @@
+id: fa:alt2:011
+hypothesis_ref: dh:sched-core:027
+identity_card_ref: ic:alt2:011
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: deterministic overshoot-rollback procedure specification'
+  still_viable: true
+- label: 'process: a capacity-overshoot recovery occurrence'
+  still_viable: true
+- label: 'implementation_artifact_only: race-resolution helper local to file-based admission'
+  still_viable: true
+strongest_counterexample: >-
+  isOvershootLoser is a boolean predicate over a snapshot, not a dated recovery run; calling it a process would confuse the
+  specification with an unobserved rollback execution.
+verdict: analyzed
+needed_evidence: >-
+  An observed rollback execution (lease file deleted because the prefix test lost) distinct from the predicate would keep
+  a process term; a rewrite of the helper that is unused at runtime would revive the implementation-only reading.

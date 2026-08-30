@@ -1,0 +1,46 @@
+target: "otp:observed-queue-wait-ms:001"
+target_sha256: "07b6c78f11222b8063b45dcbd3414d29d6a65cdcbe59e240d695ffd7f8dec768"
+chain_sha256: "3b716b0041d59784116f7e5cee9f9d5277e367c7ad4db6c15e5259a78bee51c4"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge, so there is no proposed is-a relation to test; no
+    valid subsumption relation is asserted or inferred.
+attacks:
+  - surface: identity
+    rule: identity-card-entity-kind-mismatch
+    counterexample: >-
+      Collector A and collector B can compute the same waitedMillis for the same request,
+      enqueue boundary, observation instant, and clock. As data-property assertions they
+      duplicate one subject-value relation, but the IdentityCard instead claims a distinct
+      quality-token criterion. Proposal identity none and FA analyzed agree with the IC; the
+      card still individuates entities that the proposed data property does not introduce.
+    outcome: landed
+  - surface: warrant
+    rule: cq-term-required
+    counterexample: >-
+      If observedQueueWaitMs is absent, CQ-023 cannot bind waited or compare it with
+      starvationBoundMs, and the property is explicitly listed in required_properties. The
+      counterexample deletion makes the Must constraint unanswerable, so this warrant survives.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-logging-value
+    counterexample: >-
+      A progress logger can compute nowMillis minus startMillis into a temporary waitedMillis
+      and use it for logging or escalation without persisting an observed quality or semantic
+      assertion. The cited arithmetic is exactly true of that implementation-only twin.
+    outcome: landed
+rival_models_still_viable:
+  - "Only a computed duration value in a timestamped snapshot or log record is needed."
+  - "The referent is the ongoing queue-wait process or temporal interval rather than an observed quality."
+evidence:
+  - "so:sha256:aae98d5927e0b5760e2cd21c7eb757857be3c4a618f5c59c83191a9311cff21b"
+  - "po:sha256:452b4ed8ff3e6ac37d200a6c3d8a5737000078258fbde7864a0186d709407c89"
+  - "CQ-023"

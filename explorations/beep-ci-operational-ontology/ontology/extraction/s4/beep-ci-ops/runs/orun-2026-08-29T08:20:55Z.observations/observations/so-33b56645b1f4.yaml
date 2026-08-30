@@ -1,0 +1,23 @@
+id: so:sha256:33b56645b1f47f53539801f058db551aa3d8c610ed32703eb124317a84aaced5
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts
+source_span:
+  start_line: 96
+  end_line: 99
+  content_sha256: cdf283378b37bcf1272034fbe0f7a670ea469ba921df60241d1f06ced26bbc9f
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts::PorcelainBlock
+  lexical_name: PorcelainBlock
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: PorcelainBlock
+source_excerpt: type PorcelainBlock = {
+epistemic_status: parser_derived

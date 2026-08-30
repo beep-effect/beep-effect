@@ -1,0 +1,9 @@
+id: rat:15
+proposal_ref: otp:enqueued-at:001
+proposal_sha256: 71ba4e63cbea2b3037e195019dea2372d43d2d55d0bf52b582625dbd9ac4beb6
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept enqueuedAt — the deployed FIFO tiebreaker.

@@ -1,0 +1,68 @@
+target: "otp:docgen-affected-work-unit:001"
+target_sha256: "fa1e4006101cabd63e26779fddf1a326c5999d3783da236d103ace2e01d3388e"
+chain_sha256: "524af2dac1e7332177bfdd9d5dd3ac5ea741b225cd86c938df59dfc2e5575a29"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The individual proposal asserts no parents edges, so no is-a or subsumption
+    relation exists to test and no parent can be preferred over no relation.
+attacks:
+  - surface: identity
+    rule: identity-criterion-counterexample
+    counterexample: >-
+      origin/main can advance between invocation I1 and I2, changing the concrete
+      file set while the symbolic docgen scope rule remains unchanged. The criterion
+      correctly identifies one reusable specification and keeps the two bound
+      execution contexts distinct.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      A second command named docgen:local can implement different completion or
+      dirty-file semantics. The technical command key alone is insufficient under
+      the card's procedure, scope-rule, applicability, and policy criteria.
+    outcome: survived
+  - surface: identity
+    rule: specification-execution-split
+    counterexample: >-
+      Runs I1 and I2 have distinct resolved commits, dirty snapshots, and outputs,
+      but the proposal and card treat the WorkUnit as the reusable prescription,
+      not either dated execution.
+    outcome: survived
+  - surface: identity
+    rule: foundational-status-and-rival-disclosure
+    counterexample: >-
+      An execution-bound plan with concrete base, target, and dirty snapshot remains
+      viable alongside the symbolic plan. The analyzed status matches the FA and
+      the open issue exposes that rival.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      CQ-002 is answerable with any A-Box WorkUnit linked by admissibleFor,
+      executesLane, targetsTier, and requiresLane. It requires the WorkUnit class
+      and relations, not this named docgen individual; a lint work unit alone can
+      satisfy the query. The listing CQ therefore does not license this term.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-true-of-command-config
+    counterexample: >-
+      A documentation-only command configuration can bind docgen:local to
+      origin/main...HEAD plus dirty files and be invoked in edit loops while
+      remaining an implementation instruction. That pure configuration twin makes
+      the discriminator true without the proposed ontology individual.
+    outcome: landed
+rival_models_still_viable:
+  - "A reusable symbolic affected-scope plan"
+  - "An execution-bound plan with concrete base, target, and dirty snapshot"
+evidence:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:a56b779098239e2c5a7dc016448e4f6c069488fae5ad5719d39843a6d18d323f"
+  - "CQ-002"

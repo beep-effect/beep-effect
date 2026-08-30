@@ -1,0 +1,10 @@
+id: po:sha256:88e8e724ffb0967198fa555ab886c8a9ea3e14cf26614dd018b57b409b1c79ef
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 48
+  end_line: 53
+quote: 'description: "Execution status of one planned yeet lane."'
+epistemic_status: quoted_prose

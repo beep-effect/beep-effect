@@ -1,0 +1,26 @@
+id: "fa:alt1:038"
+hypothesis_ref: "dh:topology:106"
+identity_card_ref: "ic:alt1:038"
+tests:
+  spec_vs_execution: "not_applicable"
+  world_vs_information: "separated"
+  role_vs_bearer: "not_applicable"
+  context_reification_needed: false
+rival_models:
+  - label: "kind: @beep/rdf-canonize as a world-side software unit (source tree / technical
+      artifact) rather than an information object"
+    still_viable: true
+  - label: "@beep/rdf-canonize as a lexical alias whose only content is the capture token"
+    still_viable: true
+  - label: "generated topology-capture row as the package itself"
+    still_viable: false
+strongest_counterexample: "topo-sort.txt lists dependency-kind rows (devDependencies 0) in the
+  same format as package rows. Treating every such line as a workspace package would admit those
+  kind-labels as packages; the hypothesized referent is the package named @beep/rdf-canonize,
+  not the capture row format."
+verdict: "analyzed"
+needed_evidence: "A package.json name declaration and workspace directory for @beep/rdf-canonize
+  used by affected-package closure. That observation would be false of a mere lexical token in
+  topo-sort.txt (killing the alias rival) and would discriminate an information-object package
+  from a world-side source-tree kind. On current evidence (one name-plus-index line) those two
+  models are observationally equivalent."

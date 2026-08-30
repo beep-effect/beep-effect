@@ -1,0 +1,18 @@
+id: fa:alt4:005
+hypothesis_ref: dh:sched-core:004
+identity_card_ref: ic:alt4:005
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "information object: closed admission work-kind vocabulary"
+    still_viable: true
+  - label: "kind family: each literal as a kind of heavyweight work (observationally equivalent on current evidence because weights differ by code)"
+    still_viable: true
+  - label: uninterpreted string union
+    still_viable: false
+strongest_counterexample: admissionTokenWeight assigns different charges by work-kind value, so the vocabulary is not a compile-time convenience; that still does not license promoting each literal into a Kind.
+verdict: analyzed
+needed_evidence: An admission charge that varies by something other than these codes, or a work occurrence classified without this vocabulary, would discriminate a code list from a taxonomy of work kinds.

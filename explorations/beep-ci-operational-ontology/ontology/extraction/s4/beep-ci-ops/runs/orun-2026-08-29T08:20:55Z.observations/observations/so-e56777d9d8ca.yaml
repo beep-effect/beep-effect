@@ -1,0 +1,23 @@
+id: so:sha256:e56777d9d8cab07afdd41f8a1127d8d309f641d2143bfadc9e8499f591f9d397
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts
+source_span:
+  start_line: 1177
+  end_line: 1184
+  content_sha256: ad1630797e1bc680e5c41f7c9d2893ef53b9d29a5273c0ad4f9fa1133ab31c4d
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Ci/CiLane.ts::DOCTEST_WORKSPACE_PATHS
+  lexical_name: DOCTEST_WORKSPACE_PATHS
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const DOCTEST_WORKSPACE_PATHS = [
+epistemic_status: parser_derived

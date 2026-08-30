@@ -1,0 +1,25 @@
+id: so:sha256:dcc8e45291ae54f9a3c4762ead3efdc29081b62bda5af6761c676a84f148ba60
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 961
+  end_line: 970
+  content_sha256: e5e6e94b61d2f88088e7ca19fccf4a4ce3564f7d5e70c958957702cdad5b83bd
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::GithubCheckRunReport
+  lexical_name: GithubCheckRunReport
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: GithubCheckRunReport
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class GithubCheckRunReport extends S.Class<GithubCheckRunReport>($I`GithubCheckRunReport`)(
+epistemic_status: parser_derived

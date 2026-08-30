@@ -1,0 +1,25 @@
+id: so:sha256:a4a2bc6f88d7c94e877af69ce8c4e42f68cf4125076460fb0b59cabf1abf866a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 190
+  end_line: 198
+  content_sha256: 68717301be6ff62f7006aef589b3d58b87084b26315d299e4a3d8bf4012a603c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::GateFresh
+  lexical_name: GateFresh
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: GateFresh
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class GateFresh extends S.Class<GateFresh>($I`GateFresh`)(
+epistemic_status: parser_derived

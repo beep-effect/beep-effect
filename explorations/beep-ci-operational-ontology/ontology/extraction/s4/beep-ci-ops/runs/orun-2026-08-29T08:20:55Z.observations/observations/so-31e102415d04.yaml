@@ -1,0 +1,23 @@
+id: so:sha256:31e102415d041b753ef23c6851e223aaf863caa1bcf7f4217931db36e271c46a
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts
+source_span:
+  start_line: 511
+  end_line: 512
+  content_sha256: b5622daf86ac72236d92b1bef00e93daedcf59aa25e5c91d98b86d27c37b40d2
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts::isRepoCodeInput
+  lexical_name: isRepoCodeInput
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const isRepoCodeInput = (repoRelativePath: string): boolean =>'
+epistemic_status: parser_derived

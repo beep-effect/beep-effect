@@ -1,0 +1,25 @@
+id: so:sha256:56bfbf644f84217d5ff86ec029692ae986ac22b83caa00e32001758242a3da8c
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 131
+  end_line: 140
+  content_sha256: 959e307c5e20acd3cea2d3e3d0ea2d888a1466f71781aa90b564f9c850a4d10c
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/process/StepExec.ts::CapturedStep
+  lexical_name: CapturedStep
+  syntactic_kind: class_declaration
+observed_facts:
+- predicate: exports_symbol
+  object: CapturedStep
+- predicate: extends_syntactically
+  object: S.Class
+source_excerpt: export class CapturedStep extends S.Class<CapturedStep>($I`CapturedStep`)(
+epistemic_status: parser_derived

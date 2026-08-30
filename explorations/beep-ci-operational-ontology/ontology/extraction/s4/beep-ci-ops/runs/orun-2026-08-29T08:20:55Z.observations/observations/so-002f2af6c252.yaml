@@ -1,0 +1,25 @@
+id: so:sha256:002f2af6c25205430643e2b09a6fb55019a92a76af66785587a80cef09ff11c6
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 790
+  end_line: 790
+  content_sha256: de0a14b6312cdf79e40745ec8bb6c78b4c21a4357877b1b9b51ec315d0842f23
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::GithubCheckFailurePolicy
+  lexical_name: GithubCheckFailurePolicy
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: GithubCheckFailurePolicy
+- predicate: exports_symbol
+  object: GithubCheckFailurePolicy
+source_excerpt: export type GithubCheckFailurePolicy = typeof GithubCheckFailurePolicy.Type;
+epistemic_status: parser_derived

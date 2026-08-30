@@ -1,0 +1,43 @@
+id: "ic:worktree-config:008"
+hypothesis_ref: "dh:worktree-config:012"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two docgen procedure specifications are the same when they retain the same
+    documentation-generation objective, procedure semantics, rule for choosing
+    affected versus full-repository work specifications, completion
+    requirements, and revision lineage; command spelling alone is insufficient.
+  reidentification_key:
+    - "documentation-generation objective and procedure semantics"
+    - "affected-versus-full scope-selection rule"
+    - "completion and proof requirements"
+    - "repository-policy and toolchain revision"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One authoritative documentation-verification plan whose variants select
+    scope without becoming executions.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "process: a documentation-generation execution"
+    - "none: an abstract docgen procedure universal"
+    - "information_object: a pair of command-description records with no shared procedure individual"
+  existential_dependencies:
+    - "At least one faithful realization of the procedure specification"
+    - "The repository policy and toolchain interpretation that give it operational meaning"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "superseded by revised procedure semantics"
+    - "withdrawn"
+counterexamples:
+  - description: >-
+      A local affected docgen run and a later full-repository docgen run can
+      follow one procedure family while differing in scope, start time, cost,
+      and output; neither run can supply the reusable procedure's identity.
+status: proposed

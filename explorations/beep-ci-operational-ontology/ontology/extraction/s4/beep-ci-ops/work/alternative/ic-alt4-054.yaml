@@ -1,0 +1,26 @@
+id: ic:alt4:054
+hypothesis_ref: dh:worktree-config:014
+identity:
+  supplies_identity: true
+  identity_criterion: Two full-repository docgen work-unit specifications are the same when they prescribe running full documentation generation as the repo-wide proof, as opposed to the bounded local edit-loop variant; the command spelling is evidence, never the criterion.
+  reidentification_key:
+    - bun run docgen
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: Full-repository scope plus documentation generation as proof compose one work-unit prescription.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: bun run docgen:local is explicitly reserved for edit loops and is not this full-repository specification.
+  - description: A particular docgen process that already ran is an execution, not this prescription.
+status: proposed

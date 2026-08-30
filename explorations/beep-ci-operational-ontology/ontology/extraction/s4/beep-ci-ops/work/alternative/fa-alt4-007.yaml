@@ -1,0 +1,20 @@
+id: fa:alt4:007
+hypothesis_ref: dh:sched-core:013
+identity_card_ref: ic:alt4:007
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "relator: capacity-binding among ticket, active charges, and capacity"
+    still_viable: true
+  - label: "information object: the inequality as a policy rule (observationally equivalent on current evidence)"
+    still_viable: true
+  - label: "situation: the state of affairs that capacity currently suffices"
+    still_viable: true
+  - label: the selfMayAttempt procedure as the obligation itself
+    still_viable: false
+strongest_counterexample: The bound span permits promotion only when active tokens plus the ticket charge are at most capacity, but the same function also refuses later tickets while an earlier unblocked ticket waits, so identifying the obligation with the whole helper merges a capacity relator with a queue-order rule.
+verdict: analyzed
+needed_evidence: An admission attempt that records the capacity inequality as a persisted relation distinct from queue order, or a policy document stating the obligation without the helper, would discriminate relator from information rule.

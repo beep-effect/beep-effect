@@ -1,0 +1,24 @@
+id: "dh:cilane:010"
+observation_refs:
+  - "po:sha256:c1f31ecfab7c74c39a6bfade2e54499f3c659caa77e253120e6a600fd3a7d8ac"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "fallow verification lane"
+  description: "A possible operational verification lane named by the quoted fallow token; its procedure is not established here."
+representation_status: lexical_alias
+alternatives:
+  - label: "fallow command-dispatch token"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "fallow-quality verification procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied quotation proves only that fallow appears in the source list. It records neither advisory versus blocking semantics nor any executed check, report, or outcome, leaving a pure selector interpretation adequate."
+epistemic_status: proposed
+confidence:
+  value: 0.42
+  use_for_acceptance: false

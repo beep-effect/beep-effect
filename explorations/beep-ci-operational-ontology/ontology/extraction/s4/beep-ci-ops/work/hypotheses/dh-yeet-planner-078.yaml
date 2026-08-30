@@ -1,0 +1,20 @@
+id: "dh:yeet-planner:078"
+observation_refs:
+  - "so:sha256:dc087c415a58a51551cdccde29c8bebe2126b6e36a8c17451e29bd36b30cfb3f"
+cq_warrants: []
+proposed_referent:
+  label: "No established domain referent for pushStep in Planner.ts"
+  description: "No separate domain referent is established for the pushStep declaration in Planner.ts."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Information or domain concept suggested by packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::pushStep"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The only canonical fact is unrepresentable_construct for a source declaration; it supplies no behavior, represented subject, persistence, identity criterion, or other discriminator against implementation-only status."
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

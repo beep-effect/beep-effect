@@ -1,0 +1,34 @@
+id: ic:worktree-config:011
+hypothesis_ref: dh:worktree-config:015
+identity:
+  supplies_identity: true
+  identity_criterion: Two Fallow audit procedure specifications are the same information content exactly when their normative
+    audit command, base-selection rule, finding gate, and verdict semantics are the same; repository location, version lineage,
+    and carrier copies are provenance rather than identity.
+  reidentification_key:
+  - normalized audit prescription
+  - base-selection and finding-gate semantics
+  - content digest or semantic version as evidence
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One repeatable procedure prescription combining the base-relative audit, new-only gate, and result semantics.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a dated audit execution
+  - a command-catalog row with no procedure semantics
+  existential_dependencies:
+  - a governing verification policy
+  - at least one executable or documentary carrier
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - a semantic change to command, base rule, gate, or verdict creates a successor specification
+counterexamples:
+- description: Two repositories can carry byte-for-byte or semantically identical Fallow prescriptions under different histories
+    without creating different information content, while changing new-only to all-findings creates a different specification.
+status: proposed

@@ -1,0 +1,24 @@
+id: "dh:yeet-handler:001"
+observation_refs:
+  - "so:sha256:0016cfe3905b09c22b38a93799cf35fa443f35c6a3f89b192d172679f8c57629"
+  - "po:sha256:bde32fa6682e1b0c1117452303772e61fe6b20fc29764c45ffae977106fd9eaf"
+  - "po:sha256:cb47b23eada8f8e95a7da272596862e4095ac0255417231c54f95e8f7305baa2"
+cq_warrants: ["CQ-013", "CQ-022"]
+proposed_referent:
+  label: "Yeet failure-channel code vocabulary"
+  description: "The step-exit and handler-error tokens lexically label the failure channel recorded in a Yeet verdict; the tokens are not failure occurrences."
+representation_status: lexical_alias
+alternatives:
+  - label: "failure-channel category"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "serializer discriminator with no ontology role"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The literal family is connected to the verdict's failureKind content, giving the codes an operational labeling role while leaving the represented failure distinct."
+  discriminator: "The observed failureKind slot accepts the same step-exit and handler-error codes declared by the vocabulary, connecting those tokens to recorded operational failure channels."
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

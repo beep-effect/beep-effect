@@ -1,0 +1,29 @@
+id: so:sha256:854719e7d6c8efd2c8c2723010bb0747e8e562fd6948059aee426ecb6de2c249
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 341
+  end_line: 345
+  content_sha256: 29d365a25b1a42763b18ff7a35a67e54cc6023ab4e2df0a1c071aadf03675b16
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts::QualityHardwareProfile
+  lexical_name: QualityHardwareProfile
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: ci
+- predicate: declares_literal_member
+  object: current
+- predicate: declares_literal_member
+  object: workstation
+- predicate: exports_symbol
+  object: QualityHardwareProfile
+source_excerpt: export const QualityHardwareProfile = LiteralKit(["current", "workstation", "ci"]).pipe(
+epistemic_status: parser_derived

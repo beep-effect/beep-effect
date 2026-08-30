@@ -1,0 +1,23 @@
+id: so:sha256:ee4d42f21f5983ed0f1d88f2dbb1e907471bbc2edad8921a08a1940a93ed7654
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts
+source_span:
+  start_line: 286
+  end_line: 292
+  content_sha256: 24d996ce01c26678ab51e918de718b05c898d81aec13f8c9b3b36c96cfc07046
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts::packageNameForFeedbackTask
+  lexical_name: packageNameForFeedbackTask
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: const packageNameForFeedbackTask =
+epistemic_status: parser_derived

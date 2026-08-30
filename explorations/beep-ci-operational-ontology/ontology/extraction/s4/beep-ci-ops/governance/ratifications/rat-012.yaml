@@ -1,0 +1,9 @@
+id: rat:12
+proposal_ref: otp:capacity-at-admission-tokens:001
+proposal_sha256: b1007dbe40d0ea8e3e8527c67a42981b790836c70832a9746908cdb6a665be18
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept capacityAtAdmissionTokens — the capacity that admission saw, frozen and replayable.

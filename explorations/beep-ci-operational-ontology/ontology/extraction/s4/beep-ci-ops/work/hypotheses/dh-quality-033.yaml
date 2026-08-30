@@ -1,0 +1,22 @@
+id: "dh:quality:033"
+observation_refs:
+  - "so:sha256:33aade124bca85c34adab4f03e00cff155778abfe5706d3aac13f6f7f3cf10c3"
+  - "so:sha256:e2f8da6f428807faf8f9450184d0a54a3b8bf7243669304156699b5351c13779"
+cq_warrants: []
+proposed_referent:
+  label: "Source-level alias GithubCheckMode in Quality.schemas.ts"
+  description: "A TypeScript alias or exported aliasing surface. The safest denotation is lexical or representational only."
+representation_status: lexical_alias
+alternatives:
+  - label: "An operational concept suggested by GithubCheckMode"
+    representation_status: unresolved
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied facts record aliasing and possibly export only. Alias declarations can exist solely to present an implementation surface, and no independent bearer, event, information-object lifecycle, or external use is observed."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

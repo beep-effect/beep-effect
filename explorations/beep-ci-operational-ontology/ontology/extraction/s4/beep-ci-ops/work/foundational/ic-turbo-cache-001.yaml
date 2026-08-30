@@ -1,0 +1,29 @@
+id: "ic:turbo-cache:001"
+hypothesis_ref: "dh:turbo-cache:001"
+identity:
+  supplies_identity: true
+  identity_criterion: "Two artifacts are the same versioned Turbo configuration document only when they are the same authored configuration in the same repository-document lineage and carry the same normative configuration content; byte equality or the path alone is insufficient."
+  reidentification_key:
+    - "repository-relative document path"
+    - "repository revision"
+    - "configuration-content digest"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: "The schema binding, global declarations, and task collection are jointly authored as one versioned configuration document."
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "A collection of independent configuration-assertion information objects"
+    - "A concrete file encoding that bears the configuration content"
+  existential_dependencies:
+    - "At least one concrete encoding or repository bearer capable of realizing the configuration content"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: "Two unrelated repositories can contain byte-identical turbo.json files; their matching bytes do not decide whether they are one information object, two copies, or two independently authored documents."
+status: proposed

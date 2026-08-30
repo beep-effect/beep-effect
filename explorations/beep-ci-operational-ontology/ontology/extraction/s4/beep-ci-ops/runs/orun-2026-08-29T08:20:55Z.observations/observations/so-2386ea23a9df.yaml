@@ -1,0 +1,24 @@
+id: so:sha256:2386ea23a9df123913d1e64bf3f14ca0f9b40796aed3cfd3d2b4460bfeec74ef
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 488
+  end_line: 488
+  content_sha256: e10346a633c81f36e0e4f65f2abc45d7c7e434aecbec6fdcc5842cc03055fc14
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::isSecretReference
+  lexical_name: isSecretReference
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: unrepresentable_construct
+  object: variable_declaration
+source_excerpt: 'const isSecretReference = (source: TurboCacheValueSource | undefined): boolean => source
+  === "secret-reference";'
+epistemic_status: parser_derived

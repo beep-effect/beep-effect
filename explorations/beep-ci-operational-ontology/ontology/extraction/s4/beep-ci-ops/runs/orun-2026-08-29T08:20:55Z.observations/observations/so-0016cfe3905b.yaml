@@ -1,0 +1,27 @@
+id: so:sha256:0016cfe3905b09c22b38a93799cf35fa443f35c6a3f89b192d172679f8c57629
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 176
+  end_line: 180
+  content_sha256: 55413c88815488b7b5a38508179b39d91edbcf503efa69ee8a16cca8f54ce89b
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts::YeetFailureKind
+  lexical_name: YeetFailureKind
+  syntactic_kind: variable_declaration
+observed_facts:
+- predicate: declares_literal_member
+  object: handler-error
+- predicate: declares_literal_member
+  object: step-exit
+- predicate: exports_symbol
+  object: YeetFailureKind
+source_excerpt: export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
+epistemic_status: parser_derived

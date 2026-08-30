@@ -1,0 +1,21 @@
+id: fa:alt2:048
+hypothesis_ref: dh:turbo-cache:007
+identity_card_ref: ic:alt2:048
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Turbo test:integration work-unit specification'
+  still_viable: true
+- label: 'kind: integration-test verification lane'
+  still_viable: true
+- label: 'process: a particular test:integration execution'
+  still_viable: false
+strongest_counterexample: The test:integration entry asserts dependsOn ^build, which orders repeatable work and does not record
+  an execution.
+verdict: analyzed
+needed_evidence: >-
+  Observed checks performed by test:integration, or a lane registry using this task as a proof surface, would decide specification-only
+  versus verification-lane kind.

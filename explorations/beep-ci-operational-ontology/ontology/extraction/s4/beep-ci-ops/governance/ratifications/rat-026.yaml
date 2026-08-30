@@ -1,0 +1,10 @@
+id: rat:26
+proposal_ref: otp:architecture-boundary-obligation:001
+proposal_sha256: ea08ddaa3a2f8bd02f8665f23bd12b07ab04f38156efe90fc333b5e0fc4dd1f8
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept VerificationObligation — the generalized standing-duty class; the obligation/procedure
+  split holds.

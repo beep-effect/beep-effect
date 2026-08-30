@@ -1,0 +1,9 @@
+id: rat:19
+proposal_ref: otp:admission-snapshot:001
+proposal_sha256: 10da4feaa1e52d265317232d0f32d20a01aa2fb44204b3e036778ef3fb49a060
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept AdmissionSnapshot — capture-context identity; distinct captures stay distinct individuals.

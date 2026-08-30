@@ -1,0 +1,10 @@
+id: po:sha256:14f257e298db255a69389e25e0d5f008b17f9fe76b0dfd030796a21ce21c64b1
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 136
+  end_line: 146
+quote: export const YeetMonitorFlakeClass = LiteralKit([
+epistemic_status: quoted_prose

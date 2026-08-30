@@ -1,0 +1,28 @@
+id: "dh:yeet-watch:010"
+observation_refs:
+  - "so:sha256:6305419fa96099617bb98162ac43d2718d51c1b66bcee82bc34027b762df7e60"
+  - "so:sha256:85a0c2546f8dc5cdc9a2d646a896bf5eadb4d39c08240549747c6e281006bf37"
+  - "so:sha256:a48630328a1a6c95febb3aecad4e2c6f9dbe75dbcdf2698acc17f0aa024c407a"
+  - "so:sha256:dac0c567ff454baf98279c698442d3effa8c8ce8da4a9e26251a1234e99e11b8"
+  - "so:sha256:e49d7857a2f1d0c247b2bf32b8005aff0f0790bcba3b74dbf5cc27023140a054"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "PR closeout report information artifact"
+  description: "A possible serialized record of closeout gate states, issues, review summary, and write actions."
+representation_status: unresolved
+alternatives:
+  - label: "closeout report schema and JSON codec"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "closeout assessment situation"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A structured schema and serializer define a possible report shape but do not establish that a report instance was created, persisted, or used in an operational decision."
+epistemic_status: proposed
+confidence:
+  value: 0.76
+  use_for_acceptance: false

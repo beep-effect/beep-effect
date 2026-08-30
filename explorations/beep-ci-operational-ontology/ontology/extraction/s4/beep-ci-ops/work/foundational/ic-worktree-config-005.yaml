@@ -1,0 +1,34 @@
+id: ic:worktree-config:005
+hypothesis_ref: dh:worktree-config:009
+identity:
+  supplies_identity: true
+  identity_criterion: Two WorkUnit specifications are the same information content exactly when their verification lane, scope
+    rule, parameters, ordering-relevant semantics, completion criteria, and failure semantics are the same; carrier copies
+    and unrelated policy-version changes are provenance, not identity.
+  reidentification_key:
+  - normalized lane and scope prescription
+  - parameters and completion or failure semantics
+  - content digest or semantic version as evidence
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: One repeatable verification prescription pairing a lane with its scope, parameters, and completion and failure semantics.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - a dated WorkUnit execution
+  - a command DTO with no governed prescription
+  existential_dependencies:
+  - a governing verification practice
+  - at least one executable or documentary carrier
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+  - a semantic change to lane, scope, parameters, completion, or failure rules creates a successor specification
+counterexamples:
+- description: A policy revision can change an unrelated lint rule while leaving this WorkUnit prescription unchanged; that
+    is the same specification, while changing affected scope to full-repository creates a different one.
+status: proposed

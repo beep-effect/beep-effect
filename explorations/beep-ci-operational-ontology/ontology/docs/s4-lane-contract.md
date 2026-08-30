@@ -160,8 +160,14 @@ not a parser); null-hypothesis discriminators; a blinded alternative seat + an
 OntoClean adversary seat (independent by construction); the MECHANICAL `--gate` mode
 of the skill's validation script; per-proposal STEWARD ratification (the operator);
 and a total dispositions index. Working directory:
-`ontology/extraction/s4/normalization/` plays the skill's `ontologies/{name}/work/`
-role (`{name}` = `beep-ci-ops`).
+`ontology/extraction/s4/beep-ci-ops/` plays the skill's `ontologies/{name}/` ROOT
+role (`{name}` = `beep-ci-ops`): the validator hard-requires the literal layout
+`work/run-manifest.yaml`, `work/dispositions.index.yaml`, `work/alternative/`, and
+`governance/ratifications/` under the scanned ontology root AND that the root
+directory be NAMED after `ontology.name`, so `beep-ci-ops/` holds `work/`,
+`adapters/` (+`golden/`), `governance/`, and `runs/` (layout clarified at gate
+launch 2026-08-29 — the skill as written wins over the earlier `normalization/`
+work-dir phrasing here).
 
 Reconciliation with §3 lane output (the two flows compose, they do not compete):
 

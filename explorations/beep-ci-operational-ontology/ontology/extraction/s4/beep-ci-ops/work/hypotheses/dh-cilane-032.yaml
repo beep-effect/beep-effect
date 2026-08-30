@@ -1,0 +1,24 @@
+id: "dh:cilane:032"
+observation_refs:
+  - "so:sha256:311b4641920cea66e976df9fe3edf4a7a468a611d4cfe80ce92744f39ec1e826"
+  - "so:sha256:3155514265be63d5d1e2cd41c26b195d75ef2c1ffed207971019795d48464bc2"
+cq_warrants: []
+proposed_referent:
+  label: "CI lane CLI adapter implementation"
+  description: "The exported command declaration and its internal error-reporting adapter."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "operational interface for requesting lane execution"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "verification request procedure"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "An exported Command.make declaration and an error callback are normal adapter-layer artifacts. The observations do not record a request event, requester, execution, or stable interface artifact outside the implementation."
+epistemic_status: proposed
+confidence:
+  value: 0.91
+  use_for_acceptance: false

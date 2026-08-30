@@ -1,0 +1,36 @@
+target: "otp:local-only:001"
+target_sha256: "8916ea102d533dec83b17e7437a651ad5fbbbd84bb71d6fc122c39489ac6585e"
+chain_sha256: "37b21abeb0a56c1a0b923435f7a3da23354a827002a4fd2f26b618a09b20e8dd"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: "A governed CachePosture domain contract and invocation-level A-Box examples must decide whether LocalOnly is one reusable vocabulary individual or distinct execution-borne posture particulars, and must show a retained posture assertion beyond the tagged cache-plan DTO."
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no parents edge, so there is no proposed is-a edge to test; no valid subsumption relation is asserted."
+attacks:
+  - surface: identity
+    rule: "invocation-posture-vs-vocabulary-individual"
+    counterexample: "Two executions can both emit local:rw while bearing distinct posture particulars. The revision now marks identity unresolved and explicitly presents the reusable-individual versus invocation-mode choice, so it no longer silently merges those executions."
+    outcome: survived
+  - surface: warrant
+    rule: "cq-required-domain-member"
+    counterexample: "CQ-024 explicitly asks whether each WorkUnit execution used local-only, local-write-remote-read, or caller-controlled posture. Removing LocalOnly leaves local:rw executions unclassifiable under the stated closed answer domain, so the direct warrant survives."
+    outcome: survived
+  - surface: null_discriminator
+    rule: "discriminator-true-of-dto"
+    counterexample: "A tagged cache-plan DTO can map LocalOnly to local:rw and emit that argument without either a reusable ontology individual or a separately reified posture particular. The cited mapping is true in both live models and in the null world."
+    outcome: landed
+rival_models_still_viable:
+  - "One reusable controlled-vocabulary individual"
+  - "An invocation-borne intrinsic mode"
+  - "Information content in a cache-plan decision record"
+evidence:
+  - "so:sha256:c5efde190ee92ca63e6e934eb78e8deb7bec01d061e7f60a251c65bc458a5eee"
+  - "po:sha256:11b9660c23b2d6fc9adaac24808dd1c5e65033f508c8e2dac8c3c887762b122c"
+  - "po:sha256:441c069829b93c9562a294dce2ca9c5757b16db3b6dd1af5dc6ee070360ead3d"
+  - "po:sha256:f145ee478d3d0a92bbbe070e06d3596bffb5b28c620dc5d1f60eaa02a14cba7a"
+  - "CQ-024"

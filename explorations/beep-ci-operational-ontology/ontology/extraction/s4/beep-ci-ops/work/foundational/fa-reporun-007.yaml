@@ -1,0 +1,22 @@
+id: "fa:reporun:007"
+hypothesis_ref: "dh:reporun:010"
+identity_card_ref: "ic:reporun:007"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "pre-push verification lane"
+    still_viable: true
+  - label: "controlled-vocabulary member naming a proof surface"
+    still_viable: true
+  - label: "particular pre-push verification execution"
+    still_viable: false
+  - label: "CLI selector token only"
+    still_viable: false
+strongest_counterexample: >-
+  One prescription can govern many dated pre-push runs, and two repositories
+  can use the same pre-push word for different prescriptions; the source token
+  therefore cannot collapse specification identity into execution identity.
+verdict: analyzed

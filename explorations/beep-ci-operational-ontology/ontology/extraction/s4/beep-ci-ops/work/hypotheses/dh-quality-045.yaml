@@ -1,0 +1,26 @@
+id: "dh:quality:045"
+observation_refs:
+  - "so:sha256:55191a981ed20517accafb408e211729d04b44a8afa15845360ab0f880ab5ebc"
+  - "so:sha256:70c110f3a31c3da3885c9f24039e4aa4a2ae306c1712716e0ebcfdd5348e2d35"
+  - "so:sha256:ef6cb236ca7fd00966f16021520f29db5dedbdedb28c1cb52b142a762435445d"
+  - "po:sha256:018cf3cdb8617f0a83157007f024a999ae433a9275dc350de23dd30671b4b9db"
+  - "po:sha256:bc102ba1a63a124e271a1e8f83070e8aa3dae5b3252c6685369483a3bd99d6c4"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "\"test\" label in PackageVerifyStepName"
+  description: "The observed token is retained only as a lexical member of the PackageVerifyStepName source vocabulary. The harvested claim that it denotes a package-verification work-unit specification remains possible but is not established by these records."
+representation_status: lexical_alias
+alternatives:
+  - label: "A reusable package-verification work-unit specification denoted by \"test\""
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The supplied observations establish \"test\" only as a literal or backing-array member of PackageVerifyStepName. They do not observe an operational bearer, stable specification identity, execution occurrence, or lifecycle corresponding to that token, so the implementation-only null stands."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.72
+  use_for_acceptance: false

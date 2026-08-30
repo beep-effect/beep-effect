@@ -1,0 +1,25 @@
+id: so:sha256:851e5258ae9f3445d2fb705147e3436235ae76d5f67e2077f865f5f4ebafcd09
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
+source_span:
+  start_line: 321
+  end_line: 321
+  content_sha256: 4f575ac217597d543cccde14a07dda6aa48f513b9ccd27741e57d083ab583474
+extractor:
+  id: adapter-typescript
+  version: 1.0.0
+  parser: typescript@6.0.3
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-typescript.py
+symbol:
+  qualified_name: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts::TurboCachePlanTag
+  lexical_name: TurboCachePlanTag
+  syntactic_kind: type_alias_declaration
+observed_facts:
+- predicate: declares_type_alias
+  object: TurboCachePlanTag
+- predicate: exports_symbol
+  object: TurboCachePlanTag
+source_excerpt: export type TurboCachePlanTag = typeof TurboCachePlanTag.Type;
+epistemic_status: parser_derived

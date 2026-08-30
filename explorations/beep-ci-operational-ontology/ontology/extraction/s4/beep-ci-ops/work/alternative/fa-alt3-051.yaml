@@ -1,0 +1,23 @@
+id: fa:alt3:051
+hypothesis_ref: dh:turbo-cache:021
+identity_card_ref: ic:alt3:051
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: resolved cache decision for one Turbo invocation'
+  still_viable: true
+- label: 'quality: cache posture borne by a WorkUnit execution'
+  still_viable: true
+- label: 'relator: a decision relating an invocation to a cache posture'
+  still_viable: true
+strongest_counterexample: TurboCachePlan is annotated as the resolved local Turbo cache decision
+  for one invocation, and the tag kit lists caller-controlled, local-only, and remote-read.
+  CQ-024 asks under what posture each execution ran, which is also readable as a quality of
+  the execution.
+verdict: analyzed
+needed_evidence: Whether the plan is persisted as its own artifact per invocation (information
+  object / relator) or only recovered as a property of the work-unit execution (quality).
+  Observationally equivalent on the tagged union plus the two quotations.

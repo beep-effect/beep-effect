@@ -1,0 +1,25 @@
+id: "dh:topology:079"
+observation_refs:
+  - "po:sha256:3f834e9b70b176215eaf6c24d4c609be03e7adb263647aa435859ffe96e721ba"
+cq_warrants:
+  - "CQ-004"
+proposed_referent:
+  label: "@beep/nlp-processing workspace package"
+  description: "The workspace software package information artifact identified by @beep/nlp-processing in the captured package-name topology; the trailing numeric token is not proposed as part of this referent."
+representation_status: "implementation_artifact_only"
+alternatives:
+  - label: "@beep/nlp-processing as a package-name lexical alias"
+    representation_status: "lexical_alias"
+    plausibility: "viable"
+  - label: "generated topology-capture row only"
+    representation_status: "implementation_artifact_only"
+    plausibility: "weak"
+null_hypothesis:
+  label: "implementation or representation artifact only"
+  rejected: false
+  rationale: "A generated topo-sort row can contain @beep/nlp-processing and be consumed by a closure parser while remaining only a lexical package token; no cited lineage evidence identifies a continuing package bearer."
+  discriminator: ""
+epistemic_status: "proposed"
+confidence:
+  value: 0.74
+  use_for_acceptance: false

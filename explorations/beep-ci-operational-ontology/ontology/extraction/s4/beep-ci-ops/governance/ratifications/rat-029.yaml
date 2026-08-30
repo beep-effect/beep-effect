@@ -1,0 +1,10 @@
+id: rat:29
+proposal_ref: otp:docgen-affected-work-unit:001
+proposal_sha256: 0cbd359266c8e6005d2d2fef7bb703e61aea8662fa834ae09fd5a399b3c3b127
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-08-29T20:19:04Z'
+verbatim_decision: Accept DocgenAffectedWorkUnit — CQ-002 worked example, the affected-scope unit the docgen law
+  enforces.

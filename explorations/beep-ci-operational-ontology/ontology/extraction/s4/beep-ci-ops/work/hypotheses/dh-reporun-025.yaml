@@ -1,0 +1,30 @@
+id: "dh:reporun:025"
+observation_refs:
+  - "so:sha256:f31e6f76b44fb2f4ae094d7957a69318c4f30a0101649d1e13f1926fd96cf17b"
+  - "so:sha256:f512e52528210addcd044c704edcbe9892d11d066d1936499a22d289a1eab30f"
+  - "so:sha256:39060d3a73299af2375688540cb13a9efd4da879845f6087ddff0662d158fa46"
+  - "so:sha256:a6ad40a935472aecb313008c29de7fd676155defa4706d1d7f8b1808a84ac3eb"
+  - "so:sha256:906f9d719b7531f4c878c535e72c3cdae60b54bd8ef3ea349d1887b118f54cc9"
+cq_warrants: ["CQ-002", "CQ-020"]
+proposed_referent:
+  label: "planned repository command specification"
+  description: "A repeatable plan step prescribing command, arguments, working directory, phase, scope, mutability, and resume policy."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "WorkUnitSpecification corresponding to the plan step"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "WorkUnitExecution occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "Planner DTO"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A planner DTO can be rendered, sorted, checked for resume eligibility, and rewritten for safety exactly as observed, without an independently retained repository-command specification."
+epistemic_status: proposed
+confidence:
+  value: 0.77
+  use_for_acceptance: false

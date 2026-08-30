@@ -1,0 +1,24 @@
+id: fa:alt3:009
+hypothesis_ref: dh:sched-core:020
+identity_card_ref: ic:alt3:009
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: timestamped record that the origin gate was recently busy'
+  still_viable: true
+- label: 'phase: the ticket while blocked on its origin'
+  still_viable: true
+- label: 'quality: blockedOnOriginAtMillis as a moment inhering in the ticket'
+  still_viable: true
+strongest_counterexample: waitForAdmission refreshes blockedOnOriginAtMillis only when tick.originBusy;
+  isTicketSkippable then treats the stamp as expired after three heartbeats so a crashed holder
+  cannot skip forever. The world origin can be free while a fresh stamp still skips other
+  tickets.
+verdict: analyzed
+needed_evidence: Whether skippability tracks the live origin lock (phase of the ticket) or
+  only the stamped observation (information object). A ticket skipped solely by a still-fresh
+  stamp after the origin lock has been released would settle the split; the code already allows
+  that window.

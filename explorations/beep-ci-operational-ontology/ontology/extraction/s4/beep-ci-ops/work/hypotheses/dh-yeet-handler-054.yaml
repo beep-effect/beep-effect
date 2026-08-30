@@ -1,0 +1,18 @@
+id: "dh:yeet-handler:054"
+observation_refs:
+  - "so:sha256:cd7765aadf2af4d0764d33623bd15e44f0052b381e6e235565dab25c0e4c8958"
+cq_warrants: []
+proposed_referent:
+  label: "YeetExecutedStep schema representation"
+  description: "No domain-ontology referent is proposed for the YeetExecutedStep schema representation; the cited records describe implementation structure only."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "WorkUnitExecution occurrence"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The observation establishes only an exported schema class and its syntactic base. Representation structure alone does not establish that instances are domain entities or governed information artifacts."
+epistemic_status: proposed
+confidence: {value: 0.72, use_for_acceptance: false}

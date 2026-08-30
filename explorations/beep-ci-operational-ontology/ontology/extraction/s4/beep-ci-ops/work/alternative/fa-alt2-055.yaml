@@ -1,0 +1,17 @@
+id: fa:alt2:055
+hypothesis_ref: dh:worktree-config:016
+identity_card_ref: ic:alt2:055
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: 'information_object: scoped Fallow audit work-unit specification'
+  still_viable: true
+- label: 'process: an origin-main Fallow audit execution'
+  still_viable: false
+strongest_counterexample: >-
+  The quoted command fixes both base and gate parameters, which is the standing specification/execution split: scope-defining
+  arguments specify repeatable work, they do not timestamp a run.
+verdict: analyzed

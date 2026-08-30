@@ -1,0 +1,46 @@
+target: "otp:grant-state:001"
+target_sha256: "76fe9c2a40cda4360a68828cffaab10555de4e9fb34a90a76cc5b438af744d87"
+chain_sha256: "07e98cc7e2c2348997aea7a125ff05e350bae0b8a9f19f543394cbd9ea3ecacc"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The class proposal asserts no parents edge; no is-a relation exists to
+    test, so no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: missing-bearer-continuity
+    counterexample: >-
+      A lease can be deleted and a later equal-looking lease created without
+      any durable bearer connecting them. The revised term no longer claims a
+      ReleasedGrant phase or bearer continuity; it identifies a governed state
+      vocabulary whose ActiveGrant classification applies only to live leases.
+    outcome: survived
+  - surface: warrant
+    rule: decision-term-warrant
+    counterexample: >-
+      Removing GrantState or ActiveGrant makes CQ-008 unable to restrict
+      holders to live grants and CQ-009 unable to compare only active grants.
+      Both constraints explicitly require that classification.
+    outcome: survived
+  - surface: null_discriminator
+    rule: deployed-runtime-discriminator
+    counterexample: >-
+      A lease-presence DTO could carry an active tag, but an inert tag cannot
+      preserve the observed governed condition in which the live lease is
+      heartbeated, capacity-charging, reaped on owner failure, and removed on
+      cleanup or overshoot. The deployed ActiveGrant meaning defeats the null.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "po:sha256:0d62b3ef661a7fa27afadd365c8ae77413be167e228fc9479b4d4282ebc9d17a"
+  - "po:sha256:340b077904d1da2c455cae9602ec45592da780f4999bec02b3374a34e453f01a"
+  - "po:sha256:c317ad442968f0cbbbcc25cc491452db0fffc71620b820dd71dec5165f7e6618"
+  - "CQ-008"
+  - "CQ-009"

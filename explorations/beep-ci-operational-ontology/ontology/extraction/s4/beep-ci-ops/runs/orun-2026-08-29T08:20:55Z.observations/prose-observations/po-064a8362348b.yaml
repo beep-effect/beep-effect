@@ -1,0 +1,10 @@
+id: po:sha256:064a8362348b42829e8f4d1af44f985a0ed26a7eb36b974d3f0a8bf9c1541807
+schema_version: 1
+repository:
+  commit: c1558f6ca9b11d9eb07d3f2f310bcca63501ccb2
+  path: explorations/beep-ci-operational-ontology/research/kpi-baseline-2026-08-27.md
+source_span:
+  start_line: 11
+  end_line: 11
+quote: new-binary contenders QUEUE instead of bouncing. The 27%/17% lock-bounce economy
+epistemic_status: quoted_prose

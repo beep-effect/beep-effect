@@ -1,0 +1,47 @@
+target: "otp:work-unit-specification:001"
+target_sha256: "518ab5e27715d8f21041f8b91e248bf6d43158ae9d20c763f51e47b8e436c433"
+chain_sha256: "27d4c45c67b705a694d1a5201dfdbfc4d8fe45c383d94a4c1fa6b9f95859a52f"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The proposal asserts no parents edge; no is-a relation exists to test, so
+    no valid subsumption relation is presumed.
+attacks:
+  - surface: identity
+    rule: prescription-content-identity
+    counterexample: >-
+      An unrelated lint-policy revision can occur while lane, scope,
+      parameters, ordering semantics, completion criteria, and failure
+      semantics remain unchanged; that is the same prescription. Changing
+      affected scope to full-repository creates a different prescription even
+      under the same identifier. The card handles both and treats keys as
+      evidence only.
+    outcome: survived
+  - surface: warrant
+    rule: cq-requires-lane-scope-prescription
+    counterexample: >-
+      CQ-002 cannot schedule verification by lane and scope from dated command
+      executions alone. It requires a reusable prescription that fixes the
+      lane, scope, parameters, and completion and failure semantics, which is
+      exactly the proposed decision term.
+    outcome: survived
+  - surface: null_discriminator
+    rule: governed-prescription-discriminator
+    counterexample: >-
+      Incidental command text could be copied into a DTO without prescribing
+      agent behavior. The cited canonical policy governs which affected-scope
+      and full-repository docgen prescriptions agents may execute, so the
+      normative lane-and-scope content is false in the stale-text twin.
+    outcome: survived
+rival_models_still_viable: []
+evidence:
+  - "po:sha256:f075b3f7e10d17e7b1fb6d717e92d605d31ebdacbf9e453ccf868f85865997e6"
+  - "po:sha256:60ee0a392b7109f8914e89df188cdd5bd8e18390ddde480b96f362408411fdd4"
+  - "CQ-002"

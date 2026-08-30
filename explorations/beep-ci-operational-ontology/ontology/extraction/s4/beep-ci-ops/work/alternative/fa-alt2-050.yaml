@@ -1,0 +1,21 @@
+id: fa:alt2:050
+hypothesis_ref: dh:turbo-cache:015
+identity_card_ref: ic:alt2:050
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: 'information_object: Turbo docgen work-unit specification'
+  still_viable: true
+- label: 'kind: documentation verification lane'
+  still_viable: true
+- label: 'process: a particular docgen execution'
+  still_viable: false
+strongest_counterexample: The docgen entry depends on transit, which is a reusable ordering relation, not a documentation
+  run.
+verdict: analyzed
+needed_evidence: >-
+  A binding from this turbo task to the AGENTS.md edit-loop versus repo-wide docgen commands would decide whether this specification
+  is also a verification lane.

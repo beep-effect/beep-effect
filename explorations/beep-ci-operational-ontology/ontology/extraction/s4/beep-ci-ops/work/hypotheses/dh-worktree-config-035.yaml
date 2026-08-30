@@ -1,0 +1,19 @@
+id: "dh:worktree-config:035"
+observation_refs:
+  - "so:sha256:646aba2cf56ad94a6ba492b809ea12ceebdacec8837d7923a6c4d34445cee2cf"
+  - "so:sha256:71b50ddba122798db630c794b22904c9c68ca3e01b483f183a0a69a93e28dd97"
+cq_warrants: []
+proposed_referent:
+  label: "FleetUnknownReason code vocabulary"
+  description: "The source vocabulary of head-unknown, not-live, probe-failed, and target-unmaterialized codes together with its generated alias."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "fleet assessment unknown-reason domain"
+    representation_status: unresolved
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Literal members and a generated alias establish a code family but not the conditions, occurrences, or CQ use needed to treat those codes as domain referents."
+epistemic_status: proposed
+confidence: {value: 0.82, use_for_acceptance: false}
