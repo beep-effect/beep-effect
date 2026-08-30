@@ -11,6 +11,12 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/repo-run/TmpfsReap.schemas");
 
+const TmpfsSystemRoot = S.String.pipe(
+  $I.annoteSchema("TmpfsSystemRoot", {
+    description: "Canonical system temporary root and first entry in tmpRoots.",
+  })
+);
+
 /**
  * Artifact families the janitor can classify without inspecting arbitrary paths.
  *
@@ -25,7 +31,14 @@ const $I = $RepoCliId.create("internal/repo-run/TmpfsReap.schemas");
  * @category models
  * @since 0.0.0
  */
-export const TmpfsReapClass = LiteralKit(["git-worktree", "head-install", "fallow-cache", "scoped-temp"]).pipe(
+export const TmpfsReapClass = LiteralKit([
+  "git-worktree",
+  "head-install",
+  "fallow-cache",
+  "scoped-temp",
+  "vitest-forks-tmp",
+  "dangling-worktree-stub",
+]).pipe(
   $I.annoteSchema("TmpfsReapClass", {
     description: "Artifact family recognized by the tmpfs janitor's closed classification policy.",
   })
@@ -88,6 +101,10 @@ export const TmpfsReapSkipReason = LiteralKit([
   "dirty-worktree",
   "too-young",
   "parent-repo-missing-but-refs",
+  "wrong-shape",
+  "gitdir-target-exists",
+  "parent-repo-present",
+  "live-runner",
   "unclassified",
 ]).pipe(
   $I.annoteSchema("TmpfsReapSkipReason", {
@@ -112,6 +129,7 @@ export type TmpfsReapSkipReason = typeof TmpfsReapSkipReason.Type;
  * import { TmpfsReapCandidate } from "@beep/repo-cli/test/RepoRun"
  *
  * const candidate = TmpfsReapCandidate.make({
+ *   root: "/tmp",
  *   path: "/tmp/fallow-audit-base-cache-example",
  *   reapClass: "fallow-cache",
  *   ageHours: 8,
@@ -127,6 +145,7 @@ export type TmpfsReapSkipReason = typeof TmpfsReapSkipReason.Type;
  */
 export class TmpfsReapCandidate extends S.Class<TmpfsReapCandidate>($I`TmpfsReapCandidate`)(
   {
+    root: S.optional(S.String),
     path: S.String,
     reapClass: TmpfsReapClass,
     ageHours: S.Finite,
@@ -152,6 +171,7 @@ export class TmpfsReapCandidate extends S.Class<TmpfsReapCandidate>($I`TmpfsReap
  * const report = TmpfsReapReport.make({
  *   scannedAt: "2026-08-29T12:00:00.000Z",
  *   tmpRoot: "/tmp",
+ *   tmpRoots: ["/tmp"],
  *   applied: false,
  *   candidates: [],
  *   reapedCount: 0,
@@ -168,7 +188,8 @@ export class TmpfsReapReport extends S.Class<TmpfsReapReport>($I`TmpfsReapReport
   {
     schemaVersion: S.tag("tmpfs-reap/v1"),
     scannedAt: S.String,
-    tmpRoot: S.String,
+    tmpRoot: TmpfsSystemRoot,
+    tmpRoots: S.String.pipe(S.Array, S.optional),
     applied: S.Boolean,
     candidates: S.Array(TmpfsReapCandidate),
     reapedCount: S.Int,

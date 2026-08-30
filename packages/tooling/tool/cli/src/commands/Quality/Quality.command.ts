@@ -2805,7 +2805,12 @@ const renderTmpfsCandidateLine = (candidate: TmpfsReapReport["candidates"][numbe
     O.map((reason) => ` reason=${reason}`),
     O.getOrElse(() => "")
   );
-  return `- ${candidate.action} class=${candidate.reapClass} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
+  const root = pipe(
+    O.fromUndefinedOr(candidate.root),
+    O.map((value) => ` root=${value}`),
+    O.getOrElse(() => "")
+  );
+  return `- ${candidate.action} class=${candidate.reapClass}${root} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
 };
 
 const tmpfsReapCommand = Command.make(
@@ -2831,6 +2836,10 @@ const tmpfsReapCommand = Command.make(
       apply
         ? "TMPFS REAP APPLY — removing only classified, idle artifacts with zero live references"
         : "TMPFS REAP DRY RUN — nothing will be removed; pass --apply to reap eligible artifacts",
+      `scratch roots: ${A.join(
+        O.getOrElse(O.fromUndefinedOr(report.tmpRoots), () => [report.tmpRoot]),
+        ", "
+      )}`,
       ...A.map(report.candidates, renderTmpfsCandidateLine),
       `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
       ...A.map(report.warnings, (warning) => `warning: ${warning}`),
@@ -2838,7 +2847,7 @@ const tmpfsReapCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Dry-run-first janitor for idle tmpfs worktrees and tool artifacts; pass --apply from the janitor timer"
+    "Dry-run-first janitor for idle artifacts under /tmp and a distinct absolute TMPDIR; includes Vitest forks scratch and dangling worktree stubs"
   )
 );
 
