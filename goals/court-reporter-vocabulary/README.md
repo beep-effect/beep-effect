@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -29,19 +29,24 @@ contract for law-practice consumers.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - inherited provenance.
 6. [`court-vocabulary-resolver`](../../explorations/court-vocabulary-resolver/README.md) - source exploration.
 
-## Current Phase
+## Outcome
 
-P1a ingestion substrate: the pinned-source audit is complete and the active
-increment adds both sync targets, internal generated artifacts, source assembly,
-attribution, and deterministic proof. P1b public stable IDs, lookups, lifecycle,
-compatibility, and citation-consumer integration remains pending.
+Closed 2026-08-27. The pinned targets deterministically emit 2,809 court
+identities and 1,262 reporter identities into package-private artifacts. The
+law-practice domain exposes schema-decoded stable IDs, source-faithful
+vocabulary, ambiguity-preserving lookups, an exact artifact-version gate, and
+machine-readable lifecycle compatibility classification without exporting raw
+source tables.
 
 ## Latest Evidence
 
 Pinned inputs and counts are recorded in
 [`research/EYECITE_DATA_AUDIT.md`](./research/EYECITE_DATA_AUDIT.md) and
-[`research/SOURCES.md`](./research/SOURCES.md). The ingestion increment does not
-close the full goal.
+[`research/SOURCES.md`](./research/SOURCES.md). Deterministic regeneration,
+artifact hashes, lifecycle coverage, and the public consumer boundary are
+archived under [`history/evidence/`](./history/evidence/). Closeout learning is
+captured in
+[`history/reflections/2026-08-27-codex.md`](./history/reflections/2026-08-27-codex.md).
 
 ## Notes
 
