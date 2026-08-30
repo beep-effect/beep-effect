@@ -90,7 +90,7 @@ export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Opti
  * registry.dispose()
  * ```
  *
- * @category atoms
+ * @category actions
  * @since 0.0.0
  */
 export const composerDocumentSafetyGateAtoms = Atom.family((_threadId: WorkspaceIdentity.ThreadId) =>
