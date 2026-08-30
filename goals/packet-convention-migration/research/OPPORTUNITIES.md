@@ -1005,3 +1005,52 @@
   projection diff, rerun the check after the final ledger edit, and publish only
   if it remains green.
 - **Owner:** exploration projection check determinism and failure diagnostics.
+
+## 2026-08-30 — Full coverage writer updates the PR file but hosted ratchet still compares the old floor
+
+- **What happened:** after Yeet prescribed the whole-repository coverage writer,
+  the generated PR diff lowered the changed `Local.ts` row to the locally
+  measured values. The next exact-head hosted coverage lane nevertheless
+  compared the same measurements with higher floors and failed after more than
+  fifteen minutes. Its failure message then prescribed the package-scoped
+  writer and explicitly warned never to use the whole-repository writer for a
+  per-package drop.
+- **Evidence:** commit `906d93ff3c` contains
+  `standards/coverage.regression-baseline.jsonc` values `66.99` lines, `67.81`
+  statements, and `51.3` branches for
+  `packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts`; PR #906
+  Actions job `99312429138` measured those exact values but failed them against
+  `68.27`, `68.85`, and `51.35`, then printed `bun run coverage --
+  --filter=@beep/repo-cli --write-baseline` and “never run bun run
+  coverage:baseline:write for a per-package drop.”
+- **What would have prevented it:** make Yeet's staleness repair render the same
+  package-scoped command as the hosted ratchet, and explain whether CI
+  intentionally ignores PR-authored lower floors until an explicit reviewer
+  acceptance marker is present. A baseline writer should also verify that its
+  output is the floor the hosted merge-ref lane will actually consume.
+- **Disposition:** actionable coverage-acceptance mismatch; inspect the ratchet's
+  base-versus-head policy before changing another floor, then prefer restoring
+  focused test coverage if lower-floor acceptance is intentionally prohibited.
+- **Owner:** coverage baseline writer, ratchet comparison policy, and Yeet
+  remediation consistency.
+
+## 2026-08-30 — Temp-repository test harness exposes an unavailable console accessor as an invalid Effect
+
+- **What happened:** the focused coverage-restoration test used the common
+  `withTempRepo` fixture and then attempted to inspect `TestConsole.logLines`.
+  The production effect completed both canonical and non-canonical aggregation
+  paths, but the test failed afterward with an opaque Effect runtime error
+  because that fixture does not install the test-console layer.
+- **Evidence:** `bunx vitest run packages/tooling/tool/cli/test/docgen.test.ts`
+  printed both expected `docgen:local` messages, then failed only the new test
+  with `Unknown Error: Fiber.runLoop: Not a valid effect: undefined` at the
+  `TestConsole.logLines` read; the neighboring `withTempRepoCommand` fixture is
+  the variant that provides captured command-console state.
+- **What would have prevented it:** encode the console capability in the
+  fixture's environment type or expose a deliberately named capture fixture so
+  an unavailable accessor fails at typecheck time instead of becoming
+  `yield* undefined` at runtime.
+- **Disposition:** test-harness friction; assert the observable aggregate count
+  and filesystem outputs under `withTempRepo`, leaving console-capture behavior
+  to command-harness tests.
+- **Owner:** Repo CLI test fixture capability typing and naming.

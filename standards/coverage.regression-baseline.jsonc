@@ -20497,15 +20497,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 78.77,
-      "statements": 78.57,
-      "branches": 67.83,
-      "functions": 72.62,
+      "lines": 78.81,
+      "statements": 78.6,
+      "branches": 67.88,
+      "functions": 72.63,
       "uncovered": {
-        "lines": 8305,
-        "statements": 8779,
-        "branches": 4747,
-        "functions": 3202
+        "lines": 8292,
+        "statements": 8766,
+        "branches": 4740,
+        "functions": 3200
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21901,15 +21901,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts": {
-          "lines": 66.99,
-          "statements": 67.81,
-          "branches": 51.3,
-          "functions": 65.95,
+          "lines": 70.62,
+          "statements": 71.25,
+          "branches": 53.04,
+          "functions": 67.02,
           "uncovered": {
-            "lines": 100,
-            "statements": 103,
-            "branches": 56,
-            "functions": 32
+            "lines": 89,
+            "statements": 92,
+            "branches": 54,
+            "functions": 31
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts": {

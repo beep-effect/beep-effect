@@ -903,7 +903,27 @@ const checkPackageDocumentation = Effect.fn("DocgenLocal.checkPackageDocumentati
 export const isCanonicalDocgenAggregateConfigForTesting = (config: DocgenConfigDocument): boolean =>
   P.isUndefined(config.outDir) || config.outDir === "docs";
 
-const aggregatePackages = Effect.fn("DocgenLocal.aggregatePackages")(function* (
+/**
+ * Aggregate canonical Docgen outputs while ignoring focused auxiliary outputs.
+ *
+ * **Example** (Build the aggregate effect)
+ *
+ * ```ts
+ * import { aggregateDocgenPackagesForTesting } from "@beep/repo-cli/test/Docgen"
+ *
+ * const aggregate = aggregateDocgenPackagesForTesting([])
+ * console.log(aggregate)
+ * ```
+ *
+ * Exposed through the test kit so the canonical and non-canonical configuration
+ * branches can be exercised without spawning Turbo.
+ *
+ * @param packages - Resolved workspace packages emitted by the scoped Turbo plan.
+ * @returns An effect yielding the number of packages that produced aggregate output.
+ * @category testing
+ * @since 0.0.0
+ */
+export const aggregateDocgenPackagesForTesting = Effect.fn("DocgenLocal.aggregatePackages")(function* (
   packages: ReadonlyArray<DocgenWorkspacePackage>
 ) {
   let aggregateCount = 0;
@@ -1144,7 +1164,7 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
   // Previously nothing was logged between turbo's own summary and the first
   // "aggregated" line, so a stall in between was invisible.
   yield* Console.log(`docgen:local: aggregating ${A.length(packages)} package(s) into docs/generated`);
-  const [aggregateElapsed, aggregateCount] = yield* Effect.timed(aggregatePackages(packages));
+  const [aggregateElapsed, aggregateCount] = yield* Effect.timed(aggregateDocgenPackagesForTesting(packages));
   yield* Console.log(
     `docgen:local: aggregated ${aggregateCount} of ${A.length(packages)} package(s) in ${Duration.format(aggregateElapsed)}`
   );
