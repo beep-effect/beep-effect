@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "todox-marketing-site",
+    "title": "Todox Marketing Site",
+    "status": "active",
+    "created": "2026-08-27",
+    "updated": "2026-08-27",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/todox-marketing-site",
+  "lifecycle": "active",
+  "mission": "Build the Terminal of Record marketing homepage for Todox in apps/todox: claim-gated copy, deterministic synthetic session, Impeccable-documented visual world.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/todox-wealth-management-site",
+    "graduated": "2026-08-27"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). PR publication additionally waits for Benjamin's explicit go (deferred 2026-08-27, repo contention).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/todox-marketing-site/README.md",
+    "goals/todox-marketing-site/SPEC.md",
+    "goals/todox-marketing-site/PLAN.md",
+    "goals/todox-marketing-site/GOAL.md",
+    "goals/todox-marketing-site/research/SOURCES.md",
+    "apps/todox/PRODUCT.md",
+    "explorations/todox-wealth-management-site/research/SHAPE-BRIEF.md",
+    "explorations/todox-wealth-management-site/research/PUBLIC-COPY.md",
+    "explorations/todox-wealth-management-site/research/DEMO-SCRIPT.md",
+    "explorations/todox-wealth-management-site/research/ASSET-PLAN.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/todox-marketing-site/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Pre-flight: fonts, licenses, direction contract",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement: Terminal of Record build",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify: detector, finish review, browser QA, claim re-check",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable (awaits explicit go)",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "bun run --cwd apps/todox audit",
+    "test \"$(wc -m < goals/todox-marketing-site/GOAL.md)\" -le 4000",
+    "jq . goals/todox-marketing-site/ops/manifest.json",
+    "rg -n \"todox-marketing-site|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/todox-marketing-site",
+    "git diff --check -- goals/todox-marketing-site",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (new routes, backend, extra packages).",
+    "A claim cannot be carried by the ledger and concept tense.",
+    "No yeet publish or PR until Benjamin explicitly green-lights publication (deferred 2026-08-27, repo contention).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

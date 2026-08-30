@@ -1,17 +1,23 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { finding } from "./findings.mjs";
-import { parseAnyColor, resolveLengthPx } from "./rules/checks.mjs";
-import { GENERIC_FONTS } from "./shared/constants.mjs";
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-const DESIGN_NAMES = ["DESIGN.md", "Design.md", "design.md"];
-const FALLBACK_DIRS = [".agents/context", "docs"];
+import { finding } from './findings.mjs';
+import { GENERIC_FONTS } from './shared/constants.mjs';
+import { parseAnyColor, resolveLengthPx } from './rules/checks.mjs';
+
+const DESIGN_NAMES = ['DESIGN.md', 'Design.md', 'design.md'];
+const FALLBACK_DIRS = ['.agents/context', 'docs'];
 // Files/dirs whose presence marks a directory as a project root. Mirrors the
 // walk-up semantics of skill/scripts/context.mjs (`resolveProject`), which the
 // CLI can't import (separate tree). `.git` and `package.json` are the common
 // boundaries; `.impeccable` is our own project marker.
-const PROJECT_ROOT_MARKERS = [".git", "package.json", ".impeccable"];
+const PROJECT_ROOT_MARKERS = ['.git', 'package.json', '.impeccable'];
+// Monorepo-root recognition, mirroring context.mjs's isMonorepoRoot: declared
+// workspace globs (package.json `workspaces`, pnpm-workspace.yaml `packages:`)
+// or a marker file beside apps/ or packages/ children.
+const MONOREPO_MARKER_FILES = ['pnpm-workspace.yaml', 'turbo.json', 'nx.json', 'lerna.json'];
+const MONOREPO_FALLBACK_PROJECT_DIRS = ['apps', 'packages'];
 const COLOR_CHANNEL_TOLERANCE = 6;
 // Shadow blacks at different alphas are different tokens (0.28 vs 0.55 is the
 // difference between a documented shadow and drift), so shadow matching cannot
@@ -30,17 +36,7 @@ const BORDER_RADIUS_JS_RE = /borderRadius\s*[:=]\s*["'`]([^"'`]+)["'`]/g;
 const FONT_SIZE_DECL_RE = /font-size\s*:\s*([^;}\n]+)/gi;
 const FONT_SIZE_JS_RE = /fontSize\s*[:=]\s*["'`]([^"'`]+)["'`]/g;
 const TAILWIND_FONT_SIZE_RE = /\btext-\[(-?[\d.]+(?:px|rem))\]/g;
-const STATIC_DESIGN_SKIP_TAGS = new Set([
-  "head",
-  "title",
-  "meta",
-  "link",
-  "style",
-  "script",
-  "noscript",
-  "template",
-  "source",
-]);
+const STATIC_DESIGN_SKIP_TAGS = new Set(['head', 'title', 'meta', 'link', 'style', 'script', 'noscript', 'template', 'source']);
 
 function firstExisting(dir, names) {
   for (const name of names) {
@@ -65,28 +61,25 @@ function resolveDesignMdPath(cwd = process.cwd()) {
 
 function resolveDesignSidecarPath(cwd = process.cwd(), contextDir = cwd) {
   const candidates = [
-    path.join(cwd, ".impeccable", "design.json"),
-    path.join(cwd, "DESIGN.json"),
-    path.join(contextDir, "DESIGN.json"),
+    path.join(cwd, '.impeccable', 'design.json'),
+    path.join(cwd, 'DESIGN.json'),
+    path.join(contextDir, 'DESIGN.json'),
   ];
-  return (
-    candidates.find((candidate, index) => candidates.indexOf(candidate) === index && fs.existsSync(candidate)) || null
-  );
+  return candidates.find((candidate, index) =>
+    candidates.indexOf(candidate) === index && fs.existsSync(candidate)
+  ) || null;
 }
 
 function parseFrontmatter(md) {
-  const lines = String(md || "").split(/\r?\n/);
-  if (lines[0]?.trim() !== "---") return null;
+  const lines = String(md || '').split(/\r?\n/);
+  if (lines[0]?.trim() !== '---') return null;
   let end = -1;
   for (let i = 1; i < lines.length; i++) {
-    if (lines[i].trim() === "---") {
-      end = i;
-      break;
-    }
+    if (lines[i].trim() === '---') { end = i; break; }
   }
   if (end === -1) return null;
   try {
-    return parseYamlSubset(lines.slice(1, end).join("\n"));
+    return parseYamlSubset(lines.slice(1, end).join('\n'));
   } catch {
     return null;
   }
@@ -96,7 +89,7 @@ function parseYamlSubset(yaml) {
   const root = {};
   const stack = [{ indent: -1, obj: root }];
 
-  for (const raw of String(yaml || "").split(/\r?\n/)) {
+  for (const raw of String(yaml || '').split(/\r?\n/)) {
     if (!raw.trim() || /^\s*#/.test(raw)) continue;
     const indent = raw.match(/^\s*/)[0].length;
     const content = raw.slice(indent);
@@ -109,7 +102,7 @@ function parseYamlSubset(yaml) {
     const rest = stripInlineYamlComment(content.slice(colonIdx + 1).trim());
     const parent = stack[stack.length - 1].obj;
 
-    if (rest === "") {
+    if (rest === '') {
       const obj = {};
       parent[key] = obj;
       stack.push({ indent, obj });
@@ -126,10 +119,10 @@ function findTopLevelColon(s) {
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (inQuote) {
-      if (ch === inQuote && s[i - 1] !== "\\") inQuote = null;
+      if (ch === inQuote && s[i - 1] !== '\\') inQuote = null;
     } else if (ch === '"' || ch === "'") {
       inQuote = ch;
-    } else if (ch === ":") {
+    } else if (ch === ':') {
       return i;
     }
   }
@@ -148,10 +141,10 @@ function stripInlineYamlComment(s) {
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (inQuote) {
-      if (ch === inQuote && s[i - 1] !== "\\") inQuote = null;
+      if (ch === inQuote && s[i - 1] !== '\\') inQuote = null;
     } else if (ch === '"' || ch === "'") {
       inQuote = ch;
-    } else if (ch === "#" && i > 0 && /\s/.test(s[i - 1])) {
+    } else if (ch === '#' && i > 0 && /\s/.test(s[i - 1])) {
       return s.slice(0, i).trimEnd();
     }
   }
@@ -166,31 +159,31 @@ function stripInlineYamlComment(s) {
 // backslash handling stays readable.
 // The full YAML 1.2 double-quote escape set (spec section 5.7).
 const YAML_SIMPLE_ESCAPES = {
-  0: "\0",
-  a: "\x07",
-  b: "\b",
-  t: "\t",
-  n: "\n",
-  v: "\v",
-  f: "\f",
-  r: "\r",
-  e: "\x1b",
-  " ": " ",
+  '0': '\0',
+  a: '\x07',
+  b: '\b',
+  t: '\t',
+  n: '\n',
+  v: '\v',
+  f: '\f',
+  r: '\r',
+  e: '\x1b',
+  ' ': ' ',
   '"': '"',
-  "/": "/",
-  "\\": "\\",
-  N: "\u0085",
-  _: "\u00a0",
-  L: "\u2028",
-  P: "\u2029",
+  '/': '/',
+  '\\': '\\',
+  N: '\u0085',
+  _: '\u00a0',
+  L: '\u2028',
+  P: '\u2029',
 };
 const YAML_HEX_ESCAPE_LENGTHS = { x: 2, u: 4, U: 8 };
 
 function unescapeYamlDoubleQuoted(body) {
-  let out = "";
+  let out = '';
   for (let i = 0; i < body.length; i++) {
     const ch = body[i];
-    if (ch !== "\\" || i === body.length - 1) {
+    if (ch !== '\\' || i === body.length - 1) {
       out += ch;
       continue;
     }
@@ -205,7 +198,7 @@ function unescapeYamlDoubleQuoted(body) {
     const hexLen = YAML_HEX_ESCAPE_LENGTHS[next];
     if (hexLen) {
       const hex = body.slice(i + 2, i + 2 + hexLen);
-      const codePoint = hex.length === hexLen && /^[0-9a-fA-F]+$/.test(hex) ? Number.parseInt(hex, 16) : -1;
+      const codePoint = hex.length === hexLen && /^[0-9a-fA-F]+$/.test(hex) ? parseInt(hex, 16) : -1;
       if (codePoint >= 0 && codePoint <= 0x10ffff) {
         out += String.fromCodePoint(codePoint);
         i += 1 + hexLen;
@@ -226,9 +219,9 @@ function parseScalar(raw) {
   if (s.length >= 2 && s.startsWith("'") && s.endsWith("'")) {
     return s.slice(1, -1).split("''").join("'");
   }
-  if (s === "true") return true;
-  if (s === "false") return false;
-  if (s === "null" || s === "~") return null;
+  if (s === 'true') return true;
+  if (s === 'false') return false;
+  if (s === 'null' || s === '~') return null;
   if (/^-?\d+$/.test(s)) return Number(s);
   if (/^-?\d*\.\d+$/.test(s)) return Number(s);
   return s;
@@ -237,55 +230,57 @@ function parseScalar(raw) {
 function safeReadJson(filePath) {
   if (!filePath) return null;
   try {
-    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
   } catch {
     return null;
   }
 }
 
 function normalizeFontName(value) {
-  return String(value || "")
+  return String(value || '')
     .trim()
-    .replace(/\s*!important\s*$/i, "")
+    .replace(/\s*!important\s*$/i, '')
     .trim()
-    .replace(/^["']|["']$/g, "")
-    .replace(/\+/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/^["']|["']$/g, '')
+    .replace(/\+/g, ' ')
+    .replace(/\s+/g, ' ')
     .toLowerCase();
 }
 
 function splitFontStack(stack) {
-  return String(stack || "")
-    .replace(/\s*!important\s*$/i, "")
-    .split(",")
+  return String(stack || '')
+    .replace(/\s*!important\s*$/i, '')
+    .split(',')
     .map(normalizeFontName)
     .filter(Boolean);
 }
 
 function primaryFont(stack) {
-  if (!stack || /var\(/i.test(stack) || !isLiteralFontStack(stack)) return "";
-  return splitFontStack(stack).find((font) => !GENERIC_FONTS.has(font)) || "";
+  if (!stack || /var\(/i.test(stack) || !isLiteralFontStack(stack)) return '';
+  return splitFontStack(stack).find(font => !GENERIC_FONTS.has(font)) || '';
 }
 
 function isLiteralFontStack(stack) {
-  const text = String(stack || "");
+  const text = String(stack || '');
   return !/[$`{}]|\s\+\s|\|\|/.test(text);
 }
 
 function cssColorLabel(raw) {
-  return String(raw || "")
-    .trim()
-    .replace(/\s+/g, " ");
+  return String(raw || '').trim().replace(/\s+/g, ' ');
 }
 
 function colorKey(color) {
-  if (!color) return "";
+  if (!color) return '';
   return `${color.r},${color.g},${color.b}`;
 }
 
 function colorsClose(a, b) {
   if (!a || !b) return false;
-  return Math.max(Math.abs(a.r - b.r), Math.abs(a.g - b.g), Math.abs(a.b - b.b)) <= COLOR_CHANNEL_TOLERANCE;
+  return Math.max(
+    Math.abs(a.r - b.r),
+    Math.abs(a.g - b.g),
+    Math.abs(a.b - b.b),
+  ) <= COLOR_CHANNEL_TOLERANCE;
 }
 
 function hslToRgb(H, S, L, alpha = 1) {
@@ -311,16 +306,16 @@ function hslToRgb(H, S, L, alpha = 1) {
 }
 
 function parseDesignColor(value) {
-  const text = String(value || "").trim();
+  const text = String(value || '').trim();
   const parsed = parseAnyColor(text);
   if (parsed) return parsed;
   const hsl = text.match(/hsla?\(\s*([-\d.]+)(?:deg)?\s*,?\s*([\d.]+)%\s*,?\s*([\d.]+)%(?:\s*[,/]\s*([\d.]+))?\s*\)/i);
   if (hsl) {
     return hslToRgb(
-      Number.parseFloat(hsl[1]),
-      Number.parseFloat(hsl[2]) / 100,
-      Number.parseFloat(hsl[3]) / 100,
-      hsl[4] !== undefined ? Number.parseFloat(hsl[4]) : 1
+      parseFloat(hsl[1]),
+      parseFloat(hsl[2]) / 100,
+      parseFloat(hsl[3]) / 100,
+      hsl[4] !== undefined ? parseFloat(hsl[4]) : 1,
     );
   }
   return null;
@@ -336,10 +331,10 @@ function addDesignColor(out, value, label) {
   out.allowedColorKeys.get(key).labels.push(label || cssColorLabel(value));
 }
 
-function addColorObject(out, colors, prefix = "colors") {
-  if (!colors || typeof colors !== "object") return;
+function addColorObject(out, colors, prefix = 'colors') {
+  if (!colors || typeof colors !== 'object') return;
   for (const [name, value] of Object.entries(colors)) {
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       addDesignColor(out, value, `${prefix}.${name}`);
     }
   }
@@ -347,24 +342,24 @@ function addColorObject(out, colors, prefix = "colors") {
 
 function addSidecarColors(out, sidecar) {
   const colorMeta = sidecar?.extensions?.colorMeta;
-  if (!colorMeta || typeof colorMeta !== "object") return;
+  if (!colorMeta || typeof colorMeta !== 'object') return;
 
   for (const [name, meta] of Object.entries(colorMeta)) {
-    if (!meta || typeof meta !== "object") continue;
-    if (typeof meta.canonical === "string") addDesignColor(out, meta.canonical, `sidecar.${name}`);
+    if (!meta || typeof meta !== 'object') continue;
+    if (typeof meta.canonical === 'string') addDesignColor(out, meta.canonical, `sidecar.${name}`);
     if (Array.isArray(meta.tonalRamp)) {
       for (const [index, value] of meta.tonalRamp.entries()) {
-        if (typeof value === "string") addDesignColor(out, value, `sidecar.${name}.tonalRamp[${index}]`);
+        if (typeof value === 'string') addDesignColor(out, value, `sidecar.${name}.tonalRamp[${index}]`);
       }
     }
   }
 }
 
 function addTypographyFonts(out, typography) {
-  if (!typography || typeof typography !== "object") return;
+  if (!typography || typeof typography !== 'object') return;
   for (const role of Object.values(typography)) {
-    if (!role || typeof role !== "object") continue;
-    if (typeof role.fontFamily !== "string") continue;
+    if (!role || typeof role !== 'object') continue;
+    if (typeof role.fontFamily !== 'string') continue;
     for (const font of splitFontStack(role.fontFamily)) {
       if (!GENERIC_FONTS.has(font)) out.allowedFonts.add(font);
     }
@@ -372,9 +367,7 @@ function addTypographyFonts(out, typography) {
 }
 
 function addFontSizeStep(out, raw, { fluid = false } = {}) {
-  const text = String(raw ?? "")
-    .trim()
-    .toLowerCase();
+  const text = String(raw ?? '').trim().toLowerCase();
   if (!FONT_SIZE_LITERAL_RE.test(text)) return;
   const px = resolveLengthPx(text, 16);
   if (px == null || !Number.isFinite(px) || px <= 0) return;
@@ -385,7 +378,7 @@ function addFontSizeStep(out, raw, { fluid = false } = {}) {
 // well-formed clamp(). Used both to read DESIGN.md's fluid roles and to
 // validate fluid values in source, so the two stay symmetric.
 function parseClampArgs(raw) {
-  const match = /^clamp\(\s*([\s\S]+)\s*\)$/i.exec(String(raw ?? "").trim());
+  const match = /^clamp\(\s*([\s\S]+)\s*\)$/i.exec(String(raw ?? '').trim());
   if (!match) return null;
   const args = splitTopLevelArgs(match[1]);
   return args.length === 3 ? args : null;
@@ -407,13 +400,13 @@ function addClampEndpoints(out, raw) {
 function splitTopLevelArgs(s) {
   const args = [];
   let depth = 0;
-  let current = "";
+  let current = '';
   for (const ch of String(s)) {
-    if (ch === "(") depth++;
-    else if (ch === ")") depth--;
-    if (ch === "," && depth === 0) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) {
       args.push(current.trim());
-      current = "";
+      current = '';
       continue;
     }
     current += ch;
@@ -423,31 +416,29 @@ function splitTopLevelArgs(s) {
 }
 
 function addTypographySizes(out, typography) {
-  if (!typography || typeof typography !== "object") return;
+  if (!typography || typeof typography !== 'object') return;
 
   // `scale` is the enumerated ramp: a name -> size map, since the frontmatter
   // parser has no list support. It sits alongside the named roles.
   const scale = typography.scale;
-  if (scale && typeof scale === "object") {
+  if (scale && typeof scale === 'object') {
     for (const value of Object.values(scale)) {
-      if (typeof value !== "string" && typeof value !== "number") continue;
+      if (typeof value !== 'string' && typeof value !== 'number') continue;
       addFontSizeStep(out, value);
     }
   }
 
   for (const [name, role] of Object.entries(typography)) {
-    if (name === "scale") continue;
-    if (!role || typeof role !== "object") continue;
-    const raw = String(role.fontSize ?? "")
-      .trim()
-      .toLowerCase();
+    if (name === 'scale') continue;
+    if (!role || typeof role !== 'object') continue;
+    const raw = String(role.fontSize ?? '').trim().toLowerCase();
     if (addClampEndpoints(out, raw)) continue;
     addFontSizeStep(out, raw);
   }
 }
 
 function addRoundedScale(out, rounded) {
-  if (!rounded || typeof rounded !== "object") return;
+  if (!rounded || typeof rounded !== 'object') return;
   for (const [rawName, value] of Object.entries(rounded)) {
     const name = unquoteYamlKey(rawName).toLowerCase();
     addRoundedToken(out, name, value);
@@ -455,9 +446,9 @@ function addRoundedScale(out, rounded) {
 }
 
 function addRoundedToken(out, name, value) {
-  if (typeof value !== "string" && typeof value !== "number") return;
+  if (typeof value !== 'string' && typeof value !== 'number') return;
   const raw = String(value).trim();
-  if (!raw || /var\(/i.test(raw) || raw.includes("%")) return;
+  if (!raw || /var\(/i.test(raw) || raw.includes('%')) return;
   const px = resolveLengthPx(raw, 16);
   if (px == null || !Number.isFinite(px)) return;
   out.allowedRadii.push({ name, value: raw, px });
@@ -466,27 +457,27 @@ function addRoundedToken(out, name, value) {
 
 function addSidecarRadii(out, sidecar) {
   const roundedMeta = sidecar?.extensions?.roundedMeta;
-  if (!roundedMeta || typeof roundedMeta !== "object") return;
+  if (!roundedMeta || typeof roundedMeta !== 'object') return;
 
   for (const [rawName, meta] of Object.entries(roundedMeta)) {
     const name = unquoteYamlKey(rawName).toLowerCase();
-    if (typeof meta === "string" || typeof meta === "number") {
+    if (typeof meta === 'string' || typeof meta === 'number') {
       addRoundedToken(out, `sidecar.${name}`, meta);
       continue;
     }
-    if (!meta || typeof meta !== "object") continue;
-    for (const key of ["canonical", "value"]) {
-      if (typeof meta[key] === "string" || typeof meta[key] === "number") {
+    if (!meta || typeof meta !== 'object') continue;
+    for (const key of ['canonical', 'value']) {
+      if (typeof meta[key] === 'string' || typeof meta[key] === 'number') {
         addRoundedToken(out, `sidecar.${name}.${key}`, meta[key]);
       }
     }
-    for (const key of ["values", "aliases"]) {
+    for (const key of ['values', 'aliases']) {
       if (!Array.isArray(meta[key])) continue;
       for (const [index, value] of meta[key].entries()) {
         addRoundedToken(out, `sidecar.${name}.${key}[${index}]`, value);
       }
     }
-    if (/^(full|pill|round|rounded-full)$/.test(name) || /^(full|pill|round)$/i.test(String(meta.role || ""))) {
+    if (/^(full|pill|round|rounded-full)$/.test(name) || /^(full|pill|round)$/i.test(String(meta.role || ''))) {
       out.hasPillRadius = true;
     }
   }
@@ -503,7 +494,7 @@ function addSidecarShadows(out, sidecar) {
   if (!Array.isArray(shadows)) return;
 
   for (const entry of shadows) {
-    if (typeof entry?.value !== "string") continue;
+    if (typeof entry?.value !== 'string') continue;
     for (const match of entry.value.matchAll(CSS_COLOR_RE)) {
       const parsed = parseDesignColor(match[0]);
       if (parsed) out.allowedShadowColors.push({ color: parsed });
@@ -541,7 +532,7 @@ function normalizeDesignSystem(input = {}) {
   // Gate on *enumerated* steps only. A fully fluid system declares clamp
   // endpoints but no discrete ramp, so treating those endpoints as the whole
   // allowlist would flag every intermediate size. Abstain instead.
-  out.hasFontSizes = out.allowedFontSizes.some((entry) => !entry.fluid);
+  out.hasFontSizes = out.allowedFontSizes.some(entry => !entry.fluid);
   return out;
 }
 
@@ -553,11 +544,11 @@ function loadDesignSystemForCwd(cwd = process.cwd()) {
   let mdStat = null;
   try {
     mdStat = fs.statSync(md.path);
-    frontmatter = parseFrontmatter(fs.readFileSync(md.path, "utf-8"));
+    frontmatter = parseFrontmatter(fs.readFileSync(md.path, 'utf-8'));
   } catch {
     return null;
   }
-  if (!frontmatter || typeof frontmatter !== "object") return null;
+  if (!frontmatter || typeof frontmatter !== 'object') return null;
 
   const sidecarPath = resolveDesignSidecarPath(cwd, md.contextDir);
   const sidecar = safeReadJson(sidecarPath);
@@ -589,14 +580,179 @@ function designSystemStartDir(targetPath, cwd = process.cwd()) {
   }
 }
 
+// Same two groups as context.mjs's readProjectPatternGroups: Impeccable
+// projectRoots govern any path they match (positive or negated); package-manager
+// globs only apply to paths the Impeccable group does not match.
+function readWorkspacePatternGroups(dir) {
+  const impeccable = [];
+  for (const name of ['config.json', 'config.local.json']) {
+    const roots = safeReadJson(path.join(dir, '.impeccable', name))?.projectRoots;
+    if (Array.isArray(roots)) {
+      impeccable.push(...roots.filter(entry => typeof entry === 'string' && entry.trim()).map(entry => entry.trim()));
+    }
+  }
+  const pkg = [];
+  const workspaces = safeReadJson(path.join(dir, 'package.json'))?.workspaces;
+  if (Array.isArray(workspaces)) pkg.push(...workspaces);
+  else if (Array.isArray(workspaces?.packages)) pkg.push(...workspaces.packages);
+  const lernaPackages = safeReadJson(path.join(dir, 'lerna.json'))?.packages;
+  if (Array.isArray(lernaPackages)) pkg.push(...lernaPackages);
+  try {
+    let inPackages = false;
+    for (const line of fs.readFileSync(path.join(dir, 'pnpm-workspace.yaml'), 'utf-8').split(/\r?\n/)) {
+      const trimmed = stripInlineYamlComment(line).trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const flow = trimmed.match(/^packages:\s*\[(.*)\]\s*$/);
+      if (flow) {
+        pkg.push(...flow[1].split(',').map(entry => entry.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean));
+        break;
+      }
+      if (/^packages:\s*$/.test(trimmed)) { inPackages = true; continue; }
+      if (!inPackages) continue;
+      const item = trimmed.match(/^-\s*(.+)$/);
+      if (item) pkg.push(item[1].trim().replace(/^['"]|['"]$/g, ''));
+      else if (/^[A-Za-z0-9_-]+:\s*/.test(trimmed)) break;
+    }
+  } catch { /* no pnpm-workspace.yaml */ }
+  return [impeccable, pkg];
+}
+
+function readWorkspacePatterns(dir) {
+  return readWorkspacePatternGroups(dir).flat();
+}
+
+function isMonorepoRoot(dir) {
+  if (readWorkspacePatterns(dir).some(pattern => !String(pattern).trim().startsWith('!'))) return true;
+  if (!MONOREPO_MARKER_FILES.some(file => fs.existsSync(path.join(dir, file)))) return false;
+  return MONOREPO_FALLBACK_PROJECT_DIRS.some(name => {
+    try {
+      return fs.readdirSync(path.join(dir, name), { withFileTypes: true }).some(entry => entry.isDirectory());
+    } catch {
+      return false;
+    }
+  });
+}
+
+function monorepoOwnsPath(root, boundaryDir) {
+  const rel = path.relative(root, boundaryDir);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return false;
+  const relSegments = rel.split(path.sep).filter(Boolean);
+
+  function normalizeWorkspacePattern(pattern) {
+    return String(pattern || '')
+      .trim()
+      .replace(/^['"]|['"]$/g, '')
+      .replace(/^\.\//, '')
+      .replace(/\/+$/, '');
+  }
+
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function segmentMatches(patternSegment, relSegment) {
+    if (patternSegment === '*') return true;
+    if (!patternSegment.includes('*')) return patternSegment === relSegment;
+    const re = new RegExp(`^${escapeRegExp(patternSegment).replace(/\\\*/g, '[^/]*')}$`);
+    return re.test(relSegment);
+  }
+
+  function matchGlobSegments(patternSegments, relSegments) {
+    function rec(pi, ri) {
+      if (pi === patternSegments.length) return ri === relSegments.length;
+      if (patternSegments[pi] === '**') {
+        if (pi === patternSegments.length - 1) return true;
+        for (let k = ri; k <= relSegments.length; k++) {
+          if (rec(pi + 1, k)) return true;
+        }
+        return false;
+      }
+      if (ri >= relSegments.length) return false;
+      if (!segmentMatches(patternSegments[pi], relSegments[ri])) return false;
+      return rec(pi + 1, ri + 1);
+    }
+    return rec(0, 0);
+  }
+
+  // Negations like !packages/excluded must also cover nested dirs under that path.
+  function matchesNegation(pattern) {
+    const patternSegments = normalizeWorkspacePattern(pattern).split('/').filter(Boolean);
+    if (!patternSegments.length) return false;
+    if (patternSegments.includes('**')) return matchGlobSegments(patternSegments, relSegments);
+    if (relSegments.length < patternSegments.length) return false;
+    for (let i = 0; i < patternSegments.length; i++) {
+      if (!segmentMatches(patternSegments[i], relSegments[i])) return false;
+    }
+    return true;
+  }
+
+  // Positive globs identify workspace packages at exact depth (`*` is a direct
+  // child). A nested package.json under that package is still owned: the
+  // ancestor directory of glob length must itself be a package.
+  function positiveOwns(pattern) {
+    const patternSegments = normalizeWorkspacePattern(pattern).split('/').filter(Boolean);
+    if (!patternSegments.length) return false;
+    if (patternSegments.includes('**')) return matchGlobSegments(patternSegments, relSegments);
+    if (relSegments.length < patternSegments.length) return false;
+    for (let i = 0; i < patternSegments.length; i++) {
+      if (!segmentMatches(patternSegments[i], relSegments[i])) return false;
+    }
+    if (relSegments.length === patternSegments.length) return true;
+    const ancestorDir = path.join(root, ...relSegments.slice(0, patternSegments.length));
+    return fs.existsSync(path.join(ancestorDir, 'package.json'));
+  }
+
+  function groupOwns(rawPatterns) {
+    const patterns = rawPatterns.map(normalizeWorkspacePattern).filter(Boolean);
+    if (!patterns.length) return null;
+    const excluded = patterns.some((pattern) => (
+      pattern.startsWith('!') && matchesNegation(pattern.slice(1))
+    ));
+    const included = patterns.filter((pattern) => !pattern.startsWith('!')).some(positiveOwns);
+    if (!excluded && !included) return null;
+    if (excluded) return false;
+    return true;
+  }
+
+  const [impeccable, pkg] = readWorkspacePatternGroups(root);
+  const fromImpeccable = groupOwns(impeccable);
+  if (fromImpeccable !== null) return fromImpeccable;
+  const fromPkg = groupOwns(pkg);
+  if (fromPkg !== null) return fromPkg;
+  if ([...impeccable, ...pkg].some((pattern) => !normalizeWorkspacePattern(pattern).startsWith('!'))) {
+    return false;
+  }
+  return relSegments.length >= 2 && MONOREPO_FALLBACK_PROJECT_DIRS.includes(relSegments[0]);
+}
+
+// Both forms of the home directory. The walk compares path strings, and a
+// symlinked home (e.g. /home -> /var/home) never string-matches the physical
+// paths a cwd-resolved target produces, which would let the post-boundary walk
+// sail through $HOME and inherit from it.
+function homeDirForms() {
+  const homeDir = path.resolve(os.homedir());
+  const forms = new Set([homeDir]);
+  try {
+    forms.add(fs.realpathSync(homeDir));
+  } catch { /* keep the logical form only */ }
+  return forms;
+}
+
 // Walk up from `startDir` to the directory that governs the target's design
 // system, mirroring skill/scripts/context.mjs's project-boundary semantics:
 //
 //   - A directory carrying a DESIGN.md (directly or in a fallback dir) IS the
 //     design root — that's where the rules live.
 //   - A directory carrying a project marker (.git / package.json / .impeccable)
-//     but no DESIGN.md is a project BOUNDARY: the walk stops with no design
-//     system, so a sibling project never inherits a parent's or cwd's rules.
+//     but no DESIGN.md is a project BOUNDARY. A nested package.json inherits
+//     the ancestor DESIGN.md only when that ancestor's workspace declarations
+//     include the path (negations win; a nested package under a matched
+//     workspace still inherits). Marker-only roots (turbo/nx/lerna/pnpm
+//     with no globs) still own apps/<name> and packages/<name>. A stray nested
+//     package that matches no glob does not inherit. This is detect's
+//     contamination contract, not skill-context's repoRoot fallback for
+//     excluded paths. A nested separate repository (.git with no workspace
+//     declaration) still inherits nothing (issue #570).
 //   - Reaching the home directory / filesystem root with neither means no
 //     design system at all — never process.cwd()'s.
 //
@@ -604,15 +760,33 @@ function designSystemStartDir(targetPath, cwd = process.cwd()) {
 // runs out. This is the fix for cross-project contamination.
 export function findDesignRoot(startDir) {
   let dir = path.resolve(startDir);
-  const homeDir = path.resolve(os.homedir());
+  const homeDirs = homeDirForms();
+  let boundary = null;
   while (true) {
-    if (resolveDesignMdPath(dir)) return { dir, hasDesign: true };
-    if (PROJECT_ROOT_MARKERS.some((marker) => fs.existsSync(path.join(dir, marker)))) {
-      return { dir, hasDesign: false };
+    if (!boundary && resolveDesignMdPath(dir)) return { dir, hasDesign: true };
+    if (boundary) {
+      // Past the boundary the walk only looks for the monorepo root that owns
+      // the workspace path (workspace globs including negations, or marker-only
+      // apps/packages fallback). Monorepo-root before .git, same order as
+      // context.mjs: a workspace root carrying its own .git is still recognized,
+      // while a .git that declares no workspaces is a separate repository and
+      // stops the walk with nothing inherited. The home directory is never an
+      // owning root, same as context.mjs's findMonorepoRoot, which stops at
+      // homeDir before its monorepo check.
+      if (!homeDirs.has(dir) && isMonorepoRoot(dir)) {
+        if (monorepoOwnsPath(dir, boundary.dir)) return { dir, hasDesign: !!resolveDesignMdPath(dir) };
+        return boundary;
+      }
+      if (fs.existsSync(path.join(dir, '.git'))) return boundary;
+    } else if (PROJECT_ROOT_MARKERS.some((marker) => fs.existsSync(path.join(dir, marker)))) {
+      boundary = { dir, hasDesign: false };
+      // A boundary that is itself a monorepo root, or a separate repository
+      // with its own .git, inherits nothing from above.
+      if (isMonorepoRoot(dir) || fs.existsSync(path.join(dir, '.git'))) return boundary;
     }
-    if (dir === homeDir) return null;
+    if (homeDirs.has(dir)) return boundary;
     const parent = path.dirname(dir);
-    if (parent === dir) return null;
+    if (parent === dir) return boundary;
     dir = parent;
   }
 }
@@ -626,7 +800,7 @@ export function findDesignRoot(startDir) {
 export function loadDesignSystemForTarget(targetPath, { cache, cwd = process.cwd() } = {}) {
   const startDir = designSystemStartDir(targetPath, cwd);
   const found = findDesignRoot(startDir);
-  const key = found ? `root:${found.dir}` : "\0none";
+  const key = found ? `root:${found.dir}` : '\0none';
   if (cache && cache.has(key)) return cache.get(key);
   const loaded = found?.hasDesign ? loadDesignSystemForCwd(found.dir) : null;
   if (cache) cache.set(key, loaded);
@@ -641,12 +815,9 @@ function isAllowedFont(font, designSystem) {
 
 function isAllowedColorRaw(raw, designSystem) {
   if (!designSystem?.hasColors) return true;
-  const text = String(raw || "")
-    .trim()
-    .toLowerCase();
-  if (!text || text === "transparent" || text === "currentcolor" || text === "inherit" || text === "initial")
-    return true;
-  if (text.includes("var(")) return true;
+  const text = String(raw || '').trim().toLowerCase();
+  if (!text || text === 'transparent' || text === 'currentcolor' || text === 'inherit' || text === 'initial') return true;
+  if (text.includes('var(')) return true;
   const parsed = parseDesignColor(text);
   if (!parsed) return true;
   if ((parsed.a ?? 1) <= 0.05) return true;
@@ -662,44 +833,36 @@ function isAllowedColorRaw(raw, designSystem) {
 // would let every black at every alpha through.
 function isAllowedShadowColorRaw(raw, designSystem) {
   if (!designSystem?.allowedShadowColors?.length) return false;
-  const parsed = parseDesignColor(
-    String(raw || "")
-      .trim()
-      .toLowerCase()
-  );
+  const parsed = parseDesignColor(String(raw || '').trim().toLowerCase());
   if (!parsed) return false;
-  return designSystem.allowedShadowColors.some(
-    (entry) =>
-      colorsClose(parsed, entry.color) && Math.abs((parsed.a ?? 1) - (entry.color.a ?? 1)) <= SHADOW_ALPHA_TOLERANCE
+  return designSystem.allowedShadowColors.some(entry =>
+    colorsClose(parsed, entry.color) &&
+    Math.abs((parsed.a ?? 1) - (entry.color.a ?? 1)) <= SHADOW_ALPHA_TOLERANCE,
   );
 }
 
 function isAllowedRadiusRaw(raw, designSystem) {
   if (!designSystem?.hasRadii) return true;
-  const text = String(raw || "")
-    .trim()
-    .toLowerCase();
-  if (!text || text === "0" || text === "none" || text === "initial" || text === "inherit") return true;
-  if (text.includes("var(") || text.includes("%")) return true;
+  const text = String(raw || '').trim().toLowerCase();
+  if (!text || text === '0' || text === 'none' || text === 'initial' || text === 'inherit') return true;
+  if (text.includes('var(') || text.includes('%')) return true;
   const px = resolveLengthPx(text, 16);
   if (px == null || !Number.isFinite(px) || px <= RADIUS_TOLERANCE_PX) return true;
   if (designSystem.hasPillRadius && px >= 99) return true;
-  return designSystem.allowedRadii.some((entry) => Math.abs(entry.px - px) <= RADIUS_TOLERANCE_PX);
+  return designSystem.allowedRadii.some(entry => Math.abs(entry.px - px) <= RADIUS_TOLERANCE_PX);
 }
 
 // One term of a font-size value. `unjudgeable` covers var(), calc(), percentages
 // and units the ramp cannot resolve (em is parent-relative, not root-relative);
 // those abstain rather than guess.
 function fontSizeStepStatus(raw, designSystem) {
-  const text = String(raw || "")
-    .trim()
-    .toLowerCase();
-  if (!FONT_SIZE_LITERAL_RE.test(text)) return "unjudgeable";
+  const text = String(raw || '').trim().toLowerCase();
+  if (!FONT_SIZE_LITERAL_RE.test(text)) return 'unjudgeable';
   const px = resolveLengthPx(text, 16);
-  if (px == null || !Number.isFinite(px) || px <= 0) return "unjudgeable";
-  return designSystem.allowedFontSizes.some((entry) => Math.abs(entry.px - px) <= FONT_SIZE_TOLERANCE_PX)
-    ? "on-ramp"
-    : "off-ramp";
+  if (px == null || !Number.isFinite(px) || px <= 0) return 'unjudgeable';
+  return designSystem.allowedFontSizes.some(
+    entry => Math.abs(entry.px - px) <= FONT_SIZE_TOLERANCE_PX,
+  ) ? 'on-ramp' : 'off-ramp';
 }
 
 // The off-ramp endpoints of a fluid value, or null when `raw` is not a fluid
@@ -711,33 +874,28 @@ function fontSizeStepStatus(raw, designSystem) {
 // declaration stayed invisible until someone measured computed styles.
 export function offRampClampEndpoints(raw, designSystem) {
   if (!designSystem?.hasFontSizes) return null;
-  const args = parseClampArgs(
-    String(raw || "")
-      .trim()
-      .replace(/\s*!important\s*$/i, "")
-  );
+  const args = parseClampArgs(String(raw || '').trim().replace(/\s*!important\s*$/i, ''));
   if (!args) return null;
-  return [args[0], args[2]].filter((endpoint) => fontSizeStepStatus(endpoint, designSystem) === "off-ramp");
+  return [args[0], args[2]].filter(
+    endpoint => fontSizeStepStatus(endpoint, designSystem) === 'off-ramp',
+  );
 }
 
 function isAllowedFontSizeRaw(raw, designSystem) {
   if (!designSystem?.hasFontSizes) return true;
-  const text = String(raw || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s*!important\s*$/, "");
+  const text = String(raw || '').trim().toLowerCase().replace(/\s*!important\s*$/, '');
   const offRampEndpoints = offRampClampEndpoints(text, designSystem);
   if (offRampEndpoints) return offRampEndpoints.length === 0;
-  return fontSizeStepStatus(text, designSystem) !== "off-ramp";
+  return fontSizeStepStatus(text, designSystem) !== 'off-ramp';
 }
 
 function lineLooksCommented(line) {
-  const trimmed = String(line || "").trim();
-  return trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*") || trimmed.startsWith("<!--");
+  const trimmed = String(line || '').trim();
+  return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('<!--');
 }
 
 function isProbablyColorLiteral(line, match) {
-  const raw = match?.[0] || "";
+  const raw = match?.[0] || '';
   const index = match.index ?? -1;
   if (index < 0) return false;
   if (isInsideCssAttributeSelector(line, index)) return false;
@@ -745,23 +903,17 @@ function isProbablyColorLiteral(line, match) {
   const before = line.slice(0, index);
   const after = line.slice(index + raw.length);
 
-  if (raw.startsWith("#")) {
-    if (before.endsWith("&")) return false; // HTML numeric entity, e.g. &#8596;
+  if (raw.startsWith('#')) {
+    if (before.endsWith('&')) return false; // HTML numeric entity, e.g. &#8596;
 
-    const prevNonSpace = before.match(/\S(?=\s*$)/)?.[0] || "";
-    const nextNonSpace = after.match(/^\s*(\S)/)?.[1] || "";
-    if (prevNonSpace === ">" && nextNonSpace === "<") return false; // plain text, e.g. PR #155
+    const prevNonSpace = before.match(/\S(?=\s*$)/)?.[0] || '';
+    const nextNonSpace = after.match(/^\s*(\S)/)?.[1] || '';
+    if (prevNonSpace === '>' && nextNonSpace === '<') return false; // plain text, e.g. PR #155
   }
 
-  const styleContext =
-    /(?:^|[{\s;"'`(,])(?:color|background(?:-color|-image)?|border(?:-(?:top|right|bottom|left))?(?:-color)?|outline(?:-color)?|box-shadow|text-shadow|fill|stroke)\s*:\s*[^;{}"'`]*/i.test(
-      before
-    );
+  const styleContext = /(?:^|[{\s;"'`(,])(?:color|background(?:-color|-image)?|border(?:-(?:top|right|bottom|left))?(?:-color)?|outline(?:-color)?|box-shadow|text-shadow|fill|stroke)\s*:\s*[^;{}"'`]*/i.test(before);
   const cssFunctionContext = /(?:linear-gradient|radial-gradient|conic-gradient|color-mix)\([^)]*$/i.test(before);
-  const jsColorKeyContext =
-    /(?:^|[,{]\s*)(?:color|background|backgroundColor|borderColor|outlineColor|fill|stroke|boxShadow|textShadow)\s*[:=]\s*["'`]?[^"'`,}]*/i.test(
-      before
-    );
+  const jsColorKeyContext = /(?:^|[,{]\s*)(?:color|background|backgroundColor|borderColor|outlineColor|fill|stroke|boxShadow|textShadow)\s*[:=]\s*["'`]?[^"'`,}]*/i.test(before);
 
   return styleContext || cssFunctionContext || jsColorKeyContext;
 }
@@ -773,19 +925,18 @@ function isProbablyColorLiteral(line, match) {
 // the context check misses and the finding fires — a false positive a waiver
 // can silence, never a leak.
 const QUOTED_STRING_SRC = `"[^"]*"|'[^']*'`;
-const INTERPOLATION_SRC = `\\$\\{(?:${QUOTED_STRING_SRC}|\\{(?:${QUOTED_STRING_SRC}|[^{}"'\`])*\\}|[^{}"'\`])*\\}`;
+const INTERPOLATION_SRC =
+  `\\$\\{(?:${QUOTED_STRING_SRC}|\\{(?:${QUOTED_STRING_SRC}|[^{}"'\`])*\\}|[^{}"'\`])*\\}`;
 // The two shadow-context tails. Unlike jsColorKeyContext, the JS tail admits
 // commas: a multi-layer shadow string is comma-separated, and a later
 // property on the same line is still blocked because it sits past the
 // string's closing quote. Both tails admit complete interpolations; a bare
 // `}`, quote, or `;` still ends the context.
 const SHADOW_CSS_CONTEXT_RE = new RegExp(
-  `(?:^|[{\\s;"'\`(,])(?:box-shadow|text-shadow)\\s*:\\s*(?:${INTERPOLATION_SRC}|[^;{}"'\`])*$`,
-  "i"
+  `(?:^|[{\\s;"'\`(,])(?:box-shadow|text-shadow)\\s*:\\s*(?:${INTERPOLATION_SRC}|[^;{}"'\`])*$`, 'i',
 );
 const SHADOW_JS_CONTEXT_RE = new RegExp(
-  `(?:^|[,{]\\s*)(?:boxShadow|textShadow)\\s*[:=]\\s*["'\`]?(?:${INTERPOLATION_SRC}|[^"'\`}])*$`,
-  "i"
+  `(?:^|[,{]\\s*)(?:boxShadow|textShadow)\\s*[:=]\\s*["'\`]?(?:${INTERPOLATION_SRC}|[^"'\`}])*$`, 'i',
 );
 
 // True when the color literal sits inside a box-shadow / text-shadow value —
@@ -804,13 +955,13 @@ function isShadowPropertyContext(line, match) {
 function isInsideCssAttributeSelector(line, index) {
   if (index < 0) return false;
   const before = line.slice(0, index);
-  const lastOpen = before.lastIndexOf("[");
+  const lastOpen = before.lastIndexOf('[');
   if (lastOpen === -1) return false;
-  const lastClose = before.lastIndexOf("]");
+  const lastClose = before.lastIndexOf(']');
   if (lastClose > lastOpen) return false;
   const after = line.slice(index);
-  const close = after.indexOf("]");
-  const block = after.indexOf("{");
+  const close = after.indexOf(']');
+  const block = after.indexOf('{');
   return close !== -1 && (block === -1 || close < block);
 }
 
@@ -819,9 +970,7 @@ function makeDesignFinding(id, filePath, snippet, line = 0, extras = {}) {
 }
 
 function decodeGoogleFamily(value) {
-  const family = String(value || "")
-    .split(":")[0]
-    .replace(/\+/g, " ");
+  const family = String(value || '').split(':')[0].replace(/\+/g, ' ');
   try {
     return decodeURIComponent(family);
   } catch {
@@ -832,23 +981,21 @@ function decodeGoogleFamily(value) {
 function checkFontStack(stack, filePath, line, designSystem, context) {
   const primary = primaryFont(stack);
   if (!primary || isAllowedFont(primary, designSystem)) return [];
-  const display = primary.replace(/\b\w/g, (ch) => ch.toUpperCase());
-  return [
-    makeDesignFinding(
-      "design-system-font",
-      filePath,
-      `${context}: ${display} is not declared in DESIGN.md typography`,
-      line,
-      { ignoreValue: display }
-    ),
-  ];
+  const display = primary.replace(/\b\w/g, ch => ch.toUpperCase());
+  return [makeDesignFinding(
+    'design-system-font',
+    filePath,
+    `${context}: ${display} is not declared in DESIGN.md typography`,
+    line,
+    { ignoreValue: display },
+  )];
 }
 
 function extractRadiusTokens(value) {
-  return String(value || "")
-    .replace(/\s*\/\s*/g, " ")
+  return String(value || '')
+    .replace(/\s*\/\s*/g, ' ')
     .split(/\s+/)
-    .map((token) => token.trim())
+    .map(token => token.trim())
     .filter(Boolean);
 }
 
@@ -856,52 +1003,46 @@ function checkRadiusValue(value, filePath, line, designSystem, context) {
   const findings = [];
   for (const token of extractRadiusTokens(value)) {
     if (isAllowedRadiusRaw(token, designSystem)) continue;
-    findings.push(
-      makeDesignFinding(
-        "design-system-radius",
-        filePath,
-        `${context}: ${token} is outside the DESIGN.md rounded scale`,
-        line,
-        { ignoreValue: token }
-      )
-    );
+    findings.push(makeDesignFinding(
+      'design-system-radius',
+      filePath,
+      `${context}: ${token} is outside the DESIGN.md rounded scale`,
+      line,
+      { ignoreValue: token },
+    ));
   }
   return findings;
 }
 
 function checkFontSizeValue(value, filePath, line, designSystem, context) {
-  const token = String(value || "").trim();
+  const token = String(value || '').trim();
   if (isAllowedFontSizeRaw(token, designSystem)) return [];
 
   // Name the offending endpoint on a fluid value; the whole clamp() string is
   // not actionable on its own, and it makes a poor ignore-value.
   const offRampEndpoints = offRampClampEndpoints(token, designSystem) || [];
   if (offRampEndpoints.length > 0) {
-    const plural = offRampEndpoints.length > 1 ? "s" : "";
-    return [
-      makeDesignFinding(
-        "design-system-font-size",
-        filePath,
-        `${context}: ${token} has fluid endpoint${plural} ${offRampEndpoints.join(" and ")} off the DESIGN.md type ramp`,
-        line,
-        { ignoreValue: offRampEndpoints[0] }
-      ),
-    ];
+    const plural = offRampEndpoints.length > 1 ? 's' : '';
+    return [makeDesignFinding(
+      'design-system-font-size',
+      filePath,
+      `${context}: ${token} has fluid endpoint${plural} ${offRampEndpoints.join(' and ')} off the DESIGN.md type ramp`,
+      line,
+      { ignoreValue: offRampEndpoints[0] },
+    )];
   }
 
   // The snippet shows the declaration as authored, but the ignoreValue has to
   // be what a `hooks ignore-value` waiver can match, so the priority marker is
   // stripped. Otherwise the same size needs two different waivers depending on
   // whether it carries !important. font-family already behaves this way.
-  return [
-    makeDesignFinding(
-      "design-system-font-size",
-      filePath,
-      `${context}: ${token} is off the DESIGN.md type ramp`,
-      line,
-      { ignoreValue: token.replace(/\s*!important\s*$/i, "").trim() }
-    ),
-  ];
+  return [makeDesignFinding(
+    'design-system-font-size',
+    filePath,
+    `${context}: ${token} is off the DESIGN.md type ramp`,
+    line,
+    { ignoreValue: token.replace(/\s*!important\s*$/i, '').trim() },
+  )];
 }
 
 function checkSourceDesignSystem(content, filePath, options = {}) {
@@ -909,7 +1050,7 @@ function checkSourceDesignSystem(content, filePath, options = {}) {
   if (!designSystem?.present) return [];
 
   const findings = [];
-  const lines = String(content || "").split("\n");
+  const lines = String(content || '').split('\n');
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineNum = i + 1;
@@ -917,10 +1058,10 @@ function checkSourceDesignSystem(content, filePath, options = {}) {
 
     if (designSystem.hasFonts) {
       for (const match of line.matchAll(FONT_DECL_RE)) {
-        findings.push(...checkFontStack(match[1], filePath, lineNum, designSystem, "font-family"));
+        findings.push(...checkFontStack(match[1], filePath, lineNum, designSystem, 'font-family'));
       }
       for (const match of line.matchAll(FONT_JS_RE)) {
-        findings.push(...checkFontStack(match[1], filePath, lineNum, designSystem, "fontFamily"));
+        findings.push(...checkFontStack(match[1], filePath, lineNum, designSystem, 'fontFamily'));
       }
       for (const match of line.matchAll(GOOGLE_FONT_RE)) {
         const url = match[0];
@@ -928,15 +1069,13 @@ function checkSourceDesignSystem(content, filePath, options = {}) {
           const font = normalizeFontName(decodeGoogleFamily(familyMatch[1]));
           if (!font || isAllowedFont(font, designSystem)) continue;
           const display = decodeGoogleFamily(familyMatch[1]);
-          findings.push(
-            makeDesignFinding(
-              "design-system-font",
-              filePath,
-              `Google Fonts: ${display} is not declared in DESIGN.md typography`,
-              lineNum,
-              { ignoreValue: display }
-            )
-          );
+          findings.push(makeDesignFinding(
+            'design-system-font',
+            filePath,
+            `Google Fonts: ${display} is not declared in DESIGN.md typography`,
+            lineNum,
+            { ignoreValue: display },
+          ));
         }
       }
     }
@@ -947,36 +1086,34 @@ function checkSourceDesignSystem(content, filePath, options = {}) {
         const raw = cssColorLabel(match[0]);
         if (isAllowedColorRaw(raw, designSystem)) continue;
         if (isShadowPropertyContext(line, match) && isAllowedShadowColorRaw(raw, designSystem)) continue;
-        findings.push(
-          makeDesignFinding(
-            "design-system-color",
-            filePath,
-            `Undocumented color ${raw} is outside DESIGN.md colors`,
-            lineNum,
-            { ignoreValue: raw }
-          )
-        );
+        findings.push(makeDesignFinding(
+          'design-system-color',
+          filePath,
+          `Undocumented color ${raw} is outside DESIGN.md colors`,
+          lineNum,
+          { ignoreValue: raw },
+        ));
       }
     }
 
     if (designSystem.hasRadii) {
       for (const match of line.matchAll(BORDER_RADIUS_RE)) {
-        findings.push(...checkRadiusValue(match[1], filePath, lineNum, designSystem, "border-radius"));
+        findings.push(...checkRadiusValue(match[1], filePath, lineNum, designSystem, 'border-radius'));
       }
       for (const match of line.matchAll(BORDER_RADIUS_JS_RE)) {
-        findings.push(...checkRadiusValue(match[1], filePath, lineNum, designSystem, "borderRadius"));
+        findings.push(...checkRadiusValue(match[1], filePath, lineNum, designSystem, 'borderRadius'));
       }
     }
 
     if (designSystem.hasFontSizes) {
       for (const match of line.matchAll(FONT_SIZE_DECL_RE)) {
-        findings.push(...checkFontSizeValue(match[1], filePath, lineNum, designSystem, "font-size"));
+        findings.push(...checkFontSizeValue(match[1], filePath, lineNum, designSystem, 'font-size'));
       }
       for (const match of line.matchAll(FONT_SIZE_JS_RE)) {
-        findings.push(...checkFontSizeValue(match[1], filePath, lineNum, designSystem, "fontSize"));
+        findings.push(...checkFontSizeValue(match[1], filePath, lineNum, designSystem, 'fontSize'));
       }
       for (const match of line.matchAll(TAILWIND_FONT_SIZE_RE)) {
-        findings.push(...checkFontSizeValue(match[1], filePath, lineNum, designSystem, "text-[…] class"));
+        findings.push(...checkFontSizeValue(match[1], filePath, lineNum, designSystem, 'text-[…] class'));
       }
     }
   }
@@ -985,14 +1122,12 @@ function checkSourceDesignSystem(content, filePath, options = {}) {
 }
 
 function hasDirectText(el) {
-  return Array.from(el.childNodes || []).some((node) => node.nodeType === 3 && node.textContent.trim().length > 0);
+  return Array.from(el.childNodes || []).some(node => node.nodeType === 3 && node.textContent.trim().length > 0);
 }
 
 function sampleText(el) {
-  const text = String(el.textContent || "")
-    .replace(/\s+/g, " ")
-    .trim();
-  return text ? ` "${text.slice(0, 40)}"` : "";
+  const text = String(el.textContent || '').replace(/\s+/g, ' ').trim();
+  return text ? ` "${text.slice(0, 40)}"` : '';
 }
 
 // Font-size design-system checks are source-scan-only (see checkSourceDesignSystem).
@@ -1004,37 +1139,35 @@ function collectStaticDesignSystemFindings(document, window, filePath, designSys
   const seenColors = new Set();
   const seenRadii = new Set();
 
-  for (const el of document.querySelectorAll("*")) {
+  for (const el of document.querySelectorAll('*')) {
     if (shouldSkipStaticDesignElement(el, window)) continue;
-    const tag = el.tagName?.toLowerCase?.() || "unknown";
+    const tag = el.tagName?.toLowerCase?.() || 'unknown';
     const style = window.getComputedStyle(el);
 
     if (designSystem.hasFonts && hasDirectText(el)) {
-      const font = primaryFont(style.fontFamily || "");
+      const font = primaryFont(style.fontFamily || '');
       if (font && !seenFonts.has(font) && !isAllowedFont(font, designSystem)) {
         seenFonts.add(font);
-        findings.push(
-          makeDesignFinding(
-            "design-system-font",
-            filePath,
-            `${tag}${sampleText(el)} uses ${font}; not declared in DESIGN.md typography`,
-            0,
-            { ignoreValue: font }
-          )
-        );
+        findings.push(makeDesignFinding(
+          'design-system-font',
+          filePath,
+          `${tag}${sampleText(el)} uses ${font}; not declared in DESIGN.md typography`,
+          0,
+          { ignoreValue: font },
+        ));
       }
     }
 
     if (designSystem.hasColors) {
       const colorChecks = [];
-      if (hasDirectText(el)) colorChecks.push(["text color", style.color]);
-      if (!isTransparentCss(style.backgroundColor)) colorChecks.push(["background", style.backgroundColor]);
-      for (const side of ["Top", "Right", "Bottom", "Left"]) {
-        if ((Number.parseFloat(style[`border${side}Width`]) || 0) > 0) {
+      if (hasDirectText(el)) colorChecks.push(['text color', style.color]);
+      if (!isTransparentCss(style.backgroundColor)) colorChecks.push(['background', style.backgroundColor]);
+      for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
+        if ((parseFloat(style[`border${side}Width`]) || 0) > 0) {
           colorChecks.push([`border-${side.toLowerCase()}`, style[`border${side}Color`]]);
         }
       }
-      if ((Number.parseFloat(style.outlineWidth) || 0) > 0) colorChecks.push(["outline", style.outlineColor]);
+      if ((parseFloat(style.outlineWidth) || 0) > 0) colorChecks.push(['outline', style.outlineColor]);
 
       for (const [kind, raw] of colorChecks) {
         const label = cssColorLabel(raw);
@@ -1042,34 +1175,30 @@ function collectStaticDesignSystemFindings(document, window, filePath, designSys
         const key = `${kind}:${label}`;
         if (seenColors.has(key)) continue;
         seenColors.add(key);
-        findings.push(
-          makeDesignFinding(
-            "design-system-color",
-            filePath,
-            `${kind} ${label} on ${tag}${sampleText(el)} is outside DESIGN.md colors`,
-            0,
-            { ignoreValue: label }
-          )
-        );
+        findings.push(makeDesignFinding(
+          'design-system-color',
+          filePath,
+          `${kind} ${label} on ${tag}${sampleText(el)} is outside DESIGN.md colors`,
+          0,
+          { ignoreValue: label },
+        ));
       }
     }
 
     if (designSystem.hasRadii) {
-      const rawRadius = String(style.borderRadius || "").trim();
+      const rawRadius = String(style.borderRadius || '').trim();
       if (!rawRadius) continue;
       for (const token of extractRadiusTokens(rawRadius)) {
         if (isAllowedRadiusRaw(token, designSystem)) continue;
         if (seenRadii.has(token)) continue;
         seenRadii.add(token);
-        findings.push(
-          makeDesignFinding(
-            "design-system-radius",
-            filePath,
-            `border-radius ${token} on ${tag}${sampleText(el)} is outside the DESIGN.md rounded scale`,
-            0,
-            { ignoreValue: token }
-          )
-        );
+        findings.push(makeDesignFinding(
+          'design-system-radius',
+          filePath,
+          `border-radius ${token} on ${tag}${sampleText(el)} is outside the DESIGN.md rounded scale`,
+          0,
+          { ignoreValue: token },
+        ));
       }
     }
   }
@@ -1078,58 +1207,52 @@ function collectStaticDesignSystemFindings(document, window, filePath, designSys
 }
 
 function shouldSkipStaticDesignElement(el, window) {
-  const tag = el.tagName?.toLowerCase?.() || "";
+  const tag = el.tagName?.toLowerCase?.() || '';
   if (STATIC_DESIGN_SKIP_TAGS.has(tag)) return true;
 
   let current = el;
   while (current) {
-    if (current.getAttribute?.("hidden") !== null || current.getAttribute?.("aria-hidden") === "true") return true;
+    if (current.getAttribute?.('hidden') !== null || current.getAttribute?.('aria-hidden') === 'true') return true;
     const style = window.getComputedStyle(current);
-    const display = String(style.display || "").toLowerCase();
-    const visibility = String(style.visibility || "").toLowerCase();
-    if (display === "none" || visibility === "hidden" || visibility === "collapse") return true;
+    const display = String(style.display || '').toLowerCase();
+    const visibility = String(style.visibility || '').toLowerCase();
+    if (display === 'none' || visibility === 'hidden' || visibility === 'collapse') return true;
     current = current.parentElement;
   }
   return false;
 }
 
 function isTransparentCss(value) {
-  const text = String(value || "")
-    .trim()
-    .toLowerCase();
-  if (!text || text === "transparent") return true;
+  const text = String(value || '').trim().toLowerCase();
+  if (!text || text === 'transparent') return true;
   const parsed = parseDesignColor(text);
   return parsed ? (parsed.a ?? 1) <= 0.05 : false;
 }
 
 function canonicalDesignFindingKey(item) {
-  if (!item?.antipattern?.startsWith?.("design-system-")) return null;
-  const value = item.ignoreValue || item.value || "";
-  if (item.antipattern === "design-system-font") {
-    const context = /google fonts/i.test(item.snippet || "") ? "google-font" : "font";
+  if (!item?.antipattern?.startsWith?.('design-system-')) return null;
+  const value = item.ignoreValue || item.value || '';
+  if (item.antipattern === 'design-system-font') {
+    const context = /google fonts/i.test(item.snippet || '') ? 'google-font' : 'font';
     const font = normalizeFontName(value);
     return font ? `${item.antipattern}:${context}:${font}` : null;
   }
-  if (item.antipattern === "design-system-color") {
+  if (item.antipattern === 'design-system-color') {
     const parsed = parseDesignColor(value);
     if (parsed) return `${item.antipattern}:color:${colorKey(parsed)}`;
     const label = cssColorLabel(value).toLowerCase();
     return label ? `${item.antipattern}:color:${label}` : null;
   }
-  if (item.antipattern === "design-system-radius") {
-    const px = resolveLengthPx(String(value || "").trim(), 16);
+  if (item.antipattern === 'design-system-radius') {
+    const px = resolveLengthPx(String(value || '').trim(), 16);
     if (px != null && Number.isFinite(px)) return `${item.antipattern}:radius:${Math.round(px * 100) / 100}`;
-    const label = String(value || "")
-      .trim()
-      .toLowerCase();
+    const label = String(value || '').trim().toLowerCase();
     return label ? `${item.antipattern}:radius:${label}` : null;
   }
-  if (item.antipattern === "design-system-font-size") {
-    const px = resolveLengthPx(String(value || "").trim(), 16);
+  if (item.antipattern === 'design-system-font-size') {
+    const px = resolveLengthPx(String(value || '').trim(), 16);
     if (px != null && Number.isFinite(px)) return `${item.antipattern}:font-size:${Math.round(px * 100) / 100}`;
-    const label = String(value || "")
-      .trim()
-      .toLowerCase();
+    const label = String(value || '').trim().toLowerCase();
     return label ? `${item.antipattern}:font-size:${label}` : null;
   }
   return null;
@@ -1159,9 +1282,11 @@ function dedupeDesignFindings(findings) {
   const out = [];
   const seen = new Set();
   for (const item of findings) {
-    const key = [item.antipattern, item.line || 0, normalizeFontName(item.ignoreValue || item.snippet || "")].join(
-      "\0"
-    );
+    const key = [
+      item.antipattern,
+      item.line || 0,
+      normalizeFontName(item.ignoreValue || item.snippet || ''),
+    ].join('\0');
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(item);
@@ -1170,15 +1295,15 @@ function dedupeDesignFindings(findings) {
 }
 
 export {
+  parseFrontmatter,
+  normalizeDesignSystem,
+  loadDesignSystemForCwd,
+  isAllowedFont,
+  isAllowedColorRaw,
+  isAllowedShadowColorRaw,
+  isAllowedRadiusRaw,
+  isAllowedFontSizeRaw,
   checkSourceDesignSystem,
   collectStaticDesignSystemFindings,
-  isAllowedColorRaw,
-  isAllowedFont,
-  isAllowedFontSizeRaw,
-  isAllowedRadiusRaw,
-  isAllowedShadowColorRaw,
-  loadDesignSystemForCwd,
   mergeDesignSystemFindings,
-  normalizeDesignSystem,
-  parseFrontmatter,
 };
