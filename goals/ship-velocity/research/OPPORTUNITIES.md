@@ -881,11 +881,34 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   decision. Removing either guard alone would only move the serialization boundary or weaken
   mixed-version safety.
 - Resolution: current tickets and leases now carry an origin-coordination protocol. Legacy entries
-  decode distinctly and drain first; the first current contender then atomically installs a
-  persistent v4 retirement marker that old clients fail closed against. Current siblings share the
-  weighted scheduler, while below-envelope hosts retain a separate exclusive fallback lock. The
-  focused scheduler/coordinator suites pass 54 tests and the full Yeet unit file passes 130 tests;
-  a live dual-full-proof receipt remains the final runtime acceptance check.
+  decode distinctly, and same-origin legacy state drains first; the first current contender then
+  atomically installs a persistent v4 retirement marker that old clients fail closed against.
+  Current siblings share the weighted scheduler, while below-envelope hosts retain a separate
+  exclusive fallback lock. After the first closeout review, the focused scheduler/coordinator
+  suites pass 56 tests and the full Yeet unit file passes 132 tests; a live dual-full-proof receipt
+  remains the final runtime acceptance check.
+
+## 2026-08-30 — mixed-version review found a current-first ticket deadlock
+
+- What was happening: the required closeout reviewer panel modeled both queue orders for the
+  additive scheduler protocol instead of only the already-tested legacy-lease drain.
+- Evidence: an older current ticket treated any younger same-origin legacy ticket as a migration
+  owner, but the prior-version selector saw that older current ticket as unblocked. Each therefore
+  waited for the other to leave the queue. The same review found that non-`NotFound` coordinator
+  read failures were converted into apparent absence on the mandatory retirement path.
+- What would have prevented it: pin both legacy-first and current-first ticket orders before the
+  rollout implementation is accepted, and reuse the typed read boundary for every coordination
+  file observation rather than collapsing platform failures into absence.
+
+## 2026-08-30 — post-merge package verification repeated ignored projection drift
+
+- What was happening: running the required repo-cli package verification immediately after merging
+  current main.
+- Evidence: 2,702 tests passed and the only test failure compared a freshly generated goals index
+  with this checkout's ignored pre-merge `goals/INDEX.md`; the merge had changed three packet
+  lifecycles. The earlier receipt in this ledger describes the same failure class.
+- What would have prevented it: regenerate ignored packet projections in the post-merge hook, or
+  isolate the determinism fixture from checkout-local generated state.
 
 ## 2026-08-30 — Package verification inherits a private temporary root
 

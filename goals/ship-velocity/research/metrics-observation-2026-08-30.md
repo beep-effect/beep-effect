@@ -217,11 +217,13 @@ which separates the origin guard from machine-capacity pressure.
 
 The closeout repair retains the original concurrency outcome instead of weakening the gate. New
 tickets and leases identify the scheduler-origin-concurrency protocol; older entries decode as
-legacy and drain before migration. The first current contender then installs a persistent v4
+legacy, and same-origin legacy state drains before migration. The first current contender then
+installs a persistent v4
 origin-lock retirement marker that older clients fail closed against. Current siblings may overlap
 under weighted admission, while below-envelope hosts serialize through a separate fallback lock.
-The focused scheduler/coordinator suites pass 54 tests, the full Yeet unit file passes all 130
-tests, and an untouched pre-change decoder accepts and discards the additive protocol field. A
+After the first closeout review repaired both mixed-version ticket orders and typed filesystem
+failures, the focused scheduler/coordinator suites pass 56 tests and the full Yeet unit file passes
+all 132 tests. An untouched pre-change decoder accepts and discards the additive protocol field. A
 live dual-full-proof run on the repaired implementation remains required for the terminal no-OOM
 receipt.
 

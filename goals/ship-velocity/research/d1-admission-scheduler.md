@@ -133,14 +133,36 @@ without permitting a mixed-version race:
   a distinct exclusive fallback lock, preserving one-proof execution rather than bypassing all
   coordination.
 
+### Lifecycle and removal trigger
+
+The `yeet-proof-lock/v4` marker is a permanent compatibility fence, not stale owner state. Routine
+reaping must never delete it: a dormant v3 binary would otherwise see an absent coordinator and
+could race scheduler-governed proofs. Only a future, explicitly versioned coordination migration
+may replace the marker.
+
+Absent-field legacy decoding and the deprecated v3 acquisition test seams remain until all of the
+following are true:
+
+1. the CLI entrypoint enforces a machine-wide minimum coordination generation that rejects pre-v4
+   proof binaries before they can inspect or create an origin coordinator;
+2. a fleet audit finds no runnable pre-v4 checkout or tool clone for seven consecutive days; and
+3. scheduler status and retained admission evidence show no legacy ticket or lease during that same
+   observation window.
+
+No compatibility code removal is authorized until that generation floor exists. When the trigger
+is satisfied, remove the v3 acquisition test seams and absent-field decoding in one migration PR,
+while retaining the v4 marker decoder until its replacement protocol supplies an equally strong
+old-client fence.
+
 Compatibility and behavior proof covers: old-file decode defaults, an untouched pre-change
 decoder accepting and discarding the new field, current same-origin overlap, legacy-lease drain,
 live-v3 wait, stale-v3 CAS replacement, idempotent marker installation, old-client fail-closed
 behavior, low-memory fallback serialization, interruption, and release paths. The focused
-scheduler/coordinator suites pass 54 tests; the full Yeet unit file passes 131 tests. The
-authoritative scoped coverage run then passed all 143 repo-cli files and 2,702 tests, with the changed
-`ProofState.ts` at 83.39% statements, 59.82% branches, 80.00% functions, and 83.70% lines;
-the per-file coverage ratchet passed with epsilon 0.001.
+scheduler/coordinator suites pass 56 tests; the full Yeet unit file passes 132 tests. The first
+authoritative scoped coverage run passed all 143 repo-cli files and 2,702 tests, with the changed
+`ProofState.ts` at 83.39% statements, 59.82% branches, 80.00% functions, and 83.70% lines; the
+per-file coverage ratchet passed with epsilon 0.001. A final scoped ratchet after the reviewer fixes
+remains part of the terminal baseline proof.
 
 ## Follow-ups (tracked in PLAN P4)
 

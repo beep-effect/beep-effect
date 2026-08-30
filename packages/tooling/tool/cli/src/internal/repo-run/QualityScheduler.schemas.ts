@@ -83,6 +83,12 @@ export type AdmissionPriority = typeof AdmissionPriority.Type;
 /**
  * Origin-coordination protocol understood by one scheduler ticket or lease.
  *
+ * **Details**
+ *
+ * Newly constructed tickets and leases default to `scheduler-origin-concurrency/v1`.
+ * Decoding a persisted record without the additive field defaults to
+ * `legacy-origin-lock/v1`, so prior-version state drains before migration.
+ *
  * **Example** (Detect current scheduler coordination)
  *
  * ```ts

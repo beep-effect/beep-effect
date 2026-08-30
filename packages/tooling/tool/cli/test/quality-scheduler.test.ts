@@ -22,6 +22,7 @@ import {
   releaseAdmissionJournalLockForTesting,
   withQualityAdmission,
   YeetAdmissionLease,
+  YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -52,6 +53,7 @@ const fastConfig = AdmissionConfig.make({
 
 const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
+const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
 
@@ -197,6 +199,38 @@ const writeFakeLease = Effect.fnUntraced(function* (
   const filePath = path.join(tempRoot.leases, name);
   yield* fs.writeFileString(filePath, `${yield* encodeLease(lease)}\n`);
   return filePath;
+});
+
+const writeLegacyTicket = Effect.fnUntraced(function* (
+  tempRoot: AdmissionTempRoot,
+  options: {
+    readonly enqueuedAtMillis: number;
+    readonly nonce: string;
+    readonly originKey: string;
+  }
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const ticketPath = path.join(tempRoot.queue, `legacy-${options.nonce}.ticket.json`);
+  const ticketText = yield* encodeJsonObject({
+    schemaVersion: "yeet-admission-ticket/v1",
+    pid: process.pid,
+    procStart: yield* ownProcStart(),
+    kind: "full-proof",
+    weightTokens: 3,
+    priority: "verify",
+    originKey: options.originKey,
+    checkoutRoot: "/repo/legacy",
+    branch: "feat/legacy",
+    command: "bun run beep yeet verify",
+    enqueuedAtMillis: options.enqueuedAtMillis,
+    heartbeatAtMillis: options.enqueuedAtMillis,
+    blockedOnOriginAtMillis: 0,
+    nonce: options.nonce,
+  });
+  yield* fs.makeDirectory(tempRoot.queue, { recursive: true, mode: 0o700 });
+  yield* fs.writeFileString(ticketPath, `${ticketText}\n`);
+  return ticketPath;
 });
 
 // Transient .tmp- staging files are atomically renamed away; only settled
@@ -679,6 +713,92 @@ describe("quality-scheduler", () => {
             yield* Effect.sleep("100 millis");
             expect(current.pollUnsafe()).toBeUndefined();
             yield* fs.remove(legacyPath, { force: true });
+            expect(yield* Fiber.join(current)).toBe("current");
+          })
+        );
+      })
+    ));
+
+  it("keeps a current contender queued behind an older same-origin legacy ticket", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const legacyPath = yield* writeLegacyTicket(tempRoot, {
+              enqueuedAtMillis: 1,
+              nonce: "legacy01",
+              originKey: "origin-legacy-ticket",
+            });
+            const current = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-legacy-ticket", checkoutRoot: "/repo/current" }),
+                noAdmissionOriginGate,
+                Effect.succeed("current"),
+                fastConfig
+              )
+            );
+
+            yield* Effect.sleep("100 millis");
+            expect(current.pollUnsafe()).toBeUndefined();
+            const currentName = pipe(
+              yield* listDirectory(tempRoot.queue),
+              A.findFirst((name) => !Str.startsWith("legacy-")(name)),
+              O.getOrThrow
+            );
+            const currentTicket = yield* fs
+              .readFileString(path.join(tempRoot.queue, currentName))
+              .pipe(Effect.flatMap(decodeTicket));
+            expect(currentTicket.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
+            expect(currentTicket.blockedOnOriginAtMillis).toBeGreaterThan(0);
+
+            yield* fs.remove(legacyPath, { force: true });
+            expect(yield* Fiber.join(current)).toBe("current");
+          })
+        );
+      })
+    ));
+
+  it("stamps an older current ticket so a younger legacy client can drain", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(20);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const current = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-current-first", checkoutRoot: "/repo/current" }),
+                noAdmissionOriginGate,
+                Effect.succeed("current"),
+                fastConfig
+              )
+            );
+
+            yield* Effect.sleep("80 millis");
+            const currentName = pipe(yield* listDirectory(tempRoot.queue), A.head, O.getOrThrow);
+            const currentPath = path.join(tempRoot.queue, currentName);
+            const firstCurrent = yield* fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket));
+            expect(firstCurrent.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
+
+            const legacyPath = yield* writeLegacyTicket(tempRoot, {
+              enqueuedAtMillis: firstCurrent.enqueuedAtMillis + 1,
+              nonce: "legacy02",
+              originKey: "origin-current-first",
+            });
+            expect((yield* fs.readFileString(legacyPath).pipe(Effect.flatMap(decodeTicket))).coordinationProtocol).toBe(
+              "legacy-origin-lock/v1"
+            );
+
+            yield* Effect.sleep("100 millis");
+            const stampedCurrent = yield* fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket));
+            expect(stampedCurrent.blockedOnOriginAtMillis).toBeGreaterThan(0);
+
+            yield* fs.remove(legacyPath, { force: true });
+            yield* Ref.set(gibRef, 50);
             expect(yield* Fiber.join(current)).toBe("current");
           })
         );

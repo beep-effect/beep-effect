@@ -703,9 +703,10 @@ const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(func
   }
 
   return yield* Effect.gen(function* () {
-    const currentText = yield* fs
-      .readFileString(lockPath)
-      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    const currentText = yield* readProofCoordinationFile(
+      lockPath,
+      `Failed to revalidate Yeet proof lock at ${lockPath} before atomic movement.`
+    );
     if (O.isNone(currentText) || !Str.Equivalence(currentText.value, observedText)) {
       return false;
     }
@@ -769,9 +770,11 @@ interface ObservedProofLockState {
 // decoder purely so decodable v2 locks can be refused instead of reclaimed.
 const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* (
   lockPath: string
-): Effect.fn.Return<ObservedProofLockState, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => ""));
+): Effect.fn.Return<ObservedProofLockState, YeetCommandError, FileSystem.FileSystem> {
+  const text = O.getOrElse(
+    yield* readProofCoordinationFile(lockPath, `Failed to inspect Yeet proof lock at ${lockPath}.`),
+    () => ""
+  );
   const state = yield* decodeProofLockState(text).pipe(
     Effect.map(O.some),
     Effect.orElseSucceed(O.none<YeetProofLockState>)
@@ -874,13 +877,13 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
 });
 
 /**
- * Atomically acquire the full-proof lock for heavyweight Yeet verification.
+ * Acquire the legacy v3 full-proof lock for compatibility and migration tests.
  *
  * **Example** (Acquire full-proof lock)
  *
  * ```ts
  * import { Effect } from "effect"
- * import { acquireFullProofLock, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { acquireLegacyFullProofLockForTesting, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
  *   base: "origin/main",
@@ -904,7 +907,9 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
  *   scope: "repo"
  * })
  *
- * const acquired = acquireFullProofLock(context, [step]).pipe(Effect.map((lease) => lease.lockPath.endsWith(".lock")))
+ * const acquired = acquireLegacyFullProofLockForTesting(context, [step]).pipe(
+ *   Effect.map((lease) => lease.lockPath.endsWith(".lock"))
+ * )
  * ```
  *
  * @param context - Repo context whose origin identifies sibling checkouts.
@@ -913,7 +918,7 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
  * @category resource-management
  * @since 0.0.0
  */
-export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(function* (
+const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(function* (
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<
@@ -927,6 +932,22 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
   }
   return yield* contendForFullProofLock(prepared.lockPath, prepared.lockText, prepared.lease);
 });
+
+/**
+ * Compatibility alias exposing legacy v3 fail-closed acquisition to tests.
+ *
+ * **Example** (Reference the legacy test seam)
+ *
+ * ```ts
+ * import { acquireLegacyFullProofLockForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireLegacyFullProofLockForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireLegacyFullProofLockForTesting = acquireFullProofLock;
 
 interface PreparedFullProofLockLease {
   readonly lease: YeetProofLockLease;
@@ -1003,7 +1024,7 @@ const tryAcquirePreparedFullProofLock = Effect.fn("Yeet.tryAcquirePreparedFullPr
 });
 
 /**
- * Attempt one non-blocking acquisition of the full-proof coordinator.
+ * Attempt one non-blocking acquisition of the legacy v3 full-proof coordinator.
  *
  * Succeeds with `None` while a live sibling owns the lock, so queue-style
  * callers (the machine-wide admission scheduler) can keep waiting with
@@ -1013,7 +1034,7 @@ const tryAcquirePreparedFullProofLock = Effect.fn("Yeet.tryAcquirePreparedFullPr
  * **Example** (Attempt an acquisition without blocking)
  *
  * ```ts
- * import { acquireFullProofLockOrObserve, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { acquireLegacyFullProofLockOrObserveForTesting, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
@@ -1039,7 +1060,7 @@ const tryAcquirePreparedFullProofLock = Effect.fn("Yeet.tryAcquirePreparedFullPr
  *   scope: "repo"
  * })
  *
- * const attempt = acquireFullProofLockOrObserve(context, [step]).pipe(
+ * const attempt = acquireLegacyFullProofLockOrObserveForTesting(context, [step]).pipe(
  *   Effect.map((acquisition) => O.isOption(acquisition))
  * )
  * console.log(Effect.isEffect(attempt)) // true
@@ -1051,7 +1072,7 @@ const tryAcquirePreparedFullProofLock = Effect.fn("Yeet.tryAcquirePreparedFullPr
  * @category resource-management
  * @since 0.0.0
  */
-export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLockOrObserve")(function* (
+const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLockOrObserve")(function* (
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<
@@ -1064,7 +1085,23 @@ export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLoc
 });
 
 /**
- * {@link acquireFullProofLockOrObserve} against an already-resolved lock path.
+ * Compatibility alias exposing legacy v3 queue-style acquisition to tests.
+ *
+ * **Example** (Reference the legacy queue test seam)
+ *
+ * ```ts
+ * import { acquireLegacyFullProofLockOrObserveForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireLegacyFullProofLockOrObserveForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireLegacyFullProofLockOrObserveForTesting = acquireFullProofLockOrObserve;
+
+/**
+ * The legacy queue-style acquisition against an already-resolved lock path.
  *
  * Queue-style callers resolve the git origin identity once per run and retry
  * acquisition every scheduler tick without re-spawning git.
@@ -1072,9 +1109,9 @@ export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLoc
  * **Example** (Reference the resolved-path acquisition)
  *
  * ```ts
- * import { acquireFullProofLockOrObserveAtPath } from "@beep/repo-cli/test/Yeet"
+ * import { acquireLegacyFullProofLockOrObserveAtPathForTesting } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(typeof acquireFullProofLockOrObserveAtPath) // "function"
+ * console.log(typeof acquireLegacyFullProofLockOrObserveAtPathForTesting) // "function"
  * ```
  *
  * @param lockPath - Resolved coordinator lock path for this origin.
@@ -1084,7 +1121,7 @@ export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLoc
  * @category resource-management
  * @since 0.0.0
  */
-export const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullProofLockOrObserveAtPath")(function* (
+const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullProofLockOrObserveAtPath")(function* (
   lockPath: string,
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
@@ -1092,6 +1129,22 @@ export const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullPr
   const prepared = yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
   return yield* tryAcquirePreparedFullProofLock(prepared);
 });
+
+/**
+ * Compatibility alias exposing resolved-path legacy v3 acquisition to tests.
+ *
+ * **Example** (Reference the resolved-path legacy test seam)
+ *
+ * ```ts
+ * import { acquireLegacyFullProofLockOrObserveAtPathForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireLegacyFullProofLockOrObserveAtPathForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireLegacyFullProofLockOrObserveAtPathForTesting = acquireFullProofLockOrObserveAtPath;
 
 const observeProofLockRetirementReplacement = Effect.fn("Yeet.observeProofLockRetirementReplacement")(function* (
   lockPath: string
@@ -1237,7 +1290,7 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
  * ```ts
  * import { Effect } from "effect"
  * import {
- *   acquireFullProofLock,
+ *   acquireLegacyFullProofLockForTesting,
  *   releaseProofLock,
  *   RepoPlanStep,
  *   RepoRunContext
@@ -1266,14 +1319,14 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
  * })
  *
  * const guarded = Effect.acquireUseRelease(
- *   acquireFullProofLock(context, [step]),
+ *   acquireLegacyFullProofLockForTesting(context, [step]),
  *   (lease) => Effect.succeed(lease.lockPath),
  *   releaseProofLock
  * )
  * console.log(Effect.isEffect(guarded)) // true
  * ```
  *
- * @param lease - Exact lock generation returned by {@link acquireFullProofLock}.
+ * @param lease - Exact lock generation returned by the legacy acquisition test seam.
  * @returns An Effect that removes only the generation owned by the lease.
  * @category resource-management
  * @since 0.0.0

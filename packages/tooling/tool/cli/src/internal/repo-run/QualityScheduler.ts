@@ -1001,7 +1001,7 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   const nowMillis = yield* Clock.currentTimeMillis;
   const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
   if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
-    return { admitted: O.none(), info, originBusy: false };
+    return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket) };
   }
   const attempt = yield* tryAdmitSelf(directories, request, ticket, gate, config);
   if (O.isNone(attempt.admitted)) {
@@ -1197,7 +1197,8 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
  * ```
  *
  * @param request - Kind, weight, priority, and provenance of the work.
- * @param gate - Origin-scoped gate acquired at promotion time.
+ * @param gate - Migration observation used by normal admission and exclusive fallback acquisition
+ * used only below the scheduler memory envelope.
  * @param use - The admitted work.
  * @param config - Optional policy override; defaults to chartered D1 values.
  * @returns The result of `use`, guarded by ticket/lease/gate lifecycles.

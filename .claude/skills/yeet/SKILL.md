@@ -465,13 +465,20 @@ turbo work, so they are cheap to run mid-loop.
 - Full proofs use machine-wide weighted admission as the sole current-version
   concurrency authority (ship-velocity D1). New tickets and leases identify
   `scheduler-origin-concurrency/v1`; state written before this migration
-  decodes as `legacy-origin-lock/v1` and drains first. The first current
-  contender then atomically installs a persistent `yeet-proof-lock/v4`
+  decodes as `legacy-origin-lock/v1`, and same-origin legacy state drains first.
+  The first current contender then atomically installs a persistent
+  `yeet-proof-lock/v4`
   retirement marker at the former per-origin lock path. Previous v3 clients
   cannot decode that marker and therefore fail closed instead of racing a
   current proof. Current clients recognize the marker and may overlap when
   machine capacity permits. Hosts below the scheduler memory envelope retain
   single-proof execution through a distinct `.scheduler-fallback` lock.
+- The `yeet-proof-lock/v4` marker is a permanent compatibility fence, not stale
+  owner state. Never reap or delete it during routine repair. Its legacy
+  decoders and v3 acquisition test seams remain until a future CLI generation
+  floor makes pre-v4 proof binaries non-runnable and a seven-day fleet audit
+  observes no legacy ticket or lease; the exact removal gate is recorded in
+  `goals/ship-velocity/research/d1-admission-scheduler.md`.
 - Origin paths still hash a canonical host/repository identity into an opaque
   path under the machine temporary directory, so equivalent SCP, SSH, HTTPS,
   and Git origin URLs share one coordinator even when `.git`, trailing
