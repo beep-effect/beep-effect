@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-30T18:45:48.902Z
+Generated: 2026-08-30T19:19:10.090Z
 
 ## Scope
 
@@ -16,7 +16,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesNeedingRemediation | 58 |
 | publicModules | 2951 |
 | publicExports | 20573 |
-| openModules | 348 |
+| openModules | 347 |
 | openExports | 99 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
@@ -101,7 +101,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 44 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 15 | 0 | 0 |
 | 45 | `@beep/openclaw` | `packages/drivers/openclaw` | needs-remediation | 9 | 130 | 7 | 15 |
 | 46 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 89 | 1 | 0 |
-| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 7 | 38 | 2 | 0 |
+| 47 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 7 | 38 | 1 | 0 |
 | 48 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 12 | 0 | 0 |
 | 49 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 86 | 0 | 0 |
 | 50 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
@@ -524,7 +524,6 @@ Path: `packages/tooling/test-kit/test-utils`
 
 Module findings:
 - `src/FastCheckRuns.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/SystemTemp.ts:1` (none) - missing summary; missing @since
 
 ### @beep/exiftool
 

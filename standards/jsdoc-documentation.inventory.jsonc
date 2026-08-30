@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-30T18:45:48.902Z",
+  "generatedAt": "2026-08-30T19:19:10.090Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -67,7 +67,7 @@
     "packagesNeedingRemediation": 58,
     "publicModules": 2951,
     "publicExports": 20573,
-    "openModules": 348,
+    "openModules": 347,
     "openExports": 99,
     "missingExportExamples": 4,
     "missingExportCategories": 0,
@@ -145919,7 +145919,7 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 2,
+        "openModules": 1,
         "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
@@ -146063,17 +146063,18 @@
           "remediationStatus": "resolved"
         },
         {
-          "docKind": "none",
+          "docKind": "packageDocumentation",
           "filePath": "src/SystemTemp.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
           "line": 1,
           "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-1-module",
-          "currentTags": [],
-          "missingRequiredTags": [
+          "currentTags": [
+            "@packageDocumentation",
             "@since"
           ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
-          "missingSummary": true,
+          "missingSummary": false,
           "malformedConditionalTags": [],
           "exampleImportViolations": [],
           "unsafeExampleViolations": [],
@@ -146081,7 +146082,7 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -146785,9 +146786,11 @@
           "exportKind": "const",
           "filePath": "src/SystemTemp.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
-          "line": 48,
-          "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-48-privacysafesystemtemprootfortesting",
+          "line": 57,
+          "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-57-privacysafesystemtemprootfortesting",
           "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -146807,9 +146810,10 @@
           "exportKind": "const",
           "filePath": "src/SystemTemp.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
-          "line": 75,
-          "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-75-privacysafesystemtemproot",
+          "line": 85,
+          "anchor": "packages-tooling-test-kit-test-utils-src-systemtemp-ts-85-privacysafesystemtemproot",
           "currentTags": [
+            "@returns",
             "@category",
             "@since"
           ],

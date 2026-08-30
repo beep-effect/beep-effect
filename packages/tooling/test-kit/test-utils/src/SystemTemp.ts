@@ -1,3 +1,10 @@
+/**
+ * Privacy-safe system temporary-root helpers for generated-payload tests.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { platform } from "node:os";
 import { env } from "node:process";
 
@@ -42,6 +49,8 @@ interface PrivacySafeSystemTempRootOptions {
  * console.log(root) // C:\Windows\Temp
  * ```
  *
+ * @param options - Injectable platform and environment facts.
+ * @returns The user-independent temporary root for the supplied host facts.
  * @category testing
  * @since 0.0.0
  */
@@ -69,6 +78,7 @@ export const privacySafeSystemTempRootForTesting = (options: PrivacySafeSystemTe
  * console.log(privacySafeSystemTempRoot())
  * ```
  *
+ * @returns The current host's user-independent temporary root.
  * @category testing
  * @since 0.0.0
  */

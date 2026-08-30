@@ -22,6 +22,7 @@ import {
   generateQualityJson,
   generateQualityReport,
   generateQualityWorkerEvalJson,
+  isCanonicalDocgenAggregateConfigForTesting,
   loadDocgenConfigDocument,
   makeQualityWorkerRunpodEvalPodCreateInput,
   requiredQualityWorkerRunpodEvalModel,
@@ -599,6 +600,18 @@ describe("Docgen operations", () => {
       ),
       fcRuns(16)
     );
+  });
+
+  it("aggregates only canonical Docgen output configurations during scoped runs", () => {
+    expect(isCanonicalDocgenAggregateConfigForTesting(DocgenConfigDocument.make({ srcDir: "src" }))).toBe(true);
+    expect(
+      isCanonicalDocgenAggregateConfigForTesting(DocgenConfigDocument.make({ srcDir: "src", outDir: "docs" }))
+    ).toBe(true);
+    expect(
+      isCanonicalDocgenAggregateConfigForTesting(
+        DocgenConfigDocument.make({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
+      )
+    ).toBe(false);
   });
 
   it("selects package-local inputs for the bounded local docgen lane", () =>

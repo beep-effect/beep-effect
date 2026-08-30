@@ -800,3 +800,104 @@
 - **Disposition:** hosted-propagation friction; use a bounded retry only for the
   exact no-check message, then hand control to the normal required-check watch.
 - **Owner:** GitHub check-watch startup semantics and Yeet hosted monitoring.
+
+## 2026-08-30 — Package verifier misses the module fileoverview required by CI Docgen
+
+- **What happened:** the shared test-utils helper passed the package verifier's
+  audit and docgen steps, but the exact affected CI Docgen lane rejected the new
+  module's documentation surface.
+- **Evidence:** `bun run beep quality package-verify @beep/test-utils` completed
+  `ok audit` and `ok docgen`; later, both hosted `Heavy / Docgen` and
+  `bun run beep ci lane docgen --base origin/main --head HEAD --mode affected`
+  failed with `src/SystemTemp.ts:1 <module fileoverview> missing @since`.
+- **What would have prevented it:** make package verification run the same
+  module-fileoverview law as `docgen:local`, or have the new-export scaffold add
+  the canonical `@packageDocumentation` and `@since` module header.
+- **Disposition:** actionable documentation-law repair; add the canonical module
+  header, rerun package verification and the exact affected Docgen lane, then
+  publish one final reviewed fix.
+- **Owner:** package verifier parity, Docgen law composition, and export
+  scaffolding.
+
+## 2026-08-30 — Concurrent Docgen callers race on generated examples
+
+- **What happened:** package verification and the affected CI Docgen lane were
+  launched concurrently to prove the same `@beep/test-utils` documentation
+  repair. The affected lane generated and typechecked the package successfully,
+  while package verification failed because its generated examples directory
+  became empty during the overlapping run.
+- **Evidence:** the concurrent `bun run beep quality package-verify
+  @beep/test-utils` process failed with `TS18003: No inputs were found in config
+  file 'packages/tooling/test-kit/test-utils/docs/examples/tsconfig.json'`; at
+  the same timestamp, `bun run beep ci lane docgen --base origin/main --head
+  HEAD --mode affected` reported `@beep/test-utils:docgen` succeeded.
+- **What would have prevented it:** serialize Docgen callers per package, or
+  generate each invocation's temporary examples in an isolated directory and
+  atomically publish the completed result.
+- **Disposition:** harness concurrency friction; let the affected lane finish,
+  then rerun package verification alone before publication.
+- **Owner:** Docgen generated-workspace isolation and package-verifier locking.
+
+## 2026-08-30 — Affected Docgen accepts scratchpad's skipped output, then rejects it during aggregation
+
+- **What happened:** the exact affected Docgen lane completed all 114 selected
+  Turbo tasks successfully, including `@beep/test-utils`, but failed afterward
+  while aggregating package docs. The scratchpad task had explicitly skipped its
+  proof manifest for a focused include run and emitted no output; the aggregator
+  nevertheless required generated scratchpad docs.
+- **Evidence:** `bun run beep ci lane docgen --base origin/main --head HEAD
+  --mode affected` reported `Tasks: 114 successful, 114 total`, warned `no
+  output files found for task @beep/scratchpad#docgen`, and then failed with
+  `Package "@beep/scratchpad" does not have generated docs. Run "bun run beep
+  docgen generate -p scratchpad" first.`
+- **What would have prevented it:** make scoped selection and aggregation share
+  one typed package-eligibility decision, so an intentional focused-run skip is
+  either excluded before Turbo execution or accepted during aggregation.
+- **Disposition:** authoritative-lane orchestration friction; inspect the live
+  Docgen routing and use its narrowest canonical generation/retry path before
+  publishing the final head.
+- **Owner:** affected Docgen selection, focused-include semantics, and docs
+  aggregation.
+
+## 2026-08-30 — Repo CLI tests emit failure-like fixture output without a progress boundary
+
+- **What happened:** the package-scoped `@beep/repo-cli` test proof emitted
+  realistic failure text from its integration fixtures, then continued without
+  a clear top-level progress boundary for several minutes. It was interrupted
+  at the operator's publish cadence, so its terminal result is not acceptance
+  evidence; the paired package check and focused Docgen regression test were
+  green.
+- **Evidence:** `bunx turbo run test --filter=@beep/repo-cli
+  --filter=@beep/test-utils` printed simulated `@beep/xai:build` and
+  `@beep/ui:build` TS2589 failures, then continued into temporary Git worktrees
+  and hosted-check fixtures for more than four minutes; the scoped check
+  completed 34/34 tasks, the focused regression test passed, and
+  `@beep/test-utils` completed 22 tests with 3 skipped.
+- **What would have prevented it:** prefix captured fixture subprocess output
+  as simulated test data and emit periodic top-level test-file progress, so an
+  operator can distinguish a real package failure from a long-running fixture.
+- **Disposition:** observability friction, not a confirmed product failure;
+  rely on the focused test plus the authoritative affected/hosted lanes for the
+  final head.
+- **Owner:** Repo CLI integration-test output labeling and progress reporting.
+
+## 2026-08-30 — Package verification omits full ESLint JSDoc policy and hosted output hides the finding
+
+- **What happened:** the helper passed package audit, package Docgen, and the
+  affected Docgen metadata law, but hosted `Heavy / Lint Policy` failed the
+  full-repository ESLint JSDoc step. The hosted policy summary retained only the
+  failing child command and exit code, so the actionable diagnostics required
+  a local replay.
+- **Evidence:** hosted run `33329419656`, job `Heavy / Lint Policy`, reported
+  `lint:jsdoc: exit 1` for `bunx eslint . --max-warnings=0` without its child
+  output. Local execution of that exact command identified three warnings in
+  `packages/tooling/test-kit/test-utils/src/SystemTemp.ts`: missing `@param
+  "options"` and two missing `@returns` declarations. `bun run beep quality
+  package-verify @beep/test-utils` had completed both audit and Docgen green.
+- **What would have prevented it:** include the repository's ESLint JSDoc rules
+  in package verification for exported package files, and preserve failing
+  child stdout/stderr in the lint-policy summary and GitHub annotation.
+- **Disposition:** actionable documentation-law repair plus diagnostic
+  observability friction; add the canonical tags and replay ESLint before
+  publishing the final head.
+- **Owner:** package-verifier lint parity and lint-policy failure reporting.
