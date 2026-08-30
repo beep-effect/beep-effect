@@ -800,6 +800,12 @@ export class ProjectionSnapshot extends S.Class<ProjectionSnapshot>($I`Projectio
       S.Literal("source:https://www.portlandbolt.com/technical/specifications/astm-f959/"),
     ]),
     documentCount: S.Literal(4),
+    documentDigests: S.Tuple([
+      S.Literal("rfq-a-outlook-body|ee38c21a1635fa152f1e48914ae2c2ce3761d5ada7f96b8c7c3d5a50e808f3b5"),
+      S.Literal("rfq-a-xlsx-takeoff|2ef7617efaf7b70880d8cce16744fa85f5e5c9c6bc558b1f09f1685036a5adda"),
+      S.Literal("rfq-b-pdf-schedule|03e1f8df73defb01810998c6916e20534e7f1d4cb2adf0207533904959d2d46b"),
+      S.Literal("rfq-b-prose-email|bc1144a4fdde67229b9e2178c09c133cdd48a0b8881e5f9b9f0316f4ba91806e"),
+    ]),
     ontologyClasses: S.Tuple([
       S.Literal("Approval"),
       S.Literal("Component"),

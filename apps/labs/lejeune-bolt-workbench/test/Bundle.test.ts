@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { DuckDb } from "@beep/duckdb";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -36,6 +37,7 @@ import {
   makeProjectionLayer,
   ProjectionInput,
   ProjectionLayerOptions,
+  verifyDurableProjectionSnapshot,
 } from "@/runtime/Projections";
 import { buildNormalizedFixtures } from "@/workflows/Normalize";
 import { verifyFrozenProviderRecording, verifyProviderRecording } from "@/workflows/ProviderRecording";
@@ -280,6 +282,7 @@ describe("LeJeune deterministic fixture bundle", () => {
 
       expect(second).toEqual(first);
       expect(first.documentCount).toBe(4);
+      expect(first.documentDigests).toHaveLength(4);
       expect(first.ontologyClasses).toEqual([
         "Approval",
         "Component",
@@ -298,6 +301,35 @@ describe("LeJeune deterministic fixture bundle", () => {
       expect(first.citations).toHaveLength(4);
       expect(first.syntheticRecords).toHaveLength(4);
       expect(first.ruleDispositions).toHaveLength(6);
+    })
+  );
+
+  it.effect(
+    "rejects same-count corpus body corruption even when citations and the A490 result remain unchanged",
+    Effect.fnUntraced(function* () {
+      const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
+      const fixtures = yield* buildNormalizedFixtures(artifacts);
+      const rules = yield* evaluateRules(fixtures);
+      const referenceData = buildReferenceData(fixtures);
+      const input = ProjectionInput.make({
+        certificates: referenceData.certificates,
+        fixtures,
+        offers: referenceData.offers,
+        rules,
+      });
+
+      const failure = yield* Effect.flip(
+        Effect.gen(function* () {
+          const expected = yield* buildProjectionSnapshot(input);
+          const duckdb = yield* DuckDb;
+          yield* duckdb.run(
+            "UPDATE corpus_documents SET body = body || ' integrity-corruption' WHERE id = 'rfq-a-xlsx-takeoff'"
+          );
+          return yield* verifyDurableProjectionSnapshot(expected);
+        }).pipe(provideScopedLayer(makeInMemoryProjectionLayer()))
+      );
+
+      expect(failure._tag).toBe("ProjectionError");
     })
   );
 

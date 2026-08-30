@@ -34,6 +34,7 @@ const PgliteQuoteLineRow = S.Struct({ id: S.String, quantity: S.Finite });
 const PgliteRuleRow = S.Struct({ case_id: S.String, disposition: S.String, rule_id: S.String });
 const PgliteSyntheticRow = S.Struct({ id: S.String, kind: S.String, label: S.String, observed_at: S.String });
 const DuckCountRow = S.Struct({ count: S.Finite });
+const DuckDocumentDigestRow = S.Struct({ digest: S.String, id: S.String });
 const DuckTextHitRow = S.Struct({ id: S.String });
 const DuckCitationRow = S.Struct({ url: S.String });
 const projectionSnapshotEquivalent = S.toEquivalence(ProjectionSnapshot);
@@ -173,6 +174,11 @@ const readDuckDbProjection = Effect.fnUntraced(function* () {
   const countRows = yield* duckdb
     .query("SELECT CAST(count(*) AS INTEGER) AS count FROM corpus_documents")
     .pipe(Effect.flatMap((rows) => decodeRows("duckdb-count", S.NonEmptyArray(DuckCountRow), rows)));
+  const digestRows = yield* duckdb
+    .query("SELECT sha256(body) AS digest, id FROM corpus_documents ORDER BY id")
+    .pipe(
+      Effect.flatMap((rows) => decodeRows("duckdb-document-digests", S.NonEmptyArray(DuckDocumentDigestRow), rows))
+    );
   const hitRows = yield* duckdb
     .query("SELECT doc_id AS id FROM fts_bm25 WHERE term = 'a490' ORDER BY score DESC, doc_id")
     .pipe(Effect.flatMap((rows) => decodeRows("duckdb-full-text", S.NonEmptyArray(DuckTextHitRow), rows)));
@@ -185,6 +191,7 @@ const readDuckDbProjection = Effect.fnUntraced(function* () {
       ...A.map(citationRows, (row) => `source:${row.url}`),
     ],
     documentCount: countRows[0].count,
+    documentDigests: A.map(digestRows, (row) => `${row.id}|${row.digest}`),
   };
 });
 
@@ -354,6 +361,7 @@ export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(fun
   return yield* S.decodeUnknownEffect(ProjectionSnapshot)({
     citations: duckdb.citations,
     documentCount: duckdb.documentCount,
+    documentDigests: duckdb.documentDigests,
     ontologyClasses,
     quoteLines: pglite.quoteLines,
     ruleDispositions: pglite.ruleDispositions,
@@ -392,6 +400,7 @@ export const verifyDurableProjectionSnapshot = Effect.fn("lejeune.projection.ver
   const actual = yield* S.decodeUnknownEffect(ProjectionSnapshot)({
     citations: duckdb.citations,
     documentCount: duckdb.documentCount,
+    documentDigests: duckdb.documentDigests,
     ontologyClasses: expected.ontologyClasses,
     quoteLines: pglite.quoteLines,
     ruleDispositions: pglite.ruleDispositions,
