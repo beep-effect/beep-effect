@@ -586,7 +586,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   const sandboxShebangBinds = Effect.fn("Libpff.pffexport.sandboxShebangBinds")(function* (
     executable: string
   ): Effect.fn.Return<ReadonlyArray<string>, LibpffError> {
-    const prefix = yield* Effect.scoped(
+    const shebang = yield* Effect.scoped(
       fs.open(executable, { flag: "r" }).pipe(
         Effect.flatMap((handle) => handle.readAlloc(4096)),
         Effect.map((bytes) => O.getOrElse(bytes, () => new Uint8Array()))
@@ -597,9 +597,10 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       ),
       Effect.map((bytes) => textDecoder.decode(bytes)),
       Effect.map((contents) => Str.split("\n")(contents)[0] ?? ""),
-      Effect.map((firstLine) => (Str.startsWith("#!")(firstLine) ? Str.trim(Str.slice(2)(firstLine)) : "")),
-      Effect.map((shebang) => shebang.split(/\s+/u)[0] ?? "")
+      Effect.map((firstLine) => (Str.startsWith("#!")(firstLine) ? Str.trim(Str.slice(2)(firstLine)) : ""))
     );
+    const shebangParts = shebang.split(/\s+/u);
+    const prefix = shebangParts[0] ?? "";
     if (Str.isEmpty(prefix) || !path.isAbsolute(prefix)) return [];
 
     const canonicalInterpreter = yield* fs
@@ -631,7 +632,72 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         binds.push(runtimePrefix);
       }
     }
-    return A.flatMap(binds, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]);
+    const bindArguments = A.flatMap(binds, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]);
+    if (path.basename(prefix) !== "env") return bindArguments;
+
+    const envCommand = A.findFirst(
+      shebangParts.slice(1),
+      (part) => !Str.isEmpty(part) && !Str.startsWith("-")(part) && !Str.includes("=")(part)
+    );
+    if (O.isNone(envCommand) || !/^[A-Za-z0-9._+-]+$/u.test(envCommand.value)) {
+      return yield* makeLibpffError("config", { cause: "sandbox env shebang command is unsupported" });
+    }
+    const resolvedEnvInterpreter = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const handle = yield* spawner
+          .spawn(
+            ChildProcess.make(
+              "/bin/sh",
+              ["-c", 'command -v -- "$1"', "shebang-interpreter-resolver", envCommand.value],
+              spawnOptions
+            )
+          )
+          .pipe(
+            Effect.mapError(() =>
+              makeLibpffError("engine-unavailable", { cause: "env shebang interpreter resolution failed" })
+            )
+          );
+        const [stdout, , exitCode] = yield* Effect.all(
+          [captureBoundedProcessText(handle.stdout), drainStream(handle.stderr), handle.exitCode],
+          { concurrency: "unbounded" }
+        );
+        const resolved = Str.trim(stdout);
+        if (exitCode !== 0 || Str.isEmpty(resolved) || Str.includes("\n")(resolved)) {
+          return yield* makeLibpffError("engine-unavailable", { cause: "env shebang interpreter resolution failed" });
+        }
+        return resolved;
+      })
+    ).pipe(
+      Effect.mapError(() =>
+        makeLibpffError("engine-unavailable", { cause: "env shebang interpreter resolution failed" })
+      )
+    );
+    const canonicalEnvInterpreter = yield* fs
+      .realPath(resolvedEnvInterpreter)
+      .pipe(
+        Effect.mapError(() =>
+          makeLibpffError("engine-unavailable", { cause: "env shebang interpreter resolution failed" })
+        )
+      );
+    const envInterpreterInfo = yield* fs
+      .stat(canonicalEnvInterpreter)
+      .pipe(
+        Effect.mapError(() =>
+          makeLibpffError("engine-unavailable", { cause: "env shebang interpreter resolution failed" })
+        )
+      );
+    if (envInterpreterInfo.type !== "File") {
+      return yield* makeLibpffError("engine-unavailable", { cause: "env shebang interpreter is not a regular file" });
+    }
+    if (sandboxRuntimeCovers(canonicalEnvInterpreter)) return bindArguments;
+    const envRuntimePrefix = runtimePrefixFor(canonicalEnvInterpreter);
+    if (envRuntimePrefix === path.parse(envRuntimePrefix).root) {
+      return yield* makeLibpffError("config", { cause: "sandbox env interpreter bind cannot expose the host root" });
+    }
+    const envRuntimeBind = sandboxRuntimeCovers(envRuntimePrefix)
+      ? []
+      : ["--ro-bind", envRuntimePrefix, envRuntimePrefix];
+    return [...bindArguments, ...envRuntimeBind, "--ro-bind", canonicalEnvInterpreter, `/usr/bin/${envCommand.value}`];
   });
 
   const sandboxedPffexportCommand = Effect.fn("Libpff.pffexport.sandboxedCommand")(function* (
