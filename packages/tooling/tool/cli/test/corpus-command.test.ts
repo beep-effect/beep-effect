@@ -1940,6 +1940,33 @@ describe("corpus restoration preservation", () => {
           sourceLabel: fileTerminal.value.sourceLabel,
           sourceRelativePath: fileTerminal.value.sourceRelativePath,
         });
+        const fileDestinationInfo = yield* fs.stat(fileDestination);
+        const provenanceSource = {
+          destinationRelativePath: fileTerminal.value.destinationRelativePath,
+          expectedInfo: RA.sourceIdentity(fileDestinationInfo),
+          expectedSizeBytes: fileTerminal.value.sizeBytes,
+          objectId: fileTerminal.value.objectId,
+          objectKind: "file" as const,
+          sourceLabel: fileTerminal.value.sourceLabel,
+          sourcePath: path.join(fixture.sourceRoot, fileTerminal.value.sourceRelativePath),
+          sourceRelativePath: fileTerminal.value.sourceRelativePath,
+        };
+        yield* RA.appendProvenance(
+          path.join(fixture.corpusRoot, "raw", "provenance.jsonl"),
+          archiveRoot,
+          provenanceSource,
+          failureTerminal,
+          failureTerminal.recordedAt
+        );
+        expect(
+          yield* RA.appendProvenance(
+            path.join(fixture.corpusRoot, "raw", "provenance.jsonl"),
+            archiveRoot,
+            { ...provenanceSource, sourcePath: `${provenanceSource.sourcePath}.contradictory` },
+            fileTerminal.value,
+            fileTerminal.value.recordedAt
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
         expect(
           (yield* RA.verifyArchiveTerminal(archiveRoot, failureTerminal.objectId, failureTerminal)).record
         ).toMatchObject({ _tag: "Some", value: { failureKind: "unapproved-terminal" } });
