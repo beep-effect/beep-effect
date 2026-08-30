@@ -215,6 +215,12 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     mergeable: S.optionalKey(S.String),
     number: S.optionalKey(S.Finite),
     pendingCheckCount: S.optionalKey(S.Finite),
+    requiredCheckCount: S.optionalKey(S.Finite),
+    failingRequiredCheckCount: S.optionalKey(S.Finite),
+    pendingRequiredCheckCount: S.optionalKey(S.Finite),
+    optionalCheckCount: S.optionalKey(S.Finite),
+    failingOptionalCheckCount: S.optionalKey(S.Finite),
+    pendingOptionalCheckCount: S.optionalKey(S.Finite),
     unresolvedReviewThreadCount: S.optionalKey(S.Finite),
     unresolvedReviewThreads: S.Array(S.String).pipe(S.optionalKey),
     unresolvedThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -418,7 +424,13 @@ export class GhStatusWorkflowRun extends S.Class<GhStatusWorkflowRun>($I`GhStatu
   $I.annote("GhStatusWorkflowRun", { description: "GitHub workflow run used for rerun-failed guidance." })
 ) {}
 
-class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
+/**
+ * GitHub check row used to derive required and optional status counts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
   {
     bucket: S.String,
     name: S.String,
@@ -615,14 +627,102 @@ const checkIsPending = (check: GhStatusCheck): boolean => {
   );
 };
 
+type RemoteCheckSummary = {
+  readonly checkCount: O.Option<number>;
+  readonly failingCheckCount: O.Option<number>;
+  readonly pendingCheckCount: O.Option<number>;
+  readonly requiredCheckCount: O.Option<number>;
+  readonly failingRequiredCheckCount: O.Option<number>;
+  readonly pendingRequiredCheckCount: O.Option<number>;
+  readonly optionalCheckCount: O.Option<number>;
+  readonly failingOptionalCheckCount: O.Option<number>;
+  readonly pendingOptionalCheckCount: O.Option<number>;
+};
+
+/**
+ * Summarize all, required, and optional pull-request checks for status output.
+ *
+ * **Details**
+ *
+ * GitHub returns required checks as a second filtered view of the complete
+ * check list. Optional checks are therefore the complete rows whose names do
+ * not appear in that required view. When either capture is unavailable the
+ * optional split remains unknown rather than being reported as empty.
+ *
+ * @param checks - Complete check-list capture, when available.
+ * @param requiredChecks - Required-only check-list capture, when available.
+ * @returns Optional counts for each observed check partition.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const summarizeRemoteChecksForTesting: {
+  (
+    requiredChecks: O.Option<ReadonlyArray<GhStatusCheck>>
+  ): (checks: O.Option<ReadonlyArray<GhStatusCheck>>) => RemoteCheckSummary;
+  (
+    checks: O.Option<ReadonlyArray<GhStatusCheck>>,
+    requiredChecks: O.Option<ReadonlyArray<GhStatusCheck>>
+  ): RemoteCheckSummary;
+} = dual(
+  2,
+  (
+    checks: O.Option<ReadonlyArray<GhStatusCheck>>,
+    requiredChecks: O.Option<ReadonlyArray<GhStatusCheck>>
+  ): RemoteCheckSummary => {
+    const checkCount = pipe(checks, O.map(A.length));
+    const failingCheckCount = pipe(
+      checks,
+      O.map((values) => A.length(A.filter(values, checkIsFailing)))
+    );
+    const pendingCheckCount = pipe(
+      checks,
+      O.map((values) => A.length(A.filter(values, checkIsPending)))
+    );
+    const requiredCheckCount = pipe(requiredChecks, O.map(A.length));
+    const failingRequiredCheckCount = pipe(
+      requiredChecks,
+      O.map((values) => A.length(A.filter(values, checkIsFailing)))
+    );
+    const pendingRequiredCheckCount = pipe(
+      requiredChecks,
+      O.map((values) => A.length(A.filter(values, checkIsPending)))
+    );
+    const optionalChecks = O.all({ checks, requiredChecks }).pipe(
+      O.map(({ checks: all, requiredChecks: requiredRows }) =>
+        A.filter(all, (check) => !A.some(requiredRows, (requiredCheck) => requiredCheck.name === check.name))
+      )
+    );
+    const optionalCheckCount = pipe(optionalChecks, O.map(A.length));
+    const failingOptionalCheckCount = pipe(
+      optionalChecks,
+      O.map((values) => A.length(A.filter(values, checkIsFailing)))
+    );
+    const pendingOptionalCheckCount = pipe(
+      optionalChecks,
+      O.map((values) => A.length(A.filter(values, checkIsPending)))
+    );
+    return {
+      checkCount,
+      failingCheckCount,
+      pendingCheckCount,
+      requiredCheckCount,
+      failingRequiredCheckCount,
+      pendingRequiredCheckCount,
+      optionalCheckCount,
+      failingOptionalCheckCount,
+      pendingOptionalCheckCount,
+    };
+  }
+);
+
 const collectRemoteChecks = Effect.fn("YeetStatus.collectRemoteChecks")(function* (
-  context: RepoRunContext
+  context: RepoRunContext,
+  required: boolean
 ): Effect.fn.Return<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* runRepoCommandCapture(
-    "gh",
-    ["pr", "checks", "--json", "name,state,bucket"],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status.")));
+  const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket"];
+  const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
+  );
   if (result.truncated) {
     return O.none();
   }
@@ -839,7 +939,10 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   const view = yield* decodeGhStatusPullRequest(result.output).pipe(
     Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON for yeet status."))
   );
-  const checks = yield* collectRemoteChecks(context);
+  const [checks, requiredChecks] = yield* Effect.all([
+    collectRemoteChecks(context, false),
+    collectRemoteChecks(context, true),
+  ]);
   const reviewThreads = yield* collectRemoteReviewThreads(context, view.id);
   const unresolved = A.filter(reviewThreads.nodes, (thread) => !thread.isResolved);
   const unresolvedThreads = A.map(unresolved, reviewThreadTriage);
@@ -847,18 +950,10 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     ...A.map(unresolved, (thread) => `${thread.id}${thread.path === null ? "" : ` (${thread.path})`}`),
     ...(reviewThreads.pageInfo.hasNextPage ? ["additional review threads omitted after the first 100"] : []),
   ];
-  const checkCount = pipe(checks, O.map(A.length));
-  const failingCheckCount = pipe(
-    checks,
-    O.map((values) => A.length(A.filter(values, checkIsFailing)))
-  );
-  const pendingCheckCount = pipe(
-    checks,
-    O.map((values) => A.length(A.filter(values, checkIsPending)))
-  );
+  const checkSummary = summarizeRemoteChecksForTesting(checks, requiredChecks);
   const workflowRuns = yield* collectRemoteWorkflowRuns(context);
   const hasFailingCheck = pipe(
-    failingCheckCount,
+    checkSummary.failingCheckCount,
     O.exists((count) => count > 0)
   );
   // A same-SHA failed run stays in `gh run list` after a rerun turns the checks
@@ -887,9 +982,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     unresolvedThreads: O.some(unresolvedThreads),
     headSha: O.some(view.headRefOid),
     ...O.getSomesStruct({
-      checkCount,
-      failingCheckCount,
-      pendingCheckCount,
+      ...checkSummary,
       rerunFailedCommand,
       rerunFailedDecision,
     }),
@@ -910,11 +1003,27 @@ const CLOSEOUT_COMMAND =
   "run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`";
 const VERIFY_OR_REMOTE_COMMAND = "run `bun run beep yeet verify` or pass `--remote` for PR status";
 
-const checksAreGreen = (remote: YeetStatusRemote): boolean =>
+const requiredChecksAreGreen = (remote: YeetStatusRemote): boolean =>
   pipe(
-    O.fromUndefinedOr(remote.checkCount),
-    O.exists(() => (remote.failingCheckCount ?? 0) === 0 && (remote.pendingCheckCount ?? 0) === 0)
+    O.fromUndefinedOr(remote.requiredCheckCount),
+    O.exists(
+      (count) =>
+        count > 0 && (remote.failingRequiredCheckCount ?? 0) === 0 && (remote.pendingRequiredCheckCount ?? 0) === 0
+    )
   );
+
+const acceptableMergeStateStatuses: ReadonlyArray<string> = ["BEHIND", "CLEAN", "HAS_HOOKS", "UNSTABLE"];
+
+const mergeStateIsAcceptable = (remote: YeetStatusRemote): boolean =>
+  O.exists(O.fromUndefinedOr(remote.mergeStateStatus), (status) =>
+    A.contains(acceptableMergeStateStatuses, Str.toUpperCase(status))
+  );
+
+const reviewDecisionIsAcceptable = (remote: YeetStatusRemote): boolean =>
+  O.match(O.fromUndefinedOr(remote.reviewDecision), {
+    onNone: () => true,
+    onSome: (decision) => Str.toUpperCase(decision) === "APPROVED",
+  });
 
 const sameHeadSha = S.toEquivalence(S.String);
 
@@ -949,13 +1058,14 @@ const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetM
   );
 
 /**
- * Fold the merge protocol's three surfaces into one merge-readiness verdict.
+ * Fold the live pull request surfaces into one truthful merge-readiness verdict.
  *
  * **Details**
  *
  * Status already fetches everything the protocol asks a human to read, so the
- * only thing missing was a name for the answer. `closeout-run`, `checks-green`,
- * and `threads-resolved` are the hard criteria. A missing closeout artifact is
+ * only thing missing was a name for the answer. Pull request state, draft state,
+ * current-head closeout, required checks, threads, mergeability, merge state,
+ * and review decision are hard criteria. A missing closeout artifact is
  * its own blocker while the live thread criterion continues to report only the
  * state it knows. A present closeout satisfies `closeout-run` only when its
  * recorded reviewed head equals the current remote head; legacy headless and
@@ -981,9 +1091,8 @@ const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetM
  *     available: true,
  *     checked: true,
  *     detail: "PR #42 OPEN",
- *     checkCount: 24,
- *     failingCheckCount: 1,
- *     pendingCheckCount: 0,
+ *     state: "OPEN", isDraft: false, mergeable: "MERGEABLE", mergeStateStatus: "CLEAN",
+ *     requiredCheckCount: 17, failingRequiredCheckCount: 1, pendingRequiredCheckCount: 0,
  *     unresolvedReviewThreadCount: 0,
  *   })
  * )
@@ -1004,9 +1113,14 @@ export const deriveYeetMergeReady: {
     return O.none();
   }
   const criteria = YeetMergeReadyCriteria.make({
+    prOpen: remote.state === "OPEN",
+    notDraft: remote.isDraft === false,
     closeoutRun: closeout.state === "present" && closeoutBindsCurrentHead(closeout, remote),
-    checksGreen: checksAreGreen(remote),
+    requiredChecksGreen: requiredChecksAreGreen(remote),
     threadsResolved: threadsAreResolved(closeout, remote),
+    mergeable: remote.mergeable === "MERGEABLE",
+    mergeStateAcceptable: mergeStateIsAcceptable(remote),
+    reviewDecisionAcceptable: reviewDecisionIsAcceptable(remote),
     greptileScore: closeout.greptileScore,
   });
   const failing = firstFailingCriterion(criteria);
@@ -1108,10 +1222,22 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
 const renderWorktreeLine = (worktree: YeetStatusWorktree): string =>
   `${worktree.clean ? "clean" : "dirty"} (${worktree.staged} staged, ${worktree.unstaged} unstaged, ${worktree.untracked} untracked)`;
 
-const renderCheckLine = (remote: YeetStatusRemote): string =>
-  remote.checked && O.isSome(O.fromUndefinedOr(remote.checkCount))
-    ? `checks: ${remote.checkCount} total, ${remote.failingCheckCount ?? 0} failing, ${remote.pendingCheckCount ?? 0} pending`
-    : "checks: not checked";
+const optionalCount = (value: number | undefined): number =>
+  pipe(
+    O.fromUndefinedOr(value),
+    O.getOrElse(() => 0)
+  );
+
+const renderCheckLine = (remote: YeetStatusRemote): string => {
+  if (!remote.checked) return "checks: not checked";
+  if (remote.requiredCheckCount !== undefined) {
+    return `checks: ${remote.requiredCheckCount} required (${optionalCount(remote.failingRequiredCheckCount)} failing, ${optionalCount(remote.pendingRequiredCheckCount)} pending); ${optionalCount(remote.optionalCheckCount)} optional (${optionalCount(remote.failingOptionalCheckCount)} failing, ${optionalCount(remote.pendingOptionalCheckCount)} pending)`;
+  }
+  if (remote.checkCount !== undefined) {
+    return `checks: ${remote.checkCount} total, ${optionalCount(remote.failingCheckCount)} failing, ${optionalCount(remote.pendingCheckCount)} pending (legacy unsplit snapshot)`;
+  }
+  return "checks: not checked";
+};
 
 const renderThreadTriageLine = (thread: YeetStatusReviewThread): string => {
   const location = pipe(

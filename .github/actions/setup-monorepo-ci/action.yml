@@ -10,6 +10,10 @@ inputs:
     description: Save restored caches after install when cache misses occur.
     required: false
     default: "true"
+  turbo-cache-key-suffix:
+    description: Stable suffix that isolates local Turbo caches for matrix lanes sharing one job id.
+    required: false
+    default: ""
   use-node:
     description: Setup Node.js runtime when workflow steps require it.
     required: false
@@ -114,10 +118,9 @@ runs:
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
+        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
         restore-keys: |
-          turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-
-          turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-
+          turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-
 
     - name: Install dependencies
       shell: bash
@@ -142,7 +145,7 @@ runs:
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
+        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
 
     - name: Report setup timing and cache metadata
       if: ${{ always() }}
@@ -184,7 +187,7 @@ runs:
           echo "| Bun cache hit | \`${bun_cache_hit}\` |"
           echo "| Bun cache size | \`${bun_cache_size}\` |"
           echo "| Turbo cache enabled | \`${{ inputs.cache-turbo }}\` |"
-          echo "| Turbo cache key | \`turbo-${{ runner.os }}-${{ github.job }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}\` |"
+          echo "| Turbo cache key | \`turbo-${{ runner.os }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}\` |"
           echo "| Turbo cache hit | \`${turbo_cache_hit}\` |"
           echo "| Turbo cache size | \`${turbo_cache_size}\` |"
           echo "| Cache write enabled | \`${{ inputs.cache-write }}\` |"

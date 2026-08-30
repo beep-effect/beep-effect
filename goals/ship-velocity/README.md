@@ -6,7 +6,7 @@ Created 2026-08-13 · Anchor: [SPEC.md](SPEC.md) · Order: [PLAN.md](PLAN.md)
 
 Agents ship correct code faster: near-zero backpressure latency (failures reach the owning
 agent's next tool boundary, not the operator's patience), local verify that near-guarantees the
-16 required remote checks, a readable+warm Turbo remote cache in every checkout, memory-aware
+17 required remote checks, a readable+warm Turbo remote cache in every checkout, memory-aware
 concurrent verify/publish across sibling checkouts, and an end to the derived-file merge
 treadmill.
 
@@ -21,8 +21,8 @@ ci-lane-economics (coverage placement lands via #698), coding-agent-effectivenes
 (proof reuse, failure capsules), fleet-coordination exploration (routing/lease laws), and the
 fleet-mirror contested-path index.
 
-Phases: ~~P0 ratify+baseline~~ · ~~P1 instant wins~~ · **P2 backpressure engine (current)** ·
-P3 full parity · P4 concurrency+cache · P5 hot-file endgame + close.
+Phases: ~~P0 ratify+baseline~~ · ~~P1 instant wins~~ · ~~P2 backpressure engine~~ ·
+~~P3 full parity~~ · ~~P4 concurrency+cache~~ · **P5 observation closeout (current)**.
 
 P0 and P1 complete 2026-08-17. P1 shipped as #737 (B1 same-argv lanes), #736 (E1 publish
 regenerates the derived goals INDEX), #738 (A7 monitor hardening), #743 (C1 remote-read cache
@@ -36,3 +36,11 @@ of a changed owner, so a dependent's ratchet drop fails the PR instead of `main`
 B11 (2026-08-25) closed the regeneration treadmill: the ratchet prints the exact scoped
 `--filter … --write-baseline` command for the regressed packages, and a baseline edit that only
 touches package rows measures those packages (24 s) instead of the full workspace (9–15 min).
+
+The remaining P2-P5 engineering backlog was completed in the 2026-08-27 closeout branch. It
+adds hook-driven inbox enforcement and takeover, full local/hosted parity planning and proof
+reuse, weighted admission with RSS telemetry, cache warming and first-touch evidence, local-only
+portfolio projections, contention families, goals-only required-check skips, and the live E7/E8
+evaluations. The initiative intentionally remains active until the final PR is merge-ready and a
+representative post-merge week satisfies the completion gate; see
+[research/metrics-closeout.md](research/metrics-closeout.md).

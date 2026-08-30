@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `research`
 Status: `active`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

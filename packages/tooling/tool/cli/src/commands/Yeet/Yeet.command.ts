@@ -113,6 +113,11 @@ const mergedFlag = Flag.boolean("merged").pipe(
   )
 );
 
+const ciParityFlag = Flag.boolean("ci-parity").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Run the exact affected CI battery in an installed merge-preview worktree")
+);
+
 const collectAllFlag = Flag.boolean("collect-all").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Run every local preflight wave after failures instead of stopping before later waves")
@@ -284,6 +289,26 @@ const inboxThreadUrlFlag = Flag.string("thread-url").pipe(
   Flag.withDefault("")
 );
 
+const inboxWaiveFlag = Flag.boolean("waive").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Temporarily waive the row; requires actor, shard, reason, and expiry")
+);
+
+const inboxActorFlag = Flag.string("actor").pipe(
+  Flag.withDescription("Actor accountable for an expiring waiver"),
+  Flag.withDefault("")
+);
+
+const inboxExpiresAtFlag = Flag.string("expires-at").pipe(
+  Flag.withDescription("ISO timestamp after which a waiver stops acknowledging the row"),
+  Flag.withDefault("")
+);
+
+const inboxShardFlag = Flag.string("shard").pipe(
+  Flag.withDescription("Named local shard or required context covered by a waiver"),
+  Flag.withDefault("")
+);
+
 const inboxRowStdinFlag = Flag.boolean("from-stdin").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Read one inbox row JSON document from stdin")
@@ -311,6 +336,7 @@ const sharedFlags = {
 
 const verifyFlags = {
   ...sharedFlags,
+  ciParity: ciParityFlag,
   merged: mergedFlag,
 } as const;
 
@@ -389,6 +415,7 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
     amend: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     base: S.String,
     bots: S.String.pipe(SchemaUtils.withKeyDefaults("greptile")),
+    ciParity: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     collectAll: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     fast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     head: S.String,
@@ -429,6 +456,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       allowStaleBase: sharedOptions.allowStaleBase,
       amend: sharedOptions.amend,
       bots: sharedOptions.bots,
+      ciParity: sharedOptions.ciParity,
       collectAll: sharedOptions.collectAll,
       fast: sharedOptions.fast,
       merged: sharedOptions.merged,
@@ -581,14 +609,18 @@ const yeetInboxListCommand = Command.make("list", inboxListFlags, runYeetInboxLi
 const yeetInboxAckCommand = Command.make(
   "ack",
   {
+    actor: inboxActorFlag,
+    expiresAt: inboxExpiresAtFlag,
     fixSha: inboxFixShaFlag,
     id: inboxAckIdArgument,
     reason: inboxReasonFlag,
+    shard: inboxShardFlag,
     threadUrl: inboxThreadUrlFlag,
+    waive: inboxWaiveFlag,
     wontfix: inboxWontfixFlag,
   },
   runYeetInboxAck
-).pipe(Command.withDescription("Acknowledge one inbox row with a fix SHA, a reasoned wontfix, or a thread URL"));
+).pipe(Command.withDescription("Acknowledge one inbox row with a fix, wontfix, thread, or attributed expiring waiver"));
 
 const yeetInboxAppendCommand = Command.make("append", { fromStdin: inboxRowStdinFlag }, runYeetInboxAppend).pipe(
   Command.withDescription("Append one typed failure row from stdin to the checkout's inbox")

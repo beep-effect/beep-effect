@@ -1563,6 +1563,58 @@ describe("schema-first lint command", { concurrent: false }, () => {
 });
 
 describe("package test import lint command", { concurrent: false }, () => {
+  it("rejects conflicting and out-of-package scan scopes", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const conflicting = yield* Effect.exit(
+            runLintCommand([
+              "package-test-imports",
+              "--include",
+              "packages/example/test/Example.test.ts",
+              "--include-root",
+              "packages/example",
+            ])
+          );
+          const outside = yield* Effect.exit(runLintCommand(["package-test-imports", "--include-root", "standards"]));
+
+          expectReportedExit(conflicting);
+          expectReportedExit(outside);
+        })
+      ).pipe(provideScopedLayer(testLayer))
+    ));
+
+  it(
+    "scopes the scan to one package root",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const selected = path.join("packages", "foundation", "modeling", "selected");
+            const ignored = path.join("packages", "foundation", "modeling", "ignored");
+
+            yield* writePackage(selected, "@beep/selected");
+            yield* writePackage(ignored, "@beep/ignored");
+            yield* fs.makeDirectory(path.join(ignored, "test"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join(ignored, "test", "Ignored.test.ts"),
+              `import { ignored } from "../src/index.ts";\nvoid ignored;\n`
+            );
+
+            yield* runLintCommand(["package-test-imports", "--include-root", selected]);
+
+            expect(yield* TestConsole.logLines).toEqual([
+              "[check-package-test-imports] OK: package test imports use package aliases.",
+            ]);
+            expect(yield* TestConsole.errorLines).toEqual([]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
   it(
     "reports same-package relative imports into src",
     () =>

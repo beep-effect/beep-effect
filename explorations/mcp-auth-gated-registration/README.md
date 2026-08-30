@@ -2,8 +2,12 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
-Status: `graduated` (three candidates shipped; `mcp-write-wall` absorbed)
+Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
+
+Status note: (three candidates shipped; `mcp-write-wall` absorbed)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
