@@ -600,7 +600,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   };
 
   const envShebangCommand = (commandParts: ReadonlyArray<string>): string | undefined => {
-    const optionOperands = ["-C", "--argv0", "--chdir", "--unset", "-u"];
+    const optionOperands = ["-C", "-a", "--argv0", "--chdir", "--unset", "-u"];
     for (let index = 0; index < commandParts.length; index += 1) {
       const part = commandParts[index] ?? "";
       if (A.contains(optionOperands, part)) {

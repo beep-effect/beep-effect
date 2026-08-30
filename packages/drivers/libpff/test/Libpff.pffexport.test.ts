@@ -405,7 +405,7 @@ describe("makePffexportFileProcessingEngine", () => {
         const bwrapArgumentsPath = path.join(path.dirname(stubPath), "standard-env-bwrap-arguments");
         yield* fs.writeFileString(
           stubPath,
-          stubPffexport.replace("#!/usr/bin/env bash", "#!/usr/bin/env -u BEEP_UNUSED bash")
+          stubPffexport.replace("#!/usr/bin/env bash", "#!/usr/bin/env -a pffexport -u BEEP_UNUSED bash")
         );
         yield* fs.chmod(stubPath, 0o755);
         yield* fs.writeFileString(
@@ -425,7 +425,7 @@ describe("makePffexportFileProcessingEngine", () => {
         expect(result.children.length).toBeGreaterThan(0);
         const bwrapArguments = yield* fs.readFileString(bwrapArgumentsPath);
         expect(bwrapArguments).toContain("--setenv\nPATH\n/usr/bin:/bin\n");
-        expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-u\nBEEP_UNUSED\nbash\n${stubPath}\n`);
+        expect(bwrapArguments).toContain(`--\n/usr/bin/env\n-a\npffexport\n-u\nBEEP_UNUSED\nbash\n${stubPath}\n`);
         expect(bwrapArguments).not.toContain("--ro-bind\n/\n/\n");
       },
       Effect.scoped,
