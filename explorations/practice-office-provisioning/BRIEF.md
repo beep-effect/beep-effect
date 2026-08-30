@@ -57,8 +57,11 @@ the contact seeding from the already-salvaged contact-export CSVs.
    before releasing retention hold.
 4. **Signature + invoice flow**: Box Sign engagement-letter requests driven
    off an idempotent workflow ledger (operational transactions, not
-   desired-state); `@beep/freshbooks` driver (hubspot-pattern) retrieving
-   invoice PDFs for delivery into client Box folders.
+   desired-state); `@beep/freshbooks` driver (hubspot-pattern) whose
+   invoice-to-Box delivery starts with an endpoint-validation spike — if a
+   supported invoice-PDF endpoint exists, the driver retrieves and files
+   PDFs into client Box folders; if not, delivery falls back to
+   operator-exported PDFs dropped into a reconciler-watched intake folder.
 5. **Walkthroughs**: eight Claude Artifacts pages per the R5 outline,
    teaching the attorney the system the reconciler provisioned.
 

@@ -203,9 +203,11 @@ E3 routes (overkill), defer-to-quote (blocks the import window needlessly).
 instead of skipping. The Box quote (Governance-on-Business eligibility and
 price, Business Plus, Enterprise Plus bundling, Shield) is gathered in
 parallel; any upgrade is a later ratified decision with real prices.
-The quote must also price external-collaborator economics on Business —
-client collaborators must not silently require paid seats (r7 flags this
-as unverified).
+External-collaborator economics are already CONFIRMED by r7's plan matrix:
+Business carries paid external collaborators while Business Plus unlocks
+unlimited external collaborators — so client-facing collaboration at scale
+is itself an upgrade trigger, and the quote prices that trigger rather
+than discovering it.
 
 **Rationale:** Structure, collaborations, versioning, and Box Sign work
 today; blocking visibly preserves honesty about what the plan lacks.
@@ -220,10 +222,14 @@ practice).
 **Answer:** A dedicated Box service identity owns the canonical tree; the
 attorney collaborates at client-folder level (co-owner/editor); Benjamin
 retains admin. The CCG platform-app approval flow on the Business plan is a
-verification item before build. Box Sign requests must preserve the
-attorney's sender/on-behalf context even under service-account ownership —
-the exact mechanism (managed user, on-behalf header, or sender field) is a
-goal-design question, not optional.
+verification item before build. Identity is split by role, per r7 §F:
+the service account is the stable identity for the tree, webhooks, and
+reconciliation, but Box Sign treats the authenticated requester as the
+request owner/sender — so engagement-letter Sign requests are created in
+the attorney's user context (authorized user token / as-user), never as
+the service account. r7 §F also cautions against a hidden automation-owned
+root; this packet makes that ownership an explicit ratified decision with
+the attorney collaborated at client-folder level.
 
 **Rationale:** Stable owner for webhooks and Sign requests; survives
 personnel/device changes; matches r7 §F. The probed status quo (everything
@@ -271,10 +277,12 @@ pattern (FetchHttpClient + Schema decode + LiteralKit errors + `S.Redacted`
 config): auth-code token helper with a local exact-match HTTPS redirect,
 clients/invoices/payments read verbs plus invoice-PDF retrieval for Box
 delivery — gated on validating the actual PDF endpoint first (r7 lists it
-UNVERIFIED); webhooks follow later. The token helper must handle
-FreshBooks' single-use refresh-token rotation: persist each rotated
-refresh token atomically before using it, or the integration bricks itself
-on the first race. The existing all-scopes dev app stays dev-only; the
+UNVERIFIED); webhooks follow later. The token helper must treat
+FreshBooks' single-use refresh-token rotation as a serialization problem,
+not just a persistence one (r7 §F9): a single refresh owner — one
+dedicated refresher behind a lock — performs every refresh and atomically
+persists the rotated token before releasing it; two concurrent refreshers
+presenting the same single-use token strand one of them. The existing all-scopes dev app stays dev-only; the
 production app is registered least-privilege at graduation.
 
 **Rationale:** Versioned-code decision needs a repo home for the
