@@ -166,11 +166,16 @@ const bwrapStub = `#!/usr/bin/env bash
 set -eu
 mount_hosts=()
 mount_targets=()
+required_bind="$(dirname "$0")/interpreter"
+required_bind_seen=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --ro-bind|--bind)
       mount_hosts+=("$2")
       mount_targets+=("$3")
+      if [ "$1" = "--ro-bind" ] && [ "$2" = "$required_bind" ] && [ "$3" = "$required_bind" ]; then
+        required_bind_seen=1
+      fi
       shift 3
       ;;
     --)
@@ -182,6 +187,7 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+[ ! -d "$required_bind" ] || [ "$required_bind_seen" -eq 1 ] || exit 97
 command="$1"
 shift
 mapped_command="$command"
@@ -316,6 +322,48 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(result.children.length).toBeGreaterThan(0);
         expect(result.warnings).toStrictEqual([]);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "binds an external shebang interpreter prefix into the sandbox",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const fixtureRoot = path.dirname(stubPath);
+        const interpreterPrefix = path.join(fixtureRoot, "interpreter");
+        const interpreterPath = path.join(interpreterPrefix, "bin", "bash");
+        const launcherPath = path.join(fixtureRoot, "launcher", "bin", "pffexport");
+        const bwrapPath = path.join(fixtureRoot, "bwrap-stub");
+        yield* fs.makeDirectory(path.dirname(interpreterPath), { recursive: true });
+        yield* fs.makeDirectory(path.dirname(launcherPath), { recursive: true });
+        yield* fs.symlink("/bin/bash", interpreterPath);
+        yield* fs.writeFileString(launcherPath, stubPffexport.replace("#!/usr/bin/env bash", `#!${interpreterPath}`));
+        yield* fs.chmod(launcherPath, 0o755);
+        yield* fs.writeFileString(bwrapPath, bwrapStub);
+        yield* fs.chmod(bwrapPath, 0o755);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            pffexportPath: launcherPath,
+          })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({
+            ...operation,
+            source: SourceArtifact.make(sourceWithoutBytes),
+          })
+        );
+
+        expect(result.children.length).toBeGreaterThan(0);
       },
       Effect.scoped,
       provideTestLayer

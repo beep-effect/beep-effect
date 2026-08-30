@@ -47,6 +47,7 @@ const PffexportFormatBase = LiteralKit(["all", "html", "rtf", "text"]);
 const PffexportExistingExportPolicyBase = LiteralKit(["fail", "replace"]);
 
 const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 const versionOutputPattern = /^pffexport\s+(\S+)/;
 const artifactIdPrefixLength = "artifact:".length;
 const emlBoundaryHexLength = 40;
@@ -566,6 +567,69 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     return binds;
   });
 
+  const sandboxRuntimeCovers = (candidate: string): boolean =>
+    A.some(sandboxRuntimeRoots, (root) => {
+      const relative = path.relative(root, candidate);
+      return (
+        relative === "" ||
+        (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative))
+      );
+    });
+
+  const runtimePrefixFor = (executable: string): string => {
+    const executableDirectory = path.dirname(executable);
+    return A.contains(["bin", "sbin"], path.basename(executableDirectory))
+      ? path.dirname(executableDirectory)
+      : executableDirectory;
+  };
+
+  const sandboxShebangBinds = Effect.fn("Libpff.pffexport.sandboxShebangBinds")(function* (
+    executable: string
+  ): Effect.fn.Return<ReadonlyArray<string>, LibpffError> {
+    const prefix = yield* Effect.scoped(
+      fs.open(executable, { flag: "r" }).pipe(
+        Effect.flatMap((handle) => handle.readAlloc(4096)),
+        Effect.map((bytes) => O.getOrElse(bytes, () => new Uint8Array()))
+      )
+    ).pipe(
+      Effect.mapError(() =>
+        makeLibpffError("engine-unavailable", { cause: "pffexport interpreter inspection failed" })
+      ),
+      Effect.map((bytes) => textDecoder.decode(bytes)),
+      Effect.map((contents) => Str.split("\n")(contents)[0] ?? ""),
+      Effect.map((firstLine) => (Str.startsWith("#!")(firstLine) ? Str.trim(Str.slice(2)(firstLine)) : "")),
+      Effect.map((shebang) => shebang.split(/\s+/u)[0] ?? "")
+    );
+    if (Str.isEmpty(prefix) || !path.isAbsolute(prefix) || sandboxRuntimeCovers(prefix)) return [];
+
+    const canonicalInterpreter = yield* fs
+      .realPath(prefix)
+      .pipe(
+        Effect.mapError(() =>
+          makeLibpffError("engine-unavailable", { cause: "pffexport interpreter resolution failed" })
+        )
+      );
+    const interpreterInfo = yield* fs
+      .stat(canonicalInterpreter)
+      .pipe(
+        Effect.mapError(() =>
+          makeLibpffError("engine-unavailable", { cause: "pffexport interpreter resolution failed" })
+        )
+      );
+    if (interpreterInfo.type !== "File") {
+      return yield* makeLibpffError("engine-unavailable", { cause: "pffexport interpreter is not a regular file" });
+    }
+
+    const binds: Array<string> = [];
+    for (const interpreter of [prefix, canonicalInterpreter]) {
+      const runtimePrefix = runtimePrefixFor(interpreter);
+      if (!sandboxRuntimeCovers(runtimePrefix) && !A.contains(binds, runtimePrefix)) {
+        binds.push(runtimePrefix);
+      }
+    }
+    return A.flatMap(binds, (runtimePrefix) => ["--ro-bind", runtimePrefix, runtimePrefix]);
+  });
+
   const sandboxedPffexportCommand = Effect.fn("Libpff.pffexport.sandboxedCommand")(function* (
     bwrapPath: string,
     sourcePath: string,
@@ -581,18 +645,9 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         cause: "sandboxed pffexport executable could not be resolved",
       });
     }
-    const runtimeCoversPffexport = A.some(sandboxRuntimeRoots, (root) => {
-      const relative = path.relative(root, hostPffexportPath);
-      return (
-        relative === "" ||
-        (!path.isAbsolute(relative) && relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative))
-      );
-    });
+    const runtimeCoversPffexport = sandboxRuntimeCovers(hostPffexportPath);
     const sandboxExecutable = hostPffexportPath;
-    const executableDirectory = path.dirname(hostPffexportPath);
-    const executableRuntimePrefix = A.contains(["bin", "sbin"], path.basename(executableDirectory))
-      ? path.dirname(executableDirectory)
-      : executableDirectory;
+    const executableRuntimePrefix = runtimePrefixFor(hostPffexportPath);
     const executableBind = runtimeCoversPffexport
       ? []
       : ["--ro-bind", executableRuntimePrefix, executableRuntimePrefix];
@@ -615,6 +670,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         "--dir",
         "/output",
         ...executableBind,
+        ...(yield* sandboxShebangBinds(hostPffexportPath)),
         "--ro-bind",
         sourcePath,
         "/input/source.pst",
