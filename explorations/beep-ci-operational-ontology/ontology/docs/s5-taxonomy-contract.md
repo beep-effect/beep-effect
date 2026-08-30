@@ -3,9 +3,12 @@
 Stage S5 of the pipeline (grilled v2). Design rulings locked 2026-08-30 (eight
 rulings, DECISIONS.md): home `ontology/extraction/s5/`; this bespoke contract +
 a `validate_packet.py --s5` gate; facts ruled in bulk classes; the 149
-waiver-parked rows auto-rule `parked-run-2`; ~6 seats, one round; all 89
-literal-domain members appear as leaf records; duplicate candidates get a
-distinct `merged-into` ruling; steward sittings land in DECISIONS.md only.
+waiver-parked rows auto-rule `parked-run-2`; ~6 seats, one round; every
+ACCEPTED literal-domain member appears as a leaf record (the original all-89
+phrasing was superseded by sittings 1a/4b, which parked the 80 members of
+unratified domains — they return with their domains at run 2); duplicate
+candidates get a distinct `merged-into` ruling; steward sittings land in
+DECISIONS.md only.
 
 ## 1. Inputs (frozen at branch cut)
 
@@ -40,8 +43,8 @@ distinct `merged-into` ruling; steward sittings land in DECISIONS.md only.
   accepted: the A-Box ratifies them at S6.
 - `s5/TAXONOMY.yaml` — the assembled T-Box: one record per accepted term
   {term, kind, parents, rigidity, identity_ref, parameters}; `parents` is
-  CLASS SUBSUMPTION only. Accepted literal-domain members and other accepted
-  individuals appear as leaf records carrying `instance_of: <accepted class>`
+  CLASS SUBSUMPTION only. Every ACCEPTED literal-domain member and accepted
+  individual appears as a leaf record carrying `instance_of: <accepted class>`
   (the type relation, per literal-domains.md: a member is an individual of its
   domain class), never a `parents` edge. Subsumption acyclic, kind-consistent,
   parents accepted; every `instance_of` target accepted.

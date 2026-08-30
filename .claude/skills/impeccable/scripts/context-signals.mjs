@@ -207,6 +207,64 @@ function gitSignals(cwd) {
 }
 
 const COMMON_DEV_PORTS = [4321, 3000, 5173, 5174, 8080, 8000, 4200];
+const PORTLESS_NAMED_COMMAND = /(?:^|\s)portless\s+(?:--name\s+)?([a-z0-9][a-z0-9.-]*)/i;
+const PORTLESS_RESERVED_NAMES = new Set([
+  "alias",
+  "clean",
+  "doctor",
+  "get",
+  "hosts",
+  "list",
+  "proxy",
+  "prune",
+  "run",
+  "service",
+  "trust",
+]);
+
+function trackedPackageJsonFiles(cwd) {
+  try {
+    return execFileSync("git", ["ls-files", "-z", "--", "package.json", ":(glob)**/package.json"], {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .split("\0")
+      .filter(Boolean);
+  } catch {
+    return fs.existsSync(path.join(cwd, "package.json")) ? ["package.json"] : [];
+  }
+}
+
+function configuredPortlessRoutes(cwd) {
+  const names = new Set();
+  for (const relativePath of trackedPackageJsonFiles(cwd)) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(path.join(cwd, relativePath), "utf-8"));
+      const dev = manifest?.scripts?.dev;
+      if (typeof dev !== "string") continue;
+      const name = dev.match(PORTLESS_NAMED_COMMAND)?.[1]?.toLowerCase();
+      if (name && !PORTLESS_RESERVED_NAMES.has(name)) names.add(`${name}.localhost`);
+    } catch {
+      /* malformed or concurrently removed manifests do not block routing */
+    }
+  }
+  return [...names].sort();
+}
+
+function activePortlessRoutes(cwd, configuredRoutes) {
+  if (configuredRoutes.length === 0) return [];
+  try {
+    const output = execFileSync("portless", ["list"], {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).toLowerCase();
+    return configuredRoutes.filter((route) => output.includes(route));
+  } catch {
+    return [];
+  }
+}
 
 function probePort(port, timeout = 250) {
   return new Promise((resolve) => {
@@ -230,7 +288,13 @@ function probePort(port, timeout = 250) {
   });
 }
 
-async function devServerSignals() {
+async function devServerSignals(cwd) {
+  const configuredRoutes = configuredPortlessRoutes(cwd);
+  if (configuredRoutes.length > 0) {
+    const routes = activePortlessRoutes(cwd, configuredRoutes);
+    return { running: routes.length > 0, ports: [], routes, configuredRoutes };
+  }
+
   const open = [];
   await Promise.all(
     COMMON_DEV_PORTS.map(async (p) => {
@@ -318,7 +382,7 @@ export async function gatherSignals(cwd = process.cwd()) {
     },
     critique: { latest: latestCritique(cwd) },
     git,
-    devServer: await devServerSignals(),
+    devServer: await devServerSignals(cwd),
     scan: scanTargets(cwd, git),
   };
 }
