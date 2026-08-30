@@ -404,4 +404,149 @@ describe("restoration archive boundary helpers", () => {
       provideTestLayer
     )
   );
+
+  it.effect(
+    "rejects changed sources, aliased partials, and opened-copy identity drift",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-copy-identity-" });
+        const sourceRoot = path.join(root, "source");
+        const destinationDirectory = path.join(root, "destination");
+        yield* fs.makeDirectory(sourceRoot);
+        yield* fs.makeDirectory(destinationDirectory);
+        const sourcePath = path.join(sourceRoot, "source.bin");
+        const destinationPath = path.join(destinationDirectory, "destination.bin");
+        const partialPath = `${destinationPath}.partial`;
+        yield* fs.writeFileString(sourcePath, "source-bytes");
+        yield* fs.writeFileString(destinationPath, "destination-bytes");
+        yield* fs.writeFileString(partialPath, "partial");
+        const sourceInfo = yield* fs.stat(sourcePath);
+        const destinationInfo = yield* fs.stat(destinationPath);
+        const partialInfo = yield* fs.stat(partialPath);
+        const object = {
+          destinationRelativePath: "payload/source.bin",
+          expectedInfo: RA.sourceIdentity(sourceInfo),
+          expectedSizeBytes: Number(sourceInfo.size),
+          objectId: "source-object",
+          objectKind: "file" as const,
+          sourceLabel: "tree",
+          sourcePath,
+          sourceRelativePath: "source.bin",
+        };
+        expect(yield* RA.inspectExpectedSourceFile(object, "source changed")).toEqual(sourceInfo);
+        expect(
+          yield* RA.inspectExpectedSourceFile(
+            { ...object, expectedSizeBytes: object.expectedSizeBytes + 1 },
+            "source changed"
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.inspectArchiveAttemptSource(
+            { ...object, expectedSizeBytes: object.expectedSizeBytes + 1 },
+            true
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
+        const sourceRootInfo = yield* fs.stat(sourceRoot);
+        expect(
+          yield* RA.inspectExpectedSourceDirectory(
+            {
+              destinationRelativePath: "payload/tree",
+              expectedInfo: { ...RA.sourceIdentity(sourceRootInfo), mode: Number(sourceRootInfo.mode) + 1 },
+              objectId: "directory-object",
+              sourceLabel: "tree",
+              sourceRelativePath: ".",
+            },
+            sourceRoot
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        const linkedDirectory = path.join(sourceRoot, "linked-directory");
+        yield* fs.symlink(destinationDirectory, linkedDirectory);
+        expect(
+          yield* RA.inspectExpectedSourceDirectory(
+            {
+              destinationRelativePath: "payload/linked-directory",
+              expectedInfo: RA.sourceIdentity(yield* fs.stat(destinationDirectory)),
+              objectId: "linked-directory-object",
+              sourceLabel: "tree",
+              sourceRelativePath: "linked-directory",
+            },
+            sourceRoot
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
+        const context = {
+          attemptId: "attempt-1",
+          chunkSize: 2,
+          destinationDirectory,
+          destinationPath,
+          manifestPath: path.join(root, "manifest.jsonl"),
+          object,
+          partialPath,
+          runId: "run-1",
+        };
+        yield* fs.remove(destinationPath);
+        yield* fs.link(sourcePath, destinationPath);
+        expect(yield* RA.reconcileCompleteArchiveDestination(context, sourceInfo).pipe(Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
+        yield* fs.remove(destinationPath);
+        yield* fs.remove(partialPath);
+        yield* fs.link(sourcePath, partialPath);
+        expect(yield* RA.resumableArchiveOffset(context, sourceInfo).pipe(Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
+        yield* fs.remove(partialPath);
+        yield* fs.writeFileString(partialPath, "source-bytes-with-extra-data");
+        expect(yield* RA.resumableArchiveOffset(context, sourceInfo)).toMatchObject({ resumeBytes: 0 });
+        yield* fs.writeFileString(partialPath, "partial");
+
+        const cleanPartialInfo = yield* fs.stat(partialPath);
+        expect(
+          yield* RA.validateOpenedArchiveCopy(
+            { ...context, object: { ...object, expectedInfo: { ...object.expectedInfo, sizeBytes: 1 } } },
+            { expectedInfo: O.none(), resumeBytes: 0 },
+            sourceInfo,
+            cleanPartialInfo
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.validateOpenedArchiveCopy(
+            context,
+            { expectedInfo: O.none(), resumeBytes: 0 },
+            sourceInfo,
+            yield* fs.stat(destinationDirectory)
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.validateOpenedArchiveCopy(
+            context,
+            { expectedInfo: O.some({ ...RA.sourceIdentity(cleanPartialInfo), sizeBytes: 1 }), resumeBytes: 0 },
+            sourceInfo,
+            cleanPartialInfo
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.validateOpenedArchiveCopy(
+            context,
+            { expectedInfo: O.none(), resumeBytes: 0 },
+            sourceInfo,
+            destinationInfo
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.validateOpenedArchiveCopy(
+            { ...context, partialPath: sourcePath },
+            { expectedInfo: O.none(), resumeBytes: 0 },
+            sourceInfo,
+            sourceInfo
+          ).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
 });
