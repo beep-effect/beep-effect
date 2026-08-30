@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-30T20:19:26.221Z",
+  "generatedAt": "2026-08-30T21:26:09.391Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -51929,8 +51929,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 180,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-180-docgenissuepriority",
+          "line": 181,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-181-docgenissuepriority",
           "currentTags": [
             "@category",
             "@since"
@@ -51951,8 +51951,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-199-docgenissuepriority",
+          "line": 200,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-200-docgenissuepriority",
           "currentTags": [
             "@category",
             "@since"
@@ -51973,8 +51973,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 214,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-214-docgenexportkind",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-215-docgenexportkind",
           "currentTags": [
             "@category",
             "@since"
@@ -51995,8 +51995,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 243,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-243-docgenexportkind",
+          "line": 244,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-244-docgenexportkind",
           "currentTags": [
             "@category",
             "@since"
@@ -52017,8 +52017,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 271,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-271-docgenexportanalysis",
+          "line": 272,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-272-docgenexportanalysis",
           "currentTags": [
             "@category",
             "@since"
@@ -52039,8 +52039,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 313,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-313-docgenanalysissummary",
+          "line": 314,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-314-docgenanalysissummary",
           "currentTags": [
             "@category",
             "@since"
@@ -52061,8 +52061,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 359,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-359-docgenpackageanalysis",
+          "line": 360,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-360-docgenpackageanalysis",
           "currentTags": [
             "@category",
             "@since"
@@ -52083,8 +52083,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-391-docgengenerationresult",
+          "line": 392,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-392-docgengenerationresult",
           "currentTags": [
             "@category",
             "@since"
@@ -52105,8 +52105,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 425,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-425-docgenaggregateresult",
+          "line": 426,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-426-docgenaggregateresult",
           "currentTags": [
             "@category",
             "@since"
@@ -52127,8 +52127,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 461,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-461-isdocgenworkspacepackage",
+          "line": 462,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-462-isdocgenworkspacepackage",
           "currentTags": [
             "@category",
             "@since"
@@ -52149,8 +52149,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 482,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-482-byrelativepathascending",
+          "line": 483,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-483-byrelativepathascending",
           "currentTags": [
             "@category",
             "@since"
@@ -52171,8 +52171,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 509,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-509-bydocsoutputpathascending",
+          "line": 510,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-510-bydocsoutputpathascending",
           "currentTags": [
             "@category",
             "@since"
@@ -52193,8 +52193,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
-          "line": 536,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-536-byissueascending",
+          "line": 537,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-schemas-ts-537-byissueascending",
           "currentTags": [
             "@category",
             "@since"
@@ -212204,8 +212204,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 123,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-123-curationeventgroup",
+          "line": 124,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-124-curationeventgroup",
           "currentTags": [
             "@category",
             "@since"
@@ -212226,8 +212226,8 @@
           "exportKind": "type",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 156,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-156-curationevent",
+          "line": 157,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-157-curationevent",
           "currentTags": [
             "@category",
             "@since"
@@ -212248,8 +212248,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 310,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-310-ontologyevententry",
+          "line": 337,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-337-ontologyevententry",
           "currentTags": [
             "@category",
             "@since"
@@ -212270,8 +212270,8 @@
           "exportKind": "type",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 326,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-326-ontologyevententry",
+          "line": 353,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-353-ontologyevententry",
           "currentTags": [
             "@category",
             "@since"
@@ -212292,8 +212292,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 341,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-341-extractioneventgroup",
+          "line": 373,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-373-extractioneventgroup",
           "currentTags": [
             "@category",
             "@since"
@@ -212314,8 +212314,8 @@
           "exportKind": "type",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 364,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-364-extractionevent",
+          "line": 396,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-396-extractionevent",
           "currentTags": [
             "@category",
             "@since"
@@ -212336,8 +212336,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 379,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-379-ontologyeventgroups",
+          "line": 411,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-411-ontologyeventgroups",
           "currentTags": [
             "@category",
             "@since"
@@ -212358,8 +212358,8 @@
           "exportKind": "type",
           "filePath": "effect-ontology/Domain/Schema/EventSchema.ts",
           "repoPath": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
-          "line": 387,
-          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-387-ontologyevent",
+          "line": 422,
+          "anchor": "scratchpad-effect-ontology-domain-schema-eventschema-ts-422-ontologyevent",
           "currentTags": [
             "@category",
             "@since"
@@ -233003,8 +233003,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Service/WorkflowOrchestrator.ts",
           "repoPath": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
-          "line": 336,
-          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-336-polltobatchstate",
+          "line": 341,
+          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-341-polltobatchstate",
           "currentTags": [
             "@category",
             "@since"
@@ -233025,8 +233025,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Service/WorkflowOrchestrator.ts",
           "repoPath": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
-          "line": 378,
-          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-378-batchextractionworkflowlayer",
+          "line": 383,
+          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-383-batchextractionworkflowlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -233047,8 +233047,8 @@
           "exportKind": "interface",
           "filePath": "effect-ontology/Service/WorkflowOrchestrator.ts",
           "repoPath": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
-          "line": 1032,
-          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1032-workfloworchestratormethods",
+          "line": 1037,
+          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1037-workfloworchestratormethods",
           "currentTags": [
             "@category",
             "@since"
@@ -233069,8 +233069,8 @@
           "exportKind": "class",
           "filePath": "effect-ontology/Service/WorkflowOrchestrator.ts",
           "repoPath": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
-          "line": 1092,
-          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1092-workfloworchestrator",
+          "line": 1097,
+          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1097-workfloworchestrator",
           "currentTags": [
             "@category",
             "@since"
@@ -233091,8 +233091,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Service/WorkflowOrchestrator.ts",
           "repoPath": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
-          "line": 1123,
-          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1123-makeworkfloworchestrator",
+          "line": 1128,
+          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1128-makeworkfloworchestrator",
           "currentTags": [
             "@category",
             "@since"
@@ -233113,8 +233113,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Service/WorkflowOrchestrator.ts",
           "repoPath": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
-          "line": 1180,
-          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1180-workfloworchestratorlive",
+          "line": 1185,
+          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1185-workfloworchestratorlive",
           "currentTags": [
             "@category",
             "@since"
@@ -233135,8 +233135,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Service/WorkflowOrchestrator.ts",
           "repoPath": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
-          "line": 1213,
-          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1213-workfloworchestratorfulllive",
+          "line": 1218,
+          "anchor": "scratchpad-effect-ontology-service-workfloworchestrator-ts-1218-workfloworchestratorfulllive",
           "currentTags": [
             "@category",
             "@since"

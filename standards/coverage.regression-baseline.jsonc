@@ -20497,15 +20497,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 76.73,
-      "statements": 76.45,
-      "branches": 64.32,
-      "functions": 70.35,
+      "lines": 78.79,
+      "statements": 78.59,
+      "branches": 67.84,
+      "functions": 72.62,
       "uncovered": {
-        "lines": 8283,
-        "statements": 8763,
-        "branches": 4752,
-        "functions": 3200
+        "lines": 8298,
+        "statements": 8772,
+        "branches": 4745,
+        "functions": 3202
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21205,33 +21205,33 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Corpus/Corpus.command.ts": {
-          "lines": 65.21,
-          "statements": 63.82,
+          "lines": 69.09,
+          "statements": 67.85,
           "branches": 0,
-          "functions": 0,
+          "functions": 4.54,
           "uncovered": {
-            "lines": 16,
-            "statements": 17,
+            "lines": 34,
+            "statements": 36,
             "branches": 28,
-            "functions": 8
+            "functions": 21
           }
         },
         "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts": {
           "lines": 100,
-          "statements": 75,
+          "statements": 100,
           "branches": 100,
-          "functions": 0,
+          "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Corpus/Corpus.recyclebin.ts": {
           "lines": 88.6,
           "statements": 88.88,
-          "branches": 63.33,
+          "branches": 65.62,
           "functions": 80.95,
           "uncovered": {
             "lines": 9,
@@ -21253,10 +21253,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts": {
-          "lines": 82.35,
-          "statements": 82.35,
+          "lines": 91.42,
+          "statements": 91.42,
           "branches": 100,
-          "functions": 73.33,
+          "functions": 88.57,
           "uncovered": {
             "lines": 6,
             "statements": 6,
@@ -21420,6 +21420,42 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.contracts.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Corpus/internal/Provenance.ts": {
           "lines": 100,
           "statements": 100,
@@ -21433,6 +21469,42 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -21469,12 +21541,12 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts": {
-          "lines": 66.25,
-          "statements": 66.48,
+          "lines": 66.29,
+          "statements": 66.66,
           "branches": 40.6,
-          "functions": 59.22,
+          "functions": 59.4,
           "uncovered": {
-            "lines": 303,
+            "lines": 305,
             "statements": 313,
             "branches": 177,
             "functions": 95
@@ -21829,13 +21901,13 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts": {
-          "lines": 68.27,
-          "statements": 68.85,
+          "lines": 68.36,
+          "statements": 69.13,
           "branches": 51.35,
-          "functions": 64.44,
+          "functions": 65.59,
           "uncovered": {
-            "lines": 92,
-            "statements": 95,
+            "lines": 93,
+            "statements": 96,
             "branches": 54,
             "functions": 32
           }
@@ -21913,10 +21985,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts": {
-          "lines": 98.79,
-          "statements": 98.79,
-          "branches": 84,
-          "functions": 93.75,
+          "lines": 98.9,
+          "statements": 98.9,
+          "branches": 85.18,
+          "functions": 94.11,
           "uncovered": {
             "lines": 1,
             "statements": 1,
@@ -23605,15 +23677,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
-          "lines": 33.7,
-          "statements": 33.54,
-          "branches": 17.41,
-          "functions": 23.36,
+          "lines": 35.62,
+          "statements": 35.52,
+          "branches": 19.66,
+          "functions": 26.59,
           "uncovered": {
-            "lines": 419,
-            "statements": 428,
-            "branches": 147,
-            "functions": 141
+            "lines": 412,
+            "statements": 421,
+            "branches": 143,
+            "functions": 138
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts": {
@@ -24408,6 +24480,18 @@
             "functions": 2
           }
         },
+        "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/FreeLawProjectVocabulary.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts": {
           "lines": 95.91,
           "statements": 96,
@@ -24433,15 +24517,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/CourtsDb.ts": {
-          "lines": 84.44,
-          "statements": 84.04,
-          "branches": 50,
-          "functions": 80,
+          "lines": 87.7,
+          "statements": 88.09,
+          "branches": 70,
+          "functions": 91.17,
           "uncovered": {
-            "lines": 14,
+            "lines": 15,
             "statements": 15,
             "branches": 3,
-            "functions": 5
+            "functions": 3
           }
         },
         "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/IanaMediaTypes.ts": {
@@ -24493,15 +24577,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/ReportersDb.ts": {
-          "lines": 78.84,
-          "statements": 78.84,
+          "lines": 85.98,
+          "statements": 86.23,
           "branches": 100,
-          "functions": 40,
+          "functions": 84.61,
           "uncovered": {
-            "lines": 11,
-            "statements": 11,
+            "lines": 15,
+            "statements": 15,
             "branches": 0,
-            "functions": 3
+            "functions": 4
           }
         },
         "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts": {
@@ -24877,8 +24961,8 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts": {
-          "lines": 51.94,
-          "statements": 50.6,
+          "lines": 51.63,
+          "statements": 50.3,
           "branches": 23.25,
           "functions": 35.41,
           "uncovered": {
@@ -24886,6 +24970,18 @@
             "statements": 82,
             "branches": 33,
             "functions": 31
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.constants.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.errors.ts": {
@@ -25285,15 +25381,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PrLease.ts": {
-          "lines": 91.02,
-          "statements": 87.57,
-          "branches": 71.79,
-          "functions": 84.37,
+          "lines": 92.3,
+          "statements": 89.34,
+          "branches": 76.92,
+          "functions": 87.5,
           "uncovered": {
-            "lines": 14,
-            "statements": 21,
-            "branches": 22,
-            "functions": 5
+            "lines": 12,
+            "statements": 18,
+            "branches": 18,
+            "functions": 4
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
@@ -25681,14 +25777,14 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts": {
-          "lines": 84.15,
-          "statements": 83,
-          "branches": 81.11,
+          "lines": 84.65,
+          "statements": 83.49,
+          "branches": 82.22,
           "functions": 66.66,
           "uncovered": {
-            "lines": 32,
-            "statements": 35,
-            "branches": 17,
+            "lines": 31,
+            "statements": 34,
+            "branches": 16,
             "functions": 17
           }
         },
@@ -26053,10 +26149,10 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/process/StepExec.ts": {
-          "lines": 96.73,
-          "statements": 96.25,
-          "branches": 94.5,
-          "functions": 94,
+          "lines": 96.79,
+          "statements": 96.31,
+          "branches": 94.73,
+          "functions": 94.11,
           "uncovered": {
             "lines": 5,
             "statements": 6,
@@ -26173,15 +26269,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 89.03,
-          "statements": 89.08,
+          "lines": 89.66,
+          "statements": 89.47,
           "branches": 83.03,
-          "functions": 81.42,
+          "functions": 83.33,
           "uncovered": {
-            "lines": 43,
-            "statements": 44,
+            "lines": 40,
+            "statements": 42,
             "branches": 19,
-            "functions": 26
+            "functions": 23
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {
@@ -26281,15 +26377,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
-          "lines": 92.52,
-          "statements": 91.02,
-          "branches": 80.61,
-          "functions": 88.65,
+          "lines": 94.89,
+          "statements": 94.34,
+          "branches": 87.76,
+          "functions": 94.26,
           "uncovered": {
-            "lines": 21,
-            "statements": 27,
-            "branches": 19,
-            "functions": 11
+            "lines": 24,
+            "statements": 28,
+            "branches": 23,
+            "functions": 9
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {
@@ -26413,6 +26509,18 @@
           }
         },
         "packages/tooling/tool/cli/src/test/Codex.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/test/Corpus.test-kit.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
