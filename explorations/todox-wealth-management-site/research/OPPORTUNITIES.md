@@ -1,5 +1,19 @@
 # Opportunities
 
+## 2026-08-30 - start-pr-early could not reuse an already-pushed clean head
+
+- **Work:** Open the Todox pull request with Yeet's `--start-pr-early` path
+  after the reviewed commit had already been pushed manually.
+- **Evidence:** The publish plan still included a commit step, while the
+  executor accepts an existing clean commit only when it is ahead of
+  `origin/<branch>`; local `HEAD` and `origin/todox-init` were identical.
+- **Impact:** Opening the PR through the requested canonical path required a
+  fresh base merge or another reviewed commit before Yeet could establish a
+  publish intent.
+- **Prevention:** Let `--start-pr-early --pr` reuse an exact clean remote head
+  for PR creation, or expose an explicit open-PR-only mode that retains the
+  same preflight and monitoring contract.
+
 ## 2026-08-30 - scheduler wait hint omitted a required flag
 
 - **Work:** Inspect a live Yeet scheduler holder after the verification wait
