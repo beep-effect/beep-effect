@@ -24,12 +24,15 @@ import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { describe, expect, it } from "vitest";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
+
+const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>): void =>
+  it(name, () => Effect.runPromise(program()));
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -73,9 +76,14 @@ const blockedMergeReady = YeetMergeReady.make({
   ready: false,
   failing: O.some("threads-resolved"),
   criteria: YeetMergeReadyCriteria.make({
+    prOpen: true,
+    notDraft: true,
     closeoutRun: true,
-    checksGreen: true,
+    requiredChecksGreen: true,
     threadsResolved: false,
+    mergeable: true,
+    mergeStateAcceptable: true,
+    reviewDecisionAcceptable: true,
     greptileScore: O.some("5/5"),
   }),
 });
@@ -99,7 +107,7 @@ const readVerdictArtifact = Effect.fnUntraced(function* (context: RepoRunContext
 // could no longer decode what the writer had emitted. These assert the bytes
 // that actually landed on disk.
 describe("writeRunVerdict", () => {
-  it.effect("writes a verdict file that decodes back through YeetVerdictJson", () =>
+  itEffect("writes a verdict file that decodes back through YeetVerdictJson", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const context = contextForRoot(tmpDir);
@@ -132,7 +140,7 @@ describe("writeRunVerdict", () => {
     )
   );
 
-  it.effect("omits merge readiness from the artifact when no status snapshot was read", () =>
+  itEffect("omits merge readiness from the artifact when no status snapshot was read", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const context = contextForRoot(tmpDir);
@@ -179,7 +187,7 @@ const closeoutReportWith = (reviewedHeadSha: O.Option<string>): PrCloseoutReport
   });
 
 describe("writePrCloseoutReport", () => {
-  it.effect("writes a closeout file whose reviewedHeadSha decodes back as a plain string", () =>
+  itEffect("writes a closeout file whose reviewedHeadSha decodes back as a plain string", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const fs = yield* FileSystem.FileSystem;
@@ -199,7 +207,7 @@ describe("writePrCloseoutReport", () => {
     )
   );
 
-  it.effect("omits reviewedHeadSha from the artifact when no head was recorded", () =>
+  itEffect("omits reviewedHeadSha from the artifact when no head was recorded", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const fs = yield* FileSystem.FileSystem;
@@ -218,7 +226,7 @@ describe("writePrCloseoutReport", () => {
 });
 
 describe("writeYeetStatusSnapshot", () => {
-  it.effect("writes a status file that decodes back through YeetStatusSnapshotJson", () =>
+  itEffect("writes a status file that decodes back through YeetStatusSnapshotJson", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const fs = yield* FileSystem.FileSystem;

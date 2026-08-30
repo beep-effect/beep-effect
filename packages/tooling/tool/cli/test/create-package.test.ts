@@ -188,12 +188,14 @@ const ExpectedGeneratedQualityScripts = {
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:audit":
-    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
   "beep:build": "tsc -p tsconfig.json && bun run babel",
   "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+  "beep:docgen": expect.any(String),
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
+  "beep:policy": expect.any(String),
   "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
   "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
   build: "bun run beep:build",
@@ -587,7 +589,7 @@ describe("create-package", { concurrent: false }, () => {
               yield* readJsonFile(path.join(rootDir, "packages", "example-domain", "package.json"))
             );
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
-            expect(generatedPackage.scripts.docgen).toBe("bunx --bun --no-install docgen");
+            expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
             expect(generatedPackage.scripts.codegen).toBeUndefined();
             expect(yield* fs.exists(path.join(rootDir, "packages", "example-domain", "ai-context.md"))).toBe(false);
 
@@ -911,7 +913,7 @@ describe("create-package", { concurrent: false }, () => {
             );
 
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
-            expect(generatedPackage.scripts.docgen).toBe("bunx --bun --no-install docgen");
+            expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
             expect(generatedPackage.exports).toMatchObject({
               ".": "./src/index.ts",
               "./package.json": "./package.json",
@@ -967,7 +969,7 @@ describe("create-package", { concurrent: false }, () => {
               kind: "modeling",
             });
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
-            expect(generatedPackage.scripts.docgen).toBe("bunx --bun --no-install docgen");
+            expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
             const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({
@@ -1153,7 +1155,7 @@ describe("create-package", { concurrent: false }, () => {
                 family: "tooling",
                 kind: "library",
               });
-              expect(generatedPackage.scripts.docgen).toBe("bunx --bun --no-install docgen");
+              expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
               const packageRefs = decodeTsconfigReferences(
                 yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
@@ -1213,7 +1215,7 @@ describe("create-package", { concurrent: false }, () => {
                 family: "drivers",
               });
               expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
-              expect(generatedPackage.scripts.docgen).toBe("bunx --bun --no-install docgen");
+              expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
               const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
               expect(rootTsconfig.compilerOptions.paths).toMatchObject({
@@ -1296,7 +1298,7 @@ describe("create-package", { concurrent: false }, () => {
               expect(generatedPackage.bundleDependencies).toBeUndefined();
               expect(generatedPackage.devDependencies.effect).toBe("catalog:");
               expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
-              expect(generatedPackage.scripts.docgen).toBe("bunx --bun --no-install docgen");
+              expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
               const ecosystemPackageDir = path.join(rootDir, "packages", "ecosystem", "portable-effect");
               const productionTsconfig = decodeEcosystemProductionTsconfig(

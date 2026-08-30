@@ -5,11 +5,12 @@
  * @since 0.0.0
  */
 
+import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
-import { Clock, Console, Crypto, DateTime, Duration, Effect, FileSystem, Path, pipe, Ref } from "effect";
+import { Clock, Console, Crypto, DateTime, Duration, Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -37,6 +38,7 @@ import {
   artifactDirForContext,
   runIdForContext,
   runArtifactPathForContext as runOutputPathForContext,
+  safeArtifactName,
 } from "./ArtifactPaths.ts";
 import { appendYeetAttemptJournalEvent, YeetAttemptFinished, YeetAttemptStarted } from "./AttemptJournal.ts";
 import { PrCloseoutOptions, PrCloseoutReportJson, runPrCloseout } from "./Closeout.ts";
@@ -64,6 +66,7 @@ import {
   writeIssueArtifacts,
   writeTextFile,
 } from "./IssueArtifacts.ts";
+import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "./LocalShardPoison.ts";
 import { installYeetMergePreview, withYeetMergePreview, yeetMergedPreviewContext } from "./MergedPreview.ts";
 import {
   awaitYeetCheckRegistration,
@@ -74,12 +77,14 @@ import {
 import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import {
   buildYeetRunPlanWithMode,
+  CI_PARITY_STEP_ID,
   emptyTurboPlanSnapshot,
   YeetProofTier,
   YeetRunMode,
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
+import { retirePublishedPrLease, retirePublishedPrLeaseReceipt, writePublishedPrLease } from "./PrLease.ts";
 import {
   acquireFullProofLock,
   acquireFullProofLockOrObserveAtPath,
@@ -120,6 +125,33 @@ import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdic
 export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Handler");
+
+const isNamedLocalProofShard = (step: RepoPlanStep): boolean =>
+  step.mutability === "readonly" && (step.phase === "feedback" || step.phase === "full");
+
+const recordLocalShardOutcome = Effect.fn("Yeet.recordLocalShardOutcome")(function* (
+  context: RepoRunContext,
+  step: RepoPlanStep,
+  result: RepoStepRunResult
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  if (!isNamedLocalProofShard(step)) {
+    return;
+  }
+
+  yield* recordYeetLocalShardOutcome(
+    context.repoRoot,
+    YeetLocalShardOutcome.make({
+      command: result.commandText,
+      exitCode: result.exitCode,
+      headSha: yield* currentCommitSha(context),
+      shard: step.id,
+    })
+  );
+});
 
 /**
  * The three repository coordinates every yeet run context needs before any
@@ -236,13 +268,49 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
   });
 });
 
+const executeMeasuredStep = Effect.fn("Yeet.executeMeasuredStep")(function* (
+  context: RepoRunContext,
+  step: RepoPlanStep
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  if (!(yield* fs.exists("/usr/bin/time").pipe(Effect.orElseSucceed(() => false)))) {
+    return yield* executeStepWithArtifacts(context, step);
+  }
+  const artifactDir = yield* artifactDirForContext(context);
+  const rssDir = path.join(artifactDir, "rss");
+  const rssPath = path.join(rssDir, `${safeArtifactName(step.id)}-${randomUUID()}.txt`);
+  yield* fs.makeDirectory(rssDir, { recursive: true });
+  const measuredStep = RepoPlanStep.make({
+    ...step,
+    command: "/usr/bin/time",
+    args: ["-f", "%M", "-o", rssPath, "--", step.command, ...step.args],
+  });
+  const result = yield* executeStepWithArtifacts(context, measuredStep);
+  const peakRssKb = yield* fs.readFileString(rssPath).pipe(
+    Effect.map(Str.trim),
+    Effect.map((value) => globalThis.Number.parseInt(value, 10)),
+    Effect.option,
+    Effect.map(O.filter(globalThis.Number.isFinite))
+  );
+  yield* fs.remove(rssPath).pipe(Effect.ignore);
+  return RepoStepRunResult.make({
+    ...result,
+    commandText: commandTextForStep(step),
+    ...O.getSomesStruct({ peakRssKb }),
+  });
+});
+
 const runPhaseStep = Effect.fn("Yeet.runPhaseStep")(function* (
   context: RepoRunContext,
   step: RepoPlanStep,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
 ) {
   const fallbackStartedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const [duration, result] = yield* executeStepWithArtifacts(context, step).pipe(Effect.timed);
+  const [duration, result] = yield* executeMeasuredStep(context, step).pipe(
+    Effect.mapError(YeetCommandError.new(`RSS-instrumented ${step.id} failed.`)),
+    Effect.timed
+  );
   const fallbackEndedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const elapsedMs = result.elapsedMs ?? Duration.toMillis(duration);
   const timedResult = RepoStepRunResult.make({
@@ -252,7 +320,30 @@ const runPhaseStep = Effect.fn("Yeet.runPhaseStep")(function* (
     elapsedMs,
   });
   yield* Ref.update(recorder, A.append(YeetExecutedStep.make({ durationMs: elapsedMs, result: timedResult, step })));
+  yield* recordLocalShardOutcome(context, step, timedResult).pipe(
+    Effect.catch((error) =>
+      Console.error(`[yeet] failed to update the local-shard inbox for ${step.id}: ${error.message}`)
+    )
+  );
   return timedResult;
+});
+
+const runCiParityStep = Effect.fn("Yeet.runCiParityStep")(function* (
+  context: RepoRunContext,
+  step: RepoPlanStep,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
+) {
+  return yield* withYeetMergePreview(
+    context,
+    Effect.fnUntraced(function* (preview) {
+      yield* Console.log(
+        `[yeet] CI parity on merge preview ${Str.takeLeft(12)(preview.commitSha)} against ${Str.takeLeft(12)(preview.baseSha)}`
+      );
+      yield* installYeetMergePreview(context, preview.worktreePath);
+      const previewStep = RepoPlanStep.make({ ...step, cwd: preview.worktreePath });
+      return yield* runPhaseStep(context, previewStep, recorder);
+    })
+  );
 });
 
 const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
@@ -266,7 +357,9 @@ const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
 > {
   let results = A.empty<RepoStepRunResult>();
   for (const step of steps) {
-    const result = yield* runPhaseStep(context, step, recorder);
+    const result = yield* step.id === CI_PARITY_STEP_ID
+      ? runCiParityStep(context, step, recorder)
+      : runPhaseStep(context, step, recorder);
     results = A.append(results, result);
     if (result.exitCode !== 0) {
       return results;
@@ -309,9 +402,10 @@ const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator"
   const resolved = intent ?? defaultFullProofAdmissionIntent;
   const path = yield* Path.Path;
   const lockPath = yield* proofLockPathForContext(context);
+  const kind = A.some(proofSteps, (step) => step.id === CI_PARITY_STEP_ID) ? "merged-preview" : "full-proof";
   const request = AdmissionRequest.make({
-    kind: "full-proof",
-    weightTokens: admissionTokenWeight("full-proof"),
+    kind,
+    weightTokens: admissionTokenWeight(kind),
     priority: resolved.priority,
     originKey: path.basename(lockPath, ".lock"),
     checkoutRoot: context.repoRoot,
@@ -459,6 +553,34 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
   if (A.some(results, (result) => result.exitCode !== 0)) {
     return yield* failWithIssueArtifacts(context, steps, results, failureMessage);
   }
+});
+
+const runRequiredProofPhase = Effect.fn("Yeet.runRequiredProofPhase")(function* (
+  context: RepoRunContext,
+  steps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  failureMessage: string
+) {
+  const results = yield* runProofPhase(context, steps, recorder);
+  if (A.some(results, (result) => result.exitCode !== 0)) {
+    return yield* failWithIssueArtifacts(context, steps, results, failureMessage);
+  }
+  yield* writeVerifiedState(context, "full", steps);
+});
+
+const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(function* (
+  context: RepoRunContext,
+  steps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
+) {
+  yield* ensurePullRequest(
+    context,
+    recorder,
+    A.findFirst(steps, (step) => step.id === "publish:02-pr-create")
+  );
+  return yield* writePublishedPrLease(context).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to persist the published-PR ownership lease."))
+  );
 });
 
 const reusablePublishMaySkipCommit = (options: YeetRunOptions): boolean =>
@@ -624,7 +746,6 @@ const preparePublishCommit = Effect.fn("Yeet.preparePublishCommit")(function* (
 
 const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhases")(function* (
   plan: RepoRunPlan,
-  options: YeetRunOptions,
   fullSteps: ReadonlyArray<RepoPlanStep>,
   earlyPublishSteps: ReadonlyArray<RepoPlanStep>,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
@@ -635,53 +756,51 @@ const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhase
   yield* Console.log(
     "[yeet] start-pr-early: pushing before local proof; full proof and hosted monitor remain required"
   );
-  yield* runWithFullProofCoordinator(
+  const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
+  yield* runRequiredPhase(
     plan.context,
-    fullSteps,
-    Effect.gen(function* () {
-      const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
-      yield* runRequiredPhase(
-        plan.context,
-        preflightSteps,
-        recorder,
-        "yeet clean-HEAD install preflight failed before the early push."
-      );
-      yield* warnOnMismatchedPublishUpstream(plan.context);
-      const earlyPushSteps = A.filter(
-        earlyPublishSteps,
-        (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
-      );
-      const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
-      if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
-        return yield* failWithIssueArtifacts(
-          plan.context,
-          earlyPushSteps,
-          earlyPublishResults,
-          "yeet start-pr-early push phase failed."
-        );
-      }
-      if (options.pr) {
-        yield* ensurePullRequest(
-          plan.context,
-          recorder,
-          A.findFirst(plan.steps, (step) => step.id === "publish:02-pr-create")
-        );
-      }
-      const fullResults = yield* runProofPhase(plan.context, fullSteps, recorder);
-      if (A.some(fullResults, (result) => result.exitCode !== 0)) {
-        return yield* failWithIssueArtifacts(
+    preflightSteps,
+    recorder,
+    "yeet clean-HEAD install preflight failed before the early push."
+  );
+  yield* warnOnMismatchedPublishUpstream(plan.context);
+  const earlyPushSteps = A.filter(
+    earlyPublishSteps,
+    (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+  );
+  const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
+  if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
+    return yield* failWithIssueArtifacts(
+      plan.context,
+      earlyPushSteps,
+      earlyPublishResults,
+      "yeet start-pr-early push phase failed."
+    );
+  }
+  const publishedLease = yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
+  return yield* Effect.gen(function* () {
+    yield* runWithFullProofCoordinator(
+      plan.context,
+      fullSteps,
+      Effect.gen(function* () {
+        yield* runRequiredProofPhase(
           plan.context,
           fullSteps,
-          fullResults,
+          recorder,
           "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
         );
-      }
-      yield* writeVerifiedState(plan.context, "full", fullSteps);
-      yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
-    }),
-    { priority: "publish" }
+        yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
+      }),
+      { priority: "publish" }
+    );
+    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+  }).pipe(
+    Effect.onExit((exit) =>
+      Exit.isFailure(exit)
+        ? retirePublishedPrLeaseReceipt(plan.context, publishedLease, "start-pr-early-failed")
+        : Effect.void
+    )
   );
-  return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
 });
 
 const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(function* (
@@ -734,11 +853,7 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
     return yield* failWithIssueArtifacts(plan.context, pushSteps, publishResults, "yeet publish phase failed.");
   }
   if (options.pr) {
-    yield* ensurePullRequest(
-      plan.context,
-      recorder,
-      A.findFirst(plan.steps, (step) => step.id === "publish:02-pr-create")
-    );
+    yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
   }
   return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
 });
@@ -775,16 +890,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   );
 
   const runPostCommitPhases = options.startPrEarly
-    ? runStartPrEarlyPublishPhases(
-        plan,
-        options,
-        fullSteps,
-        earlyPublishSteps,
-        monitorSteps,
-        recorder,
-        extras,
-        skipCommit
-      )
+    ? runStartPrEarlyPublishPhases(plan, fullSteps, earlyPublishSteps, monitorSteps, recorder, extras, skipCommit)
     : runStandardPublishPhases(plan, options, fullSteps, publishSteps, monitorSteps, recorder, extras, skipCommit);
 
   return yield* pipe(
@@ -842,6 +948,25 @@ const runPrePushHookMode = Effect.fn("Yeet.runPrePushHookMode")(function* (
   return yield* emptyPlanResult(context);
 });
 
+const retireTerminalPrLease = Effect.fn("Yeet.retireTerminalPrLease")(function* (
+  context: RepoRunContext,
+  snapshot: YeetStatusSnapshot
+) {
+  const remoteState = Str.toUpperCase(snapshot.remote.state ?? "");
+  if (A.contains(["MERGED", "CLOSED"], remoteState)) {
+    const target = O.all({
+      headSha: snapshot.remote.headSha,
+      prNumber: O.fromUndefinedOr(snapshot.remote.number),
+    });
+    if (O.isNone(target)) {
+      return yield* YeetCommandError.make({
+        message: `Cannot retire the ${Str.toLowerCase(remoteState)} PR lease without its exact PR number and head SHA.`,
+      });
+    }
+    yield* retirePublishedPrLease(context, target.value.prNumber, target.value.headSha, Str.toLowerCase(remoteState));
+  }
+});
+
 const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
   context: RepoRunContext,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
@@ -856,6 +981,7 @@ const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
     Effect.catch((error) => failWithRerunGuidance(context, error))
   );
   const snapshot = yield* printOperatorStatusSummary(context, true);
+  yield* retireTerminalPrLease(context, snapshot);
   yield* Ref.update(extras, (state) => ({ ...state, mergeReady: snapshot.mergeReady }));
   yield* assertNoUnresolvedReviewThreads(snapshot);
   return yield* emptyPlanResult(context);
@@ -1017,6 +1143,7 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
   );
   if (!A.isReadonlyArrayEmpty(monitorSteps)) {
     const snapshot = yield* printOperatorStatusSummary(context, true);
+    yield* retireTerminalPrLease(context, snapshot);
     yield* Ref.update(extras, (state) => ({ ...state, mergeReady: snapshot.mergeReady }));
     yield* assertNoUnresolvedReviewThreads(snapshot);
   }
@@ -1551,6 +1678,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   }
   const modeOptions = YeetRunPlanModeOptions.make({
     amend: options.amend,
+    ciParity: options.ciParity,
     collectAll: options.collectAll,
     fast: options.fast,
     forceTurbo,
@@ -1587,6 +1715,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
 export class BuildYeetRunPlanTestOptions extends S.Class<BuildYeetRunPlanTestOptions>($I`BuildYeetRunPlanTestOptions`)(
   {
     amend: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    ciParity: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     collectAll: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     context: RepoRunContext,
     fast: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
@@ -1623,6 +1752,7 @@ export const buildYeetRunPlanForTesting = (
     normalized.message,
     YeetRunPlanModeOptions.make({
       amend: normalized.amend,
+      ciParity: normalized.ciParity,
       collectAll: normalized.collectAll,
       fast: normalized.fast,
       forceTurbo: normalized.forceTurbo,

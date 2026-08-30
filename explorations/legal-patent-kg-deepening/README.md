@@ -2,8 +2,10 @@
 
 ## Status
 
-Stage: `align`
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
+Stage: `graduate`
 Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
