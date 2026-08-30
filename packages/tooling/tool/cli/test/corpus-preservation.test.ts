@@ -535,6 +535,38 @@ describe("T7 corpus preservation", () => {
         const complete = yield* writer.archiveObject(source, freshDest, identity);
         expect(complete.kind).toBe("already-complete");
 
+        const settleMutationSource = path.join(root, "settle-mutation-source.bin");
+        const settleMutationDest = path.join(root, "archive", "settle-mutation.bin");
+        const settleMutationTimestamp = 1_787_850_002;
+        yield* fs.writeFile(settleMutationSource, new Uint8Array([1, 2, 3]));
+        yield* fs.writeFile(settleMutationDest, new Uint8Array([1, 2, 3]));
+        yield* fs.utimes(settleMutationSource, settleMutationTimestamp, settleMutationTimestamp);
+        const settleMutationIdentity = yield* identityFor(settleMutationSource, "settle-mutation-source.bin").pipe(
+          Effect.provide(baseContext)
+        );
+        const mutateSettledSource = Effect.fn("CorpusPreservationTest.mutateSettledSource")(function* () {
+          yield* fs.writeFile(settleMutationSource, new Uint8Array([4, 5, 6]));
+          yield* fs.utimes(settleMutationSource, settleMutationTimestamp, settleMutationTimestamp);
+        }, Effect.orDie);
+        const settleMutationFileSystem = FileSystem.FileSystem.of({
+          ...fs,
+          stream: (target, options) => {
+            const streamed = fs.stream(target, options);
+            return Str.Equivalence(target, settleMutationDest)
+              ? streamed.pipe(Stream.ensuring(mutateSettledSource()))
+              : streamed;
+          },
+        });
+        const settleMutationContext = yield* Layer.build(makeArchiveWriterLive()).pipe(
+          Effect.provideService(FileSystem.FileSystem, settleMutationFileSystem),
+          Effect.provide(baseContext)
+        );
+        const settleMutationWriter = yield* ArchiveWriter.pipe(Effect.provide(settleMutationContext));
+        expect(
+          (yield* settleMutationWriter.archiveObject(settleMutationSource, settleMutationDest, settleMutationIdentity))
+            .kind
+        ).toBe("resume-discarded");
+
         for (const race of ["unreadable", "changed"] as const) {
           const raceDest = path.join(root, "archive", `settle-${race}.bin`);
           yield* fs.writeFile(raceDest, sourceBytes);

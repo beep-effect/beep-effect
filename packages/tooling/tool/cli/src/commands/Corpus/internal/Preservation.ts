@@ -455,7 +455,11 @@ const settleFullLengthDestination = Effect.fn("Preservation.settleFullLengthDest
   if (!stabilityEquivalence(statBefore, statAfter.value)) {
     return O.some(changedOutcome(statBefore, statAfter.value));
   }
-  if (!Str.Equivalence(sourceHash.sha256, destHash.sha256)) {
+  const settledSourceHash = yield* hashStream(sourceAbs);
+  if (
+    !Str.Equivalence(sourceHash.sha256, destHash.sha256) ||
+    !Str.Equivalence(sourceHash.sha256, settledSourceHash.sha256)
+  ) {
     return O.none();
   }
   return O.some(
