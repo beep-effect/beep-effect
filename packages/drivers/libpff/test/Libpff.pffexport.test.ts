@@ -5,7 +5,7 @@ import {
   OperationId,
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
-import { ExportArchiveOperation } from "@beep/file-processing/Operation";
+import { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import {
   encodePffexportMessageRecordJson,
   makePffexportFileProcessingEngine,
@@ -21,6 +21,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Encoding, FileSystem, Path, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
 const testLayer = NodeServices.layer;
@@ -156,6 +157,25 @@ const failingStub = `#!/usr/bin/env bash
 exit 2
 `;
 
+const emptyOutputStub = `#!/usr/bin/env bash
+${stubVersionBanner}
+exit 0
+`;
+
+const headersOnlyStub = `#!/usr/bin/env bash
+${stubVersionBanner}
+target=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-t" ]; then target="$arg"; fi
+  prev="$arg"
+done
+item="$target.export/Top of Personal Folders/Inbox/Message00001"
+mkdir -p "$item"
+printf 'Subject:\theaders only\n' > "$item/OutlookHeaders.txt"
+exit 0
+`;
+
 const corruptFailingStub = `#!/usr/bin/env bash
 ${stubVersionBanner}
 printf 'input archive is corrupt\n' >&2
@@ -279,9 +299,12 @@ describe("makePffexportFileProcessingEngine", () => {
     Effect.fnUntraced(
       function* () {
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
-        const engine = yield* makePffexportFileProcessingEngine(
-          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
-        );
+        const config = yield* S.decodeEffect(PffexportEngineConfig)({
+          exportRoot,
+          maxOutputBytes: 1_000_000,
+          pffexportPath: stubPath,
+        });
+        const engine = yield* makePffexportFileProcessingEngine(config);
         const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
         const operationWithoutBytes = ExportArchiveOperation.make({
           ...operation,
@@ -365,6 +388,62 @@ describe("makePffexportFileProcessingEngine", () => {
         );
 
         expect(result.children.length).toBeGreaterThan(0);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "uses a standard-root env interpreter without an additional runtime bind",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const bwrapPath = path.join(path.dirname(stubPath), "standard-env-bwrap");
+        yield* fs.writeFileString(bwrapPath, bwrapStub);
+        yield* fs.chmod(bwrapPath, 0o755);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ bwrapPath: O.some(bwrapPath), exportRoot, pffexportPath: stubPath })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+
+        const result = yield* engine.exportArchive(
+          ExportArchiveOperation.make({ ...operation, source: SourceArtifact.make(sourceWithoutBytes) })
+        );
+
+        expect(result.children.length).toBeGreaterThan(0);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "fails closed when a sandboxed executable cannot be resolved",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const bwrapPath = path.join(path.dirname(stubPath), "unresolved-command-bwrap");
+        yield* fs.writeFileString(bwrapPath, bwrapStub);
+        yield* fs.chmod(bwrapPath, 0o755);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            pffexportPath: "beep-definitely-missing-pffexport",
+          })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+
+        const error = yield* engine
+          .exportArchive(ExportArchiveOperation.make({ ...operation, source: SourceArtifact.make(sourceWithoutBytes) }))
+          .pipe(Effect.flip);
+
+        expect(error.reason).toBe("engine-unavailable");
       },
       Effect.scoped,
       provideTestLayer
@@ -466,6 +545,210 @@ describe("makePffexportFileProcessingEngine", () => {
         );
 
         expect(result.children.length).toBeGreaterThan(0);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects malformed or unavailable sandbox shebang interpreters",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const cases = [
+          ["env-without-command", "#!/usr/bin/env -S", "archive-export-failed"],
+          ["missing-env-command", "#!/usr/bin/env beep-missing-sandbox-runtime", "engine-unavailable"],
+          ["missing-direct-interpreter", "#!/beep/missing/sandbox-runtime", "engine-unavailable"],
+          ["directory-interpreter", "#!$FIXTURE_ROOT", "engine-unavailable"],
+        ] as const;
+
+        for (const [name, shebang, expectedReason] of cases) {
+          const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+          const fixtureRoot = path.dirname(stubPath);
+          const launcherPath = path.join(fixtureRoot, `${name}-pffexport`);
+          const bwrapPath = path.join(fixtureRoot, `${name}-bwrap`);
+          yield* fs.writeFileString(launcherPath, stubPffexport);
+          yield* fs.chmod(launcherPath, 0o755);
+          yield* fs.writeFileString(bwrapPath, bwrapStub);
+          yield* fs.chmod(bwrapPath, 0o755);
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({
+              bwrapPath: O.some(bwrapPath),
+              exportRoot,
+              pffexportPath: launcherPath,
+            })
+          );
+          yield* fs.writeFileString(
+            launcherPath,
+            stubPffexport.replace("#!/usr/bin/env bash", Str.replace("$FIXTURE_ROOT", fixtureRoot)(shebang))
+          );
+          yield* fs.chmod(launcherPath, 0o755);
+          const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+
+          const error = yield* engine
+            .exportArchive(
+              ExportArchiveOperation.make({
+                ...operation,
+                source: SourceArtifact.make(sourceWithoutBytes),
+              })
+            )
+            .pipe(Effect.flip);
+
+          expect(error.reason, name).toBe(expectedReason);
+        }
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "rejects non-file sources without bytes and direct extraction",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+        const { bytes: _bytes, ...sourceWithoutBytes } = operation.source;
+        const syntheticSource = SourceArtifact.make({
+          ...sourceWithoutBytes,
+          locator: ArtifactLocator.make({ kind: "synthetic", value: operation.source.relativePath }),
+        });
+        const exportError = yield* engine
+          .exportArchive(ExportArchiveOperation.make({ ...operation, source: syntheticSource }))
+          .pipe(Effect.flip);
+        const extractError = yield* engine
+          .extract(
+            ExtractFileOperation.make({
+              format: "pst",
+              operationId: operation.operationId,
+              operationKind: "extract",
+              preference: { engine: "libpff" },
+              source: operation.source,
+            })
+          )
+          .pipe(Effect.flip);
+
+        expect(exportError.reason).toBe("archive-export-failed");
+        expect(extractError.reason).toBe("unsupported-file-format");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "reports a successful pffexport run that produces no children",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(emptyOutputStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+
+        const result = yield* engine.exportArchive(operation);
+
+        expect(result.children).toStrictEqual([]);
+        expect(result.warnings).toContain("pffexport produced no exported children for this archive.");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "assembles a headers-only message without an exported body",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(headersOnlyStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+
+        const result = yield* engine.exportArchive(operation);
+
+        expect(result.children.some((child) => child.relativePath.endsWith("/Message.eml"))).toBe(false);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "maps filesystem failures at each export traversal boundary",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        for (const failurePoint of [
+          "makeDirectory",
+          "exists",
+          "readDirectory",
+          "realPath",
+          "stat",
+          "readFileString",
+          "readFile",
+          "writeFile",
+          "writeMessagesJsonl",
+          "sourceSnapshot",
+        ] as const) {
+          const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+          const missingPath = path.join(path.dirname(exportRoot), "missing-for-injected-failure");
+          const injectedFailure = fs.stat(missingPath);
+          const failingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            exists: Effect.fn("LibpffPffexportTest.failingExists")((candidate) =>
+              failurePoint === "exists" && candidate.endsWith(".export")
+                ? injectedFailure.pipe(Effect.as(false))
+                : fs.exists(candidate)
+            ),
+            makeDirectory: Effect.fn("LibpffPffexportTest.failingMakeDirectory")((candidate, options) =>
+              failurePoint === "makeDirectory" && candidate === exportRoot
+                ? injectedFailure.pipe(Effect.asVoid)
+                : fs.makeDirectory(candidate, options)
+            ),
+            readDirectory: Effect.fn("LibpffPffexportTest.failingReadDirectory")((candidate, options) =>
+              failurePoint === "readDirectory" && candidate.endsWith(".export")
+                ? injectedFailure.pipe(Effect.as([]))
+                : fs.readDirectory(candidate, options)
+            ),
+            readFile: Effect.fn("LibpffPffexportTest.failingReadFile")((candidate) =>
+              failurePoint === "readFile" && candidate.endsWith("report.pdf")
+                ? injectedFailure.pipe(Effect.as(new Uint8Array()))
+                : fs.readFile(candidate)
+            ),
+            readFileString: Effect.fn("LibpffPffexportTest.failingReadFileString")((candidate, encoding) =>
+              failurePoint === "readFileString" && candidate.endsWith("OutlookHeaders.txt")
+                ? injectedFailure.pipe(Effect.as(""))
+                : fs.readFileString(candidate, encoding)
+            ),
+            realPath: Effect.fn("LibpffPffexportTest.failingRealPath")((candidate) =>
+              failurePoint === "realPath" && candidate === exportRoot
+                ? injectedFailure.pipe(Effect.as(candidate))
+                : fs.realPath(candidate)
+            ),
+            stat: Effect.fn("LibpffPffexportTest.failingStat")((candidate) =>
+              failurePoint === "stat" && candidate.includes(".export/") ? injectedFailure : fs.stat(candidate)
+            ),
+            writeFile: Effect.fn("LibpffPffexportTest.failingWriteFile")((candidate, data, options) =>
+              (failurePoint === "writeFile" && candidate.endsWith("Message.eml")) ||
+              (failurePoint === "writeMessagesJsonl" && candidate.endsWith(PFFEXPORT_MESSAGES_SUFFIX)) ||
+              (failurePoint === "sourceSnapshot" && candidate.endsWith("source.pst"))
+                ? injectedFailure.pipe(Effect.asVoid)
+                : fs.writeFile(candidate, data, options)
+            ),
+          });
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+          ).pipe(Effect.provideService(FileSystem.FileSystem, failingFileSystem));
+
+          const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+
+          expect(error.reason, failurePoint).toBe("archive-export-failed");
+        }
       },
       Effect.scoped,
       provideTestLayer
@@ -957,6 +1240,30 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(error.details).toStrictEqual({ exitCode: "2", processClassification: "corrupt" });
         expect(error.message).not.toContain("input archive is corrupt");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "classifies password and codepage process diagnostics",
+    Effect.fnUntraced(
+      function* () {
+        for (const [diagnostic, expectedClassification] of [
+          ["archive is password encrypted", "password"],
+          ["unsupported code page", "codepage"],
+        ] as const) {
+          const failingDiagnosticStub = `#!/usr/bin/env bash\n${stubVersionBanner}\nprintf '${diagnostic}\\n' >&2\nexit 2\n`;
+          const { exportRoot, operation, stubPath } = yield* fixture(failingDiagnosticStub);
+          const engine = yield* makePffexportFileProcessingEngine(
+            PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+          );
+
+          const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+
+          expect(error.details).toStrictEqual({ exitCode: "2", processClassification: expectedClassification });
+        }
       },
       Effect.scoped,
       provideTestLayer
