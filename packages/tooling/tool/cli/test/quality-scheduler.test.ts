@@ -12,10 +12,14 @@ import {
   appendAdmissionJournalEvent,
   decodeAdmissionJournalEvent,
   isOvershootLoserForTesting,
+  legacyAdmissionRootsForTesting,
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
+  provideLegacyAdmissionRootsForTesting,
+  provideRuntimeRootForTesting,
   RunScopeRecord,
+  RuntimeRootChoice,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
   withQualityAdmission,
@@ -152,11 +156,11 @@ const withAdmissionTempRoot = Effect.fn("withAdmissionTempRoot")(
       quarantine: path.join(root, "quarantine"),
     };
     return yield* use(tempRoot).pipe(
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
       provideScopedLayer(
         ConfigProvider.layer(
           ConfigProvider.fromUnknown({
             BEEP_RUN_SCOPES: runScopesEnabled ? "1" : "0",
-            XDG_RUNTIME_DIR: runtimeDir,
           })
         )
       ),
@@ -1083,6 +1087,82 @@ describe("quality-scheduler", () => {
                 expect(captured).not.toContain("stop\nagent-run-legacy.scope");
               })
             );
+          })
+        );
+      })
+    ));
+
+  it("reconciles dead scopes under a safe legacy admission root without stopping live legacy work", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const runtimeDirectory = path.dirname(path.dirname(tempRoot.root));
+            const legacyRoot: AdmissionTempRoot = {
+              root: path.join(runtimeDirectory, "legacy", "beep-admit-uid-1000"),
+              leases: path.join(runtimeDirectory, "legacy", "beep-admit-uid-1000", "leases"),
+              queue: path.join(runtimeDirectory, "legacy", "beep-admit-uid-1000", "queue"),
+              quarantine: path.join(runtimeDirectory, "legacy", "beep-admit-uid-1000", "quarantine"),
+            };
+            yield* Effect.forEach(
+              [legacyRoot.root, legacyRoot.leases, legacyRoot.queue, legacyRoot.quarantine],
+              (directory) => fs.makeDirectory(directory, { recursive: true, mode: 0o700 }),
+              { discard: true }
+            );
+            const missingRoot = path.join(runtimeDirectory, "legacy", "missing-root");
+            const incompleteRoot = path.join(runtimeDirectory, "legacy", "incomplete-root");
+            const unsafeRoot = path.join(runtimeDirectory, "legacy", "unsafe-root");
+            yield* fs.makeDirectory(incompleteRoot, { recursive: true, mode: 0o700 });
+            yield* Effect.forEach(
+              [unsafeRoot, path.join(unsafeRoot, "leases"), path.join(unsafeRoot, "queue")],
+              (directory) => fs.makeDirectory(directory, { recursive: true, mode: 0o700 }),
+              { discard: true }
+            );
+            yield* fs.chmod(unsafeRoot, 0o755);
+            const liveLeasePath = yield* writeFakeLease(legacyRoot, {
+              originKey: "legacy-live",
+              runScope: RunScopeRecord.make({
+                unitName: "agent-run-legacy-live.scope",
+                support: "active",
+                attachedPid: process.pid,
+                attachedAt: "2026-08-30T00:00:01Z",
+              }),
+            });
+            const deadLeasePath = yield* writeFakeLease(legacyRoot, {
+              pid: DEAD_PID,
+              procStart: "0",
+              originKey: "legacy-dead",
+              runScope: RunScopeRecord.make({
+                unitName: "agent-run-legacy-dead.scope",
+                support: "active",
+                attachedPid: DEAD_PID,
+                attachedAt: "2026-08-30T00:00:01Z",
+              }),
+            });
+            const binDirectory = path.join(runtimeDirectory, "legacy-bin");
+            const capturePath = path.join(runtimeDirectory, "legacy-systemctl.argv");
+            yield* fs.makeDirectory(binDirectory, { recursive: true });
+            yield* writeExecutable(
+              path.join(binDirectory, "systemctl"),
+              `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\ncase "$2" in\n  list-units) printf 'agent-run-legacy-live.scope loaded active running\\nagent-run-legacy-dead.scope loaded active running\\n' ;;\n  show) printf 'Description=beep-yeet-lease nonce=legacy root=${legacyRoot.root}\\n' ;;\nesac\nexit 0\n`
+            );
+
+            expect(legacyAdmissionRootsForTesting(path, legacyRoot.root)).not.toContain(legacyRoot.root);
+            yield* withPrependedPath(
+              binDirectory,
+              reapAdmissionState({ apply: true }).pipe(
+                provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "run-user", root: runtimeDirectory })),
+                provideLegacyAdmissionRootsForTesting([missingRoot, incompleteRoot, unsafeRoot, legacyRoot.root])
+              )
+            );
+            const captured = yield* fs.readFileString(capturePath);
+            expect(captured).toContain("--user\nstop\nagent-run-legacy-dead.scope\n");
+            expect(captured).not.toContain("stop\nagent-run-legacy-live.scope");
+            expect(yield* fs.exists(liveLeasePath)).toBe(true);
+            expect(yield* fs.exists(deadLeasePath)).toBe(false);
           })
         );
       })

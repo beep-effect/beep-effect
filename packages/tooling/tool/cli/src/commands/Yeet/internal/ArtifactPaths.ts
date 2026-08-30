@@ -6,7 +6,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { hostname, tmpdir, userInfo } from "node:os";
+import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Effect, flow, Path, pipe } from "effect";
@@ -14,7 +14,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
+import { perUserRuntimeRoot } from "../../../internal/repo-run/index.ts";
+import type { FileSystem } from "effect";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
@@ -133,10 +134,15 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
 
 const effectiveUserId = (): number => userInfo().uid;
 
-const proofCoordinatorRuntimeRoot = Effect.fn("Yeet.proofCoordinatorRuntimeRoot")(function* () {
-  const path = yield* Path.Path;
-  const configuredRuntimeRoot = yield* configStringOption("XDG_RUNTIME_DIR");
-  return pipe(configuredRuntimeRoot, O.filter(Str.isNonEmpty), O.filter(path.isAbsolute), O.getOrElse(tmpdir));
+// Locks keep their historical leaf directly under the base root; resolving the
+// base independently of XDG_RUNTIME_DIR makes configured and scrubbed siblings
+// converge on the same coordinator.
+const proofCoordinatorRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Return<
+  string,
+  never,
+  FileSystem.FileSystem | Path.Path
+> {
+  return (yield* perUserRuntimeRoot()).root;
 });
 
 const proofCoordinatorDirectoryName = (): string =>
@@ -151,9 +157,10 @@ const proofCoordinatorDirectoryName = (): string =>
  * path. Equivalent SCP, SSH, HTTPS, and Git URLs therefore share a lock. The
  * normalized identity is hashed before it reaches the path, so a
  * credential-bearing remote URL never appears in a filename. Lock files live
- * under an absolute XDG runtime directory, with an ephemeral system-temporary
- * fallback, and the namespace includes opaque machine identity plus the
- * effective UID.
+ * under the shared per-user coordination root. Resolution probes
+ * `/run/user/<uid>` by creating a child directory and otherwise uses the
+ * uid-suffixed system-temporary fallback. The namespace includes opaque machine
+ * identity plus the effective UID.
  *
  * **Example** (Share a coordinator across checkouts)
  *
@@ -173,7 +180,7 @@ const proofCoordinatorDirectoryName = (): string =>
  */
 export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath")(function* (
   repositoryIdentity: string
-): Effect.fn.Return<string, never, Path.Path> {
+): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const runtimeRoot = yield* proofCoordinatorRuntimeRoot();
   return path.join(
