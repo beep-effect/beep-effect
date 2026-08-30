@@ -7,7 +7,7 @@
 
 import { codeFrameColumns } from "@babel/code-frame";
 import { $RepoDocgenId } from "@beep/identity";
-import { A } from "@beep/utils";
+import * as A from "@beep/utils/Array";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
@@ -53,7 +53,7 @@ const checkEntry = Effect.fn("checkEntry")(function* (
 ) {
   const source = yield* Parser.Source;
   const config = yield* Configuration.Configuration;
-  let errors: Array<string> = [];
+  let errors = A.empty<string>();
 
   if (config.enforceDescriptions && model.doc.description === undefined) {
     errors = A.appendAll(
@@ -316,32 +316,31 @@ export function checkExports(_models: ReadonlyArray<Domain.Export>) {
  * @since 0.0.0
  */
 export function checkModule(module: Domain.Module) {
-  return Effect.scoped(
-    Layer.build(Parser.Source.layer(module.source)).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* Effect.gen(function* () {
-            const functionsErrors = yield* checkFunctions(module.functions);
-            const classesErrors = yield* checkClasses(module.classes);
-            const constantsErrors = yield* checkConstants(module.constants);
-            const interfacesErrors = yield* checkInterfaces(module.interfaces);
-            const typeAliasesErrors = yield* checkTypeAliases(module.typeAliases);
-            const namespacesErrors = yield* checkNamespaces(module.namespaces);
-            const exportsErrors = yield* checkExports(module.exports);
+  return Layer.build(Parser.Source.layer(module.source)).pipe(
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        return yield* Effect.gen(function* () {
+          const functionsErrors = yield* checkFunctions(module.functions);
+          const classesErrors = yield* checkClasses(module.classes);
+          const constantsErrors = yield* checkConstants(module.constants);
+          const interfacesErrors = yield* checkInterfaces(module.interfaces);
+          const typeAliasesErrors = yield* checkTypeAliases(module.typeAliases);
+          const namespacesErrors = yield* checkNamespaces(module.namespaces);
+          const exportsErrors = yield* checkExports(module.exports);
 
-            return A.flatten([
-              functionsErrors,
-              classesErrors,
-              constantsErrors,
-              interfacesErrors,
-              typeAliasesErrors,
-              namespacesErrors,
-              exportsErrors,
-            ]);
-          }).pipe(Effect.provide(context));
-        })
-      )
-    )
+          return A.flatten([
+            functionsErrors,
+            classesErrors,
+            constantsErrors,
+            interfacesErrors,
+            typeAliasesErrors,
+            namespacesErrors,
+            exportsErrors,
+          ]);
+        }).pipe(Effect.provide(context));
+      })
+    ),
+    Effect.scoped
   );
 }
 

@@ -16,7 +16,7 @@
     "build": "tsc -b tsconfig.json && bun run babel",
     "check": "tsgo -b tsconfig.json",
     "coverage": "bunx vitest run --coverage",
-    "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "test": "bunx --bun vitest run",

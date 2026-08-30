@@ -36,12 +36,12 @@ import { CaseReportList, CourtCaseSearchDto, PartyReportList, PartySearchDto, Re
 export const PclHttpApiGroup = HttpApiGroup.make("pcl").add(
   HttpApiEndpoint.post("findCases", "/pcl-public-api/rest/cases/find", {
     payload: CourtCaseSearchDto,
-    query: { page: S.optional(S.FiniteFromString) },
+    query: { page: S.optionalKey(S.FiniteFromString) },
     success: CaseReportList,
   }).annotate(OpenApi.Summary, "Search PACER Case Locator cases."),
   HttpApiEndpoint.post("findParties", "/pcl-public-api/rest/parties/find", {
     payload: PartySearchDto,
-    query: { page: S.optional(S.FiniteFromString) },
+    query: { page: S.optionalKey(S.FiniteFromString) },
     success: PartyReportList,
   }).annotate(OpenApi.Summary, "Search PACER Case Locator parties."),
   HttpApiEndpoint.post("startCaseDownload", "/pcl-public-api/rest/cases/download", {

@@ -45,6 +45,35 @@ const DEFAULT_PACKAGE_TIMEOUT = Duration.seconds(180);
 const DEFAULT_REMEDIATION_PACKET_LIMIT = 25;
 const qualityErrorMessage = (error: unknown): string => errorMessage(error, "Unknown error");
 
+/**
+ * Build the shared fail-first, impact-descending remediation candidate order.
+ *
+ * **Example** (Order candidates by severity and identity)
+ *
+ * ```ts
+ * import { A } from "@beep/utils"
+ * import { docgenPacketCandidateOrder } from "@beep/repo-cli/commands/Docgen/internal/Quality"
+ * import { Order } from "effect"
+ *
+ * const byId = Order.mapInput(Order.String, (candidate: { readonly id: string }) => candidate.id)
+ * const order = docgenPacketCandidateOrder(byId)
+ * const sorted = A.sort([{ id: "b", impact: 1, isFail: false }, { id: "a", impact: 2, isFail: true }], order)
+ * console.log(sorted[0]?.id)
+ * ```
+ *
+ * @param tieBreaker - Stable order applied after failure tier and impact.
+ * @returns Candidate order shared by quality packet producers and worker evaluation.
+ * @category ordering
+ * @since 0.0.0
+ */
+export const docgenPacketCandidateOrder = <Candidate extends { readonly impact: number; readonly isFail: boolean }>(
+  tieBreaker: Order.Order<Candidate>
+): Order.Order<Candidate> =>
+  Order.combine(
+    Order.mapInput(Order.Number, (candidate: Candidate) => (candidate.isFail ? 0 : 1)),
+    Order.combine(Order.flip(Order.mapInput(Order.Number, (candidate: Candidate) => candidate.impact)), tieBreaker)
+  );
+
 const summarizeReviews = (
   packages: number,
   subjects: number,
@@ -129,14 +158,10 @@ class RemediationPacketCandidate extends S.Class<RemediationPacketCandidate>($I`
   })
 ) {}
 
-const packetCandidateOrder: Order.Order<RemediationPacketCandidate> = Order.combine(
-  Order.mapInput(Order.Number, (candidate) => (candidate.isFail ? 0 : 1)),
+const packetCandidateOrder: Order.Order<RemediationPacketCandidate> = docgenPacketCandidateOrder(
   Order.combine(
-    Order.flip(Order.mapInput(Order.Number, (candidate) => candidate.impact)),
-    Order.combine(
-      Order.mapInput(Order.String, (candidate) => candidate.packagePath),
-      Order.mapInput(Order.String, (candidate) => candidate.subjectId)
-    )
+    Order.mapInput(Order.String, (candidate) => candidate.packagePath),
+    Order.mapInput(Order.String, (candidate) => candidate.subjectId)
   )
 );
 

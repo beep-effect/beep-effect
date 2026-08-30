@@ -58,6 +58,23 @@ const writeFixture = Effect.fn("RoadmapRefsTest.writeFixture")(function* (roadma
 
 describe("roadmap-refs lint command", { concurrent: false }, () => {
   it(
+    "accepts deterministic projections that are intentionally absent from Git",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture(
+              "# Roadmap\n\n- [Exploration Atlas](../explorations/ATLAS.md)\n- [Goals index](../goals/INDEX.md)\n"
+            );
+            const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
     "blocks only the dead link and reports phase drift as advisory",
     () =>
       Effect.runPromise(

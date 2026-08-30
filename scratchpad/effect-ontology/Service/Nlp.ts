@@ -17,6 +17,7 @@ import { Tokenization } from "@beep/nlp-processing/Core";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkStringArray } from "@beep/wink/Wink.models";
@@ -54,10 +55,14 @@ const SimilaritySearchResultOrder = Order.mapInput(
 );
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Nlp");
+const NlpIndexKind = LiteralKit(["bm25", "semantic"]).pipe(
+  $I.annoteSchema("NlpIndexKind", {
+    description: "Opaque ontology index implementations accepted by the NLP search service.",
+  })
+);
 
 /**
  * Tokenization result
- *
  *
  * **Example** (Represent tokenized text)
  *
@@ -84,7 +89,6 @@ export class TokenizeResult extends S.Class<TokenizeResult>($I`TokenizeResult`)(
 
 /**
  * BM25 similarity result
- *
  *
  * **Example** (Represent a ranked document)
  *
@@ -233,6 +237,7 @@ export const ChunkOptions = ChunkOptionsInput.pipe(
     decode: SchemaGetter.transform(resolveChunkOptions),
     encode: SchemaGetter.transform(encodeChunkOptions),
   }),
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("ChunkOptions", {
     description: "Optional chunk overrides decoded to one complete canonical strategy parameter set.",
     toArbitrary: () => (fc) => S.toArbitrary(ResolvedChunkOptions)(fc),
@@ -248,8 +253,12 @@ export const ChunkOptions = ChunkOptionsInput.pipe(
 export type ChunkOptions = typeof ChunkOptions.Type;
 
 /**
- * Opaque BM25 index for ontology search
+ * Opaque BM25 index handle for ontology search.
  *
+ * **Details**
+ *
+ * This remains a type-level handle because it owns live mutable hash maps and
+ * an in-memory ontology reference; it is not serializable boundary data.
  *
  * @category type-level
  * @since 0.0.0
@@ -263,8 +272,12 @@ export interface OntologyBM25Index {
 }
 
 /**
- * Opaque semantic index for ontology search
+ * Opaque semantic index handle for ontology search.
  *
+ * **Details**
+ *
+ * This remains a type-level handle because it owns mutable embedding and
+ * domain-model maps plus an in-memory ontology reference.
  *
  * @category type-level
  * @since 0.0.0
@@ -300,7 +313,7 @@ export interface OntologySemanticIndex {
 export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError`)(
   "NlpIndexError",
   {
-    indexKind: S.Literals(["bm25", "semantic"]),
+    indexKind: NlpIndexKind,
     message: S.String,
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
   },
@@ -310,11 +323,15 @@ export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError
 ) {}
 
 const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
-  S.decodeUnknownEffect(WinkStringArray)(value).pipe(
+  WinkStringArray.decodeUnknownEffect(value).pipe(
     Effect.mapError((cause) => WinkTokenizationError.fromCause(cause, operation, { text }))
   );
 
-const OntologySearchResultKind = LiteralKit(["class", "property"]);
+const OntologySearchResultKind = LiteralKit(["class", "property"]).pipe(
+  $I.annoteSchema("OntologySearchResultKind", {
+    description: "Ontology definition kinds returned by text and semantic search.",
+  })
+);
 
 class OntologySearchResultBase extends S.Class<OntologySearchResultBase>($I`OntologySearchResultBase`)(
   {
@@ -446,64 +463,65 @@ const SPEAKER_TURN_PATTERN = /^(?:\[?[A-Z][a-zA-Z\s]+\]?:|[A-Z]{2,}(?:\s+\d+)?:)
  */
 const PARAGRAPH_SEPARATOR = /\n{2,}/;
 
+const makePatternChunker =
+  (boundaryPattern: RegExp) =>
+  (text: string, maxChunkSize: number, _overlapSentences: number): Array<TextChunk> => {
+    const chunks: Array<TextChunk> = [];
+    let chunkIndex = 0;
+
+    const boundaryOffsets: Array<number> = [];
+    const pattern = new RegExp(boundaryPattern.source, boundaryPattern.flags);
+    let match = pattern.exec(text);
+    while (P.isNotNull(match)) {
+      boundaryOffsets.push(match.index);
+      match = pattern.exec(text);
+    }
+
+    if (A.isReadonlyArrayEmpty(boundaryOffsets)) {
+      return chunkBySize(text, maxChunkSize, chunkIndex);
+    }
+
+    const firstBoundaryOffset = boundaryOffsets[0];
+    if (firstBoundaryOffset > 0) {
+      const preText = Str.trim(Str.slice(0, firstBoundaryOffset)(text));
+      if (preText.length > 0) {
+        const preChunks = chunkBySize(preText, maxChunkSize, chunkIndex);
+        for (const chunk of preChunks) {
+          chunks.push(chunk);
+        }
+        chunkIndex += preChunks.length;
+      }
+    }
+
+    for (let index = 0; index < boundaryOffsets.length; index++) {
+      const startOffset = boundaryOffsets[index];
+      const endOffset = boundaryOffsets[index + 1] ?? text.length;
+      const boundaryText = Str.trim(Str.slice(startOffset, endOffset)(text));
+
+      if (Str.isEmpty(boundaryText)) continue;
+
+      if (boundaryText.length <= maxChunkSize) {
+        chunks.push(makeTextChunk(chunkIndex++, boundaryText, startOffset, endOffset));
+      } else {
+        const boundaryChunks = chunkBySize(boundaryText, maxChunkSize, chunkIndex);
+        for (const chunk of boundaryChunks) {
+          chunks.push(
+            makeTextChunk(chunkIndex++, chunk.text, startOffset + chunk.startOffset, startOffset + chunk.endOffset)
+          );
+        }
+      }
+    }
+
+    return chunks;
+  };
+
 /**
  * Chunk text by section headers
  *
  * Splits on markdown headers (##, ###) or numbered sections (1., 1.1).
  * Each section becomes a chunk, with overflow split by sentences.
  */
-function chunkBySections(text: string, maxChunkSize: number, _overlapSentences: number): Array<TextChunk> {
-  const chunks: Array<TextChunk> = [];
-  let chunkIndex = 0;
-
-  // Find all section header positions
-  const headerMatches: Array<{ index: number; match: string }> = [];
-  const pattern = new RegExp(SECTION_HEADER_PATTERN.source, "gm");
-  let match = pattern.exec(text);
-  while (P.isNotNull(match)) {
-    headerMatches.push({ index: match.index, match: match[0] });
-    match = pattern.exec(text);
-  }
-
-  // If no headers found, fall back to simple chunking
-  if (headerMatches.length === 0) {
-    return chunkBySize(text, maxChunkSize, chunkIndex);
-  }
-
-  // Process text before first header
-  if (headerMatches[0].index > 0) {
-    const preText = text.slice(0, headerMatches[0].index).trim();
-    if (preText.length > 0) {
-      const preChunks = chunkBySize(preText, maxChunkSize, chunkIndex);
-      for (const chunk of preChunks) {
-        chunks.push(chunk);
-      }
-      chunkIndex += preChunks.length;
-    }
-  }
-
-  // Process each section
-  for (let i = 0; i < headerMatches.length; i++) {
-    const start = headerMatches[i].index;
-    const end = i < headerMatches.length - 1 ? headerMatches[i + 1].index : text.length;
-    const sectionText = text.slice(start, end).trim();
-
-    if (sectionText.length === 0) continue;
-
-    if (sectionText.length <= maxChunkSize) {
-      chunks.push(makeTextChunk(chunkIndex++, sectionText, start, end));
-    } else {
-      // Section too large - split by sentences within section
-      const sectionChunks = chunkBySize(sectionText, maxChunkSize, chunkIndex);
-      // Adjust offsets relative to section start
-      for (const chunk of sectionChunks) {
-        chunks.push(makeTextChunk(chunkIndex++, chunk.text, start + chunk.startOffset, start + chunk.endOffset));
-      }
-    }
-  }
-
-  return chunks;
-}
+const chunkBySections = makePatternChunker(SECTION_HEADER_PATTERN);
 
 /**
  * Chunk text by speaker turns
@@ -511,57 +529,7 @@ function chunkBySections(text: string, maxChunkSize: number, _overlapSentences: 
  * Splits on speaker patterns like "Name:", "SPEAKER 1:", "[Interviewer]:".
  * Each speaker turn becomes a chunk, with overflow split by sentences.
  */
-function chunkBySpeakerTurns(text: string, maxChunkSize: number, _overlapSentences: number): Array<TextChunk> {
-  const chunks: Array<TextChunk> = [];
-  let chunkIndex = 0;
-
-  // Find all speaker turn positions
-  const turnMatches: Array<{ index: number; match: string }> = [];
-  const pattern = new RegExp(SPEAKER_TURN_PATTERN.source, "gm");
-  let match = pattern.exec(text);
-  while (P.isNotNull(match)) {
-    turnMatches.push({ index: match.index, match: match[0] });
-    match = pattern.exec(text);
-  }
-
-  // If no speaker turns found, fall back to simple chunking
-  if (turnMatches.length === 0) {
-    return chunkBySize(text, maxChunkSize, chunkIndex);
-  }
-
-  // Process text before first speaker turn
-  if (turnMatches[0].index > 0) {
-    const preText = text.slice(0, turnMatches[0].index).trim();
-    if (preText.length > 0) {
-      const preChunks = chunkBySize(preText, maxChunkSize, chunkIndex);
-      for (const chunk of preChunks) {
-        chunks.push(chunk);
-      }
-      chunkIndex += preChunks.length;
-    }
-  }
-
-  // Process each speaker turn
-  for (let i = 0; i < turnMatches.length; i++) {
-    const start = turnMatches[i].index;
-    const end = i < turnMatches.length - 1 ? turnMatches[i + 1].index : text.length;
-    const turnText = text.slice(start, end).trim();
-
-    if (turnText.length === 0) continue;
-
-    if (turnText.length <= maxChunkSize) {
-      chunks.push(makeTextChunk(chunkIndex++, turnText, start, end));
-    } else {
-      // Turn too large - split by sentences
-      const turnChunks = chunkBySize(turnText, maxChunkSize, chunkIndex);
-      for (const chunk of turnChunks) {
-        chunks.push(makeTextChunk(chunkIndex++, chunk.text, start + chunk.startOffset, start + chunk.endOffset));
-      }
-    }
-  }
-
-  return chunks;
-}
+const chunkBySpeakerTurns = makePatternChunker(SPEAKER_TURN_PATTERN);
 
 /**
  * Chunk text by paragraphs
@@ -684,13 +652,18 @@ type WinkSentenceView = {
 /**
  * Provides the nlp service service capability.
  *
- * **Example** (Inspect the default NLP layer)
+ * **Example** (Tokenize through the service)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import { Effect } from "effect"
  * import { NlpService } from "@effect-ontology/Service/Nlp"
  *
- * console.log(Layer.isLayer(NlpService.Default)) // true
+ * const program = Effect.gen(function* () {
+ *   const nlp = yield* NlpService
+ *   return yield* nlp.tokenize("Ada founded Acme.")
+ * }).pipe(Effect.provide(NlpService.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category services
@@ -762,20 +735,24 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           ),
           { concurrency: 5 }
         );
-        const results = pipe(
+
+        return pipe(
           A.getSomes(docEmbeddings),
           A.map(({ doc, embedding: docVector, index }) => {
             const score = embedding.cosineSimilarity(queryVector, docVector);
-            return SimilarityResult.make({ doc, index: NonNegativeInt.make(index), score });
+            return SimilarityResult.make({
+              doc,
+              index: NonNegativeInt.make(index),
+              score,
+            });
           }),
           A.filter((result) => result.score > 0),
           A.sort(SimilaritySearchResultOrder),
           A.take(k)
         );
-        return results;
       }),
       chunkText: Effect.fn("NlpService.chunkText")(function* (text: string, options: typeof ChunkOptions.Encoded = {}) {
-        const decodedOptions = yield* S.decodeEffect(ChunkOptions)(options);
+        const decodedOptions = yield* ChunkOptions.decodeEffect(options);
         const { params, strategy } = decodedOptions;
         const maxChunkSize = params.chunkSize;
         const overlapSentences = params.overlapSentences;
@@ -894,12 +871,11 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         };
         return index;
       }),
-      searchOntologyIndex: (
+      searchOntologyIndex: Effect.fn("NlpService.searchOntologyIndex")(function* (
         index: OntologyBM25Index,
         query: string,
         limit: PosInt = PosInt.make(10)
-      ): Effect.Effect<ReadonlyArray<OntologySearchResult>, NlpIndexError> =>
-        Effect.gen(function* () {
+      ): Effect.fn.Return<ReadonlyArray<OntologySearchResult>, NlpIndexError> {
           const corpusId = index._corpusId;
           const domainModelMap = index._domainModelMap;
           const ontology = index._ontology;
@@ -928,8 +904,8 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
               results.push(makeOntologySearchResult(iriValue, result.score, domainModel.value));
             }
           }
-          return results;
-        }),
+        return results;
+      }),
       createOntologySemanticIndex: Effect.fn("NlpService.createOntologySemanticIndex")(function* (
         ontology: OntologyContext
       ) {
@@ -969,11 +945,11 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         };
         return index;
       }),
-      createOntologySemanticIndexFromPrecomputed: (
+      createOntologySemanticIndexFromPrecomputed: Effect.fn("NlpService.createOntologySemanticIndexFromPrecomputed")(
+        function* (
         ontology: OntologyContext,
         embeddings: OntologyEmbeddings
-      ): Effect.Effect<OntologySemanticIndex> =>
-        Effect.gen(function* () {
+        ): Effect.fn.Return<OntologySemanticIndex> {
           const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>();
           const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
           for (const classEmb of embeddings.classes) {
@@ -1003,7 +979,8 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             _ontology: ontology,
           };
           return index;
-        }),
+        }
+      ),
       searchOntologySemanticIndex: Effect.fn("NlpService.searchOntologySemanticIndex")(function* (
         index: OntologySemanticIndex,
         query: string,

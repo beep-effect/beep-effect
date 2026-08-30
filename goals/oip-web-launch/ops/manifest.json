@@ -30,8 +30,7 @@
     "bun run --cwd apps/oip-web build",
     "bun run --cwd apps/oip-web check",
     "bun run --cwd apps/oip-web test",
-    "bun run --cwd apps/oip-web lint",
-    "bun run --cwd apps/oip-web type-test"
+    "bun run --cwd apps/oip-web lint"
   ],
   "reviewGates": [
     "client-logo-permission",
@@ -74,14 +73,14 @@
   ],
   "proofLane": {
     "lastRun": "2026-07-14",
-    "status": "failed",
-    "browserSmoke": "driver-evidence-pending",
+    "status": "passed-after-driver-rerun",
+    "browserSmoke": "history/outputs/2026-07-14-browser-smoke.md",
     "results": {
-      "build": "failed-environment-port-binding",
+      "build": "passed-after-driver-rerun",
       "check": "passed",
-      "test": "failed-worker-start-timeout",
+      "test": "passed-after-driver-rerun-48-of-48",
       "lint": "passed",
-      "type-test": "failed-script-not-found"
+      "type-test": "reconciled-not-defined"
     }
   },
   "completionGate": {
@@ -100,6 +99,7 @@
   },
   "packetPath": "goals/oip-web-launch",
   "lifecycle": "completed-retained",
-  "reflectionRequired": false,
+  "mergedPullRequest": 401,
+  "reflectionRequired": true,
   "statusNote": "Implementation complete; proof lane re-run 2026-07-14; FINISH disposition rides the portfolio-consolidation PR."
 }

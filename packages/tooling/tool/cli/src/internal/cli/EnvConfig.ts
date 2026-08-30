@@ -19,7 +19,7 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { Config, ConfigProvider, Effect, flow, pipe } from "effect";
+import { Config, ConfigProvider, Effect, flow, MutableHashMap, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
@@ -506,6 +506,13 @@ export const readTurboCacheEnvironmentSync = (): TurboCacheEnvironment =>
     R.fromIterableWith(TurboCacheEnvName.Options, (name) => [name, O.getOrUndefined(configStringOptionSync(name))])
   );
 
+const turboSecretSessionVerdicts = MutableHashMap.empty<string, boolean>();
+
+/** Clear process-local Turbo secret-session probes for isolated tests. */
+export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
+  MutableHashMap.clear(turboSecretSessionVerdicts);
+};
+
 /**
  * Whether a local Turbo secret session can be used at `repoRoot`.
  *
@@ -542,8 +549,29 @@ export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCac
     return false;
   }
 
-  const exitCode = yield* runToExit({ command: "op", args: ["whoami"], cwd: repoRoot, stdio: "ignore" }).pipe(
+  const cacheKey = `${repoRoot}\0${O.getOrElse(ci, () => "")}`;
+  const cached = MutableHashMap.get(turboSecretSessionVerdicts, cacheKey);
+  if (O.isSome(cached)) return cached.value;
+
+  const whoamiExitCode = yield* runToExit({ command: "op", args: ["whoami"], cwd: repoRoot, stdio: "ignore" }).pipe(
     Effect.orElseSucceed(() => 1)
   );
-  return exitCode === 0;
+  if (whoamiExitCode !== 0) {
+    MutableHashMap.set(turboSecretSessionVerdicts, cacheKey, false);
+    return false;
+  }
+
+  // `op whoami` proves only that the desktop/CLI session is alive. Resolve
+  // every `op://` value in the environment through a no-output child so a
+  // stale item or field reference degrades the lane before the real Turbo
+  // command is wrapped. No resolved value is printed or returned.
+  const referenceProbeExitCode = yield* runToExit({
+    command: "op",
+    args: ["run", "--", "/usr/bin/true"],
+    cwd: repoRoot,
+    stdio: "ignore",
+  }).pipe(Effect.orElseSucceed(() => 1));
+  const usable = referenceProbeExitCode === 0;
+  MutableHashMap.set(turboSecretSessionVerdicts, cacheKey, usable);
+  return usable;
 });

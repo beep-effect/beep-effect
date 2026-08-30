@@ -39,7 +39,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingFallback");
 /**
  * Fallback chain configuration
  *
- *
  * **Example** (Create a fallback chain)
  *
  * ```ts
@@ -48,7 +47,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingFallback");
  * console.log(FallbackChainConfig.make({ providers: ["voyage", "nomic"], logFallbacks: true }).providers.length) // 2
  * ```
  *
- * @category type-level
+ * @category configuration
  * @since 0.0.0
  */
 export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`FallbackChainConfig`)(
@@ -64,7 +63,6 @@ export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`Fallbac
 /**
  * Active provider tracking for observability
  *
- *
  * **Example** (Create active-provider state)
  *
  * ```ts
@@ -75,7 +73,7 @@ export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`Fallbac
  * console.log(O.isNone(info.lastFallbackReason)) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ActiveProviderInfo extends S.Class<ActiveProviderInfo>($I`ActiveProviderInfo`)(
@@ -153,9 +151,16 @@ const makeProtectedProvider = (
  * **Example** (Inspect embedding provider fallback live)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { EmbeddingProviderFallbackLive } from "@effect-ontology/Service/EmbeddingFallback"
  *
- * console.log(EmbeddingProviderFallbackLive)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(EmbeddingProviderFallbackLive))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers
@@ -184,7 +189,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 
     // Create Voyage provider if API key is configured
     const voyageApiKey = O.getOrNull(config.embedding.voyageApiKey);
-    const voyageModel = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+    const voyageModel = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({
           message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,
@@ -315,9 +320,16 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
  * **Example** (Inspect embedding provider fallback default)
  *
  * ```ts
+ * import { Effect } from "effect"
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { EmbeddingProviderFallbackDefault } from "@effect-ontology/Service/EmbeddingFallback"
  *
- * console.log(EmbeddingProviderFallbackDefault)
+ * const program = Effect.gen(function* () {
+ *   const provider = yield* EmbeddingProvider
+ *   return provider.metadata.providerId
+ * }).pipe(Effect.provide(EmbeddingProviderFallbackDefault))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

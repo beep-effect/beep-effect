@@ -17,25 +17,37 @@ import { dual2, dual3, dual6 } from "./Dual.ts";
 import { combinedSimilarity, jaccardSimilarity, overlapRatio } from "./String.ts";
 
 /**
- * Get entity neighbors (incoming and outgoing)
+ * Collects incoming and outgoing entity-reference neighbors for one entity.
  *
- * **Details**
+ * **Gotchas**
  *
- * Finds neighbors in both directions:
- * - Outgoing: Entities this entity references (subject -> object)
- * - Incoming: Entities referencing this entity (subject -> object)
+ * Self-references are excluded from both directions.
  *
- * **Example** (Inspect get neighbors)
+ * **Example** (Collect outgoing neighbors and skip self-links)
  *
  * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { Relation, RelationObject } from "@effect-ontology/Domain/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { getNeighbors } from "@effect-ontology/Utils/Similarity"
+ * import { MutableHashSet } from "effect"
  *
- * console.log(getNeighbors)
+ * const worksFor = Relation.make({
+ *   subjectId: EntityId.make("ada_lovelace"),
+ *   predicate: IRI.make("https://schema.org/worksFor"),
+ *   object: RelationObject.cases.EntityReference.make({ value: EntityId.make("analytical_engine") })
+ * })
+ * const sameAsSelf = Relation.make({
+ *   subjectId: EntityId.make("ada_lovelace"),
+ *   predicate: IRI.make("https://schema.org/sameAs"),
+ *   object: RelationObject.cases.EntityReference.make({ value: EntityId.make("ada_lovelace") })
+ * })
+ * const neighbors = getNeighbors("ada_lovelace", [worksFor, sameAsSelf])
+ * console.log(MutableHashSet.has(neighbors.outgoing, "analytical_engine")) // true
+ * console.log(MutableHashSet.size(neighbors.outgoing)) // 1
  * ```
  *
- * @param entityId - Entity ID to find neighbors for
- * @param relations - Array of relations to search
- * @returns Object with Sets of incoming and outgoing neighbor IDs
+ * @see {@link computeEntitySimilarity} for using these neighborhoods in a weighted score.
  * @category utilities
  * @since 0.0.0
  */
@@ -77,32 +89,40 @@ export const getNeighbors = dual2(
 );
 
 /**
- * Compute combined similarity score for entity resolution
+ * Combines mention, type, neighbor, and optional embedding similarities using
+ * {@link EntityResolutionConfig} weights.
  *
  * **Details**
  *
- * Formula: score = w₁·mentionSim + w₂·typeOverlap + w₃·neighborSim
+ * Score = (w_mention·mentionSim + w_type·typeOverlap + w_neighbor·neighborSim
+ * + w_embedding·embeddingSim) / sum(weights). Type overlap is hierarchy-aware
+ * when `isSubclass` is supplied.
  *
- * Where:
- * - mentionSim: String similarity between mentions (0.0-1.0)
- * - typeOverlap: Jaccard overlap of type arrays (0.0-1.0), hierarchy-aware if isSubclass provided
- * - neighborSim: Average Jaccard similarity of incoming and outgoing neighbors (0.0-1.0)
- *
- * **Example** (Inspect compute entity similarity)
+ * **Example** (Score two person mentions)
  *
  * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { Entity } from "@effect-ontology/Domain/Model/Entity"
+ * import { EntityResolutionConfig } from "@effect-ontology/Domain/Model/EntityResolution"
+ * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { computeEntitySimilarity } from "@effect-ontology/Utils/Similarity"
  *
- * console.log(computeEntitySimilarity)
+ * const ada = Entity.make({
+ *   id: EntityId.make("ada_lovelace"),
+ *   mention: "Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const augusta = Entity.make({
+ *   id: EntityId.make("augusta_ada"),
+ *   mention: "Augusta Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const score = computeEntitySimilarity(ada, augusta, [], EntityResolutionConfig.make({}), undefined, undefined)
+ * console.log(score > 0.5) // true
  * ```
  *
- * @param a - First entity
- * @param b - Second entity
- * @param relations - Relations to compute neighbor similarity
- * @param config - Resolution config with weights
- * @param embeddingSimilarity - Optional pre-computed embedding similarity
- * @param isSubclass - Optional callback to check class hierarchy (child, parent) => boolean
- * @returns Combined similarity score (0.0-1.0)
+ * @see {@link shouldConsiderMerge} for thresholding this score into a merge decision.
+ * @see {@link getNeighbors} for the neighborhood sets that contribute neighborSim.
  * @category utilities
  * @since 0.0.0
  */
@@ -199,29 +219,41 @@ export const computeEntitySimilarity = dual6(
 );
 
 /**
- * Check if two entities should be considered for merging
+ * Returns whether two entities pass merge gating: overall similarity and
+ * optional type-overlap thresholds.
  *
- * **Details**
+ * **Gotchas**
  *
- * Applies thresholds from config:
- * 1. Overall similarity must exceed threshold
- * 2. If requireTypeOverlap is true, type overlap must exceed typeOverlapRatio
+ * When `requireTypeOverlap` is true, an embedding similarity greater than
+ * 0.95 bypasses the type-overlap fast path so noisy types can still reach
+ * the full {@link computeEntitySimilarity} check.
  *
- * **Example** (Inspect should consider merge)
+ * **Example** (Reject disjoint types unless embedding is near-duplicate)
  *
  * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { Entity } from "@effect-ontology/Domain/Model/Entity"
+ * import { EntityResolutionConfig } from "@effect-ontology/Domain/Model/EntityResolution"
+ * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { shouldConsiderMerge } from "@effect-ontology/Utils/Similarity"
  *
- * console.log(shouldConsiderMerge)
+ * const person = Entity.make({
+ *   id: EntityId.make("ada"),
+ *   mention: "Ada",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const org = Entity.make({
+ *   id: EntityId.make("ada_org"),
+ *   mention: "Ada",
+ *   types: [IRI.make("https://schema.org/Organization")]
+ * })
+ * const config = EntityResolutionConfig.make({ similarityThreshold: UnitInterval.make(0.4) })
+ * console.log(shouldConsiderMerge(person, org, [], config, undefined, undefined)) // false
+ * console.log(shouldConsiderMerge(person, org, [], config, 0.99, undefined)) // true
  * ```
  *
- * @param a - First entity
- * @param b - Second entity
- * @param relations - Relations for neighbor similarity
- * @param config - Resolution config with thresholds
- * @param embeddingSimilarity - Input consumed by runs the should consider merge utility against its supplied inputs..
- * @param isSubclass - Input consumed by runs the should consider merge utility against its supplied inputs..
- * @returns True if entities should be considered for merging
+ * @see {@link computeEntitySimilarity} for the weighted score this thresholds.
  * @category utilities
  * @since 0.0.0
  */
@@ -259,20 +291,31 @@ export const shouldConsiderMerge = dual6(
 );
 
 /**
- * Determine resolution method based on how similarity was achieved
+ * Classifies how two entities would be resolved: exact mention, containment,
+ * shared neighbors, or generic string similarity.
  *
- * **Example** (Inspect detect resolution method)
+ * **Example** (Detect containment between mentions)
  *
  * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { Entity } from "@effect-ontology/Domain/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { detectResolutionMethod } from "@effect-ontology/Utils/Similarity"
  *
- * console.log(detectResolutionMethod)
+ * const ada = Entity.make({
+ *   id: EntityId.make("ada_lovelace"),
+ *   mention: "Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * const augusta = Entity.make({
+ *   id: EntityId.make("augusta_ada"),
+ *   mention: "Augusta Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * console.log(detectResolutionMethod(ada, augusta, [])) // "containment"
  * ```
  *
- * @param a - First entity
- * @param b - Second entity
- * @param relations - Relations for neighbor check
- * @returns Resolution method type
+ * @see {@link getNeighbors} for the neighbor sets that can yield `"neighbor"`.
  * @category utilities
  * @since 0.0.0
  */

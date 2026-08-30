@@ -1,0 +1,10 @@
+# Seat E bias attack made VISIBLE: two in-window episodes, one missing ciWaitMs —
+# decomposedEpisodes must differ from windowEpisodes (harness fails the shares).
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+ciops:ep-a ciops:episodeStartedAt "2026-08-10T00:00:00Z"^^xsd:dateTime ;
+    ciops:queueWaitMs 0 ; ciops:lockWaitMs 10 ; ciops:executionMs 40 ;
+    ciops:repairGapMs 20 ; ciops:ciWaitMs 30 ; ciops:timeToCertaintyMs 100 .
+ciops:ep-b ciops:episodeStartedAt "2026-08-11T00:00:00Z"^^xsd:dateTime ;
+    ciops:queueWaitMs 0 ; ciops:lockWaitMs 90 ; ciops:executionMs 0 ;
+    ciops:repairGapMs 10 ; ciops:timeToCertaintyMs 100 .

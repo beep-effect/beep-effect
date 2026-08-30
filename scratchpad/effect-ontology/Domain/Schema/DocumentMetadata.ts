@@ -708,10 +708,20 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
  *
  * **Example** (Use PreprocessingStats)
  * ```ts
- * import type { PreprocessingStats } from "@effect-ontology/Schema/DocumentMetadata"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { PreprocessingStats } from "@effect-ontology/Schema/DocumentMetadata"
  *
- * const failures = (stats: PreprocessingStats) => stats.failedCount
- * console.log(failures)
+ * const stats = S.decodeUnknownOption(PreprocessingStats)({
+ *   totalDocuments: 1,
+ *   classifiedCount: 1,
+ *   failedCount: 0,
+ *   totalEstimatedTokens: 251,
+ *   preprocessingDurationMs: 40,
+ *   averageComplexity: 0.5,
+ *   documentTypeDistribution: { article: 1 }
+ * })
+ * console.log(O.map(stats, (value) => value.failedCount)) // Some(0)
  * ```
  *
  * @invariant Counts and durations are finite and non-negative; average
@@ -741,10 +751,28 @@ export class PreprocessingStats extends S.Class<PreprocessingStats>($I`Preproces
  *
  * **Example** (Use EnrichedManifest)
  * ```ts
- * import type { EnrichedManifest } from "@effect-ontology/Schema/DocumentMetadata"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EnrichedManifest } from "@effect-ontology/Schema/DocumentMetadata"
  *
- * const count = (manifest: EnrichedManifest) => manifest.documents.length
- * console.log(count)
+ * const manifest = S.decodeUnknownOption(EnrichedManifest)({
+ *   batchId: "batch-abc123def456",
+ *   ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
+ *   ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
+ *   targetNamespace: "football",
+ *   createdAt: "2026-07-25T10:00:00.000Z",
+ *   preprocessedAt: "2026-07-25T10:05:00.000Z",
+ *   preprocessingStats: {
+ *     totalDocuments: 1,
+ *     classifiedCount: 1,
+ *     failedCount: 0,
+ *     totalEstimatedTokens: 251,
+ *     preprocessingDurationMs: 40,
+ *     averageComplexity: 0.5,
+ *     documentTypeDistribution: { article: 1 }
+ *   }
+ * })
+ * console.log(O.map(manifest, (value) => value.documents.length)) // Some(0)
  * ```
  *
  * @category models
@@ -815,10 +843,24 @@ export class PreprocessingActivityInput extends S.Class<PreprocessingActivityInp
  *
  * **Example** (Use PreprocessingActivityOutput)
  * ```ts
- * import type { PreprocessingActivityOutput } from "@effect-ontology/Schema/DocumentMetadata"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { PreprocessingActivityOutput } from "@effect-ontology/Schema/DocumentMetadata"
  *
- * const duration = (output: PreprocessingActivityOutput) => output.durationMs
- * console.log(duration)
+ * const output = S.decodeUnknownOption(PreprocessingActivityOutput)({
+ *   enrichedManifestUri: "gs://beep-ontology-state/batches/batch-abc123def456/enriched.json",
+ *   stats: {
+ *     totalDocuments: 1,
+ *     classifiedCount: 1,
+ *     failedCount: 0,
+ *     totalEstimatedTokens: 251,
+ *     preprocessingDurationMs: 40,
+ *     averageComplexity: 0.5,
+ *     documentTypeDistribution: { article: 1 }
+ *   },
+ *   durationMs: 40
+ * })
+ * console.log(O.map(output, (value) => value.durationMs)) // Some(40)
  * ```
  *
  * @category dtos

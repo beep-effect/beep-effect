@@ -17,22 +17,22 @@ describe("@beep/infra AIMetrics", () => {
   it("keeps stack args import-safe and target-aware", () => {
     const args = AIMetricsStackArgs.new(
       AiMetricsInstallInput.make({
-        hashSaltSecretRef: "op://TBK/ai-metrics/hash-salt",
-        rawArchiveKeySecretRef: "op://TBK/ai-metrics/raw-archive-key",
+        hashSaltSecretRef: O.some("op://TBK/ai-metrics/hash-salt"),
+        rawArchiveKeySecretRef: O.some("op://TBK/ai-metrics/raw-archive-key"),
         target: AiMetricsDeployTarget.Enum.dankserver,
       }),
       AIMetricsRemoteDeploymentConfig.make({})
     );
 
     expect(args.install.target).toBe("dankserver");
-    expect(args.install.dataRoot).toBeUndefined();
+    expect(O.isNone(args.install.dataRoot)).toBe(true);
     expect(args.remote.remoteConfigRoot).toBe("/home/elpresidank/ai-metrics");
     expect(args.remote.remoteMirrorRoot).toBe("/srv/data/ai-metrics/p7-derived-mirror");
     expect(args.remote.phoenixTailnetHttpsPort).toBe(8447);
-    expect(Effect.runSync(makeAiMetricsInstallSpec(args.install)).hashSaltSecretRef).toBe(
+    expect(O.getOrUndefined(Effect.runSync(makeAiMetricsInstallSpec(args.install)).hashSaltSecretRef)).toBe(
       "op://TBK/ai-metrics/hash-salt"
     );
-    expect(Effect.runSync(makeAiMetricsInstallSpec(args.install)).rawArchiveKeySecretRef).toBe(
+    expect(O.getOrUndefined(Effect.runSync(makeAiMetricsInstallSpec(args.install)).rawArchiveKeySecretRef)).toBe(
       "op://TBK/ai-metrics/raw-archive-key"
     );
   });
@@ -46,13 +46,13 @@ describe("@beep/infra AIMetrics", () => {
     const spec = Effect.runSync(makeAiMetricsInstallSpec(args.install));
 
     expect(args.install.target).toBe("dankserver");
-    expect(args.install.publicBaseUrl).toBe("https://dankserver.tailc7c348.ts.net:8447");
+    expect(O.getOrUndefined(args.install.publicBaseUrl)).toBe("https://dankserver.tailc7c348.ts.net:8447");
     expect(args.remote.ssh.host).toBe("dankserver");
     expect(args.remote.ssh.user).toBe("elpresidank");
     expect(args.remote.remoteMirrorRoot).toBe("/srv/data/ai-metrics/p7-derived-mirror");
     expect(spec.target).toBe("dankserver");
-    expect(spec.hashSaltSecretRef).toBe("op://TBK/ai-metrics/hash-salt");
-    expect(spec.rawArchiveKeySecretRef).toBe("op://TBK/ai-metrics/raw-archive-key");
+    expect(O.getOrUndefined(spec.hashSaltSecretRef)).toBe("op://TBK/ai-metrics/hash-salt");
+    expect(O.getOrUndefined(spec.rawArchiveKeySecretRef)).toBe("op://TBK/ai-metrics/raw-archive-key");
     expect(spec.services).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -85,7 +85,7 @@ describe("@beep/infra AIMetrics", () => {
     });
     const spec = Effect.runSync(makeAiMetricsInstallSpec(args.install));
 
-    expect(args.install.publicBaseUrl).toBe("https://dankserver.tail.example.ts.net:9446");
+    expect(O.getOrUndefined(args.install.publicBaseUrl)).toBe("https://dankserver.tail.example.ts.net:9446");
     expect(args.remote.remoteConfigRoot).toBe("/srv/ai-metrics");
     expect(args.remote.remoteMirrorRoot).toBe("/srv/ai-metrics/p7-mirror");
     expect(O.getOrUndefined(args.remote.ssh.agentSocketPath)).toBe("/tmp/agent.sock");
@@ -130,7 +130,9 @@ describe("@beep/infra AIMetrics", () => {
   });
 
   it("rejects dankserver install specs when the hash salt secret reference is absent", () => {
-    const args = makeAIMetricsStackArgsFromConfigValues({ target: "dankserver" });
+    const args = makeAIMetricsStackArgsFromConfigValues({
+      target: "dankserver",
+    });
 
     expect(() => Effect.runSync(makeAiMetricsInstallSpec(args.install))).toThrow(
       "non-local installs require hashSaltSecretRef"
@@ -171,7 +173,9 @@ describe("@beep/infra AIMetrics", () => {
   });
 
   it("round-trips AI metrics config schemas through encoded wire values", () => {
-    assertSchemaArbitraryDecodesToSelf(AIMetricsPulumiConfigValues, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(AIMetricsPulumiConfigValues, {
+      numRuns: 25,
+    });
     expectSchemaRoundTrip(AIMetricsPulumiConfigValues);
     expectSchemaRoundTrip(AIMetricsRemoteSshConfig);
     expectSchemaRoundTrip(AIMetricsRemoteDeploymentConfig);

@@ -2,6 +2,8 @@
 
 ## Status
 
+Lifecycle: `completed-retained`
+
 V1 closed
 
 ## Mission

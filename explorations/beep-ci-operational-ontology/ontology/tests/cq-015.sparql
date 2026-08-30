@@ -1,0 +1,9 @@
+# CQ-015: Is a given proof transferable to another checkout (same epoch, shared cache) so one agent's green licenses another's skip?
+# Expected: boolean | priority: should_have | derivation: inference
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+ASK {
+  VALUES (?proof ?other) { (ciops:proof-example ciops:checkout-example) }  # harness binds
+  ?proof ciops:validInEpoch ?epoch ; ciops:cachedIn ?cache .
+  ?other ciops:mountsCache ?cache ; ciops:inEpoch ?epoch .
+}

@@ -94,8 +94,8 @@ export class PrCloseoutGateState extends S.Class<PrCloseoutGateState>($I`PrClose
     name: PrCloseoutGateName,
     status: PrCloseoutGateStatus,
     detail: S.String,
-    count: S.optional(S.Finite),
-    url: S.optional(S.String),
+    count: S.optionalKey(S.Finite),
+    url: S.optionalKey(S.String),
   },
   $I.annote("PrCloseoutGateState", {
     description: "Durable state for one PR closeout gate.",

@@ -332,4 +332,6 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
   get contentLength(): number {
     return O.getOrElse(this.length, () => Str.length(this.content));
   }
+
+  static readonly decodeEffect = S.decodeEffect(JinaContent)
 }

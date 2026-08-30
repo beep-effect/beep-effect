@@ -15,6 +15,8 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Unknown } from "@beep/schema/Unknown";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
+import type { Scope } from "effect/Scope";
+import { PlatformError } from "effect/PlatformError";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -31,6 +33,9 @@ import { makeCliExtractionLayer } from "../../Runtime/WorkflowLayers.ts";
 import { ExtractionWorkflow } from "../../Service/ExtractionWorkflow.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
+import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+
 
 const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 
@@ -94,7 +99,7 @@ class ExtractInputError extends S.TaggedError<ExtractInputError>($I`ExtractInput
 const readInputText = Effect.fn("Extract.readInputText")(function* (
   textOpt: O.Option<string>,
   fileOpt: O.Option<string>
-) {
+): Effect.fn.Return<string, ExtractInputError | PlatformError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
 
   // Priority: --text > --file > stdin
@@ -161,7 +166,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
   noExternalVocabs: boolean,
   format: "json" | "turtle",
   concurrency: number
-) {
+): Effect.fn.Return<void, ExtractInputError | ExtractionError | PlatformError | RdfError | S.SchemaError | SerializationFailed, ExtractionWorkflow | FileSystem.FileSystem | Path.Path | RdfBuilder | Scope> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const inputText = yield* readInputText(text, file);
@@ -250,17 +255,29 @@ const makeExtractLayer = (ontologyPath: string, noExternalVocabs: boolean) => {
 // =============================================================================
 
 /**
- * Exposes extract command for composition by callers of this module.
+ * Runs ad-hoc ontology-guided extraction from inline text, a file, or stdin
+ * without starting the HTTP server.
  *
- * **Example** (Inspect extract command)
+ * **Details**
+ *
+ * The positional `ontology` argument is a Turtle file. Supply `--text` /
+ * `-t` for inline source, `--file` / `-f` for a document path, `--format`
+ * `json|turtle`, and `--concurrency` for parallel chunk work.
+ *
+ * **Example** (Compose extract with ontology and inline text)
  *
  * ```ts
  * import { extractCommand } from "@effect-ontology/Cli/Commands/Extract"
+ * import * as Command from "effect/unstable/cli/Command"
  *
- * console.log(extractCommand)
+ * const argv = ["ontologies/people.ttl", "--text", "Ada Lovelace was a mathematician"]
+ * const program = Command.runWith(extractCommand, { version: "0.0.0" })([...argv])
+ * console.log(extractCommand.name) // "extract"
+ * console.log(argv.includes("--text")) // true
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category cli-commands
  * @since 0.0.0
  */
 export const extractCommand = Command.make(

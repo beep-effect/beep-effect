@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `graduate`
 Status: `graduated`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Graduated into [`goals/agent-execution-authority`](../../goals/agent-execution-authority/README.md)
 on 2026-07-25.

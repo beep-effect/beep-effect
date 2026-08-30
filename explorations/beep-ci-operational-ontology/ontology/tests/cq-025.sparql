@@ -1,0 +1,12 @@
+# CQ-025: For each completed WorkUnit execution, what was the actual wall cost versus the estimated P50/P95 (cost-calibration pairs)?
+# Expected: non_empty | priority: should_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?exec ?actual ?p50 ?p95 WHERE {
+  ?exec rdf:type ciops:WorkUnitExecution ;
+        ciops:hasExecutionState ciops:CompletedExecution ;
+        ciops:actualWallMs ?actual ;
+        ciops:usedCostEstimate ?c .
+  ?c ciops:p50Ms ?p50 ; ciops:p95Ms ?p95 .
+}

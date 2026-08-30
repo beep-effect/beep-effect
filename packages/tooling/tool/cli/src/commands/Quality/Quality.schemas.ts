@@ -892,7 +892,7 @@ export class GithubCheckLaneWaveSpec extends S.Class<GithubCheckLaneWaveSpec>($I
  * @category models
  * @since 0.0.0
  */
-export const GithubCheckLaneRunStatus = LiteralKit(["passed", "failed", "not-run-early-stop"]).annotate(
+export const GithubCheckLaneRunStatus = LiteralKit(["passed", "reused", "failed", "not-run-early-stop"]).annotate(
   $I.annote("GithubCheckLaneRunStatus", {
     description: "Terminal status of one lane in a local GitHub-check wave run.",
   })

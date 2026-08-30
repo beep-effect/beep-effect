@@ -13,7 +13,7 @@
  * @since 0.0.0
  */
 
-import { Console, DateTime, Effect } from "effect";
+import { Console, DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -139,6 +139,11 @@ const manifestPayload = (input: BootstrapInput): string => {
     name: phase.name,
     status: "pending",
   }));
+  const provenanceFields = pipe(
+    O.fromUndefinedOr(input.provenanceExploration),
+    O.map((exploration) => ({ provenance: { exploration: `explorations/${exploration}`, graduated: input.today } })),
+    O.getOrElse(() => ({}))
+  );
   const document = {
     schemaVersion: "initiative-manifest/v2",
     initiative: {
@@ -155,14 +160,7 @@ const manifestPayload = (input: BootstrapInput): string => {
     mission: input.mission,
     executionCapable: input.executionCapable,
     reflectionRequired: input.reflectionRequired,
-    ...(input.provenanceExploration === undefined
-      ? {}
-      : {
-          provenance: {
-            exploration: `explorations/${input.provenanceExploration}`,
-            graduated: input.today,
-          },
-        }),
+    ...provenanceFields,
     completionGate: {
       operator: "yeet",
       requiresPullRequest: true,
@@ -553,6 +551,16 @@ export const sealMaterializationPlan = (fields: {
     compilerVersion: "goal-materialization-compiler/v1",
     ...fields,
   });
+  const towardArchetypeFields = pipe(
+    O.fromUndefinedOr(fields.towardArchetype),
+    O.map((towardArchetype) => ({ towardArchetype })),
+    O.getOrElse(() => ({}))
+  );
+  const templateSnapshotFields = pipe(
+    O.fromUndefinedOr(fields.templateSnapshotHash),
+    O.map((templateSnapshotHash) => ({ templateSnapshotHash })),
+    O.getOrElse(() => ({}))
+  );
   return MaterializationPlan.make({
     planId: `goal-plan/v1:${sha256Hex(preimage)}`,
     mode: fields.mode,
@@ -562,8 +570,8 @@ export const sealMaterializationPlan = (fields: {
     preservations: A.map(fields.preservations, (row) => PlanPreservation.make(row)),
     validations: fields.validations,
     conflicts: A.map(fields.conflicts, (row) => PlanConflict.make(row)),
-    ...(fields.towardArchetype === undefined ? {} : { towardArchetype: fields.towardArchetype }),
-    ...(fields.templateSnapshotHash === undefined ? {} : { templateSnapshotHash: fields.templateSnapshotHash }),
+    ...towardArchetypeFields,
+    ...templateSnapshotFields,
   });
 };
 

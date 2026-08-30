@@ -2,8 +2,10 @@
 
 ## Status
 
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `decompose`
 Status: `active`
+<!-- END GENERATED: EXPLORATION STATUS -->
 
 Graduated 2026-08-17 with `packet-control-plane-core` as the sole promised-now
 candidate. **Reopened at `decompose` 2026-08-26** on the ratified convention:
@@ -46,15 +48,29 @@ migration, and closeout in one PR. The active work is the graduated
 
 ## Trail
 
-- 2026-08-26 (Session B decisions and candidate 6): seven research lanes ran
-  before the grill, with reports under `research/2026-08-26-session-b/`. The
-  grill chartered the convention migration as its own goal and the first
-  reopener; H was ratified without generated `GOAL.md`, I was rejected in
-  favor of a named-consumer-gated schema.org/RO-Crate projection, and J was
-  moved to `@beep/skill-contract`. Follow-ups route J through
-  `typed-agent-skill-contracts`, make the applier candidate 6's first slice,
-  and supersede D19's unexecuted docs-only leg with one complete PR (D17–D26).
-
+- 2026-08-27 (D6 navigation migration): ship-velocity P5 landed the ignored
+  whole-file Atlas and marked README status projections. No exploration
+  streams were fabricated: manifests are explicit adoption snapshots until
+  Amendment G's freeze lifts, and any opted-in stream is fail-closed
+  PacketCore authority. Candidate 3 retains fleet adoption and the by-state
+  projection.
+- 2026-08-26 (Session B grill, reopened at decompose): seven research lanes ran
+  before the grill — three repo audits on GPT-5.6 Sol at xhigh, three web
+  prior-art sweeps on Grok, and the rung-4 implementation lane — with reports
+  under `research/2026-08-26-session-b/`. The grill chartered the fleet
+  convention-migration campaign as **candidate 6**, its own goal packet and the
+  first decompose reopener, because Amendment G makes the repair applier its
+  rung 0 and freezes fleet `ops/events/` opt-in until that ships (census: 1 of
+  225 manifest-bearing packets carries a stream; 226 packet directories, with
+  `explorations/_gold-intake` carrying no manifest). Of the three queued amendments, **H** is
+  ratified reshaped — the typed `PacketWorkPlan` lands, the `GOAL.md` render
+  does not, and model/effort stay out of the plan; **I** is **rejected**, its
+  PROV-O/P-Plan/AgentO spine refuted by the projects that shipped it, with a
+  named-consumer-gated schema.org/RO-Crate successor requeued; **J** is ratified
+  reshaped and pulled forward out of this MAP entirely, onto the
+  `@beep/skill-contract` kernel with EARL/ACT outcomes and a reach aggregate.
+  The in-toto deferral is scoped to signing and verification (D23). Decisions
+  D17–D23.
 - 2026-08-26 (close + reopen): `packet-control-plane-core` closed
   `completed-retained` — rung-4 pre-close hardening merged as #848, the flip
   executed through the guarded writer as stream event 4, closeout reflection

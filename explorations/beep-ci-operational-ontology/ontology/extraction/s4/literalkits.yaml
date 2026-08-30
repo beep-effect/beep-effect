@@ -1,0 +1,992 @@
+telemetry:
+  lane: s4-literalkits
+  runner: "codex exec"
+  model: gpt-5.6-sol
+  reasoning_effort: max
+  prompt_version: s4-lane-contract-v2
+  corpus_commit: 469136d2a872
+  started: 2026-08-27T23:31:21-05:00
+  finished: 2026-08-27T23:47:26-05:00
+  wall_seconds: 965
+  frozen_inputs:
+    - { path: ontology/docs/competency-questions.yaml, sha256_12: e06ec7fe12a6 }
+    - { path: ontology/docs/pre-glossary.csv, sha256_12: 9184cddcecc7 }
+    - { path: ontology/docs/literal-domains.md, sha256_12: 7f0cf3e79e7e }
+    - { path: ontology/docs/orsd.md, sha256_12: 2b0fd670129b }
+    - { path: ontology/docs/scope.md, sha256_12: 6c39b69481a3 }
+  candidate_count: 73
+  fact_count: 0
+  issue_count: 21
+
+issues:
+  - id: literalkits-I01
+    kind: ambiguity
+    claim: 'CiLaneClass encodes local parity classes, not the frozen LaneKind distinction between turbo task, script, and collected gate.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:57 — ''export const CI_LANE_CLASS_VALUES = ["cli-runnable", "workflow-gated", "ci-native"] as const;'''
+    suggested_disposition: 'Keep the source domain distinct and require an explicit mapping property before any LaneKind alignment.'
+    status: open
+  - id: literalkits-I02
+    kind: missing-cq
+    claim: 'CiLaneReplay carries exact, approximate, and no-replay fidelity, but no Must or Should CQ asks for replay fidelity as a T-Box term.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:110 — ''export const CI_LANE_REPLAY_VALUES = ["exact", "approximate", "none"] as const;'''
+    suggested_disposition: 'Retain as source telemetry unless a CQ needs replay fidelity for tier or transferability decisions.'
+    status: open
+  - id: literalkits-I03
+    kind: ambiguity
+    claim: 'DocgenLaneMode mixes absence of a scheduled lane with affected and full scope choices.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:242 — ''export const DOCGEN_LANE_MODE_VALUES = ["none", "affected", "full"] as const;'''
+    suggested_disposition: 'Model lane omission separately from Scope before mapping affected or full to canonical scope members.'
+    status: open
+  - id: literalkits-I04
+    kind: schema-conflict
+    claim: 'FallowQualityFeatureFamily contains matrix-only members beyond the smaller FallowFeatureFamily implemented by the quality wrapper.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:533-543 — ''"runtime-coverage", "editor-mcp-hooks"'''
+    suggested_disposition: 'Preserve the two source domains separately and ratify which matrix rows denote deployed VerificationLanes.'
+    status: open
+  - id: literalkits-I05
+    kind: missing-cq
+    claim: 'GitHub lane stage, wave, and failure-policy labels configure execution but are not queried as ontology terms by a Must or Should CQ.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:777-806 — ''LiteralKit(["fail-fast", "collect-all"]) ... LiteralKit(["preflight", "heavy", "test", "documentation"])'''
+    suggested_disposition: 'Keep them as projection configuration unless a CQ requires their semantics beyond materialized stepIndex.'
+    status: open
+  - id: literalkits-I06
+    kind: schema-conflict
+    claim: 'RepoPlanStepScope uses package, repo, and git, which is not the frozen ScopeKind domain of full, affected, filter, and shard scopes.'
+    evidence: 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:98-101 — ''LiteralKit(["package", "repo", "git"])'''
+    suggested_disposition: 'Do not equate these domains; define a checked mapping or retain RepoPlanStepScope as implementation metadata.'
+    status: open
+  - id: literalkits-I07
+    kind: schema-conflict
+    claim: 'RepoGraphHealthStatus is a trust-level enum and does not state the typed FailOpenOutcome or FailClosedOutcome required by CQ-019.'
+    evidence: 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:154-157 — ''LiteralKit(["ok", "warning", "error"])'''
+    suggested_disposition: 'Require a deterministic outcome mapping before graph-health status can affect scopedByComputation.'
+    status: open
+  - id: literalkits-I08
+    kind: missing-concept
+    claim: 'QualityHardwareProfile and CiRunnerClass condition scheduling measurements, but the frozen glossary has no execution-environment bearer or attachment property.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:341-344 — ''LiteralKit(["current", "workstation", "ci"])'''
+    suggested_disposition: 'Ratify an environment model only if cost calibration requires it; define the context-dependent current member explicitly.'
+    status: open
+  - id: literalkits-I09
+    kind: ambiguity
+    claim: 'DocgenProofManifestStatus says current, missing, or stale without binding that status to CacheEpoch and TreeState.'
+    evidence: 'packages/tooling/tool/docgen/src/ProofManifest.ts:111-114 — ''LiteralKit(["current", "missing", "stale"])'''
+    suggested_disposition: 'Treat these as manifest observations, not VerificationEvidence validity, until epoch and tree provenance are attached.'
+    status: open
+  - id: literalkits-I10
+    kind: missing-cq
+    claim: 'Docgen proof-manifest format and schema-version markers are verification representations with no CQ or support dependency licensing T-Box members.'
+    evidence: 'packages/tooling/tool/docgen/src/ProofManifest.ts:37-39 — ''LiteralKit(["docgen-proof-manifest"])'''
+    suggested_disposition: 'Keep the format markers in ingestion metadata rather than minting ontology terms.'
+    status: open
+  - id: literalkits-I11
+    kind: ambiguity
+    claim: 'GateArtifactKind names cached file forms, which are information artifacts and are not automatically VerificationEvidence.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:88-91 — ''LiteralKit(["baseline", "inventory", "manifest", "snapshot", "tsbuildinfo"])'''
+    suggested_disposition: 'Require evidence-production and epoch-tree provenance before mapping an artifact instance to VerificationEvidence.'
+    status: open
+  - id: literalkits-I12
+    kind: ambiguity
+    claim: 'ProofLockDisposition classifies fail-closed actions on proof-lock generations, not SeatGrant lifecycle states.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts:126-129 — ''LiteralKit(["replace-stale", "refuse-active", "refuse-legacy", "refuse-unreadable"])'''
+    suggested_disposition: 'Keep proof-lock actions distinct from scheduler grants and model only a checked relation to MachineProofLock contention.'
+    status: open
+  - id: literalkits-I13
+    kind: missing-cq
+    claim: 'QualityIssue category, severity, parser-confidence, and attribution domains normalize diagnostics but are not required by any Must or Should CQ.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts:29-49 — ''export const QualityIssueCategory = LiteralKit(['''
+    suggested_disposition: 'Retain them in diagnostic payloads unless a CQ explicitly requires issue taxonomy or attribution.'
+    status: open
+  - id: literalkits-I14
+    kind: missing-cq
+    claim: 'Fallow envelope status and defect domains describe producer and report handling, not a CQ-licensed failure or invalidation taxonomy.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts:99-107 — ''"tool-failed", "invalid-json", "invalid-report", "base-resolution-failed"'''
+    suggested_disposition: 'Keep them as lane-output diagnostics until a decision CQ requires their distinctions.'
+    status: open
+  - id: literalkits-I15
+    kind: schema-conflict
+    claim: 'PrCloseoutGateStatus mixes outcome states with written, which denotes artifact production rather than pass or block state.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:66-69 — ''LiteralKit(["passed", "blocked", "unknown", "written"])'''
+    suggested_disposition: 'Split evidence production from gate outcome before any mapping to VerificationEvidence or ExecutionState.'
+    status: open
+  - id: literalkits-I16
+    kind: missing-cq
+    claim: 'Changeset applicability, check registration, optional-artifact reads, and monitor termination are operational control states without a CQ warrant.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts:154-157 — ''LiteralKit(["lab-exempt", "enforced"])'''
+    suggested_disposition: 'Leave these values in runtime telemetry unless a Must or Should CQ needs the control-state distinction.'
+    status: open
+  - id: literalkits-I17
+    kind: schema-conflict
+    claim: 'RepoPlanStepResume permits fingerprint-based skipping without stating the CacheEpoch by TreeState validity conditions required for reusable evidence.'
+    evidence: 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — ''LiteralKit(["never", "fingerprint-match"])'''
+    suggested_disposition: 'Treat fingerprint-match as a candidate carrier only; prohibit direct proof-validity equivalence until the fingerprint semantics are audited.'
+    status: open
+  - id: literalkits-I18
+    kind: schema-conflict
+    claim: 'Source flake and infrastructure classifiers name failure signatures that are not visibly normalized to the frozen failedStepId by failureKind identity.'
+    evidence: 'packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — ''LiteralKit(["setup-5xx", "runner-loss", "install-failure"])'''
+    suggested_disposition: 'Ratify a mapping or a separate infrastructure-signature model; do not silently merge the identities.'
+    status: open
+  - id: literalkits-I19
+    kind: ambiguity
+    claim: 'GithubCheckMode and RepoProofSurface overlap on four spellings while denoting a command mode and a named proof surface respectively.'
+    evidence: 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — ''LiteralKit(["cheap-gates", "quality", "review-fix", "pre-push"])'''
+    suggested_disposition: 'Keep source_domain-qualified members distinct and ratify the mode-to-surface relation.'
+    status: open
+  - id: literalkits-I20
+    kind: assumption
+    claim: 'FleetCheckoutKind distinguishes clone from linked worktree but supplies no deployed admission-exclusion identity.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — ''LiteralKit(["clone", "linked-worktree"])'''
+    suggested_disposition: 'Use the members only to constrain Checkout; never infer origin or checkout exclusion from them.'
+    status: open
+  - id: literalkits-I21
+    kind: ambiguity
+    claim: 'GithubCheckLaneRunStatus not-run-early-stop establishes non-execution but does not state whether the cancellation is clean or dirty.'
+    evidence: 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — ''LiteralKit(["passed", "failed", "not-run-early-stop"])'''
+    suggested_disposition: 'Map it to execution state only; derive CancelClass independently from step mutability.'
+    status: open
+
+candidates:
+  - candidate: 'build'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The build runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:164 — ''"build",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'check'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The check runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:165 — ''"check",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'codegen'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The codegen runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:166 — ''"codegen",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'commitlint'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The commitlint runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:167 — ''"commitlint",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'coverage'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The coverage runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:168 — ''"coverage",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'desktop-ipc'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The desktop-ipc runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:169 — ''"desktop-ipc",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'docgen'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The docgen runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:170 — ''"docgen",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'doctest'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The doctest runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:171 — ''"doctest",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'ecosystem'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The ecosystem runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:172 — ''"ecosystem",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'fallow'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The fallow runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:173 — ''"fallow",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'jsdoc-ratchet'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The jsdoc-ratchet runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:174 — ''"jsdoc-ratchet",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'knip'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The knip runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:175 — ''"knip",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'labs'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The labs runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:176 — ''"labs",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'lint'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The lint runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:177 — ''"lint",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'lint-policy'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The lint-policy runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:178 — ''"lint-policy",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'nix'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The nix runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:179 — ''"nix",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'property'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The property runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:180 — ''"property",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'repo-sanity'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The repo-sanity runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:181 — ''"repo-sanity",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'sast'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The sast runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:182 — ''"sast",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'secrets'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The secrets runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:183 — ''"secrets",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'security'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The security runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:184 — ''"security",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'test-integration'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The test-integration runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:185 — ''"test-integration",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'test-unit'
+    kind: literal-domain-member
+    source_domain: CiLaneId
+    definition: 'The test-unit runnable CI lane identifier handled by beep ci lane.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a runnable validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:186 — ''"test-unit",'''
+      - 'packages/tooling/tool/cli/src/commands/Ci/CiLane.ts:203-206 — ''export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'clone'
+    kind: literal-domain-member
+    source_domain: FleetCheckoutKind
+    definition: 'The clone source classification for a machine-local checkout.'
+    admission_kind: semantic-support
+    supports: [Checkout]
+    decision_relevance: 'Constrains the Checkout bearer used in evidence-transferability decisions without asserting an exclusion key.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — ''LiteralKit(["clone", "linked-worktree"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'linked-worktree'
+    kind: literal-domain-member
+    source_domain: FleetCheckoutKind
+    definition: 'The linked-worktree source classification for a machine-local checkout.'
+    admission_kind: semantic-support
+    supports: [Checkout]
+    decision_relevance: 'Constrains the Checkout bearer used in evidence-transferability decisions without asserting an exclusion key.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:616-619 — ''LiteralKit(["clone", "linked-worktree"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'goals-packets'
+    kind: literal-domain-member
+    source_domain: GateInputScope
+    definition: 'The goals-packets changed-input family that may invalidate a cached gate artifact.'
+    admission_kind: semantic-support
+    supports: [HashSurface, InvalidationEvent]
+    decision_relevance: 'Constrains the changed-input family used to derive verification-evidence invalidation blast radius.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — ''LiteralKit(["repo-code", "goals-packets"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'repo-code'
+    kind: literal-domain-member
+    source_domain: GateInputScope
+    definition: 'The repo-code changed-input family that may invalidate a cached gate artifact.'
+    admission_kind: semantic-support
+    supports: [HashSurface, InvalidationEvent]
+    decision_relevance: 'Constrains the changed-input family used to derive verification-evidence invalidation blast radius.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts:109-113 — ''LiteralKit(["repo-code", "goals-packets"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'failed'
+    kind: literal-domain-member
+    source_domain: GithubCheckLaneRunStatus
+    definition: 'The failed terminal source status for one lane in a local GitHub-check wave.'
+    admission_kind: semantic-support
+    supports: [WorkUnitExecution, CommittedFailure]
+    decision_relevance: 'Provides a closed source carrier for execution, evidence, or committed-failure state used by stopping and calibration decisions.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — ''LiteralKit(["passed", "failed", "not-run-early-stop"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'not-run-early-stop'
+    kind: literal-domain-member
+    source_domain: GithubCheckLaneRunStatus
+    definition: 'The not-run-early-stop terminal source status for one lane in a local GitHub-check wave.'
+    admission_kind: semantic-support
+    supports: [WorkUnitExecution, ExecutionState]
+    decision_relevance: 'Provides a closed source carrier for execution, evidence, or committed-failure state used by stopping and calibration decisions.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — ''LiteralKit(["passed", "failed", "not-run-early-stop"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'passed'
+    kind: literal-domain-member
+    source_domain: GithubCheckLaneRunStatus
+    definition: 'The passed terminal source status for one lane in a local GitHub-check wave.'
+    admission_kind: semantic-support
+    supports: [WorkUnitExecution, VerificationEvidence]
+    decision_relevance: 'Provides a closed source carrier for execution, evidence, or committed-failure state used by stopping and calibration decisions.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:895-898 — ''LiteralKit(["passed", "failed", "not-run-early-stop"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'install-failure'
+    kind: literal-domain-member
+    source_domain: GithubJobShapeClass
+    definition: 'The install-failure infrastructure-failure class decidable from a GitHub job record without its log.'
+    admission_kind: semantic-support
+    supports: [FailureSignature]
+    decision_relevance: 'Disambiguates infrastructure failure observations used by CQ-013 delay attribution and cheapest-surfacing analysis.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — ''LiteralKit(["setup-5xx", "runner-loss", "install-failure"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'runner-loss'
+    kind: literal-domain-member
+    source_domain: GithubJobShapeClass
+    definition: 'The runner-loss infrastructure-failure class decidable from a GitHub job record without its log.'
+    admission_kind: semantic-support
+    supports: [FailureSignature]
+    decision_relevance: 'Disambiguates infrastructure failure observations used by CQ-013 delay attribution and cheapest-surfacing analysis.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — ''LiteralKit(["setup-5xx", "runner-loss", "install-failure"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'setup-5xx'
+    kind: literal-domain-member
+    source_domain: GithubJobShapeClass
+    definition: 'The setup-5xx infrastructure-failure class decidable from a GitHub job record without its log.'
+    admission_kind: semantic-support
+    supports: [FailureSignature]
+    decision_relevance: 'Disambiguates infrastructure failure observations used by CQ-013 delay attribution and cheapest-surfacing analysis.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/github/JobShape.ts:76-80 — ''LiteralKit(["setup-5xx", "runner-loss", "install-failure"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'check'
+    kind: literal-domain-member
+    source_domain: PackageVerifyStepName
+    definition: 'The check verification step run by quality package-verify.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a package verification surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — ''const VERIFY_STEP_NAMES = ["lint", "check", "test"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:43-46 — ''export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'lint'
+    kind: literal-domain-member
+    source_domain: PackageVerifyStepName
+    definition: 'The lint verification step run by quality package-verify.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a package verification surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — ''const VERIFY_STEP_NAMES = ["lint", "check", "test"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:43-46 — ''export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'test'
+    kind: literal-domain-member
+    source_domain: PackageVerifyStepName
+    definition: 'The test verification step run by quality package-verify.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a package verification surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:26 — ''const VERIFY_STEP_NAMES = ["lint", "check", "test"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts:43-46 — ''export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'chatgpt'
+    kind: literal-domain-member
+    source_domain: PrCloseoutGateName
+    definition: 'The chatgpt PR closeout gate represented in durable Yeet state.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a collected verification gate for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — ''LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'coderabbit'
+    kind: literal-domain-member
+    source_domain: PrCloseoutGateName
+    definition: 'The coderabbit PR closeout gate represented in durable Yeet state.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a collected verification gate for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — ''LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'greptile'
+    kind: literal-domain-member
+    source_domain: PrCloseoutGateName
+    definition: 'The greptile PR closeout gate represented in durable Yeet state.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a collected verification gate for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — ''LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'hosted-checks'
+    kind: literal-domain-member
+    source_domain: PrCloseoutGateName
+    definition: 'The hosted-checks PR closeout gate represented in durable Yeet state.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a collected verification gate for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — ''LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'review-threads'
+    kind: literal-domain-member
+    source_domain: PrCloseoutGateName
+    definition: 'The review-threads PR closeout gate represented in durable Yeet state.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a collected verification gate for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts:60-63 — ''LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'audit'
+    kind: literal-domain-member
+    source_domain: QualityTaskName
+    definition: 'The audit canonical quality task handled by beep-cli.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a canonical quality validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — ''LiteralKit(["build", "check", "test", "lint", "audit", "coverage"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'build'
+    kind: literal-domain-member
+    source_domain: QualityTaskName
+    definition: 'The build canonical quality task handled by beep-cli.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a canonical quality validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — ''LiteralKit(["build", "check", "test", "lint", "audit", "coverage"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'check'
+    kind: literal-domain-member
+    source_domain: QualityTaskName
+    definition: 'The check canonical quality task handled by beep-cli.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a canonical quality validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — ''LiteralKit(["build", "check", "test", "lint", "audit", "coverage"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'coverage'
+    kind: literal-domain-member
+    source_domain: QualityTaskName
+    definition: 'The coverage canonical quality task handled by beep-cli.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a canonical quality validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — ''LiteralKit(["build", "check", "test", "lint", "audit", "coverage"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'lint'
+    kind: literal-domain-member
+    source_domain: QualityTaskName
+    definition: 'The lint canonical quality task handled by beep-cli.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a canonical quality validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — ''LiteralKit(["build", "check", "test", "lint", "audit", "coverage"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'test'
+    kind: literal-domain-member
+    source_domain: QualityTaskName
+    definition: 'The test canonical quality task handled by beep-cli.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a canonical quality validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts:53-56 — ''LiteralKit(["build", "check", "test", "lint", "audit", "coverage"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'publish'
+    kind: literal-domain-member
+    source_domain: RepoPlanStepMutability
+    definition: 'The publish mutability classification of a planned repository step.'
+    admission_kind: semantic-support
+    supports: [CancelClass, WorkUnitExecution]
+    decision_relevance: 'Constrains the source derivation of clean versus dirty cancellation for an in-flight WorkUnit execution.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — ''LiteralKit(["readonly", "write", "publish"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'readonly'
+    kind: literal-domain-member
+    source_domain: RepoPlanStepMutability
+    definition: 'The readonly mutability classification of a planned repository step.'
+    admission_kind: semantic-support
+    supports: [CancelClass, WorkUnitExecution]
+    decision_relevance: 'Constrains the source derivation of clean versus dirty cancellation for an in-flight WorkUnit execution.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — ''LiteralKit(["readonly", "write", "publish"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'write'
+    kind: literal-domain-member
+    source_domain: RepoPlanStepMutability
+    definition: 'The write mutability classification of a planned repository step.'
+    admission_kind: semantic-support
+    supports: [CancelClass, WorkUnitExecution]
+    decision_relevance: 'Constrains the source derivation of clean versus dirty cancellation for an in-flight WorkUnit execution.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:70-73 — ''LiteralKit(["readonly", "write", "publish"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'fingerprint-match'
+    kind: literal-domain-member
+    source_domain: RepoPlanStepResume
+    definition: 'The fingerprint-match resume eligibility assigned to a planned repository step.'
+    admission_kind: semantic-support
+    supports: [VerificationEvidence, CacheEpoch, TreeState]
+    decision_relevance: 'Constrains whether a source fingerprint may permit a skipped step while evidence remains valid for the relevant epoch and tree.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — ''LiteralKit(["never", "fingerprint-match"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'never'
+    kind: literal-domain-member
+    source_domain: RepoPlanStepResume
+    definition: 'The never resume eligibility assigned to a planned repository step.'
+    admission_kind: semantic-support
+    supports: [VerificationEvidence, CacheEpoch, TreeState]
+    decision_relevance: 'Constrains whether a source fingerprint may permit a skipped step while evidence remains valid for the relevant epoch and tree.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:126-129 — ''LiteralKit(["never", "fingerprint-match"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'cheap-gates'
+    kind: literal-domain-member
+    source_domain: RepoProofSurface
+    definition: 'The cheap-gates named repository proof surface backed by a GitHub checks mode.'
+    admission_kind: semantic-support
+    supports: [VerificationEvidence, AssuranceTier]
+    decision_relevance: 'Disambiguates the source proof surface whose evidence contributes toward a target assurance tier.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — ''LiteralKit(["cheap-gates", "quality", "review-fix", "pre-push"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'pre-push'
+    kind: literal-domain-member
+    source_domain: RepoProofSurface
+    definition: 'The pre-push named repository proof surface backed by a GitHub checks mode.'
+    admission_kind: semantic-support
+    supports: [VerificationEvidence, AssuranceTier]
+    decision_relevance: 'Disambiguates the source proof surface whose evidence contributes toward a target assurance tier.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — ''LiteralKit(["cheap-gates", "quality", "review-fix", "pre-push"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'quality'
+    kind: literal-domain-member
+    source_domain: RepoProofSurface
+    definition: 'The quality named repository proof surface backed by a GitHub checks mode.'
+    admission_kind: semantic-support
+    supports: [VerificationEvidence, AssuranceTier]
+    decision_relevance: 'Disambiguates the source proof surface whose evidence contributes toward a target assurance tier.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — ''LiteralKit(["cheap-gates", "quality", "review-fix", "pre-push"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'review-fix'
+    kind: literal-domain-member
+    source_domain: RepoProofSurface
+    definition: 'The review-fix named repository proof surface backed by a GitHub checks mode.'
+    admission_kind: semantic-support
+    supports: [VerificationEvidence, AssuranceTier]
+    decision_relevance: 'Disambiguates the source proof surface whose evidence contributes toward a target assurance tier.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts:74-77 — ''LiteralKit(["cheap-gates", "quality", "review-fix", "pre-push"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'ts2589-no-location'
+    kind: literal-domain-member
+    source_domain: StepFlakeQuarantinePolicy
+    definition: 'The ts2589-no-location established environment-only failure signature a quality step may quarantine.'
+    admission_kind: decision
+    cq_justification: [CQ-013]
+    decision_relevance: 'Names a failure signature whose attributed delay and cheapest surfacing lane are queried by CQ-013.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/internal/process/StepExec.ts:191-194 — ''LiteralKit(["ts2589-no-location"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'affected'
+    kind: literal-domain-member
+    source_domain: TurboConfigProofSelectorMode
+    definition: 'The affected selector used by Turbo dry-run proof commands.'
+    admission_kind: semantic-support
+    supports: [Scope, HashSurface]
+    decision_relevance: 'Constrains the scope and hash-selection surface represented by scoped verification work.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:27 — ''const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:77-80 — ''export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECTOR_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'filter-range'
+    kind: literal-domain-member
+    source_domain: TurboConfigProofSelectorMode
+    definition: 'The filter-range selector used by Turbo dry-run proof commands.'
+    admission_kind: semantic-support
+    supports: [Scope, HashSurface]
+    decision_relevance: 'Constrains the scope and hash-selection surface represented by scoped verification work.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:27 — ''const TURBO_CONFIG_PROOF_SELECTOR_VALUES = ["affected", "filter-range"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:77-80 — ''export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECTOR_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'build'
+    kind: literal-domain-member
+    source_domain: TurboConfigProofTaskName
+    definition: 'The build Turbo task included in scoped-config proof reports.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a scoped Turbo validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — ''const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — ''export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'check'
+    kind: literal-domain-member
+    source_domain: TurboConfigProofTaskName
+    definition: 'The check Turbo task included in scoped-config proof reports.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a scoped Turbo validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — ''const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — ''export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'docgen'
+    kind: literal-domain-member
+    source_domain: TurboConfigProofTaskName
+    definition: 'The docgen Turbo task included in scoped-config proof reports.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a scoped Turbo validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — ''const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — ''export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'lint'
+    kind: literal-domain-member
+    source_domain: TurboConfigProofTaskName
+    definition: 'The lint Turbo task included in scoped-config proof reports.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a scoped Turbo validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — ''const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — ''export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'test'
+    kind: literal-domain-member
+    source_domain: TurboConfigProofTaskName
+    definition: 'The test Turbo task included in scoped-config proof reports.'
+    admission_kind: decision
+    cq_justification: [CQ-001]
+    decision_relevance: 'Enumerates a scoped Turbo validation surface for the CQ-001 lane inventory.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:26 — ''const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;'''
+      - 'packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts:43-46 — ''export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUES).pipe('''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'fail'
+    kind: literal-domain-member
+    source_domain: YeetCheckOutcome
+    definition: 'The fail closed classification of one PR check state in a Yeet watch snapshot.'
+    admission_kind: semantic-support
+    supports: [CommittedFailure, WorkUnitExecution]
+    decision_relevance: 'Provides a source carrier for execution, evidence, or failure state used by verification stopping and obligation decisions.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — ''LiteralKit(["pending", "pass", "fail", "skip"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'pass'
+    kind: literal-domain-member
+    source_domain: YeetCheckOutcome
+    definition: 'The pass closed classification of one PR check state in a Yeet watch snapshot.'
+    admission_kind: semantic-support
+    supports: [VerificationEvidence, WorkUnitExecution]
+    decision_relevance: 'Provides a source carrier for execution, evidence, or failure state used by verification stopping and obligation decisions.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — ''LiteralKit(["pending", "pass", "fail", "skip"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'pending'
+    kind: literal-domain-member
+    source_domain: YeetCheckOutcome
+    definition: 'The pending closed classification of one PR check state in a Yeet watch snapshot.'
+    admission_kind: semantic-support
+    supports: [WorkUnitExecution, ExecutionState]
+    decision_relevance: 'Provides a source carrier for execution, evidence, or failure state used by verification stopping and obligation decisions.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — ''LiteralKit(["pending", "pass", "fail", "skip"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'skip'
+    kind: literal-domain-member
+    source_domain: YeetCheckOutcome
+    definition: 'The skip closed classification of one PR check state in a Yeet watch snapshot.'
+    admission_kind: semantic-support
+    supports: [WorkUnitExecution, ExecutionState]
+    decision_relevance: 'Provides a source carrier for execution, evidence, or failure state used by verification stopping and obligation decisions.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts:83-87 — ''LiteralKit(["pending", "pass", "fail", "skip"])'''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'ci-timeout'
+    kind: literal-domain-member
+    source_domain: YeetMonitorFlakeClass
+    definition: 'The ci-timeout environment-only failure signature the merge loop may rerun once per job per head SHA.'
+    admission_kind: decision
+    cq_justification: [CQ-013]
+    decision_relevance: 'Names a failure signature whose attributed delay and cheapest surfacing lane are queried by CQ-013.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:138 — ''"ci-timeout",'''
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — ''export const YeetMonitorFlakeClass = LiteralKit(['''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'install-failure'
+    kind: literal-domain-member
+    source_domain: YeetMonitorFlakeClass
+    definition: 'The install-failure environment-only failure signature the merge loop may rerun once per job per head SHA.'
+    admission_kind: decision
+    cq_justification: [CQ-013]
+    decision_relevance: 'Names a failure signature whose attributed delay and cheapest surfacing lane are queried by CQ-013.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:141 — ''"install-failure",'''
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — ''export const YeetMonitorFlakeClass = LiteralKit(['''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'runner-loss'
+    kind: literal-domain-member
+    source_domain: YeetMonitorFlakeClass
+    definition: 'The runner-loss environment-only failure signature the merge loop may rerun once per job per head SHA.'
+    admission_kind: decision
+    cq_justification: [CQ-013]
+    decision_relevance: 'Names a failure signature whose attributed delay and cheapest surfacing lane are queried by CQ-013.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:140 — ''"runner-loss",'''
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — ''export const YeetMonitorFlakeClass = LiteralKit(['''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'setup-5xx'
+    kind: literal-domain-member
+    source_domain: YeetMonitorFlakeClass
+    definition: 'The setup-5xx environment-only failure signature the merge loop may rerun once per job per head SHA.'
+    admission_kind: decision
+    cq_justification: [CQ-013]
+    decision_relevance: 'Names a failure signature whose attributed delay and cheapest surfacing lane are queried by CQ-013.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:139 — ''"setup-5xx",'''
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — ''export const YeetMonitorFlakeClass = LiteralKit(['''
+    already_in_glossary: false
+    status: candidate
+  - candidate: 'ts2589-no-location'
+    kind: literal-domain-member
+    source_domain: YeetMonitorFlakeClass
+    definition: 'The ts2589-no-location environment-only failure signature the merge loop may rerun once per job per head SHA.'
+    admission_kind: decision
+    cq_justification: [CQ-013]
+    decision_relevance: 'Names a failure signature whose attributed delay and cheapest surfacing lane are queried by CQ-013.'
+    evidence:
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:137 — ''"ts2589-no-location",'''
+      - 'packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts:136-146 — ''export const YeetMonitorFlakeClass = LiteralKit(['''
+    already_in_glossary: false
+    status: candidate
+
+facts: []

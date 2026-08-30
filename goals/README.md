@@ -96,8 +96,8 @@ piecemeal — partial migration is how majority-pattern gravity persists.
 
 Directory names do not encode lifecycle state. Lifecycle is declared once per
 packet: `initiative.status` in `ops/manifest.json` is canonical, the README
-`Lifecycle:` line mirrors it, and both surfaces (plus the generated
-[`INDEX.md`](./INDEX.md)) are written together by
+`Lifecycle:` line mirrors it, and both tracked surfaces (plus the local
+generated index) are written together by
 `bun run beep goals set-status <slug> <status>`. The vocabulary is closed —
 validated by the `GoalManifest` schema and enforced by
 `bun run beep goals doctor`:
@@ -177,18 +177,19 @@ git diff --check -- goals/<slug>
    packet `reference` or `paused` with an explicit non-executable rationale in
    `README.md` and `ops/manifest.json`.
 
-## Index Policy
+## Local Index Policy
 
 This README defines the packet standard. It does not maintain a hand-written
-list of packets: the live portfolio index is generated at
-[`INDEX.md`](./INDEX.md), grouped by canonical status with one row per packet.
+list of packets. `goals/INDEX.md` is an ignored local projection, grouped by
+canonical status with one row per tracked packet manifest.
 
 ```sh
 bun run beep goals index --write   # regenerate goals/INDEX.md
-bun run beep goals index --check   # fail on drift (runs inside yeet verify)
+bun run beep goals index --check   # prove generation and check a local copy when present
 ```
 
-Merge conflicts on `INDEX.md` are resolved by rerunning `--write`.
+Do not link `goals/INDEX.md` as tracked GitHub truth or stage it. Generate it
+locally when a portfolio table is useful; edit packet manifests instead.
 
 ## Research Basis
 

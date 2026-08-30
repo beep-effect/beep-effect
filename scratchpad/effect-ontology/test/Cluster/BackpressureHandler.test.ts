@@ -1,9 +1,11 @@
 import { PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect, Stream } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { BackpressureConfig } from "../../Cluster/BackpressureHandler.ts";
+import { BackpressureConfig, withBackpressure } from "../../Cluster/BackpressureHandler.ts";
+import { ChunkingProgressEvent } from "../../Contract/ProgressStreaming.ts";
 
 const decodeConfig = S.decodeUnknownResult(BackpressureConfig);
 
@@ -27,4 +29,29 @@ describe("BackpressureConfig", () => {
     expect(Result.isFailure(decodeConfig({ samplingRate: -0.1 }))).toBe(true);
     expect(Result.isFailure(decodeConfig({ samplingRate: 1.1 }))).toBe(true);
   });
+
+  it.effect(
+    "drains the producer through the scoped queue",
+    Effect.fnUntraced(function* () {
+      const event = yield* S.decodeEffect(ChunkingProgressEvent)({
+        _tag: "chunking_progress",
+        eventId: "00000000-0000-4000-8000-000000000001",
+        runId: "doc-0123456789ab",
+        timestamp: "2026-08-24T00:00:00.000Z",
+        overallProgress: 5,
+        chunksCompleted: 3,
+        chunksProcessing: 1,
+        avgChunkSize: 480,
+      });
+      const config = BackpressureConfig.make({
+        maxQueuedEvents: PosInt.make(2),
+        samplingThreshold: UnitInterval.make(1),
+        samplingRate: UnitInterval.make(1),
+      });
+
+      const observed = yield* Stream.make(event).pipe(withBackpressure(config), Stream.runCollect);
+
+      expect(observed).toEqual([event]);
+    })
+  );
 });

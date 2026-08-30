@@ -24,19 +24,34 @@ import { getCanonicalId } from "./EntityLinker.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
 
 /**
- * Linked relation with canonical IDs
+ * Original relation paired with canonical subject, predicate, object, and remapping flags.
  *
- *
- * **Example** (Reject incomplete linked-relation data)
+ * **Example** (Remap a subject to its canonical entity)
  *
  * ```ts
- * import * as S from "effect/Schema"
+ * import { IRI } from "@beep/rdf"
+ * import { Relation, RelationObject } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  * import { LinkedRelation } from "@effect-ontology/Service/RelationLinker"
  *
- * console.log(S.is(LinkedRelation)({})) // false
+ * const original = Relation.make({
+ *   subjectId: EntityId.make("ada_lovelace_alias"),
+ *   predicate: IRI.make("https://schema.org/knows"),
+ *   object: RelationObject.cases.EntityReference.make({ value: EntityId.make("charles_babbage") })
+ * })
+ * const linked = LinkedRelation.make({
+ *   original,
+ *   canonicalSubjectId: EntityId.make("ada_lovelace"),
+ *   canonicalPredicate: original.predicate,
+ *   canonicalObject: original.object,
+ *   subjectRemapped: true,
+ *   objectRemapped: false
+ * })
+ * console.log(linked.subjectRemapped) // true
+ * console.log(linked.canonicalSubjectId) // "ada_lovelace"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class LinkedRelation extends S.Class<LinkedRelation>($I`LinkedRelation`)(
@@ -54,8 +69,7 @@ export class LinkedRelation extends S.Class<LinkedRelation>($I`LinkedRelation`)(
 ) {}
 
 /**
- * Result of linking a batch of relations
- *
+ * Canonicalized relations and non-negative remapping and literal-object counts.
  *
  * **Example** (Create an empty linking result)
  *
@@ -63,10 +77,11 @@ export class LinkedRelation extends S.Class<LinkedRelation>($I`LinkedRelation`)(
  * import { Chunk } from "effect"
  * import { LinkingResult } from "@effect-ontology/Service/RelationLinker"
  *
- * console.log(LinkingResult.make({ linkedRelations: Chunk.empty(), remappedCount: 0, literalObjectCount: 0 }))
+ * const result = LinkingResult.make({ linkedRelations: Chunk.empty(), remappedCount: 0, literalObjectCount: 0 })
+ * console.log(result.remappedCount) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class LinkingResult extends S.Class<LinkingResult>($I`LinkingResult`)(
@@ -92,9 +107,15 @@ export class LinkingResult extends S.Class<LinkingResult>($I`LinkingResult`)(
  * **Example** (Inspect relation linker)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { RelationLinker } from "@effect-ontology/Service/RelationLinker"
  *
- * console.log(RelationLinker)
+ * const program = Effect.gen(function* () {
+ *   const linker = yield* RelationLinker
+ *   return linker
+ * }).pipe(Effect.provide(RelationLinker.Default))
+ *
+ * console.log(program)
  * ```
  *
  * @category layers

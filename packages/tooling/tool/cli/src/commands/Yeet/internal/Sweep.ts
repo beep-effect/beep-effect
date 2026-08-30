@@ -68,10 +68,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
 import { SchemaUtils } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import { Cause, Clock, DateTime, Effect, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
@@ -1157,7 +1157,7 @@ export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(fun
     apply: true,
     classes: ["git-worktree"],
     gitWorktreePaths: worktreePaths,
-    ...(tmpRoot === undefined ? {} : { tmpRoot }),
+    ...O.getSomesStruct({ tmpRoot: O.fromUndefinedOr(tmpRoot) }),
   }).pipe(
     Effect.matchCause({
       onFailure: (cause): SweepStepOutcome =>

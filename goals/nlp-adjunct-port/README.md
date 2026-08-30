@@ -1,6 +1,11 @@
 # NLP Adjunct Port & MCP Toolkit Expansion
 
+Lifecycle: `completed-retained`
+
 Status: **DONE** (see `ops/manifest.json`)
+
+On-demand reflection:
+[`history/reflections/2026-08-29-codex.md`](./history/reflections/2026-08-29-codex.md).
 
 ## What this is
 

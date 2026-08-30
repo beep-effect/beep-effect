@@ -1,4 +1,3 @@
-/** @effect-diagnostics strictEffectProvide:skip-file */
 /**
  * Tests for `Plugin.scan`, `Plugin.load`, and `Plugin.sync`.
  *
@@ -387,3 +386,4 @@ describe("Plugin.sync", () => {
     expect(synced.manifest.outputStyles).toEqual(O.none());
   });
 });
+/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

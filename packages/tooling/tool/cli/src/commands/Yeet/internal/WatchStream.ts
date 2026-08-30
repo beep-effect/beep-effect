@@ -39,6 +39,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
 import type { YeetMonitorComment } from "./MonitorComments.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
@@ -181,6 +182,7 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
   {
     name: S.NonEmptyString,
     outcome: YeetCheckOutcome,
+    required: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     link: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
     signal: YeetCheckSignal.pipe(
       S.withConstructorDefault(Effect.succeed(YeetCheckSignal.make({ bucket: "", state: "" })))
@@ -244,9 +246,27 @@ export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSn
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
     mergeable: S.String,
+    mergeStateStatus: S.String.pipe(S.withConstructorDefault(Effect.succeed("UNKNOWN"))),
     prNumber: S.Finite,
     state: S.String,
     threads: S.Array(YeetWatchThread),
+    criteria: YeetMergeReadyCriteria.pipe(
+      S.withConstructorDefault(
+        Effect.succeed(
+          YeetMergeReadyCriteria.make({
+            prOpen: false,
+            notDraft: false,
+            closeoutRun: false,
+            requiredChecksGreen: false,
+            threadsResolved: false,
+            mergeable: false,
+            mergeStateAcceptable: false,
+            reviewDecisionAcceptable: false,
+            greptileScore: O.none(),
+          })
+        )
+      )
+    ),
   },
   $I.annote("YeetWatchSnapshot", {
     description: "Everything one yeet watch poll observed about the pull request.",
@@ -296,6 +316,7 @@ export class YeetCheckTransition extends S.Class<YeetCheckTransition>($I`YeetChe
     headSha: S.NonEmptyString,
     name: S.NonEmptyString,
     from: S.NullOr(YeetCheckOutcome),
+    required: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     to: YeetCheckOutcome,
   },
   $I.annote("YeetCheckTransition", {
@@ -344,6 +365,43 @@ export class YeetMergeabilityChanged extends S.Class<YeetMergeabilityChanged>($I
   },
   $I.annote("YeetMergeabilityChanged", {
     description: "GitHub's mergeability answer for the PR changed between polls.",
+  })
+) {}
+
+/**
+ * One truthful merge-readiness criterion flipped between watch polls.
+ *
+ * **Example** (Describe a required-check recovery)
+ *
+ * ```ts
+ * import { YeetMergeReadyCriterionChanged } from "@beep/repo-cli/test/Yeet"
+ *
+ * const event = YeetMergeReadyCriterionChanged.make({
+ *   at: "2026-08-27T00:00:00Z", criterion: "required-checks-green",
+ *   from: false, headSha: "abc123", to: true
+ * })
+ * console.log(event.to) // true
+ * ```
+ *
+ * @category events
+ * @since 0.0.0
+ */
+export class YeetMergeReadyCriterionChanged extends S.Class<YeetMergeReadyCriterionChanged>(
+  $I`YeetMergeReadyCriterionChanged`
+)(
+  {
+    kind: S.tag("merge-ready-criterion-changed"),
+    schemaVersion: S.Literal(YEET_WATCH_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_WATCH_SCHEMA_VERSION))
+    ),
+    at: S.String,
+    headSha: S.NonEmptyString,
+    criterion: YeetMergeReadyCriterion,
+    from: S.Boolean,
+    to: S.Boolean,
+  },
+  $I.annote("YeetMergeReadyCriterionChanged", {
+    description: "One truthful merge-readiness criterion flipped between watch polls.",
   })
 ) {}
 
@@ -567,6 +625,7 @@ export const YeetWatchEvent = S.Union([
   YeetCheckTransition,
   YeetThreadTransition,
   YeetMergeabilityChanged,
+  YeetMergeReadyCriterionChanged,
   YeetHeadChanged,
   YeetCommentPosted,
   YeetWatchEnded,
@@ -710,6 +769,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
             headSha: next.headSha,
             name: check.name,
             from: O.getOrNull(before),
+            required: check.required,
             to: check.outcome,
           }),
         ];
@@ -736,7 +796,23 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
       ? A.empty()
       : [YeetMergeabilityChanged.make({ at, headSha: next.headSha, from: prev.mergeable, to: next.mergeable })];
 
-  return A.appendAll(A.appendAll(checkEvents, threadEvents), mergeabilityEvents);
+  const criteriaEvents = A.flatMap(YeetMergeReadyCriterion.Options, (criterion): ReadonlyArray<YeetWatchEvent> => {
+    const before = mergeReadyCriterionHolds(prev.criteria, criterion);
+    const after = mergeReadyCriterionHolds(next.criteria, criterion);
+    return before === after
+      ? A.empty()
+      : [
+          YeetMergeReadyCriterionChanged.make({
+            at,
+            criterion,
+            from: before,
+            headSha: next.headSha,
+            to: after,
+          }),
+        ];
+  });
+
+  return A.appendAll(A.appendAll(A.appendAll(checkEvents, threadEvents), mergeabilityEvents), criteriaEvents);
 };
 
 /**

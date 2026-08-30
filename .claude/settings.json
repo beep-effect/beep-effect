@@ -80,6 +80,12 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/yeet-inbox.sh claude",
+            "timeout": 2,
+            "statusMessage": "Checking Yeet inbox"
           }
         ]
       }
@@ -149,6 +155,30 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/yeet-inbox.sh claude",
+            "timeout": 2,
+            "statusMessage": "Reading Yeet inbox"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/packet-projections.sh",
+            "timeout": 30,
+            "statusMessage": "Refreshing packet projections"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/yeet-inbox.sh claude",
+            "timeout": 2,
+            "statusMessage": "Reading Yeet inbox"
           }
         ]
       }
@@ -159,6 +189,12 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/yeet-inbox.sh claude",
+            "timeout": 2,
+            "statusMessage": "Checking Yeet inbox"
           }
         ]
       }

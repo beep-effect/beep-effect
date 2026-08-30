@@ -13,16 +13,25 @@ import { Effect } from "effect";
 import { calculateCost } from "./CostCalculator.ts";
 
 /**
- * Semantic conventions for LLM spans (OpenTelemetry GenAI)
+ * OpenTelemetry GenAI and extraction span attribute keys used by the
+ * annotate helpers in this module.
  *
- * **Example** (Inspect llm attributes)
+ * **Gotchas**
+ *
+ * Prompt and response bodies are intentionally absent. Only lengths, hashes,
+ * token counts, and similar metadata are recorded.
+ *
+ * **Example** (Read the model and prompt-length keys)
  *
  * ```ts
  * import { LlmAttributes } from "@effect-ontology/Telemetry/LlmAttributes"
  *
- * console.log(LlmAttributes)
+ * console.log(LlmAttributes.MODEL) // "gen_ai.request.model"
+ * console.log(LlmAttributes.PROMPT_LENGTH) // "gen_ai.prompt.length"
+ * console.log("PROMPT_TEXT" in LlmAttributes) // false
  * ```
  *
+ * @see {@link annotateLlmCall} for writing these keys onto the current span.
  * @category observability
  * @since 0.0.0
  */
@@ -72,18 +81,34 @@ export const LlmAttributes = {
 };
 
 /**
- * Annotate current span with LLM call metadata
+ * Annotates the current span with model, provider, token, and length metadata
+ * for one language-model call.
  *
- * **Example** (Inspect annotate llm call)
+ * **Gotchas**
+ *
+ * Prompt and response text are never written. Pass lengths and optional
+ * `schemaHash` only.
+ *
+ * **Example** (Compose a call annotation)
  *
  * ```ts
- * import { annotateLlmCall } from "@effect-ontology/Telemetry/LlmAttributes"
+ * import { LlmAttributes, annotateLlmCall } from "@effect-ontology/Telemetry/LlmAttributes"
+ * import { calculateCost } from "@effect-ontology/Telemetry/CostCalculator"
  *
- * console.log(annotateLlmCall)
+ * const attrs = {
+ *   model: "claude-sonnet-4-5",
+ *   provider: "anthropic",
+ *   promptLength: 128,
+ *   inputTokens: 100,
+ *   outputTokens: 40
+ * }
+ * const annotate = annotateLlmCall(attrs)
+ * console.log(LlmAttributes.TOTAL_TOKENS) // "gen_ai.usage.total_tokens"
+ * console.log(calculateCost(attrs.model, attrs.inputTokens, attrs.outputTokens)) // 0.0009
+ * console.log(typeof annotate) // "object"
  * ```
  *
- * @param attrs - LLM call attributes
- * @returns Effect that annotates the current span
+ * @see {@link LlmAttributes} for the attribute keys written by this helper.
  * @category observability
  * @since 0.0.0
  */
@@ -123,18 +148,23 @@ export const annotateLlmCall = (attrs: {
   });
 
 /**
- * Annotate current span with retry metadata
+ * Annotates the current span with the current retry attempt and configured
+ * maximum attempts.
  *
- * **Example** (Inspect annotate retry)
+ * **Example** (Compose a retry annotation)
  *
  * ```ts
- * import { annotateRetry } from "@effect-ontology/Telemetry/LlmAttributes"
+ * import { LlmAttributes, annotateRetry } from "@effect-ontology/Telemetry/LlmAttributes"
  *
- * console.log(annotateRetry)
+ * const attrs = { retryCount: 2, maxAttempts: 3 }
+ * const annotate = annotateRetry(attrs)
+ * console.log(LlmAttributes.RETRY_COUNT) // "retry.count"
+ * console.log(LlmAttributes.RETRY_MAX_ATTEMPTS) // "retry.max_attempts"
+ * console.log(attrs.retryCount < attrs.maxAttempts) // true
+ * console.log(typeof annotate) // "object"
  * ```
  *
- * @param attrs - Retry attributes
- * @returns Effect that annotates the current span
+ * @see {@link LlmAttributes} for the retry attribute keys.
  * @category observability
  * @since 0.0.0
  */
@@ -145,19 +175,27 @@ export const annotateRetry = (attrs: { retryCount: number; maxAttempts: number }
   ]).pipe(Effect.asVoid);
 
 /**
- * Annotate current span with error metadata
+ * Annotates the current span with an error type and an optional message.
  *
- * **Example** (Inspect annotate error)
+ * **Gotchas**
+ *
+ * `errorMessage` is truncated to 500 characters before it is written.
+ *
+ * **Example** (Compose a truncated error annotation)
  *
  * ```ts
- * import { annotateError } from "@effect-ontology/Telemetry/LlmAttributes"
+ * import { LlmAttributes, annotateError } from "@effect-ontology/Telemetry/LlmAttributes"
  *
- * console.log(annotateError)
+ * const errorMessage = "x".repeat(600)
+ * const annotate = annotateError({ errorType: "LlmTimeout", errorMessage })
+ * console.log(LlmAttributes.ERROR_TYPE) // "error.type"
+ * console.log(LlmAttributes.ERROR_MESSAGE) // "error.message"
+ * console.log(errorMessage.slice(0, 500).length) // 500
+ * console.log(typeof annotate) // "object"
  * ```
  *
- * @param attrs - Error attributes
- * @returns Effect that annotates the current span
- * @category errors
+ * @see {@link LlmAttributes} for the error attribute keys.
+ * @category observability
  * @since 0.0.0
  */
 export const annotateError = (attrs: { errorType: string; errorMessage?: string }): Effect.Effect<void> =>
@@ -170,18 +208,23 @@ export const annotateError = (attrs: { errorType: string; errorMessage?: string 
   });
 
 /**
- * Annotate current span with extraction metadata
+ * Annotates the current span with chunk, entity, relation, and mention counts
+ * for one extraction step.
  *
- * **Example** (Inspect annotate extraction)
+ * **Example** (Compose an extraction annotation)
  *
  * ```ts
- * import { annotateExtraction } from "@effect-ontology/Telemetry/LlmAttributes"
+ * import { LlmAttributes, annotateExtraction } from "@effect-ontology/Telemetry/LlmAttributes"
  *
- * console.log(annotateExtraction)
+ * const attrs = { chunkIndex: 0, entityCount: 3, relationCount: 1 }
+ * const annotate = annotateExtraction(attrs)
+ * console.log(LlmAttributes.CHUNK_INDEX) // "extraction.chunk_index"
+ * console.log(LlmAttributes.ENTITY_COUNT) // "extraction.entity_count"
+ * console.log(attrs.entityCount + attrs.relationCount) // 4
+ * console.log(typeof annotate) // "object"
  * ```
  *
- * @param attrs - Extraction attributes
- * @returns Effect that annotates the current span
+ * @see {@link LlmAttributes} for the extraction attribute keys.
  * @category observability
  * @since 0.0.0
  */

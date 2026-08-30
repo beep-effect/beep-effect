@@ -14,18 +14,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { Context, Layer } from "effect";
 
 /**
- * Tracing context interface
+ * Model identifier and provider name threaded into LLM span annotations.
  *
- * **Example** (Reference TracingContextShape fields)
- *
- * ```ts
- * import type { TracingContextShape } from "@effect-ontology/Telemetry/TracingContext"
- *
- * const tracingContextShapeFields: ReadonlyArray<keyof TracingContextShape> = ["model", "provider"]
- *
- * console.log(tracingContextShapeFields)
- * ```
- *
+ * @see {@link TracingContext} for the service that provides this shape.
  * @category type-level
  * @since 0.0.0
  */
@@ -36,21 +27,30 @@ export interface TracingContextShape {
 
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/TracingContext");
 /**
- * TracingContext tag and utilities
+ * Context service that supplies the current model and provider for LLM span
+ * annotations.
  *
  * **Details**
  *
- * Provides model/provider info for LLM span annotations.
+ * {@link TracingContext.Default} uses `"unknown"` / `"unknown"`.
+ * {@link TracingContext.make} overrides both fields for a real provider.
  *
- * **Example** (Inspect tracing context)
+ * **Example** (Read default and constructed context)
  *
  * ```ts
  * import { TracingContext } from "@effect-ontology/Telemetry/TracingContext"
+ * import { Effect } from "effect"
  *
- * console.log(TracingContext)
+ * const read = Effect.flatMap(TracingContext, (context) => Effect.succeed(context))
+ * const unknown = Effect.runSync(Effect.provide(read, TracingContext.Default))
+ * console.log(unknown.model) // "unknown"
+ * const claude = Effect.runSync(
+ *   Effect.provide(read, TracingContext.make("claude-sonnet-4-5", "anthropic"))
+ * )
+ * console.log(claude.provider) // "anthropic"
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class TracingContext extends Context.Service<TracingContext, TracingContextShape>()($I`TracingContext`) {

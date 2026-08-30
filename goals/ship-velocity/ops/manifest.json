@@ -5,13 +5,13 @@
     "title": "Ship Velocity",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-25",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ship-velocity",
   "lifecycle": "active",
-  "statusNote": "P0 and P1 complete. P0: packet landed, metrics baseline frozen (research/metrics-baseline.md), both in-flight branches landed; the C2/E2/E6 decision notes ride their implementation PRs by design. P1 shipped 2026-08-16..17 as four PRs: #737 B1 same-argv lanes, #736 E1 publish regenerates the derived goals INDEX, #738 A7 monitor hardening, #743 C1 remote-read cache posture. B9 (deterministic coverage runtime, the P3 prerequisite for B2/B4) shipped 2026-08-24 after a 150-run sweep showed Coverage Regression failing 25.7% of PR runs, half of it from locally minted EnvConfig floors. B10 (dependents in pull-request coverage scope) shipped the same day, closing the green-PR-red-main inheritance class. B11 (2026-08-25) added the scoped remediation block and row-only baseline scoping, closing the regeneration treadmill. Next actions are P2's backpressure engine, starting with A1's watch stream and the failure capsules the seven misattributed-repair-hint receipts now argue for.",
-  "mission": "Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guarantees the 16 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
+  "statusNote": "P0-P4 and the P5 engineering backlog are complete. The 2026-08-27 closeout implements hook-driven backpressure and dead-owner takeover, full local/hosted parity planning and proof reuse, weighted admission with RSS telemetry, cache warming and first-touch evidence, ignored local portfolio projections, contention-family serialization, goals-only required-check skips, and the live stacked-PR and merge-queue evaluations. The initiative remains active because its representative post-merge observation week cannot begin until the final implementation PR lands; research/metrics-closeout.md owns that explicit gate.",
+  "mission": "Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guarantees the 17 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -42,7 +42,13 @@
     "research/c6-conflicts-queue.md",
     "research/c7-opportunities.md",
     "research/g1-external-research.md",
-    "research/g2-design-ideas.md"
+    "research/g2-design-ideas.md",
+    "research/cache-proof.md",
+    "research/parity-ledger.md",
+    "research/branch-protection-contexts.json",
+    "research/stacked-pr-trial.md",
+    "research/merge-queue-evaluation.md",
+    "research/metrics-closeout.md"
   ],
   "agentLaunchers": [
     {
@@ -67,22 +73,22 @@
     {
       "id": "P2",
       "name": "Backpressure engine",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Full parity",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Concurrency and cache proof",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Hot-file endgame and close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

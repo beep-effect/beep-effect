@@ -38,7 +38,7 @@
     "test:integration": "bun run beep:test:integration",
     "test:integration:serial": "bun run beep:test:integration",
     "coverage": "bunx vitest run --coverage",
-    "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bunx --bun --no-install docgen",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
     "beep:check": "tsgo -p tsconfig.check.json",
     "beep:test": "bunx --bun vitest run --exclude=test/integration/**",

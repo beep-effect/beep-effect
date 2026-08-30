@@ -48,7 +48,7 @@
     "title": "NLP Adjunct Port & MCP Toolkit Expansion",
     "status": "completed-retained"
   },
-  "reflectionRequired": false,
+  "reflectionRequired": true,
   "statusNote": "legacy status: DONE",
   "schemaVersion": "initiative-manifest/v2",
   "lifecycle": "completed-retained",

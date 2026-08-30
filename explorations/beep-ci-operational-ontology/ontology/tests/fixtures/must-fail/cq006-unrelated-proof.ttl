@@ -1,0 +1,7 @@
+# Partner-review monotonicity: a proof on ANOTHER tree/epoch must not discharge the
+# target's obligation — LaneA must come back.
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:TierCiMergeGreen ciops:requiresLane ciops:LaneA .
+ciops:proof-elsewhere ciops:dischargesObligation ciops:LaneA ;
+    ciops:provesTree ciops:tree-OTHER ;
+    ciops:validInEpoch ciops:epoch-OTHER .

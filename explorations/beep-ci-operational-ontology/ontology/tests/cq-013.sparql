@@ -1,0 +1,16 @@
+# CQ-013: Which failure signatures most delay certainty (ranked by attributed delay), and which lane surfaces each signature cheapest? (Cheapest = earliest under the ascending-cost execution order.)
+# Expected: non_empty | priority: must_have | derivation: direct_lookup
+# GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?sig ?delay ?lane ?p50 WHERE {
+  ?sig ciops:attributedDelayMs ?delay .
+  OPTIONAL {
+    ?sig ciops:surfacedByLane ?lane .
+    ?lane ciops:hasCostEstimate ?c . ?c ciops:p50Ms ?p50 .
+    FILTER NOT EXISTS {
+      ?sig ciops:surfacedByLane ?lane2 .
+      ?lane2 ciops:hasCostEstimate ?c2 . ?c2 ciops:p50Ms ?p502 .
+      FILTER (?p502 < ?p50)
+    }
+  }
+} ORDER BY DESC(?delay)

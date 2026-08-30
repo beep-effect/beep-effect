@@ -2,6 +2,7 @@ import { tmpdir } from "node:os";
 import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
 import {
   emptyTurboPlanSnapshot,
+  loadYeetInboxView,
   proofCoordinatorLockPath,
   proofLockPathForContext,
   RepoPlanStep,
@@ -10,7 +11,7 @@ import {
   runWithFullProofCoordinatorForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
+import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -19,7 +20,7 @@ import * as A from "effect/Array";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 
 const contextAt = (repoRoot: string): RepoRunContext =>
@@ -108,6 +109,10 @@ const proofStep = (repoRoot: string, id: string, source: string): RepoPlanStep =
     command: "bun",
     args: ["--eval", source],
     cwd: repoRoot,
+    env: {
+      BEEP_YEET_ADMISSION_LEASE_ID: "review-fixes-test-lease",
+      BEEP_YEET_ADMISSION_WORKLOAD_PATH: `${repoRoot}/.review-fixes-test.workload`,
+    },
     scope: "repo",
     mutability: "readonly",
     resume: "never",
@@ -148,6 +153,47 @@ describe("yeet review fixes", () => {
           expect(A.map(results, (result) => result.stepId)).toEqual(["full:cheap-gates"]);
           expect(A.map(executed, (entry) => entry.step.id)).toEqual(["full:cheap-gates"]);
           expect(results[0]?.exitCode).toBe(23);
+        })
+      )
+    ));
+
+  it("poisons the checkout on a local shard failure and clears it after the shard succeeds", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          yield* runGit(tmpDir, ["init"]);
+          yield* runGit(tmpDir, [
+            "-c",
+            "user.name=Yeet Test",
+            "-c",
+            "user.email=yeet@example.test",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "test: seed repo",
+          ]);
+          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
+
+          yield* runProofPhaseForTesting(
+            contextAt(tmpDir),
+            [proofStep(tmpDir, "full:check", "process.exitCode = 23")],
+            recorder
+          );
+          const failedView = yield* loadYeetInboxView(tmpDir);
+          expect(failedView.entries).toHaveLength(1);
+          expect(failedView.entries[0]?.row.kind).toBe("local-shard-failed");
+          expect(failedView.entries[0]?.liveness).toBe("live");
+          expect(failedView.entries[0]?.ack.acked).toBe(false);
+
+          yield* runProofPhaseForTesting(
+            contextAt(tmpDir),
+            [proofStep(tmpDir, "full:check", "process.exitCode = 0")],
+            recorder
+          );
+          const repairedView = yield* loadYeetInboxView(tmpDir);
+          expect(repairedView.entries).toHaveLength(1);
+          expect(repairedView.entries[0]?.ack.acked).toBe(true);
+          expect(repairedView.entries[0]?.ack.receipt?.resolution.kind).toBe("fix-sha");
         })
       )
     ));

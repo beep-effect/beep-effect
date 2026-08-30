@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Cache, Context, Duration, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
@@ -21,19 +22,27 @@ import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } 
 import { NomicNlpService, NomicNlpServiceDefault } from "./NomicNlp.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
+const SimilarityMethod = LiteralKit(["exact", "similarity", "containment", "neighbor"]).pipe(
+  $I.annoteSchema("SimilarityMethod", {
+    description: "Resolution strategies that can produce an entity similarity decision.",
+  })
+);
 
 /**
- * Similarity score result with method detection
+ * Similarity score plus the method that produced the merge decision.
  *
- *
- * **Example** (Use the SimilarityResult contract)
+ * **Example** (Record a similarity decision)
  *
  * ```ts
- * import type { SimilarityResult } from "@effect-ontology/Service/SimilarityScorer"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { SimilarityResult } from "@effect-ontology/Service/SimilarityScorer"
  *
- * const acceptsSimilarityResult = (_value: SimilarityResult): void => undefined
- *
- * console.log(acceptsSimilarityResult)
+ * const result = SimilarityResult.make({
+ *   score: UnitInterval.make(0.92),
+ *   method: "similarity",
+ *   shouldMerge: true
+ * })
+ * console.log(result.shouldMerge) // true
  * ```
  *
  * @category models
@@ -42,31 +51,34 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
 export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityResult`)(
   {
     score: UnitInterval,
-    method: S.Literals(["exact", "similarity", "containment", "neighbor"]),
+    method: SimilarityMethod,
     shouldMerge: S.Boolean,
   },
   $I.annote("SimilarityResult", { description: "Validated entity similarity score and resolution decision." })
 ) {}
 
 /**
- * SimilarityScorer - Service for computing entity similarity with caching
+ * Cached entity-similarity scorer backed by {@link NomicNlpService}.
  *
  * **Details**
  *
- * Features:
- * - Shared embedding cache across computations
- * - Effect-native interface
- * - Configurable weights
+ * Embeddings are cached by mention text so repeated comparisons skip re-encoding.
  *
- * **Example** (Inspect similarity scorer)
+ * **Example** (Read cache size from Default)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { SimilarityScorer } from "@effect-ontology/Service/SimilarityScorer"
  *
- * console.log(SimilarityScorer)
+ * const program = Effect.gen(function* () {
+ *   const scorer = yield* SimilarityScorer
+ *   return yield* scorer.getCacheSize
+ * }).pipe(Effect.provide(SimilarityScorer.Default))
+ *
+ * console.log(program)
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`SimilarityScorer`, {
