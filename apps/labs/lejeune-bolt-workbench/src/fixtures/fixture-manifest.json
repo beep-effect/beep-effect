@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "lejeune-fixture-manifest/v1",
+  "sources": [
+    {
+      "id": "rfq-a-outlook-body",
+      "sha256": "ee38c21a1635fa152f1e48914ae2c2ce3761d5ada7f96b8c7c3d5a50e808f3b5"
+    },
+    {
+      "id": "rfq-a-xlsx-takeoff",
+      "sha256": "09c038e5118283ff15382a632ca6c6e9c811ef4e7235128623956f6043b1d4c5"
+    },
+    {
+      "id": "rfq-b-prose-email",
+      "sha256": "bc1144a4fdde67229b9e2178c09c133cdd48a0b8881e5f9b9f0316f4ba91806e"
+    },
+    {
+      "id": "rfq-b-pdf-schedule",
+      "sha256": "bbaa1ae10d94a0680966ed5d1eef8c020b172131d760eb7bc9bc61e8f4831360"
+    }
+  ],
+  "extractedFields": [
+    {
+      "anchor": {
+        "startChar": 26,
+        "endChar": 43,
+        "quote": "North Loop Canopy"
+      },
+      "name": "projectName",
+      "sourceDocumentId": "rfq-a-outlook-body",
+      "value": "North Loop Canopy"
+    },
+    {
+      "anchor": { "startChar": 55, "endChar": 65, "quote": "2026-09-12" },
+      "name": "deliveryDate",
+      "sourceDocumentId": "rfq-a-outlook-body",
+      "value": "2026-09-12"
+    },
+    {
+      "anchor": {
+        "startChar": 68,
+        "endChar": 85,
+        "quote": "Domestic required"
+      },
+      "name": "domesticOrigin",
+      "sourceDocumentId": "rfq-a-outlook-body",
+      "value": "Domestic required"
+    },
+    {
+      "anchor": {
+        "startChar": 95,
+        "endChar": 111,
+        "quote": "MG B695 Class 55"
+      },
+      "name": "finish",
+      "sourceDocumentId": "rfq-a-outlook-body",
+      "value": "MG B695 Class 55"
+    },
+    {
+      "anchor": { "startChar": 6, "endChar": 17, "quote": "TC assembly" },
+      "name": "product",
+      "sourceDocumentId": "rfq-a-xlsx-takeoff",
+      "value": "TC assembly"
+    },
+    {
+      "anchor": { "startChar": 20, "endChar": 32, "quote": "F1852 Type 1" },
+      "name": "grade",
+      "sourceDocumentId": "rfq-a-xlsx-takeoff",
+      "value": "F1852 Type 1"
+    },
+    {
+      "anchor": { "startChar": 35, "endChar": 41, "quote": "7/8 in" },
+      "name": "diameter",
+      "sourceDocumentId": "rfq-a-xlsx-takeoff",
+      "value": "7/8 in"
+    },
+    {
+      "anchor": { "startChar": 44, "endChar": 52, "quote": "3-1/4 in" },
+      "name": "length",
+      "sourceDocumentId": "rfq-a-xlsx-takeoff",
+      "value": "3-1/4 in"
+    },
+    {
+      "anchor": { "startChar": 55, "endChar": 58, "quote": "180" },
+      "name": "quantity",
+      "sourceDocumentId": "rfq-a-xlsx-takeoff",
+      "value": "180"
+    },
+    {
+      "anchor": { "startChar": 61, "endChar": 74, "quote": "F959 Type 325" },
+      "name": "dti",
+      "sourceDocumentId": "rfq-a-xlsx-takeoff",
+      "value": "F959 Type 325"
+    },
+    {
+      "anchor": {
+        "startChar": 20,
+        "endChar": 42,
+        "quote": "County Shops Expansion"
+      },
+      "name": "projectName",
+      "sourceDocumentId": "rfq-b-prose-email",
+      "value": "County Shops Expansion"
+    },
+    {
+      "anchor": { "startChar": 56, "endChar": 66, "quote": "2026-09-20" },
+      "name": "deliveryDate",
+      "sourceDocumentId": "rfq-b-prose-email",
+      "value": "2026-09-20"
+    },
+    {
+      "anchor": {
+        "startChar": 71,
+        "endChar": 96,
+        "quote": "certification is required"
+      },
+      "name": "certificationRequirement",
+      "sourceDocumentId": "rfq-b-prose-email",
+      "value": "certification is required"
+    },
+    {
+      "anchor": {
+        "startChar": 19,
+        "endChar": 38,
+        "quote": "heavy hex bolt only"
+      },
+      "name": "product",
+      "sourceDocumentId": "rfq-b-pdf-schedule",
+      "value": "heavy hex bolt only"
+    },
+    {
+      "anchor": { "startChar": 47, "endChar": 58, "quote": "A490 Type 1" },
+      "name": "grade",
+      "sourceDocumentId": "rfq-b-pdf-schedule",
+      "value": "A490 Type 1"
+    },
+    {
+      "anchor": { "startChar": 70, "endChar": 76, "quote": "3/4 in" },
+      "name": "diameter",
+      "sourceDocumentId": "rfq-b-pdf-schedule",
+      "value": "3/4 in"
+    },
+    {
+      "anchor": { "startChar": 86, "endChar": 94, "quote": "2-1/2 in" },
+      "name": "length",
+      "sourceDocumentId": "rfq-b-pdf-schedule",
+      "value": "2-1/2 in"
+    },
+    {
+      "anchor": { "startChar": 106, "endChar": 109, "quote": "860" },
+      "name": "quantity",
+      "sourceDocumentId": "rfq-b-pdf-schedule",
+      "value": "860"
+    },
+    {
+      "anchor": { "startChar": 119, "endChar": 122, "quote": "HDG" },
+      "name": "finish",
+      "sourceDocumentId": "rfq-b-pdf-schedule",
+      "value": "HDG"
+    },
+    {
+      "anchor": { "startChar": 129, "endChar": 142, "quote": "F959 Type 325" },
+      "name": "dti",
+      "sourceDocumentId": "rfq-b-pdf-schedule",
+      "value": "F959 Type 325"
+    }
+  ],
+  "missingFields": ["rfq-a|certificationRequirement", "rfq-b|domesticOrigin"]
+}
