@@ -3,18 +3,20 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
-Graduated 2026-08-17 with `packet-control-plane-core` as the sole promised-now
-candidate. **Reopened at `decompose` 2026-08-26** on the ratified convention:
-the candidate-2/3 gate condition was satisfied on main evidence and the core
-closed `completed-retained`. Session B then chartered
-[`goals/packet-convention-migration`](../../goals/packet-convention-migration/README.md)
-as candidate 6 and the first reopener, and ruled on H, I, and J (D17–D26).
-Candidates 2–4 remain gated re-entry candidates; the React viewer stays gated
-on KSA static-v1 daily-use evidence.
+Graduated for the candidate-6 wave on 2026-08-30. The convention migration
+implementation shipped in PR #855; D27 authorized a bounded recovery PR for
+the reflection, public empty-preview repair, goal lifecycle reconciliation,
+and this graduation after the original PR merged before its promised same-PR
+closeout.
+
+Candidates 2–4 remain gated re-entry candidates, the React viewer remains gated
+on KSA static-v1 daily-use evidence, and Amendment J remains with
+`typed-agent-skill-contracts`. A fired gate reopens this packet at `decompose`;
+there is no active open question for the completed candidate-6 wave.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -29,11 +31,9 @@ BDUF ceremony.
 
 ## Next Open Question
 
-None for this wave. D24 routes Amendment J through the existing
-`typed-agent-skill-contracts` exploration, D25 starts candidate 6 with the
-fork-repair applier alone, and D26 combines the rulings, implementation,
-migration, and closeout in one PR. The active work is the graduated
-`packet-convention-migration` goal.
+None. Candidate 6 is closed under D27. Candidates 2–5 retain their existing
+re-entry gates; when one fires, reopen this exploration at `decompose` rather
+than treating the present graduation as authorization to scaffold it.
 
 ## Read This First
 
@@ -48,6 +48,14 @@ migration, and closeout in one PR. The active work is the graduated
 
 ## Trail
 
+- 2026-08-30 (candidate-6 recovery closeout): PR #855 had already merged the
+  packet-convention implementation when P3 resumed, so its promised same-PR P4
+  was impossible. The final implementation head had all 17 review threads
+  resolved but retained two failed contexts and no scored Greptile verdict.
+  D27 authorized one bounded recovery PR, which repaired and re-proved the
+  canonical empty-preview command, added the Codex reflection, closed the goal
+  `completed-retained`, and graduated this exploration for the wave without
+  rewriting #855 as merge-ready.
 - 2026-08-27 (D6 navigation migration): ship-velocity P5 landed the ignored
   whole-file Atlas and marked README status projections. No exploration
   streams were fabricated: manifests are explicit adoption snapshots until

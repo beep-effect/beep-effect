@@ -3,7 +3,7 @@
 Normative contract. Packet anchor document. Seeded 2026-08-26 from candidate 6
 of the ratified
 [`packet-system-redesign`](../../explorations/packet-system-redesign/MAP.md)
-MAP and Session B decisions D17–D26.
+MAP, Session B decisions D17–D26, and the D27 post-merge recovery ruling.
 
 ## Mission
 
@@ -58,6 +58,15 @@ assumptions and issues explicitly, and prove the resulting fleet with
 - The operation is idempotent: a second preview after apply has no edits or
   seeds, and `bun run beep explore --check` is clean.
 
+## Post-merge recovery ruling
+
+D27 authorizes a separate recovery PR because implementation PR #855 merged
+before the required same-PR reflection and lifecycle changes. The exception is
+bounded to repairing the canonical empty-preview command, recording the
+reflection, reconciling fleet drift and goal/exploration state, and proving the
+recovery head through Yeet. It does not grandfather the goal and does not
+assert that #855's final head was merge-ready.
+
 ## Acceptance
 
 - [x] `beep goals repair-fork <slug> --root <root> --preview|--apply` repairs
@@ -73,8 +82,11 @@ assumptions and issues explicitly, and prove the resulting fleet with
       and a fresh tip-only trace; already-streamed packets are not reseeded.
 - [x] A second migration preview is empty and `bun run beep explore --check`
       reports zero findings.
-- [ ] Focused tests, typecheck, repo verification, reflection lint, and Yeet's
-      exact-head merge-readiness proof pass.
+- [x] Focused tests, typecheck, repo verification, and reflection lint pass for
+      the shipped implementation and recovery; the recovery head carries the
+      lifecycle closeout and is accepted through Yeet's exact-head
+      merge-readiness proof. PR #855's historical final-head check and Greptile
+      gaps remain explicitly recorded under D27.
 
 ## Stop conditions
 

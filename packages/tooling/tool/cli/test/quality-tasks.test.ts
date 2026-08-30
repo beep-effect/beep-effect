@@ -983,15 +983,20 @@ describe("quality task adapter", () => {
       const lane = laneProofTestLane(tempRoot, "proof:test", "preflight", "echo run >> .beep/lane-marker.txt");
       const waves = [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: [lane] })];
       const run = collectGithubCheckLaneWavesForTesting("proof", waves, "fail-fast");
+      const runWithLaneProof = withEnvVarEffect(
+        "BEEP_YEET_LANE_PROOF_MODE",
+        "active",
+        withEnvVarEffect("BEEP_YEET_PROOF_BASE", undefined, run)
+      );
 
-      const first = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      const first = yield* runWithLaneProof;
       expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
-      const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      const second = yield* runWithLaneProof;
       expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\n");
 
       yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# changed\n");
-      const invalidated = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
+      const invalidated = yield* runWithLaneProof;
       expect(A.map(invalidated.report.lanes, (result) => result.status)).toEqual(["passed"]);
       expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
     }, provideScopedLayer(PlatformLayer))
@@ -1318,7 +1323,7 @@ describe("quality task adapter", () => {
     return Effect.runPromise(
       withEnvVarEffect(
         "BEEP_YEET_LANE_PROOF_MODE",
-        "off",
+        undefined,
         runGithubChecks("cheap-gates").pipe(
           Effect.tap(
             Effect.fnUntraced(function* () {

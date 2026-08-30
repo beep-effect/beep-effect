@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "S5 adversarial taxonomy over the 104-entry LEDGER, the 149 unresolved dispositions rows, and the 31 ratified terms (the §4b normalization gate is complete and ratified as of 2026-08-29, PR #889 — do not rerun it)."
+      "Stage S6: A-Box ratification & predicates over the ratified 38-term taxonomy (runtime ETL for individuals; the deferred AdmissionPolicy instance; predicates from the 4 accepted fact edges), and assemble auditor run 2's queue (163 parked candidates, 76 parked ledger rows, 4 waived constraints, VerificationLane placement). S5 is COMPLETE and ratified — do not redo it."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-08-27",
-    "updated": "2026-08-29"
+    "updated": "2026-08-30"
   }
 }

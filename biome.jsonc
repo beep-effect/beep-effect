@@ -52,6 +52,14 @@
       "!standards/repo-exports.catalog.jsonc",
       "!**/fixtures/f1/documents",
       "!scratchpad",
+      // beep-ci-operational-ontology §4b: digest-locked run evidence. The
+      // adapter engine bytes are pinned by a sha256 sidecar and the archived
+      // run manifest, and the runs/ tree (manifest, observations, vendored
+      // judging engine incl. JSON contract bytes) is captured provenance —
+      // a format sweep rewriting any of it falsifies the recorded run
+      // (PR #865 reformatted the adapter and broke its engine check).
+      "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters",
+      "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/runs",
       "!**/modeling/html/data"
     ]
   },

@@ -126,3 +126,4 @@
 
   [mcp_servers.phoenix]
     url = "https://dankserver.tailc7c348.ts.net:8447/mcp"
+    enabled = false
