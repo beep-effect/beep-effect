@@ -653,4 +653,138 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       ).toEqual({ inputBytes: 0, outputBytes: 0, passed: false, unapproved: true });
     })
   );
+
+  it.effect("reconciles strict family acceptance fields independently", () =>
+    Effect.gen(function* () {
+      const digest = sha("strict-output");
+      const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
+        ...identity,
+        expectedCount: NonNegativeInt.make(0),
+        family: "legacy-word",
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        policySha256: sha("policy"),
+        recordType: "family-run-start",
+      });
+      const summary = TransformationLedgerRecord.cases["family-run-summary"].make({
+        ...identity,
+        elapsedMillis: NonNegativeInt.make(1),
+        exceptionCount: NonNegativeInt.make(0),
+        family: "legacy-word",
+        inputBytes: NonNegativeInt.make(0),
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        outputBytes: NonNegativeInt.make(3),
+        outputTreeSha256: digest,
+        passCount: NonNegativeInt.make(0),
+        recordType: "family-run-summary",
+        sourceCount: NonNegativeInt.make(0),
+        unapprovedCount: NonNegativeInt.make(0),
+      });
+      const acceptance = TransformationLedgerRecord.cases["family-acceptance-pass"].make({
+        ...identity,
+        evidenceSha256: sha("evidence"),
+        expectedCount: NonNegativeInt.make(0),
+        family: "legacy-word",
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        outputTreeSha256: digest,
+        recordType: "family-acceptance-pass",
+        terminalCount: NonNegativeInt.make(0),
+        unapprovedCount: NonNegativeInt.make(0),
+      });
+      const evidence = {
+        acceptance,
+        evidenceSha256: acceptance.evidenceSha256,
+        segment: [runStart],
+        summary,
+      };
+      const outputTree = { sha256: digest, sizeBytes: 3 };
+
+      expect(RT.familyEvidenceDigestsMatch(evidence, outputTree)).toBe(true);
+      expect(RT.familyEvidenceDigestsMatch({ ...evidence, evidenceSha256: sha("drift") }, outputTree)).toBe(false);
+      expect(
+        RT.familyEvidenceDigestsMatch(
+          { ...evidence, acceptance: { ...acceptance, outputTreeSha256: sha("drift") } },
+          outputTree
+        )
+      ).toBe(false);
+      expect(
+        RT.familyEvidenceDigestsMatch(
+          { ...evidence, summary: { ...summary, outputTreeSha256: sha("drift") } },
+          outputTree
+        )
+      ).toBe(false);
+      expect(RT.familyEvidenceDigestsMatch(evidence, { ...outputTree, sizeBytes: 4 })).toBe(false);
+
+      expect(RT.familyEvidenceCeilingsMatch(evidence)).toBe(true);
+      expect(
+        RT.familyEvidenceCeilingsMatch({
+          ...evidence,
+          summary: { ...summary, elapsedMillis: NonNegativeInt.make(101) },
+        })
+      ).toBe(false);
+      expect(
+        RT.familyEvidenceCeilingsMatch({ ...evidence, summary: { ...summary, outputBytes: NonNegativeInt.make(101) } })
+      ).toBe(false);
+      expect(
+        RT.familyEvidenceCeilingsMatch({
+          ...evidence,
+          acceptance: { ...acceptance, maxTotalElapsedMillis: PosInt.make(99) },
+        })
+      ).toBe(false);
+      expect(
+        RT.familyEvidenceCeilingsMatch({
+          ...evidence,
+          acceptance: { ...acceptance, maxTotalOutputBytes: PosInt.make(99) },
+        })
+      ).toBe(false);
+
+      expect(RT.familyEvidenceTerminalsMatch(evidence)).toBe(true);
+      expect(
+        RT.familyEvidenceTerminalsMatch({
+          ...evidence,
+          acceptance: { ...acceptance, unapprovedCount: NonNegativeInt.make(1) },
+        })
+      ).toBe(false);
+      expect(
+        RT.familyEvidenceTerminalsMatch({
+          ...evidence,
+          acceptance: { ...acceptance, expectedCount: NonNegativeInt.make(1) },
+        })
+      ).toBe(false);
+      expect(
+        RT.familyEvidenceTerminalsMatch({
+          ...evidence,
+          acceptance: { ...acceptance, terminalCount: NonNegativeInt.make(1) },
+        })
+      ).toBe(false);
+
+      expect(RT.familyEvidenceAccepted(context, evidence, outputTree)).toBe(true);
+      const failure = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
+        ...acceptance,
+        message: "rejected",
+        recordType: "family-acceptance-failure",
+      });
+      expect(RT.familyEvidenceAccepted(context, { ...evidence, acceptance: failure }, outputTree)).toBe(false);
+
+      expect(RT.recordIdentityMatches(runStart, context)).toBe(true);
+      expect(RT.recordIdentityMatches({ ...runStart, runLabel: "other" }, context)).toBe(false);
+      expect(RT.strictEvidenceSha256(["one", "summary", "acceptance"])).toBe(sha("one\n"));
+      expect(RT.strictEvidenceSha256(["summary", "acceptance"])).toBe(sha(""));
+      expect(yield* RT.requireStrictFamilyTerminalRows(context, [runStart, summary, acceptance])).toEqual({
+        acceptance,
+        summary,
+      });
+      expect(
+        O.isNone(yield* RT.requireStrictFamilyTerminalRows(context, [runStart, acceptance]).pipe(Effect.option))
+      ).toBe(true);
+      expect(yield* RT.requireStrictFamilySegment(context, [runStart, summary, acceptance])).toEqual([runStart]);
+      expect(
+        O.isNone(
+          yield* RT.requireStrictFamilySegment(context, [runStart, summary, summary, acceptance]).pipe(Effect.option)
+        )
+      ).toBe(true);
+    })
+  );
 });
