@@ -1,6 +1,8 @@
 import {
   ArchiveLedgerRecord,
   CollectorManifestRecord,
+  CorpusCommandServiceLive,
+  preserveRestorationArchive,
   RestorationPreserveOptions,
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationArchiveTesting as RA, withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
@@ -9,10 +11,11 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, FileSystem, HashMap, Path } from "effect";
+import { Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as O from "effect/Option";
 
 const provideTestLayer = provideScopedLayer(NodeServices.layer);
+const provideCorpusLayer = provideScopedLayer(CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
 
 const preserveOptions = (
   sourceRoot: string,
@@ -367,6 +370,238 @@ describe("restoration archive boundary helpers", () => {
   );
 
   it.effect(
+    "rejects an absent recycle tree that reappears before preservation",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-absent-tree-" });
+        const sourceRoot = path.join(root, "source");
+        const corpusRoot = path.join(root, "corpus");
+        const rootArchive = path.join(root, "root.zip");
+        const sourceManifest = path.join(root, "collector.jsonl");
+        const reappearedTree = path.join(root, "reappeared-tree");
+        yield* fs.makeDirectory(sourceRoot);
+        yield* fs.makeDirectory(corpusRoot);
+        yield* fs.makeDirectory(reappearedTree);
+        yield* fs.writeFileString(path.join(sourceRoot, "source.bin"), "source");
+        yield* fs.writeFileString(rootArchive, "archive");
+        yield* fs.writeFileString(sourceManifest, "");
+        const options = RestorationPreserveOptions.make({
+          ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
+          absentRecycleTreePath: reappearedTree,
+          capacityCeilingBytes: PosInt.make(1024),
+          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
+          expectedSourceDirectoryCount: NonNegativeInt.make(1),
+          expectedSourceFileCount: NonNegativeInt.make(1),
+          expectedSourceTreeBytes: NonNegativeInt.make("source".length),
+        });
+        expect(yield* preserveRestorationArchive(options).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
+      },
+      Effect.scoped,
+      provideCorpusLayer
+    )
+  );
+
+  it.effect(
+    "rejects collector destinations that appear only after inventory capture",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-late-collector-file-" });
+        const sourceRoot = path.join(root, "source");
+        const corpusRoot = path.join(root, "corpus");
+        const rootArchive = path.join(root, "root.zip");
+        const sourceManifest = path.join(root, "collector.jsonl");
+        const lateFile = path.join(sourceRoot, "present.bin");
+        yield* fs.makeDirectory(sourceRoot);
+        yield* fs.makeDirectory(corpusRoot);
+        yield* fs.writeFileString(rootArchive, "archive");
+        yield* fs.writeFileString(
+          sourceManifest,
+          `${JSON.stringify({ dst: "C:\\root\\present.bin", size: 4, src: "C:\\source\\present.bin", status: "copied" })}\n`
+        );
+        const options = RestorationPreserveOptions.make({
+          ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
+          capacityCeilingBytes: PosInt.make(1024),
+          expectedCollectorCopiedCount: NonNegativeInt.make(1),
+          expectedCollectorPresentSuccessfulRowCount: NonNegativeInt.make(1),
+          expectedCollectorRowCount: NonNegativeInt.make(1),
+          expectedCollectorUniqueSuccessfulDestinationCount: NonNegativeInt.make(1),
+          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
+          expectedSourceDirectoryCount: NonNegativeInt.make(1),
+        });
+        const lateFileSystem = {
+          ...fs,
+          readFileString: (filePath: string, encoding?: string) =>
+            filePath === sourceManifest
+              ? fs.writeFileString(lateFile, "data").pipe(Effect.andThen(fs.readFileString(filePath, encoding)))
+              : fs.readFileString(filePath, encoding),
+        };
+        const layer = CorpusCommandServiceLive.pipe(
+          Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, lateFileSystem)))
+        );
+        expect(yield* preserveRestorationArchive(options).pipe(Effect.provide(layer), Effect.exit)).toMatchObject({
+          _tag: "Failure",
+        });
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "fails closed when archive ledgers drift across repair and append boundaries",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const runRace = (
+          race: "append-current" | "append-existing" | "append-type" | "repair-current" | "repair-opened"
+        ) =>
+          Effect.gen(function* () {
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: `restoration-${race}-` });
+            const sourceRoot = path.join(root, "source");
+            const corpusRoot = path.join(root, "corpus");
+            const rootArchive = path.join(root, "root.zip");
+            const sourceManifest = path.join(root, "collector.jsonl");
+            const archiveRoot = path.join(corpusRoot, "raw", "archive-boundary-test");
+            const ledgerPath = path.join(archiveRoot, "archive-ledger.jsonl");
+            yield* fs.makeDirectory(sourceRoot);
+            yield* fs.makeDirectory(archiveRoot, { recursive: true });
+            yield* fs.writeFileString(rootArchive, "archive");
+            yield* fs.writeFileString(sourceManifest, "");
+            if (race === "repair-current" || race === "repair-opened") {
+              yield* fs.writeFileString(ledgerPath, "incomplete");
+            } else if (race === "append-existing") {
+              yield* fs.writeFileString(ledgerPath, "\n");
+            }
+
+            let ledgerStatCount = 0;
+            const racingFileSystem = {
+              ...fs,
+              open: (filePath: string, options?: FileSystem.OpenOptions) =>
+                fs.open(filePath, options).pipe(
+                  Effect.map((file) =>
+                    filePath !== ledgerPath
+                      ? file
+                      : {
+                          ...file,
+                          stat:
+                            race === "repair-opened" && options?.flag === "r+"
+                              ? file.stat.pipe(Effect.map((info) => ({ ...info, type: "Directory" as const })))
+                              : race === "append-type" && options?.flag === "ax+"
+                                ? file.stat.pipe(Effect.map((info) => ({ ...info, type: "Directory" as const })))
+                                : race === "append-existing" && options?.flag === "a"
+                                  ? file.stat.pipe(Effect.map((info) => ({ ...info, size: info.size + 1n })))
+                                  : file.stat,
+                        }
+                  )
+                ),
+              stat: (filePath: string) =>
+                fs.stat(filePath).pipe(
+                  Effect.map((info) => {
+                    if (filePath !== ledgerPath) return info;
+                    ledgerStatCount += 1;
+                    const shouldDrift =
+                      (race === "repair-current" && ledgerStatCount === 2) || race === "append-current";
+                    return shouldDrift ? { ...info, size: info.size + 1n } : info;
+                  })
+                ),
+            };
+            const layer = CorpusCommandServiceLive.pipe(
+              Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, racingFileSystem)))
+            );
+            const options = RestorationPreserveOptions.make({
+              ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
+              capacityCeilingBytes: PosInt.make(1024),
+              expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
+              expectedSourceDirectoryCount: NonNegativeInt.make(1),
+            });
+            expect(yield* preserveRestorationArchive(options).pipe(Effect.provide(layer), Effect.exit)).toMatchObject({
+              _tag: "Failure",
+            });
+          });
+
+        yield* runRace("repair-opened");
+        yield* runRace("repair-current");
+        yield* runRace("append-type");
+        yield* runRace("append-existing");
+        yield* runRace("append-current");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "stops after the bounded attempts when a source changes after every payload sync",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-bounded-source-race-" });
+        const sourceRoot = path.join(root, "source");
+        const sourceFile = path.join(sourceRoot, "source.bin");
+        const corpusRoot = path.join(root, "corpus");
+        const rootArchive = path.join(root, "root.zip");
+        const sourceManifest = path.join(root, "collector.jsonl");
+        yield* fs.makeDirectory(sourceRoot);
+        yield* fs.makeDirectory(corpusRoot);
+        yield* fs.writeFileString(sourceFile, "source");
+        yield* fs.writeFileString(rootArchive, "archive");
+        yield* fs.writeFileString(sourceManifest, "");
+
+        let mutation = 0;
+        const racingFileSystem = {
+          ...fs,
+          open: (filePath: string, options?: FileSystem.OpenOptions) =>
+            fs.open(filePath, options).pipe(
+              Effect.map((file) => {
+                if (!filePath.endsWith("source.bin.partial")) return file;
+                let mutatedThisAttempt = false;
+                return new Proxy(file, {
+                  get: (target, property) =>
+                    property === "sync"
+                      ? target.sync.pipe(
+                          Effect.tap(() =>
+                            Effect.sync(() => {
+                              if (mutatedThisAttempt) return;
+                              mutatedThisAttempt = true;
+                              mutation += 1;
+                              const changedAt = 1_800_000_000 + mutation;
+                              const result = Bun.spawnSync(["touch", "-m", "-d", `@${changedAt}`, sourceFile]);
+                              if (result.exitCode !== 0) throw new Error("Failed mutating source timestamp.");
+                            })
+                          )
+                        )
+                      : Reflect.get(target, property),
+                });
+              })
+            ),
+        };
+        const layer = CorpusCommandServiceLive.pipe(
+          Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, racingFileSystem)))
+        );
+        const options = RestorationPreserveOptions.make({
+          ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
+          capacityCeilingBytes: PosInt.make(1024),
+          expectedRootArchiveBytes: NonNegativeInt.make("archive".length),
+          expectedSourceDirectoryCount: NonNegativeInt.make(1),
+          expectedSourceFileCount: NonNegativeInt.make(1),
+          expectedSourceTreeBytes: NonNegativeInt.make("source".length),
+        });
+        const outcome = yield* preserveRestorationArchive(options).pipe(Effect.provide(layer), Effect.exit);
+        expect(mutation).toBe(3);
+        expect(outcome).toMatchObject({ _tag: "Failure" });
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
     "reclaims dead writer generations and rejects ambiguous verification artifacts",
     Effect.fnUntraced(
       function* () {
@@ -567,13 +802,15 @@ describe("restoration archive boundary helpers", () => {
         ).toMatchObject({ _tag: "Failure" });
 
         const racedClaimPath = path.join(root, "raced.claim");
+        const collisionTargetPath = path.join(root, "collision-target.claim");
+        yield* fs.writeFileString(collisionTargetPath, liveText);
         expect(
           yield* RA.acquireObservedRestorationWriterClaim({ claimPath: racedClaimPath, claimText: staleText }).pipe(
             Effect.provideService(FileSystem.FileSystem, {
               ...fs,
               open: (filePath, options) =>
                 filePath === racedClaimPath && options?.flag === "wx"
-                  ? fs.open(liveClaimPath, options)
+                  ? fs.open(collisionTargetPath, options)
                   : fs.open(filePath, options),
             }),
             Effect.exit
