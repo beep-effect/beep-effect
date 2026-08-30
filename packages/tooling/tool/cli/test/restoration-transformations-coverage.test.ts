@@ -1,12 +1,26 @@
-import { ArchiveLedgerRecord, RestorationAcceptanceRecord } from "@beep/repo-cli/commands/Corpus";
+import {
+  ArchiveLedgerRecord,
+  encodeArchiveLedgerRecordJson,
+  encodeRestorationAcceptanceRecordJson,
+  RestorationAcceptanceRecord,
+  TransformationLedgerRecord,
+} from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, MutableHashMap, Path } from "effect";
+import { Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as O from "effect/Option";
 
 const sha = RT.digestString;
+const identity = {
+  preservationRunId: "preservation-1",
+  preservationSealSha256: sha("seal"),
+  recordedAt: "2026-08-30T00:00:00.000Z",
+  runLabel: "run-1",
+  schemaVersion: "oppold-corpus-restoration/v1" as const,
+  transformationRunId: "transformation-1",
+};
 const archivedFile = (objectId: string, sourceRelativePath: string, sizeBytes = 2) =>
   ArchiveLedgerRecord.cases["archive-file-pass"].make({
     attemptId: `attempt-${objectId}`,
@@ -172,6 +186,7 @@ describe("restoration transformation semantic helpers", () => {
       const path = yield* Path.Path;
       const ordinary = archivedFile("ordinary", "docs/readme.txt");
       const pst = archivedFile("pst", "$Recycle.Bin/S-1/$RSTORE.PST", 2 * 1024 * 1024);
+      const pstLarger = archivedFile("pst-larger", "$Recycle.Bin/S-1/$RSTORE2.PST", 3 * 1024 * 1024);
       const eml = archivedFile("eml", "mail/one.EML");
       const residue = archivedFile("residue", "mail/folder.export/item.txt");
       const docA = archivedFile("doc-a", "legacy/a.doc");
@@ -179,10 +194,10 @@ describe("restoration transformation semantic helpers", () => {
         ...archivedFile("doc-a-copy", "legacy/a-copy.doc"),
         sha256: docA.sha256,
       });
-      const records = [ordinary, pst, eml, residue, docA, docADuplicate];
+      const records = [ordinary, pst, pstLarger, eml, residue, docA, docADuplicate];
 
       const mail = RT.mailCandidates(path, "/archive", records);
-      expect(mail.map((candidate) => candidate.family)).toEqual(["eml", "pst", "residue"]);
+      expect(mail.map((candidate) => candidate.family)).toEqual(["eml", "pst", "pst", "residue"]);
       expect(RT.selectMailCandidates(path, "full", mail)).toEqual(mail);
       expect(RT.selectMailCandidates(path, "slice", mail).map((candidate) => candidate.objectId)).toEqual(["pst"]);
 
@@ -262,10 +277,165 @@ describe("restoration transformation semantic helpers", () => {
       yield* RT.removeMatchingAcceptancePartial(directory, partial, canonical);
       expect(yield* fs.exists(partial)).toBe(false);
 
+      const recycle = RestorationAcceptanceRecord.make({
+        ...record,
+        family: "recycle",
+        transformationRunId: "recycle-1",
+      });
+      const recycleDirectory = path.join(corpusRoot, "staging/restoration/runs/run-2/acceptance");
+      yield* fs.makeDirectory(recycleDirectory, { recursive: true });
+      const recyclePartial = path.join(recycleDirectory, "recycle.json.partial");
+      const encodedRecycle = yield* encodeRestorationAcceptanceRecordJson(recycle);
+      yield* fs.writeFileString(recyclePartial, `${encodedRecycle}\n`);
+      yield* RT.writeAcceptanceRecord(corpusRoot, "run-2", recycle);
+      expect(yield* fs.exists(path.join(recycleDirectory, "recycle.json"))).toBe(true);
+
       const outside = path.join(corpusRoot, "outside");
       yield* fs.writeFileString(outside, "x");
       const escaped = yield* RT.requireCanonicalContainedPath(directory, outside).pipe(Effect.option);
       expect(O.isNone(escaped)).toBe(true);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+  );
+
+  it("validates resumable family and attempt checkpoint ordering", () => {
+    const runStart = TransformationLedgerRecord.cases["family-run-start"].make({
+      ...identity,
+      expectedCount: NonNegativeInt.make(1),
+      family: "legacy-word",
+      maxTotalElapsedMillis: PosInt.make(100),
+      maxTotalOutputBytes: PosInt.make(100),
+      policySha256: sha("policy"),
+      recordType: "family-run-start",
+    });
+    const attemptId = RT.familyAttemptId("legacy-word", sha("source"), 0);
+    const attempt = TransformationLedgerRecord.cases["family-attempt-start"].make({
+      ...identity,
+      attemptId,
+      family: "legacy-word",
+      inputBytes: NonNegativeInt.make(2),
+      recordType: "family-attempt-start",
+      retryOrdinal: NonNegativeInt.make(0),
+      sourceId: sha("source"),
+      sourceSha256: sha("source"),
+    });
+    const interrupted = TransformationLedgerRecord.cases["family-attempt-interrupted"].make({
+      ...identity,
+      attemptId,
+      disposition: "retained-for-retry",
+      family: "legacy-word",
+      recordType: "family-attempt-interrupted",
+      retainedOutputBytes: NonNegativeInt.make(0),
+      retainedOutputRelativePath: "proof/attempt",
+      retainedOutputSha256: sha("empty"),
+      retryOrdinal: NonNegativeInt.make(0),
+      sourceId: sha("source"),
+    });
+    const terminal = TransformationLedgerRecord.cases["legacy-word-exception"].make({
+      ...identity,
+      approved: true,
+      attemptId,
+      exceptionKind: "not-binary-word",
+      family: "legacy-word",
+      message: "Not a binary Word document.",
+      originalSha256: sha("source"),
+      recordType: "legacy-word-exception",
+    });
+    const summary = TransformationLedgerRecord.cases["family-run-summary"].make({
+      ...identity,
+      elapsedMillis: NonNegativeInt.make(1),
+      exceptionCount: NonNegativeInt.make(1),
+      family: "legacy-word",
+      inputBytes: NonNegativeInt.make(2),
+      maxTotalElapsedMillis: PosInt.make(100),
+      maxTotalOutputBytes: PosInt.make(100),
+      outputBytes: NonNegativeInt.make(0),
+      outputTreeSha256: sha("empty"),
+      passCount: NonNegativeInt.make(0),
+      recordType: "family-run-summary",
+      sourceCount: NonNegativeInt.make(1),
+      unapprovedCount: NonNegativeInt.make(0),
+    });
+
+    expect(RT.familyStartStateIsResumable([])).toBe(true);
+    expect(RT.familyStartStateIsResumable([runStart])).toBe(true);
+    expect(RT.familyStartStateIsResumable([attempt])).toBe(false);
+    expect(RT.familyStartStateIsResumable([runStart, runStart])).toBe(false);
+    expect(RT.familySummaryStateIsResumable([])).toBe(true);
+    expect(RT.familySummaryStateIsResumable([runStart, summary])).toBe(true);
+    expect(RT.familySummaryStateIsResumable([summary, runStart])).toBe(false);
+    expect(RT.familySummaryStateIsResumable([summary, summary])).toBe(false);
+    expect(RT.recycleCheckpointOrderValid([])).toBe(true);
+    expect(RT.recycleCheckpointOrderValid([runStart, attempt, interrupted])).toBe(true);
+    expect(RT.unsettledAttemptStarts([attempt])).toEqual([attempt]);
+    expect(RT.unsettledAttemptStarts([attempt, interrupted])).toEqual([]);
+    expect(MutableHashSet.size(RT.terminalAttemptIds([attempt]))).toBe(0);
+    expect(MutableHashSet.size(RT.terminalAttemptIds([terminal]))).toBe(1);
+    expect(RT.unsettledAttemptStarts([attempt, terminal])).toEqual([]);
+    expect(RT.attemptRetryOrdinalsReconcile([attempt])).toBe(true);
+    expect(RT.attemptRetryOrdinalsReconcile([attempt, attempt])).toBe(false);
+    expect(RT.attemptSettlementsReconcile([attempt], [interrupted], [])).toBe(true);
+    expect(RT.attemptBindingsReconcile([attempt], [interrupted], [])).toBe(true);
+    expect(RT.latestAttemptsAreTerminal([attempt], [])).toBe(false);
+    expect(RT.resumableAttemptLifecycleReconciles([attempt, interrupted])).toBe(true);
+  });
+
+  it.effect("runs bounded legacy subprocess probes and rejects exhausted budgets", () =>
+    Effect.gen(function* () {
+      const captured = yield* RT.runLegacyStep("sh", ["-c", "printf semantic-proof"], 2_000, "stdout");
+      expect(captured.exitCode).toBe(0);
+      expect(captured.output).toBe("semantic-proof");
+      const exhausted = yield* RT.runLegacyStep("sh", ["-c", "exit 0"], 0).pipe(Effect.option);
+      expect(O.isNone(exhausted)).toBe(true);
+      expect(yield* RT.maximumPageRmse([], [], Object.create(null), Object.create(null))).toBe(0);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("derives preservation elapsed time and rejects unsealed evidence", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "transformation-preservation-" });
+      const corpusRoot = path.join(root, "corpus");
+      const ledgerDirectory = path.join(corpusRoot, "raw/run-1");
+      yield* fs.makeDirectory(ledgerDirectory, { recursive: true });
+
+      const preflight = ArchiveLedgerRecord.cases["archive-preflight"].make({
+        approved: true,
+        approvedCeilingBytes: NonNegativeInt.make(10),
+        availableBytes: NonNegativeInt.make(10),
+        directoryCount: NonNegativeInt.make(0),
+        fileCount: NonNegativeInt.make(0),
+        minimumFreeAfterBytes: NonNegativeInt.make(0),
+        recordedAt: "2026-08-30T00:00:00.000Z",
+        recordType: "archive-preflight",
+        requiredBytes: NonNegativeInt.make(0),
+        runId: "preservation-1",
+        schemaVersion: "oppold-corpus-restoration/v1",
+      });
+      const seal = ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
+        manifestSha256: sha("manifest"),
+        recordCount: NonNegativeInt.make(1),
+        recordedAt: "2026-08-30T00:00:00.125Z",
+        recordType: "archive-manifest-seal",
+        runId: "preservation-1",
+        schemaVersion: "oppold-corpus-restoration/v1",
+      });
+      expect(yield* RT.deterministicPreservationElapsed([preflight, seal], seal)).toBe(125);
+      const invalidElapsed = yield* RT.deterministicPreservationElapsed([], seal).pipe(Effect.option);
+      expect(O.isNone(invalidElapsed)).toBe(true);
+
+      yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), "");
+      const unsealed = yield* RT.currentPreservationEvidence(corpusRoot, "run-1").pipe(Effect.option);
+      expect(O.isNone(unsealed)).toBe(true);
+      const encoded = yield* Effect.forEach([preflight, seal], encodeArchiveLedgerRecordJson);
+      yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), `${encoded.join("\n")}\n`);
+      const evidence = yield* RT.currentPreservationEvidence(corpusRoot, "run-1");
+      expect(evidence.records).toHaveLength(2);
+      expect(evidence.seal.runId).toBe("preservation-1");
+
+      const emptyFile = path.join(root, "empty.bin");
+      yield* fs.writeFile(emptyFile, new Uint8Array());
+      expect((yield* RT.readPrefix(emptyFile)).byteLength).toBe(0);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
   );
 });
