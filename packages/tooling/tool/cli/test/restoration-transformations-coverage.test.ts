@@ -757,7 +757,13 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
         outputTreeSha256: digest,
         recordType: "family-acceptance-pass",
         terminalCount: NonNegativeInt.make(0),
-        unapprovedCount: NonNegativeInt.make(0),
+        unapprovedCount: 0,
+      });
+      const failure = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
+        ...acceptance,
+        message: "rejected",
+        recordType: "family-acceptance-failure",
+        unapprovedCount: NonNegativeInt.make(1),
       });
       const evidence = {
         acceptance,
@@ -810,7 +816,7 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       expect(
         RT.familyEvidenceTerminalsMatch({
           ...evidence,
-          acceptance: { ...acceptance, unapprovedCount: NonNegativeInt.make(1) },
+          acceptance: failure,
         })
       ).toBe(false);
       expect(
@@ -827,11 +833,6 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
       ).toBe(false);
 
       expect(RT.familyEvidenceAccepted(context, evidence, outputTree)).toBe(true);
-      const failure = TransformationLedgerRecord.cases["family-acceptance-failure"].make({
-        ...acceptance,
-        message: "rejected",
-        recordType: "family-acceptance-failure",
-      });
       expect(RT.familyEvidenceAccepted(context, { ...evidence, acceptance: failure }, outputTree)).toBe(false);
 
       expect(RT.recordIdentityMatches(runStart, context)).toBe(true);
