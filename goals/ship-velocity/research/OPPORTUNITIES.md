@@ -951,6 +951,17 @@ install hook, so the 951-file TypeScript test gate failed in `infra`. Disposable
 with independent Git metadata and their own frozen install avoid both defects. A reusable proof
 worktree provisioner should install the complete workspace instead of linking only root packages.
 
+## 2026-08-30 — Full aggregate exposed inherited coverage-baseline drift
+
+- What was happening: the final `TMPDIR=/tmp bun run audit:github quality` acceptance proof passed
+  all 20 build, lint, policy, type, unit, and integration lanes, but stopped at the coverage ratchet.
+- Evidence: five rows were below their recorded floors in `PrLease.ts` and `TmpfsReap.ts`. Both
+  implementation files are byte-identical to current `origin/main`; the gap was missing path
+  coverage, not a source regression introduced by this branch.
+- What would have prevented it: require the coverage ratchet on the exact merge head before main
+  advances, and land any baseline-affecting test changes with the implementation whose paths they
+  cover. This branch restores the floors with focused regression tests instead of lowering them.
+
 ## 2026-08-30 — Durable admission rows omit the protocol and terminal memory receipt
 
 - What was happening: extracting the terminal evidence for two same-origin full proofs admitted

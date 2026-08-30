@@ -502,6 +502,9 @@ describe("yeet published PR lease", () => {
             false
           );
 
+          const missingLeaseError = yield* retire.pipe(Effect.flip);
+          expect(missingLeaseError.message).toContain("Published-PR lease disappeared while retiring PR #874");
+
           yield* writeLease("retired");
           yield* retire;
           expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ status: "retired" });

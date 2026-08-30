@@ -435,6 +435,49 @@ describe("tmpfs reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("keeps dangling worktree stubs when census metadata vanishes or removal fails", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const gitFile = path.join(fixture.stubEligible, ".git");
+        const missingStatTarget = path.join(root, "missing-stat-target");
+        const missingCacheRoot = path.join(root, "missing-cache");
+        let gitFileStatCount = 0;
+        const racingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          remove: (target, options) =>
+            Str.Equivalence(target, fixture.stubRelativeGitDir)
+              ? fs.remove(missingStatTarget)
+              : fs.remove(target, options),
+          stat: (target) => {
+            if (!Str.Equivalence(target, gitFile)) return fs.stat(target);
+            gitFileStatCount += 1;
+            return gitFileStatCount === 2 ? fs.stat(missingStatTarget) : fs.stat(target);
+          },
+        });
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot: missingCacheRoot,
+          classes: ["dangling-worktree-stub"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+        const candidate = candidateByPath(report, fixture.stubEligible);
+        expect(candidate.action).toBe("skip");
+        expect(candidate.skipReason).toBe("contents-present");
+        expect(yield* fs.exists(fixture.stubEligible)).toBe(true);
+        expect(gitFileStatCount).toBe(2);
+        expect(yield* fs.exists(fixture.stubRelativeGitDir)).toBe(true);
+        expect(report.warnings).toContain(`Failed to remove ${fixture.stubRelativeGitDir}.`);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("skips every Vitest forks candidate when the injected process listing sees a live runner", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
