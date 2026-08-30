@@ -66,6 +66,7 @@ import {
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
   retirePublishedPrLease,
+  retirePublishedPrLeaseAtPathForTesting,
   retirePublishedPrLeaseReceipt,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
@@ -102,7 +103,7 @@ import {
   yeetRerunJobListingCommand,
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
@@ -191,7 +192,7 @@ const withTempDirectory = <Result, Error, Requirements>(
     (tmpDir) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(tmpDir, { recursive: true });
+        yield* fs.remove(tmpDir, { force: true, recursive: true });
       })
   ).pipe(provideScopedLayer(PlatformLayer));
 
@@ -460,6 +461,54 @@ const findStep = (steps: ReadonlyArray<RepoPlanStep>, label: string): RepoPlanSt
   );
 
 describe("yeet published PR lease", () => {
+  it("treats retired leases as idempotent and refuses to retire an active takeover claim", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const inbox = path.join(tmpDir, ".beep", "inbox");
+          const leasePath = path.join(inbox, "pr-lease.json");
+          yield* fs.makeDirectory(inbox, { recursive: true });
+          const writeLease = Effect.fnUntraced(function* (status: "claiming" | "retired") {
+            const encoded = yield* encodeJson({
+              schemaVersion: "yeet-pr-lease/v1",
+              generationId: `${status}-generation`,
+              sessionId: "test:retirement-status",
+              pid: process.pid,
+              procStart: "fixture",
+              checkoutRoot: tmpDir,
+              branch: "feat/retirement-status",
+              headSha: "abc123",
+              prNumber: 874,
+              acquiredAt: "2026-08-27T00:00:00Z",
+              refreshedAt: "2026-08-27T00:00:00Z",
+              status,
+            });
+            yield* fs.writeFileString(leasePath, `${encoded}\n`);
+          });
+          const retire = retirePublishedPrLeaseAtPathForTesting(
+            tmpDir,
+            inbox,
+            leasePath,
+            PosInt.make(874),
+            "abc123",
+            "fixture-retirement",
+            O.none(),
+            false
+          );
+
+          yield* writeLease("retired");
+          yield* retire;
+          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ status: "retired" });
+
+          yield* writeLease("claiming");
+          const claimingError = yield* retire.pipe(Effect.flip);
+          expect(claimingError.message).toContain("Refusing to retire claiming generation claiming-generation");
+        })
+      )
+    ));
+
   it("replaces terminal and abandoned ownership while preserving an open prior PR", () =>
     Effect.runPromise(
       withTrackedFileRepo(({ tempContext, tmpDir }) =>

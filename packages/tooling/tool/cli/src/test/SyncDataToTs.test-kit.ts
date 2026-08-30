@@ -7,6 +7,7 @@
 
 export * from "@beep/repo-cli/commands/SyncDataToTs/index";
 export * from "@beep/repo-cli/commands/SyncDataToTs/internal/FreeLawProject";
+export * from "@beep/repo-cli/commands/SyncDataToTs/internal/FreeLawProjectVocabulary";
 export * from "@beep/repo-cli/commands/SyncDataToTs/internal/Source";
 export * from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/CldrTerritories";

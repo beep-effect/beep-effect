@@ -4,13 +4,13 @@
     "id": "lejeune-demo-corpus-and-ontology",
     "packetId": "goal-packet/v1:9d81113b8422f8848250d5e738e281f5f619347509b34653fb69940201f83bcb",
     "title": "LeJeune Demo Corpus and Ontology",
-    "status": "paused",
+    "status": "active",
     "created": "2026-08-26",
-    "updated": "2026-08-26",
+    "updated": "2026-08-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lejeune-demo-corpus-and-ontology",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Build the machine-local public and synthetic fixture bundle, small fastener ontology, exact-span extraction set, and deterministic projections for the LeJeune lunch demo.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -50,22 +50,22 @@
     {
       "id": "P0",
       "name": "Fixture and ontology freeze proof",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Bundle build (parse -> spans -> projections)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Rule checks, citations, and replay recording",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -81,5 +81,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Paused at scaffold (authored-but-not-started): graduated from explorations/lejeune-bolt-agentic-demo on 2026-08-26; day 1 of the five-day walking-skeleton schedule starts on Benjamin's signal."
+  "statusNote": "P0-P2 complete on 2026-08-27: frozen fixtures, exact spans, ontology, cited rules, deterministic projections, live Anthropic recording, and offline replay are proven. P3 repository review and hosted merge-readiness are in progress."
 }

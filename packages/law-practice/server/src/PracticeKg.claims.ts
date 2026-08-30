@@ -19,8 +19,10 @@ import {
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
+import { PatentApplicationDocument } from "@beep/law-practice-domain/values/PatentDocument";
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
+import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
 import { Defect, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Unknown } from "@beep/schema/Unknown";
@@ -49,6 +51,39 @@ const decodeOperationId = S.decodeUnknownEffect(OperationId);
 const decodePosixPath = S.decodeUnknownEffect(PosixPath);
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const encodeUnknownJson = Unknown.encodeUnknownEffectFromJsonString;
+
+/**
+ * One normalized patent document supplied directly to the claims batch.
+ *
+ * **Example** (Inspect the source filename field)
+ *
+ * ```ts
+ * import { PracticeKgPatentDocumentInput } from "@beep/law-practice-server"
+ *
+ * console.log(PracticeKgPatentDocumentInput.fields.sourceFile)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PracticeKgPatentDocumentInput extends S.Class<PracticeKgPatentDocumentInput>(
+  $I`PracticeKgPatentDocumentInput`
+)(
+  {
+    docket: S.NonEmptyString.annotateKey({
+      description: "Matter docket associated with the normalized patent document.",
+    }),
+    document: PatentApplicationDocument.annotateKey({
+      description: "Domain-normalized patent application document consumed without reparsing.",
+    }),
+    sourceFile: S.NonEmptyString.annotateKey({
+      description: "Traceable source filename retained in candidate snapshots.",
+    }),
+  },
+  $I.annote("PracticeKgPatentDocumentInput", {
+    description: "Normalized patent application document and batch persistence provenance.",
+  })
+) {}
 
 const createClaimsTables = [
   `CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (
@@ -121,6 +156,11 @@ export class PracticeKgClaimsOptions extends S.Class<PracticeKgClaimsOptions>($I
   {
     bundleOut: S.NonEmptyString,
     inputs: S.NonEmptyString,
+    patentDocuments: S.Array(PracticeKgPatentDocumentInput)
+      .pipe(S.withConstructorDefault(Effect.succeed(A.empty<PracticeKgPatentDocumentInput>())))
+      .annotateKey({
+        description: "Already-normalized patent documents to persist without heading or claim reparsing.",
+      }),
   },
   $I.annote("PracticeKgClaimsOptions", {
     description: "Input directory and existing bundle destination for one candidate-claims batch.",
@@ -373,6 +413,54 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
         ),
       { concurrency: 1 }
     );
+    const persistPatentDocument = Effect.fnUntraced(function* (input: PracticeKgPatentDocumentInput) {
+      if (Str.length(input.document.sourceText) > maxClaimsInputBytes) {
+        return yield* PracticeKgClaimsError.make({
+          message: `Normalized patent document exceeds ${maxClaimsInputBytes} bytes: ${input.sourceFile}`,
+        });
+      }
+      const bytes = new TextEncoder().encode(input.document.sourceText);
+      if (bytes.byteLength > maxClaimsInputBytes) {
+        return yield* PracticeKgClaimsError.make({
+          message: `Normalized patent document exceeds ${maxClaimsInputBytes} bytes: ${input.sourceFile}`,
+        });
+      }
+      const digestHex = yield* hashBytes(bytes);
+      const digest = yield* decodeContentDigest(`sha256:${digestHex}`);
+      const identityHex = yield* hashBytes(new TextEncoder().encode(`${input.docket}\0${digestHex}`));
+      const identityDigest = yield* decodeContentDigest(`sha256:${identityHex}`);
+      const operationId = yield* decodeOperationId(`operation:${digestHex}`);
+      const baseSeed = (Number.parseInt(Str.slice(0, 8)(identityHex), 16) % 20_000_000) + 1;
+      // PatentApplicationDocument's coherence schema guarantees this section.
+      const claimsSectionIndex = O.getOrThrow(
+        A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims"))
+      );
+      const claimsHeading = O.getOrThrow(A.get(input.document.sections, claimsSectionIndex));
+      yield* Effect.forEach(
+        input.document.claims,
+        (claim, index) =>
+          patentClaimCandidateFrom(
+            PatentClaimCandidateInput.make({
+              claim,
+              claimsHeading: claimsHeading.heading,
+              claimsSectionEnd: claimsHeading.sourceEnd,
+              claimsSectionStart: claimsHeading.sourceStart,
+              digest,
+              docket: input.docket,
+              entitySeed: PosInt.make(baseSeed + index),
+              identityDigest,
+              operationId,
+              sourceFile: input.sourceFile,
+              sourceText: input.document.sourceText,
+            })
+          ).pipe(Effect.flatMap(({ candidate, evidence }) => persistCandidate(sql, candidate, evidence))),
+        { concurrency: 1, discard: true }
+      );
+      return input.sourceFile;
+    });
+    const persistedPatentDocuments = yield* Effect.forEach(options.patentDocuments, persistPatentDocument, {
+      concurrency: 1,
+    });
     const [failedExtractions, extractedFiles] = A.partition(outcomes, (outcome) =>
       outcome.extracted ? Result.succeed(outcome) : Result.fail(outcome)
     );
@@ -385,7 +473,11 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     const claimCountRows = yield* sql
       .unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM epistemic_candidate_claim")
       .pipe(Effect.flatMap(decodeClaimsCountRows));
-    if (A.isReadonlyArrayNonEmpty(docketedFiles) && A.isReadonlyArrayEmpty(extractedFiles)) {
+    if (
+      A.isReadonlyArrayNonEmpty(docketedFiles) &&
+      A.isReadonlyArrayEmpty(extractedFiles) &&
+      A.isReadonlyArrayEmpty(persistedPatentDocuments)
+    ) {
       return yield* PracticeKgClaimsError.make({
         message: "Claims batch persisted zero claims across all extractable inputs.",
       });
@@ -393,7 +485,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     return PracticeKgClaimsSummary.make({
       claims: NonNegativeInt.make(A.headNonEmpty(claimCountRows).count),
       failedFiles: NonNegativeInt.make(A.length(failedExtractions)),
-      files: NonNegativeInt.make(A.length(extractedFiles)),
+      files: NonNegativeInt.make(A.length(extractedFiles) + A.length(persistedPatentDocuments)),
     });
   },
   Effect.mapError((cause) =>

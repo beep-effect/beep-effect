@@ -150,6 +150,15 @@ describe("verified-span hostile-text contract", () => {
   );
 
   it.effect(
+    "fails mixed exact and normalization-equivalent occurrences as ambiguous",
+    Effect.fnUntraced(function* () {
+      const failure = yield* locateRawText("office ofﬁce", "office").pipe(Effect.flip);
+
+      expect(failure.reason).toBe("ambiguous");
+    })
+  );
+
+  it.effect(
     "fails overlapping exact occurrences as ambiguous",
     Effect.fnUntraced(function* () {
       const failure = yield* locateRawText("aaa", "aa").pipe(Effect.flip);
@@ -262,9 +271,8 @@ describe("verified-span hostile-text contract", () => {
         label: "quotation",
         text: "missing",
       });
-      const failure = yield* locateGroundedExtractions(
-        A.replicate(extraction, MAX_EXTRACTION_CANDIDATES + 1),
-        "source"
+      const failure = yield* locateGroundedExtractions("source")(
+        A.replicate(extraction, MAX_EXTRACTION_CANDIDATES + 1)
       ).pipe(Effect.flip);
 
       expect(failure.reason).toBe("limit-exceeded");
