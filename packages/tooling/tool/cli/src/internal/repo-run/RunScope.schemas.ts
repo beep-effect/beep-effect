@@ -47,6 +47,34 @@ export const RunScopeSupport = LiteralKit(["active", "unsupported", "disabled", 
 export type RunScopeSupport = typeof RunScopeSupport.Type;
 
 /**
+ * Result of attempting to stop a dead admission lease's run scope.
+ *
+ * **Example** (Recognize an already-collected scope)
+ *
+ * ```ts
+ * import { RunScopeStopOutcome } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(RunScopeStopOutcome.is.absent("absent")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RunScopeStopOutcome = LiteralKit(["stopped", "absent", "spawn-failed", "exit-failed"]).pipe(
+  $I.annoteSchema("RunScopeStopOutcome", {
+    description: "Bounded result of stopping or confirming absence of one dead admission run scope.",
+  })
+);
+
+/**
+ * Result of attempting to stop a dead admission lease's run scope.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RunScopeStopOutcome = typeof RunScopeStopOutcome.Type;
+
+/**
  * Optional accounting values read from one systemd run scope.
  *
  * **Example** (Construct a telemetry sample)

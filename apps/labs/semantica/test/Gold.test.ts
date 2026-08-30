@@ -204,6 +204,10 @@ describe("C0 gold proposer", () => {
     );
   });
 
+  it("rejects a quote that folds to an empty string", () => {
+    expect(resolveGoldQuoteAnchor("prefix suffix", "-\n", 0)).toEqual(O.none());
+  });
+
   it("maps a gold-generation deadline to GoldUnavailable", () =>
     Effect.runPromise(
       provideScopedLayer(BunServices.layer)(
