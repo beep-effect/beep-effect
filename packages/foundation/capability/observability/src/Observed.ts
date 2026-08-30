@@ -250,7 +250,7 @@ export const ObservedCause = S.Cause(ObservedErrorWithStack, ObservedDefectWithS
   $I.annoteSchema("ObservedCause", {
     description: "A transport-safe schema for full Effect causes.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -291,7 +291,7 @@ export const ObservedExit = S.Exit(S.Unknown, ObservedErrorWithStack, ObservedDe
   $I.annoteSchema("ObservedExit", {
     description: "A transport-safe schema for exits carrying unknown success values.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

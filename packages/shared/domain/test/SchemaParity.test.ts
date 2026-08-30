@@ -175,8 +175,8 @@ describe("shared-domain schema parity", () => {
 
   it("keeps entity-id value statics colocated on the schema", () => {
     expect(EntityId.EntityIdValue.is(EntityId.EntityIdValue.make(1))).toBe(true);
-    expect(EntityId.EntityIdValue.fromUnknown(1)).toBe(EntityId.EntityIdValue.make(1));
-    expect(O.isSome(EntityId.EntityIdValue.decodeOption(1))).toBe(true);
+    expect(EntityId.EntityIdValue.decodeUnknownSync(1)).toBe(EntityId.EntityIdValue.make(1));
+    expect(O.isSome(EntityId.EntityIdValue.decodeUnknownOption(1))).toBe(true);
     expect(DocumentId.equivalence(DocumentId.make(1), DocumentId.make(1))).toBe(true);
   });
 });

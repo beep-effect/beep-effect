@@ -41,7 +41,7 @@ const StringArray = S.Array(S.String).pipe(
   $I.annoteSchema("StringArray", {
     description: "Rendered string array accepted by Markdown utility helpers.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 const UnsafeUrlProtocolDestination = S.String.check(
   S.isPattern(unsafeUrlProtocolPattern, {
@@ -54,7 +54,7 @@ const UnsafeUrlProtocolDestination = S.String.check(
   $I.annoteSchema("UnsafeUrlProtocolDestination", {
     description: "Normalized URL destination that starts with an active unsafe protocol.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const NormalizedUrlScheme = S.Trim.pipe(
@@ -69,8 +69,7 @@ const NormalizedUrlScheme = S.Trim.pipe(
   ),
   $I.annoteSchema("NormalizedUrlScheme", {
     description: "A schema-normalized lowercase URL scheme including its trailing colon.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -159,8 +158,7 @@ export class AllowListUrlPolicySpec extends S.TaggedClass<AllowListUrlPolicySpec
 export const UrlPolicySpec = S.Union([CompatibilityUrlPolicy, AllowListUrlPolicySpec]).pipe(
   $I.annoteSchema("UrlPolicySpec", {
     description: "Canonical tagged URL destination policy.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

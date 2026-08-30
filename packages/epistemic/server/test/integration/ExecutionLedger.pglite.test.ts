@@ -54,7 +54,7 @@ const migrateLedger = Effect.fnUntraced(function* () {
   yield* migrate(db, { migrationsFolder, migrationsSchema });
 });
 
-const revision = PolicyRevision.fromUnknown("1.0.0");
+const revision = PolicyRevision.decodeUnknownSync("1.0.0");
 
 const decisionContent = (input: {
   readonly runKey: string;

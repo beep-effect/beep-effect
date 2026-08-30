@@ -98,9 +98,9 @@ describe("EntityId", () => {
 
       expect(DocumentId.is(1)).toBe(true);
       expect(DocumentId.is(0)).toBe(false);
-      expect(DocumentId.fromUnknown(1)).toBe(1);
-      expect(O.isSome(DocumentId.decodeOption(1))).toBe(true);
-      expect(O.isNone(DocumentId.decodeOption(0))).toBe(true);
+      expect(DocumentId.decodeUnknownSync(1)).toBe(1);
+      expect(O.isSome(DocumentId.decodeUnknownOption(1))).toBe(true);
+      expect(O.isNone(DocumentId.decodeUnknownOption(0))).toBe(true);
       const decoded = yield* DocumentId.decodeUnknownEffect(1);
       expect(decoded).toBe(1);
       expect(yield* DocumentId.encodeEffect(decoded)).toBe(1);

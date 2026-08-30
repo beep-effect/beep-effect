@@ -20,7 +20,7 @@ import {
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
 import { Defect, LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -410,7 +410,7 @@ export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.
   $I.annoteSchema("AgentEffectivenessAnnotationValue", {
     description: "Sanitized primitive value allowed in an agent-effectiveness annotation plan.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -4137,7 +4137,7 @@ const checkPlanPayload = (
   Result.match(
     pipe(
       AgentEffectivenessAnnotationPlan.encodeJsonResult(plan),
-      Result.flatMap(Unknown.decodeUnknownResultFromJsonString)
+      Result.flatMap(UnknownFromJsonString.decodeUnknownResult)
     ),
     {
       onFailure: () => [

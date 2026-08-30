@@ -42,21 +42,21 @@ describe("Next shared schemas", () => {
   it("accepts Next.js file size suffixes and size limits", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        expect(FileSizeSuffix.fromUnknown("kb")).toBe("kb");
-        expect(FileSizeSuffix.fromUnknown("MB")).toBe("MB");
-        expect(SizeLimit.fromUnknown(1024)).toBe(1024);
-        expect(SizeLimit.fromUnknown("1.5gb")).toBe("1.5gb");
+        expect(FileSizeSuffix.decodeUnknownSync("kb")).toBe("kb");
+        expect(FileSizeSuffix.decodeUnknownSync("MB")).toBe("MB");
+        expect(SizeLimit.decodeUnknownSync(1024)).toBe(1024);
+        expect(SizeLimit.decodeUnknownSync("1.5gb")).toBe("1.5gb");
       })
     ));
 
   it("rejects malformed size suffixes and size limit strings", () => {
-    expect(O.isNone(FileSizeSuffix.decodeOption("xb"))).toBe(true);
-    expect(O.isNone(FileSizeSuffix.decodeOption("mbps"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeOption(-1))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeOption("-2KB"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeOption("1"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeOption("1xb"))).toBe(true);
-    expect(O.isNone(SizeLimit.decodeOption("mb"))).toBe(true);
+    expect(O.isNone(FileSizeSuffix.decodeUnknownOption("xb"))).toBe(true);
+    expect(O.isNone(FileSizeSuffix.decodeUnknownOption("mbps"))).toBe(true);
+    expect(O.isNone(SizeLimit.decodeUnknownOption(-1))).toBe(true);
+    expect(O.isNone(SizeLimit.decodeUnknownOption("-2KB"))).toBe(true);
+    expect(O.isNone(SizeLimit.decodeUnknownOption("1"))).toBe(true);
+    expect(O.isNone(SizeLimit.decodeUnknownOption("1xb"))).toBe(true);
+    expect(O.isNone(SizeLimit.decodeUnknownOption("mb"))).toBe(true);
   });
 
   it("round-trips schema-derived primitive values", () => {
@@ -77,12 +77,12 @@ describe("Next route schemas", () => {
   it("accepts route predicates and public route config shapes", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        expect(RouteHas.fromUnknown({ type: "header", key: "x-beep", value: "1" })).toEqual({
+        expect(RouteHas.decodeUnknownSync({ type: "header", key: "x-beep", value: "1" })).toEqual({
           type: "header",
           key: "x-beep",
           value: "1",
         });
-        expect(RouteHas.fromUnknown({ type: "host", value: "example.com" })).toEqual({
+        expect(RouteHas.decodeUnknownSync({ type: "host", value: "example.com" })).toEqual({
           type: "host",
           value: "example.com",
         });
@@ -109,12 +109,12 @@ describe("Next route schemas", () => {
           source: "/secure",
           headers: [{ key: "x-frame-options", value: "deny" }],
         });
-        expect(Redirect.fromUnknown({ source: "/old", destination: "/new", permanent: true })).toEqual({
+        expect(Redirect.decodeUnknownSync({ source: "/old", destination: "/new", permanent: true })).toEqual({
           source: "/old",
           destination: "/new",
           permanent: true,
         });
-        expect(Redirect.fromUnknown({ source: "/old", destination: "/new", statusCode: 307 })).toEqual({
+        expect(Redirect.decodeUnknownSync({ source: "/old", destination: "/new", statusCode: 307 })).toEqual({
           source: "/old",
           destination: "/new",
           statusCode: 307,
@@ -129,7 +129,7 @@ describe("Next route schemas", () => {
   it("decodes schema-derived route predicates", () => {
     fc.assert(
       fc.property(routeHasArbitrary, (predicate) => {
-        const decoded = RouteHas.fromUnknown(predicate);
+        const decoded = RouteHas.decodeUnknownSync(predicate);
 
         expect(decoded).toEqual(predicate);
       }),

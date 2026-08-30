@@ -290,8 +290,7 @@ export const VeniceAIQueryValue = S.Union([
 ]).pipe(
   $I.annoteSchema("VeniceAIQueryValue", {
     description: "URL query value accepted by the Venice AI driver.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -314,8 +313,7 @@ export type VeniceAIQueryValue = typeof VeniceAIQueryValue.Type;
 const VeniceAIEncodedQuery = S.Record(S.String, VeniceAIQueryValue).pipe(
   $I.annoteSchema("VeniceAIEncodedQuery", {
     description: "Encoded URL query record accepted by the Venice AI driver.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 type VeniceAIEncodedQuery = typeof VeniceAIEncodedQuery.Type;
@@ -605,8 +603,7 @@ export const VeniceAIResponse = S.Union([VeniceAIBinaryResponse, VeniceAIJsonRes
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("VeniceAIResponse", {
     description: "Response union returned by non-streaming Venice AI operation methods.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

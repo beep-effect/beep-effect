@@ -546,7 +546,6 @@ const GoldFileProposerCheck = S.makeFilter(
  * @since 0.0.0
  */
 export const GoldFile = GoldFileDefinition.check(GoldFileProposerCheck).pipe(
-  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("GoldFile", {
     description: "Gold-v1 structure, entity, or relation labels for one paper and pinned proposer.",
   })
@@ -605,9 +604,21 @@ const GoldFileEncodedProposerCheck = S.makeFilter(
  * @since 0.0.0
  */
 export const GoldFileEncoded = GoldFileEncodedDefinition.check(GoldFileEncodedProposerCheck).pipe(
-  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("GoldFileEncoded", {
     description: "Persisted gold-v1 file shape containing offsets and digests but no W1 corpus text.",
+  })
+);
+
+/**
+ * JSON-text boundary for persisted digest-only gold files.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GoldFileEncodedFromJsonString = S.fromJsonString(GoldFileEncoded).pipe(
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
+  $I.annoteSchema("GoldFileEncodedFromJsonString", {
+    description: "JSON-text codec for persisted gold-v1 digest-only files.",
   })
 );
 

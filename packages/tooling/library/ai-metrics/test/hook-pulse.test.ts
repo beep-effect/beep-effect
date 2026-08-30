@@ -14,7 +14,7 @@ import {
   hashPrivateIdentifier,
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Result } from "effect";
@@ -310,7 +310,7 @@ describe("HookPulseV1", () => {
       // was pinned by construction; now an unpinned decode would mean the
       // developer's environment here and the empty one in CI.
       const decoded = yield* withSaltEnv({}, decodeHookPulseFromLegacy(legacy));
-      const serialized = yield* Unknown.encodeUnknownEffectFromJsonString(yield* encodeHookPulse(decoded));
+      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(yield* encodeHookPulse(decoded));
 
       expect(decoded).toBeInstanceOf(HookPulseV1);
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
@@ -386,7 +386,7 @@ describe("HookPulseV1", () => {
         )
       );
       const encoded = yield* encodeHookPulse(decoded);
-      const serialized = yield* Unknown.encodeUnknownEffectFromJsonString(encoded);
+      const serialized = yield* UnknownFromJsonString.encodeUnknownEffect(encoded);
 
       expect(decoded.sessionId).toMatch(/^[0-9a-f]{64}$/u);
       expect(decoded.cwd).toMatch(/^[0-9a-f]{64}$/u);

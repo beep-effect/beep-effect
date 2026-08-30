@@ -166,13 +166,13 @@ const edgeMatchesCandidateBelief = (
   );
 
 const candidatePublicIdFor = (orgId: ContradictionCandidate["orgId"], candidateKey: string) =>
-  candidatePublicId.fromUnknown(`${Epistemic.ContradictionCandidateId.tableName}_a${orgId}${candidateKey}`);
+  candidatePublicId.decodeUnknownSync(`${Epistemic.ContradictionCandidateId.tableName}_a${orgId}${candidateKey}`);
 
 const receiptPublicIdFor = (orgId: ContradictionReceipt["orgId"], receiptKey: string) =>
-  receiptPublicId.fromUnknown(`${Epistemic.ContradictionReceiptId.tableName}_a${orgId}${receiptKey}`);
+  receiptPublicId.decodeUnknownSync(`${Epistemic.ContradictionReceiptId.tableName}_a${orgId}${receiptKey}`);
 
 const dispositionPublicIdFor = (orgId: ContradictionDisposition["orgId"], candidateKey: string) =>
-  dispositionPublicId.fromUnknown(`${Epistemic.ContradictionDispositionId.tableName}_a${orgId}${candidateKey}`);
+  dispositionPublicId.decodeUnknownSync(`${Epistemic.ContradictionDispositionId.tableName}_a${orgId}${candidateKey}`);
 
 const repositoryUnavailable =
   (operation: "get" | "list" | "review" | "submit") =>

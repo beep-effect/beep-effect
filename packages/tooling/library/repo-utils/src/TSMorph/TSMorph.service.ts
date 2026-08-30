@@ -211,7 +211,7 @@ export class TsMorphSourceFileError extends S.TaggedError<TsMorphSourceFileError
   ): TsMorphSourceFileError {
     return TsMorphSourceFileError.make({
       scopeId,
-      filePath: TypeScriptFilePath.decodeOption(filePathInput),
+      filePath: TypeScriptFilePath.decodeUnknownOption(filePathInput),
       message,
     });
   }
@@ -979,7 +979,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
         continue;
       }
 
-      const implementationFilePath = TypeScriptImplementationFilePath.decodeOption(repoRelativeFilePath);
+      const implementationFilePath = TypeScriptImplementationFilePath.decodeUnknownOption(repoRelativeFilePath);
       if (O.isSome(implementationFilePath)) {
         const sourceEntries = yield* collectOutlineEntries(implementationFilePath.value, sourceFile).pipe(
           Effect.provide(cryptoContext)
@@ -1180,7 +1180,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
           const startPosition = loadedSourceFile.sourceFile.getLineAndColumnAtPos(start);
           const endPosition = loadedSourceFile.sourceFile.getLineAndColumnAtPos(end);
           const source = diagnostic.getSource();
-          const filePathOption = TypeScriptFilePath.decodeOption(loadedSourceFile.filePath);
+          const filePathOption = TypeScriptFilePath.decodeUnknownOption(loadedSourceFile.filePath);
           const decodeDiagnosticField = <A>(
             decode: (value: unknown) => Effect.Effect<A, S.SchemaError>,
             value: unknown,

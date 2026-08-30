@@ -52,7 +52,7 @@ import type { EventBody as EventBodyValue, ProvenanceEvent as ProvenanceEventVal
 import type { ParseOutcome } from "@/schema/Text";
 import type { GoldSource } from "@/services/GoldSource";
 
-const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withEffectCodecStatics);
+const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const EvalReportJson = S.fromJsonString(EvalReport, { space: 2 });
 const EvalTelemetryJson = S.fromJsonString(EvalRunTelemetry, { space: 2 });
 const fallbackExtractor = SourceTextExtractor.make({

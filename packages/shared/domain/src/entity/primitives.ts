@@ -6,7 +6,6 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as S from "effect/Schema";
@@ -106,8 +105,7 @@ export const Ed25519Signature = Base64UrlToken.pipe(
   S.brand("Ed25519Signature"),
   $I.annoteSchema("Ed25519Signature", {
     description: "Base64url-encoded Ed25519 signature.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -151,8 +149,7 @@ export const EncryptionKeyId = StableToken.pipe(
   S.brand("EncryptionKeyId"),
   $I.annoteSchema("EncryptionKeyId", {
     description: "Stable identifier for a key used to encrypt persisted entity data.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -196,8 +193,7 @@ export const HybridLogicalClock = StableToken.pipe(
   S.brand("HybridLogicalClock"),
   $I.annoteSchema("HybridLogicalClock", {
     description: "Hybrid logical clock token used for local-first synchronization.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -241,8 +237,7 @@ export const VectorClock = S.Record(S.NonEmptyString, NonNegativeInt).pipe(
   S.brand("VectorClock"),
   $I.annoteSchema("VectorClock", {
     description: "Vector clock map used to reason about distributed entity updates.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

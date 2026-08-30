@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
 import { GENERATED_MANAGERS } from "./box.surface.ts";
+import type { CodecStaticKeys } from "@beep/schema/SchemaUtils/withCodecStatics";
 import type { PlatformError } from "effect";
 
 const $I = $BoxId.create("scripts/generate");
@@ -250,6 +251,14 @@ const renderStructFields = (fields: string): string => (Str.length(fields) === 0
 
 const isLiteralKitExpression = (expression: string): boolean => Str.startsWith("LiteralKit(")(expression);
 
+const generatedCodecStaticOverrides: Readonly<Record<string, CodecStaticKeys | undefined>> = {};
+
+const codecStaticOperation = (name: string): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(generatedCodecStaticOverrides[name]),
+    O.map((keys) => `SchemaUtils.withCodecStatics([${pipe(keys, A.map(stringLiteral), A.join(", "))}])`)
+  );
+
 const annotatedGeneratedSchemaExpression = (name: string, description: string, schemaExpression: string): string =>
   pipeExpression(
     schemaExpression,
@@ -258,24 +267,31 @@ const annotatedGeneratedSchemaExpression = (name: string, description: string, s
   })`
   );
 
-const withGeneratedCodecStatics = (expression: string): string =>
-  pipeExpression(expression, "SchemaUtils.withCodecStatics");
+const withGeneratedCodecStatics = (name: string, expression: string): string =>
+  pipe(
+    codecStaticOperation(name),
+    O.match({ onNone: () => expression, onSome: (operation) => pipeExpression(expression, operation) })
+  );
 
 const renderGeneratedSchemaConst = (name: string, description: string, schemaExpression: string): string => {
   if (isLiteralKitExpression(schemaExpression)) {
+    const selectedCodecStatic = pipe(
+      codecStaticOperation(name),
+      O.match({ onNone: () => "", onSome: (operation) => `\n      ${operation},` })
+    );
     return `export const ${name} = ${schemaExpression}.pipe(
   (schema) =>
     schema.pipe(
       $I.annoteSchema(${stringLiteral(name)}, {
         description: ${stringLiteral(description)}
-      }),
-      withLiteralKitCodecStatics,
+      }),${selectedCodecStatic}
       SchemaUtils.withLiteralKitStatics(schema)
     )
 )`;
   }
 
   return `export const ${name} = ${withGeneratedCodecStatics(
+    name,
     annotatedGeneratedSchemaExpression(name, description, schemaExpression)
   )}`;
 };
@@ -1333,20 +1349,6 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $BoxId.create("_generated/Box.models.gen");
-
-// Kept local because importing this generic helper makes TypeScript instantiate it
-// against thousands of generated schemas and exceed the compiler's depth limit.
-const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
-  schema: Sch
-): Sch & {
-  // fallow-ignore-next-line code-duplication -- generated-local codec statics avoid TypeScript instantiation-depth failures
-  readonly decodeOption: (input: unknown) => import("effect/Option").Option<Sch["Type"]>;
-  readonly fromUnknown: (input: unknown) => Sch["Type"];
-} =>
-  SchemaUtils.withStatics((self: Sch) => ({
-    decodeOption: S.decodeUnknownOption(self),
-    fromUnknown: S.decodeUnknownSync(self)
-  }))(schema);
 
 /**
  * Serialized Box SDK JSON payloads.

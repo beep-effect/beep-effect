@@ -678,8 +678,7 @@ export const ExecutionId = S.String.pipe(
   S.brand("ExecutionId"),
   $I.annoteSchema("ExecutionId", {
     description: "Unique identifier for one execution.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

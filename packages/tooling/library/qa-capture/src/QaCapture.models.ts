@@ -188,8 +188,7 @@ export const SessionId = S.String.check(
 ).pipe(
   $I.annoteSchema("SessionId", {
     description: "Non-empty QA capture session identifier.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -233,8 +232,7 @@ export const RoundNumber = S.Int.check(
 ).pipe(
   $I.annoteSchema("RoundNumber", {
     description: "One-based QA round number.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -278,8 +276,7 @@ export const ViewportDimension = S.Int.check(
 ).pipe(
   $I.annoteSchema("ViewportDimension", {
     description: "Positive integer pixel dimension for viewports.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -338,8 +335,7 @@ export const CollectorPort = S.Int.check(
 ).pipe(
   $I.annoteSchema("CollectorPort", {
     description: "Loopback TCP port a collector can listen on.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

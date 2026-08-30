@@ -42,8 +42,7 @@ const XAiWebSocketCloseCode = S.Int.check(S.isBetween({ minimum: 1000, maximum: 
 export const XAiHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
   $I.annoteSchema("XAiHttpStatusCode", {
     description: "Numeric HTTP status code returned by the xAI driver.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -82,7 +81,7 @@ export const XAiQueryScalar = S.Union([S.Boolean, S.Null, S.Finite, S.String]).p
   $I.annoteSchema("XAiQueryScalar", {
     description: "URL query scalar accepted by the xAI driver.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -120,8 +119,7 @@ export type XAiQueryScalar = typeof XAiQueryScalar.Type;
 export const XAiQueryValue = S.Union([S.Array(XAiQueryScalar), XAiQueryScalar]).pipe(
   $I.annoteSchema("XAiQueryValue", {
     description: "URL query value accepted by the xAI driver.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -337,8 +335,7 @@ export const XAiResponse = S.Union([XAiBinaryResponse, XAiJsonResponse, XAiNoBod
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("XAiResponse", {
     description: "Response union returned by non-streaming xAI endpoint methods.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -509,8 +506,7 @@ export const XAiWebSocketEvent = XAiWebSocketEventKind.mapMembers((members) => {
   S.toTaggedUnion("kind"),
   $I.annoteSchema("XAiWebSocketEvent", {
     description: "Event emitted by an xAI WebSocket endpoint session.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

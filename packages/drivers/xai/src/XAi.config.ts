@@ -56,8 +56,7 @@ export const XAiHttpBaseUrl = S.NonEmptyString.check(
   $I.annoteSchema("XAiHttpBaseUrl", {
     description: "xAI HTTP API base URL normalized without trailing slashes.",
     toArbitrary: () => (fc) => fc.webUrl().map(normalizeXAiBaseUrl),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -91,8 +90,7 @@ export const XAiWebSocketBaseUrl = S.NonEmptyString.check(
   $I.annoteSchema("XAiWebSocketBaseUrl", {
     description: "xAI WebSocket API base URL normalized without trailing slashes.",
     toArbitrary: () => (fc) => fc.webUrl().map((url) => normalizeXAiBaseUrl(url.replace(/^https?:/, "wss:"))),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

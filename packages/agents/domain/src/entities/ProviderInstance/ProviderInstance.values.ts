@@ -8,7 +8,7 @@
 
 import { $AgentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { SchemaTransformation } from "effect";
+import { pipe, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -232,7 +232,7 @@ export const EnvVarName = S.NonEmptyString.check(
   $I.annoteSchema("EnvVarName", {
     description: "Environment-variable name safe to persist on a provider instance; token-bearing names rejected.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -464,7 +464,7 @@ export class ProbeFailedSnapshot extends S.Class<ProbeFailedSnapshot>($I`ProbeFa
  * ```ts
  * import { AuthSnapshot } from "@beep/agents-domain/entities/ProviderInstance"
  *
- * const snapshot = AuthSnapshot.fromUnknown({
+ * const snapshot = AuthSnapshot.decodeUnknownSync({
  *   status: "unauthenticated",
  *   probedAt: "2026-07-11T00:00:00.000Z",
  * })
@@ -474,12 +474,20 @@ export class ProbeFailedSnapshot extends S.Class<ProbeFailedSnapshot>($I`ProbeFa
  * @category schemas
  * @since 0.0.0
  */
-export const AuthSnapshot = S.Union([AuthenticatedSnapshot, UnauthenticatedSnapshot, ProbeFailedSnapshot]).pipe(
-  S.toTaggedUnion("status"),
+export const AuthSnapshot = pipe(
+  S.Union([AuthenticatedSnapshot, UnauthenticatedSnapshot, ProbeFailedSnapshot]),
   $I.annoteSchema("AuthSnapshot", {
     description: "Tagged union of provider auth-probe outcomes, discriminated by status.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("status"),
+      SchemaUtils.withStatics(() => ({
+        decodeUnknownSync: schema.decodeUnknownSync,
+        is: schema.is,
+      }))
+    )
 );
 
 /**

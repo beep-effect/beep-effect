@@ -490,8 +490,7 @@ export const OntologyGraphGesture = LiteralKit(["connect", "delete", "expand", "
   .pipe(
     $I.annoteSchema("OntologyGraphGesture", {
       description: "Typed visualizer halo gesture converted into ontology change operations.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**

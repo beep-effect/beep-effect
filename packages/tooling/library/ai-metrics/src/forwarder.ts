@@ -355,11 +355,15 @@ export const AiMetricsForwarderOtlpExport = S.Union([
   AiMetricsForwarderOtlpExported,
   AiMetricsForwarderOtlpExportFailed,
 ]).pipe(
-  S.toTaggedUnion("status"),
   $I.annoteSchema("AiMetricsForwarderOtlpExport", {
     description: "Tagged post-forwarder derived OTLP export status for the same ingest run.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("status"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**

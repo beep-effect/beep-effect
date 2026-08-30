@@ -40,7 +40,7 @@ export const HasNullByte = S.String.check(
   $I.annoteSchema("HasNullByte", {
     description: "A string that contains an embedded NUL byte.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -90,7 +90,7 @@ export const SupportedWindowsNamespace = S.NonEmptyString.check(
   $I.annoteSchema("SupportedWindowsNamespace", {
     description: "A non-empty path string that does not use unsupported Windows namespace prefixes.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -139,7 +139,7 @@ export const UsesPosixSeparator = S.String.check(
   $I.annoteSchema("UsesPosixSeparator", {
     description: "A string that contains the POSIX path separator /.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -188,7 +188,7 @@ export const UsesWindowsSeparator = S.String.check(
   $I.annoteSchema("UsesWindowsSeparator", {
     description: "A string that contains the Windows path separator \\.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -237,7 +237,7 @@ export const EndsWithSeparator = S.String.check(
   $I.annoteSchema("EndsWithSeparator", {
     description: "A string that ends with either the POSIX or Windows path separator.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

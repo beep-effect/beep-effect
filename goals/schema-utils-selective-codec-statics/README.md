@@ -13,9 +13,9 @@ statics and migrate all existing usages to the minimal required set.
 
 ## Current State
 
-P0 alignment and migration census are in progress. Implementation is blocked
-until the `/grilling` decision frontier is empty and the operator confirms
-shared understanding.
+The selective API and repository migration are locally complete. P0-P3 are
+closed with reproducible inventories and attributed verification evidence; the
+packet is now in P4 for Yeet publication and hosted closeout.
 
 ## Launch
 
@@ -35,7 +35,7 @@ Use this command for execution-capable sessions:
    rejected options.
 4. [`PLAN.md`](./PLAN.md) - active execution plan.
 5. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing and
-   remaining decision frontier.
+   lifecycle state.
 6. [`research/SOURCES.md`](./research/SOURCES.md) - source and evidence ledger.
 7. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - friction
    receipts captured during the goal.
@@ -43,9 +43,8 @@ Use this command for execution-capable sessions:
 
 ## Next Action
 
-Answer the current questions in `DECISIONS.md`. After each round, append the
-settled answers and replace `openQuestions` in the manifest with the newly
-unblocked frontier.
+Publish the reviewed implementation through Yeet, resolve every hosted review
+thread, and monitor until `merge-ready: yes`.
 
 ## Latest Evidence
 
@@ -54,5 +53,17 @@ unblocked frontier.
 - The initial design review is preserved in
   `scratchpad/schema-utils-codec-statics-design.md` and distilled into
   `SPEC.md`.
-- A live source census is being recorded before migration quantities become
-  acceptance baselines.
+- The opening AST inventory recorded 726 attachments, including 291 generated
+  declarations; the closing inventory records 213 explicit non-empty
+  selections, zero unresolved owners, and zero risky pre-augmented sources.
+- Decisions D0-D19 are locked and the manifest decision frontier is empty.
+- The closing census records zero broad-helper matches, zero JSON-suffixed
+  statics, no touched inline-compiler findings, and a 2,931-finding successor
+  baseline, down four from opening.
+- Focused selective-static tests pass 8/8; full `@beep/schema` and `@beep/rdf`
+  package verification pass, as do the quick lanes for every other touched
+  package.
+- Repository test-tsgo has no migration-owned diagnostics; its only remaining
+  failure is the attributed vendored `@pulumi/gharunners` module-format issue.
+- The mandatory `inline-schema-compile-hard-error` successor packet was
+  materialized from the repository bootstrap plan.

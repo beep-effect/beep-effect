@@ -237,7 +237,6 @@ export const SourceProcessingRecord = S.Union([
   $I.annoteSchema("SourceProcessingRecord", {
     description: "JSONL-safe source processing record emitted by the CLI proof.",
   }),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     encodeJson: S.encodeUnknownEffect(S.fromJsonString(schema)),
   }))
@@ -295,8 +294,7 @@ export type SourceProcessingRecord = typeof SourceProcessingRecord.Type;
 export const FileProcessingFailureReason = S.Union([FileProcessingOperationErrorReason, FileProcessingSkipReason]).pipe(
   $I.annoteSchema("FileProcessingFailureReason", {
     description: "Machine-readable skipped or failed source reason emitted in failures.jsonl.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -454,7 +452,6 @@ export const FileProcessingFailureRecord = S.Union([
   $I.annoteSchema("FileProcessingFailureRecord", {
     description: "JSONL-safe sanitized skipped or failed source record.",
   }),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     encodeJson: S.encodeUnknownEffect(S.fromJsonString(schema)),
   }))

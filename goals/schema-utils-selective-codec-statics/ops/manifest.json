@@ -52,27 +52,27 @@
     {
       "id": "P0",
       "name": "Align and census",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement selective APIs",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Migrate and delete broad variants",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Ratchet and verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",
@@ -80,23 +80,7 @@
       "status": "pending"
     }
   ],
-  "openQuestions": [
-    {
-      "id": "explicit-selector-compatibility",
-      "question": "Must withCodecStatics require a non-empty key tuple with no zero-argument compatibility overload?",
-      "recommended": "Yes; make explicit selection mandatory and delete the broad behavior."
-    },
-    {
-      "id": "class-utility-shape",
-      "question": "Should S.Class schemas use a nested frozen utility bag bound with classStatics(this, keys)?",
-      "recommended": "Yes; it preserves Effect's class implementation and allows consumer-side destructuring without constructor magic."
-    },
-    {
-      "id": "json-boundary",
-      "question": "Should JSON-string convenience names stay out of the selector in favor of explicit named S.fromJsonString schemas?",
-      "recommended": "Yes; separate construction-time JSON options from per-call parse options and prevent accidental double wrapping."
-    }
-  ],
+  "openQuestions": [],
   "verificationCommands": [
     "test \"$(wc -m < goals/schema-utils-selective-codec-statics/GOAL.md)\" -le 4000",
     "jq . goals/schema-utils-selective-codec-statics/ops/manifest.json",
@@ -107,7 +91,6 @@
     "bun run beep goals index --check"
   ],
   "stopConditions": [
-    "The /grilling frontier is non-empty or shared understanding is not explicitly confirmed.",
     "Safe class binding would require a custom Schema implementation or Effect-internal mutation.",
     "An exported schema's minimal public helper surface cannot be established from repository evidence.",
     "JSON option ownership would rebuild a codec on each business-function call.",

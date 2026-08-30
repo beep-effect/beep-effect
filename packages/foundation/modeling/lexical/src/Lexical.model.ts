@@ -20,7 +20,7 @@ import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
 import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, Result, SchemaGetter } from "effect";
+import { Effect, pipe, Result, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
@@ -587,7 +587,7 @@ export type TableDimension = typeof TableDimension.Type;
  * ```ts
  * import { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(ArtifactRefId.fromUnknown("artifact-123"))
+ * console.log(ArtifactRefId.decodeUnknownSync("artifact-123"))
  * ```
  *
  * @category models
@@ -605,7 +605,7 @@ export const ArtifactRefId = S.NonEmptyString.check(
   $I.annoteSchema("ArtifactRefId", {
     description: "Non-empty artifact reference id accepted by package-owned Lexical artifact-ref nodes.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -2580,22 +2580,30 @@ const RawLexicalNode = S.Union([
  * @category models
  * @since 0.0.0
  */
-export const LexicalNode = RawLexicalNode.check(
-  S.makeFilter(isStrictLexicalNode, {
-    identifier: $I`StrictLexicalNodeTreeCheck`,
-    title: "Strict Lexical Node",
-    description:
-      "A serialized Lexical node whose recursive child topology follows the supported v1 grammar, with a non-empty document root.",
-    message: "Expected every Lexical node to appear under a compatible v1 parent and root nodes to be non-empty.",
-  })
-).pipe(
-  S.toTaggedUnion("type"),
+export const LexicalNode = pipe(
+  S.make<(typeof RawLexicalNode)["Rebuild"]>(RawLexicalNode.ast).check(
+    S.makeFilter(isStrictLexicalNode, {
+      identifier: $I`StrictLexicalNodeTreeCheck`,
+      title: "Strict Lexical Node",
+      description:
+        "A serialized Lexical node whose recursive child topology follows the supported v1 grammar, with a non-empty document root.",
+      message: "Expected every Lexical node to appear under a compatible v1 parent and root nodes to be non-empty.",
+    })
+  ),
   $I.annoteSchema("LexicalNode", {
     description:
       "The strict tagged union of v1 serialized Lexical nodes, including recursive parent-child grammar and non-empty root validation.",
     parseOptions: strictSemanticParseOptions,
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("type"),
+      SchemaUtils.withStatics(() => ({
+        decodeUnknownOption: schema.decodeUnknownOption,
+        decodeUnknownSync: schema.decodeUnknownSync,
+      }))
+    )
 );
 
 /**
@@ -2900,8 +2908,7 @@ export const LexicalNodeWire = S.StructWithRest(
 ).pipe(
   $I.annoteSchema("LexicalNodeWire", {
     description: "JSON-only Lexical node wire preserving unknown types, versions, and fields exactly.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -2996,8 +3003,7 @@ export const SerializedEditorStateWire = S.StructWithRest(
 ).pipe(
   $I.annoteSchema("SerializedEditorStateWire", {
     description: "Lossless JSON-only editor-state envelope retaining top-level and recursive extension fields.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

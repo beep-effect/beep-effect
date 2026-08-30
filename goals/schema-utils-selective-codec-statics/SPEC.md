@@ -2,18 +2,20 @@
 
 ## Status of This Contract
 
-This is the normative packet anchor, but its explicitly marked open branches
-remain provisional until the `/grilling` frontier is empty and the operator
-confirms shared understanding. Locked decisions are recorded in
-[`DECISIONS.md`](./DECISIONS.md).
+This is the ratified normative packet anchor. The `/grilling` frontier is empty
+and the operator confirmed shared understanding on 2026-08-30. Locked decisions
+are recorded in [`DECISIONS.md`](./DECISIONS.md); changes require a dated
+amendment there.
 
 ## Objective
 
 Replace broad `SchemaUtils` codec-static bundles with one type-safe selective
 API that compiles only the requested schema helpers at module initialization,
 migrate every existing repository use to its minimal observed helper set,
-delete the broad helper variants, and make inline schema compilation a hard
-lint error once the repository is clean.
+delete the broad helper variants, and establish a shrinking no-growth baseline
+for legacy helpers and inline schema compilation. Full inline-compiler cleanup
+and hard-error promotion belong to a mandatory successor goal created after a
+fresh closing census.
 
 ## Locked Inputs
 
@@ -27,10 +29,9 @@ lint error once the repository is clean.
 - Preserve unrelated worktree changes and keep the migration mechanically
   reviewable.
 
-## Proposed API Direction
+## Selected API Contract
 
-The following design is recommended by the initial review and is subject to the
-remaining decision frontier:
+The selected schema API is:
 
 ```ts
 const MyString = S.String.pipe(
@@ -49,14 +50,19 @@ const MyString = S.String.pipe(
   runner on each business-function call.
 - Selection must be lazy by key: requesting one helper must not construct all
   helpers and then discard the unused ones.
-- Static property installation is strict and deterministic: duplicate keys are
-  deduplicated, incompatible existing keys fail closed, and installed
-  properties are read-only and non-enumerable unless the grill decides
-  otherwise.
-- No zero-argument compatibility overload is recommended. Explicit selection
-  is the mechanism that prevents broad attachment from returning.
+- Static property installation is strict and deterministic: duplicate keys,
+  pre-attached companion statics, and attempted overrides fail with a typed
+  configuration error. Selected properties are non-enumerable, non-writable,
+  and non-configurable.
+- The selector creates a fresh owned schema with Effect's public
+  `self.rebuild(self.ast)` before installation. It never mutates the supplied
+  schema or implements private Schema machinery.
+- The selector is dual: both `schema.pipe(withCodecStatics(keys))` and
+  `withCodecStatics(schema, keys)` are supported by one implementation.
+- A non-empty readonly tuple is mandatory. There is no zero-argument overload
+  and an empty tuple is not an identity operation.
 
-## Proposed Class Direction
+## Selected Class Contract
 
 The safe class recommendation is a nested, frozen utility bag bound explicitly
 to the finished class constructor:
@@ -82,7 +88,7 @@ that exact shorthand can be made safe. It also rejects custom class wrappers,
 decorators, receiver-magic inheritance helpers, and static-block mutation as
 default solutions.
 
-## Proposed JSON Boundary
+## Selected JSON Boundary
 
 JSON-string helper names such as `decodeUnknownJsonStringEffect` are not
 recommended members of the general selector. They obscure whether a schema is
@@ -97,8 +103,10 @@ const MyStructJson = S.fromJsonString(MyStruct, jsonOptions).pipe(
 
 `AST.ParseOptions` remain ordinary per-invocation runner arguments. JSON
 reviver, replacer, and spacing options belong to construction of the named
-`S.fromJsonString` schema. Dynamic construction-time options require an
-explicit factory or cache outside the general static selector.
+`S.fromJsonString` schema. The package exports a compact named
+`UnknownFromJsonString`. Fixed pretty or custom variants stay as local named
+schemas beside their consumers; this goal does not add a public dynamic factory
+or cache.
 
 ## Migration Scope
 
@@ -120,9 +128,13 @@ explicit factory or cache outside the general static selector.
 - Call sites whose helper object is re-exported or passed through another
   abstraction; these require explicit public-surface analysis rather than a
   textual nearest-file guess.
-- The `beep(no-inline-schema-compile)` rule, including the current
-  `ProvRdf.ts` violation, after migration proves the repository can sustain an
-  error-level rule.
+- A goal-local typechecker-backed inventory, reviewed minimal-key mapping, and
+  disposable codemod used to make the migration reproducible.
+- Per-schema generator override maps that default to no attached statics.
+- A shrinking legacy baseline and no-growth gate for family PRs.
+- Inline-compiler findings in touched code and the known `ProvRdf.ts` finding.
+- A fresh closing census and a mandatory successor-goal requirement for full
+  inline-compiler cleanup and hard-error promotion.
 
 ### Out of scope
 
@@ -133,27 +145,38 @@ explicit factory or cache outside the general static selector.
   later grilled decision admits it.
 - Compatibility aliases whose only purpose is to preserve the deleted broad
   helpers indefinitely.
+- Migration of the existing 253-class manual-static fleet beyond one `S.Class`
+  and one `S.TaggedClass` pilot.
+- Repository-wide inline-compiler cleanup or promotion of
+  `beep(no-inline-schema-compile)` to an error in this goal.
 
-## Required Static Families
+## Required Static Catalog
 
-The implementation must derive its key union and result mapping from a single
-typed registry. The final registry is not locked until the grill resolves the
-surface question, but candidate families include:
+The implementation derives its key union and exact result mapping from one
+typed registry. It contains exactly:
 
-- guards and assertions: `is`, `asserts` or `assert`;
-- decode/encode runners: sync, option, result, exit, promise, and effect forms,
-  including unknown-input forms where Effect exposes distinct helpers;
-- schema-derived values: `equivalence`, `toArbitrary`;
-- standards adapters only if their lifecycle and construction semantics match
-  codec runners.
+- `decodeEffect`, `decodeUnknownEffect`, `encodeEffect`,
+  `encodeUnknownEffect`;
+- `decodeExit`, `decodeUnknownExit`, `encodeExit`, `encodeUnknownExit`;
+- `decodeOption`, `decodeUnknownOption`, `encodeOption`,
+  `encodeUnknownOption`;
+- `decodePromise`, `decodeUnknownPromise`, `encodePromise`,
+  `encodeUnknownPromise`;
+- `decodeResult`, `decodeUnknownResult`, `encodeResult`,
+  `encodeUnknownResult`;
+- `decodeSync`, `decodeUnknownSync`, `encodeSync`, `encodeUnknownSync`;
+- `is`, `asserts`, the existing dual `equivalence`, and `toArbitrary`.
 
-Each registry entry must state whether it is constructed eagerly at schema
-declaration time, internally memoized by Effect, or intentionally omitted.
+Names exactly match Effect. Legacy `fromUnknown`, the legacy unknown-input
+`decodeOption` meaning, all JSON-suffixed names, and `toStandardSchemaV1` are
+excluded. Each selected entry is constructed once at schema declaration; no
+unselected factory is invoked.
 
 ## Migration Rules
 
-1. Build an authoritative inventory before edits: helper, owning schema,
-   attached properties actually read, re-export status, and JSON/class risks.
+1. Build a typechecker-backed authoritative inventory before consumer edits:
+   helper, owning schema, attached properties actually read, explicit public
+   contract, re-export status, and JSON/class risks.
 2. Implement and test the selector before changing consumers.
 3. Migrate generated sources at their generator first, then regenerate.
 4. Replace each use with its minimal selected tuple. Do not translate a broad
@@ -161,10 +184,12 @@ declaration time, internally memoized by Effect, or intentionally omitted.
 5. Preserve public behavior and Effect-native function signatures.
 6. Delete the six broad group implementations, the old bare behavior, their
    exports, tests, docs, and stale examples in the same campaign.
-7. Prove a second inventory pass finds no stale helper names or zero-argument
+7. Treat the old every-runner `Unknown` surface as intentionally retired.
+8. Prove a second inventory pass finds no stale helper names or zero-argument
    calls in executable/documented source.
-8. Hoist remaining inline compiler calls, including the known `ProvRdf.ts`
-   site, then promote `beep(no-inline-schema-compile)` from warning to error.
+9. Fix inline compiler calls in touched code and the known `ProvRdf.ts` site,
+   reject warning growth, and record the fresh closing census for the mandatory
+   successor goal.
 
 ## Safety Constraints
 
@@ -176,32 +201,38 @@ declaration time, internally memoized by Effect, or intentionally omitted.
   schema is exported.
 - Do not attach statics to Effect's shared primitive singleton schemas unless
   the final ownership decision explicitly permits and tests that mutation.
-- Do not start implementation before the operator confirms the completed
-  decision tree.
+- Do not change public `withStatics` behavior. Its internal installer may be
+  shared, but only the selected codec path uses owned strict mode.
 
 ## Acceptance Criteria
 
-- [ ] `/grilling` has no open frontier and the operator has explicitly
-      confirmed shared understanding.
-- [ ] One `withCodecStatics(keys)` implementation attaches exactly the selected
+- [x] `/grilling` has no open frontier and the operator explicitly confirmed
+      shared understanding on 2026-08-30.
+- [x] One `withCodecStatics(keys)` implementation attaches exactly the selected
       statics and constructs no unselected runners.
-- [ ] The selected return type is exact and retains native Effect signatures.
-- [ ] The chosen class utility form works on real `S.Class` declarations
+- [x] The selected return type is exact and retains native Effect signatures.
+- [x] Duplicate keys, pre-attached statics, and attempted overrides fail closed;
+      selected descriptors are immutable and non-enumerable.
+- [x] The chosen class utility form works on real `S.Class` declarations
       without a custom Schema class implementation.
-- [ ] JSON construction options and per-call parse options have distinct,
+- [x] JSON construction options and per-call parse options have distinct,
       tested ownership; double wrapping is not exposed as an ergonomic path.
-- [ ] Every existing broad-helper call site is migrated using an audited
+- [x] Every existing broad-helper call site is migrated using an audited
       minimal key set, including exported schemas and generators.
-- [ ] The old bare behavior and all six `with<X>CodecStatics` variants are
+- [x] The reviewed inventory and disposable codemod are retained as goal-local
+      evidence; generators default to no statics with explicit override maps.
+- [x] The old bare behavior and all six `with<X>CodecStatics` variants are
       deleted from implementation, exports, tests, docs, and live consumers.
-- [ ] Direct selected runners are constructed once per schema declaration and
+- [x] Direct selected runners are constructed once per schema declaration and
       a regression test distinguishes declaration-time construction from
       per-call construction.
-- [ ] `beep(no-inline-schema-compile)` is error-level and its repository scope
-      is clean, including `packages/foundation/modeling/rdf/src/ProvRdf.ts`.
+- [x] Touched inline-compiler findings and `ProvRdf.ts` are fixed; the shrinking
+      baseline rejects helper or warning growth.
+- [x] A fresh closing census is recorded and requires a successor goal for
+      full cleanup and hard-error promotion.
 - [ ] `@beep/schema` package verification, focused tests, docgen, and the
       canonical Yeet lane are green.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -214,14 +245,12 @@ declaration time, internally memoized by Effect, or intentionally omitted.
 | Broad helper removal | targeted `rg` census from `research/SOURCES.md` | Zero live definitions, exports, or uses |
 | Selector behavior | focused `@beep/schema` runtime and dtslint tests | Exact keys, signatures, collisions, and construction timing pass |
 | Package proof | `bun run beep quality package-verify @beep/schema` | Green |
-| Lint ratchet | policy-pack rule tests and repository lint | Inline compile rule is error-level and clean |
+| Lint ratchet | goal-local baseline check and repository census | No growth; touched and known finding clean |
 | Repository proof | `bun run beep yeet verify` | Green or unrelated failures attributed |
 | Hosted completion | `bun run beep yeet monitor` | `merge-ready: yes` |
 
 ## Stop Conditions
 
-- The grill reveals a public compatibility promise that conflicts with deleting
-  the broad helpers and the operator has not selected a migration policy.
 - A migrated exported schema's minimal public helper set cannot be established
   from repository evidence.
 - Safe class binding would require a custom Schema implementation or mutation
@@ -238,4 +267,3 @@ declaration time, internally memoized by Effect, or intentionally omitted.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
-

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "inline-schema-compile-hard-error",
+    "packetId": "goal-packet/v1:074c977d8b1b1e8ca85083f82551df8ff41f011b2f83dc88baa9093ef6bcb9a3",
+    "title": "Inline Schema Compiler Hard Error",
+    "status": "active",
+    "created": "2026-08-30",
+    "updated": "2026-08-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/inline-schema-compile-hard-error",
+  "lifecycle": "active",
+  "mission": "Eliminate the remaining inline Schema compiler calls and promote beep(no-inline-schema-compile) from warning to error.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "note": "Mandatory successor created from the 2026-08-30 closing census of schema-utils-selective-codec-statics.",
+    "graduated": "2026-08-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/inline-schema-compile-hard-error/README.md",
+    "goals/inline-schema-compile-hard-error/SPEC.md",
+    "goals/inline-schema-compile-hard-error/PLAN.md",
+    "goals/inline-schema-compile-hard-error/GOAL.md",
+    "goals/inline-schema-compile-hard-error/research/SOURCES.md",
+    "goals/schema-utils-selective-codec-statics/research/closing-census.json"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/inline-schema-compile-hard-error/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/inline-schema-compile-hard-error/GOAL.md)\" -le 4000",
+    "jq . goals/inline-schema-compile-hard-error/ops/manifest.json",
+    "rg -n \"inline-schema-compile-hard-error|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/inline-schema-compile-hard-error",
+    "git diff --check -- goals/inline-schema-compile-hard-error",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "A compiler call cannot be hoisted without changing observable parse options, dependencies, or schema semantics.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

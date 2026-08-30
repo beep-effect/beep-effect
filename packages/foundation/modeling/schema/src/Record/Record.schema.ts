@@ -6,7 +6,6 @@
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Record");
 
@@ -31,8 +30,7 @@ const $I = $SchemaId.create("Record");
 export const UnknownRecord = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("UnknownRecord", {
     description: "A record of unknown values",
-  }),
-  SchemaUtils.withOptionCodecStatics
+  })
 );
 
 /**

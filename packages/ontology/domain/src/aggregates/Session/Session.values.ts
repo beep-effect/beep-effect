@@ -34,7 +34,7 @@ export const SessionId = S.NonEmptyString.pipe(
   $I.annoteSchema("SessionId", {
     description: "Stable id for an ontology workbench session.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**

@@ -74,7 +74,7 @@ const FilingOutcomeBase = FilingOutcomeKind.toTaggedUnion("kind")({
  * ```ts
  * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  *
- * const outcome = FilingOutcome.fromUnknown({
+ * const outcome = FilingOutcome.decodeUnknownSync({
  *   kind: "filed",
  *   confidence: 1,
  *   rationale: "Matched deterministic taxonomy token for pleadings.",
@@ -90,7 +90,7 @@ export const FilingOutcome = FilingOutcomeBase.pipe(
   $I.annoteSchema("FilingOutcome", {
     description: "Filing decision outcome: filed under a taxonomy concept, or routed to the intake inbox.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   SchemaUtils.withStatics(() => ({ match: FilingOutcomeBase.match }))
 );
 

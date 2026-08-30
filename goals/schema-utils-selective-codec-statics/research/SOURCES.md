@@ -122,3 +122,20 @@ class migration outside this goal unless the operator explicitly expands it.
 None required. The implementation must be validated against the repo's pinned
 Effect reference checkout and installed package rather than general web or
 training-data recollection.
+
+## Closing Evidence
+
+- `research/closing-attachment-inventory.json` records 213 explicit selective
+  attachments across 3,968 scanned source files, with zero unresolved owners,
+  empty tuples, JSON-boundary aliases, broad helpers, or risky augmented roots.
+- `research/closing-census.json` records zero broad-helper and JSON-suffixed
+  static matches, no finding on a touched line, and removal of the named
+  `ProvRdf.ts` compiler. The inline-warning count shrank from 2,935 to 2,931.
+- `goals/inline-schema-compile-hard-error` is the required successor packet for
+  the remaining 2,931 warnings and later hard-error promotion.
+- The runtime/type suite at
+  `packages/foundation/modeling/schema/test/codecStatics.test.ts` passes eight
+  focused tests covering both invocation forms, exact types, descriptor
+  ownership, rebuilds, schema-derived properties, collision rejection, JSON
+  option ownership, native runner identity, and `S.Class` / `S.TaggedClass`
+  bags.

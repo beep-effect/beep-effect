@@ -336,8 +336,7 @@ const WinkNlpToolkitLiveError = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("WinkNlpToolkitLiveError", {
     description: "Union of errors raised by the live wink NLP toolkit layer.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 type WinkNlpToolkitLiveError = typeof WinkNlpToolkitLiveError.Type;
 

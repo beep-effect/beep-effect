@@ -6,7 +6,7 @@
  */
 
 import { DomainError } from "@beep/repo-utils";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -21,7 +21,7 @@ import type {
   DocgenPackageAnalysis,
 } from "./Docgen.schemas.ts";
 
-const encodeJsonResult = Unknown.encodeUnknownResultFromJsonString;
+const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
 const normalizeSlashes = Str.replace(/\\/g, "/");
 const hasAnalysisIssue = (analysis: DocgenExportAnalysis): boolean =>
   analysis.missingTags.length > 0 || analysis.categoryIssues.length > 0;

@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { parseProcStatStartTime } from "@beep/repo-cli/commands/Worktree";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, Stream } from "effect";
 import * as A from "effect/Array";
@@ -15,7 +15,7 @@ const hookPath = `${repoRoot}.claude/hooks/yeet-inbox.sh`;
 
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeObject = S.decodeUnknownSync(JsonObject);
-const encodeUnknown = Unknown.encodeUnknownEffectFromJsonString;
+const encodeUnknown = UnknownFromJsonString.encodeUnknownEffect;
 const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>, timeout?: number): void =>
   it(name, () => Effect.runPromise(program()), timeout);
 

@@ -208,6 +208,16 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/epistemic/config/test/Config.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 98,
+      "owner": "@beep/epistemic-config",
+      "reason": "Audience-routing regression over fixed loopback and external URL cases; schema-derived URL property coverage lives with the owning @beep/schema URL models, while arbitrary destinations would not prove these named security classifications."
+    },
+    {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
       "symbol": "EdgeVersionSourceColumns",
       "kind": "exported-type-literal",
@@ -250,6 +260,16 @@
       "line": 102,
       "owner": "@beep/epistemic-server",
       "reason": "P0 persistence spike decodes fixed commands and rows to prove duplicate suppression, visibility, ordering, and transactional boundaries against PGlite; schema law coverage lives in domain and use-case tests."
+    },
+    {
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 89,
+      "owner": "@beep/epistemic-server",
+      "reason": "External-Postgres race regression uses deterministic candidate identifiers to prove concurrent repository behavior; arbitrary values would make the race non-reproducible, and schema-derived identifier laws live with the owning domain models."
     },
     {
       "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
@@ -448,6 +468,16 @@
       "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
     },
     {
+      "file": "packages/foundation/modeling/schema/test/Unknown.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 13,
+      "owner": "@beep/schema",
+      "reason": "Explicit JSON-boundary policy regression over fixed compact and pretty fixtures; S.Unknown admits non-JSON values for which a JSON-string round-trip is undefined, so schema-derived arbitrary coverage would not express the boundary's law."
+    },
+    {
       "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
       "symbol": "ChatComposerMountConfig",
       "kind": "exported-interface",
@@ -598,6 +628,16 @@
       "line": 71,
       "owner": "@beep/ontology-server",
       "reason": "Real-engine orchestration regression coverage; schema-derived property laws belong to the schema-owning ontology use-cases package."
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 61,
+      "owner": "@beep/ontology-use-cases",
+      "reason": "End-to-end session orchestration regression uses deterministic file paths and prefix maps to prove validation, repair, and provenance output; schema-derived laws live with the owning modeling schemas."
     },
     {
       "file": "packages/shared/domain/src/entity/Principal.ts",

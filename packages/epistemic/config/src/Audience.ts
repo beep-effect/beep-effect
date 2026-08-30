@@ -46,9 +46,9 @@ const hostOf = (destination: string): string => {
  * import { resolveSinkAudience } from "@beep/epistemic-config/server"
  * import { SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
  *
- * console.log(resolveSinkAudience(SinkDestination.fromUnknown("http://127.0.0.1:3939")))
+ * console.log(resolveSinkAudience(SinkDestination.decodeUnknownSync("http://127.0.0.1:3939")))
  * // "local-workspace"
- * console.log(resolveSinkAudience(SinkDestination.fromUnknown("https://registry.example")))
+ * console.log(resolveSinkAudience(SinkDestination.decodeUnknownSync("https://registry.example")))
  * // "external-network"
  * ```
  *

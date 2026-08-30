@@ -8,6 +8,7 @@
 import { $AcpId } from "@beep/identity";
 import { Defect, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
+import { pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AcpSchema from "./_generated/schema.gen.ts";
@@ -440,18 +441,18 @@ export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpReques
  * @category errors
  * @since 0.0.0
  */
-export const AcpError = S.Union([
-  AcpRequestError,
-  AcpSpawnError,
-  AcpProcessExitedError,
-  AcpProtocolParseError,
-  AcpTransportError,
-]).pipe(
-  S.toTaggedUnion("_tag"),
+export const AcpError = pipe(
+  S.Union([AcpRequestError, AcpSpawnError, AcpProcessExitedError, AcpProtocolParseError, AcpTransportError]),
+  // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("AcpError", {
     description: "Union of typed technical failures emitted by the ACP driver.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**

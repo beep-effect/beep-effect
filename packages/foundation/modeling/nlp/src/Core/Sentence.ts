@@ -74,8 +74,7 @@ export const SentenceIndex = NonNegativeInt.pipe(
   S.fromBrand("SentenceIndex", sentenceIndex),
   $I.annoteSchema("SentenceIndex", {
     description: "Non-negative ordered index for an NLP sentence.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

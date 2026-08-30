@@ -145,15 +145,19 @@ const DocumentsProjectionOutputArbitraryValues = [
  * @category schemas
  * @since 0.0.0
  */
-export const DocumentsProjectionOutput = DocumentsProjectionOutputBase.annotate({
-  toArbitrary: () => (fc) => fc.constantFrom(...DocumentsProjectionOutputArbitraryValues),
-}).pipe(
-  $I.annoteSchema("DocumentsProjectionOutput", {
-    description:
-      "Outcome of projecting a documentBag-shaped document array within a size budget: inline tier-projected columnar envelope, or a fetchable handle when even the minimal tier is oversized.",
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const DocumentsProjectionOutput = S.make<(typeof DocumentsProjectionOutputBase)["Rebuild"]>(
+  DocumentsProjectionOutputBase.ast
+)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...DocumentsProjectionOutputArbitraryValues),
+  })
+  .pipe(
+    $I.annoteSchema("DocumentsProjectionOutput", {
+      description:
+        "Outcome of projecting a documentBag-shaped document array within a size budget: inline tier-projected columnar envelope, or a fetchable handle when even the minimal tier is oversized.",
+    }),
+    SchemaUtils.withCodecStatics(["is"])
+  );
 
 /**
  * Type for {@link DocumentsProjectionOutput}.

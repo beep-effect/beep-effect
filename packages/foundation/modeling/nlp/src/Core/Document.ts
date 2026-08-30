@@ -46,8 +46,7 @@ export const DocumentId = S.NonEmptyString.pipe(
   S.brand("DocumentId"),
   $I.annoteSchema("DocumentId", {
     description: "Stable identifier for an NLP document.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -122,8 +121,7 @@ export const DocumentIndex = NonNegativeInt.pipe(
   S.fromBrand("DocumentIndex", documentIndex),
   $I.annoteSchema("DocumentIndex", {
     description: "Non-negative ordered index for an NLP document.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 const rebuildSentence: {

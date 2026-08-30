@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { parseProcStatStartTime } from "@beep/repo-cli/commands/Worktree";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, Stream } from "effect";
 import * as O from "effect/Option";
@@ -12,7 +12,7 @@ const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const watcherPath = `${repoRoot}scripts/yeet-pr-lease-watch.sh`;
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeObject = S.decodeUnknownSync(JsonObject);
-const encodeUnknown = Unknown.encodeUnknownEffectFromJsonString;
+const encodeUnknown = UnknownFromJsonString.encodeUnknownEffect;
 const provideNodeServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   Effect.scoped(
     Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))

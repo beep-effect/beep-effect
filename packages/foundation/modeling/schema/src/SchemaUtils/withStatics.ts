@@ -4,13 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
-
-const $I = $SchemaId.create("SchemaUtils/withStatics");
+import { staticDescriptorInstaller } from "./internal/staticDescriptors.ts";
 
 /**
  * The schema object returned by {@link withStatics}: the original schema with
@@ -28,47 +24,13 @@ type WithStaticsTransform<Schema extends object, Statics extends Record<string, 
   schema: Schema
 ) => WithStatics<Schema, Statics>;
 
-class WithStaticsStaticRedefinitionError extends S.TaggedError<WithStaticsStaticRedefinitionError>(
-  $I`WithStaticsStaticRedefinitionError`
-)(
-  "WithStaticsStaticRedefinitionError",
-  {
-    key: S.String,
-    message: S.String,
-  },
-  $I.annoteError<WithStaticsStaticRedefinitionError>("WithStaticsStaticRedefinitionError", {
-    description: "Raised when schema statics would redefine a non-configurable property with a different value.",
-  })
-) {}
-
 const attachStatics = <S extends object, M extends Record<string, unknown>>(
   schema: S,
   methods: (schema: S) => M
 ): WithStatics<S, M> => {
   const originalAnnotate = Reflect.get(schema, "annotate");
   const statics = methods(schema);
-
-  for (const [key, descriptor] of R.toEntries(Object.getOwnPropertyDescriptors(statics))) {
-    const existing = Reflect.getOwnPropertyDescriptor(schema, key);
-    const nextValue = "value" in descriptor ? descriptor.value : Reflect.get(statics, key);
-
-    if (existing !== undefined) {
-      const currentValue = "value" in existing ? existing.value : Reflect.get(schema, key);
-
-      if (Object.is(currentValue, nextValue)) {
-        continue;
-      }
-
-      if (existing.configurable === false) {
-        throw WithStaticsStaticRedefinitionError.make({
-          key,
-          message: `Cannot redefine non-configurable static '${key}'.`,
-        });
-      }
-    }
-
-    Reflect.defineProperty(schema, key, descriptor);
-  }
+  staticDescriptorInstaller.install(schema, statics);
 
   if (P.isFunction(originalAnnotate)) {
     Reflect.defineProperty(schema, "annotate", {

@@ -8,8 +8,9 @@ import { Effect, Redacted, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const decodeArchiveEnvelope = AiMetricsEncryptedRawArchiveEnvelope.decodeUnknownResultFromJsonString;
-const encodeArchiveEnvelope = AiMetricsEncryptedRawArchiveEnvelope.encodeUnknownResultFromJsonString;
+const ArchiveEnvelopeFromJsonString = S.fromJsonString(AiMetricsEncryptedRawArchiveEnvelope);
+const decodeArchiveEnvelope = S.decodeUnknownResult(ArchiveEnvelopeFromJsonString);
+const encodeArchiveEnvelope = S.encodeUnknownResult(ArchiveEnvelopeFromJsonString);
 const JsonRecord = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeUnknownJson = S.decodeUnknownResult(JsonRecord);
 const encodeUnknownJson = S.encodeUnknownResult(JsonRecord);

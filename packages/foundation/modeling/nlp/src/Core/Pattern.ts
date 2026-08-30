@@ -197,8 +197,7 @@ export const POSPatternOption = S.NonEmptyArray(S.Union([UniversalPOSTag, EmptyP
   .pipe(
     $I.annoteSchema("POSPatternOption", {
       description: "One or more POS tag alternatives for a pattern position.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**
@@ -237,8 +236,7 @@ export const EntityPatternOption = S.NonEmptyArray(S.Union([NamedEntityType, Emp
   .pipe(
     $I.annoteSchema("EntityPatternOption", {
       description: "One or more entity-type alternatives for a pattern position.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**
@@ -283,8 +281,7 @@ export const LiteralPatternOption = S.NonEmptyArray(S.Union([S.NonEmptyString, E
   .pipe(
     $I.annoteSchema("LiteralPatternOption", {
       description: "One or more literal-text alternatives for a pattern position.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**
@@ -435,8 +432,7 @@ export const PatternId = S.NonEmptyString.pipe(
   S.brand("PatternId"),
   $I.annoteSchema("PatternId", {
     description: "Stable identifier for a reusable NLP pattern.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

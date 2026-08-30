@@ -56,21 +56,21 @@ describe("schema.org namespace canonicalization", () => {
   });
 
   it("preserves RDF-distinct schema.org IRIs across the generic IRI facade", () => {
-    expect(IRI.fromUnknown("http://schema.org/name")).toBe("http://schema.org/name");
-    expect(AbsoluteIRI.fromUnknown("http://schema.org/Person")).toBe("http://schema.org/Person");
-    expect(IRIReference.fromUnknown("http://www.schema.org/Thing")).toBe("http://www.schema.org/Thing");
+    expect(IRI.decodeUnknownSync("http://schema.org/name")).toBe("http://schema.org/name");
+    expect(AbsoluteIRI.decodeUnknownSync("http://schema.org/Person")).toBe("http://schema.org/Person");
+    expect(IRIReference.decodeUnknownSync("http://www.schema.org/Thing")).toBe("http://www.schema.org/Thing");
     expect(makeNamedNode("http://schema.org/name").value).toBe("http://schema.org/name");
   });
 
   it("keeps canonical schema.org and unrelated legacy-http IRIs unchanged on decode", () => {
-    expect(IRI.fromUnknown("https://schema.org/name")).toBe("https://schema.org/name");
-    expect(IRI.fromUnknown("http://purl.org/dc/terms/creator")).toBe("http://purl.org/dc/terms/creator");
+    expect(IRI.decodeUnknownSync("https://schema.org/name")).toBe("https://schema.org/name");
+    expect(IRI.decodeUnknownSync("http://purl.org/dc/terms/creator")).toBe("http://purl.org/dc/terms/creator");
   });
 
   it("accepts valid legacy schema.org forms on the type side", () => {
     expect(IRI.is("http://schema.org/name")).toBe(true);
     expect(IRI.is("https://schema.org/name")).toBe(true);
-    expect(O.isNone(IRI.decodeOption("https://example.com/%ZZ"))).toBe(true);
+    expect(O.isNone(IRI.decodeUnknownOption("https://example.com/%ZZ"))).toBe(true);
     expect(O.isSome(IRI.makeOption("http://schema.org/name"))).toBe(true);
     expect(() => IRI.make("http://schema.org/name")).not.toThrow();
   });

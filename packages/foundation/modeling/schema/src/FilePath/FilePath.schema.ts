@@ -172,10 +172,7 @@ export const FilePath = S.String.check(FilePathChecks)
   })
   .pipe(
     S.brand("FilePath"),
-    SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      is: S.is(schema),
-    })),
+    SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
     $I.annoteSchema("FilePath", {
       description: "A file path string valid for at least one supported operating-system path family.",
     })

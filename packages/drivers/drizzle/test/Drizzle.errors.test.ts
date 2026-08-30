@@ -326,7 +326,7 @@ describe("DrizzleError", () => {
   });
 
   it("decodes product-neutral row arrays from the schema value", () => {
-    const rows = DrizzleRows.fromUnknown([{ id: 1 }]);
+    const rows = DrizzleRows.decodeUnknownSync([{ id: 1 }]);
 
     expect(rows).toEqual([{ id: 1 }]);
   });

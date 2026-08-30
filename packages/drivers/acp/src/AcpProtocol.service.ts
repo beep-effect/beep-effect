@@ -9,7 +9,7 @@ import { $AcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Deferred, Effect, HashMap, HashSet, Inspectable, Match, Queue, Ref, Stream, Tuple } from "effect";
+import { Deferred, Effect, HashMap, HashSet, Inspectable, Match, pipe, Queue, Ref, Stream, Tuple } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as RpcClient from "effect/unstable/rpc/RpcClient";
@@ -178,7 +178,7 @@ type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
  * ```ts
  * import { AcpProtocolLogEvent } from "@beep/acp/protocol"
  *
- * const event = AcpProtocolLogEvent.fromUnknown({
+ * const event = AcpProtocolLogEvent.decodeUnknownSync({
  *   direction: "incoming",
  *   stage: "raw",
  *   payload: "{}"
@@ -189,49 +189,54 @@ type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
  * @category observability
  * @since 0.0.0
  */
-export const AcpProtocolLogEvent = AcpProtocolLogDirection.mapMembers(
-  Tuple.evolve([
-    (literal: S.Literal<"incoming">) =>
-      S.Class<AcpProtocolLogEventMember<"incoming">>($I`AcpProtocolLogIncomingEvent`)(
-        {
-          direction: S.tag(literal.literal).annotateKey({
-            description: "Incoming ACP protocol log-event direction.",
-          }),
-          payload: S.Unknown.annotateKey({
-            description: "Raw or decoded ACP protocol payload observed at this stage.",
-          }),
-          stage: AcpProtocolLogStage.annotateKey({
-            description: "Processing stage for the incoming ACP protocol payload.",
-          }),
-        },
-        $I.annote("AcpProtocolLogIncomingEvent", {
-          description: "Structured incoming log event emitted by the ACP protocol adapter.",
-        })
-      ),
-    (literal: S.Literal<"outgoing">) =>
-      S.Class<AcpProtocolLogEventMember<"outgoing">>($I`AcpProtocolLogOutgoingEvent`)(
-        {
-          direction: S.tag(literal.literal).annotateKey({
-            description: "Outgoing ACP protocol log-event direction.",
-          }),
-          payload: S.Unknown.annotateKey({
-            description: "Raw or decoded ACP protocol payload observed at this stage.",
-          }),
-          stage: AcpProtocolLogStage.annotateKey({
-            description: "Processing stage for the outgoing ACP protocol payload.",
-          }),
-        },
-        $I.annote("AcpProtocolLogOutgoingEvent", {
-          description: "Structured outgoing log event emitted by the ACP protocol adapter.",
-        })
-      ),
-  ])
-).pipe(
+export const AcpProtocolLogEvent = pipe(
+  AcpProtocolLogDirection.mapMembers(
+    Tuple.evolve([
+      (literal: S.Literal<"incoming">) =>
+        S.Class<AcpProtocolLogEventMember<"incoming">>($I`AcpProtocolLogIncomingEvent`)(
+          {
+            direction: S.tag(literal.literal).annotateKey({
+              description: "Incoming ACP protocol log-event direction.",
+            }),
+            payload: S.Unknown.annotateKey({
+              description: "Raw or decoded ACP protocol payload observed at this stage.",
+            }),
+            stage: AcpProtocolLogStage.annotateKey({
+              description: "Processing stage for the incoming ACP protocol payload.",
+            }),
+          },
+          $I.annote("AcpProtocolLogIncomingEvent", {
+            description: "Structured incoming log event emitted by the ACP protocol adapter.",
+          })
+        ),
+      (literal: S.Literal<"outgoing">) =>
+        S.Class<AcpProtocolLogEventMember<"outgoing">>($I`AcpProtocolLogOutgoingEvent`)(
+          {
+            direction: S.tag(literal.literal).annotateKey({
+              description: "Outgoing ACP protocol log-event direction.",
+            }),
+            payload: S.Unknown.annotateKey({
+              description: "Raw or decoded ACP protocol payload observed at this stage.",
+            }),
+            stage: AcpProtocolLogStage.annotateKey({
+              description: "Processing stage for the outgoing ACP protocol payload.",
+            }),
+          },
+          $I.annote("AcpProtocolLogOutgoingEvent", {
+            description: "Structured outgoing log event emitted by the ACP protocol adapter.",
+          })
+        ),
+    ])
+  ),
   $I.annoteSchema("AcpProtocolLogEvent", {
     description: "Structured log event emitted by the ACP protocol adapter.",
   }),
-  S.toTaggedUnion("direction"),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("direction"),
+      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync }))
+    )
 );
 
 /**
@@ -284,6 +289,33 @@ export class AcpProtocolLoggingOptions extends S.Class<AcpProtocolLoggingOptions
   })
 ) {}
 
+const AcpSessionUpdateNotification = S.TaggedStruct("SessionUpdate", {
+  method: S.Literal(CLIENT_METHODS.session_update).annotateKey({
+    description: "ACP `session/update` method name.",
+  }),
+  params: AcpSchema.SessionNotification.annotateKey({
+    description: "Decoded ACP session notification payload.",
+  }),
+});
+
+const AcpElicitationCompleteNotification = S.TaggedStruct("ElicitationComplete", {
+  method: S.Literal(CLIENT_METHODS.session_elicitation_complete).annotateKey({
+    description: "ACP `session/elicitation/complete` method name.",
+  }),
+  params: AcpSchema.ElicitationCompleteNotification.annotateKey({
+    description: "Decoded ACP elicitation-complete notification payload.",
+  }),
+});
+
+const AcpExtensionNotification = S.TaggedStruct("ExtNotification", {
+  method: S.String.annotateKey({
+    description: "ACP extension notification method name.",
+  }),
+  params: S.Unknown.annotateKey({
+    description: "ACP extension notification payload.",
+  }),
+});
+
 /**
  * Schema for notifications decoded from the ACP peer stream.
  *
@@ -292,7 +324,7 @@ export class AcpProtocolLoggingOptions extends S.Class<AcpProtocolLoggingOptions
  * ```ts
  * import { AcpIncomingNotification } from "@beep/acp/protocol"
  *
- * const notification = AcpIncomingNotification.fromUnknown({
+ * const notification = AcpIncomingNotification.decodeUnknownSync({
  *   _tag: "ExtNotification",
  *   method: "x/custom",
  *   params: { ok: true }
@@ -303,36 +335,17 @@ export class AcpProtocolLoggingOptions extends S.Class<AcpProtocolLoggingOptions
  * @category schemas
  * @since 0.0.0
  */
-export const AcpIncomingNotification = S.TaggedUnion({
-  SessionUpdate: {
-    method: S.Literal(CLIENT_METHODS.session_update).annotateKey({
-      description: "ACP `session/update` method name.",
-    }),
-    params: AcpSchema.SessionNotification.annotateKey({
-      description: "Decoded ACP session notification payload.",
-    }),
-  },
-  ElicitationComplete: {
-    method: S.Literal(CLIENT_METHODS.session_elicitation_complete).annotateKey({
-      description: "ACP `session/elicitation/complete` method name.",
-    }),
-    params: AcpSchema.ElicitationCompleteNotification.annotateKey({
-      description: "Decoded ACP elicitation-complete notification payload.",
-    }),
-  },
-  ExtNotification: {
-    method: S.String.annotateKey({
-      description: "ACP extension notification method name.",
-    }),
-    params: S.Unknown.annotateKey({
-      description: "ACP extension notification payload.",
-    }),
-  },
-}).pipe(
+export const AcpIncomingNotification = pipe(
+  S.Union([AcpSessionUpdateNotification, AcpElicitationCompleteNotification, AcpExtensionNotification]),
   $I.annoteSchema("AcpIncomingNotification", {
     description: "Schema for notifications decoded from the ACP peer stream.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ decodeUnknownSync: schema.decodeUnknownSync }))
+    )
 );
 
 /**

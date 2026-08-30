@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "schema-utils-selective-codec-statics-closing-census/v1",
+  "generatedAt": "2026-08-30T19:50:26.950Z",
+  "legacySurface": {
+    "broadHelperMatches": [],
+    "broadHelperMatchCount": 0,
+    "jsonSuffixedStaticMatches": [],
+    "jsonSuffixedStaticMatchCount": 0
+  },
+  "inlineCompiler": {
+    "openingCount": 2935,
+    "closingCount": 2931,
+    "delta": -4,
+    "byScope": {
+      "apps": 238,
+      "infra": 14,
+      "packages": 2367,
+      "scratchpad": 312
+    },
+    "knownObjectRefCompileCallPresent": false,
+    "remainingProvRdfFindings": [
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 211,
+        "message": "Hoist Schema.encodeResult(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 533,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 611,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 630,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 654,
+        "message": "Hoist Schema.decodeResult(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 680,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 689,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 691,
+        "message": "Hoist Schema.decodeResult(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 697,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 714,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 893,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      },
+      {
+        "filename": "packages/foundation/modeling/rdf/src/ProvRdf.ts",
+        "line": 948,
+        "message": "Hoist Schema.is(...) to module scope: the compiled function is rebuilt on every call. Move it to a module-level const."
+      }
+    ],
+    "touchedLineFindings": []
+  },
+  "successorRequirement": {
+    "required": true,
+    "objective": "Eliminate the remaining no-inline-schema-compile warnings and promote beep(no-inline-schema-compile) from warning to error.",
+    "baseline": 2931
+  }
+}

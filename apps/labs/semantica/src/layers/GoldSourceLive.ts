@@ -7,7 +7,13 @@ import { GOLD_SUBSETS } from "@/canary/Gold";
 import { contentDigest } from "@/schema/Digest";
 import { Origin } from "@/schema/Document";
 import { GoldUnavailable } from "@/schema/Errors";
-import { CurrentGoldDocumentText, GoldFile, GoldFileEncoded, GoldRef } from "@/schema/Gold";
+import {
+  CurrentGoldDocumentText,
+  GoldFile,
+  GoldFileEncoded,
+  GoldFileEncodedFromJsonString,
+  GoldRef,
+} from "@/schema/Gold";
 import { ModelIdentity } from "@/schema/Model";
 import { GoldSource } from "@/services/GoldSource";
 import type { CorpusPaperId } from "@/corpus/Manifest";
@@ -53,7 +59,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("stale-reference", "The gold-v1 reference covers a missing label file.");
     }
     const file = yield* fs.readFileString(filePath).pipe(
-      Effect.flatMap(GoldFileEncoded.decodeEffectFromJsonString),
+      Effect.flatMap(GoldFileEncodedFromJsonString.decodeEffect),
       Effect.mapError(() => unavailable("read-failed", "A covered gold-v1 file could not be read or decoded."))
     );
     if (!Str.Equivalence(file.paperId, paperId) || !Str.Equivalence(file.subset, subset)) {

@@ -65,7 +65,7 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
   $I.annoteSchema("CodeFenceLanguage", {
     description: "Single safe Markdown fenced-code info-string token.",
   }),
-  SchemaUtils.withOptionCodecStatics
+  SchemaUtils.withCodecStatics(["decodeOption", "decodeUnknownOption"])
 );
 
 /**
@@ -121,7 +121,7 @@ export const YouTubeVideoId = S.String.check(
   $I.annoteSchema("YouTubeVideoId", {
     description: "Bare 11-character YouTube video id accepted by Md YouTube embeds.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -132,7 +132,7 @@ export const YouTubeVideoId = S.String.check(
  * ```ts
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
  *
- * const identifier = FootnoteIdentifier.fromUnknown("note-1")
+ * const identifier = FootnoteIdentifier.decodeUnknownSync("note-1")
  * console.log(identifier)
  * ```
  *
@@ -151,7 +151,7 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
   $I.annoteSchema("FootnoteIdentifier", {
     description: "Safe Markdown footnote identifier.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -163,7 +163,7 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
  * import type { FootnoteIdentifier as FootnoteIdentifierValue } from "@beep/md/Md.model"
  * import { FootnoteIdentifier } from "@beep/md/Md.model"
  *
- * const identifier: FootnoteIdentifierValue = FootnoteIdentifier.fromUnknown("note-1")
+ * const identifier: FootnoteIdentifierValue = FootnoteIdentifier.decodeUnknownSync("note-1")
  * console.log(identifier)
  * ```
  *
@@ -1207,7 +1207,6 @@ export const Inline = S.Union([
   $I.annoteSchema("Inline", {
     description: "Discriminated union of inline Markdown AST nodes.",
   }),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => {
     const toPlainText = schema.match({
       text: Text.toPlainText,
@@ -1241,6 +1240,7 @@ export const Inline = S.Union([
       toHtmlWithContext(inline)(insideAnchor);
 
     return {
+      is: S.is(schema),
       toHtml,
       toHtmlAll: (inlines: ReadonlyArray<Inline.Type>, insideAnchor = false): ReadonlyArray<HtmlChildNode> =>
         Arr.map(inlines, (inline) => toHtml(inline, insideAnchor)),
@@ -1646,11 +1646,11 @@ export declare namespace P {
  * @category models
  * @since 0.0.0
  */
-export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
+export const HeadingLevel = S.Literals([1, 2, 3, 4, 5, 6]).pipe(
   $I.annoteSchema("HeadingLevel", {
     description: "Markdown heading level from one (largest) to six (smallest).",
   }),
-  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -2130,8 +2130,7 @@ export declare namespace TaskItem {
 export const TaskListItemSpec = TaskItem.pipe(
   $I.annoteSchema("TaskListItemSpec", {
     description: "Canonical tagged task-list item accepted by unambiguous builders.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -3188,7 +3187,6 @@ export const Block = S.Union([
   $I.annoteSchema("Block", {
     description: "Discriminated union of block Markdown AST nodes.",
   }),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => {
     const toHtml = schema.match({
       heading: Heading.toHtml,
@@ -3224,6 +3222,7 @@ export const Block = S.Union([
     });
 
     return {
+      is: S.is(schema),
       toHtml,
       toHtmlAll: (blocks: ReadonlyArray<Block.Type>): ReadonlyArray<HtmlChildNode> => Arr.map(blocks, toHtml),
       toPlainText,

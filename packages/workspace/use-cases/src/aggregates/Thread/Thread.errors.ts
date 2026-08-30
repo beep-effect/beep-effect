@@ -138,11 +138,10 @@ export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable
  * @since 0.0.0
  */
 export const ThreadStoreError = S.Union([ThreadStoreNotFound, ThreadStoreConflict, ThreadStoreUnavailable]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("ThreadStoreError", {
     description: "ThreadStore port failure.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

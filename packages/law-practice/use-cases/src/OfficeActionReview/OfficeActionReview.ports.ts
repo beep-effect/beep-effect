@@ -149,7 +149,7 @@ export const OfficeActionReviewError = S.Union([
   $I.annoteSchema("OfficeActionReviewError", {
     description: "Failure union for the law-practice office-action review loop.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"])
 );
 
 /**

@@ -218,7 +218,7 @@ const TSConfigJsonKey = S.String.check(
 );
 
 const JsonRecord = S.Record(TSConfigJsonKey, S.Json).pipe(
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   SchemaUtils.withStatics((schema) => ({
     empty: schema.make({}),
   })),
@@ -1848,14 +1848,14 @@ const TSConfigSemanticChecks = S.makeFilterGroup(
   }
 );
 
-const TSConfigSemantic = TSConfig.check(TSConfigSemanticChecks).pipe(
-  SchemaUtils.withResultCodecStatics,
-  SchemaUtils.withExitCodecStatics,
-  SchemaUtils.withEffectCodecStatics,
-  $I.annoteSchema("TSConfigSemantic", {
-    description: "Strict tsconfig shape with cross-field semantic checks used by the decode helpers.",
-  })
-);
+const TSConfigSemantic = S.make<(typeof TSConfig)["Rebuild"]>(TSConfig.ast)
+  .check(TSConfigSemanticChecks)
+  .pipe(
+    SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownExit", "decodeUnknownResult"]),
+    $I.annoteSchema("TSConfigSemantic", {
+      description: "Strict tsconfig shape with cross-field semantic checks used by the decode helpers.",
+    })
+  );
 
 const decodeJsoncUnknownText = (input: string): Effect.Effect<unknown, S.SchemaError> => {
   const exit = JsoncTextToUnknown.decodeUnknownExit(input);

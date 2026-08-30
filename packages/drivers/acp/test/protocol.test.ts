@@ -161,7 +161,7 @@ it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
   assert.deepEqual(
     encode(
       AcpProtocol.AcpProtocolLogEvent,
-      AcpProtocol.AcpProtocolLogEvent.fromUnknown({
+      AcpProtocol.AcpProtocolLogEvent.decodeUnknownSync({
         direction: "incoming",
         payload: "{}",
         stage: "raw",
@@ -176,7 +176,7 @@ it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
   assert.deepEqual(
     encode(
       AcpProtocol.AcpIncomingNotification,
-      AcpProtocol.AcpIncomingNotification.fromUnknown({
+      AcpProtocol.AcpIncomingNotification.decodeUnknownSync({
         _tag: "ExtNotification",
         method: "x/custom",
         params: { ok: true },

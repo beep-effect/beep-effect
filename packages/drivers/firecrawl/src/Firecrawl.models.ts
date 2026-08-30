@@ -4818,8 +4818,7 @@ export const FirecrawlWatcherEvent = S.Union([
   S.toTaggedUnion("type"),
   $I.annoteSchema("FirecrawlWatcherEvent", {
     description: "Tagged Firecrawl watcher event union decoded from SDK watcher events.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

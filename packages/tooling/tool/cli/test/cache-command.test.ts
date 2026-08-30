@@ -1,14 +1,14 @@
 import { buildCacheDashboard, CacheCommandError, CacheWarmLane } from "@beep/repo-cli/commands/Cache";
 import { runCacheWarmForTesting } from "@beep/repo-cli/test/Cache";
 import { NonNegativeInt } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const provideNodeServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   Effect.scoped(
     Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))

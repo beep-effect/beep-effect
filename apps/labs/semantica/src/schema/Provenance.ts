@@ -1,7 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { SourceTextExtractor } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { identity, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -113,8 +112,7 @@ export const EventBody = EventKind.mapMembers(
   S.toTaggedUnion("kind"),
   $I.annoteSchema("EventBody", {
     description: "Exhaustive timestamp-free C0 provenance event bodies.",
-  }),
-  SchemaUtils.withEffectCodecStatics
+  })
 );
 
 /**

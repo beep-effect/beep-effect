@@ -4,7 +4,7 @@ import {
   codexIdFromFindingUrl,
   decodeCodexFindingsCsv,
 } from "@beep/repo-cli/test/Codex";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -47,7 +47,7 @@ const row = (input: {
 
 // Serializing the decoded record is how these tests prove a dropped column
 // is truly absent; the repo requires the schema codec rather than JSON.*.
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const csv = (rows: ReadonlyArray<string>): string => `${A.join([A.join(CODEX_CSV_COLUMNS, ","), ...rows], "\n")}\n`;
 
