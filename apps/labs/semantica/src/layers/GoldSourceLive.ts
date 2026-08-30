@@ -1,14 +1,13 @@
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Crypto, Effect, FileSystem, Layer, Order, Path, Tuple } from "effect";
+import { Crypto, Effect, FileSystem, Layer, Path, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GOLD_SUBSETS } from "@/canary/Gold";
+import { GOLD_SUBSETS, GoldArtifactSemantics } from "@/canary/Gold";
 import { contentDigest } from "@/schema/Digest";
 import { Origin } from "@/schema/Document";
 import { GoldUnavailable } from "@/schema/Errors";
 import { CurrentGoldDocumentText, GoldFile, GoldFileEncoded, GoldRef } from "@/schema/Gold";
-import { ModelIdentity } from "@/schema/Model";
 import { GoldSource } from "@/services/GoldSource";
 import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
@@ -24,8 +23,6 @@ const GoldRefJson = S.fromJsonString(GoldRef).pipe(
     decodeEffect: S.decodeEffect(schema),
   }))
 );
-const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`);
-const modelIdentityEquivalence = S.toEquivalence(S.toEncoded(ModelIdentity));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const unavailable = (reason: GoldUnavailable["reason"], message: string): GoldUnavailable =>
@@ -118,7 +115,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       );
       const files = A.sort(
         yield* Effect.forEach(jobs, ([paperId, subset]) => readCoveredFile(paperId, subset), { concurrency: 4 }),
-        goldFileOrder
+        GoldArtifactSemantics.fileOrder
       );
       const digest = yield* contentDigest(S.Array(GoldFileEncoded))(files).pipe(
         Effect.provideService(Crypto.Crypto, crypto),
@@ -126,7 +123,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       );
       if (
         !sha256Equivalence(digest, reference.digest) ||
-        A.some(files, (file) => !modelIdentityEquivalence(file.proposer, reference.proposer))
+        A.some(files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, reference.proposer))
       ) {
         return yield* unavailable(
           "stale-reference",

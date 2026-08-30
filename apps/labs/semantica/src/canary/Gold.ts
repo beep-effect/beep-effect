@@ -254,8 +254,18 @@ const writeJsonAtomic = Effect.fn("Gold.writeJsonAtomic")(function* (target: str
 const GoldFileJson = S.fromJsonString(GoldFile, { space: 2 });
 const GoldFileEncodedJson = S.fromJsonString(GoldFileEncoded);
 const GoldRefJson = S.fromJsonString(GoldRef, { space: 2 });
-const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`);
-const modelIdentityEquivalence = S.toEquivalence(S.toEncoded(ModelIdentity));
+
+/**
+ * Shared ordering and equivalence semantics for encoded gold artifacts.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const GoldArtifactSemantics = {
+  fileOrder: Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`),
+  modelIdentityEquivalence: S.toEquivalence(S.toEncoded(ModelIdentity)),
+};
 const isGoldUnavailable = S.is(GoldUnavailable);
 const isEntityProposalLabel = S.is(EntityProposalLabel);
 const isRelationProposalLabel = S.is(RelationProposalLabel);
@@ -298,7 +308,7 @@ const readWrittenGold = Effect.fn("Gold.readWrittenGold")(function* (directory: 
     );
   });
   return {
-    files: A.sort(A.getSomes(A.map(entries, (entry) => entry[1])), goldFileOrder),
+    files: A.sort(A.getSomes(A.map(entries, (entry) => entry[1])), GoldArtifactSemantics.fileOrder),
     missingJobs: A.getSomes(A.map(entries, ([job, file]) => (O.isNone(file) ? O.some(job) : O.none()))),
   };
 });
@@ -750,7 +760,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   const total = A.reduce(proposed, 0, (count, item) => count + item.total);
   const proposer = yield* ActiveModelIdentity;
   const inventory = yield* readWrittenGold(options.outputDirectory, expectedJobs);
-  if (A.some(inventory.files, (file) => !modelIdentityEquivalence(file.proposer, proposer))) {
+  if (A.some(inventory.files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, proposer))) {
     return yield* unavailable(
       "mixed-proposer",
       "The complete gold-v1 file set must use the current run's proposer identity."
