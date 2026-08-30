@@ -654,6 +654,72 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
     })
   );
 
+  it.effect("rejects non-file trees and enforces attachment content addresses", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "transformation-content-addresses-" });
+      const outside = path.join(root, "outside.bin");
+      const tree = path.join(root, "tree");
+      const attemptRoot = path.join(root, "attempt");
+      const ledgerPath = path.join(root, "mail.jsonl");
+      yield* fs.writeFileString(outside, "outside");
+      yield* fs.makeDirectory(tree, { recursive: true });
+      yield* fs.symlink(outside, path.join(tree, "escape.bin"));
+      expect(O.isNone(yield* RT.walkTransformationEntries(tree).pipe(Effect.option))).toBe(true);
+
+      yield* fs.remove(path.join(tree, "escape.bin"));
+      const fifo = path.join(tree, "unsupported.fifo");
+      expect((yield* RT.runLegacyStep("mkfifo", [fifo], 2_000)).exitCode).toBe(0);
+      expect(O.isNone(yield* RT.walkTransformationEntries(tree).pipe(Effect.option))).toBe(true);
+      expect(O.isNone(yield* RT.hashTransformationTree(fifo).pipe(Effect.option))).toBe(true);
+      expect(O.isNone(yield* RT.hashTransformationTree(tree).pipe(Effect.option))).toBe(true);
+      expect(O.isNone(yield* RT.measureTransformationTreeBytes(fifo).pipe(Effect.option))).toBe(true);
+      yield* fs.remove(fifo);
+
+      yield* fs.makeDirectory(attemptRoot, { recursive: true });
+      const source = path.join(root, "source.bin");
+      const derived = path.join(attemptRoot, "derived", "source.bin");
+      yield* fs.writeFileString(source, "abc");
+      const expected = { sha256: sha("abc"), sizeBytes: 3 };
+      const mailContext = {
+        ...context,
+        corpusRoot: root,
+        family: "mail" as const,
+        ledgerPath,
+        mailScope: O.some<"full" | "slice">("full"),
+        outputRoot: attemptRoot,
+        runRoot: root,
+      };
+      yield* RT.requireAttachmentCapacity(mailContext, attemptRoot, 3, 3, "capacity");
+      expect(
+        O.isNone(yield* RT.requireAttachmentCapacity(mailContext, attemptRoot, 4, 3, "capacity").pipe(Effect.option))
+      ).toBe(true);
+      yield* RT.materializeAttachmentRepair(source, derived, attemptRoot, expected, mailContext, 3);
+      yield* RT.materializeAttachmentRepair(source, derived, attemptRoot, expected, mailContext, 3);
+      yield* fs.writeFileString(derived, "drift");
+      expect(
+        O.isNone(
+          yield* RT.materializeAttachmentRepair(source, derived, attemptRoot, expected, mailContext, 10).pipe(
+            Effect.option
+          )
+        )
+      ).toBe(true);
+
+      yield* fs.remove(derived);
+      const tikaRelativePath = path.join("derived", "source.tika.txt");
+      yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100);
+      yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100);
+      yield* fs.writeFileString(path.join(attemptRoot, tikaRelativePath), "drift");
+      expect(
+        O.isNone(
+          yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100).pipe(Effect.option)
+        )
+      ).toBe(true);
+      yield* RT.syncTree(attemptRoot);
+    })
+  );
+
   it.effect("reconciles strict family acceptance fields independently", () =>
     Effect.gen(function* () {
       const digest = sha("strict-output");
