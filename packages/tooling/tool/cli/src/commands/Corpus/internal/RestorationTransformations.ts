@@ -4918,7 +4918,11 @@ const familyEvidenceAccepted = (
   familyEvidenceTerminalsMatch(evidence) &&
   transformationSegmentReconciles(context.family, evidence.summary, evidence.segment);
 
-/** Test-only semantic probes for restoration evidence invariants. */
+/**
+ * Test-only semantic probes for restoration evidence invariants.
+ *
+ * @category testing
+ */
 export const restorationTransformationTesting = {
   attachmentRepairsReconcile,
   attemptBindingsReconcile,

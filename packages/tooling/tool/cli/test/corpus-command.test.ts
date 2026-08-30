@@ -131,7 +131,7 @@ describe("corpus restoration evidence invariants", () => {
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const summary = A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"]));
         if (O.isNone(summary)) return yield* Effect.die("Expected a real family summary fixture.");
-        const variants = [
+        const variants: Array<ReadonlyArray<TransformationLedgerRecord>> = [
           records,
           A.reverse(records),
           A.drop(records, 1),
@@ -139,6 +139,22 @@ describe("corpus restoration evidence invariants", () => {
           A.appendAll(records, records),
           [],
         ];
+        for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
+          const record = records[recordIndex];
+          if (record === undefined) continue;
+          for (const [field, value] of Object.entries(record)) {
+            const mutated = structuredClone(records) as unknown as Array<Record<string, unknown>>;
+            const target = mutated[recordIndex];
+            if (target === undefined) continue;
+            if (typeof value === "string") target[field] = `${value}/mutated`;
+            else if (typeof value === "number") target[field] = value + 1;
+            else if (typeof value === "boolean") target[field] = !value;
+            else if (Array.isArray(value)) target[field] = A.append(value, value[0] ?? "mutated");
+            else if (value === undefined) target[field] = "mutated";
+            else continue;
+            variants.push(mutated as unknown as ReadonlyArray<TransformationLedgerRecord>);
+          }
+        }
 
         for (const variant of variants) {
           const starts = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-start"]));
