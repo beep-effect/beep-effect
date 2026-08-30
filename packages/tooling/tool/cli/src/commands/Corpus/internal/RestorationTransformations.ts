@@ -4982,6 +4982,7 @@ export const restorationTransformationTesting = {
   readPrefix,
   relativePathIsUnder,
   removeMatchingAcceptancePartial,
+  repairAttachment,
   requireCanonicalContainedPath,
   requireAttachmentCapacity,
   requireStrictFamilySegment,

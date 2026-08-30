@@ -716,6 +716,49 @@ layer(NodeServices.layer, { timeout: 30_000 })("restoration transformation seman
           yield* RT.persistAttachmentText(attemptRoot, tikaRelativePath, "text\n", mailContext, 100).pipe(Effect.option)
         )
       ).toBe(true);
+
+      const options = RestorationMailOptions.make({
+        corpusRoot: root,
+        expectedStoreCount: NonNegativeInt.make(0),
+        maxAmplificationRatio: 1,
+        maxElapsedMillis: PosInt.make(100),
+        maxTotalElapsedMillis: PosInt.make(100),
+        maxTotalOutputBytes: PosInt.make(100),
+        pffexportPath: "pffexport",
+        scope: "full",
+        tikaJarPath: "/tika.jar",
+      });
+      const unknownAttachment = path.join(attemptRoot, "Attachment-unknown.bin");
+      yield* fs.writeFile(unknownAttachment, Uint8Array.of(0x00));
+      expect(
+        yield* RT.repairAttachment(
+          { absolutePath: unknownAttachment, relativePath: "Attachment-unknown.bin" },
+          attemptRoot,
+          "attempt-unknown",
+          "object-unknown",
+          options,
+          mailContext,
+          0,
+          100
+        )
+      ).toBe(0);
+      const matchingAttachment = path.join(attemptRoot, "Attachment-document.pdf");
+      yield* fs.writeFile(matchingAttachment, Uint8Array.of(0x25, 0x50, 0x44, 0x46));
+      expect(
+        yield* RT.repairAttachment(
+          { absolutePath: matchingAttachment, relativePath: "Attachment-document.pdf" },
+          attemptRoot,
+          "attempt-matching",
+          "object-matching",
+          options,
+          mailContext,
+          0,
+          100
+        )
+      ).toBe(0);
+      const repairRecords = yield* fs.readFileString(ledgerPath);
+      expect(repairRecords).toContain('"repairStatus":"unsupported"');
+      expect(repairRecords).toContain('"repairStatus":"unchanged"');
       yield* RT.syncTree(attemptRoot);
     })
   );
