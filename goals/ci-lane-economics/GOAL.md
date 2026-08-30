@@ -4,13 +4,16 @@ You are executing `goals/ci-lane-economics`. Read `SPEC.md` and `PLAN.md`
 first; the ledger is `research/OPPORTUNITIES.md` (record friction at the
 moment it happens).
 
-Current phase: P2 execute moves. P0 and P1 are complete; the signed placement
-decision and cache-warm census live in `research/`. Admit the safe Coverage
-Regression scope/sharding redesign on live pull-request and push waves, then
-open P3 only after every accepted move is merged. Failed, cancelled, or rerun
-attempts feed flake attribution and admission/rollback decisions, never the
-duration percentiles. The exit bar remains the p95, not the median — the
-charter says no one waits.
+Current phase: P3 evidence and repair decision. P0-P2 are complete: every
+signed zero-expansion placement and lane-shape move is merged through PR #719.
+The representative 2026-08-23 through 2026-08-29 UTC week proves Coverage
+Regression at 16m26s p95 but fails the charter on Lint at 20m31s and Test Unit
+at 22m48s; see `research/live-week-p95.md`. Do not improvise another placement
+or shard from the exhausted P1 decision. Attribute the two tails and require a
+new signed, costed repair decision before changing their execution shape.
+Failed, cancelled, or rerun attempts feed flake attribution and admission or
+rollback decisions, never the duration percentiles. The exit bar remains the
+p95, not the median — the charter says no one waits.
 
 Rules: placement changes ride `.github/workflows/**` PRs through Yeet; the
 $100/mo projection and $200/mo ceiling from
