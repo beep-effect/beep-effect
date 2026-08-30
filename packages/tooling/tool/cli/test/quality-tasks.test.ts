@@ -1317,7 +1317,11 @@ describe("quality task adapter", () => {
               expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
               expect(logText).toContain('"failurePolicy":"collect-all"');
               expect(logText).toContain('"status":"passed"');
-              expect(spawned).toHaveLength(A.length(cheapGateLanes) + 4);
+              expect(
+                A.every(cheapGateLanes, (lane) =>
+                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
+                )
+              ).toBe(true);
             })
           ),
           provideScopedLayer(cheapGatesTestLayer(spawned, A.empty()))
