@@ -125,7 +125,7 @@ const fixtureLanguageModel = Layer.effect(
 
 const normalizedPatentFixture = Md.make([
   Md.h1("TITLE OF THE INVENTION"),
-  Md.p("Optical sensor alert system"),
+  Md.p("  Optical sensor alert system  "),
   Md.h1("CROSS-REFERENCE TO RELATED APPLICATIONS"),
   Md.p("Not applicable."),
   Md.h1("STATEMENT REGARDING FEDERALLY SPONSORED RESEARCH OR DEVELOPMENT"),

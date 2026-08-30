@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -450,11 +450,14 @@ export type PatentClaims = typeof PatentClaims.Type;
  *
  * ```ts
  * import { PatentApplicationSection } from "@beep/law-practice-domain/values/PatentDocument"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const section = PatentApplicationSection.make({
  *   content: "1. A system comprising a sensor.",
  *   heading: "CLAIMS",
- *   role: "claims"
+ *   role: "claims",
+ *   sourceEnd: NonNegativeInt.make(48),
+ *   sourceStart: NonNegativeInt.make(7)
  * })
  * console.log(section.role) // "claims"
  * ```
@@ -472,6 +475,12 @@ export class PatentApplicationSection extends S.Class<PatentApplicationSection>(
     }),
     content: S.NonEmptyString.annotateKey({
       description: "Plain-text section content projected from the canonical Markdown AST.",
+    }),
+    sourceEnd: NonNegativeInt.annotateKey({
+      description: "Exclusive offset of the section content in the normalized document source text.",
+    }),
+    sourceStart: NonNegativeInt.annotateKey({
+      description: "Inclusive offset of the section content in the normalized document source text.",
     }),
   },
   $I.annote("PatentApplicationSection", {
@@ -548,11 +557,12 @@ const PatentApplicationSectionOrderCheck = S.makeFilter(
  *
  * ```ts
  * import { PatentApplicationSection, PatentApplicationSections } from "@beep/law-practice-domain/values/PatentDocument"
+ * import { NonNegativeInt } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
  * const sections = [
- *   PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE OF THE INVENTION", role: "title-of-invention" }),
- *   PatentApplicationSection.make({ content: "1. A system.", heading: "CLAIMS", role: "claims" })
+ *   PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE OF THE INVENTION", role: "title-of-invention", sourceEnd: NonNegativeInt.make(36), sourceStart: NonNegativeInt.make(23) }),
+ *   PatentApplicationSection.make({ content: "1. A system.", heading: "CLAIMS", role: "claims", sourceEnd: NonNegativeInt.make(56), sourceStart: NonNegativeInt.make(44) })
  * ]
  * console.log(S.is(PatentApplicationSections)(sections)) // true
  * ```
@@ -591,11 +601,22 @@ const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
   (document: typeof PatentApplicationDocumentFields.Type): S.FilterOutput => {
     const hasClaimsSection = A.some(document.sections, (section) => Eq.equals(section.role, "claims"));
     const normalizedSourceText = normalizeClaimAlignmentText(document.sourceText);
+    const sectionsAlign = A.every(document.sections, (section) => {
+      const sourceSlice = Str.slice(section.sourceStart, section.sourceEnd)(document.sourceText);
+      return (
+        Num.isLessThanOrEqualTo(section.sourceStart, section.sourceEnd) &&
+        Num.isLessThanOrEqualTo(section.sourceEnd, Str.length(document.sourceText)) &&
+        Eq.equals(normalizeClaimAlignmentText(sourceSlice), normalizeClaimAlignmentText(section.content))
+      );
+    });
     const claimsAlign = A.every(document.claims, (claim) =>
       Str.includes(normalizeClaimAlignmentText(claim.claimText))(normalizedSourceText)
     );
     return A.getSomes([
       hasClaimsSection ? O.none<string>() : O.some("Patent application document must include a claims section."),
+      sectionsAlign
+        ? O.none<string>()
+        : O.some("Every patent section must retain exact normalized source-text boundaries."),
       claimsAlign ? O.none<string>() : O.some("Every patent claim must align to the normalized source text."),
     ]);
   },
@@ -614,7 +635,7 @@ const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
  *
  * ```ts
  * import { PatentApplicationDocument, PatentApplicationSection, PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
- * import { PosInt } from "@beep/schema"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
  *
  * const claim = PatentClaim.cases.independent.make({
  *   body: "a sensor",
@@ -626,8 +647,8 @@ const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
  * const document = PatentApplicationDocument.make({
  *   claims: [claim],
  *   sections: [
- *     PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE", role: "title-of-invention" }),
- *     PatentApplicationSection.make({ content: "1. A system comprising a sensor.", heading: "CLAIMS", role: "claims" })
+ *     PatentApplicationSection.make({ content: "Sensor system", heading: "TITLE", role: "title-of-invention", sourceEnd: NonNegativeInt.make(18), sourceStart: NonNegativeInt.make(6) }),
+ *     PatentApplicationSection.make({ content: "1. A system comprising a sensor.", heading: "CLAIMS", role: "claims", sourceEnd: NonNegativeInt.make(59), sourceStart: NonNegativeInt.make(26) })
  *   ],
  *   sourceText: "Sensor system\nCLAIMS\n1. A system comprising a sensor."
  * })

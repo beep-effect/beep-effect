@@ -26,7 +26,7 @@ import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-p
 import { Defect, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Unknown } from "@beep/schema/Unknown";
-import { Effect, FileSystem, Number as Num, Order, Path, pipe, Result } from "effect";
+import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -436,17 +436,6 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
         A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims"))
       );
       const claimsHeading = O.getOrThrow(A.get(input.document.sections, claimsSectionIndex));
-      const claimsSectionStart = Num.sum(
-        pipe(
-          input.document.sections,
-          A.take(claimsSectionIndex),
-          A.reduce(0, (offset, section) =>
-            Num.sum(offset, Num.sum(Str.length(section.heading), Num.sum(1, Num.sum(Str.length(section.content), 1))))
-          )
-        ),
-        Num.sum(Str.length(claimsHeading.heading), 1)
-      );
-      const claimsSectionEnd = Num.sum(claimsSectionStart, Str.length(claimsHeading.content));
       yield* Effect.forEach(
         input.document.claims,
         (claim, index) =>
@@ -454,8 +443,8 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
             PatentClaimCandidateInput.make({
               claim,
               claimsHeading: claimsHeading.heading,
-              claimsSectionEnd: NonNegativeInt.make(claimsSectionEnd),
-              claimsSectionStart: NonNegativeInt.make(claimsSectionStart),
+              claimsSectionEnd: claimsHeading.sourceEnd,
+              claimsSectionStart: claimsHeading.sourceStart,
               digest,
               docket: input.docket,
               entitySeed: PosInt.make(baseSeed + index),

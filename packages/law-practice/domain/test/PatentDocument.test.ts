@@ -9,7 +9,7 @@ import {
   PatentClaims,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import { Md } from "@beep/md";
-import { PosInt } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Result } from "effect";
 import * as A from "effect/Array";
@@ -155,11 +155,15 @@ describe("PatentDocument", () => {
       content: "Sensor system",
       heading: "TITLE OF THE INVENTION",
       role: "title-of-invention",
+      sourceEnd: NonNegativeInt.make(36),
+      sourceStart: NonNegativeInt.make(23),
     });
     const background = PatentApplicationSection.make({
       content: "Sensor background",
       heading: "BACKGROUND",
       role: "background",
+      sourceEnd: NonNegativeInt.make(65),
+      sourceStart: NonNegativeInt.make(48),
     });
     const rejectedOrder = S.decodeResult(PatentApplicationSections)([background, title]);
     const rejectedDuplicate = S.decodeResult(PatentApplicationSections)([title, title]);
@@ -194,11 +198,15 @@ describe("PatentDocument", () => {
       content: "Sensor system",
       heading: "TITLE OF THE INVENTION",
       role: "title-of-invention",
+      sourceEnd: NonNegativeInt.make(13),
+      sourceStart: NonNegativeInt.make(0),
     });
     const claims = PatentApplicationSection.make({
       content: "1. A system comprising a sensor.",
       heading: "CLAIMS",
       role: "claims",
+      sourceEnd: NonNegativeInt.make(40),
+      sourceStart: NonNegativeInt.make(7),
     });
     const claim = independentClaim(1);
 

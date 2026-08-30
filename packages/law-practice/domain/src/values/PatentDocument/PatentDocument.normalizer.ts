@@ -7,7 +7,7 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
-import { LiteralKit, PosInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
 import { Effect, flow, Match, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -196,12 +196,15 @@ interface SectionDraft {
   readonly blocks: ReadonlyArray<Block>;
   readonly heading: string;
   readonly role: PatentApplicationSectionRole;
+  readonly sourceEnd: number;
+  readonly sourceStart: number;
 }
 
 interface SectionDraftState {
   readonly current: O.Option<SectionDraft>;
   readonly drafts: ReadonlyArray<SectionDraft>;
   readonly errors: ReadonlyArray<PatentDocumentNormalizationError>;
+  readonly sourceOffset: number;
 }
 
 const renderPatentTextBlock = (block: Block): string =>
@@ -243,52 +246,71 @@ const flushCurrent = (state: SectionDraftState): SectionDraftState => ({
 const collectSectionDrafts = (document: Document): SectionDraftState =>
   pipe(
     document.children,
-    A.reduce<SectionDraftState, Block>({ current: O.none(), drafts: A.empty(), errors: A.empty() }, (state, block) => {
-      if (Heading.is(block) && block.level === 1) {
-        const heading = Str.trim(renderPlainTextBlock(block));
-        const flushed = flushCurrent(state);
+    A.reduce<SectionDraftState, Block>(
+      { current: O.none(), drafts: A.empty(), errors: A.empty(), sourceOffset: 0 },
+      (state, block) => {
+        const renderedBlock = renderPatentTextBlock(block);
+        const nextSourceOffset = Num.sum(state.sourceOffset, Num.sum(Str.length(renderedBlock), 1));
+        if (Heading.is(block) && block.level === 1) {
+          const heading = Str.trim(renderedBlock);
+          const flushed = flushCurrent(state);
+          return pipe(
+            sectionRoleFromHeading(heading),
+            O.match({
+              onNone: () => ({
+                ...flushed,
+                sourceOffset: nextSourceOffset,
+                errors: A.append(
+                  flushed.errors,
+                  PatentDocumentNormalizationError.make({
+                    message: `Unknown patent application section heading: ${heading}.`,
+                    reason: "unknown-section-heading",
+                  })
+                ),
+              }),
+              onSome: (role) => ({
+                ...flushed,
+                current: O.some({
+                  blocks: A.empty(),
+                  heading,
+                  role,
+                  sourceEnd: nextSourceOffset,
+                  sourceStart: nextSourceOffset,
+                }),
+                sourceOffset: nextSourceOffset,
+              }),
+            })
+          );
+        }
         return pipe(
-          sectionRoleFromHeading(heading),
+          state.current,
           O.match({
             onNone: () => ({
-              ...flushed,
-              errors: A.append(
-                flushed.errors,
-                PatentDocumentNormalizationError.make({
-                  message: `Unknown patent application section heading: ${heading}.`,
-                  reason: "unknown-section-heading",
-                })
-              ),
+              ...state,
+              sourceOffset: nextSourceOffset,
+              errors: Str.isEmpty(Str.trim(renderPlainTextBlock(block)))
+                ? state.errors
+                : A.append(
+                    state.errors,
+                    PatentDocumentNormalizationError.make({
+                      message: "Patent application content must follow a recognized level-one section heading.",
+                      reason: "content-before-first-section",
+                    })
+                  ),
             }),
-            onSome: (role) => ({
-              ...flushed,
-              current: O.some({ blocks: A.empty(), heading, role }),
+            onSome: (current) => ({
+              ...state,
+              current: O.some({
+                ...current,
+                blocks: A.append(current.blocks, block),
+                sourceEnd: Num.sum(state.sourceOffset, Str.length(renderedBlock)),
+              }),
+              sourceOffset: nextSourceOffset,
             }),
           })
         );
       }
-      return pipe(
-        state.current,
-        O.match({
-          onNone: () => ({
-            ...state,
-            errors: Str.isEmpty(Str.trim(renderPlainTextBlock(block)))
-              ? state.errors
-              : A.append(
-                  state.errors,
-                  PatentDocumentNormalizationError.make({
-                    message: "Patent application content must follow a recognized level-one section heading.",
-                    reason: "content-before-first-section",
-                  })
-                ),
-          }),
-          onSome: (current) => ({
-            ...state,
-            current: O.some({ ...current, blocks: A.append(current.blocks, block) }),
-          }),
-        })
-      );
-    }),
+    ),
     flushCurrent
   );
 
@@ -458,7 +480,15 @@ export const normalizePatentApplicationDocument = Effect.fn("PatentDocument.norm
   const sections = yield* Effect.forEach(drafts, (draft) => {
     const content = Str.trim(renderPatentTextBlocks(draft.blocks));
     return Str.isNonEmpty(content)
-      ? Effect.succeed(PatentApplicationSection.make({ content, heading: draft.heading, role: draft.role }))
+      ? Effect.succeed(
+          PatentApplicationSection.make({
+            content,
+            heading: draft.heading,
+            role: draft.role,
+            sourceEnd: NonNegativeInt.make(draft.sourceEnd),
+            sourceStart: NonNegativeInt.make(draft.sourceStart),
+          })
+        )
       : Effect.fail(
           PatentDocumentNormalizationError.make({
             message: `Patent application section ${draft.heading} must not be empty.`,
