@@ -456,3 +456,21 @@
   this evidence before amending and requeueing the exact-head candidate.
 - **Owner:** Yeet admission scheduler, origin-lock observability, and publish
   proof orchestration maintainers.
+
+## 2026-08-30 — PR body interpolation executes Markdown code spans
+
+- **What happened:** the first manual `gh pr create` attempt passed a Markdown
+  body containing backtick code spans through a double-quoted shell argument.
+  The shell interpreted those spans as command substitutions, started a
+  redundant full Yeet proof, and never created the PR.
+- **Evidence:** the command emitted `zsh: command not found` for the exact-head
+  SHA and then launched `bun run beep yeet verify --collect-all`; a subsequent
+  `gh pr list --head docs/packet-convention-closeout-recovery` returned no PR.
+  The accidentally launched proof processes were identified by their exact
+  command and terminated without touching other active checkouts.
+- **What would have prevented it:** pass multiline PR bodies through
+  `gh pr create --body-file -` or another literal stdin/file boundary instead
+  of interpolating Markdown into executable shell text.
+- **Disposition:** publication-command construction friction; retry through a
+  literal stdin body and keep the already authoritative exact-head proof.
+- **Owner:** agent shell-command construction and PR publication wrappers.
