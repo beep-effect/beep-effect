@@ -901,7 +901,6 @@ describe("quality-scheduler", () => {
               });
               expect(snapshot.tickets).toHaveLength(1);
               yield* Fiber.interrupt(queued);
-
               yield* writeExecutable(path.join(binDirectory, "systemctl"), "#!/bin/sh\nexit 0\n");
               const unavailable = yield* withPrependedPath(binDirectory, admissionStatus(fastConfig));
               expect(unavailable.leases[0]?.runScope).not.toHaveProperty("memoryPeakBytes");
