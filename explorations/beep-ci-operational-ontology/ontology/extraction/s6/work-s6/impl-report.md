@@ -20,7 +20,8 @@ The implementation produced:
   redacted-byte digest of `cf30b993a38d` at `2026-08-30T22:04:02.475Z`.
 - `ABOX.yaml` and `graphs/abox.ttl`: one admission-policy individual, four work-kind
   individuals with weights, and two collision-qualified priority individuals.
-- `shapes/closure.ttl`, `shapes/typing.ttl`, and `scripts/run_shacl.py`: closure
+- `shapes/closure.ttl`, `shapes/typing.ttl`, and
+  `ontology/extraction/s6/scripts/run_shacl.py`: closure
   structure, ratified typing, exact priority membership, policy datatypes, snapshot
   datatypes, and non-negative wait validation.
 - An S6 gate in `validate_packet.py`, mechanical golden-leg handling in
