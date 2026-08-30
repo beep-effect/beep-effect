@@ -901,3 +901,23 @@
   observability friction; add the canonical tags and replay ESLint before
   publishing the final head.
 - **Owner:** package-verifier lint parity and lint-policy failure reporting.
+
+## 2026-08-30 — Final PR head enters an all-jobs hosted Actions fleet queue
+
+- **What happened:** the final repair head published immediately without using
+  local Yeet admission, but its GitHub Actions workflow registered every job
+  without acquiring any runner. This can look like the previously investigated
+  machine scheduler contention even though it is a separate hosted queue.
+- **Evidence:** Actions run `33330826703` for PR #906 head `b968441965` showed
+  `23` jobs with status `queued`, `0` running, and only the intentionally skipped
+  Build job completed after registration; `bun run beep yeet monitor` had
+  already observed the same exact head and only the two optional Vercel reds.
+- **What would have prevented it:** surface hosted runner-fleet queue age and
+  capacity separately from repository admission state, and let Yeet label a
+  registered-but-zero-running workflow as `hosted-runner-queued` rather than a
+  generic pending-check state.
+- **Disposition:** hosted propagation/capacity friction; publish the ledger-only
+  observation while the superseded run is still idle, then monitor the new
+  exact head without entering local admission.
+- **Owner:** GitHub Actions runner-fleet observability and Yeet hosted-state
+  classification.
