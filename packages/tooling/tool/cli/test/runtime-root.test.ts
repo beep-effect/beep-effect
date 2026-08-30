@@ -1,6 +1,7 @@
 import { userInfo } from "node:os";
 import {
   admissionRootFor,
+  canonicalRuntimeRootForTesting,
   perUserRuntimeRoot,
   provideRuntimeRootForTesting,
   RuntimeRootChoice,
@@ -12,7 +13,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Path } from "effect";
 
 const uid = userInfo().uid;
-const canonical = RuntimeRootChoice.make({ kind: "canonical", root: "/tmp" });
+const canonicalRoot = canonicalRuntimeRootForTesting(process.platform, userInfo().homedir);
+const canonical = RuntimeRootChoice.make({ kind: "canonical", root: canonicalRoot });
 
 const resolveWith = (environment: Readonly<Record<string, string>>) =>
   perUserRuntimeRoot().pipe(
@@ -20,7 +22,12 @@ const resolveWith = (environment: Readonly<Record<string, string>>) =>
   );
 
 describe("per-user runtime root", () => {
-  it.effect("uses one literal host root across launcher environment variants", () =>
+  it("uses a stable user-writable Windows base without consulting TEMP", () => {
+    expect(canonicalRuntimeRootForTesting("win32", "C:\\Users\\alice")).toBe("C:\\Users\\alice\\.beep\\runtime");
+    expect(canonicalRuntimeRootForTesting("linux", "/home/alice")).toBe("/tmp");
+  });
+
+  it.effect("uses one invariant host root across launcher environment variants", () =>
     Effect.gen(function* () {
       const configured = yield* resolveWith({ XDG_RUNTIME_DIR: "/configured/runtime", TMPDIR: "/custom/tmp" });
       const relative = yield* resolveWith({ XDG_RUNTIME_DIR: "relative/runtime" });
@@ -52,7 +59,7 @@ describe("per-user runtime root", () => {
       const path = yield* Path.Path;
       const configured = RuntimeRootChoice.make({ kind: "test-override", root: "/configured/runtime" });
       expect(admissionRootFor(path, configured)).toBe("/configured/runtime/beep/admit");
-      expect(admissionRootFor(path, canonical)).toBe(path.join("/tmp", `beep-admit-uid-${uid}`));
+      expect(admissionRootFor(path, canonical)).toBe(path.join(canonicalRoot, `beep-admit-uid-${uid}`));
 
       const lock = yield* proofCoordinatorLockPath("https://github.com/acme/repo.git").pipe(
         provideRuntimeRootForTesting(configured),

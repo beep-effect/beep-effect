@@ -4,7 +4,8 @@
  * Both coordinators used to choose between launcher-specific environment state,
  * `/run/user/<uid>`, and the system temporary directory. Any fallible choice can
  * split sibling sessions across separate trees. This module instead fixes the
- * host base at POSIX `/tmp`; each consumer appends its existing UID-scoped leaf.
+ * POSIX base at `/tmp`; Windows uses the effective user's home-backed
+ * `.beep/runtime` directory. Each consumer appends its existing scoped leaf.
  *
  * This change is a hard cutover, not a mixed-version migration. Before adopting
  * it, operators must drain every Yeet process, admission lease or ticket,
@@ -22,7 +23,30 @@ import { dual } from "effect/Function";
 import { RuntimeRootChoice, RuntimeRootKind } from "./RuntimeRoot.schemas.ts";
 import type { Path } from "effect";
 
-const CANONICAL_RUNTIME_ROOT = "/tmp";
+/**
+ * Resolve the invariant production base for an explicit platform and user home.
+ *
+ * **Example** (Resolve the Windows base)
+ *
+ * ```ts
+ * import { canonicalRuntimeRootForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(canonicalRuntimeRootForTesting("win32", "C:\\Users\\alice"))
+ * // "C:\\Users\\alice\\.beep\\runtime"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const canonicalRuntimeRootForTesting: {
+  (platform: NodeJS.Platform, userHome: string): string;
+  (userHome: string): (platform: NodeJS.Platform) => string;
+} = dual(2, (platform: NodeJS.Platform, userHome: string): string =>
+  platform === "win32" ? `${userHome.replace(/[\\/]+$/u, "")}\\.beep\\runtime` : "/tmp"
+);
+
+const CANONICAL_RUNTIME_ROOT = canonicalRuntimeRootForTesting(process.platform, userInfo().homedir);
 
 class RuntimeRootTestOverride extends Context.Service<RuntimeRootTestOverride, RuntimeRootChoice>()(
   "@beep/repo-cli/internal/repo-run/RuntimeRoot/RuntimeRootTestOverride"
@@ -69,10 +93,11 @@ export const provideRuntimeRootForTesting: {
  *
  * **Details**
  *
- * Production always returns literal `/tmp`. It does not consult
- * `XDG_RUNTIME_DIR`, `TMPDIR`, or a fallible `/run/user/<uid>` probe, so sibling
- * sessions cannot independently select different coordination trees. Admission
- * and proof consumers retain their existing UID-scoped leaves below this base.
+ * Production returns literal `/tmp` on POSIX and a stable directory below the
+ * effective user's home on Windows. It does not consult `XDG_RUNTIME_DIR`,
+ * `TMPDIR`, `TEMP`, or a fallible `/run/user/<uid>` probe, so sibling sessions
+ * cannot independently select different coordination trees. Admission and
+ * proof consumers retain their existing scoped leaves below this base.
  * Deployment must follow the module-level hard-cutover procedure; mixed-version
  * coordination with the prior `/run/user/<uid>` scheme is intentionally refused
  * as an operational rollout shape.
@@ -83,7 +108,7 @@ export const provideRuntimeRootForTesting: {
  * import { perUserRuntimeRoot } from "@beep/repo-cli/test/RepoRun"
  * import { Effect } from "effect"
  *
- * Effect.runPromise(perUserRuntimeRoot()).then((resolved) => console.log(resolved.root)) // "/tmp"
+ * Effect.runPromise(perUserRuntimeRoot()).then((resolved) => console.log(resolved.kind)) // "canonical"
  * ```
  *
  * @returns The chosen base root and how it was chosen.

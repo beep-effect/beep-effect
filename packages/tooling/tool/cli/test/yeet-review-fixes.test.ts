@@ -1,4 +1,10 @@
-import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
+import { userInfo } from "node:os";
+import {
+  canonicalRuntimeRootForTesting,
+  MemoryStats,
+  provideRuntimeRootForTesting,
+  RuntimeRootChoice,
+} from "@beep/repo-cli/test/RepoRun";
 import {
   emptyTurboPlanSnapshot,
   loadYeetInboxView,
@@ -278,8 +284,14 @@ describe("yeet review fixes", () => {
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
             provideScopedLayer(FileSystem.layerNoop({}))
           );
-        const canonicalPrefix = path.join("/tmp", "beep-yeet-proof-locks-");
-        const configuredRoot = path.join("/tmp", "configured-yeet-runtime");
+        const canonicalPrefix = path.join(
+          canonicalRuntimeRootForTesting(process.platform, userInfo().homedir),
+          "beep-yeet-proof-locks-"
+        );
+        const configuredRoot = path.join(
+          canonicalRuntimeRootForTesting(process.platform, userInfo().homedir),
+          "configured-yeet-runtime"
+        );
 
         const missing = yield* resolveWithEnvironment({});
         const relative = yield* resolveWithEnvironment({ XDG_RUNTIME_DIR: "relative-runtime" });
