@@ -610,3 +610,26 @@
   the global Effect scan passed. Keep the shared helper to avoid duplicating a
   privacy boundary, but optimize its downstream proof cost separately.
 - **Owner:** test-support package topology and affected-proof planning.
+
+## 2026-08-30 — Recovery PR merges before its active review-fix loop closes
+
+- **What happened:** PR #900 was merged and its remote branch was deleted while
+  the active Greptile loop was repairing a valid portability finding. A later
+  push recreated the same remote branch with the fixes, but those commits are
+  not ancestors of the squash merge on `main` and therefore require a narrow
+  follow-up PR.
+- **Evidence:** GitHub records PR #900 merged at
+  `746ac2836d4a3499b7e323790f75c48cd26cd67e` from head
+  `d49d0dd2f9c2ff3e82e5cb119f5714b90a913ae6` on 2026-08-30 at 17:30:02Z.
+  Required hosted checks were terminal by 17:17Z, but Greptile was still 4/5
+  with an unresolved `/tmp` portability thread; local head
+  `b1d2f138058ab9d1d9c215b952f2c4c9d033408d` contains that reviewed repair.
+- **What would have prevented it:** make the merge queue require the current
+  head's Greptile 5/5 result and zero unresolved review threads, and expose an
+  active closeout lease so branch deletion cannot race a publisher's review-fix
+  iteration.
+- **Disposition:** hosted-concurrency recovery; retain the completed merge of
+  #900, reconcile the recreated branch with current `origin/main`, and publish
+  only the unmerged review fixes as a follow-up.
+- **Owner:** merge admission, review-policy enforcement, and closeout lease
+  observability.
