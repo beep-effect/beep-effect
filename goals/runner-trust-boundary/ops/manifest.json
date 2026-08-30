@@ -4,14 +4,14 @@
     "id": "runner-trust-boundary",
     "packetId": "goal-packet/v1:86891349f7fd4e9fa0ae81212a26c855c198a4603f12a600201abe32200547e6",
     "title": "Runner Trust Boundary",
-    "status": "completed-retained",
+    "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-08-25",
+    "updated": "2026-08-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/runner-trust-boundary",
-  "lifecycle": "completed-retained",
-  "statusNote": "P0 ratified and P1 plus P2 completed on 2026-08-24; P3 and P4 completed on 2026-08-25. Heavy lanes stay on EC2 through heavy.yml@main and organization group beep-ec2-heavy; the fleet is a non-privileged runner class (no usable ambient credentials, sealed digest-verified image, one job per VM). The final-head red team (run 32893112867) passed Gates A through M including concurrent JIT replay rejection, AMI_PIN, live METADATA_DISABLED, scoped deregistration, and EC2 teardown. All remediation PRs are merged, the six exact Codex IDs are closed as Already fixed with the ledger in ops/closures.json, and the closeout reflection is retained. Exceptions in SPEC.md: E1 post-release JIT replay untested (open security residual, ci-fleet-endgame), E2 four IDs closed 2026-08-24 before the P4 re-proof by operator authority. Residuals: stale serving image after lockfile changes (ci-fleet-endgame), inert pre-cutover repository registrations, and the by-construction JIT argv residue bounded by the one-job VM.",
+  "lifecycle": "active",
+  "statusNote": "P0 through P7 evidence and prior closures remain retained. P8 reactivated on 2026-08-30 because concurrent JIT replay rejection did not satisfy post-release replay or remove the readable argv/configuration credential. runner-trust-boundary now owns E1 directly and cannot close until live proof shows no recoverable handoff credential or server-side replay rejection after the original listener ends from both the original and a second host.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -45,6 +45,7 @@
     "goals/codex-security-findings-2026-08-10/ops/triage.json",
     "goals/codex-security-findings-2026-08-13/ops/triage.json",
     "goals/codex-security-findings-2026-08-24/ops/triage.json",
+    "goals/codex-security-findings-2026-08-30/ops/triage.json",
     "goals/ci-fleet-residue/research/p2-acceptance-evidence.md",
     "goals/ci-lane-economics/research/placement-decision.md"
   ],
@@ -113,6 +114,11 @@
       "id": "P7",
       "name": "Close",
       "status": "complete"
+    },
+    {
+      "id": "P8",
+      "name": "Post-release JIT containment",
+      "status": "pending"
     }
   ],
   "verificationCommands": [

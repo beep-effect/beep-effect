@@ -3716,8 +3716,8 @@
 
   //
   // Inline text editing - makes pure-text descendants of the picked element
-  // directly contenteditable. Save stages copy edits in the live buffer; the
-  // Apply copy edits dock later asks the AI to apply the staged batch.
+  // directly contenteditable. Save stages copy edits in the live buffer; a
+  // trusted operator later authorizes the AI to apply the staged batch.
   //
 
   let inlineEditRows = [];
@@ -4265,7 +4265,16 @@
   }
 
   function pendingApplyLabel(count) {
-    return count === 1 ? "Apply copy edit" : "Apply copy edits";
+    return count === 1 ? "Copy edit staged" : "Copy edits staged";
+  }
+
+  function showTrustedManualApplyInstructions(action = "apply") {
+    console.info(
+      "[impeccable] " +
+        action +
+        " requires authorization outside the inspected page. Return to the trusted live-server terminal."
+    );
+    showToast("Return to the trusted terminal to authorize " + action, 5200);
   }
 
   function showManualApplyBusyToast() {
@@ -4433,7 +4442,7 @@
       pendingPillEl.style.display = "none";
       pendingPillEl.disabled = false;
       pendingPillEl.setAttribute("aria-busy", "false");
-      pendingPillEl.setAttribute("aria-label", "Apply copy edits to source");
+      pendingPillEl.setAttribute("aria-label", "Copy edits staged; apply from the trusted operator CLI");
       pendingPillEl.style.cursor = "pointer";
       pendingPillEl.style.filter = "none";
       pendingPillEl.style.transform = "scale(1)";
@@ -4494,7 +4503,10 @@
     pendingPillCountEl.textContent = String(currentPageCount);
     pendingPillEl.setAttribute(
       "aria-label",
-      "Apply " + currentPageCount + " copy edit" + (currentPageCount === 1 ? "" : "s") + " to source"
+      currentPageCount +
+        " copy edit" +
+        (currentPageCount === 1 ? "" : "s") +
+        " staged; apply from the trusted operator CLI"
     );
     pendingPillEl.style.display = "inline-flex";
     pendingTrashBtn.style.display = "inline-flex";
@@ -4509,7 +4521,7 @@
   function maybeShowFirstSaveToast() {
     if (!firstSaveOfSession) return;
     firstSaveOfSession = false;
-    showToast('Saved. Click "Apply copy edits" to write changes.', 4500);
+    showToast("Saved. Use the trusted operator CLI to write staged changes.", 4500);
   }
 
   async function fetchPendingCount() {
@@ -4533,57 +4545,7 @@
   async function onPendingPillClick() {
     const count = Number.parseInt(pendingPillEl?.dataset.count || "0", 10);
     if (count <= 0 || pendingApplyInFlight) return;
-    const ok = confirm("Apply " + count + " copy edit" + (count === 1 ? "" : "s") + " to source?");
-    if (!ok) return;
-    let waitForSseCompletion = false;
-    resetManualApplyProgress(count);
-    setPendingApplyLoading(true, count);
-    try {
-      const res = await fetch(
-        "http://localhost:" +
-          PORT +
-          "/manual-edit-commit?token=" +
-          encodeURIComponent(TOKEN) +
-          "&pageUrl=" +
-          encodeURIComponent(location.pathname) +
-          "&async=1",
-        { method: "POST", keepalive: true }
-      );
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || "HTTP " + res.status);
-      }
-      const result = await res.json();
-      if (res.status === 202 || result.status === "started") {
-        waitForSseCompletion = true;
-        return;
-      }
-      const remaining = remainingManualEditCount(result);
-      updatePendingCounter(remaining);
-      if (result.failed && result.failed.length > 0) {
-        console.warn("[impeccable] some copy edits failed:", result.failed);
-        showToast(
-          "Applied " + (result.applied?.length || 0) + ", " + result.failed.length + " failed - see console",
-          5000
-        );
-      } else {
-        const n = Array.isArray(result.applied) ? result.applied.length : result.cleared || 0;
-        if (n > 0) {
-          showToast("Applied " + n + " edit" + (n === 1 ? "" : "s"), 2500);
-        } else {
-          console.warn("[impeccable] apply returned no verified edits:", result);
-          showToast("No edits applied - see console", 4000);
-        }
-      }
-    } catch (err) {
-      console.error("[impeccable] commit failed:", err);
-      showToast("Apply failed - see console", 4000);
-    } finally {
-      if (waitForSseCompletion) return;
-      const remainingCount = Number.parseInt(pendingPillEl?.dataset.count || "0", 10) || 0;
-      if (remainingCount > 0) setPendingApplyLoading(false);
-      else hidePendingApplyDock();
-    }
+    showTrustedManualApplyInstructions("apply");
   }
 
   async function onPendingTrashClick() {
@@ -4591,32 +4553,7 @@
     if (count <= 0 || pendingApplyInFlight) return;
     const ok = confirm("Discard " + count + " copy edit" + (count === 1 ? "" : "s") + " on this page?");
     if (!ok) return;
-    try {
-      const res = await fetch(
-        "http://localhost:" +
-          PORT +
-          "/manual-edit-discard?token=" +
-          encodeURIComponent(TOKEN) +
-          "&pageUrl=" +
-          encodeURIComponent(location.pathname),
-        { method: "POST" }
-      );
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const result = await res.json().catch(() => ({}));
-      const restoreFailures = restoreDiscardedManualEdits(result.entries || []);
-      updatePendingCounter(0);
-      if (restoreFailures > 0) {
-        showToast(
-          "Discarded " + count + " copy edit" + (count === 1 ? "" : "s") + " - refresh to reset " + restoreFailures,
-          4000
-        );
-      } else {
-        showToast("Discarded " + count + " copy edit" + (count === 1 ? "" : "s"), 2500);
-      }
-    } catch (err) {
-      console.error("[impeccable] discard failed:", err);
-      showToast("Discard failed - see console", 4000);
-    }
+    showTrustedManualApplyInstructions("discard");
   }
 
   function showManualApplyDecision(msg) {
@@ -4650,55 +4587,13 @@
       numberOrNull(readStoredManualApplyState()?.count) ||
       0;
     if (count <= 0) return;
-    updateManualApplyRepairState({ attempt: 1, maxAttempts: 3 }, "repairing");
-    try {
-      const res = await fetch(
-        "http://localhost:" +
-          PORT +
-          "/manual-edit-commit?token=" +
-          encodeURIComponent(TOKEN) +
-          "&pageUrl=" +
-          encodeURIComponent(location.pathname) +
-          "&async=1&repair=1",
-        { method: "POST", keepalive: true }
-      );
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      if (pendingKeepFixingBtn) pendingKeepFixingBtn.style.display = "none";
-      if (pendingRollbackBtn) pendingRollbackBtn.style.display = "none";
-      if (pendingTrashBtn) pendingTrashBtn.style.display = "inline-flex";
-    } catch (err) {
-      console.error("[impeccable] repair retry failed:", err);
-      showToast("Repair retry failed - see console", 4000);
-      showManualApplyDecision({ remainingCount: count, repair: readStoredManualApplyState() });
-    }
+    showTrustedManualApplyInstructions("repair");
   }
 
   async function onPendingRollbackClick() {
     const ok = confirm("Rollback source files to before this Apply and keep the edits staged?");
     if (!ok) return;
-    try {
-      const res = await fetch(
-        "http://localhost:" +
-          PORT +
-          "/manual-edit-repair-decision?token=" +
-          encodeURIComponent(TOKEN) +
-          "&pageUrl=" +
-          encodeURIComponent(location.pathname),
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: TOKEN, pageUrl: location.pathname, action: "rollback" }),
-        }
-      );
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const result = await res.json().catch(() => ({}));
-      clearStoredManualApplyState();
-      updatePendingCounter(numberOrNull(result.remainingCount) || 0);
-      showToast("Rolled back source; copy edits are still staged.", 3500);
-    } catch (err) {
-      console.error("[impeccable] manual Apply rollback failed:", err);
-      showToast("Rollback failed - see console", 4000);
-    }
+    showTrustedManualApplyInstructions("rollback");
   }
 
   function manualEditEventForCurrentPage(msg) {
@@ -4792,37 +4687,11 @@
     }
 
     if (msg.type === "manual_edit_discarded") {
-      fetchPendingCount();
+      // Source and staging are already authoritative. Reload so browser-local
+      // text mutations cannot masquerade as committed source after discard.
+      location.reload();
+      return;
     }
-  }
-
-  function restoreDiscardedManualEdits(entries) {
-    let failures = 0;
-    for (const entry of entries || []) {
-      for (const op of entry.ops || []) {
-        if (restoreMixedTextNodeManualEdit(op)) continue;
-        const el = findManualEditRestoreElement(op);
-        if (!el || typeof op.originalText !== "string" || !canRestoreManualEditElement(el, op)) {
-          failures += 1;
-          continue;
-        }
-        el.textContent = op.originalText;
-      }
-    }
-    if (failures > 0) {
-      console.warn(
-        "[impeccable] skipped unsafe copy edit DOM restore for",
-        failures,
-        "edit(s). Refresh to reset the page DOM."
-      );
-    }
-    return failures;
-  }
-
-  function canRestoreManualEditElement(el, op) {
-    if (!el || typeof op?.originalText !== "string") return false;
-    if (el.children && el.children.length > 0) return false;
-    return normalizeManualContextText(el.textContent) === normalizeManualContextText(op.newText);
   }
 
   function mixedTextWrapRestoreHint(el) {
@@ -4836,24 +4705,6 @@
     };
   }
 
-  function restoreMixedTextNodeManualEdit(op) {
-    const restore = op?.restore;
-    if (!restore || restore.kind !== "mixedTextNode" || typeof op?.originalText !== "string") return false;
-    const parent = queryManualEditRef(restore.parentRef);
-    if (!parent) return false;
-    const textNodes = directMixedTextRestoreNodes(parent).filter((node) => node.nodeType === 3);
-    const newText = normalizeManualContextText(op.newText);
-    const byIndex = textNodes[Number(restore.textIndex)];
-    if (byIndex && normalizeManualContextText(byIndex.nodeValue) === newText) {
-      byIndex.nodeValue = op.originalText;
-      return true;
-    }
-    const matches = textNodes.filter((node) => normalizeManualContextText(node.nodeValue) === newText);
-    if (matches.length !== 1) return false;
-    matches[0].nodeValue = op.originalText;
-    return true;
-  }
-
   function directMixedTextRestoreNodes(parent) {
     return Array.from(parent?.childNodes || []).filter((node) => {
       if (node.nodeType === 3) return /\S/.test(node.nodeValue || "");
@@ -4864,75 +4715,6 @@
         /\S/.test(node.textContent || "")
       );
     });
-  }
-
-  function findManualEditRestoreElement(op) {
-    for (const ref of [op?.ref, op?.leaf?.ref]) {
-      const byRef = queryManualEditRef(ref);
-      if (byRef) return byRef;
-    }
-    const tag = op?.tag || op?.leaf?.tagName || "*";
-    const classes = Array.isArray(op?.classes) ? op.classes : Array.isArray(op?.leaf?.classes) ? op.leaf.classes : [];
-    const selector = (tag === "*" ? "" : tag) + classes.map((cls) => "." + cssIdent(cls)).join("") || "*";
-    let matches = [];
-    try {
-      matches = Array.from(document.querySelectorAll(selector));
-    } catch {
-      matches = [];
-    }
-    const newText = normalizeManualContextText(op?.newText);
-    const filtered = matches.filter((el) => normalizeManualContextText(el.textContent) === newText);
-    return filtered.length === 1 ? filtered[0] : null;
-  }
-
-  function queryManualEditRef(ref) {
-    if (!ref || typeof ref !== "string") return null;
-    const parts = ref
-      .split(">")
-      .map((part) => part.trim())
-      .filter(Boolean);
-    let current = null;
-    for (let index = 0; index < parts.length; index += 1) {
-      const segment = parseManualEditRefSegment(parts[index]);
-      if (!segment) return null;
-      if (index === 0 && segment.tag === "body") {
-        current = document.body;
-        if (!elementMatchesManualRefSegment(current, segment)) return null;
-        continue;
-      }
-      const scope = current || document.body;
-      const children = Array.from(scope.children || []);
-      current = children.find((child) => elementMatchesManualRefSegment(child, segment)) || null;
-      if (!current) return null;
-    }
-    return current;
-  }
-
-  function parseManualEditRefSegment(segment) {
-    const nthMatch = String(segment || "").match(/:nth-of-type\((\d+)\)$/);
-    const nth = nthMatch ? Number(nthMatch[1]) : null;
-    const base = nthMatch ? segment.slice(0, nthMatch.index) : segment;
-    const tagMatch = base.match(/^[^#.:\s]+/);
-    const tag = tagMatch ? tagMatch[0].toLowerCase() : null;
-    if (!tag) return null;
-    const idMatch = base.match(/#([^#.]+)/);
-    const classes = base
-      .slice(tag.length)
-      .replace(/#[^#.]+/, "")
-      .split(".")
-      .filter(Boolean);
-    return { tag, id: idMatch ? idMatch[1] : null, classes, nth };
-  }
-
-  function elementMatchesManualRefSegment(el, segment) {
-    if (!el || !segment) return false;
-    if (el.tagName.toLowerCase() !== segment.tag) return false;
-    if (segment.id && el.id !== segment.id) return false;
-    for (const cls of segment.classes) {
-      if (!el.classList || !el.classList.contains(cls)) return false;
-    }
-    if (segment.nth && indexAmongSameTag(el) !== segment.nth) return false;
-    return true;
   }
 
   function cssIdent(value) {
@@ -11900,7 +11682,7 @@ void main() {
       boxShadow: "0 4px 16px oklch(0% 0 0 / 0.16), 0 1px 3px oklch(0% 0 0 / 0.1)",
       transition: "filter 0.12s ease, transform 0.1s ease, box-shadow 0.18s ease",
     });
-    pendingPillEl.title = "Apply copy edits to source";
+    pendingPillEl.title = "Copy edits staged; apply from the trusted operator CLI";
     pendingPillSpinnerEl = el("span", {
       display: "none",
       width: "12px",
@@ -11915,7 +11697,7 @@ void main() {
       boxSizing: "border-box",
     });
     pendingPillLabelEl = el("span", { lineHeight: "1", whiteSpace: "nowrap" });
-    pendingPillLabelEl.textContent = "Apply copy edits";
+    pendingPillLabelEl.textContent = "Copy edits staged";
     pendingPillCountEl = el("span", {
       display: "inline-flex",
       alignItems: "center",
@@ -12038,8 +11820,8 @@ void main() {
       btn.textContent = label;
       return btn;
     };
-    pendingKeepFixingBtn = makePendingDecisionBtn("Keep fixing", true);
-    pendingKeepFixingBtn.setAttribute("aria-label", "Ask the agent to keep fixing Apply errors");
+    pendingKeepFixingBtn = makePendingDecisionBtn("Repair from CLI", true);
+    pendingKeepFixingBtn.setAttribute("aria-label", "Return to the trusted terminal to authorize repair");
     pendingKeepFixingBtn.addEventListener("click", onPendingKeepFixingClick);
     pendingRollbackBtn = makePendingDecisionBtn("Rollback", false);
     pendingRollbackBtn.setAttribute("aria-label", "Rollback source and keep copy edits staged");

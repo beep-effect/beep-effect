@@ -11,6 +11,7 @@
  *   node <scripts_path>/live-server.mjs              # start
  *   node <scripts_path>/live-server.mjs stop         # stop + remove injected live.js tag
  *   node <scripts_path>/live-server.mjs stop --keep-inject   # stop only
+ *   node <scripts_path>/live-apply-manual-edits.mjs  # trusted staged-edit host actions
  *   node <scripts_path>/live-server.mjs --help
  */
 
@@ -1703,11 +1704,16 @@ Endpoints:
   /events              SSE stream (server→browser) + POST (browser→server)
   /poll                Long-poll for agent CLI
   /manual-edit-stash   Stage browser copy edits
-  /manual-edit-commit  Apply staged browser copy edits
-  /manual-edit-discard Discard staged browser copy edits
+  /manual-edit-commit  Apply staged edits (requires an operator-only capability header)
+  /manual-edit-repair-decision Roll back an active transaction (requires the capability header)
+  /manual-edit-discard Discard edits/cancel Apply (requires the capability header)
   /source              Raw source file reader (no-HMR fallback)
   /status              Durable recovery status (token-protected)
-  /health              Health check`);
+  /health              Health check
+
+Trusted staged-edit host actions:
+  IMPECCABLE_LIVE_COMMIT_CAPABILITY=<operator secret> \\
+    node live-apply-manual-edits.mjs [--page-url=/path] [--repair|--rollback|--discard] [--async]`);
   process.exit(0);
 }
 

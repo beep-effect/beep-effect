@@ -149,7 +149,7 @@ const admissionOwnerFields = {
  *   admittedAtMillis: 0,
  *   heartbeatAtMillis: 0,
  *   enqueuedAtMillis: 0,
- *   nonce: "d0a7b0dc"
+ *   nonce: "d0a7b0dc-54ec-4b51-95c7-6fafdc18d206"
  * })
  * console.log(lease.weightTokens) // 3
  * ```
@@ -216,7 +216,7 @@ export declare namespace YeetAdmissionLease {
  *   branch: "feat/x",
  *   enqueuedAtMillis: 0,
  *   heartbeatAtMillis: 0,
- *   nonce: "d0a7b0dc"
+ *   nonce: "d0a7b0dc-54ec-4b51-95c7-6fafdc18d206"
  * })
  * console.log(ticket.kind) // "review-fix"
  * ```
@@ -385,6 +385,59 @@ export declare namespace AdmissionSnapshot {
    */
   export type Encoded = typeof AdmissionSnapshot.Encoded;
 }
+
+const DeadLeaseRetentionReason = LiteralKit([
+  "legacy-nonce-missing",
+  "recorded-unit-mismatch",
+  "live-unit-conflict",
+]).pipe(
+  $I.annoteSchema("DeadLeaseRetentionReason", {
+    description: "Reason a verified dead admission lease must remain for retry or operator inspection.",
+  })
+);
+
+/**
+ * Conservative action chosen for one verified dead admission lease.
+ *
+ * **Details**
+ *
+ * A `stop` plan is allowed only when the lease nonce identifies a scope that
+ * no live lease represents. `reap` proves no stop is needed, while `retain`
+ * preserves ambiguous evidence for a later operator or retry.
+ *
+ * **Example** (Retain ambiguous legacy authority)
+ *
+ * ```ts
+ * import { DeadLeaseScopePlan } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const plan: typeof DeadLeaseScopePlan.Type = {
+ *   _tag: "retain",
+ *   leasePath: "/runtime/legacy.lease.json",
+ *   reason: "legacy-nonce-missing"
+ * }
+ * console.log(DeadLeaseScopePlan.guards.retain(plan)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DeadLeaseScopePlan = S.TaggedUnion({
+  retain: { leasePath: S.String, reason: DeadLeaseRetentionReason },
+  reap: { leasePath: S.String },
+  stop: { leasePath: S.String, unitName: S.String },
+}).pipe(
+  $I.annoteSchema("DeadLeaseScopePlan", {
+    description: "Conservative stop, reap, or retain decision for one verified dead admission lease.",
+  })
+);
+
+/**
+ * Conservative action chosen for one verified dead admission lease.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DeadLeaseScopePlan = typeof DeadLeaseScopePlan.Type;
 
 interface QualitySchedulerErrorOptions {
   readonly exitCode?: number;
