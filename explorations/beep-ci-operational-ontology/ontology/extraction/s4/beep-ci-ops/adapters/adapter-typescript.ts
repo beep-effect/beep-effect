@@ -126,9 +126,7 @@ const KIND_NAMES: Partial<Record<ts.SyntaxKind, string>> = {
 };
 
 const isExported = (node: ts.Node): boolean =>
-  ts.canHaveModifiers(node)
-    ? (ts.getModifiers(node) ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
-    : false;
+  ts.canHaveModifiers(node) ? (ts.getModifiers(node) ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword) : false;
 
 /** Leftmost dotted-name of an expression: S.Class<X>()("X", {...}) -> "S.Class". */
 const leftmostName = (e: ts.Expression): string | undefined => {
@@ -180,10 +178,10 @@ const literalKitMembers = (root: ts.Node): string[] => {
 };
 
 interface Decl {
-  node: ts.Node;
-  name: string;
-  kind: string;
   facts: Fact[];
+  kind: string;
+  name: string;
+  node: ts.Node;
 }
 
 const declFacts = (node: ts.Node): Decl[] => {
@@ -194,10 +192,7 @@ const declFacts = (node: ts.Node): Decl[] => {
   };
   const heritage = (n: ts.ClassDeclaration | ts.InterfaceDeclaration, facts: Fact[]): void => {
     for (const h of n.heritageClauses ?? []) {
-      const pred =
-        h.token === ts.SyntaxKind.ExtendsKeyword
-          ? "extends_syntactically"
-          : "implements_syntactically";
+      const pred = h.token === ts.SyntaxKind.ExtendsKeyword ? "extends_syntactically" : "implements_syntactically";
       for (const t of h.types) {
         const nm = leftmostName(t.expression);
         if (nm !== undefined) facts.push({ predicate: pred, object: nm });
@@ -375,15 +370,13 @@ const main = (): void => {
     // Golden mode: fixed commit "GOLDEN", path = provided relative path,
     // bytes read directly from the fixture file.
     const path = args.get("--golden-path") ?? "golden/input.ts";
-    const text = new TextDecoder().decode(
-      new Uint8Array(require("node:fs").readFileSync(goldenInput)),
-    );
+    const text = new TextDecoder().decode(new Uint8Array(require("node:fs").readFileSync(goldenInput)));
     for (const r of extractFile("GOLDEN", path, text)) console.log(JSON.stringify(r));
     return;
   }
   if (repo === undefined || commit === undefined) {
     console.error(
-      "usage: bun adapter-typescript.ts --repo <root> --commit <sha> | --golden-input <file> --golden-path <rel>",
+      "usage: bun adapter-typescript.ts --repo <root> --commit <sha> | --golden-input <file> --golden-path <rel>"
     );
     process.exit(2);
   }
@@ -397,7 +390,7 @@ const main = (): void => {
       : a.repository.path > b.repository.path
         ? 1
         : a.source_span.start_line - b.source_span.start_line ||
-          (a.symbol.lexical_name < b.symbol.lexical_name ? -1 : 1),
+          (a.symbol.lexical_name < b.symbol.lexical_name ? -1 : 1)
   );
   for (const r of all) console.log(JSON.stringify(r));
 };
