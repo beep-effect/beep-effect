@@ -1890,14 +1890,32 @@ describe("corpus restoration preservation", () => {
         );
         if (O.isNone(seal) || O.isNone(terminal)) return yield* Effect.die("Expected sealed terminal fixture rows.");
         const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
-        const withoutTerminal = A.filter(records, (record) => record !== terminal.value);
+        const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (
+          unsealed: ReadonlyArray<ArchiveLedgerRecord>
+        ) {
+          const encoded = yield* Effect.forEach(unsealed, encodeArchiveLedgerRecordJson);
+          const manifestSha256 = Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${A.join(encoded, "\n")}\n`))));
+          return A.append(
+            unsealed,
+            ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
+              ...seal.value,
+              manifestSha256,
+              recordCount: NonNegativeInt.make(unsealed.length),
+            })
+          );
+        });
+        const duplicateTerminal = yield* reseal(A.append(withoutSeal, terminal.value));
+        const withoutTerminal = yield* reseal(A.filter(withoutSeal, (record) => record !== terminal.value));
+        const withoutInheritedLoss = yield* reseal(
+          A.filter(withoutSeal, (record) => record.recordType !== "inherited-loss")
+        );
         const variants: ReadonlyArray<ReadonlyArray<ArchiveLedgerRecord>> = [
           withoutSeal,
           A.append(records, seal.value),
           A.append(A.prepend(withoutSeal, seal.value), terminal.value),
-          [...withoutSeal, terminal.value, seal.value],
+          duplicateTerminal,
           withoutTerminal,
-          A.filter(records, (record) => record.recordType !== "inherited-loss"),
+          withoutInheritedLoss,
         ];
 
         yield* Effect.forEach(
