@@ -274,9 +274,12 @@ describe("yeet review fixes", () => {
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const repositoryIdentity = "https://github.com/acme/repo.git";
+        // A no-op FileSystem makes the /run/user/<uid> probe fail, so the
+        // fallback is the temporary directory on every host.
         const resolveWithEnvironment = (environment: Readonly<Record<string, string>>) =>
           proofCoordinatorLockPath(repositoryIdentity).pipe(
-            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment))
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
+            Effect.provide(FileSystem.layerNoop({}))
           );
         const fallbackPrefix = path.join(tmpdir(), "beep-yeet-proof-locks-");
         const configuredRoot = path.join(tmpdir(), "configured-yeet-runtime");

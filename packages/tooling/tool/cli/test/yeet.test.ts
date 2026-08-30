@@ -2891,7 +2891,7 @@ describe("yeet publish scope helpers", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it("resolves the coordinator root from XDG_RUNTIME_DIR and falls back to the system temp directory", () =>
+  it("resolves the coordinator root from XDG_RUNTIME_DIR and falls back to one host root", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const path = yield* Path.Path;
