@@ -195,6 +195,49 @@ const gitDirFromGitFile = (pathService: Path.Path, candidatePath: string, conten
     )
   );
 
+const gitDirForCandidate = Effect.fnUntraced(function* (
+  candidatePath: string
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  const gitFile = pathService.join(candidatePath, ".git");
+  const gitFileInfo = yield* fs.stat(gitFile).pipe(Effect.option);
+  const gitFileContent = yield* pipe(
+    gitFileInfo,
+    O.filter((info) => Str.Equivalence(info.type, "File")),
+    O.match({
+      onNone: () => Effect.succeed(O.none<string>()),
+      onSome: () => fs.readFileString(gitFile).pipe(Effect.option),
+    })
+  );
+  return pipe(
+    gitFileContent,
+    O.flatMap((content) => gitDirFromGitFile(pathService, candidatePath, content))
+  );
+});
+
+const optionalStatIsMissing = (entryPath: O.Option<string>) =>
+  O.match(entryPath, {
+    onNone: () => Effect.succeed(O.none<boolean>()),
+    onSome: statIsMissing,
+  });
+
+const skipReasonWhen = (condition: boolean, reason: TmpfsReapSkipReason): O.Option<TmpfsReapSkipReason> =>
+  condition ? O.some(reason) : O.none();
+
+const danglingStubShape = (
+  gitDirMissing: O.Option<boolean>,
+  parentRepoMissing: O.Option<boolean>
+): Pick<DiscoveredCandidate, "classified" | "shapeSkipReason"> => {
+  const classified = O.contains(gitDirMissing, true) && O.contains(parentRepoMissing, true);
+  const shapeSkipReason = O.firstSomeOf([
+    skipReasonWhen(O.contains(gitDirMissing, false), "gitdir-target-exists"),
+    skipReasonWhen(O.contains(gitDirMissing, true) && O.contains(parentRepoMissing, false), "parent-repo-present"),
+    O.some<TmpfsReapSkipReason>("wrong-shape"),
+  ]);
+  return { classified, shapeSkipReason: classified ? O.none() : shapeSkipReason };
+};
+
 const discoverGitWorktree = Effect.fnUntraced(function* (
   root: string,
   candidatePath: string,
@@ -303,38 +346,20 @@ const discoverDanglingWorktreeStub = Effect.fnUntraced(function* (
   candidatePath: string,
   idleSinceMillis: number
 ): Effect.fn.Return<DiscoveredCandidate, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
-  const gitFile = pathService.join(candidatePath, ".git");
-  const gitFileInfo = yield* fs.stat(gitFile).pipe(Effect.option);
-  const gitFileContent = O.exists(gitFileInfo, (info) => Str.Equivalence(info.type, "File"))
-    ? yield* fs.readFileString(gitFile).pipe(Effect.option)
-    : O.none<string>();
-  const gitDir = pipe(
-    gitFileContent,
-    O.flatMap((content) => gitDirFromGitFile(pathService, candidatePath, content))
-  );
+  const gitDir = yield* gitDirForCandidate(candidatePath);
   const parentRepo = pipe(
     gitDir,
     O.flatMap((target) => parentRepoFromGitDir(pathService, candidatePath, target))
   );
-  const gitDirMissing = O.isSome(gitDir) ? yield* statIsMissing(gitDir.value) : O.none<boolean>();
-  const parentRepoMissing = O.isSome(parentRepo) ? yield* statIsMissing(parentRepo.value) : O.none<boolean>();
-  const classified = O.contains(gitDirMissing, true) && O.contains(parentRepoMissing, true);
-  const shapeSkipReason = classified
-    ? O.none<TmpfsReapSkipReason>()
-    : O.contains(gitDirMissing, false)
-      ? O.some<TmpfsReapSkipReason>("gitdir-target-exists")
-      : O.contains(gitDirMissing, true) && O.contains(parentRepoMissing, false)
-        ? O.some<TmpfsReapSkipReason>("parent-repo-present")
-        : O.some<TmpfsReapSkipReason>("wrong-shape");
+  const gitDirMissing = yield* optionalStatIsMissing(gitDir);
+  const parentRepoMissing = yield* optionalStatIsMissing(parentRepo);
   return {
     root,
     path: candidatePath,
     reapClass: "dangling-worktree-stub",
     idleSinceMillis,
-    classified,
-    shapeSkipReason,
+    ...danglingStubShape(gitDirMissing, parentRepoMissing),
     parentRepo,
   };
 });
@@ -657,36 +682,56 @@ const thresholdFor = (reapClass: TmpfsReapClass): Duration.Duration =>
     "dangling-worktree-stub": () => Duration.hours(2),
   });
 
-const skipReasonFor = (
+const classificationSkipReason = (
   candidate: DiscoveredCandidate,
-  ageHours: number,
-  liveness: CandidateLiveness,
-  dirtyWorktree: boolean,
   vitestRunning: boolean
-): O.Option<TmpfsReapSkipReason> => {
-  if (O.isSome(candidate.shapeSkipReason)) {
-    return candidate.shapeSkipReason;
-  }
-  if (!candidate.classified) {
-    return O.some("unclassified");
-  }
-  if (Str.Equivalence(candidate.reapClass, "vitest-forks-tmp") && vitestRunning) {
-    return O.some("live-runner");
-  }
+): O.Option<TmpfsReapSkipReason> =>
+  O.firstSomeOf([
+    candidate.shapeSkipReason,
+    candidate.classified ? O.none<TmpfsReapSkipReason>() : O.some<TmpfsReapSkipReason>("unclassified"),
+    TmpfsReapClass.$match(candidate.reapClass, {
+      "git-worktree": O.none<TmpfsReapSkipReason>,
+      "head-install": O.none<TmpfsReapSkipReason>,
+      "fallow-cache": O.none<TmpfsReapSkipReason>,
+      "scoped-temp": O.none<TmpfsReapSkipReason>,
+      "vitest-forks-tmp": () => skipReasonWhen(vitestRunning, "live-runner"),
+      "dangling-worktree-stub": O.none<TmpfsReapSkipReason>,
+    }),
+  ]);
+
+const livenessSkipReason = (liveness: CandidateLiveness): O.Option<TmpfsReapSkipReason> => {
   if (liveness.cwdCount > 0) {
     return O.some("live-cwd-ref");
   }
   if (liveness.fdCount > 0) {
     return O.some("live-fd-ref");
   }
-  if (liveness.liveFlock) {
-    return O.some("live-flock");
-  }
+  return liveness.liveFlock ? O.some("live-flock") : O.none();
+};
+
+const stateSkipReason = (
+  candidate: DiscoveredCandidate,
+  ageHours: number,
+  dirtyWorktree: boolean
+): O.Option<TmpfsReapSkipReason> => {
   if (dirtyWorktree) {
     return O.some("dirty-worktree");
   }
   return ageHours < Duration.toHours(thresholdFor(candidate.reapClass)) ? O.some("too-young") : O.none();
 };
+
+const skipReasonFor = (
+  candidate: DiscoveredCandidate,
+  ageHours: number,
+  liveness: CandidateLiveness,
+  dirtyWorktree: boolean,
+  vitestRunning: boolean
+): O.Option<TmpfsReapSkipReason> =>
+  O.firstSomeOf([
+    classificationSkipReason(candidate, vitestRunning),
+    livenessSkipReason(liveness),
+    stateSkipReason(candidate, ageHours, dirtyWorktree),
+  ]);
 
 const measureBytes = Effect.fnUntraced(function* (
   candidatePath: string
@@ -890,34 +935,53 @@ export const resolveBeepCacheRoot = Effect.fn("TmpfsReap.resolveBeepCacheRoot")(
   return pathService.resolve(tmpFallback);
 });
 
-const resolveTmpfsRoots = Effect.fnUntraced(function* (
-  explicitTmpRoot: O.Option<string>,
-  systemTmpRootOverride: O.Option<string>
+const configuredPath = (name: string) =>
+  Config.option(Config.string(name)).pipe(
+    Effect.orElseSucceed(() => O.none()),
+    Effect.map(O.filter(Str.isNonEmpty))
+  );
+
+const canonicalRoot = Effect.fnUntraced(function* (
+  root: string
+): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  return O.getOrElse(yield* fs.realPath(root).pipe(Effect.option), () => pathService.resolve(root));
+});
+
+const unsafeTmpRootWarning = (
+  pathService: Path.Path,
+  configuredRoot: string,
+  canonicalHome: O.Option<string>,
+  canonicalCheckout: O.Option<string>
+): O.Option<string> => {
+  if (Str.Equivalence(configuredRoot, pathService.parse(configuredRoot).root)) {
+    return O.some("Dropped TMPDIR because it resolves to the filesystem root.");
+  }
+  if (O.exists(canonicalHome, (home) => Str.Equivalence(configuredRoot, home))) {
+    return O.some("Dropped TMPDIR because it resolves to HOME.");
+  }
+  if (O.exists(canonicalHome, (home) => pathIsWithin(pathService, configuredRoot, home))) {
+    return O.some("Dropped TMPDIR because it is an ancestor of HOME.");
+  }
+  return O.exists(canonicalCheckout, (checkout) => pathIsWithin(pathService, configuredRoot, checkout))
+    ? O.some("Dropped TMPDIR because it contains the invoking checkout.")
+    : O.none();
+};
+
+const resolveAmbientTmpfsRoots = Effect.fnUntraced(function* (
+  systemTmpRoot: string
 ): Effect.fn.Return<TmpfsRootsResolution, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
-  const canonicalize = (root: string) => fs.realPath(root).pipe(Effect.option);
-  if (O.isSome(explicitTmpRoot)) {
-    const explicit = yield* canonicalize(explicitTmpRoot.value);
-    return {
-      roots: [O.getOrElse(explicit, () => pathService.resolve(explicitTmpRoot.value))],
-      warnings: A.empty(),
-    };
-  }
-  const configuredSystemRoot = O.getOrElse(systemTmpRootOverride, () => "/tmp");
-  const canonicalSystemRoot = yield* canonicalize(configuredSystemRoot);
-  const systemTmpRoot = O.getOrElse(canonicalSystemRoot, () => pathService.resolve(configuredSystemRoot));
-  const configuredTmpRoot = O.filter(
-    yield* Config.option(Config.string("TMPDIR")).pipe(Effect.orElseSucceed(() => O.none())),
-    Str.isNonEmpty
-  );
+  const configuredTmpRoot = yield* configuredPath("TMPDIR");
   if (O.isNone(configuredTmpRoot)) {
     return { roots: [systemTmpRoot], warnings: A.empty() };
   }
   if (!pathService.isAbsolute(configuredTmpRoot.value)) {
     return { roots: [systemTmpRoot], warnings: ["Dropped TMPDIR because it is not an absolute path."] };
   }
-  const canonicalConfiguredRoot = yield* canonicalize(configuredTmpRoot.value);
+  const canonicalConfiguredRoot = yield* fs.realPath(configuredTmpRoot.value).pipe(Effect.option);
   if (O.isNone(canonicalConfiguredRoot)) {
     return { roots: [systemTmpRoot], warnings: ["Dropped TMPDIR because its canonical path is unreadable."] };
   }
@@ -925,25 +989,34 @@ const resolveTmpfsRoots = Effect.fnUntraced(function* (
   if (Str.Equivalence(configuredRoot, systemTmpRoot)) {
     return { roots: [systemTmpRoot], warnings: A.empty() };
   }
-  const configuredHome = O.filter(
-    yield* Config.option(Config.string("HOME")).pipe(Effect.orElseSucceed(() => O.none())),
-    Str.isNonEmpty
+  const configuredHome = yield* configuredPath("HOME");
+  const canonicalHome = yield* pipe(
+    configuredHome,
+    O.match({
+      onNone: () => Effect.succeed(O.none<string>()),
+      onSome: (home) => fs.realPath(home).pipe(Effect.option),
+    })
   );
-  const canonicalHome = O.isSome(configuredHome) ? yield* canonicalize(configuredHome.value) : O.none<string>();
-  const canonicalCheckout = yield* canonicalize(process.cwd());
-  if (Str.Equivalence(configuredRoot, pathService.parse(configuredRoot).root)) {
-    return { roots: [systemTmpRoot], warnings: ["Dropped TMPDIR because it resolves to the filesystem root."] };
+  const canonicalCheckout = yield* fs.realPath(process.cwd()).pipe(Effect.option);
+  const warning = unsafeTmpRootWarning(pathService, configuredRoot, canonicalHome, canonicalCheckout);
+  return O.match(warning, {
+    onNone: () => ({ roots: A.dedupe([systemTmpRoot, configuredRoot]), warnings: A.empty() }),
+    onSome: (message) => ({ roots: [systemTmpRoot], warnings: [message] }),
+  });
+});
+
+const resolveTmpfsRoots = Effect.fnUntraced(function* (
+  explicitTmpRoot: O.Option<string>,
+  systemTmpRootOverride: O.Option<string>
+): Effect.fn.Return<TmpfsRootsResolution, never, FileSystem.FileSystem | Path.Path> {
+  if (O.isSome(explicitTmpRoot)) {
+    return {
+      roots: [yield* canonicalRoot(explicitTmpRoot.value)],
+      warnings: A.empty(),
+    };
   }
-  if (O.exists(canonicalHome, (home) => Str.Equivalence(configuredRoot, home))) {
-    return { roots: [systemTmpRoot], warnings: ["Dropped TMPDIR because it resolves to HOME."] };
-  }
-  if (O.exists(canonicalHome, (home) => pathIsWithin(pathService, configuredRoot, home))) {
-    return { roots: [systemTmpRoot], warnings: ["Dropped TMPDIR because it is an ancestor of HOME."] };
-  }
-  if (O.exists(canonicalCheckout, (checkout) => pathIsWithin(pathService, configuredRoot, checkout))) {
-    return { roots: [systemTmpRoot], warnings: ["Dropped TMPDIR because it contains the invoking checkout."] };
-  }
-  return { roots: A.dedupe([systemTmpRoot, configuredRoot]), warnings: A.empty() };
+  const configuredSystemRoot = O.getOrElse(systemTmpRootOverride, () => "/tmp");
+  return yield* resolveAmbientTmpfsRoots(yield* canonicalRoot(configuredSystemRoot));
 });
 
 /**

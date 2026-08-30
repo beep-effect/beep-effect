@@ -1,6 +1,6 @@
 import { runRepoCommandCapture, runTmpfsReap, TmpfsReapReport } from "@beep/repo-cli/test/RepoRun";
 import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Duration, Effect, FileSystem, Path } from "effect";
@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import { ChildProcess } from "effect/unstable/process";
 
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
@@ -120,6 +121,8 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
   const stubYoung = path.join(worktreesRoot, "young");
   const stubLive = path.join(worktreesRoot, "live");
   const stubWrongShape = path.join(worktreesRoot, "wrong-shape");
+  const stubMalformedGitFile = path.join(worktreesRoot, "malformed-git-file");
+  const stubRelativeGitDir = path.join(worktreesRoot, "relative-gitdir");
   const stubExistingTarget = path.join(worktreesRoot, "target-exists");
   const stubParentPresent = path.join(worktreesRoot, "parent-present");
   const soleWorktreesRoot = path.join(tmpRoot, "sole-worktrees");
@@ -128,6 +131,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
   const existingRepo = path.join(root, "existing-repo");
   const existingGitDir = path.join(existingRepo, ".git", "worktrees", "target-exists");
   const parentPresentRepo = path.join(root, "parent-present-repo");
+  const unclassifiedWorktree = path.join(tmpRoot, "unclassified-worktree");
 
   yield* Effect.forEach(
     [
@@ -141,11 +145,14 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       stubYoung,
       stubLive,
       stubWrongShape,
+      stubMalformedGitFile,
+      stubRelativeGitDir,
       stubExistingTarget,
       stubParentPresent,
       stubSoleEligible,
       existingGitDir,
       parentPresentRepo,
+      unclassifiedWorktree,
     ],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
     { discard: true }
@@ -154,6 +161,8 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
   yield* fs.writeFileString(path.join(stubYoung, ".git"), `gitdir: ${missingRepo}/.git/worktrees/young\n`);
   yield* fs.writeFileString(path.join(stubLive, ".git"), `gitdir: ${missingRepo}/.git/worktrees/live\n`);
   yield* fs.writeFileString(path.join(stubSoleEligible, ".git"), `gitdir: ${missingRepo}/.git/worktrees/sole\n`);
+  yield* fs.writeFileString(path.join(stubMalformedGitFile, ".git"), "gitdir: \n");
+  yield* fs.writeFileString(path.join(stubRelativeGitDir, ".git"), "gitdir: ../../missing/.git/worktrees/relative\n");
   yield* fs.writeFileString(path.join(stubExistingTarget, ".git"), `gitdir: ${existingGitDir}\n`);
   yield* fs.writeFileString(
     path.join(stubParentPresent, ".git"),
@@ -163,8 +172,20 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     path.join(vitestWrongShape, ".git"),
     `gitdir: ${missingRepo}/.git/worktrees/nanoid-git-worktree\n`
   );
+  yield* fs.writeFileString(path.join(unclassifiedWorktree, ".git"), `gitdir: ${missingRepo}/not-a-worktree\n`);
   yield* Effect.forEach(
-    [stubEligible, stubLive, stubWrongShape, stubExistingTarget, stubParentPresent, stubSoleEligible, vitestWrongShape],
+    [
+      stubEligible,
+      stubLive,
+      stubWrongShape,
+      stubMalformedGitFile,
+      stubRelativeGitDir,
+      stubExistingTarget,
+      stubParentPresent,
+      stubSoleEligible,
+      unclassifiedWorktree,
+      vitestWrongShape,
+    ],
     (candidate) => runCommand("touch", ["-d", fixtureTimestamp(3), candidate], root),
     { discard: true }
   );
@@ -189,12 +210,15 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
     stubEligible,
     stubExistingTarget,
     stubLive,
+    stubMalformedGitFile,
     stubParentPresent,
+    stubRelativeGitDir,
     stubSoleEligible,
     stubWrongShape,
     stubYoung,
     soleWorktreesRoot,
     tmpRoot,
+    unclassifiedWorktree,
     vitestEligible,
     vitestLive,
     vitestWrongShape,
@@ -340,6 +364,12 @@ describe("tmpfs reap", () => {
           expect(stubWrongShape.skipReason).toBe("wrong-shape");
           expect(yield* fs.exists(fixture.stubWrongShape)).toBe(true);
 
+          expect(candidateByPath(report, fixture.stubMalformedGitFile).skipReason).toBe("wrong-shape");
+
+          const stubRelativeGitDir = candidateByPath(report, fixture.stubRelativeGitDir);
+          expect(stubRelativeGitDir.action).toBe("remove-dir");
+          expect(yield* fs.exists(fixture.stubRelativeGitDir)).toBe(false);
+
           const stubExistingTarget = candidateByPath(report, fixture.stubExistingTarget);
           expect(stubExistingTarget.skipReason).toBe("gitdir-target-exists");
           expect(yield* fs.exists(fixture.stubExistingTarget)).toBe(true);
@@ -348,10 +378,12 @@ describe("tmpfs reap", () => {
           expect(stubParentPresent.skipReason).toBe("parent-repo-present");
           expect(yield* fs.exists(fixture.stubParentPresent)).toBe(true);
 
+          expect(candidateByPath(report, fixture.unclassifiedWorktree).skipReason).toBe("unclassified");
+
           expect(candidateByPath(report, fixture.stubSoleEligible).action).toBe("remove-dir");
           expect(yield* fs.exists(fixture.stubSoleEligible)).toBe(false);
           expect(yield* fs.exists(fixture.soleWorktreesRoot), A.join(report.warnings, "\n")).toBe(false);
-          expect(report.reapedCount).toBe(3);
+          expect(report.reapedCount).toBe(4);
         })
       )
     ).pipe(provideScopedLayer(NodeServices.layer))
@@ -388,6 +420,77 @@ describe("tmpfs reap", () => {
         expect(candidate.action).toBe("skip");
         expect(yield* fs.exists(candidatePath)).toBe(true);
       })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("distinguishes a live file descriptor from a live working-directory reference", () =>
+    withTempDirectory((root) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpRoot = path.join(root, "tmp");
+          const cacheRoot = path.join(root, "cache");
+          const candidatePath = path.join(tmpRoot, "beep-knowledge-refs-live-fd");
+          const payloadPath = path.join(candidatePath, "payload.txt");
+          yield* Effect.forEach(
+            [candidatePath, cacheRoot],
+            (directory) => fs.makeDirectory(directory, { recursive: true }),
+            {
+              discard: true,
+            }
+          );
+          yield* fs.writeFileString(payloadPath, "held open\n");
+          yield* runCommand("touch", ["-d", fixtureTimestamp(3), candidatePath], root);
+
+          yield* ChildProcess.make(
+            "sh",
+            ["-c", 'exec 3< "$1"; while :; do sleep 1; done', "tmpfs-reap-fd", payloadPath],
+            { cwd: root, stdin: "ignore", stderr: "pipe", stdout: "pipe" }
+          );
+
+          const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
+          const candidate = candidateByPath(report, candidatePath);
+          expect(candidate.refCount).toBeGreaterThan(0);
+          expect(candidate.skipReason).toBe("live-fd-ref");
+        })
+      )
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("recognizes a held fallow-cache flock independently of path references", () =>
+    withTempDirectory((root) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpRoot = path.join(root, "tmp");
+          const cacheRoot = path.join(root, "cache");
+          const candidatePath = path.join(tmpRoot, "fallow-audit-base-cache-locked");
+          const lockPath = `${candidatePath}.lock`;
+          yield* Effect.forEach(
+            [candidatePath, cacheRoot],
+            (directory) => fs.makeDirectory(directory, { recursive: true }),
+            {
+              discard: true,
+            }
+          );
+          yield* fs.writeFileString(path.join(candidatePath, "payload.txt"), "cached\n");
+          yield* runCommand("touch", ["-d", fixtureTimestamp(8), candidatePath], root);
+
+          yield* ChildProcess.make("flock", ["-x", lockPath, "sh", "-c", "while :; do sleep 1; done"], {
+            cwd: root,
+            stdin: "ignore",
+            stderr: "pipe",
+            stdout: "pipe",
+          });
+
+          const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
+          const candidate = candidateByPath(report, candidatePath);
+          expect(candidate.refCount).toBe(0);
+          expect(candidate.skipReason).toBe("live-flock");
+        })
+      )
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
@@ -500,6 +603,43 @@ describe("tmpfs reap", () => {
           systemTmpRoot,
         }).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TMPDIR: "relative-tmp" }))));
         expect(relativeReport.tmpRoots).toEqual([systemTmpRoot]);
+
+        const missingTmpRoot = path.join(root, "missing-tmpdir");
+        const unreadableReport = yield* runTmpfsReap({
+          cacheRoot,
+          classes: ["scoped-temp"],
+          nowMillis: FIXTURE_NOW_MILLIS,
+          systemTmpRoot,
+        }).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TMPDIR: missingTmpRoot }))));
+        expect(unreadableReport.warnings).toContain("Dropped TMPDIR because its canonical path is unreadable.");
+
+        const rootReport = yield* runTmpfsReap({
+          cacheRoot,
+          classes: ["scoped-temp"],
+          nowMillis: FIXTURE_NOW_MILLIS,
+          systemTmpRoot,
+        }).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TMPDIR: "/" }))));
+        expect(rootReport.warnings).toContain("Dropped TMPDIR because it resolves to the filesystem root.");
+
+        const ancestorReport = yield* runTmpfsReap({
+          cacheRoot,
+          classes: ["scoped-temp"],
+          nowMillis: FIXTURE_NOW_MILLIS,
+          systemTmpRoot,
+        }).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ HOME: homeRoot, TMPDIR: root }))));
+        expect(ancestorReport.warnings).toContain("Dropped TMPDIR because it is an ancestor of HOME.");
+
+        const checkoutReport = yield* runTmpfsReap({
+          cacheRoot,
+          classes: ["scoped-temp"],
+          nowMillis: FIXTURE_NOW_MILLIS,
+          systemTmpRoot,
+        }).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TMPDIR: process.cwd() }))));
+        expect(checkoutReport.warnings).toContain("Dropped TMPDIR because it contains the invoking checkout.");
+
+        const explicitMissingRoot = path.join(root, "missing-explicit-root");
+        const explicitReport = yield* runTmpfsReap({ cacheRoot, tmpRoot: explicitMissingRoot });
+        expect(explicitReport.tmpRoots).toEqual([explicitMissingRoot]);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -576,6 +716,54 @@ describe("tmpfs reap", () => {
         expect(yield* fs.exists(fixture.youngScoped)).toBe(true);
         expect(yield* fs.exists(fixture.dirtyWorktree)).toBe(true);
         expect(yield* fs.exists(path.join(fixture.dirtyWorktree, "uncommitted.txt"))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("releases nested head-install worktrees and reports a locked release failure", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpRoot = path.join(root, "tmp");
+        const cacheRoot = path.join(root, "cache");
+        const repo = path.join(root, "repo");
+        const headInstallRoot = path.join(cacheRoot, "beep", "head-install");
+        const releasedInstall = path.join(headInstallRoot, "beep-yeet-head-install-released");
+        const lockedInstall = path.join(headInstallRoot, "beep-yeet-head-install-locked");
+        const releasedCheckout = path.join(releasedInstall, "checkout");
+        const lockedCheckout = path.join(lockedInstall, "checkout");
+        yield* Effect.forEach([tmpRoot, repo], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+          discard: true,
+        });
+        yield* runCommand("git", ["init", "--quiet"], repo);
+        yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
+        yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
+        yield* runCommand("git", ["add", "README.md"], repo);
+        yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
+        yield* runCommand("git", ["worktree", "add", "--quiet", "-b", "released-install", releasedCheckout], repo);
+        yield* runCommand("git", ["worktree", "add", "--quiet", "-b", "locked-install", lockedCheckout], repo);
+        yield* runCommand("git", ["worktree", "lock", lockedCheckout], repo);
+        yield* Effect.forEach(
+          [releasedInstall, lockedInstall],
+          (candidate) => runCommand("touch", ["-d", fixtureTimestamp(2), candidate], root),
+          { discard: true }
+        );
+
+        const report = yield* runTmpfsReap({
+          apply: true,
+          cacheRoot,
+          classes: ["head-install"],
+          listProcessCommandLines: noProcessCommandLines,
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot,
+        });
+
+        expect(report.reapedCount).toBe(2);
+        expect(yield* fs.exists(releasedInstall)).toBe(false);
+        expect(yield* fs.exists(lockedInstall)).toBe(false);
+        expect(A.some(report.warnings, Str.includes(`Nested head-install checkout ${lockedCheckout}`))).toBe(true);
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -677,4 +865,21 @@ describe("tmpfs reap", () => {
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
+
+  it("property: tmpfs-reap reports round-trip through the JSON codec", () => {
+    const ReportArbitrary = S.toArbitrary(TmpfsReapReport)(fc);
+    fc.assert(
+      fc.property(ReportArbitrary, (report) => {
+        const encoded = S.encodeSync(S.fromJsonString(TmpfsReapReport))(report);
+        const decoded = S.decodeSync(S.fromJsonString(TmpfsReapReport))(encoded);
+        expect(decoded.schemaVersion).toBe(report.schemaVersion);
+        expect(decoded.tmpRoot).toBe(report.tmpRoot);
+        expect(A.length(decoded.candidates)).toBe(A.length(report.candidates));
+        // JSON drops the sign of -0, so the codec law is encode-stability
+        // rather than Object.is identity on numeric fields.
+        expect(S.encodeSync(S.fromJsonString(TmpfsReapReport))(decoded)).toBe(encoded);
+      }),
+      fcRuns(32)
+    );
+  });
 });
