@@ -125,12 +125,15 @@ const systematicEvidenceMutations = (
   records: ReadonlyArray<TransformationLedgerRecord>
 ): ReadonlyArray<ReadonlyArray<TransformationLedgerRecord>> =>
   A.flatMap(records, (record, recordIndex) =>
-    A.filterMap(Object.entries(record), ([field, value]) =>
-      O.map(mutatedEvidenceValue(value), (mutatedValue) => {
-        const mutated = structuredClone(records) as unknown as Array<Record<string, unknown>>;
-        const target = mutated[recordIndex];
-        if (target !== undefined) target[field] = mutatedValue;
-        return mutated as unknown as ReadonlyArray<TransformationLedgerRecord>;
+    A.flatMap(Object.entries(record), ([field, value]) =>
+      O.match(mutatedEvidenceValue(value), {
+        onNone: A.empty,
+        onSome: (mutatedValue) => {
+          const mutated = structuredClone(records) as unknown as Array<Record<string, unknown>>;
+          const target = mutated[recordIndex];
+          if (target !== undefined) target[field] = mutatedValue;
+          return [mutated as unknown as ReadonlyArray<TransformationLedgerRecord>];
+        },
       })
     )
   );
@@ -138,8 +141,8 @@ const systematicEvidenceMutations = (
 const exerciseEvidenceVariant = (
   summary: TransformationLedgerRecord,
   variant: ReadonlyArray<TransformationLedgerRecord>
-) => {
-  if (!S.is(TransformationLedgerRecord.cases["family-run-summary"])(summary)) return Effect.void;
+): void => {
+  if (!S.is(TransformationLedgerRecord.cases["family-run-summary"])(summary)) return;
   const starts = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-start"]));
   const interruptions = A.filter(variant, S.is(TransformationLedgerRecord.cases["family-attempt-interrupted"]));
   const passes = A.filter(variant, S.is(TransformationLedgerRecord.cases["mail-store-pass"]));
@@ -168,31 +171,23 @@ const exerciseEvidenceVariant = (
   RT.transformationAttemptLifecycleReconciles(summary, variant);
   RT.transformationSegmentReconciles(summary.family, summary, variant);
   RT.strictEvidenceSha256(A.map(variant, (record) => JSON.stringify(record)));
-
-  return Effect.all(
-    [
-      RT.requireStrictFamilyTerminalRows({ family: "mail" }, variant).pipe(Effect.exit),
-      RT.requireStrictFamilySegment({ family: "mail" }, variant).pipe(Effect.exit),
-    ],
-    { discard: true }
-  );
 };
 
-const exerciseEvidenceMutations = (records: ReadonlyArray<TransformationLedgerRecord>) =>
-  Effect.gen(function* () {
-    const summary = yield* A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"])).pipe(
-      Effect.fromOption
-    );
-    const variants: ReadonlyArray<ReadonlyArray<TransformationLedgerRecord>> = [
-      records,
-      A.reverse(records),
-      A.drop(records, 1),
-      A.dropRight(records, 1),
-      A.appendAll(records, records),
-      [],
-      ...systematicEvidenceMutations(records),
-    ];
-    yield* Effect.forEach(variants, (variant) => exerciseEvidenceVariant(summary, variant), { discard: true });
+const exerciseEvidenceMutations = (records: ReadonlyArray<TransformationLedgerRecord>): void =>
+  O.match(A.findFirst(records, S.is(TransformationLedgerRecord.cases["family-run-summary"])), {
+    onNone: () => undefined,
+    onSome: (summary) => {
+      const variants: ReadonlyArray<ReadonlyArray<TransformationLedgerRecord>> = [
+        records,
+        A.reverse(records),
+        A.drop(records, 1),
+        A.dropRight(records, 1),
+        A.appendAll(records, records),
+        [],
+        ...systematicEvidenceMutations(records),
+      ];
+      A.forEach(variants, (variant) => exerciseEvidenceVariant(summary, variant));
+    },
   });
 
 describe("corpus restoration evidence invariants", () => {
@@ -302,9 +297,7 @@ describe("corpus restoration evidence invariants", () => {
         );
         const legacyRecords = yield* Effect.forEach(legacyLines, decodeTransformationLedgerRecordJson);
 
-        yield* Effect.forEach([mailRecords, recycleRecords, legacyRecords], exerciseEvidenceMutations, {
-          discard: true,
-        });
+        A.forEach([mailRecords, recycleRecords, legacyRecords], exerciseEvidenceMutations);
       },
       Effect.scoped,
       provideTestLayer
