@@ -41,6 +41,13 @@ export * from "./internal/Extract.schemas.ts";
  */
 export * from "./internal/Organize.schemas.ts";
 /**
+ * Preservation-gate schema exports for the T7 salvage archive operation.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/Preservation.schemas.ts";
+/**
  * Recycle-bin schema exports for corpus curation commands.
  *
  * @category schemas
