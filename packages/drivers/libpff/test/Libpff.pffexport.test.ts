@@ -528,7 +528,7 @@ exec "$mapped_command" "\${mapped[@]}"`
         const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
         const fixtureRoot = path.dirname(stubPath);
         const interpreterPrefix = path.join(fixtureRoot, "interpreter");
-        const commandName = `${path.basename(fixtureRoot)}-bash`;
+        const commandName = `${path.basename(fixtureRoot)} bash`;
         const interpreterPath = path.join(interpreterPrefix, "bin", commandName);
         const commandDirectory = path.dirname(process.execPath);
         const commandPath = path.join(commandDirectory, commandName);

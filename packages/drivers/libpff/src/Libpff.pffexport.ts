@@ -586,14 +586,15 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   const envShebangInvocation = (
     shebangArgument: string
   ): { readonly commandParts: ReadonlyArray<string>; readonly envArguments: ReadonlyArray<string> } => {
+    const split = (value: string): ReadonlyArray<string> => value.match(/(?:[^\s'"]+|'[^']*'|"[^"]*")+/gu) ?? [];
     const trimmedArgument = Str.trim(shebangArgument);
     if (Str.startsWith("-S ")(trimmedArgument)) {
       const splitString = Str.trim(Str.slice(3)(trimmedArgument));
-      return { commandParts: splitString.split(/\s+/u), envArguments: ["-S", splitString] };
+      return { commandParts: split(splitString), envArguments: ["-S", splitString] };
     }
     if (Str.startsWith("--split-string=")(trimmedArgument)) {
       const splitString = Str.slice("--split-string=".length)(trimmedArgument);
-      return { commandParts: splitString.split(/\s+/u), envArguments: ["-S", splitString] };
+      return { commandParts: split(splitString), envArguments: ["-S", splitString] };
     }
     const envArguments = trimmedArgument.split(/\s+/u);
     return { commandParts: envArguments, envArguments };
@@ -625,7 +626,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   > {
     const { commandParts, envArguments } = envShebangInvocation(shebangArgument);
     const envCommand = envShebangCommand(commandParts);
-    if (envCommand === undefined || !/^[A-Za-z0-9._+-]+$/u.test(envCommand)) {
+    if (envCommand === undefined || !/^[A-Za-z0-9._+ -]+$/u.test(envCommand)) {
       return yield* makeLibpffError("config", { cause: "sandbox env shebang command is unsupported" });
     }
     const resolvedEnvInterpreter = yield* Effect.scoped(
