@@ -1124,3 +1124,30 @@
   `bun run beep quality scheduler status --json` and do not enter admission
   during the edit loop.
 - **Owner:** scheduler status CLI defaults and operator documentation.
+
+## 2026-08-30 — Closeout succeeds but rejects an empty GitHub review decision after Greptile acceptance
+
+- **What happened:** the strict closeout command exited successfully with every
+  requested review threshold satisfied, yet its summary still declared the PR
+  not merge-ready because GitHub returned no aggregate review decision. It also
+  reported locally stale baseline timestamps after the exact-head hosted gates
+  that consume those baselines had passed.
+- **Evidence:** `bun run beep yeet closeout --summary
+  --require-greptile-score 5/5 --require-greptile-issues 0
+  --require-review-comments 0` exited 0 for PR #906 and reported 17 required
+  checks green, 0 actionable threads, Greptile 5/5, and 0 closeout issues, but
+  then printed `merge-ready: no, blocked on review-decision-acceptable` plus
+  five stale gates. `gh pr view 906 --json reviewDecision,mergeable,reviews`
+  returned an empty `reviewDecision`, `MERGEABLE`, and only a non-blocking
+  `COMMENTED` review; the aggregate commit status contains only two optional
+  Vercel deployment-rate-limit failures.
+- **What would have prevented it:** treat an empty review decision as acceptable
+  when no approval rule is required and the configured Greptile/thread
+  thresholds pass, or fail closeout with an explicit required-human-approval
+  diagnostic. Staleness should defer to terminal exact-head hosted checks or
+  explain why their green results do not prove the same baseline contract.
+- **Disposition:** closeout classification and evidence-precedence friction;
+  preserve the exact GitHub facts and do not manufacture an approval or rerun
+  green checks merely to satisfy an ambiguous local status label.
+- **Owner:** Yeet review-decision policy, closeout exit semantics, and hosted
+  proof reconciliation.
