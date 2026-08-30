@@ -100,6 +100,15 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-08-30 (twelfth stint): frozen-evidence integrity repair + S5 design grill.
+  PR #865's repo-wide Biome write sweep had rewritten the digest-locked §4b
+  adapter engine and its golden input without the sidecar (engine check broken
+  on main); restored to the pinned bytes and exempted the packet's `adapters/`
+  and `runs/` trees from Biome (PR #899; receipt in the ledger). S5 grill
+  rounds 1–2 settled — eight rulings recorded in DECISIONS.md; next session
+  authors `ontology/docs/s5-taxonomy-contract.md` + the `--s5` gate and runs
+  the join pass before any seat launches.
+
 - 2026-08-29 (eleventh stint): §4b NORMALIZATION GATE COMPLETE + RATIFIED. The
   ontology-foundational-auditor ran AS WRITTEN in a dedicated worktree
   (branch ontology-s4b-normalization, pin c1558f6ca9b1): 1,112 observations

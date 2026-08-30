@@ -392,3 +392,27 @@ then (c) S4 lane launch.
   re-open every row.
 - All 31 submittable proposals ACCEPTED (rat-001..031); 216 conceded referents stand withdrawn;
   149 unresolved rows + 104-entry LEDGER = the S5 queue.
+
+## 2026-08-30 — S5 design grill (eight rulings, rounds 1–2, steward: Benjamin)
+
+- **Home:** S5 outputs live at `ontology/extraction/s5/` (stage-N continuity; the
+  taxonomy graduates to the formal T-Box only at S8).
+- **Engine:** bespoke `s5-taxonomy-contract.md` + a `validate_packet.py --s5` gate
+  (disposition totality over 104 LEDGER + 337 candidates + every fact key,
+  join-integrity against rat-001..031, lattice soundness, parked-row protection) —
+  not a rerun of the foundational auditor (its unit is the referent, not the lattice).
+- **Facts:** the 1,038 FACTS rule in bulk classes keyed by (predicate,
+  subject-term disposition); only orphans and conflicts get individual rulings.
+- **Parked rows:** the 149 waiver-parked dispositions auto-rule `parked-run-2`
+  citing the ratified 57.75% waiver; auditor run 2 re-opens them after the
+  journal/verdict corpus extension.
+- **Seat budget:** one round, ~6 seats — assembly lanes per kind cluster (codex
+  Sol max), one independent adversary (codex max), one blinded alternative
+  (grok xhigh) — plus re-review; the §4b join pass shrinks the open surface first.
+- **Literal-domain members:** all 89 appear in TAXONOMY.yaml as leaf records under
+  their ratified domains (membership-check refs), giving S6 its enumerations.
+- **Merges:** duplicate candidates mapping onto one ratified term get a distinct
+  `merged-into` ruling (alias provenance is first-class for S6/KPI projection),
+  never folded into `accepted-via`.
+- **Sitting log:** steward sittings land in DECISIONS.md only (the §4b precedent);
+  DISPOSITIONS.yaml carries the machine-readable outcome per row.
