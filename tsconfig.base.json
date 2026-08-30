@@ -8,8 +8,8 @@
     // Use incremental builds with project references.
     "incremental": true,
     "composite": true,
-    // Target modern JavaScript (es2024+) whilst staying closely compatible with the Node.js module system.
-    "target": "ES2024",
+    // Target modern JavaScript (ES2025+) whilst staying closely compatible with the Node.js module system.
+    "target": "ES2025",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "moduleDetection": "force", // Treat every non-declaration file as a module.
