@@ -3191,42 +3191,41 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
       ]);
       expect(acceptances.every((acceptance) => acceptance.status === "pass")).toBe(true);
 
-      for (const [family, variantRunLabel] of [
-        ["mail", "mail-denominator"],
-        ["recycle", "recycle-denominator"],
-        ["legacy-word", "legacy-denominator"],
-      ] as const) {
-        yield* preserveRestorationArchive(preserveRun(variantRunLabel));
-        const error = yield* (
-          family === "mail"
-            ? restoreMail(mailOptions(variantRunLabel, 2))
-            : family === "recycle"
-              ? restoreRecycle(recycleOptions(variantRunLabel, 2))
-              : restoreLegacyWord(legacyOptions(variantRunLabel, 1))
-        ).pipe(Effect.flip);
-        expect(error.message).toContain(
-          family === "legacy-word" ? "occurrence or converter-version gate" : "denominator"
-        );
-      }
+      yield* preserveRestorationArchive(preserveRun("mail-denominator"));
+      const mailDenominatorError = yield* restoreMail(mailOptions("mail-denominator", 2)).pipe(Effect.flip);
+      expect(mailDenominatorError.message).toContain("denominator");
 
-      for (const [family, variantRunLabel] of [
-        ["mail", "mail-retained"],
-        ["recycle", "recycle-retained"],
-        ["legacy-word", "legacy-retained"],
-      ] as const) {
-        yield* preserveRestorationArchive(preserveRun(variantRunLabel));
-        const outputRoot = path.join(corpusRoot, "staging/restoration/runs", variantRunLabel, "output", family, "full");
-        yield* fs.makeDirectory(outputRoot, { recursive: true });
-        yield* fs.writeFileString(path.join(outputRoot, "retained.bin"), "over");
-        const error = yield* (
-          family === "mail"
-            ? restoreMail(mailOptions(variantRunLabel, 1, 1))
-            : family === "recycle"
-              ? restoreRecycle(recycleOptions(variantRunLabel, 1, 1))
-              : restoreLegacyWord(legacyOptions(variantRunLabel, 0, 1))
-        ).pipe(Effect.flip);
-        expect(error.message).toContain("retained");
-      }
+      yield* preserveRestorationArchive(preserveRun("recycle-denominator"));
+      const recycleDenominatorError = yield* restoreRecycle(recycleOptions("recycle-denominator", 2)).pipe(Effect.flip);
+      expect(recycleDenominatorError.message).toContain("denominator");
+
+      yield* preserveRestorationArchive(preserveRun("legacy-denominator"));
+      const legacyDenominatorError = yield* restoreLegacyWord(legacyOptions("legacy-denominator", 1)).pipe(Effect.flip);
+      expect(legacyDenominatorError.message).toContain("occurrence or converter-version gate");
+
+      yield* preserveRestorationArchive(preserveRun("mail-retained"));
+      const mailOutputRoot = path.join(corpusRoot, "staging/restoration/runs/mail-retained/output/mail/full");
+      yield* fs.makeDirectory(mailOutputRoot, { recursive: true });
+      yield* fs.writeFileString(path.join(mailOutputRoot, "retained.bin"), "over");
+      const mailRetainedError = yield* restoreMail(mailOptions("mail-retained", 1, 1)).pipe(Effect.flip);
+      expect(mailRetainedError.message).toContain("retained");
+
+      yield* preserveRestorationArchive(preserveRun("recycle-retained"));
+      const recycleOutputRoot = path.join(corpusRoot, "staging/restoration/runs/recycle-retained/output/recycle/full");
+      yield* fs.makeDirectory(recycleOutputRoot, { recursive: true });
+      yield* fs.writeFileString(path.join(recycleOutputRoot, "retained.bin"), "over");
+      const recycleRetainedError = yield* restoreRecycle(recycleOptions("recycle-retained", 1, 1)).pipe(Effect.flip);
+      expect(recycleRetainedError.message).toContain("retained");
+
+      yield* preserveRestorationArchive(preserveRun("legacy-retained"));
+      const legacyOutputRoot = path.join(
+        corpusRoot,
+        "staging/restoration/runs/legacy-retained/output/legacy-word/full"
+      );
+      yield* fs.makeDirectory(legacyOutputRoot, { recursive: true });
+      yield* fs.writeFileString(path.join(legacyOutputRoot, "retained.bin"), "over");
+      const legacyRetainedError = yield* restoreLegacyWord(legacyOptions("legacy-retained", 0, 1)).pipe(Effect.flip);
+      expect(legacyRetainedError.message).toContain("retained");
     })
   );
 });
