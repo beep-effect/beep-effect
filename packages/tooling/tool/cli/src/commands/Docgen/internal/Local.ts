@@ -1095,6 +1095,7 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
   if (A.every(proofStatuses, (status) => status.status === "current")) {
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
+    /* v8 ignore next -- pure direct-package selection is covered through both exported call forms; this delegation sits behind spawned Turbo dry-run and proof-manifest integration */
     const selectedPackages = selectDirectDocgenPackagesForTesting(packages, plan.selectedPackages);
     yield* checkPackageDocumentation(selectedPackages, plan.parallel);
     yield* runStepWithStallWatchdog(
