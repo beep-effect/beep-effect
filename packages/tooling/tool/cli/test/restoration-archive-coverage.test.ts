@@ -1,5 +1,9 @@
-import { CollectorManifestRecord, RestorationPreserveOptions } from "@beep/repo-cli/commands/Corpus";
-import { restorationArchiveTesting as RA } from "@beep/repo-cli/test/Corpus";
+import {
+  ArchiveLedgerRecord,
+  CollectorManifestRecord,
+  RestorationPreserveOptions,
+} from "@beep/repo-cli/commands/Corpus";
+import { restorationArchiveTesting as RA, withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
 import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -271,6 +275,10 @@ describe("restoration archive boundary helpers", () => {
         yield* fs.symlink(rootArchive, alias);
         expect(yield* RA.collectArchiveInventory(canonicalPaths).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
         yield* fs.remove(alias);
+        const fifo = path.join(sourceRoot, "unsupported.fifo");
+        expect(Bun.spawnSync(["mkfifo", fifo], { stderr: "pipe", stdout: "pipe" }).exitCode).toBe(0);
+        expect(yield* RA.collectArchiveInventory(canonicalPaths).pipe(Effect.exit)).toMatchObject({ _tag: "Failure" });
+        yield* fs.remove(fifo);
         expect(
           yield* RA.collectArchiveInventory({ ...canonicalPaths, rootArchivePath: sourceRoot }).pipe(Effect.exit)
         ).toMatchObject({ _tag: "Failure" });
@@ -462,6 +470,34 @@ describe("restoration archive boundary helpers", () => {
         expect(yield* RA.requireArchivePayloadOwned(payloadRoot, HashMap.empty()).pipe(Effect.exit)).toMatchObject({
           _tag: "Failure",
         });
+
+        const preflight = ArchiveLedgerRecord.cases["archive-preflight"].make({
+          approved: true,
+          approvedCeilingBytes: NonNegativeInt.make(1),
+          availableBytes: NonNegativeInt.make(1),
+          directoryCount: NonNegativeInt.make(0),
+          fileCount: NonNegativeInt.make(1),
+          minimumFreeAfterBytes: NonNegativeInt.make(0),
+          recordedAt: "2026-08-30T00:00:00.000Z",
+          recordType: "archive-preflight",
+          requiredBytes: NonNegativeInt.make(1),
+          runId: "failure-terminal-run",
+          schemaVersion: "oppold-corpus-restoration/v1",
+        });
+        const failure = ArchiveLedgerRecord.cases["archive-failure"].make({
+          approved: false,
+          failureKind: "unreadable",
+          message: "synthetic terminal failure",
+          objectId: "failure-terminal-object",
+          recordedAt: preflight.recordedAt,
+          recordType: "archive-failure",
+          runId: preflight.runId,
+          schemaVersion: preflight.schemaVersion,
+          sourceLabel: "synthetic-source",
+          sourceRelativePath: "synthetic.bin",
+        });
+        expect(HashMap.size(yield* RA.validateArchiveTerminalIndex(root, [failure], preflight))).toBe(1);
+        expect(O.isSome(RA.indexArchiveTerminals([failure, failure, failure]).duplicateObjectId)).toBe(true);
       },
       Effect.scoped,
       provideTestLayer
@@ -517,6 +553,18 @@ describe("restoration archive boundary helpers", () => {
             Effect.exit
           )
         ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* withRestorationWriterClaim(root, "unavailable-process.claim", Effect.void).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              readFileString: (filePath, encoding) =>
+                filePath === `/proc/${process.pid}/stat`
+                  ? fs.readFileString(path.join(root, "missing-proc-stat"), encoding)
+                  : fs.readFileString(filePath, encoding),
+            }),
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
 
         const racedClaimPath = path.join(root, "raced.claim");
         expect(
@@ -562,6 +610,15 @@ describe("restoration archive boundary helpers", () => {
             })
           )
         ).toBe(false);
+        expect(
+          yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              rename: () => fs.rename(liveClaimPath, root),
+            }),
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
 
         const interruptedReapPath = path.join(root, "interrupted-reap.claim");
         yield* fs.writeFileString(interruptedReapPath, staleText);
@@ -623,6 +680,62 @@ describe("restoration archive boundary helpers", () => {
       Effect.scoped,
       provideTestLayer
     )
+  );
+
+  it.effect(
+    "handles empty capacity output and rejects thrown or invalid probes",
+    Effect.fnUntraced(function* () {
+      const originalSpawnSync = Bun.spawnSync;
+      yield* Effect.acquireUseRelease(
+        Effect.sync(() => {
+          Object.defineProperty(Bun, "spawnSync", {
+            value: () => {
+              throw new Error("synthetic capacity probe failure");
+            },
+          });
+        }),
+        () =>
+          RA.availableRestorationBytesAt("/synthetic").pipe(
+            Effect.exit,
+            Effect.map((exit) => expect(exit).toMatchObject({ _tag: "Failure" }))
+          ),
+        () =>
+          Effect.sync(() => {
+            Object.defineProperty(Bun, "spawnSync", { value: originalSpawnSync });
+          })
+      );
+      yield* Effect.acquireUseRelease(
+        Effect.sync(() => {
+          Object.defineProperty(Bun, "spawnSync", {
+            value: () => ({ exitCode: 0, stdout: new Uint8Array() }),
+          });
+        }),
+        () =>
+          RA.availableRestorationBytesAt("/synthetic").pipe(
+            Effect.map((availableBytes) => expect(availableBytes).toBe(0))
+          ),
+        () =>
+          Effect.sync(() => {
+            Object.defineProperty(Bun, "spawnSync", { value: originalSpawnSync });
+          })
+      );
+      yield* Effect.acquireUseRelease(
+        Effect.sync(() => {
+          Object.defineProperty(Bun, "spawnSync", {
+            value: () => ({ exitCode: 0, stdout: new TextEncoder().encode("not-a-number\n") }),
+          });
+        }),
+        () =>
+          RA.availableRestorationBytesAt("/synthetic").pipe(
+            Effect.exit,
+            Effect.map((exit) => expect(exit).toMatchObject({ _tag: "Failure" }))
+          ),
+        () =>
+          Effect.sync(() => {
+            Object.defineProperty(Bun, "spawnSync", { value: originalSpawnSync });
+          })
+      );
+    })
   );
 
   it.effect(
@@ -724,6 +837,17 @@ describe("restoration archive boundary helpers", () => {
             })
           )
         ).toMatchObject({ _tag: "Some", value: { recordType: "archive-changed-during-copy" } });
+        const mismatchedDestination = path.join(destinationDirectory, "mismatched-destination.bin");
+        const mismatchedPartial = `${mismatchedDestination}.partial`;
+        yield* fs.writeFileString(mismatchedDestination, "mismatched-bytes");
+        yield* fs.writeFileString(mismatchedPartial, "retained-partial");
+        expect(
+          yield* RA.reconcileCompleteArchiveDestination(
+            { ...context, destinationPath: mismatchedDestination, partialPath: mismatchedPartial },
+            sourceInfo
+          )
+        ).toEqual(O.none());
+        expect(yield* fs.exists(`${mismatchedPartial}.rejected-${context.attemptId}`)).toBe(true);
         yield* fs.remove(destinationPath);
         yield* fs.link(sourcePath, destinationPath);
         expect(yield* RA.reconcileCompleteArchiveDestination(context, sourceInfo).pipe(Effect.exit)).toMatchObject({
