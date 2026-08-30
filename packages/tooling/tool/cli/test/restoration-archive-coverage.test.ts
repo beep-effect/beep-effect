@@ -469,6 +469,163 @@ describe("restoration archive boundary helpers", () => {
   );
 
   it.effect(
+    "fails closed when live reclamation generations block stale claim replacement",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-coordination-contention-" });
+        const bootId = yield* RA.currentBootId();
+        const procStart = yield* RA.processStartTime(process.pid);
+        if (O.isNone(procStart)) return yield* Effect.die("Expected the current process identity.");
+        const claim = (token: string, claimBootId = bootId) =>
+          RA.encodeRestorationWriterClaim({
+            bootId: claimBootId,
+            pid: process.pid,
+            procStart: procStart.value,
+            schemaVersion: "oppold-preservation-writer/v2",
+            startedAt: "2026-08-30T00:00:00.000Z",
+            token,
+          }).pipe(Effect.map((text) => `${text}\n`));
+        const liveText = yield* claim("live-contention-owner");
+        const staleText = yield* claim("stale-contention-owner", "retired-boot");
+
+        expect(
+          yield* RA.processStartTime(process.pid).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              readFileString: () => Effect.succeed("malformed process stat"),
+            }),
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.processStartTime(process.pid).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              readFileString: () => fs.readFileString(root),
+            }),
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.currentBootId().pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              readFileString: () => Effect.succeed("  \n"),
+            }),
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+
+        const racedClaimPath = path.join(root, "raced.claim");
+        expect(
+          yield* RA.acquireObservedRestorationWriterClaim({ claimPath: racedClaimPath, claimText: staleText }).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              open: (filePath, options) =>
+                filePath === racedClaimPath && options?.flag === "wx"
+                  ? fs.open(liveClaimPath, options)
+                  : fs.open(filePath, options),
+            }),
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+
+        const liveClaimPath = path.join(root, "live.claim");
+        yield* fs.writeFileString(liveClaimPath, liveText);
+        expect(
+          yield* RA.readCanonicalCoordinationFile(liveClaimPath).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              open: (filePath, options) =>
+                fs.open(filePath, options).pipe(
+                  Effect.map((file) => ({
+                    ...file,
+                    stat: file.stat.pipe(Effect.map((info) => ({ ...info, type: "Directory" as const }))),
+                  }))
+                ),
+            }),
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.acquireObservedRestorationWriterClaim({ claimPath: liveClaimPath, claimText: staleText }).pipe(
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+        expect(
+          yield* RA.moveObservedCoordinationFile(liveClaimPath, liveText).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              rename: () => fs.rename(path.join(root, "missing-source"), path.join(root, "missing-target")),
+            })
+          )
+        ).toBe(false);
+
+        const interruptedReapPath = path.join(root, "interrupted-reap.claim");
+        yield* fs.writeFileString(interruptedReapPath, staleText);
+        expect(
+          yield* RA.tryRecoverObservedWriterReapClaim(interruptedReapPath, liveText, staleText).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              rename: () => fs.rename(path.join(root, "missing-source"), path.join(root, "missing-target")),
+            })
+          )
+        ).toBe(false);
+
+        const vanishedReapPath = path.join(root, "vanished-reap.claim");
+        yield* fs.writeFileString(vanishedReapPath, staleText);
+        const vanishedTombstonePath = RA.writerReapClaimTombstonePath(vanishedReapPath, staleText);
+        yield* fs.writeFileString(vanishedTombstonePath, liveText);
+        expect(
+          yield* RA.tryRecoverObservedWriterReapClaim(vanishedReapPath, staleText, staleText).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              exists: (filePath) => (filePath === vanishedTombstonePath ? Effect.succeed(false) : fs.exists(filePath)),
+            })
+          )
+        ).toBe(false);
+
+        const vanishedObservedPath = path.join(root, "vanished-observed.claim");
+        yield* fs.writeFileString(vanishedObservedPath, staleText);
+        expect(
+          yield* RA.tryClaimWriterReapClaim(vanishedObservedPath, liveText).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              exists: (filePath) => (filePath === vanishedObservedPath ? Effect.succeed(false) : fs.exists(filePath)),
+            })
+          )
+        ).toBe(false);
+
+        const staleClaimPath = path.join(root, "stale.claim");
+        yield* fs.writeFileString(staleClaimPath, staleText);
+        const reapClaimPath = RA.writerReapClaimPath(staleClaimPath, staleText);
+        yield* fs.writeFileString(reapClaimPath, liveText);
+        expect(yield* RA.tryMoveObservedWriterClaim(staleClaimPath, staleText, staleText)).toBe(false);
+        expect(yield* RA.tryReplaceStaleWriterClaim(staleClaimPath, staleText, staleText)).toBe(false);
+        expect(
+          yield* RA.acquireObservedRestorationWriterClaim({ claimPath: staleClaimPath, claimText: liveText }).pipe(
+            Effect.exit
+          )
+        ).toMatchObject({ _tag: "Failure" });
+
+        expect(
+          yield* RA.tryWriteExclusiveCoordinationFile(path.join(root, "missing", "claim"), liveText).pipe(Effect.exit)
+        ).toMatchObject({ _tag: "Failure" });
+
+        const emptySource = path.join(root, "empty-source.bin");
+        const emptyPartial = path.join(root, "empty-partial.bin");
+        yield* fs.writeFileString(emptySource, "");
+        yield* fs.writeFileString(emptyPartial, "");
+        expect(yield* RA.prefixMatches(emptySource, emptyPartial, 1, 2)).toBe(false);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
     "rejects changed sources, aliased partials, and opened-copy identity drift",
     Effect.fnUntraced(
       function* () {
@@ -549,6 +706,24 @@ describe("restoration archive boundary helpers", () => {
           partialPath,
           runId: "run-1",
         };
+        const changingDestination = path.join(destinationDirectory, "changing-destination.bin");
+        yield* fs.writeFileString(changingDestination, "source-bytes");
+        expect(
+          yield* RA.reconcileCompleteArchiveDestination(
+            { ...context, destinationPath: changingDestination },
+            sourceInfo
+          ).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              stat: (filePath) =>
+                fs
+                  .stat(filePath)
+                  .pipe(
+                    Effect.map((info) => (filePath === sourcePath ? { ...info, size: Number(info.size) + 1 } : info))
+                  ),
+            })
+          )
+        ).toMatchObject({ _tag: "Some", value: { recordType: "archive-changed-during-copy" } });
         yield* fs.remove(destinationPath);
         yield* fs.link(sourcePath, destinationPath);
         expect(yield* RA.reconcileCompleteArchiveDestination(context, sourceInfo).pipe(Effect.exit)).toMatchObject({
