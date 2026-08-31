@@ -12,6 +12,7 @@ import { projectSchedule } from "./Engine.ts";
 import { plannerNotImplemented } from "./Schemas.ts";
 import { emitScheduleAbox } from "./Turtle.ts";
 import type {
+  CyclicPlanError,
   PlanEpisodeInput,
   PlannerNotImplementedError,
   PolicyDecodeError,
@@ -39,7 +40,7 @@ export interface CiOpsProjectionShape {
   readonly currentProposal: Effect.Effect<O.Option<ScheduleProposal>>;
   readonly emitAbox: (proposal: ScheduleProposal) => Effect.Effect<TurtleDocument>;
   readonly nextProposal: Effect.Effect<ScheduleProposal>;
-  readonly planEpisode: (input: PlanEpisodeInput) => Effect.Effect<never, PlannerNotImplementedError>;
+  readonly planEpisode: (input: PlanEpisodeInput) => Effect.Effect<never, PlannerNotImplementedError | CyclicPlanError>;
   readonly project: (input: ProjectionInput) => Effect.Effect<ScheduleProposal, PolicyDecodeError>;
   readonly projectCurrent: (input: ProjectionInput) => Effect.Effect<ScheduleProposal, PolicyDecodeError>;
 }
@@ -50,7 +51,7 @@ export interface CiOpsProjectionShape {
  * **Example** (Reference the live service layer)
  *
  * ```ts
- * import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/projection/CiOpsProjection"
+ * import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/src/projection/CiOpsProjection"
  * import { Layer } from "effect"
  *
  * console.log(CiOpsProjection.key.length > 0) // true
@@ -110,7 +111,7 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<CiO
  * **Example** (Provide the projection service)
  *
  * ```ts
- * import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/projection/CiOpsProjection"
+ * import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/src/projection/CiOpsProjection"
  * import { Effect } from "effect"
  *
  * const current = Effect.flatMap(CiOpsProjection, (service) => service.currentProposal)

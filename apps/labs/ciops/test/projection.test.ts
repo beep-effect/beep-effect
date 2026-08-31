@@ -36,7 +36,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { CiOpsProjectionShape } from "@beep/ciops/projection/CiOpsProjection";
-import type { AdmissionPolicyParams } from "@beep/ciops/projection/Schemas";
+import type { AdmissionPolicyParams, AdmissionWorkKind } from "@beep/ciops/projection/Schemas";
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =
@@ -71,6 +71,22 @@ const normalizePending = (
 
 const pendingArbitrary = (policy: AdmissionPolicyParams) =>
   fc.array(PendingRequestArbitrary, { maxLength: 12 }).map((requests) => normalizePending(policy, requests));
+
+const admittedLine = (nonce: string, kind: AdmissionWorkKind, weightTokens: number, admittedAtMillis: number): string =>
+  JSON.stringify({
+    schemaVersion: "yeet-admission-journal/v1",
+    _tag: "admission-admitted",
+    nonce,
+    kind,
+    weightTokens,
+    priority: "verify",
+    originKey: "origin-test",
+    enqueuedAtMillis: admittedAtMillis - 1,
+    admittedAtMillis,
+  });
+
+const releasedLine = (nonce: string, releasedAtMillis: number): string =>
+  JSON.stringify({ schemaVersion: "yeet-admission-journal/v1", _tag: "admission-released", nonce, releasedAtMillis });
 
 const projectionInstantFor = (pending: ReadonlyArray<PendingRequest>): number =>
   A.reduce(pending, 0, (latest, request) => N.max(latest, request.enqueuedAtMillis));
@@ -317,6 +333,100 @@ describe("@beep/ciops S7 projection", () => {
       expect(rendered).toBe(renderReplayEvidence(report, "digest-1"));
       return yield* Effect.void;
     })
+  );
+
+  it.effect("mints distinct valid-Turtle nodes per proposal and re-points hasCurrentProposal", () =>
+    Effect.gen(function* () {
+      const policy = yield* readPolicy();
+      const emptyFor = (proposalId: string) =>
+        ScheduleProposal.make({
+          proposalId,
+          projectionInstantMillis: NonNegativeInt.make(1_000),
+          steps: [],
+          deferredTail: [],
+          policyDigest: "policy",
+          journalPrefixDigest: "prefix",
+        });
+      const slash = yield* emitScheduleAbox(emptyFor("a/b"));
+      const question = yield* emitScheduleAbox(emptyFor("a?b"));
+      const again = yield* emitScheduleAbox(emptyFor("a/b"));
+
+      expect(slash.content).toBe(again.content);
+      expect(slash.content).not.toBe(question.content);
+      expect(slash.content).toContain("ciops-prov:scheduler ciops-prov:hasCurrentProposal ciops-prov:a%2Fb .");
+      expect(question.content).toContain("ciops-prov:scheduler ciops-prov:hasCurrentProposal ciops-prov:a%3Fb .");
+      expect(slash.content).toContain(
+        "# PROVISIONAL GRAPH — closure OPEN; excluded from negation and ratified typing."
+      );
+      expect(slash.content).not.toContain("{");
+
+      const request = PendingRequest.make({
+        nonce: "turtle-request",
+        kind: "review-fix",
+        priority: "verify",
+        weightTokens: policy.weights.reviewFix,
+        originKey: "origin-a",
+        enqueuedAtMillis: NonNegativeInt.make(1),
+      });
+      const stepped = yield* projectSchedule(inputFor(policy, [request], emptyTokenLedger, 1)).pipe(
+        Effect.flatMap(emitScheduleAbox)
+      );
+
+      expect(stepped.content).toContain("ciops-prov:schedulesSeatRequest");
+      expect(stepped.content).toContain("rdf:type ciops:SeatRequest .");
+      expect(stepped.content).not.toContain("WorkUnitSpecification");
+      expect(stepped.content).not.toContain("schedulesWorkUnit ");
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect("fails typed on ambiguous dead-lease censorship instead of guessing", () =>
+    Effect.gen(function* () {
+      const policy = yield* readPolicy();
+      const events = yield* decodeAdmissionJournal(
+        A.join(
+          [
+            admittedLine("phantom-a", "merged-preview", 5, 1_000),
+            admittedLine("phantom-b", "merged-preview", 5, 2_000),
+            admittedLine("blocked-c", "full-proof", 3, 3_000),
+          ],
+          "\n"
+        )
+      );
+      const failure = yield* Effect.flip(replayAdmissionJournal(policy, events, "policy", "journal"));
+
+      expect(failure._tag).toBe("PolicyDecodeError");
+      expect(failure.message).toContain("Ambiguous dead-lease censorship");
+      expect(failure.message).toContain("phantom-a");
+      expect(failure.message).toContain("phantom-b");
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect("records a mismatch when a unique eviction cannot explain the recorded admission", () =>
+    Effect.gen(function* () {
+      const policy = yield* readPolicy();
+      const events = yield* decodeAdmissionJournal(
+        A.join(
+          [
+            admittedLine("phantom-a", "review-fix", 1, 1_000),
+            admittedLine("released-b", "merged-preview", 5, 2_000),
+            admittedLine("released-c", "full-proof", 3, 3_000),
+            admittedLine("blocked-d", "merged-preview", 5, 4_000),
+            releasedLine("released-b", 5_000),
+            releasedLine("released-c", 6_000),
+          ],
+          "\n"
+        )
+      );
+      const report = yield* replayAdmissionJournal(policy, events, "policy", "journal");
+
+      expect(report.passed).toBe(false);
+      expect(report.evictions).toHaveLength(1);
+      expect(report.evictions[0]?.evictedNonce).toBe("phantom-a");
+      expect(report.evictions[0]?.eventIndex).toBe(3);
+      expect(report.mismatches).toHaveLength(1);
+      expect(report.mismatches[0]?.expectedNonce).toBe("blocked-d");
+      expect((yield* Effect.flip(requireReplayMatch(report)))._tag).toBe("ReplayMismatchError");
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 
   it.effect("keeps current proposal state transactionally and leaves the planner seam typed", () =>
