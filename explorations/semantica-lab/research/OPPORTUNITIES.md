@@ -399,3 +399,12 @@ ratifies.
   emit non-digest per-document stage telemetry or progress events around parse, provider wait,
   grounding, ledger, and evaluation so operators can attribute latency without inspecting
   provider text or interrupting an authoritative gate.
+
+- **2026-08-31 — Concurrent unowned edits in one checkout invalidated focused C1 proof.** While
+  the full-W1 C1 gate was running, an unrelated schema-statics change modified the lab's gold
+  modules and `@beep/provenance` in the same worktree. Its transient unused import made
+  `bun run check` fail after the C1 surface had already passed, so the failure was unrelated and
+  could not lawfully be repaired or discarded by the C1 lane. Disposition: preserve that WIP
+  unstaged and publish C1 from a clean owning worktree. Prevention: simultaneous agents must own
+  separate sibling worktrees even when their intended files appear disjoint; shared checkouts
+  make attribution and exact-head quality evidence unstable.

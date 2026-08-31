@@ -12,6 +12,7 @@ import type {
   ReportInvalid,
 } from "@/schema/Errors";
 import type { EvalReport } from "@/schema/Eval";
+import type { C0ExecutionResult } from "@/schema/Execution";
 
 const $I = $SemanticaId.create("services/CanaryC0");
 
@@ -26,6 +27,18 @@ interface CanaryC0Shape {
     options: CanaryOptions
   ) => Effect.Effect<
     EvalReport,
+    | AnchorRejected
+    | C0ExecutionFailed
+    | DocumentUnavailable
+    | GoldUnavailable
+    | LedgerFailed
+    | ModelRevisionUnpinned
+    | ReportInvalid
+  >;
+  readonly runWithSnapshot: (
+    options: CanaryOptions
+  ) => Effect.Effect<
+    C0ExecutionResult,
     | AnchorRejected
     | C0ExecutionFailed
     | DocumentUnavailable

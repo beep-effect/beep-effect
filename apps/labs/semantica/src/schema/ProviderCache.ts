@@ -9,7 +9,7 @@ import { ModelIdentity } from "@/schema/Model";
 const $I = $SemanticaId.create("schema/ProviderCache");
 
 /**
- * Provider request variants represented by the C0 cache.
+ * Provider request variants represented by the replay cache.
  *
  * **Example** (Check a text-generation request)
  *
@@ -22,9 +22,9 @@ const $I = $SemanticaId.create("schema/ProviderCache");
  * @category schemas
  * @since 0.0.0
  */
-export const RequestKind = LiteralKit(["generate-text"]).pipe(
+export const RequestKind = LiteralKit(["embed", "generate-text"]).pipe(
   $I.annoteSchema("RequestKind", {
-    description: "Provider request kinds supported by the C0 content-addressed cache.",
+    description: "Embedding and text-generation requests supported by the content-addressed cache.",
   })
 );
 

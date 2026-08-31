@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { Sha256Hex } from "@beep/schema";
+import { PosInt, Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Duration, Effect, FileSystem, Layer, Path, Ref, Stream } from "effect";
@@ -99,6 +99,9 @@ describe("C0 F1 live-to-replay slice", () => {
               LabConfig,
               LabConfig.of({
                 corpusRoot: O.none(),
+                embeddingDimension: PosInt.make(1536),
+                embeddingModel: "text-embedding-3-small",
+                embeddingRevision: "text-embedding-3-small@2024-01-25",
                 extractionTimeout: Duration.minutes(15),
                 extractorModel: "stub-extractor-20260826",
                 goldDirectory,
@@ -107,6 +110,7 @@ describe("C0 F1 live-to-replay slice", () => {
                 ledgerRoot,
                 mode: "live",
                 offline: false,
+                projectionTimeout: Duration.seconds(30),
                 providerCacheDirectory: cacheDirectory,
               })
             );

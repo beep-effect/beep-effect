@@ -36,6 +36,15 @@
       "path": "../../../packages/drivers/doc-text/tsconfig.json"
     },
     {
+      "path": "../../../packages/drivers/duckdb/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/openai/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/drivers/oxigraph/tsconfig.json"
+    },
+    {
       "path": "../../../packages/drivers/pglite/tsconfig.json"
     },
     {
@@ -57,6 +66,9 @@
       "path": "../../../packages/foundation/capability/nlp-processing/tsconfig.json"
     },
     {
+      "path": "../../../packages/foundation/capability/semantic-web/tsconfig.json"
+    },
+    {
       "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
     },
     {
@@ -64,6 +76,9 @@
     },
     {
       "path": "../../../packages/foundation/modeling/provenance/tsconfig.json"
+    },
+    {
+      "path": "../../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../../packages/foundation/modeling/schema/tsconfig.json"

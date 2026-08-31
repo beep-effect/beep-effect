@@ -8,6 +8,7 @@ import { contentDigest } from "@/schema/Digest";
 import { Origin } from "@/schema/Document";
 import { GoldUnavailable } from "@/schema/Errors";
 import { CurrentGoldDocumentText, GoldFile, GoldFileEncoded, GoldRef } from "@/schema/Gold";
+import { ModelIdentity } from "@/schema/Model";
 import { GoldSource } from "@/services/GoldSource";
 import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
@@ -113,9 +114,10 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.mapError(() => unavailable("digest-failed", "The covered gold-v1 files could not be hashed."))
       );
+      const encodedProposer = yield* S.encodeEffect(ModelIdentity)(reference.proposer).pipe(Effect.orDie);
       if (
         !sha256Equivalence(digest, reference.digest) ||
-        A.some(files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, reference.proposer))
+        A.some(files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, encodedProposer))
       ) {
         return yield* unavailable(
           "stale-reference",

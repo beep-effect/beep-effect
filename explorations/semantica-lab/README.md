@@ -22,12 +22,12 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-None at this exploration boundary. The evidence-quote candidate passed its
-zero-spend preview, first slice, three-paper relation slate, and full-W1 C0
-gate without using its retry. Input and Extraction verdicts are recorded in
-`DECISIONS.md`; C1-C2 execution resumes from the graduated
-`semantica-canary` goal. A queued MAP gate reopens this packet only when its
-named trigger fires.
+None at this exploration boundary. The C1 projection candidate passed its
+committed G expectations, alternate-dimension fixture, rebuild identity, and
+full-W1 live/replay gate without using its retry. Storage and Embeddings join
+the earlier Input and Extraction verdicts in `DECISIONS.md`; C2 execution
+resumes from the graduated `semantica-canary` goal after the C1 evidence PR
+lands. A queued MAP gate reopens this packet only when its named trigger fires.
 
 ## Read This First
 
@@ -51,6 +51,15 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-31 (C1 pass): the first-probe projection candidate rebuilt the C0
+  PGlite ledger into dimension-keyed DuckDB exact-vector tables and an
+  Oxigraph RDF view. The frozen G kNN and SPARQL witnesses, alternate-dimension
+  keying, and empty-`QuadDelta` rebuild identity passed. Full-W1 plus F1 live
+  and cache-only replay reports were byte-identical at digest
+  `90bf21c551bb764c2e07a1985929a54c7e185ce01e7933436cc2b65c63551510`
+  with 4,837 embedded chunks, 44,406 quads, and zero unexpected degradation.
+  Storage moved to `bundle`, Embeddings to hosted `@beep/openai` `pick-one`,
+  dimension 1,536 froze, and the retry remained unused.
 - 2026-08-30 (C0 pass; re-graduated): the evidence-quote candidate passed F1
   plus all three relation papers with 10, 9, and 9 hosted relations, then all
   25 W1 papers plus F1 live and offline. The full reports were byte-identical
