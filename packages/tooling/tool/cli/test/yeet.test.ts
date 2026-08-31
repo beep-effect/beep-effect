@@ -3006,6 +3006,58 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
+  it("honors a competing retirement marker after losing stale-owner reclamation", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const staleText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/stale-owner",
+              checkoutRoot: "/repo/stale-owner",
+              command: "bun run beep yeet verify",
+              pid: 2_147_483_647,
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          const competingMarker = `${yield* encodeJson({
+            schemaVersion: "yeet-proof-lock/v4",
+            coordination: "quality-scheduler/v1",
+            retiredAt: "2026-08-31T00:00:00.000Z",
+          })}\n`;
+          let replaceOnObservationClaim = true;
+          const racingFileSystem = FileSystem.FileSystem.of({
+            ...fs,
+            writeFileString: Effect.fn("YeetTest.installCompetingRetirementMarker")(
+              function* (target, contents, options) {
+                yield* fs.writeFileString(target, contents, options);
+                if (
+                  replaceOnObservationClaim &&
+                  options?.flag === "wx" &&
+                  Str.startsWith(`${lockPath}.reap-`)(target) &&
+                  Str.endsWith(".claim")(target)
+                ) {
+                  replaceOnObservationClaim = false;
+                  yield* fs.remove(lockPath, { force: true });
+                  yield* fs.writeFileString(lockPath, competingMarker);
+                }
+              }
+            ),
+          });
+          yield* fs.writeFileString(lockPath, staleText);
+
+          const retired = yield* retireFullProofLockOrObserveAtPath(lockPath).pipe(
+            Effect.provideService(FileSystem.FileSystem, racingFileSystem)
+          );
+
+          expect(O.isSome(retired)).toBe(true);
+          expect(yield* fs.readFileString(lockPath)).toBe(competingMarker);
+        })
+      )
+    ));
+
   it("serializes cross-origin below-envelope proofs through one scheduler fallback lock", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ lockPath, tempContext }) =>

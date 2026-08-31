@@ -1133,3 +1133,23 @@ worktree provisioner should install the complete workspace instead of linking on
   GitHub, before the lane produced a coverage result.
 - **Would have prevented it:** provision native build prerequisites before restoring dependency
   caches, and retry a job automatically when GitHub reports that its runner lost communication.
+
+## 2026-08-31 — Package verification omitted the coverage ratchet
+
+- **Doing:** monitoring the exact PR head after the portable process-identity repair passed the
+  repo-cli package audit, package docgen, and aggregate cheap gates.
+- **Evidence:** the hosted Coverage Regression lane was the first completed proof to report that
+  `ProofState.ts` had fallen below its recorded branch, function, line, and statement floors.
+  Package verification had passed without exercising the package's coverage script.
+- **Would have prevented it:** include affected coverage in the package verification profile for
+  source changes, or require publishers to run the scoped coverage ratchet before entering the
+  heavyweight publish queue.
+
+## 2026-08-31 — Goal doctor has no packet-scoped form
+
+- **Doing:** validating the ship-velocity packet after adding its coverage-gate friction receipt.
+- **Evidence:** `bun run beep goals doctor ship-velocity` exited before validation with
+  `Unexpected positional argument: "ship-velocity"`; the command accepts only a repository-wide
+  scan.
+- **Would have prevented it:** accept an optional packet slug, or print the repository-wide form
+  in the error so a focused closeout does not need a failed discovery call.
