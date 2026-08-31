@@ -4,6 +4,41 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-30 — post-merge closeout work outlived its published branch
+
+- **Doing:** resuming the final ship-velocity closeout and checking whether its accumulated local
+  implementation was already durable on a remote branch or `main`.
+- **Evidence:** the checkout still tracked the branch used by merged PR #895, while its current
+  head was 13 commits ahead of `origin/main`; no remote ref contained that head. The work was
+  locally committed and recoverable, but was not protected by an open PR or remote branch.
+- **Would have prevented it:** after a PR merges, require continued packet work to move to a fresh
+  closeout branch before accepting another commit, and make Yeet warn when a local head advances
+  on the branch of an already-merged PR.
+
+## 2026-08-30 — a same-checkout proof started while the closeout was still being edited
+
+- **Doing:** recording the missing-remote-branch receipt while another agent process prepared the
+  same checkout for full verification.
+- **Evidence:** the full proof started 54 seconds before the ledger edit. The proof later reported
+  a dirty worktree while running its affected lanes, even though it had captured the earlier tree
+  at admission. The scheduler coordinated machine capacity but did not reserve the checkout for
+  edits.
+- **Would have prevented it:** add a per-checkout edit/proof ownership check before admission, or
+  require the proof runner to verify the worktree fingerprint before each affected planning wave
+  and stop as soon as it changes.
+
+## 2026-08-30 — the fixed cache sample drifted from the live fleet
+
+- **Doing:** resolving the exact checkout set for the final authenticated remote-read sample.
+- **Evidence:** the packet's post-repair sample contains 11 fully provisioned roots. An earlier
+  fleet scan classified seven roots as live, only two of which appeared in that sample. The final
+  preparation scan at `2026-08-31T02:45:59Z` classified 16 roots as live; four appeared in the
+  historical sample, 12 did not, and nine needed one or more missing cache-reference fields
+  provisioned before authentication. The packet still called the historical 11 roots active.
+- **Would have prevented it:** store the sampled root identities with the observation receipt and
+  recompute a named live-fleet delta before closeout, instead of carrying an unlabeled root count
+  forward as current state.
+
 ## 2026-08-30 — local publish proof changed base after the PR preview was fixed
 
 - **Doing:** running the exact-commit full proof after Yeet created PR #892 early to avoid more
@@ -51,9 +86,10 @@ session/machine ids.
 ## 2026-08-30 — fleet snapshot is too large for observation sampling
 
 - **Doing:** selecting active sibling checkouts for the representative-week cache sample.
-- **Evidence:** `bun run beep worktree fleet --json` emitted 32,786 characters for 78 checkouts,
-  including full policy-movement path lists. The captured output truncated before it provided a
-  usable active-checkout summary.
+- **Evidence:** `bun run beep worktree fleet --json` originally emitted 32,786 characters for 78
+  checkouts, including full policy-movement path lists. At closeout it exceeded the command
+  transport's 131,072-byte capture limit for 91 checkouts, and the JSON was cut mid-string. The
+  bounded text renderer plus an `awk` liveness filter was required to recover the 16 live roots.
 - **Would have prevented it:** add a compact mode or liveness filter that returns checkout path,
   branch, liveness, and dirty count without the policy path inventory.
 

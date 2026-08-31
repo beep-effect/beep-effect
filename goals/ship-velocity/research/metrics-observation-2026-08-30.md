@@ -262,6 +262,22 @@ The durable journal retains both admitted and released timestamps, but its event
 carry the coordination protocol and both release rows omitted the verdict's available peak RSS.
 `OPPORTUNITIES.md` records that evidence-join gap rather than overstating the journal.
 
+### Final remote-read preparation
+
+The original reference repair covered 11 roots, but checkout liveness moved before the terminal
+sample. A fleet scan at `2026-08-31T02:45:59Z` classified 16 roots as live. Four intersected the
+historical set, and nine of the current roots lacked one or more members of the remote-read quad.
+The sanctioned provisioning helper copied only the missing fields from an existing
+reference-only source. A sanitized follow-up found all 16 roots with a git-ignored `https`
+endpoint, `op://` token reference, nonblank team, and `local:rw,remote:r` posture; it did not
+render any field value. Alternate nonblank references were preserved for authenticated proof
+rather than overwritten by assumption.
+
+This is configuration readiness, not a cache outcome. The 1Password MCP remained unavailable,
+and the last safe CLI identity check was signed out. The final sample must rescan liveness after
+the operator authorizes `op signin`, use an isolated local cache directory per root, and observe
+at least one first-touch `source: REMOTE` result from each frozen root before this gate closes.
+
 ### Closeout state after the terminal trial
 
 The evidence-volume ruling closes the calendar-duration question, and the terminal dual proof
