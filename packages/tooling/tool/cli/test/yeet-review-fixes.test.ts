@@ -77,6 +77,7 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
   use: (repo: {
     readonly context: RepoRunContext;
     readonly lockPath: string;
+    readonly repositoryIdentity: string;
   }) => Effect.Effect<Success, Error, Requirements>,
   availableGib = 50,
   totalGib = 128
@@ -86,20 +87,19 @@ const withProofCoordinatorRepo = <Success, Error, Requirements>(
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* runGit(tmpDir, ["init"]);
-      yield* runGit(tmpDir, [
-        "remote",
-        "add",
-        "origin",
-        `https://example.test/review-fixes/${path.basename(tmpDir)}.git`,
-      ]);
+      const repositoryIdentity = `https://example.test/review-fixes/${path.basename(tmpDir)}.git`;
+      yield* runGit(tmpDir, ["remote", "add", "origin", repositoryIdentity]);
       const context = contextAt(tmpDir);
       const lockPath = yield* proofLockPathForContext(context);
       yield* fs.remove(lockPath, { force: true });
-      return yield* Effect.acquireUseRelease(Effect.succeed({ context, lockPath }), use, ({ lockPath: acquiredPath }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* fs.remove(acquiredPath, { force: true });
-        })
+      return yield* Effect.acquireUseRelease(
+        Effect.succeed({ context, lockPath, repositoryIdentity }),
+        use,
+        ({ lockPath: acquiredPath }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.remove(acquiredPath, { force: true });
+          })
       );
     }).pipe(
       // Coordinator locks and admission leases both live under the temp
@@ -261,16 +261,23 @@ describe("yeet review fixes", () => {
 
   it("allows two same-origin full proofs to overlap under weighted admission", () =>
     Effect.runPromise(
-      withProofCoordinatorRepo(({ context, lockPath }) =>
+      withProofCoordinatorRepo(({ context, lockPath, repositoryIdentity }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const siblingRoot = path.join(context.repoRoot, "sibling-checkout");
+          yield* fs.makeDirectory(siblingRoot);
+          yield* runGit(siblingRoot, ["init"]);
+          yield* runGit(siblingRoot, ["remote", "add", "origin", repositoryIdentity]);
+          const siblingContext = contextAt(siblingRoot);
           const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
+          const siblingProof = proofStep(siblingRoot, "full:pre-push", 'console.log("proof")');
           const firstEntered = yield* Deferred.make<void>();
           const secondEntered = yield* Deferred.make<void>();
           const first = yield* Effect.forkChild(
             runWithFullProofCoordinatorForTesting(
-              context,
-              [plannedProof],
+              siblingContext,
+              [siblingProof],
               Effect.gen(function* () {
                 yield* Deferred.succeed(firstEntered, undefined);
                 yield* Deferred.await(secondEntered);
@@ -304,6 +311,7 @@ describe("yeet review fixes", () => {
         ({ context, lockPath }) =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
             const plannedProof = proofStep(context.repoRoot, "full:pre-push", 'console.log("proof")');
             const firstEntered = yield* Deferred.make<void>();
             const releaseFirst = yield* Deferred.make<void>();
@@ -338,7 +346,7 @@ describe("yeet review fixes", () => {
             expect(yield* Fiber.join(first)).toBe("first");
             expect(yield* Fiber.join(second)).toBe("second");
             expect(yield* fs.readFileString(lockPath)).toContain('"schemaVersion":"yeet-proof-lock/v4"');
-            expect(yield* fs.exists(`${lockPath}.scheduler-fallback`)).toBe(false);
+            expect(yield* fs.exists(path.join(path.dirname(lockPath), "scheduler-fallback.lock"))).toBe(false);
           }),
         6,
         8

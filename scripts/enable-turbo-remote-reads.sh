@@ -7,7 +7,8 @@
 # `op run` resolves it at spawn time.
 #
 # Idempotent: an already-present nonblank name is reported and left alone; blank placeholders are
-# repaired from the supplied reference-only configuration.
+# repaired from the supplied reference-only configuration. Duplicate assignments fail before the
+# file is modified because their effective value is ambiguous across dotenv consumers.
 # See standards/turbo-remote-cache.md.
 #
 # Usage (from any beep-effect checkout):
@@ -49,6 +50,16 @@ if [[ ! -f "${ENV_FILE}" ]]; then
   log "creating ${ENV_FILE}"
   : >"${ENV_FILE}"
 fi
+
+assert_unique_name() {
+  local name="$1" count
+  count="$(grep -Ec "^[[:space:]]*${name}=" "${ENV_FILE}" || true)"
+  (( count <= 1 )) || die "duplicate ${name} assignments in .env; refusing to modify it"
+}
+
+for name in TURBO_API TURBO_TOKEN TURBO_TEAM TURBO_CACHE; do
+  assert_unique_name "${name}"
+done
 
 # The workstation posture is read-only by contract: no agent checkout ever
 # holds the trusted write token, and remote writes stay with the main-push CI

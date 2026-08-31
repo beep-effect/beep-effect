@@ -4,6 +4,45 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-30 — same-checkout proofs could race shared verdict artifacts
+
+- **Doing:** closing PR #929 after current-version same-origin proofs became weighted-capacity
+  peers.
+- **Evidence:** hosted review found that two tickets for the same checkout could both admit when
+  tokens fit. Those commands share branch-scoped `state.json` and `verdict.json` artifacts, so a
+  later success could overwrite a concurrent failure even though sibling checkouts are safe to
+  overlap.
+- **Would have prevented it:** include checkout identity in the admission exclusion tests while
+  preserving same-origin concurrency across distinct roots.
+
+## 2026-08-30 — duplicate dotenv assignments made blank repair destructive
+
+- **Doing:** reviewing the reference-only helper used to prepare the final remote-cache sample.
+- **Evidence:** the helper inspected the first assignment but rewrote every matching line when
+  that first value was blank. If a later assignment was configured and effective for a consumer,
+  blank repair silently replaced it.
+- **Would have prevented it:** reject duplicate cache names before any `.env` mutation and test
+  that the original file remains byte-for-byte unchanged.
+
+## 2026-08-30 — the packet's scheduler probe no longer matches the CLI
+
+- **Doing:** following the goal packet's required lane-contention probe before package
+  verification.
+- **Evidence:** `bun run beep quality scheduler status` exited before the chained verification
+  because the current command requires `--json`. The packet still names the flagless form.
+- **Would have prevented it:** keep the packet instruction synchronized with the CLI usage
+  contract, or retain a compact human-readable default for `scheduler status`.
+
+## 2026-08-30 — fallback coverage omitted cross-origin contenders
+
+- **Doing:** closing the final PR after the proof-lock retirement and same-origin concurrency
+  changes reached hosted review.
+- **Evidence:** Greptile's P1 review on PR #929 found that the below-envelope fallback path was
+  derived from each repository origin. Two heavyweight proofs for different origins could
+  therefore bypass machine-wide serialization. The existing fallback test used one origin twice.
+- **Would have prevented it:** assert that distinct origin lock paths contend for one fixed
+  machine-wide fallback lock whenever weighted admission is unavailable.
+
 ## 2026-08-30 — the first repair attempt left no terminal command receipt
 
 - **Doing:** running the canonical `beep yeet repair` before publishing the replacement closeout

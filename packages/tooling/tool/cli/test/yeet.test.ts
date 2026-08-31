@@ -264,7 +264,10 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
         const repositoryIdentity = `https://example.test/${path.basename(repo.tmpDir)}.git`;
         yield* runGit(repo.tmpDir, ["remote", "add", "origin", repositoryIdentity]);
         const lockPath = yield* proofLockPathForContext(repo.tempContext);
-        yield* fs.remove(lockPath, { force: true });
+        const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+        yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {
+          discard: true,
+        });
         return { ...repo, lockPath } as const;
       }),
       use,
@@ -274,7 +277,10 @@ const withProofCoordinatorRepo = <Result, Error, Requirements>(
           const path = yield* Path.Path;
           const coordinatorDirectory = path.dirname(lockPath);
           const coordinatorPrefix = path.basename(lockPath);
-          yield* fs.remove(lockPath, { force: true });
+          const fallbackPath = path.join(coordinatorDirectory, "scheduler-fallback.lock");
+          yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {
+            discard: true,
+          });
           const entries = yield* fs.readDirectory(coordinatorDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
           yield* Effect.forEach(
             A.filter(entries, Str.startsWith(coordinatorPrefix)),
@@ -2897,7 +2903,8 @@ describe("yeet publish scope helpers", () => {
       withProofCoordinatorRepo(({ lockPath, tempContext }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const fallbackPath = `${lockPath}.scheduler-fallback`;
+          const path = yield* Path.Path;
+          const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
           const unreadableText = "unreadable coordinator\n";
           yield* fs.writeFileString(lockPath, unreadableText);
           yield* fs.writeFileString(fallbackPath, unreadableText);
@@ -2997,10 +3004,13 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
-  it("serializes below-envelope proofs through the scheduler fallback lock", () =>
+  it("serializes cross-origin below-envelope proofs through one scheduler fallback lock", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ lockPath, tempContext }) =>
         Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+          const otherOriginLockPath = path.join(path.dirname(lockPath), "other-origin.lock");
           expect(O.isSome(yield* retireFullProofLockOrObserveAtPath(lockPath))).toBe(true);
           const first = yield* acquireFullProofFallbackLockOrObserveAtPath(
             lockPath,
@@ -3008,9 +3018,16 @@ describe("yeet publish scope helpers", () => {
             "bun run beep yeet verify"
           );
           expect(O.isSome(first)).toBe(true);
+          if (O.isSome(first)) {
+            expect(first.value.lockPath).toBe(fallbackPath);
+          }
           expect(
             O.isNone(
-              yield* acquireFullProofFallbackLockOrObserveAtPath(lockPath, tempContext, "bun run beep yeet verify")
+              yield* acquireFullProofFallbackLockOrObserveAtPath(
+                otherOriginLockPath,
+                tempContext,
+                "bun run beep yeet verify"
+              )
             )
           ).toBe(true);
 
@@ -3018,12 +3035,13 @@ describe("yeet publish scope helpers", () => {
             yield* releaseProofLock(first.value);
           }
           const next = yield* acquireFullProofFallbackLockOrObserveAtPath(
-            lockPath,
+            otherOriginLockPath,
             tempContext,
             "bun run beep yeet verify"
           );
           expect(O.isSome(next)).toBe(true);
           if (O.isSome(next)) {
+            expect(next.value.lockPath).toBe(fallbackPath);
             yield* releaseProofLock(next.value);
           }
         })

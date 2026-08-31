@@ -472,7 +472,7 @@ turbo work, so they are cheap to run mid-loop.
   cannot decode that marker and therefore fail closed instead of racing a
   current proof. Current clients recognize the marker and may overlap when
   machine capacity permits. Hosts below the scheduler memory envelope retain
-  single-proof execution through a distinct `.scheduler-fallback` lock.
+  single-proof execution through one machine-wide `scheduler-fallback.lock`.
 - The `yeet-proof-lock/v4` marker is a permanent compatibility fence, not stale
   owner state. Never reap or delete it during routine repair. Its legacy
   decoders and v3 acquisition test seams remain until a future CLI generation

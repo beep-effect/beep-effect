@@ -38,9 +38,10 @@ TURBO_API=<endpoint> TURBO_TEAM=<team-slug> TURBO_TOKEN_REF=op://<vault>/<item>/
 
 Run it from the checkout you want to enable, or pass the checkout path as the
 first argument. It is idempotent: nonblank names already present in `.env` are
-reported and left alone, while blank placeholders are repaired. It refuses a
-`TURBO_TOKEN_REF` that is not an `op://` reference, so a resolved secret cannot
-be written to disk by accident.
+reported and left alone, while blank placeholders are repaired. Duplicate
+assignments fail before the file is modified because their effective value may
+differ across dotenv consumers. It refuses a `TURBO_TOKEN_REF` that is not an
+`op://` reference, so a resolved secret cannot be written to disk by accident.
 
 Verify without executing a lane:
 

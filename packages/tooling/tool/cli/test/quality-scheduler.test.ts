@@ -682,6 +682,46 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("serializes a same-checkout contender while allowing a sibling checkout", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const blocking = yield* writeFakeLease(tempRoot, {
+              checkoutRoot: "/repo/shared",
+              originKey: "origin-active",
+              weightTokens: 3,
+            });
+            const sameCheckout = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ checkoutRoot: "/repo/shared", originKey: "origin-contender" }),
+                noAdmissionOriginGate,
+                Effect.succeed("same-checkout"),
+                fastConfig
+              )
+            );
+
+            yield* Effect.sleep("120 millis");
+            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            expect(sameCheckout.pollUnsafe()).toBeUndefined();
+
+            const sibling = yield* withQualityAdmission(
+              request({ checkoutRoot: "/repo/sibling", originKey: "origin-contender" }),
+              noAdmissionOriginGate,
+              Effect.succeed("sibling"),
+              fastConfig
+            );
+            expect(sibling).toBe("sibling");
+
+            yield* fs.remove(blocking, { force: true });
+            expect(yield* Fiber.join(sameCheckout)).toBe("same-checkout");
+          })
+        );
+      })
+    ));
+
   it("keeps a current contender queued until a same-origin legacy lease drains", () =>
     Effect.runPromise(
       Effect.gen(function* () {

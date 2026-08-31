@@ -643,12 +643,15 @@ const hasLegacySameOriginOwner = (state: LiveAdmissionState, ticket: YeetAdmissi
   Str.isNonEmpty(ticket.originKey) &&
   (hasLegacySameOriginLease(state, ticket) || hasLegacySameOriginTicket(state, ticket));
 
+const hasSameCheckoutLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  A.some(state.leases, ({ lease }) => lease.checkoutRoot === ticket.checkoutRoot);
+
 // A ticket is skippable (stays queued without blocking later tickets) when it
-// recently reported its origin migration gate busy (held by a process on the
-// previous Yeet release), or when the review-fix class cap is saturated.
-// Current-version same-origin proofs are capacity peers, so a live scheduler
-// lease never makes a sibling ticket skippable. Stamps expire so a crashed
-// holder cannot leave a permanent skip.
+// targets a checkout that already has admitted work, recently reported its
+// origin migration gate busy (held by a process on the previous Yeet release),
+// or the review-fix class cap is saturated. Current-version same-origin proofs
+// in distinct checkouts are capacity peers. Stamps expire so a crashed holder
+// cannot leave a permanent skip.
 const isTicketSkippable = (
   state: LiveAdmissionState,
   ticket: YeetAdmissionTicket,
@@ -656,7 +659,7 @@ const isTicketSkippable = (
   config: AdmissionConfig,
   ignoreOriginStamp: boolean
 ): boolean => {
-  if (hasLegacySameOriginOwner(state, ticket)) {
+  if (hasSameCheckoutLease(state, ticket) || hasLegacySameOriginOwner(state, ticket)) {
     return true;
   }
   const stampFresh =

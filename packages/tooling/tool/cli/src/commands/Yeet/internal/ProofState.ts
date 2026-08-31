@@ -1252,9 +1252,10 @@ export const retireFullProofLockOrObserveAtPath = Effect.fn("Yeet.retireFullProo
  *
  * **Details**
  *
- * The fallback has a distinct path because the original origin path remains a
- * persistent v4 retirement marker. It preserves single-proof execution on
- * machines that cannot safely create a weighted admission slot.
+ * The fallback has one fixed path in the machine-wide proof-coordinator
+ * directory because each original origin path remains a persistent v4
+ * retirement marker. Every repository origin therefore contends for the same
+ * lock on machines that cannot safely create a weighted admission slot.
  *
  * **Example** (Reference the fallback acquisition)
  *
@@ -1264,7 +1265,8 @@ export const retireFullProofLockOrObserveAtPath = Effect.fn("Yeet.retireFullProo
  * console.log(typeof acquireFullProofFallbackLockOrObserveAtPath) // "function"
  * ```
  *
- * @param lockPath - Retired per-origin coordinator path.
+ * @param lockPath - Retired per-origin path whose parent is the machine-wide
+ * proof-coordinator directory.
  * @param context - Repo context recorded as the prospective fallback owner.
  * @param command - Full proof command recorded in fallback lock metadata.
  * @returns The acquired fallback lease, or `None` while another current proof owns it.
@@ -1278,7 +1280,9 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
   context: RepoRunContext,
   command: string
 ): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  const prepared = yield* prepareFullProofLockLeaseForCommandAt(`${lockPath}.scheduler-fallback`, context, command);
+  const path = yield* Path.Path;
+  const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+  const prepared = yield* prepareFullProofLockLeaseForCommandAt(fallbackPath, context, command);
   return yield* tryAcquirePreparedFullProofLock(prepared);
 });
 
