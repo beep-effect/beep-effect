@@ -46,4 +46,4 @@ success receipt. PR #929 reached Yeet `merge-ready: yes` and merged on 2026-08-3
 final closeout PR gate. The existing 1Password reference resolves, but its mirrored read token
 predates the authoritative AWS token and the cache canary rejects it. The remaining gate is a fresh
 authenticated cross-checkout remote-read sample after the operator updates that mirror and runs
-`op signin`. Keep lifecycle active until that sample is complete.
+the exact `op run` wrapper. Keep lifecycle active until that sample is complete.

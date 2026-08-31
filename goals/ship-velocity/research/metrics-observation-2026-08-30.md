@@ -275,8 +275,9 @@ rather than overwritten by assumption.
 
 This is configuration readiness, not a cache outcome. The 1Password MCP remained unavailable,
 and the last safe CLI identity check was signed out. The final sample must rescan liveness after
-the operator authorizes `op signin`, use an isolated local cache directory per root, and observe
-at least one first-touch `source: REMOTE` result from each frozen root before this gate closes.
+the operator authorizes the exact `op run` wrapper, use an isolated local cache directory per
+root, and observe at least one first-touch `source: REMOTE` result from each frozen root before
+this gate closes.
 
 ### Authenticated cache canary
 
@@ -288,8 +289,8 @@ Sanitized control-plane metadata showed that the authoritative AWS read-token pa
 reference path was printed, copied, or stored.
 
 Reference resolution therefore does not close the cache gate. The operator must update the
-existing 1Password mirror with the current read token, authorize a new session, and rerun the
-cross-checkout sample.
+existing 1Password mirror with the current read token, authorize the exact `op run` wrapper, and
+rerun the cross-checkout sample.
 
 ### Closeout state after the terminal trial
 
