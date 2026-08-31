@@ -975,13 +975,19 @@ const prepareFullProofLockLeaseAt = Effect.fn("Yeet.prepareFullProofLockLeaseAt"
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  return yield* prepareFullProofLockLeaseForCommandAt(lockPath, context, proofCommandForSteps(proofSteps));
+  return yield* prepareFullProofLockLeaseForCommandAt(
+    lockPath,
+    context,
+    proofCommandForSteps(proofSteps),
+    O.getOrElse(yield* processStartTimeForPid(process.pid), () => "")
+  );
 });
 
 const prepareFullProofLockLeaseForCommandAt = Effect.fn("Yeet.prepareFullProofLockLeaseForCommandAt")(function* (
   lockPath: string,
   context: RepoRunContext,
-  command: string
+  command: string,
+  procStart: string
 ): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
@@ -991,7 +997,7 @@ const prepareFullProofLockLeaseForCommandAt = Effect.fn("Yeet.prepareFullProofLo
     checkoutRoot: context.repoRoot,
     command,
     pid: process.pid,
-    procStart: O.getOrElse(yield* processStartTimeForPid(process.pid), () => ""),
+    procStart,
     proofTier: "full",
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
   });
@@ -1251,6 +1257,37 @@ export const retireFullProofLockOrObserveAtPath = Effect.fn("Yeet.retireFullProo
   return yield* retireObservedProofLock(lockPath, retirementText, yield* observeProofLockState(lockPath));
 });
 
+const acquireFullProofFallbackLockOrObserveAtPathWithProcessStart = Effect.fn(
+  "Yeet.acquireFullProofFallbackLockOrObserveAtPathWithProcessStart"
+)(function* (
+  lockPath: string,
+  context: RepoRunContext,
+  command: string,
+  processStart: O.Option<string>
+): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+  const procStart = yield* pipe(
+    processStart,
+    O.match({
+      onNone: () =>
+        Effect.fail(
+          YeetCommandError.make({
+            message:
+              `Cannot acquire the machine-wide Yeet proof fallback lock at ${fallbackPath} because the current ` +
+              "process start identity is unavailable. Refusing PID-only ownership because PID reuse could strand the lock.",
+            command,
+            exitCode: 1,
+            file: fallbackPath,
+          })
+        ),
+      onSome: Effect.succeed,
+    })
+  );
+  const prepared = yield* prepareFullProofLockLeaseForCommandAt(fallbackPath, context, command, procStart);
+  return yield* tryAcquirePreparedFullProofLock(prepared);
+});
+
 /**
  * Attempt the exclusive fallback lock used below the scheduler memory envelope.
  *
@@ -1284,11 +1321,53 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
   context: RepoRunContext,
   command: string
 ): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
-  const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
-  const prepared = yield* prepareFullProofLockLeaseForCommandAt(fallbackPath, context, command);
-  return yield* tryAcquirePreparedFullProofLock(prepared);
+  return yield* acquireFullProofFallbackLockOrObserveAtPathWithProcessStart(
+    lockPath,
+    context,
+    command,
+    yield* processStartTimeForPid(process.pid)
+  );
 });
+
+/**
+ * Exercise machine-wide fallback acquisition with an explicit process identity.
+ *
+ * **Example** (Model an unavailable process identity)
+ *
+ * ```ts
+ * import { acquireFullProofFallbackLockOrObserveAtPathForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { Option } from "effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/closeout",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ *
+ * const guarded = acquireFullProofFallbackLockOrObserveAtPathForTesting(
+ *   ".beep/yeet/proof.lock",
+ *   context,
+ *   "bun run beep yeet verify",
+ *   Option.none()
+ * )
+ * void guarded
+ * ```
+ *
+ * @param lockPath - Retired per-origin path used to locate the fallback lock.
+ * @param context - Repo context recorded as the prospective fallback owner.
+ * @param command - Full proof command recorded in fallback lock metadata.
+ * @param processStart - Explicit process-start identity used by the test.
+ * @returns The guarded fallback acquisition effect.
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireFullProofFallbackLockOrObserveAtPathForTesting =
+  acquireFullProofFallbackLockOrObserveAtPathWithProcessStart;
 
 /**
  * Remove a previously acquired full-proof lock path.

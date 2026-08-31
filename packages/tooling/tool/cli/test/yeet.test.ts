@@ -9,6 +9,7 @@ import {
 import { provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
+  acquireFullProofFallbackLockOrObserveAtPathForTesting,
   acquireLegacyFullProofLockForTesting,
   acquireLegacyFullProofLockOrObserveAtPathForTesting,
   appendYeetAttemptJournalEvent,
@@ -3080,6 +3081,29 @@ describe("yeet publish scope helpers", () => {
           if (O.isSome(replacement)) {
             yield* releaseProofLock(replacement.value);
           }
+        })
+      )
+    ));
+
+  it("refuses to create a scheduler fallback lock without a process start identity", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+
+          const refusal = yield* acquireFullProofFallbackLockOrObserveAtPathForTesting(
+            lockPath,
+            tempContext,
+            "bun run beep yeet verify",
+            O.none()
+          ).pipe(Effect.flip);
+
+          expect(refusal.message).toContain("current process start identity is unavailable");
+          expect(refusal.message).toContain("PID reuse could strand the lock");
+          expect(refusal.file).toBe(fallbackPath);
+          expect(yield* fs.exists(fallbackPath)).toBe(false);
         })
       )
     ));
