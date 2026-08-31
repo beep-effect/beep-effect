@@ -27,8 +27,19 @@ const turtleLiteral = (value: string): string =>
     Str.replaceAll(/\n/g, "\\n")
   )}"`;
 
-// PN_LOCAL-safe slug so every proposal mints a distinct, deterministic node id.
-const pnLocalSlug: (value: string) => string = Str.replaceAll(/[^A-Za-z0-9-]/g, "-");
+// Injective PN_LOCAL encoding: alphanumerics stay verbatim and every other
+// UTF-8 byte becomes a %HH PLX escape, so distinct proposal ids can never
+// mint the same node and the structural "-step-"/"-request-" suffixes below
+// cannot be forged by id content.
+const pnLocalSlug = (value: string): string =>
+  A.join(
+    A.map(A.fromIterable(new TextEncoder().encode(value)), (byte) =>
+      /[A-Za-z0-9]/.test(String.fromCharCode(byte))
+        ? String.fromCharCode(byte)
+        : `%${byte.toString(16).toUpperCase().padStart(2, "0")}`
+    ),
+    ""
+  );
 
 const requestTriples =
   (proposalNode: string) =>
