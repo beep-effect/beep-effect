@@ -17,6 +17,7 @@ import { NamedNode } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import * as Event from "effect/unstable/eventlog/Event";
 import * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import { BatchId, GcsUri, OntologyName } from "../Identity.ts";
 import { BatchState } from "../Model/index.ts";
@@ -200,19 +201,27 @@ const ValidationFailedPayload = ValidationFailedPayloadDefinition.annotate({
   })
 );
 
-const BatchStateChangedPayloadDefinition = S.Struct({
+type BatchStateChangedPayloadFields = {
+  readonly batchId: typeof BatchId;
+  readonly ontologyId: typeof OntologyName;
+  readonly state: typeof BatchState;
+  readonly timestamp: typeof S.DateTimeUtcFromString;
+};
+
+const BatchStateChangedPayloadDefinition: S.Struct<BatchStateChangedPayloadFields> = S.Struct({
   batchId: BatchId,
   ontologyId: OntologyName,
   state: BatchState,
   timestamp: S.DateTimeUtcFromString,
 });
-const BatchStateChangedPayload = BatchStateChangedPayloadDefinition.annotate({
-  toArbitrary: () => S.toArbitrary(BatchStateChangedPayloadDefinition),
-}).pipe(
-  $I.annoteSchema("BatchStateChangedPayload", {
-    description: "Journal payload carrying the complete schema-validated batch workflow state.",
-  })
-);
+const BatchStateChangedPayload: typeof BatchStateChangedPayloadDefinition =
+  BatchStateChangedPayloadDefinition.annotate({
+    toArbitrary: () => S.toArbitrary(BatchStateChangedPayloadDefinition),
+  }).pipe(
+    $I.annoteSchema("BatchStateChangedPayload", {
+      description: "Journal payload carrying the complete schema-validated batch workflow state.",
+    })
+  );
 
 const EventEntryFields = {
   id: S.NonEmptyString,
@@ -255,13 +264,31 @@ const ValidationFailedEventEntry = S.Struct({
   event: S.tag("ValidationFailed"),
   payload: ValidationFailedPayload,
 });
-const BatchStateChangedEventEntry = S.Struct({
+type BatchStateChangedEventEntryCodec = S.Struct<
+  typeof EventEntryFields & {
+    readonly event: S.tag<"BatchStateChanged">;
+    readonly payload: typeof BatchStateChangedPayload;
+  }
+>;
+
+const BatchStateChangedEventEntry: BatchStateChangedEventEntryCodec = S.Struct({
   ...EventEntryFields,
   event: S.tag("BatchStateChanged"),
   payload: BatchStateChangedPayload,
 });
 
-const OntologyEventEntryDefinition = S.Union([
+type OntologyEventEntryMembers = readonly [
+  typeof ClaimCorrectedEventEntry,
+  typeof ClaimDeprecatedEventEntry,
+  typeof AliasAddedEventEntry,
+  typeof ClaimPromotedEventEntry,
+  typeof EntityLinkedEventEntry,
+  typeof ExtractionCompletedEventEntry,
+  typeof ValidationFailedEventEntry,
+  typeof BatchStateChangedEventEntry,
+];
+
+const OntologyEventEntryDefinition: S.toTaggedUnion<"event", OntologyEventEntryMembers> = S.Union([
   ClaimCorrectedEventEntry,
   ClaimDeprecatedEventEntry,
   AliasAddedEventEntry,
@@ -325,6 +352,11 @@ export const OntologyEventEntry: ReturnType<
  */
 export type OntologyEventEntry = typeof OntologyEventEntry.Type;
 
+type ExtractionEventDefinition =
+  | Event.Event<"ExtractionCompleted", typeof ExtractionCompletedPayload>
+  | Event.Event<"ValidationFailed", typeof ValidationFailedPayload>
+  | Event.Event<"BatchStateChanged", typeof BatchStateChangedPayload>;
+
 /**
  * EventLog definitions emitted by extraction and batch workflows.
  *
@@ -338,7 +370,7 @@ export type OntologyEventEntry = typeof OntologyEventEntry.Type;
  * @category events
  * @since 0.0.0
  */
-export const ExtractionEventGroup = EventGroup.empty
+export const ExtractionEventGroup: EventGroup.EventGroup<ExtractionEventDefinition> = EventGroup.empty
   .add({
     tag: "ExtractionCompleted",
     primaryKey: (payload) => `extraction:${payload.batchId}`,
@@ -361,7 +393,7 @@ export const ExtractionEventGroup = EventGroup.empty
  * @category type-level
  * @since 0.0.0
  */
-export type ExtractionEvent = EventGroup.Events<typeof ExtractionEventGroup>;
+export type ExtractionEvent = ExtractionEventDefinition;
 
 /**
  * Immutable tuple of all effect-ontology EventLog groups.
@@ -376,7 +408,10 @@ export type ExtractionEvent = EventGroup.Events<typeof ExtractionEventGroup>;
  * @category constants
  * @since 0.0.0
  */
-export const OntologyEventGroups = Tuple.make(CurationEventGroup, ExtractionEventGroup);
+export const OntologyEventGroups: readonly [typeof CurationEventGroup, typeof ExtractionEventGroup] = Tuple.make(
+  CurationEventGroup,
+  ExtractionEventGroup
+);
 
 /**
  * Union of every effect-ontology EventLog event definition.

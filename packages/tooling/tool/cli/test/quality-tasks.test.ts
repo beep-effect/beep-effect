@@ -3367,7 +3367,10 @@ describe("quality task adapter", () => {
                 packages: {
                   "@beep/a": CoveragePackageBaseline.make({
                     ...coveragePackageBaseline("packages/a", 80),
-                    files: { "packages/a/src/Existing.ts": coverageFileBaseline(80, 1) },
+                    files: {
+                      "packages/a/src/Deleted.ts": coverageFileBaseline(90, 1),
+                      "packages/a/src/Existing.ts": coverageFileBaseline(80, 1),
+                    },
                   }),
                 },
               })
@@ -3398,6 +3401,7 @@ describe("quality task adapter", () => {
             );
             expect(selected.generated_at).toBe("base");
             expect(selected.packages["@beep/a"]?.lines).toBe(80);
+            expect(selected.packages["@beep/a"]?.files["packages/a/src/Deleted.ts"]).toBeUndefined();
             expect(selected.packages["@beep/a"]?.files["packages/a/src/Existing.ts"]?.lines).toBe(80);
             expect(selected.packages["@beep/a"]?.files["packages/a/src/New.ts"]?.lines).toBe(65);
           })
