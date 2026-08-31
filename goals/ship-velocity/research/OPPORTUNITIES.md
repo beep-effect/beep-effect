@@ -4,6 +4,16 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-31 — a zsh loop variable erased command lookup
+
+- **Doing:** checking whether concurrent packet edits still had an open writer before preserving
+  them on the PR branch.
+- **Evidence:** a zsh loop used `path` as its iterator. In zsh, the special `path` array is tied to
+  `PATH`, so the assignment replaced command lookup and the same shell reported `stat` and `git`
+  as not found. The command made no repository change.
+- **Would have prevented it:** reserve zsh's special parameter names in agent shell snippets, use a
+  task-specific iterator such as `target_file`, or run portable snippets under Bash explicitly.
+
 ## 2026-08-31 — reference resolution did not prove cache authentication
 
 - **Doing:** running the final authenticated remote-read sample across a freshly frozen set of
