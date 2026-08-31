@@ -9,6 +9,8 @@ export * from "../commands/Files/index.ts";
 export {
   acquirePinnedPersonMatchArtifactForTest,
   PreparedAdaFaceArtifacts,
+  prepareAdaFaceArtifacts,
+  verifyPersonMatchModelArtifacts,
 } from "../commands/Files/internal/MatchPerson.model-store.ts";
 export {
   defaultPersonMatchBackendForPlatform,
