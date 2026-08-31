@@ -9,9 +9,10 @@
  * owner pid is dead or its `/proc` start time no longer matches (pid reuse),
  * and malformed state is quarantined visibly instead of blocking forever.
  *
- * The per-origin full-proof lock (`Yeet/internal/ProofState.ts`) is retained:
- * callers pass an {@link AdmissionOriginGate} so a contender whose origin is
- * already proving stays queued without blocking unrelated origins.
+ * Current-version proofs use this scheduler as their sole weighted admission
+ * authority. The caller-supplied {@link AdmissionOriginGate} retires the old
+ * per-origin lock only after prior-version owners drain and retains a distinct
+ * exclusive fallback for hosts below the scheduler memory envelope.
  *
  * @since 0.0.0
  */
@@ -19,6 +20,7 @@
 import { randomUUID } from "node:crypto";
 import { freemem, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import {
   Clock,
@@ -44,6 +46,7 @@ import * as Str from "effect/String";
 import { AdmissionJournalAdmitted, AdmissionJournalReleased, appendAdmissionJournalEvent } from "./AdmissionJournal.ts";
 import {
   AdmissionConfig,
+  AdmissionCoordinationProtocol,
   AdmissionRequest,
   AdmissionSnapshot,
   DeadLeaseScopePlan,
@@ -241,7 +244,31 @@ export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
     }
   });
 
-const procStartTimeForPid = Effect.fnUntraced(function* (
+/**
+ * Read the Linux process start time used to fence PID reuse.
+ *
+ * **Details**
+ *
+ * A missing or unreadable proc entry returns `None`, allowing callers to
+ * retain their documented non-Linux fallback behavior.
+ *
+ * **Example** (Read the current process identity)
+ *
+ * ```ts
+ * import { processStartTimeForPid } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const available = processStartTimeForPid(process.pid).pipe(Effect.map(O.isSome))
+ * console.log(Effect.isEffect(available)) // true
+ * ```
+ *
+ * @param pid - Process whose `/proc/<pid>/stat` start time is requested.
+ * @returns The process start time when the proc entry is readable.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const processStartTimeForPid = Effect.fnUntraced(function* (
   pid: number
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
@@ -250,25 +277,244 @@ const procStartTimeForPid = Effect.fnUntraced(function* (
     .pipe(Effect.map(parseAdmissionProcStatStartTime), Effect.orElseSucceed(O.none<string>));
 });
 
-// An owner is dead when its pid is gone, or when the pid is alive but its
-// recorded /proc start time no longer matches (pid reuse). An unreadable
-// current start time (non-Linux, permission) degrades to the pid-only check.
-const isAdmissionOwnerAlive = Effect.fnUntraced(function* (owner: {
+const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Option<string>> =>
+  Effect.try(() => {
+    const windows = process.platform === "win32";
+    const command = windows
+      ? [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToUniversalTime().Ticks`,
+        ]
+      : ["ps", "-o", "lstart=", "-p", `${pid}`];
+    const result = Bun.spawnSync({
+      cmd: command,
+      env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
+      stderr: "ignore",
+      stdout: "pipe",
+    });
+    const output = Str.trim(result.stdout.toString());
+    return result.success && Str.isNonEmpty(output) ? O.some(`${windows ? "win" : "ps"}:${output}`) : O.none<string>();
+  }).pipe(Effect.orElseSucceed(O.none<string>));
+
+/**
+ * Read a portable process-start identity used to fence PID reuse.
+ *
+ * **Details**
+ *
+ * Linux procfs remains the fast path. When procfs is unavailable, the probe
+ * uses the platform process inspector (`ps` on Unix, PowerShell on Windows)
+ * and prefixes that representation so observers use the same source.
+ *
+ * **Example** (Read the current portable identity)
+ *
+ * ```ts
+ * import { processStartIdentityForPid } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const available = processStartIdentityForPid(process.pid).pipe(Effect.map(O.isSome))
+ * console.log(Effect.isEffect(available)) // true
+ * ```
+ *
+ * @param pid - Process whose start identity is requested.
+ * @returns A procfs or platform-inspector identity when available.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const processStartIdentityForPid = Effect.fnUntraced(function* (
+  pid: number
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+  const procStart = yield* processStartTimeForPid(pid);
+  return O.isSome(procStart) ? procStart : yield* processStartIdentityFromSystemCommand(pid);
+});
+
+/**
+ * Result of inspecting a PID plus its recorded Linux process start time.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessIdentityStatus = LiteralKit(["alive", "dead", "unknown"]).pipe(
+  $I.annoteSchema("ProcessIdentityStatus", {
+    description: "Whether a recorded process identity is live, dead, or temporarily unverifiable.",
+  })
+);
+
+/**
+ * Type represented by {@link ProcessIdentityStatus}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProcessIdentityStatus = typeof ProcessIdentityStatus.Type;
+
+// A missing PID or a start-time mismatch proves an owner dead. A readable
+// match proves it alive. A live PID whose recorded identity cannot currently
+// be read remains unknown so callers can choose a context-safe policy.
+const processIdentityStatusWithStart = Effect.fnUntraced(function* <Requirements>(
+  owner: {
+    readonly pid: number;
+    readonly procStart: string;
+  },
+  currentStart: Effect.Effect<O.Option<string>, never, Requirements>
+): Effect.fn.Return<ProcessIdentityStatus, never, Requirements> {
+  const alive = yield* isProcessPidAlive(owner.pid);
+  if (!alive) {
+    return ProcessIdentityStatus.Enum.dead;
+  }
+  if (Str.isEmpty(owner.procStart)) {
+    return ProcessIdentityStatus.Enum.alive;
+  }
+  return O.match(yield* currentStart, {
+    onNone: () => ProcessIdentityStatus.Enum.unknown,
+    onSome: (start) => (start === owner.procStart ? ProcessIdentityStatus.Enum.alive : ProcessIdentityStatus.Enum.dead),
+  });
+});
+
+/**
+ * Inspect a process identity using both its PID and recorded start time.
+ *
+ * **Details**
+ *
+ * A live PID with an unreadable current start time is `unknown`, distinct
+ * from a missing PID or mismatched start time that proves the owner `dead`.
+ *
+ * **Example** (Inspect the current process)
+ *
+ * ```ts
+ * import { processIdentityStatus } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * const status = processIdentityStatus({ pid: process.pid, procStart: "" })
+ * console.log(Effect.isEffect(status)) // true
+ * ```
+ *
+ * @param owner - PID and optional Linux process start time recorded by an owner.
+ * @returns The observed process-identity status.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const processIdentityStatus = Effect.fnUntraced(function* (owner: {
+  readonly pid: number;
+  readonly procStart: string;
+}): Effect.fn.Return<ProcessIdentityStatus, never, FileSystem.FileSystem> {
+  const currentStart =
+    Str.startsWith("ps:")(owner.procStart) || Str.startsWith("win:")(owner.procStart)
+      ? processStartIdentityFromSystemCommand(owner.pid)
+      : processStartTimeForPid(owner.pid);
+  return yield* processIdentityStatusWithStart(owner, currentStart);
+});
+
+/**
+ * Check a process identity using both its PID and recorded start time.
+ *
+ * **Details**
+ *
+ * A start-time mismatch proves the PID was recycled. An unreadable current
+ * identity remains conservatively live so normal admission repair cannot reap
+ * or stop an owner that may still be running. Callers that cannot wait behind
+ * an unverifiable identity inspect {@link processIdentityStatus} directly.
+ * Empty recorded start times retain the legacy PID-only behavior.
+ *
+ * **Example** (Check a recorded process identity)
+ *
+ * ```ts
+ * import { isProcessIdentityAlive } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * const alive = isProcessIdentityAlive({ pid: process.pid, procStart: "" })
+ * console.log(Effect.isEffect(alive)) // true
+ * ```
+ *
+ * @param owner - PID and optional Linux process start time recorded by an owner.
+ * @returns Whether the same process identity is still alive.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const isProcessIdentityAlive = Effect.fnUntraced(function* (owner: {
   readonly pid: number;
   readonly procStart: string;
 }): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  const alive = yield* isProcessPidAlive(owner.pid);
-  if (!alive) {
-    return false;
-  }
-  if (Str.isEmpty(owner.procStart)) {
-    return true;
-  }
-  const current = yield* procStartTimeForPid(owner.pid);
-  return O.match(current, {
-    onNone: () => true,
-    onSome: (start) => start === owner.procStart,
-  });
+  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatus(owner));
+});
+
+/**
+ * Check process-identity behavior with a supplied current start time.
+ *
+ * **Details**
+ *
+ * This test seam keeps PID liveness real while allowing regression tests to
+ * model an unreadable `/proc/<pid>/stat` entry. Unknown identities remain
+ * conservatively alive for admission repair.
+ *
+ * **Example** (Model an unreadable current identity)
+ *
+ * ```ts
+ * import { isProcessIdentityAliveWithStartForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const alive = Effect.runSync(
+ *   isProcessIdentityAliveWithStartForTesting(
+ *     { pid: process.pid, procStart: "recorded-start" },
+ *     O.none()
+ *   )
+ * )
+ * console.log(alive) // true
+ * ```
+ *
+ * @param owner - PID and recorded process start time to check.
+ * @param currentStart - Simulated current process start time.
+ * @returns Whether the supplied identity still owns the live PID.
+ * @category testing
+ * @since 0.0.0
+ */
+export const isProcessIdentityAliveWithStartForTesting = Effect.fnUntraced(function* (
+  owner: {
+    readonly pid: number;
+    readonly procStart: string;
+  },
+  currentStart: O.Option<string>
+): Effect.fn.Return<boolean> {
+  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart)));
+});
+
+/**
+ * Inspect process-identity status with a supplied current start time.
+ *
+ * **Example** (Model an unreadable current identity)
+ *
+ * ```ts
+ * import { processIdentityStatusWithStartForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const status = Effect.runSync(
+ *   processIdentityStatusWithStartForTesting(
+ *     { pid: process.pid, procStart: "recorded-start" },
+ *     O.none()
+ *   )
+ * )
+ * console.log(status) // "unknown"
+ * ```
+ *
+ * @param owner - PID and recorded process start time to inspect.
+ * @param currentStart - Simulated current process start time.
+ * @returns The simulated process-identity status.
+ * @category testing
+ * @since 0.0.0
+ */
+export const processIdentityStatusWithStartForTesting = Effect.fnUntraced(function* (
+  owner: {
+    readonly pid: number;
+    readonly procStart: string;
+  },
+  currentStart: O.Option<string>
+): Effect.fn.Return<ProcessIdentityStatus> {
+  return yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart));
 });
 
 interface AdmissionDirectories {
@@ -491,7 +737,7 @@ const classifyAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
   if (O.isNone(decoded)) {
     return { kind: "malformed" };
   }
-  const alive = yield* isAdmissionOwnerAlive(codec.ownerOf(decoded.value));
+  const alive = yield* isProcessIdentityAlive(codec.ownerOf(decoded.value));
   return alive ? { kind: "live", entry: decoded.value } : { kind: "dead", entry: decoded.value };
 });
 
@@ -619,12 +865,37 @@ const ticketOrder = (nowMillis: number, config: AdmissionConfig): Order.Order<Ye
 const activeTokenTotal = (state: LiveAdmissionState): number =>
   A.reduce(state.leases, 0, (total, { lease }) => total + lease.weightTokens);
 
-// A ticket is skippable (stays queued without blocking later tickets) when
-// its origin is already proving under an admission lease, when it recently
-// reported its origin lock busy (held by a process without a lease, e.g. a
-// sibling checkout on the previous Yeet release), or when the review-fix
-// class cap is saturated. Stamps expire so a crashed holder cannot leave a
-// permanent skip.
+const hasLegacySameOriginLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  A.some(
+    state.leases,
+    ({ lease }) =>
+      lease.originKey === ticket.originKey &&
+      AdmissionCoordinationProtocol.is["legacy-origin-lock/v1"](lease.coordinationProtocol)
+  );
+
+const hasLegacySameOriginTicket = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  A.some(
+    state.tickets,
+    ({ ticket: queued }) =>
+      queued.nonce !== ticket.nonce &&
+      queued.originKey === ticket.originKey &&
+      AdmissionCoordinationProtocol.is["legacy-origin-lock/v1"](queued.coordinationProtocol)
+  );
+
+const hasLegacySameOriginOwner = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  AdmissionCoordinationProtocol.is["scheduler-origin-concurrency/v1"](ticket.coordinationProtocol) &&
+  Str.isNonEmpty(ticket.originKey) &&
+  (hasLegacySameOriginLease(state, ticket) || hasLegacySameOriginTicket(state, ticket));
+
+const hasSameCheckoutLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
+  A.some(state.leases, ({ lease }) => lease.checkoutRoot === ticket.checkoutRoot);
+
+// A ticket is skippable (stays queued without blocking later tickets) when it
+// targets a checkout that already has admitted work, recently reported its
+// origin migration gate busy (held by a process on the previous Yeet release),
+// or the review-fix class cap is saturated. Current-version same-origin proofs
+// in distinct checkouts are capacity peers. Stamps expire so a crashed holder
+// cannot leave a permanent skip.
 const isTicketSkippable = (
   state: LiveAdmissionState,
   ticket: YeetAdmissionTicket,
@@ -632,7 +903,7 @@ const isTicketSkippable = (
   config: AdmissionConfig,
   ignoreOriginStamp: boolean
 ): boolean => {
-  if (Str.isNonEmpty(ticket.originKey) && A.some(state.leases, ({ lease }) => lease.originKey === ticket.originKey)) {
+  if (hasSameCheckoutLease(state, ticket) || hasLegacySameOriginOwner(state, ticket)) {
     return true;
   }
   const stampFresh =
@@ -679,12 +950,13 @@ const selfMayAttempt = (
 };
 
 /**
- * Gate coordinating one origin-scoped resource (the per-origin full-proof
- * lock) underneath machine-wide admission.
+ * Gate coordinating origin-lock migration and the below-envelope fallback
+ * underneath machine-wide admission.
  *
- * `tryAcquire` succeeds with `None` when the origin is busy — the contender
- * then stays queued instead of failing. Corruption states keep failing
- * through the error channel.
+ * `tryAcquire` succeeds with `None` while a prior-version origin owner drains;
+ * the contender then stays queued instead of failing. `tryAcquireFallback`
+ * acquires the exclusive below-envelope resource. Corruption states keep
+ * failing through the error channel.
  *
  * @category admission
  * @since 0.0.0
@@ -692,6 +964,7 @@ const selfMayAttempt = (
 export interface AdmissionOriginGate<OriginLease, GateError, GateRequirements> {
   readonly release: (lease: OriginLease) => Effect.Effect<void, never, GateRequirements>;
   readonly tryAcquire: Effect.Effect<O.Option<OriginLease>, GateError, GateRequirements>;
+  readonly tryAcquireFallback: Effect.Effect<O.Option<OriginLease>, GateError, GateRequirements>;
 }
 
 /**
@@ -710,6 +983,7 @@ export interface AdmissionOriginGate<OriginLease, GateError, GateRequirements> {
  */
 export const noAdmissionOriginGate: AdmissionOriginGate<Record<string, never>, never, never> = {
   tryAcquire: Effect.succeed(O.some({})),
+  tryAcquireFallback: Effect.succeed(O.some({})),
   release: () => Effect.void,
 };
 
@@ -893,6 +1167,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
     originKey: ticket.originKey,
     checkoutRoot: ticket.checkoutRoot,
     branch: ticket.branch,
+    coordinationProtocol: ticket.coordinationProtocol,
     command: request.command,
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
     admittedAtMillis: nowMillis,
@@ -971,7 +1246,7 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   const nowMillis = yield* Clock.currentTimeMillis;
   const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
   if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
-    return { admitted: O.none(), info, originBusy: false };
+    return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket) };
   }
   const attempt = yield* tryAdmitSelf(directories, request, ticket, gate, config);
   if (O.isNone(attempt.admitted)) {
@@ -1044,9 +1319,10 @@ const noteAdmissionWait = Effect.fnUntraced(function* (
   return O.isSome(escalation) ? { ...next, escalated: escalationLevelFor(waitedMillis) } : next;
 });
 
-// Interruption is masked around promotion (so a lease and origin lock can
-// never be created without their release installed) and restored across the
-// sleep, which is where a Ctrl-C lands and unwinds to the ticket finalizer.
+// Interruption is masked around promotion (so a scheduler lease and any
+// fallback origin lease can never be created without their release installed)
+// and restored across the sleep, which is where a Ctrl-C lands and unwinds to
+// the ticket finalizer.
 const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, GateRequirements>(
   directories: AdmissionDirectories,
   request: AdmissionRequest,
@@ -1153,9 +1429,9 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
  *
  * Enqueues a durable ticket, waits (with visible progress) until the request
  * is first in priority/FIFO order and its token weight fits live capacity,
- * acquires the caller's origin gate, then runs `use` while heartbeating the
- * lease. Ticket, lease, and origin lease are all released on success, failure,
- * and interruption — `Ctrl-C` removes the ticket.
+ * acquires the caller's migration gate, then runs `use` while heartbeating the
+ * lease. Ticket, lease, and any fallback origin lease are all released on
+ * success, failure, and interruption — `Ctrl-C` removes the ticket.
  *
  * **Example** (Reference the admission bracket)
  *
@@ -1166,7 +1442,8 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
  * ```
  *
  * @param request - Kind, weight, priority, and provenance of the work.
- * @param gate - Origin-scoped gate acquired at promotion time.
+ * @param gate - Migration observation used by normal admission and exclusive fallback acquisition
+ * used only below the scheduler memory envelope.
  * @param use - The admitted work.
  * @param config - Optional policy override; defaults to chartered D1 values.
  * @returns The result of `use`, guarded by ticket/lease/gate lifecycles.
@@ -1223,7 +1500,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const admittedRequest = AdmissionRequest.make({ ...request, weightTokens });
   const directories = yield* ensureAdmissionDirectories();
   const nowMillis = yield* Clock.currentTimeMillis;
-  const procStart = O.getOrElse(yield* procStartTimeForPid(process.pid), () => "");
+  const procStart = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
@@ -1234,6 +1511,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     originKey: admittedRequest.originKey,
     checkoutRoot: admittedRequest.checkoutRoot,
     branch: admittedRequest.branch,
+    coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
     nonce: randomUUID(),
@@ -1286,10 +1564,10 @@ const bypassAdmission = Effect.fnUntraced(function* <
 ): Effect.fn.Return<Success, UseError | GateError | QualitySchedulerError, UseRequirements | GateRequirements> {
   return yield* Effect.uninterruptibleMask(
     Effect.fnUntraced(function* (restore) {
-      let origin = yield* gate.tryAcquire;
+      let origin = yield* gate.tryAcquireFallback;
       while (O.isNone(origin)) {
         yield* restore(Effect.sleep(Duration.millis(config.heartbeatSeconds * 1000)));
-        origin = yield* gate.tryAcquire;
+        origin = yield* gate.tryAcquireFallback;
       }
       return yield* Effect.acquireUseRelease(
         Effect.succeed(origin.value),

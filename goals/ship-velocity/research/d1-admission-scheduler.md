@@ -110,6 +110,60 @@ just the single newest), the origin gate is released on any post-acquire failure
 surface, and the small-host bypass now requires the hard floor plus one slot to be
 attainable from installed memory (a 15-18 GiB host bypasses instead of waiting forever).
 
+## Closeout migration — 2026-08-30
+
+The first live acceptance trial exposed a contradiction in the original composition: the
+scheduler charged one full proof at three tokens, but both the scheduler's same-origin skip and
+the retained v3 origin lock prevented another sibling checkout from entering even when seven
+tokens were free. Because every checkout of this repository hashes to the same origin key, the
+required sibling overlap was unreachable by construction.
+
+The closeout repair makes the weighted scheduler the sole current-version concurrency authority
+without permitting a mixed-version race:
+
+- new tickets and leases identify `scheduler-origin-concurrency/v1`; entries written before this
+  repair decode as `legacy-origin-lock/v1`;
+- a current ticket stays queued while any same-origin legacy ticket or lease is live, so already
+  queued work drains instead of being stranded during rollout;
+- after legacy work drains, the first current contender atomically replaces the v3 owner file
+  with a persistent `yeet-proof-lock/v4` retirement marker;
+- older v3 clients cannot decode that marker and fail closed, while current clients recognize it
+  and admit same-origin work solely by priority, FIFO order, live capacity, and overshoot rollback;
+- hosts below the scheduler memory envelope first install the same retirement marker and then use
+  a distinct exclusive fallback lock, preserving one-proof execution rather than bypassing all
+  coordination.
+
+### Lifecycle and removal trigger
+
+The `yeet-proof-lock/v4` marker is a permanent compatibility fence, not stale owner state. Routine
+reaping must never delete it: a dormant v3 binary would otherwise see an absent coordinator and
+could race scheduler-governed proofs. Only a future, explicitly versioned coordination migration
+may replace the marker.
+
+Absent-field legacy decoding and the deprecated v3 acquisition test seams remain until all of the
+following are true:
+
+1. the CLI entrypoint enforces a machine-wide minimum coordination generation that rejects pre-v4
+   proof binaries before they can inspect or create an origin coordinator;
+2. a fleet audit finds no runnable pre-v4 checkout or tool clone for seven consecutive days; and
+3. scheduler status and retained admission evidence show no legacy ticket or lease during that same
+   observation window.
+
+No compatibility code removal is authorized until that generation floor exists. When the trigger
+is satisfied, remove the v3 acquisition test seams and absent-field decoding in one migration PR,
+while retaining the v4 marker decoder until its replacement protocol supplies an equally strong
+old-client fence.
+
+Compatibility and behavior proof covers: old-file decode defaults, an untouched pre-change
+decoder accepting and discarding the new field, current same-origin overlap, legacy-lease drain,
+live-v3 wait, stale-v3 CAS replacement, idempotent marker installation, old-client fail-closed
+behavior, low-memory fallback serialization, interruption, and release paths. The focused
+scheduler/coordinator suites pass 56 tests; the full Yeet unit file passes 132 tests. The first
+authoritative scoped coverage run passed all 143 repo-cli files and 2,702 tests, with the changed
+`ProofState.ts` at 83.39% statements, 59.82% branches, 80.00% functions, and 83.70% lines; the
+per-file coverage ratchet passed with epsilon 0.001. A final scoped ratchet after the reviewer fixes
+remains part of the terminal baseline proof.
+
 ## Follow-ups (tracked in PLAN P4)
 
 D2 adaptive lane concurrency (scheduler-selected turbo args); D3 remainder (PSI/load
