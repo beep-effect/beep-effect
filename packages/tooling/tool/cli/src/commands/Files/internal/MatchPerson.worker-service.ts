@@ -472,6 +472,33 @@ const workerFailureError = (report: PersonMatchWorkerReport): PersonMatchWorkerS
   );
 };
 
+const validateWorkerExitReport = Effect.fn("Files.PersonMatchWorker.validateExitReport")(function* (
+  report: PersonMatchWorkerReport,
+  diagnostic: string,
+  exitCode: number
+): Effect.fn.Return<PersonMatchWorkerSuccess, PersonMatchWorkerServiceError> {
+  if (report.ok) {
+    if (exitCode !== 0) {
+      return yield* processError(
+        Str.isNonEmpty(diagnostic)
+          ? `Person-match worker exited with code ${exitCode}: ${diagnostic}`
+          : `Person-match worker exited with code ${exitCode}.`
+      );
+    }
+    return report;
+  }
+  const expectedExitCodes = report.error.code === "worker-failed" ? [1, 2] : [2];
+  if (!A.contains(expectedExitCodes, exitCode)) {
+    return yield* protocolError(
+      `Person-match worker failure [${report.error.code}] used exit code ${exitCode}; expected ${A.join(
+        A.map(expectedExitCodes, (code) => `${code}`),
+        " or "
+      )}.`
+    );
+  }
+  return yield* workerFailureError(report);
+});
+
 const decodeWorkerExecution = Effect.fn("Files.PersonMatchWorker.decodeExecution")(function* (
   stdout: string,
   stderr: string,
@@ -494,26 +521,7 @@ const decodeWorkerExecution = Effect.fn("Files.PersonMatchWorker.decodeExecution
       )
     )
   );
-  if (report.ok) {
-    if (exitCode !== 0) {
-      return yield* processError(
-        Str.isNonEmpty(diagnostic)
-          ? `Person-match worker exited with code ${exitCode}: ${diagnostic}`
-          : `Person-match worker exited with code ${exitCode}.`
-      );
-    }
-    return report;
-  }
-  const expectedExitCodes = report.error.code === "worker-failed" ? [1, 2] : [2];
-  if (!A.contains(expectedExitCodes, exitCode)) {
-    return yield* protocolError(
-      `Person-match worker failure [${report.error.code}] used exit code ${exitCode}; expected ${A.join(
-        A.map(expectedExitCodes, (code) => `${code}`),
-        " or "
-      )}.`
-    );
-  }
-  return yield* workerFailureError(report);
+  return yield* validateWorkerExitReport(report, diagnostic, exitCode);
 });
 
 const requestedParametersMatch = (worker: PersonMatchWorkerSuccess, options: MatchPersonOptions): boolean => {
