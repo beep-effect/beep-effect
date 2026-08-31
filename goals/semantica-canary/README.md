@@ -50,16 +50,19 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-Active in P2 on the single evidence-quote re-entry candidate. The first
-vertical slice and all three G-relation papers passed live and replay with
-byte-identical reports, non-zero hosted relation claims, zero failed anchors,
-and zero unexpected degradation. The retry remains unspent. C1, C2, and the
-full-W1 R2 gate have not run.
+P2 C0 is complete. The evidence-quote candidate passed the first vertical
+slice, all three G-relation papers, and the full-W1 R2 gate live and replay.
+The full reports were byte-identical; all 25 W1 papers parsed and extracted;
+unexpected degradation and failed anchors were zero. The retry was never
+used. P3 C1 waits for this C0 evidence PR to become merge-ready and land; its
+OpenAI-driver dependency is already merged.
 
 ## Latest evidence
 
+[`history/p2-c0-r2.md`](./history/p2-c0-r2.md) records the full-W1 live/replay
+gate and resulting family verdicts.
 [`history/p2-c0-relation-slate.md`](./history/p2-c0-relation-slate.md) records
-the passing live/replay slice and relation-paper extension. The preceding
+the preceding slice and relation-paper extension. The earlier
 [`history/p2-c0-evidence-quote-reentry.md`](./history/p2-c0-evidence-quote-reentry.md)
 records the candidate contract, zero-spend preview, and gold repair.
 

@@ -236,7 +236,7 @@ Canonicalizer row).
       states; the report carries corpus hash, `gold/v1`, `ModelIdentity` for
       every hosted call; the `EvalRunTelemetry` sidecar carries Tier-L results and
       Tier-D telemetry (R1). Passing the slice does not pass C0.
-- [ ] **C0 pass** over F1 + all three G-relation W1 papers — "second run with
+- [x] **C0 pass** over F1 + all three G-relation W1 papers — "second run with
       the network disabled reproduces the `EvalReport` digest from the provider
       cache (G7; telemetry sidecar excluded, R1); every span slices back to its text; relation count on the
       G-relation papers is non-zero." Scoring covers G-structure, G-entity,

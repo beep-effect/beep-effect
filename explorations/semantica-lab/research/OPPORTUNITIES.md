@@ -390,3 +390,12 @@ ratifies.
   distinguish operator CLI auth, operation-scoped desktop authorization, agent process
   inheritance, client MCP registration, and current-session tool exposure; never infer the first
   from failure of another or ask the operator to repeat sign-in blindly.
+
+- **2026-08-30 — Full-W1 C0 replay spent nearly ten minutes in opaque local grounding.** The
+  network-off R2 replay kept the provider cache fixed and one Bun core busy for 580,206 ms before
+  emitting its report; its p95 document duration was 148,696 ms. The live run took 1,906,490 ms
+  with a 227,190 ms p95. During both runs the CLI emitted no per-document stage progress, so the
+  only safe liveness evidence was process CPU/RSS and aggregate cache-file growth. Prevention:
+  emit non-digest per-document stage telemetry or progress events around parse, provider wait,
+  grounding, ledger, and evaluation so operators can attribute latency without inspecting
+  provider text or interrupting an authoritative gate.

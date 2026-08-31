@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/semantica-canary",
   "lifecycle": "active",
-  "statusNote": "P2 C0 evidence-quote candidate passed its first vertical slice and all three G-relation papers with replay-identical reports. Its retry remains unspent; the full-W1 R2 gate is next. See history/p2-c0-relation-slate.md.",
+  "statusNote": "P2 C0 passed: the evidence-quote candidate cleared its slice, all three G-relation papers, and the full-W1 R2 gate with byte-identical live/replay reports, zero unexpected degradation, and no retry. P3 starts after the C0 evidence PR lands; see history/p2-c0-r2.md.",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -58,7 +58,7 @@
     {
       "id": "P2",
       "name": "C0",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
