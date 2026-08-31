@@ -512,6 +512,7 @@
     "packages/drivers/exiftool",
     "packages/drivers/gov-legal-mcp",
     "packages/drivers/openai",
-    "apps/todox"
+    "apps/todox",
+    "packages/drivers/box-provisioning"
   ]
 }

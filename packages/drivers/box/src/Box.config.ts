@@ -21,11 +21,11 @@ const BoxCcgConfigShape = S.Struct({
   enterpriseId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   userId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
 }).check(
-  S.makeFilter((config) => O.isSome(config.enterpriseId) || O.isSome(config.userId), {
+  S.makeFilter((config) => O.isSome(config.enterpriseId) !== O.isSome(config.userId), {
     identifier: $I`BoxCcgSubjectCheck`,
     title: "Box CCG subject",
-    description: "Requires either an enterprise id or user id for Box Client Credentials Grant auth.",
-    message: "Expected enterpriseId or userId for Box CCG auth",
+    description: "Requires exactly one enterprise id or user id for Box Client Credentials Grant auth.",
+    message: "Expected exactly one of enterpriseId or userId for Box CCG auth",
   })
 );
 
@@ -56,6 +56,11 @@ export class BoxDeveloperTokenConfig extends S.Class<BoxDeveloperTokenConfig>($I
 
 /**
  * Client Credentials Grant configuration for enterprise Box access.
+ *
+ * **Gotchas**
+ *
+ * Exactly one subject must be configured. `enterpriseId` authenticates the
+ * application's service account; `userId` authenticates as that Box user.
  *
  * **Example** (Make CCG enterprise config)
  *
