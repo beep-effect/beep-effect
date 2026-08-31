@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Stage S6: A-Box ratification & predicates over the ratified 38-term taxonomy (runtime ETL for individuals; the deferred AdmissionPolicy instance; predicates from the 4 accepted fact edges), and assemble auditor run 2's queue (163 parked candidates, 76 parked ledger rows, 4 waived constraints, VerificationLane placement). S5 is COMPLETE and ratified — do not redo it."
+      "Auditor run 2 (first_run: false, prior index orun-2026-08-29T08:20:55Z.index.yaml): journal/verdict corpus extension + adapter v1.1.0 over 163 parked candidates, 76 parked ledger rows, 4 waived constraints, the VerificationLane placement obligation, and the six S6-surfaced vocabulary/telemetry gaps (hasGrantState, capacityAtAdmissionTokens/activeTokens carriers, admittedBy source direction, work-kind/priority predicates, CQ coverage 1/25). Then S7 projection. S5 and S6 are COMPLETE and ratified \u2014 do not redo them."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

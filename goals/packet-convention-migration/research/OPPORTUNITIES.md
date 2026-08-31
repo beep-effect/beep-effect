@@ -492,3 +492,854 @@
   Vercel contexts, and continue monitoring exact-head required checks and
   review state.
 - **Owner:** Yeet hosted-monitor classification and deployment integrations.
+
+## 2026-08-30 — Managed-temp repair hard-codes a POSIX-only fixture root
+
+- **What happened:** the first deterministic repair for privacy-sensitive
+  Agent Effectiveness fixtures ignored the managed home-based `TMPDIR` by
+  forcing `/tmp`. Greptile correctly identified that the test setup would fail
+  on native Windows, while its suggested ambient-temp fallback would recreate
+  the original private-home-path rejection on both managed POSIX hosts and
+  normal per-user Windows temp directories.
+- **Evidence:** PR #900's first Greptile review scored 4/5 and flagged
+  `agent-effectiveness.test.ts` at the hard-coded temp root. The production
+  scanner rejects `/home/<user>`, `/Users/<user>`, and
+  `C:\\Users\\<user>` paths; Effect's default temp-directory implementation
+  delegates to the environment-sensitive platform temp resolver.
+- **What would have prevented it:** use a shared, injected-platform test helper
+  from the first repair: `/tmp` for POSIX and the Windows system-root temp
+  directory for `win32`, independent of `TMPDIR`, `TMP`, and `TEMP`. Prove both
+  branches without weakening the production privacy scanner.
+- **Disposition:** actionable review finding; replace both local literals with
+  the shared helper, add Windows/POSIX resolver tests, and rerun the fixtures
+  under the actual managed temp environment before re-review.
+- **Owner:** shared test utilities and Agent Effectiveness fixture maintainers.
+
+## 2026-08-30 — Shared temp helper passes behavior tests before Effect-LSP rejects its API shape
+
+- **What happened:** the first shared portability helper passed all 28 focused
+  behavior tests, but its package build/check failed immediately under the
+  Effect language-service rules because it imported `node:path` and exported a
+  two-argument function without a pipeable overload.
+- **Evidence:** `bunx turbo run check --filter=@beep/test-utils
+  --filter=@beep/repo-ai-metrics --filter=@beep/repo-cli` reported
+  `effect(nodeBuiltinImport)` for `SystemTemp.ts` and
+  `effect(missingPipeableSignature)` for
+  `privacySafeSystemTempRootForTesting`; the preceding three-file Vitest run
+  passed 28/28 tests.
+- **What would have prevented it:** design shared helpers against the configured
+  Effect-LSP contract before behavior-only testing: prefer the Effect platform
+  surface or simple platform-independent string handling, and use one options
+  object when an exported helper does not need data-first/data-last arities.
+- **Disposition:** edit-loop API-shape correction; remove the Node path import,
+  convert the injected test seam to a single options object, and rerun the same
+  scoped check before publication.
+- **Owner:** shared test-utility authors and Effect-LSP guidance maintainers.
+
+## 2026-08-30 — Green repo-cli suite prints unscoped failure-shaped fixture output
+
+- **What happened:** the full package-scoped repo-cli test run printed repeated
+  `TS2589` failures for `@beep/xai` and `@beep/ui` plus `Failed:` task lines,
+  which looked like a live dependency regression while the suite continued for
+  several minutes. Those messages were fixture output: the terminal result was
+  143 passing files and 2,694 passing tests.
+- **Evidence:** `bunx turbo run test --filter=@beep/test-utils
+  --filter=@beep/repo-ai-metrics --filter=@beep/repo-cli` emitted
+  `@beep/xai#build` and `@beep/ui#build` failure-shaped lines mid-run, then
+  completed `3 successful, 3 total` after 4 minutes 32 seconds.
+- **What would have prevented it:** capture expected nested-command stderr in
+  the owning fixture, or prefix replayed failure samples with the test name and
+  an explicit `expected fixture output` marker so operators do not diagnose a
+  green suite as a concurrent workspace failure.
+- **Disposition:** diagnostic-noise friction only; no xai/ui repair is implied
+  by the terminal green package test result.
+- **Owner:** repo-cli command-fixture diagnostics and package-test reporting.
+
+## 2026-08-30 — Scoped check passes a new export that full package docgen rejects
+
+- **What happened:** the shared temp helper passed focused formatting,
+  typecheck, build, and behavior tests, but an independent final-diff reviewer
+  ran the full package verifier and found that its exported JSDoc violated the
+  repository documentation law.
+- **Evidence:** `bun run beep quality package-verify @beep/test-utils` failed
+  docgen on `SystemTemp.ts`: the exported options interface was missing
+  `@since`, and both exported value docs used prohibited `@example` carriers
+  instead of titled `**Example** (...)` sections. The earlier scoped Turbo
+  check had completed 35/35 tasks because it does not include package docgen.
+- **What would have prevented it:** include full package verification whenever
+  a package barrel gains a new export, or add the JSDoc-law lane to the scoped
+  check plan for files under a published `src/` surface.
+- **Disposition:** actionable proof-gap repair; bring all three exports onto the
+  canonical documentation shape and rerun the full test-utils verifier before
+  committing the review iteration.
+- **Owner:** package-verification planning and shared test-utility authors.
+
+## 2026-08-30 — Package verifier passes an unnecessary exported data interface
+
+- **What happened:** after the new helper passed scoped check, tests, and the
+  full test-utils package verifier, the repo-wide cheap-gate schema-first lane
+  rejected its exported options interface as an unmodeled pure-data API.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` reported
+  `PrivacySafeSystemTempRootOptions [exported-interface]` with
+  `schema-first-inventory` severity `error`; the preceding
+  `package-verify @beep/test-utils` had passed audit and docgen.
+- **What would have prevented it:** include schema-first policy in the package
+  verifier or scoped package check when a public barrel changes. Avoid exporting
+  a configuration shape that exists only to inject platform facts into a pure
+  test seam; if it is a genuine public model, define the annotated schema first.
+- **Disposition:** API-surface correction; keep the structural options type
+  module-private and export only the resolver functions consumers need.
+- **Owner:** package-verification composition and shared utility API authors.
+
+## 2026-08-30 — One shared test-helper export fans affected check across 117 packages
+
+- **What happened:** moving the privacy-safe temp resolver into the canonical
+  `@beep/test-utils` package made the required affected CI check typecheck nearly
+  the entire downstream workspace, even though only two test files consume the
+  new helper.
+- **Evidence:** `bun run beep ci lane check --affected --base origin/main
+  --summarize` selected 117 packages and ran 224 successful Turbo tasks in
+  1 minute 36 seconds. It then ran the separate global 952-file Effect-LSP scan
+  for another 167 seconds, despite the same scan already passing in cheap gates.
+- **What would have prevented it:** give narrow cross-package test helpers a
+  leaf support surface with limited reverse dependencies, or let affected proof
+  planning distinguish additive test-only exports from runtime dependency
+  changes while preserving a fail-closed fallback. Reuse the exact-head global
+  Effect scan across cheap-gate and CI-parity invocations.
+- **Disposition:** proof-topology bottleneck only; all 224 affected tasks and
+  the global Effect scan passed. Keep the shared helper to avoid duplicating a
+  privacy boundary, but optimize its downstream proof cost separately.
+- **Owner:** test-support package topology and affected-proof planning.
+
+## 2026-08-30 — Recovery PR merges before its active review-fix loop closes
+
+- **What happened:** PR #900 was merged and its remote branch was deleted while
+  the active Greptile loop was repairing a valid portability finding. A later
+  push recreated the same remote branch with the fixes, but those commits are
+  not ancestors of the squash merge on `main` and therefore require a narrow
+  follow-up PR.
+- **Evidence:** GitHub records PR #900 merged at
+  `746ac2836d4a3499b7e323790f75c48cd26cd67e` from head
+  `d49d0dd2f9c2ff3e82e5cb119f5714b90a913ae6` on 2026-08-30 at 17:30:02Z.
+  Required hosted checks were terminal by 17:17Z, but Greptile was still 4/5
+  with an unresolved `/tmp` portability thread; local head
+  `b1d2f138058ab9d1d9c215b952f2c4c9d033408d` contains that reviewed repair.
+- **What would have prevented it:** make the merge queue require the current
+  head's Greptile 5/5 result and zero unresolved review threads, and expose an
+  active closeout lease so branch deletion cannot race a publisher's review-fix
+  iteration.
+- **Disposition:** hosted-concurrency recovery; retain the completed merge of
+  #900, reconcile the recreated branch with current `origin/main`, and publish
+  only the unmerged review fixes as a follow-up.
+- **Owner:** merge admission, review-policy enforcement, and closeout lease
+  observability.
+
+## 2026-08-30 — Squash-merged recovery branch obscures the true follow-up diff
+
+- **What happened:** reconciling the recreated recovery branch with current
+  `origin/main` initially made the branch appear to delete thousands of lines
+  added by newer PRs because its merge base predates #900's squash commit.
+  Merging `origin/main` then produced five overlaps between the squash-merged
+  recovery baseline and the branch's post-review amendments.
+- **Evidence:** before reconciliation, `git diff --stat origin/main HEAD`
+  reported 62 changed files and 8,470 deletions. `git merge --no-edit
+  origin/main` conflicted in the recovery changeset, `SPEC.md`, this ledger, and
+  two Agent Effectiveness fixtures. After resolving against the current-main
+  baseline, `git diff --name-status origin/main` reports only the eight intended
+  follow-up files.
+- **What would have prevented it:** when a squash-merged PR branch is deleted
+  during active review repair, recreate a fresh follow-up branch directly from
+  the merge commit and apply only the reviewed delta, or provide a Yeet recovery
+  command that computes that delta from the merged PR head and current review
+  head.
+- **Disposition:** resolved publication friction; preserve all newer mainline
+  files and carry only the portable temp helper, its consumers, acceptance
+  wording, changeset, tests, and contemporaneous ledger additions.
+- **Owner:** post-merge review recovery tooling and branch lifecycle guidance.
+
+## 2026-08-30 — Prescribed scheduler probe now requires an unstated flag
+
+- **What happened:** the machine-wide scheduler operator instruction says to
+  probe the lane with `bun run beep quality scheduler status`, but the current
+  CLI rejects that exact read-only command instead of printing the status.
+- **Evidence:** the command exited 1 with `Missing required flag: --json` and
+  printed usage showing `--json` as the only command flag, even though the
+  operator instruction omits it.
+- **What would have prevented it:** make human-readable status the no-flag
+  default and keep `--json` optional, or update the canonical operator
+  instruction and command examples atomically when the flag becomes required.
+- **Disposition:** scheduler-observability friction; retry the probe with
+  `--json` and continue package-scoped iteration without entering admission.
+- **Owner:** quality-scheduler CLI compatibility and operator documentation.
+
+## 2026-08-30 — Squash follow-up edits an already-landed changeset outside the proof range
+
+- **What happened:** the first post-merge follow-up retained and extended
+  #900's changeset file, but cheap gates correctly treated that file as part of
+  the base rather than as a new in-range release declaration.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` refreshed
+  `origin/main`, then `quality changeset-status --since origin/main` exited 1
+  and reported changed product workspaces `@beep/repo-ai-metrics` and
+  `@beep/test-utils` missing an in-range changeset.
+- **What would have prevented it:** a post-squash recovery helper should detect
+  changeset paths already present in the merge commit and generate a fresh
+  follow-up changeset instead of carrying an amendment to the merged file.
+- **Disposition:** actionable publication repair; restore the landed changeset
+  byte-for-byte and add a new changeset scoped to both follow-up packages.
+- **Owner:** changeset-range diagnostics and post-merge review recovery tooling.
+
+## 2026-08-30 — Non-admission Effect scan slows under an admitted full proof
+
+- **What happened:** cheap gates correctly avoided the admission queue, but its
+  global Effect-LSP test scan still competed with a concurrently admitted full
+  proof and produced no progress output for several minutes.
+- **Evidence:** scheduler status showed one active three-token full-proof lease
+  and three queued tickets while `cheap-gates:test-tsgo` checked 952 files
+  across 135 packages. The scan completed green in 247,006 ms, versus 167
+  seconds for the same 952-file lane earlier in this recovery.
+- **What would have prevented it:** either account heavyweight non-admission
+  scans in the machine capacity model, reuse an exact-tree Effect-LSP result
+  across proof commands, or emit periodic file/package progress so slower
+  resource sharing is distinguishable from a hang.
+- **Disposition:** performance and observability regression only; the scan is
+  green and no duplicate was launched.
+- **Owner:** quality-scheduler resource accounting, Effect-LSP proof caching,
+  and progress reporting.
+
+## 2026-08-30 — Generated-document checks fail transiently without byte drift
+
+- **What happened:** cheap gates failed both generated-document checks even
+  though the follow-up has no net changes to their sources or outputs relative
+  to `origin/main`. Both canonical writers then reported writes but changed no
+  tracked bytes, and immediate standalone checks passed.
+- **Evidence:** at `origin/main` `9c0f2eacc760c246fa686fefb911a090b2bd5275`,
+  `bun run beep goals index --check` reported `goals/INDEX.md` drift and
+  `bun run beep explore atlas --check` exited 1. `git diff --name-status
+  origin/main` contained neither goal manifests nor exploration sources before
+  those checks. `goals index --write` and `explore atlas --write` left the tree
+  unchanged; direct `--check` reruns then both exited 0.
+- **What would have prevented it:** report the mismatching path or digest on
+  check failure and make projection reads/writes atomic so a transient cache or
+  concurrent-read condition cannot masquerade as committed drift.
+- **Disposition:** transient proof-orchestration failure; retain no generated
+  artifact diff and rely on the immediate green standalone reruns plus a fresh
+  cheap-gate pass after the changeset commit.
+- **Owner:** goal-index and exploration-atlas check determinism and diagnostics.
+
+## 2026-08-30 — Green local lanes leave six closeout baselines marked stale
+
+- **What happened:** after package checks, cheap gates, and the authoritative
+  affected CI lane all passed, the first hosted closeout status still declared
+  six local proof inputs stale because changed tests and the opportunity ledger
+  postdated their generated baselines or inventory.
+- **Evidence:** `bun run beep yeet status --remote` at
+  `97e98b5634c126fe505094575861aef8e82b40b9` listed stale
+  `coverage-regression`, `jsdoc-totals-ratchet`, `knip-ratchet`,
+  `test-typecheck-blindspot`, `goals-doctor`, and
+  `jsdoc-documentation-inventory`, while the preceding cheap-gate run and
+  affected lane both exited 0.
+- **What would have prevented it:** include the closeout staleness audit before
+  publication, have the relevant canonical writers participate in repair, or
+  allow an exact-head green gate to refresh an unchanged baseline's provenance
+  without requiring a late hosted-head reset.
+- **Disposition:** actionable closeout repair; run only the canonical writers
+  named by status, inspect their byte diffs, and publish one reviewed generated
+  update if needed.
+- **Owner:** Yeet pre-publication completeness and generated-baseline lifecycle.
+
+## 2026-08-30 — Timestamp staleness repair triggers workspace-wide baseline recomputation
+
+- **What happened:** clearing closeout's stale-baseline markers required
+  workspace-wide coverage and JSDoc inventory recomputation even though the
+  review fix added one small test helper and two fixture call sites.
+- **Evidence:** `bun run coverage:baseline:write` prebuilt 134 packages, ran ten
+  uncached weighted coverage shards, and completed in 5 minutes 53 seconds; the
+  repo-cli shard alone ran 143 files and 2,694 cases. The writer changed 304
+  lines in the coverage baseline. `bun run beep quality jsdoc-inventory` used
+  more than one CPU core for about five minutes without progress output and
+  changed 411 JSON inventory lines plus its Markdown projection.
+- **What would have prevented it:** key staleness to semantic input digests and
+  refresh only affected package rows; do not require a workspace-wide remeasure
+  merely because a source file's commit or mtime is newer. Cache inventory and
+  coverage results by exact tree and emit shard/package progress for silent
+  writers.
+- **Disposition:** completed canonical baseline repair; retain the generated
+  diffs, rerun the fast ratchet checks, and avoid another full workspace
+  coverage pass unless a metric gate actually fails.
+- **Owner:** coverage/JSDoc baseline provenance, affected recomputation, and
+  writer progress telemetry.
+
+## 2026-08-30 — GitHub required-check watch cannot infer the checkout repository
+
+- **What happened:** after optional Vercel failures made the Yeet event watch
+  unsuitable for waiting on required checks, the standard GitHub CLI watch
+  could not infer a repository from the current checkout.
+- **Evidence:** `gh pr checks 906 --required --watch --interval 10` exited 1
+  with `No default remote repository has been set`, even though Git has an
+  `origin` remote and the current branch tracks its remote counterpart.
+- **What would have prevented it:** let the GitHub CLI infer the unique Git
+  remote for PR commands, or have Yeet's required-only watch pass the repository
+  it already resolved for the open PR.
+- **Disposition:** closeout tooling friction; do not mutate user-level GitHub
+  configuration, and rerun the read-only watch with explicit
+  `--repo beep-effect/beep-effect`.
+- **Owner:** Yeet/GitHub CLI repository-context propagation.
+
+## 2026-08-30 — Required-check watch exits before workflows register
+
+- **What happened:** immediately after the final push, the required-only GitHub
+  check watcher exited instead of waiting for workflow check suites to be
+  created for the new head.
+- **Evidence:** `gh pr checks 906 --repo beep-effect/beep-effect --required
+  --watch --interval 10` exited 1 with `no required checks reported on the
+  'docs/packet-convention-closeout-recovery' branch` even though the previous
+  head registered 17 required checks and the new push had just completed.
+- **What would have prevented it:** give `--watch` a bounded registration grace
+  period, or have Yeet distinguish `zero checks not yet registered` from the
+  terminal `workflow configured no required checks` state.
+- **Disposition:** hosted-propagation friction; use a bounded retry only for the
+  exact no-check message, then hand control to the normal required-check watch.
+- **Owner:** GitHub check-watch startup semantics and Yeet hosted monitoring.
+
+## 2026-08-30 — Package verifier misses the module fileoverview required by CI Docgen
+
+- **What happened:** the shared test-utils helper passed the package verifier's
+  audit and docgen steps, but the exact affected CI Docgen lane rejected the new
+  module's documentation surface.
+- **Evidence:** `bun run beep quality package-verify @beep/test-utils` completed
+  `ok audit` and `ok docgen`; later, both hosted `Heavy / Docgen` and
+  `bun run beep ci lane docgen --base origin/main --head HEAD --mode affected`
+  failed with `src/SystemTemp.ts:1 <module fileoverview> missing @since`.
+- **What would have prevented it:** make package verification run the same
+  module-fileoverview law as `docgen:local`, or have the new-export scaffold add
+  the canonical `@packageDocumentation` and `@since` module header.
+- **Disposition:** actionable documentation-law repair; add the canonical module
+  header, rerun package verification and the exact affected Docgen lane, then
+  publish one final reviewed fix.
+- **Owner:** package verifier parity, Docgen law composition, and export
+  scaffolding.
+
+## 2026-08-30 — Concurrent Docgen callers race on generated examples
+
+- **What happened:** package verification and the affected CI Docgen lane were
+  launched concurrently to prove the same `@beep/test-utils` documentation
+  repair. The affected lane generated and typechecked the package successfully,
+  while package verification failed because its generated examples directory
+  became empty during the overlapping run.
+- **Evidence:** the concurrent `bun run beep quality package-verify
+  @beep/test-utils` process failed with `TS18003: No inputs were found in config
+  file 'packages/tooling/test-kit/test-utils/docs/examples/tsconfig.json'`; at
+  the same timestamp, `bun run beep ci lane docgen --base origin/main --head
+  HEAD --mode affected` reported `@beep/test-utils:docgen` succeeded.
+- **What would have prevented it:** serialize Docgen callers per package, or
+  generate each invocation's temporary examples in an isolated directory and
+  atomically publish the completed result.
+- **Disposition:** harness concurrency friction; let the affected lane finish,
+  then rerun package verification alone before publication.
+- **Owner:** Docgen generated-workspace isolation and package-verifier locking.
+
+## 2026-08-30 — Affected Docgen accepts scratchpad's skipped output, then rejects it during aggregation
+
+- **What happened:** the exact affected Docgen lane completed all 114 selected
+  Turbo tasks successfully, including `@beep/test-utils`, but failed afterward
+  while aggregating package docs. The scratchpad task had explicitly skipped its
+  proof manifest for a focused include run and emitted no output; the aggregator
+  nevertheless required generated scratchpad docs.
+- **Evidence:** `bun run beep ci lane docgen --base origin/main --head HEAD
+  --mode affected` reported `Tasks: 114 successful, 114 total`, warned `no
+  output files found for task @beep/scratchpad#docgen`, and then failed with
+  `Package "@beep/scratchpad" does not have generated docs. Run "bun run beep
+  docgen generate -p scratchpad" first.`
+- **What would have prevented it:** make scoped selection and aggregation share
+  one typed package-eligibility decision, so an intentional focused-run skip is
+  either excluded before Turbo execution or accepted during aggregation.
+- **Disposition:** authoritative-lane orchestration friction; inspect the live
+  Docgen routing and use its narrowest canonical generation/retry path before
+  publishing the final head.
+- **Owner:** affected Docgen selection, focused-include semantics, and docs
+  aggregation.
+
+## 2026-08-30 — Repo CLI tests emit failure-like fixture output without a progress boundary
+
+- **What happened:** the package-scoped `@beep/repo-cli` test proof emitted
+  realistic failure text from its integration fixtures, then continued without
+  a clear top-level progress boundary for several minutes. It was interrupted
+  at the operator's publish cadence, so its terminal result is not acceptance
+  evidence; the paired package check and focused Docgen regression test were
+  green.
+- **Evidence:** `bunx turbo run test --filter=@beep/repo-cli
+  --filter=@beep/test-utils` printed simulated `@beep/xai:build` and
+  `@beep/ui:build` TS2589 failures, then continued into temporary Git worktrees
+  and hosted-check fixtures for more than four minutes; the scoped check
+  completed 34/34 tasks, the focused regression test passed, and
+  `@beep/test-utils` completed 22 tests with 3 skipped.
+- **What would have prevented it:** prefix captured fixture subprocess output
+  as simulated test data and emit periodic top-level test-file progress, so an
+  operator can distinguish a real package failure from a long-running fixture.
+- **Disposition:** observability friction, not a confirmed product failure;
+  rely on the focused test plus the authoritative affected/hosted lanes for the
+  final head.
+- **Owner:** Repo CLI integration-test output labeling and progress reporting.
+
+## 2026-08-30 — Package verification omits full ESLint JSDoc policy and hosted output hides the finding
+
+- **What happened:** the helper passed package audit, package Docgen, and the
+  affected Docgen metadata law, but hosted `Heavy / Lint Policy` failed the
+  full-repository ESLint JSDoc step. The hosted policy summary retained only the
+  failing child command and exit code, so the actionable diagnostics required
+  a local replay.
+- **Evidence:** hosted run `33329419656`, job `Heavy / Lint Policy`, reported
+  `lint:jsdoc: exit 1` for `bunx eslint . --max-warnings=0` without its child
+  output. Local execution of that exact command identified three warnings in
+  `packages/tooling/test-kit/test-utils/src/SystemTemp.ts`: missing `@param
+  "options"` and two missing `@returns` declarations. `bun run beep quality
+  package-verify @beep/test-utils` had completed both audit and Docgen green.
+- **What would have prevented it:** include the repository's ESLint JSDoc rules
+  in package verification for exported package files, and preserve failing
+  child stdout/stderr in the lint-policy summary and GitHub annotation.
+- **Disposition:** actionable documentation-law repair plus diagnostic
+  observability friction; add the canonical tags and replay ESLint before
+  publishing the final head.
+- **Owner:** package-verifier lint parity and lint-policy failure reporting.
+
+## 2026-08-30 — Final PR head enters an all-jobs hosted Actions fleet queue
+
+- **What happened:** the final repair head published immediately without using
+  local Yeet admission, but its GitHub Actions workflow registered every job
+  without acquiring any runner. This can look like the previously investigated
+  machine scheduler contention even though it is a separate hosted queue.
+- **Evidence:** Actions run `33330826703` for PR #906 head `b968441965` showed
+  `23` jobs with status `queued`, `0` running, and only the intentionally skipped
+  Build job completed after registration; `bun run beep yeet monitor` had
+  already observed the same exact head and only the two optional Vercel reds.
+- **What would have prevented it:** surface hosted runner-fleet queue age and
+  capacity separately from repository admission state, and let Yeet label a
+  registered-but-zero-running workflow as `hosted-runner-queued` rather than a
+  generic pending-check state.
+- **Disposition:** hosted propagation/capacity friction; publish the ledger-only
+  observation while the superseded run is still idle, then monitor the new
+  exact head without entering local admission.
+- **Owner:** GitHub Actions runner-fleet observability and Yeet hosted-state
+  classification.
+
+## 2026-08-30 — Remote closeout discovers three timestamp-stale baselines after hosted Heavy Check passes
+
+- **What happened:** the exact pushed PR head passed hosted `Heavy / Check`,
+  but the remote Yeet status still rejected closeout because adding the shared
+  `SystemTemp.ts` source made three repository baselines older than their input.
+  None of the earlier package-scoped, affected-lane, cheap-gate, or hosted
+  Heavy Check results surfaced the stale closeout metadata before publication.
+- **Evidence:** `bun run beep yeet status --remote` on PR #906 head
+  `89f9a9f990` reported `3 stale, 0 unproven`: `coverage-regression` for
+  `standards/coverage.regression-baseline.jsonc`, `knip-ratchet` for
+  `standards/knip.regression-baseline.jsonc`, and
+  `test-typecheck-blindspot` for
+  `standards/test-typecheck.blindspot-baseline.jsonc`, all older than
+  `packages/tooling/test-kit/test-utils/src/SystemTemp.ts`.
+- **What would have prevented it:** make cheap-gates or the authoritative
+  affected CI lane run the same closeout staleness preflight, and have Heavy
+  Check fail or annotate when any required baseline is older than a changed
+  governed source.
+- **Disposition:** actionable closeout repair; regenerate only the three named
+  baselines, verify their diffs, and publish a replacement exact head without
+  entering local full-Yeet admission.
+- **Owner:** Yeet pre-publication staleness parity and hosted Heavy Check gate
+  coverage.
+
+## 2026-08-30 — Package-local coverage staleness prescribes a whole-repository baseline rewrite
+
+- **What happened:** Yeet correctly identified a stale coverage baseline after
+  the new `@beep/test-utils` helper, but its only rendered repair command was
+  the unscoped whole-document writer. That command prebuilt 134 packages and
+  launched ten coverage shards even though the changed governed source was
+  confined to `@beep/test-utils` and Repo CLI.
+- **Evidence:** `bun run beep yeet status --remote` prescribed `bun run
+  coverage:baseline:write`; the command reported `coverage:full: prebuild once,
+  then 10 weighted in-job shard(s)`, `Running build in 134 packages`, and was
+  still executing active package coverage after more than four minutes. The
+  baseline header separately documents the narrower supported form `bun run
+  coverage -- --filter=<package> --write-baseline`.
+- **What would have prevented it:** derive affected coverage packages from the
+  same branch diff used by gate staleness and render a safe multi-filter
+  regeneration command, falling back to the whole-document writer only when
+  affected-package resolution is ambiguous.
+- **Disposition:** command-routing and acceptance-latency friction; allow the
+  already-running authoritative writer to finish, but do not repeat it for this
+  head.
+- **Owner:** Yeet coverage-staleness remediation hints and affected-package
+  selection.
+
+## 2026-08-30 — Knip baseline writer emits JSONC that the repository formatter rejects
+
+- **What happened:** the canonical Knip baseline writer completed successfully
+  with zero findings, but reformatted `normalization.omitted_fields` onto
+  multiple lines. The repository's Biome policy requires that three-item array
+  on one line, so generator output was immediately non-canonical.
+- **Evidence:** `bun run beep quality knip --write-baseline` wrote
+  `standards/knip.regression-baseline.jsonc` with zero findings; the subsequent
+  `bunx biome check` failed only that file and proposed changing the multiline
+  `omitted_fields` array back to `["line", "col", "pos"]`.
+- **What would have prevented it:** run generated Knip JSONC through the same
+  Biome formatter configuration before the writer reports success, or serialize
+  compact arrays in the already-canonical shape.
+- **Disposition:** generator-formatting friction; apply the canonical formatter
+  and verify the baseline still contains zero findings before publication.
+- **Owner:** Knip baseline serialization and generator post-formatting.
+
+## 2026-08-30 — Exploration Atlas check exits silently until an idempotent rewrite
+
+- **What happened:** cheap-gates reported the exploration Atlas check as failed
+  without a diagnostic. Running the canonical writer changed no tracked file,
+  but the immediately repeated check passed, so there was no reviewable
+  projection drift explaining the initial nonzero exit.
+- **Evidence:** `bun run beep explore atlas --check` inside cheap-gates exited 1
+  with no command output; `bun run beep explore atlas --write` then reported it
+  wrote `explorations/ATLAS.md` and README status projections, `git status`
+  showed neither file changed, and the next `--check` reported the projections
+  current.
+- **What would have prevented it:** make check mode compare normalized content
+  independently of output mtimes and always print the path and mismatch class
+  that caused a nonzero exit; if freshness is intentional, label it separately
+  from projection drift.
+- **Disposition:** transient projection-check and diagnostic friction; retain no
+  projection diff, rerun the check after the final ledger edit, and publish only
+  if it remains green.
+- **Owner:** exploration projection check determinism and failure diagnostics.
+
+## 2026-08-30 — Full coverage writer updates the PR file but hosted ratchet still compares the old floor
+
+- **What happened:** after Yeet prescribed the whole-repository coverage writer,
+  the generated PR diff lowered the changed `Local.ts` row to the locally
+  measured values. The next exact-head hosted coverage lane nevertheless
+  compared the same measurements with higher floors and failed after more than
+  fifteen minutes. Its failure message then prescribed the package-scoped
+  writer and explicitly warned never to use the whole-repository writer for a
+  per-package drop.
+- **Evidence:** commit `906d93ff3c` contains
+  `standards/coverage.regression-baseline.jsonc` values `66.99` lines, `67.81`
+  statements, and `51.3` branches for
+  `packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts`; PR #906
+  Actions job `99312429138` measured those exact values but failed them against
+  `68.27`, `68.85`, and `51.35`, then printed `bun run coverage --
+  --filter=@beep/repo-cli --write-baseline` and “never run bun run
+  coverage:baseline:write for a per-package drop.”
+- **Recurrence evidence:** after the package-scoped writer produced PR #906
+  head `f168a70eb7`, Actions job `99328701092` measured the same aggregate and
+  per-file values as the local writer, including `TmpfsReap.ts` at `94.06`
+  statements and `93.2` functions, but still compared that file with the
+  base-pinned `94.34` and `94.26` floors. The branch and GitHub merge-preview
+  baseline both contain the newly measured lower values.
+- **What would have prevented it:** make Yeet's staleness repair render the same
+  package-scoped command as the hosted ratchet, and explain whether CI
+  intentionally ignores PR-authored lower floors until an explicit reviewer
+  acceptance marker is present. A baseline writer should also verify that its
+  output is the floor the hosted merge-ref lane will actually consume.
+- **Disposition:** actionable coverage-acceptance mismatch; inspect the ratchet's
+  base-versus-head policy before changing another floor, then prefer restoring
+  focused test coverage if lower-floor acceptance is intentionally prohibited.
+- **Owner:** coverage baseline writer, ratchet comparison policy, and Yeet
+  remediation consistency.
+
+## 2026-08-30 — Temp-repository test harness exposes an unavailable console accessor as an invalid Effect
+
+- **What happened:** the focused coverage-restoration test used the common
+  `withTempRepo` fixture and then attempted to inspect `TestConsole.logLines`.
+  The production effect completed both canonical and non-canonical aggregation
+  paths, but the test failed afterward with an opaque Effect runtime error
+  because that fixture does not install the test-console layer.
+- **Evidence:** `bunx vitest run packages/tooling/tool/cli/test/docgen.test.ts`
+  printed both expected `docgen:local` messages, then failed only the new test
+  with `Unknown Error: Fiber.runLoop: Not a valid effect: undefined` at the
+  `TestConsole.logLines` read; the neighboring `withTempRepoCommand` fixture is
+  the variant that provides captured command-console state.
+- **What would have prevented it:** encode the console capability in the
+  fixture's environment type or expose a deliberately named capture fixture so
+  an unavailable accessor fails at typecheck time instead of becoming
+  `yield* undefined` at runtime.
+- **Disposition:** test-harness friction; assert the observable aggregate count
+  and filesystem outputs under `withTempRepo`, leaving console-capture behavior
+  to command-harness tests.
+- **Owner:** Repo CLI test fixture capability typing and naming.
+
+## 2026-08-30 — In-progress Actions job logs can return BlobNotFound while the runner is active
+
+- **What happened:** while the final required Lint job remained live, an
+  attempt to inspect its partial log for progress failed even though the Jobs
+  API still reported the verification step as `in_progress`.
+- **Evidence:** `gh api --allow-escape-sequences
+  repos/beep-effect/beep-effect/actions/jobs/99317444130/logs` returned HTTP 404
+  with Azure storage error `BlobNotFound`; the same job's metadata reported
+  `status: in_progress` and active step `Run verification lane` for PR #906.
+- **What would have prevented it:** expose streaming in-progress logs through a
+  stable endpoint, or have the monitor surface the current Actions step plus a
+  clear “partial logs unavailable” state instead of requiring a separate
+  download probe.
+- **Disposition:** hosted observability friction only; retain the attached
+  required-check watcher and wait for the terminal job result.
+- **Owner:** Actions log availability and Yeet hosted-progress diagnostics.
+
+## 2026-08-30 — Goal-ledger validation commands are not self-discovering at file scope
+
+- **What happened:** validating the final one-file ledger change hit two local
+  command-contract failures: the formatter accepted the path but processed no
+  files, and a previously used goal-index command was not a registered Bun
+  script in this checkout.
+- **Evidence:** `bunx biome check
+  goals/packet-convention-migration/research/OPPORTUNITIES.md` exited 1 with
+  `No files were processed` and listed the Markdown path as ignored;
+  `bun run repo-cli goals index --check` exited 1 with
+  `error: Script not found "repo-cli"`. `git diff --check` and
+  `bun run beep explore atlas --check` both passed for the same change.
+- **What would have prevented it:** document one canonical goal-packet
+  validation command that covers Markdown formatting, packet projections, and
+  goal indexing, and make invalid legacy aliases print the supported `beep`
+  equivalent.
+- **Disposition:** validation-discovery friction; use the live root script and
+  CLI help to find the supported goal-index route, while treating ignored
+  Markdown as outside Biome's configured scope.
+- **Owner:** goal tooling command discoverability and Markdown validation scope.
+
+## 2026-08-30 — Bunx Markdown lint resolves to an unconfigured mise shim
+
+- **What happened:** after Biome correctly reported goal Markdown outside its
+  scope, the direct Markdown-lint fallback did not launch the package tool; it
+  was intercepted by a host shim that had no selected version.
+- **Evidence:** `bunx markdownlint-cli2
+  goals/packet-convention-migration/research/OPPORTUNITIES.md` exited 1 with
+  `mise ERROR No version is set for shim: markdownlint-cli2` and suggested a
+  global installation. No installation was attempted.
+- **What would have prevented it:** provide a repository-owned Markdown lint
+  script with a pinned dependency and documented path filtering, so validation
+  does not depend on host shim precedence or a mutable global toolchain.
+- **Disposition:** host-tool routing friction; rely on the repository's
+  successful diff, goal-index, Atlas, and CI lint gates instead of changing the
+  operator's global environment during closeout.
+- **Owner:** repository Markdown lint entrypoint and Bunx/mise shim precedence.
+
+## 2026-08-30 — Operator scheduler probe omits a now-required JSON flag
+
+- **What happened:** the exact machine-wide lane-probe command supplied for the
+  goal no longer executes; the live CLI treats its only output-format flag as
+  required.
+- **Evidence:** `bun run beep quality scheduler status` exited 1 after printing
+  the command help and `ERROR Missing required flag: --json`.
+- **What would have prevented it:** keep the operator instruction synchronized
+  with the CLI contract, or make human-readable status the default while
+  retaining `--json` as an optional automation format.
+- **Disposition:** operator/runbook drift; retry the read-only probe with
+  `bun run beep quality scheduler status --json` and do not enter admission
+  during the edit loop.
+- **Owner:** scheduler status CLI defaults and operator documentation.
+
+## 2026-08-30 — Closeout succeeds but rejects an empty GitHub review decision after Greptile acceptance
+
+- **What happened:** the strict closeout command exited successfully with every
+  requested review threshold satisfied, yet its summary still declared the PR
+  not merge-ready because GitHub returned no aggregate review decision. It also
+  reported locally stale baseline timestamps after the exact-head hosted gates
+  that consume those baselines had passed.
+- **Evidence:** `bun run beep yeet closeout --summary
+  --require-greptile-score 5/5 --require-greptile-issues 0
+  --require-review-comments 0` exited 0 for PR #906 and reported 17 required
+  checks green, 0 actionable threads, Greptile 5/5, and 0 closeout issues, but
+  then printed `merge-ready: no, blocked on review-decision-acceptable` plus
+  five stale gates. `gh pr view 906 --json reviewDecision,mergeable,reviews`
+  returned an empty `reviewDecision`, `MERGEABLE`, and only a non-blocking
+  `COMMENTED` review; the aggregate commit status contains only two optional
+  Vercel deployment-rate-limit failures.
+- **What would have prevented it:** treat an empty review decision as acceptable
+  when no approval rule is required and the configured Greptile/thread
+  thresholds pass, or fail closeout with an explicit required-human-approval
+  diagnostic. Staleness should defer to terminal exact-head hosted checks or
+  explain why their green results do not prove the same baseline contract.
+- **Disposition:** closeout classification and evidence-precedence friction;
+  preserve the exact GitHub facts and do not manufacture an approval or rerun
+  green checks merely to satisfy an ambiguous local status label.
+- **Owner:** Yeet review-decision policy, closeout exit semantics, and hosted
+  proof reconciliation.
+
+## 2026-08-30 — Coverage baseline ratchets collide textually across otherwise independent PRs
+
+- **What happened:** updating PR #906 with current `main` produced a single
+  content conflict in the repository-wide coverage baseline. Both sides had
+  independently remeasured the `@beep/repo-cli` package, so Git could not
+  combine their package and per-file measurements safely.
+- **Evidence:** `git merge --no-ff origin/main` stopped with
+  `CONFLICT (content): Merge conflict in
+  standards/coverage.regression-baseline.jsonc`; the conflict contains the
+  branch's Docgen-focused `@beep/repo-cli` measurements and different current
+  `main` measurements for the same package row.
+- **What would have prevented it:** make the baseline writer able to perform a
+  deterministic three-way merge keyed by package and file, or provide a
+  documented package-scoped regeneration command that remeasures only the
+  conflicted package from the already-merged tree.
+- **Disposition:** merge-forward friction; regenerate the `@beep/repo-cli`
+  baseline from the merged source tree, verify the ratchet, and include the
+  resolved baseline in the merge commit.
+- **Owner:** coverage baseline writer and concurrent-ratchet merge ergonomics.
+
+## 2026-08-30 — Ignored goals-index state makes package coverage nondeterministic after merging main
+
+- **What happened:** the package-scoped coverage regeneration reached the
+  repo-cli tests but failed because a retained, ignored local goals projection
+  still described the pre-merge manifest set. The test regenerated that
+  projection from the merged tree and interpreted the expected update as
+  nondeterminism.
+- **Evidence:** `bun run coverage -- --filter=@beep/repo-cli
+  --write-baseline` failed in
+  `test/goals-bootstrap-plan.test.ts` at `regenerating the local index around a
+  retain-only pilot plan is deterministic`; its diff changed `164 packets: 49
+  active ... 103 completed-retained` to `162 packets: 46 active ... 104
+  completed-retained` after current `main` was merged.
+- **What would have prevented it:** make the test create and compare a
+  fixture-owned index in its temporary repository, or have coverage/test
+  preflight refresh or discard the ignored projection before asserting
+  determinism against the live manifest set.
+- **Disposition:** disposable local-projection friction; regenerate the ignored
+  index from the merged manifests, prove the focused test, then retry the
+  package-scoped coverage writer.
+- **Owner:** goals-index test isolation and repo-cli coverage preflight.
+
+## 2026-08-30 — Merge commits make broad whitespace checks report already-landed main changes
+
+- **What happened:** the normal staged whitespace check was noisy during the
+  merge because its comparison included every file brought forward from
+  `main`, including whitespace already accepted there, rather than only PR
+  #906's surviving delta and conflict resolution.
+- **Evidence:** `git diff --cached --check` reported trailing whitespace and
+  blank-line findings in `.claude/skills/impeccable/reference/*.md` and
+  `scratchpad/partners/REVIEW2_FROM_THE_OTHER_SIDE_OF_THE_HARNESS.md`; the
+  PR-scoped check against the goal, baseline, repo-cli, and changeset paths
+  emitted no finding.
+- **What would have prevented it:** document a merge-in-progress diff-check
+  form that compares the index to current `origin/main`, or make the merge
+  helper distinguish inherited base findings from PR-introduced findings.
+- **Disposition:** inherited merge-diff noise; do not rewrite unrelated
+  already-landed files, and validate the PR-owned/resolved paths plus hosted
+  exact-head gates.
+- **Owner:** merge-validation command guidance and whitespace attribution.
+
+## 2026-08-30 — Ignored exploration Atlas state breaks cheap gates after merging main
+
+- **What happened:** the cheap-gates tier failed only its exploration Atlas
+  lane because the worktree retained an ignored Atlas generated before the
+  newly merged exploration manifests. The other thirteen collected lanes
+  passed.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` reported
+  `cheap-gates:exploration-atlas: exit 1` and every other lane as passed;
+  `git status --ignored --short explorations` identified
+  `explorations/ATLAS.md` as ignored local state, while
+  `bun run beep explore atlas --check` exited 1 without a drift diagnostic.
+- **What would have prevented it:** ignore an existing local Atlas during
+  `--check`, refresh it automatically from authoritative D3 manifests, or emit
+  the specific stale-projection path and supported regeneration command on
+  failure.
+- **Disposition:** disposable local-projection friction; run the documented
+  Atlas writer, then recheck only the failed projection lane.
+- **Owner:** exploration projection preflight and Atlas failure diagnostics.
+
+## 2026-08-30 — Conventional commit enforcement rejects a natural merge subject late
+
+- **What happened:** the resolved merge passed every pre-commit hook, but the
+  commit was rejected afterward because the natural-language merge subject did
+  not include a conventional-commit type.
+- **Evidence:** `git commit -m "merge main into packet convention closeout"`
+  reached the commit-msg hook after instructions-drift, gitleaks, typos, Biome,
+  and JSDoc passed, then commitlint returned `subject may not be empty` and
+  `type may not be empty`.
+- **What would have prevented it:** have the merge workflow propose a compliant
+  subject such as `chore(merge): ...` before running the more expensive
+  pre-commit suite, or make commitlint's diagnostic say that the subject lacks
+  the required `<type>(<scope>): <subject>` shape.
+- **Disposition:** commit-message contract friction; keep the resolved index
+  intact and retry with a conventional merge subject.
+- **Owner:** merge commit UX and commitlint diagnostic ordering.
+
+## 2026-08-30 — GitHub CLI remote inference changes between adjacent PR commands
+
+- **What happened:** immediately after `gh pr view` and `gh pr checks` resolved
+  PR #906 from the worktree, the attached required-check watcher refused to
+  start because GitHub CLI no longer inferred a default repository.
+- **Evidence:** `gh pr checks 906 --required --watch --fail-fast --interval 10`
+  exited 1 with `No default remote repository has been set` and requested
+  `gh repo set-default`, while adjacent PR queries in the same checkout had
+  succeeded without an explicit repository.
+- **What would have prevented it:** make repository inference consistent for
+  all `gh pr` subcommands, or have the Yeet/closeout runbook always pass the
+  canonical `-R owner/repository` argument to hosted watchers.
+- **Disposition:** GitHub CLI context friction; do not mutate global CLI
+  defaults during goal closeout, and retry the read-only watcher with an
+  explicit repository.
+- **Owner:** hosted-check command construction and GitHub CLI repository
+  context.
+
+## 2026-08-30 — GitHub CLI withholds a failed job's logs until unrelated jobs finish
+
+- **What happened:** the exact-head Coverage Regression job reached a terminal
+  failure, but its diagnostic logs remained unavailable because the overall
+  workflow still had Lint running.
+- **Evidence:** the Actions jobs API reported `Heavy / Coverage Regression` as
+  `completed` with conclusion `failure`; immediately afterward,
+  `gh run view 33338129004 --job 99328701092 --log-failed` exited 1 with
+  `run 33338129004 is still in progress; logs will be available when it is
+  complete`.
+- **What would have prevented it:** allow job-scoped log retrieval as soon as
+  that job is terminal, or have the hosted monitor surface the failed job's
+  annotations independently of the parent workflow's remaining jobs.
+- **Disposition:** hosted failure-observability bottleneck; preserve the failed
+  exact head, wait only for the remaining workflow job, then retrieve the
+  terminal coverage comparator output before editing.
+- **Owner:** GitHub Actions job-log availability and Yeet first-red evidence
+  collection.
+
+## 2026-08-30 — Property-law timing fixture can reject its own intended in-flight mutation
+
+- **What happened:** after the coverage repair was pushed to PR #906, the
+  unrelated corpus-restoration property test that intentionally mutates a
+  same-size source in flight failed its preservation-directory inventory guard.
+- **Evidence:** exact-head Actions run `33339667950`, job `99332886723`, failed
+  `test/corpus-command.test.ts > corpus restoration preservation > recopies a
+  same-size source that stabilizes after changing in flight`; the check-run
+  annotation points to `Restoration.ts:1410` with `Preservation source directory
+  no longer matches its approved inventory evidence.` The PR head changes only
+  the tmpfs fallback test, coverage baseline, and this goal ledger.
+- **What would have prevented it:** make the in-flight mutation fixture wait on
+  a deterministic copy-phase barrier that occurs after directory evidence is
+  consumed, rather than relying on filesystem timing around an observably open
+  source; alternatively classify and automatically retry this known
+  concurrency-sensitive property case independently of unrelated PR changes.
+- **Disposition:** the exact focused Vitest command passed locally (1 passed,
+  53 skipped) in 7.12 seconds against the failed head, so treat the hosted
+  result as a rerunnable concurrency flake unless it recurs on the next head.
+- **Owner:** corpus-restoration property-test synchronization and Property Laws
+  lane retry policy.
+
+## 2026-08-30 — Package-scoped check omits an Effect-LSP rule enforced by Heavy Check
+
+- **What happened:** the focused tmpfs test, full repo-cli coverage run, and
+  `turbo run check --filter=@beep/repo-cli` all passed, but hosted Heavy Check
+  rejected the new test provider's `Effect.succeed(undefined)` fallback.
+- **Evidence:** PR #906 exact-head run `33339667950`, Heavy Check job
+  `99332886807`, annotated `tmpfs-reap.test.ts:719` twice with
+  `Effect.void represents the same outcome as Effect.succeed(undefined)` and
+  rule `effectSucceedWithVoid`; the preceding scoped check reported 33/33 tasks
+  successful.
+- **Follow-on evidence:** applying the diagnostic's direct `Effect.void`
+  replacement made `bun run beep quality test-tsgo` fail the repo-cli test
+  tsconfig because `Effect<void>` is not assignable to the provider callback's
+  required `Effect<ConfigProvider.Node | undefined>` under exact optional
+  property types. Attempting to shorten the retry with `bunx tsgo -p
+  test/tsconfig.json` inside repo-cli instead emitted `TS6059` for every test
+  because the inherited `rootDir` remains `src`, leaving the 953-file root
+  command as the only usable local test-source diagnostic.
+- **What would have prevented it:** provide a package-scoped Effect-LSP command
+  or include the Effect rules in each package's normal `check` task, so an
+  author can run the authoritative source rule without entering the full CI
+  lane. The diagnostic should suggest a type-preserving equivalent such as
+  deriving explicit `undefined` from `Effect.void` when the target distinguishes
+  `undefined` from `void`. Make the package test tsconfig directly invocable or
+  offer a file/package filter on the root `test-tsgo` command.
+- **Disposition:** authoritative-lane correction; use
+  `Effect.void.pipe(Effect.as(undefined))`. The focused test and supported
+  953-file test-source diagnostic both pass; publish with this ledger update.
+- **Owner:** Effect-LSP check routing and repo-cli test-fixture guidance.

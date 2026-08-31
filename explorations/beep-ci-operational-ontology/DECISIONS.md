@@ -511,3 +511,98 @@ CANDIDATES 32 accepted / 2 merged / 1 deferred-s6 / 139 rejected / 163 parked;
 FACTS 4 accepted / 7 deferred / 206 parked / 821 rejected; LEDGER 27/76/1. The
 s4-lane-contract §5 completion predicate holds: nothing candidate/open remains.
 S5 IS COMPLETE. Next stage: S6 A-Box ratification & predicates.
+
+## 2026-08-30 — S6 sitting 1 (design grill, seven rulings; steward: Benjamin)
+
+Two grill rounds over the S6 A-Box design; the binding contract is
+`ontology/docs/s6-abox-contract.md`.
+
+- **Sequencing: S6 before auditor run 2.** The A-Box lands against the ratified
+  38-term lattice and closes the loop toward S7; run 2 expands the T-Box on its
+  own corpus afterward.
+- **SHACL at S6, as scribed.** The closure-contract enforcement shapes ship this
+  stage (`shapes/closure.ttl`, pyshacl), honoring the final-grill ruling
+  literally rather than reinterpreting it into the python gate.
+- **One golden snapshot.** A single pinned OperationalSnapshot from this
+  checkout's real `.beep/yeet/runs` journal/verdict bytes (redacted for the
+  public repo), ingested through closure declaration + SHACL and CQ-queried
+  beside the fixtures. The durable telemetry ETL stays labs-incubated per the
+  KPI measurement rules.
+- **Hybrid ratification.** YeetWeightedAdmissionV1, its seven parameter facts,
+  and the enumerations get per-individual sittings (drift vs the S4-deferred
+  values surfaced, never silently re-extracted — verified zero drift at the
+  branch cut); census and snapshot ratify as generator + output digest with
+  steward spot-checks.
+- **Census home: provisional named graph.** The @beep/* census types against a
+  `ciops-prov:` namespace (provisional class + provisional dependency edge),
+  closure declared OPEN, excluded from negation and ratified-typing shapes —
+  honoring both sitting 1b (the S6 ETL regenerates it) and the parked run-2
+  renaming obligation (importsDirectly vs declaresDependencyOn) without
+  prejudging either.
+- **IRI minting: qualify collisions only.** Bare local names stay the default
+  (seed + ratified CQs already use `ciops:ActiveGrant` et al.); a literal member
+  whose bare name is taken gets domain-qualified — `ciops:AdmissionPriority-publish`
+  / `-verify`, with bare `ciops:publish` reserved for the AdmissionWorkKind
+  member per sitting 4d. Fibered-IRI doctrine stays out; S8 ratifies IRIs.
+- **SHACL scope: closure + typing.** Beside closure validation, shapes enforce
+  instance-of-ratified-class and parameter datatype/boundary-range conformance
+  on the ratified graphs; the census graph is excluded from typing shapes.
+
+## 2026-08-30 — S6 sitting 2 (A-Box ratification; steward: Benjamin)
+
+Four rulings over the assembled S6 surface (`ontology/extraction/s6/ABOX.yaml`,
+corpus pin 3b27a0c179; all extracted values verified zero-drift against the
+S4-deferred facts). The fourth ruling was corrected in-sitting from "snapshot
+only" to the full bundle — the correction is authoritative.
+
+- **Policy RATIFIED**: ciops:YeetWeightedAdmissionV1 as instance of
+  AdmissionPolicy (rat-017) with all seven parameter facts (capacityMaxTokens 10,
+  slotSizeGib 5, reserveGib 10, hardFloorGib 15, heartbeatSeconds 5,
+  publishAgingSeconds 120 — the deployed starvation aging carrier —
+  reviewFixClassCap 3). Candidate seq-247 and the seven deferred fact classes
+  project to accepted via `apply_s6_dispositions.py --apply`.
+- **Token weights RATIFIED**: the four accepted admissionTokenWeight edges get
+  their A-Box carrier (full-proof 3, merged-preview 5, review-fix 1, publish 1).
+- **Priority enumerations RATIFIED**: ciops:AdmissionPriority-publish and
+  ciops:AdmissionPriority-verify as individuals of AdmissionPriorityClass,
+  domain-qualified per the sitting-1 collision ruling; the T-Box stays 38 terms.
+- **Bulks RATIFIED + gaps ACKNOWLEDGED**: census (138 @beep/* packages,
+  804 provisional edges, digest cc7f08231f65) and golden snapshot (instant
+  2026-08-30T22:04:02.475Z, 79 events / 41 admissions, redacted digest
+  cf30b993a38d, source pinned against journal growth) both ratify by
+  generator + output digest. Six honesty findings enter auditor run 2's queue:
+  hasGrantState unratified (state tallies manifest-only);
+  capacityAtAdmissionTokens and activeTokens have no deployed journal carrier;
+  admittedBy unusable from this source (domain is WorkUnitSpecification);
+  no ratified predicate for a request's work kind or priority; CQ predicate
+  coverage 1/25 with 0 golden-executed CQs (the three ratified-vocabulary
+  golden probes pass in their place).
+
+S6 IS COMPLETE once the projection lands and the gate reports zero pending
+refs. Next stage: auditor run 2 (journal/verdict corpus extension, adapter
+v1.1.0), then S7 projection function.
+
+### S6 sitting 2 — post-review amendment (2026-08-30, PR #919)
+
+Five review findings (4 P1 + 1 P2) fixed under the steward's direction to
+address PR comments; all five strengthen the ratified machinery without
+touching ratified content:
+
+- generators refuse dirty source bytes (`assert_sources_clean` — the pin claim
+  is now enforced, not assumed);
+- the `--s6` gate byte-verifies every generator-digest ratification against
+  the artifacts on disk;
+- SHACL unavailability now fails the gate closed (contract §4 conformance is a
+  blocker, never a skip);
+- the snapshot ETL derives the admission root from the running uid;
+- the manifest no longer declares `hasGrantState` closed — closure is declared
+  ONLY for predicates the snapshot graph actually asserts; the grant-state
+  tallies remain manifest counts and the predicate stays a vocabulary gap.
+
+The closure amendment and the moving corpus pin change the CENSUS/MANIFEST
+digests — ABOX.yaml is the digest of record and the byte-verifying gate keeps
+it honest; the ratified snapshot content — the redacted journal bytes
+cf30b993a38d and every policy/enumeration fact — is byte-identical to what
+sitting 2 ratified. A follow-up hardening in the same review arc removed every
+committed live host path (the manifest source path is now a portable
+descriptor; the impl-report environment transcript is prose-elided).
