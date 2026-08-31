@@ -20643,13 +20643,13 @@
       "path": "packages/tooling/tool/cli",
       "lines": 78.9,
       "statements": 78.7,
-      "branches": 68.14,
+      "branches": 68.19,
       "functions": 72.62,
       "uncovered": {
-        "lines": 8370,
-        "statements": 8851,
-        "branches": 4789,
-        "functions": 3239
+        "lines": 8337,
+        "statements": 8812,
+        "branches": 4752,
+        "functions": 3230
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -22129,10 +22129,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts": {
-          "lines": 98.79,
-          "statements": 98.79,
-          "branches": 88,
-          "functions": 93.75,
+          "lines": 98.9,
+          "statements": 98.9,
+          "branches": 88.88,
+          "functions": 94.11,
           "uncovered": {
             "lines": 1,
             "statements": 1,
@@ -23953,10 +23953,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts": {
-          "lines": 86.23,
-          "statements": 86.65,
+          "lines": 86.26,
+          "statements": 86.68,
           "branches": 77.57,
-          "functions": 81.72,
+          "functions": 81.81,
           "uncovered": {
             "lines": 61,
             "statements": 61,
@@ -25357,15 +25357,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": {
-          "lines": 37.95,
-          "statements": 36.11,
-          "branches": 22.16,
-          "functions": 24.61,
+          "lines": 38.78,
+          "statements": 36.83,
+          "branches": 23.16,
+          "functions": 25.19,
           "uncovered": {
-            "lines": 273,
-            "statements": 306,
-            "branches": 144,
-            "functions": 98
+            "lines": 262,
+            "statements": 295,
+            "branches": 136,
+            "functions": 95
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts": {
@@ -25560,18 +25560,6 @@
             "functions": 1
           }
         },
-        "packages/tooling/tool/cli/src/commands/Yeet/internal/PrLease.ts": {
-          "lines": 92.94,
-          "statements": 90.53,
-          "branches": 79.48,
-          "functions": 90.62,
-          "uncovered": {
-            "lines": 11,
-            "statements": 16,
-            "branches": 16,
-            "functions": 3
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
           "lines": 83.54,
           "statements": 83.18,
@@ -25609,15 +25597,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts": {
-          "lines": 25.8,
-          "statements": 25.39,
-          "branches": 0,
-          "functions": 15.38,
+          "lines": 33.92,
+          "statements": 33.92,
+          "branches": 21.42,
+          "functions": 27.27,
           "uncovered": {
-            "lines": 46,
-            "statements": 47,
-            "branches": 34,
-            "functions": 11
+            "lines": 37,
+            "statements": 37,
+            "branches": 22,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts": {
@@ -26557,14 +26545,14 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
-          "lines": 96.16,
-          "statements": 95.4,
-          "branches": 89.42,
+          "lines": 96.56,
+          "statements": 95.78,
+          "branches": 89.9,
           "functions": 95.67,
           "uncovered": {
-            "lines": 19,
-            "statements": 24,
-            "branches": 22,
+            "lines": 17,
+            "statements": 22,
+            "branches": 21,
             "functions": 7
           }
         },

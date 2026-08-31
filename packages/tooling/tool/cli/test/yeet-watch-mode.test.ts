@@ -5,15 +5,12 @@ import {
   PrCloseoutReport,
   PrCloseoutReportJson,
   RepoRunContext,
-  retireWatchLeaseForEndForTesting,
   runArtifactPathForContext,
   runYeetWatchStream,
   YeetCommandError,
   YeetInboxRowJson,
-  YeetMergeReadyCriteria,
   YeetMonitorCommentStateJson,
   YeetWatchEvent,
-  YeetWatchSnapshot,
   yeetInboxPaths,
   yeetMonitorCommentStatePath,
   yeetWatchExitFailure,
@@ -601,40 +598,6 @@ describe("runYeetWatchStream", () => {
         )
       )
     )
-  );
-
-  it.effect("retires only terminal pull-request lease endings", () =>
-    Effect.gen(function* () {
-      const retired = yield* Ref.make(A.empty<string>());
-      const snapshot = YeetWatchSnapshot.make({
-        checks: [],
-        criteria: YeetMergeReadyCriteria.make({
-          prOpen: false,
-          notDraft: true,
-          closeoutRun: false,
-          requiredChecksGreen: false,
-          threadsResolved: true,
-          mergeable: true,
-          mergeStateAcceptable: true,
-          reviewDecisionAcceptable: true,
-          greptileScore: O.none(),
-        }),
-        headSha: "aaa111",
-        mergeable: "MERGEABLE",
-        mergeStateStatus: "CLEAN",
-        prNumber: 751,
-        state: "MERGED",
-        threads: [],
-      });
-      const retire = (_context: RepoRunContext, _prNumber: number, _headSha: string, reason: string) =>
-        Ref.update(retired, A.append(reason));
-
-      yield* retireWatchLeaseForEndForTesting(snapshot, "all-terminal", retire)(context);
-      yield* retireWatchLeaseForEndForTesting(context, snapshot, "pr-merged", retire);
-      yield* retireWatchLeaseForEndForTesting(context, snapshot, "pr-closed", retire);
-
-      expect(yield* Ref.get(retired)).toEqual(["pr-merged", "pr-closed"]);
-    })
   );
 });
 

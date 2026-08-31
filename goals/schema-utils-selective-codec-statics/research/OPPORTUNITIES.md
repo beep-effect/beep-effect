@@ -102,3 +102,31 @@
 - **What would have prevented it:** Coverage baseline generation should persist
   aggregate state independently of its terminal parent, or support resuming
   from successful shard receipts without rerunning the entire repository.
+
+## 2026-08-30 — Interrupted package verification left child compilers running
+
+- **What I was doing:** Revalidating `@beep/repo-cli` after merging the latest
+  `main` changes.
+- **Evidence:** Interrupting the output-capturing `quality package-verify`
+  wrapper stopped its parent but left checkout-owned `beep:check` and TypeScript
+  child processes running. Repeating the wrapper drove host load above 500
+  until the three exact orphaned processes were identified by checkout and
+  stopped.
+- **What would have prevented it:** The verifier should run each package step
+  in a process group that is terminated with the parent, and it should stream
+  step-start/progress output so a long audit is not mistaken for a stalled
+  wrapper.
+
+## 2026-08-30 — Coverage localhost race discarded an otherwise complete shard
+
+- **What I was doing:** Regenerating the full coverage baseline after the
+  upstream merge.
+- **Evidence:** `@beep/repo-ai-metrics` failed one OTLP test when its selected
+  localhost port produced both `EADDRINUSE` and `ECONNREFUSED`. An isolated
+  rerun passed all 21 files and 288 tests. The failed shard also skipped
+  `@beep/editor`; the baseline completeness guard named that missing package,
+  and its isolated 18-file, 443-test coverage run passed before aggregation.
+- **What would have prevented it:** Reserve the OTLP test port through the
+  server listener instead of probing and reopening it, and expose a supported
+  aggregate-only resume command that consumes successful coverage summaries
+  after narrowly rerunning failed or skipped packages.

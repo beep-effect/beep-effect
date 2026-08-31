@@ -1662,14 +1662,14 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
             O.map((workspacePackage) =>
               CoveragePackageBaseline.make({
                 ...basePackage,
-                // Base floors remain authoritative; the reviewed workspace
-                // baseline contributes identity only for newly added files
-                // and removes identities for source files deleted since the
-                // comparison base.
-                files: {
-                  ...workspacePackage.files,
-                  ...R.filter(basePackage.files, (_, filePath) => R.has(workspacePackage.files, filePath)),
-                },
+                // Base floors remain authoritative for surviving files; the
+                // reviewed workspace baseline determines file identity.
+                files: R.map(workspacePackage.files, (workspaceFile, filePath) =>
+                  pipe(
+                    R.get(basePackage.files, filePath),
+                    O.getOrElse(() => workspaceFile)
+                  )
+                ),
               })
             ),
             O.getOrElse(() => basePackage)
