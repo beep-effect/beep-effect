@@ -17,6 +17,7 @@ import { ClaimBody, EvidenceBatch, EvidenceClaim, ExtractOutcome, makeBatchId, m
 import { ChunkId, DocumentId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
+import { CrashProjectionInput } from "@/schema/Reasoning";
 
 const [mode] = A.drop(process.argv, 2);
 if (mode !== "fixture") {
@@ -87,10 +88,6 @@ const event = ProvenanceEvent.make({
   id: Result.getOrThrow(makeProvenanceEventId({ body: eventBody, prev })),
   prev,
 });
-const Fixture = S.Struct({ event: S.String, outcome: S.String });
-const fixture = S.encodeSync(S.fromJsonString(Fixture))({
-  event: S.encodeSync(S.fromJsonString(ProvenanceEvent))(event),
-  outcome: S.encodeSync(S.fromJsonString(ExtractOutcome))(outcome),
-});
+const fixture = S.encodeSync(S.fromJsonString(CrashProjectionInput))(CrashProjectionInput.make({ event, outcome }));
 
 process.stdout.write(`${fixture}\n`);

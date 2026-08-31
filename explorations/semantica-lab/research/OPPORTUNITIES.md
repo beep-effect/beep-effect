@@ -462,3 +462,11 @@ ratifies.
   satisfying the hard floor. Fix: a focused scheduler test now exercises the clamp and verifies
   its admitted journal weight. Prevention: admission policy branches added to the monotonic floor
   need a behavior-level test for each distinct machine-envelope outcome before ratification.
+
+- **2026-08-31 — The projection-relevant crash witness exceeded the process argument limit.** A
+  full-W1 repair passed the extracted batch as one child-process argument and reached the crash
+  boundary only after the ten-minute live pipeline, where spawn failed with `E2BIG: argument list
+  too long`. Fix: `CrashProjectionInput` now schema-encodes the batch and event to the isolated
+  crash directory; the child schema-decodes that bounded path before committing the transaction.
+  Prevention: subprocess protocols should pass file or stream handles for workload-sized typed
+  payloads and reserve argv for identifiers, modes, and bounded scalar options.

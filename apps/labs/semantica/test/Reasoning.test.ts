@@ -2,7 +2,7 @@
 
 import { Sha256Hex } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Exit, FileSystem, HashSet, Layer, Result, Stream } from "effect";
+import { Effect, Exit, FileSystem, HashSet, Layer, Path, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -11,7 +11,13 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { describe, expect, it } from "vitest";
 import { ReasonerLive } from "@/layers/ReasonerLive";
 import { sha256TextSync } from "@/schema/Digest";
-import { GEntailmentExpectation, makeRdfStatement, RDFS_RULES, RdfTriple } from "@/schema/Reasoning";
+import {
+  CrashProjectionInput,
+  GEntailmentExpectation,
+  makeRdfStatement,
+  RDFS_RULES,
+  RdfTriple,
+} from "@/schema/Reasoning";
 import { Reasoner } from "@/services/Reasoner";
 
 const statement = (subject: string, predicate: string, object: string) =>
@@ -45,7 +51,6 @@ const inline = (value: string): string => `base64:${Buffer.from(value).toString(
 const n3 = (value: RdfTriple): string => `${value.subject} ${value.predicate} ${value.object}.`;
 const normalizeProof = (proof: string): string =>
   `${Str.trim(Str.replace(/https:\/\/eyereasoner\.github\.io\/\.well-known\/genid\/[^#>]+#/gu, "urn:eye:proof#")(proof))}\n`;
-const CrashFixture = S.Struct({ event: S.String, outcome: S.String });
 
 describe("C2 declarative reasoner", () => {
   it("executes all six rho-df rules plus SKOS transitivity and validates every event", () =>
@@ -136,17 +141,19 @@ describe("C2 declarative reasoner", () => {
           Effect.scoped(
             Effect.gen(function* () {
               const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
               const ledgerRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c2-crash-" });
               const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-              const fixture = yield* processSpawner
-                .string(
-                  ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "fixture"], {
-                    cwd: process.cwd(),
-                    stderr: "pipe",
-                    stdout: "pipe",
-                  })
-                )
-                .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(CrashFixture))));
+              const fixture = yield* processSpawner.string(
+                ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "fixture"], {
+                  cwd: process.cwd(),
+                  stderr: "pipe",
+                  stdout: "pipe",
+                })
+              );
+              yield* S.decodeEffect(S.fromJsonString(CrashProjectionInput))(fixture);
+              const inputPath = path.join(ledgerRoot, "projection-input.json");
+              yield* fs.writeFileString(inputPath, fixture);
               const recover = processSpawner
                 .string(
                   ChildProcess.make(
@@ -166,8 +173,7 @@ describe("C2 declarative reasoner", () => {
                   ledgerRoot,
                   Str.repeat(64)("c"),
                   "replay",
-                  fixture.outcome,
-                  fixture.event,
+                  inputPath,
                 ],
                 { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
               );

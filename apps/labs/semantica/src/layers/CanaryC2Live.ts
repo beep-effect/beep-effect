@@ -18,6 +18,7 @@ import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Prov
 import {
   C2EvalReport,
   CrashIdentityWitness,
+  CrashProjectionInput,
   GEntailmentExpectation,
   GEntailmentWitness,
   makeRdfStatement,
@@ -38,8 +39,7 @@ const C2_STAGE = "c2";
 const expectationJson = S.fromJsonString(GEntailmentExpectation);
 const reportJson = S.fromJsonString(C2EvalReport, { space: 2 });
 const telemetryJson = S.fromJsonString(EvalRunTelemetry, { space: 2 });
-const crashOutcomeJson = S.fromJsonString(ExtractOutcome);
-const crashEventJson = S.fromJsonString(ProvenanceEvent);
+const crashInputJson = S.fromJsonString(CrashProjectionInput);
 const tripleEquivalence = S.toEquivalence(S.Array(RdfTriple));
 const C2_INTERACTIVE_QUERY_LIMIT = PosInt.make(20);
 const C2_INTERACTIVE_QUERY: A.NonEmptyReadonlyArray<SparqlExpectation> = [
@@ -91,18 +91,13 @@ const runCrashProbe = Effect.fn("CanaryC2.runCrashProbe")(function* (
   runId: string,
   mode: "live" | "replay",
   beforeCrashDigest: Sha256Hex,
-  encodedOutcome: string,
-  encodedEvent: string
+  inputPath: string
 ) {
-  const crashCommand = ChildProcess.make(
-    "bun",
-    ["run", entry, "crash", ledgerRoot, runId, mode, encodedOutcome, encodedEvent],
-    {
-      cwd: process.cwd(),
-      stderr: "pipe",
-      stdout: "pipe",
-    }
-  );
+  const crashCommand = ChildProcess.make("bun", ["run", entry, "crash", ledgerRoot, runId, mode, inputPath], {
+    cwd: process.cwd(),
+    stderr: "pipe",
+    stdout: "pipe",
+  });
   const [crashOutput, crashExit] = yield* Effect.scoped(
     processSpawner.spawn(crashCommand).pipe(
       Effect.flatMap((crash) =>
@@ -284,12 +279,9 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.mapError(() => failed("crash-mismatch", "The expected crash projection digest failed."))
       );
-      const encodedCrashOutcome = yield* S.encodeEffect(crashOutcomeJson)(crashOutcome).pipe(
-        Effect.mapError(() => failed("crash-mismatch", "The crash extraction outcome could not be encoded."))
-      );
-      const encodedCrashEvent = yield* S.encodeEffect(crashEventJson)(crashEvent).pipe(
-        Effect.mapError(() => failed("crash-mismatch", "The crash provenance event could not be encoded."))
-      );
+      const encodedCrashInput = yield* S.encodeEffect(crashInputJson)(
+        CrashProjectionInput.make({ event: crashEvent, outcome: crashOutcome })
+      ).pipe(Effect.mapError(() => failed("crash-mismatch", "The crash projection input could not be encoded.")));
       const crashLedgerRoot = path.join(config.ledgerRoot, "c2-crash-probe");
       yield* fs
         .remove(path.join(crashLedgerRoot, base.report.base.run.id, base.baseTelemetry.mode), {
@@ -297,6 +289,13 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
           recursive: true,
         })
         .pipe(Effect.mapError(() => failed("crash-mismatch", "The prior crash-probe ledger could not be cleared.")));
+      const crashInputPath = path.join(crashLedgerRoot, "projection-input.json");
+      yield* fs
+        .makeDirectory(crashLedgerRoot, { recursive: true })
+        .pipe(Effect.mapError(() => failed("crash-mismatch", "The crash-probe directory could not be created.")));
+      yield* fs
+        .writeFileString(crashInputPath, encodedCrashInput)
+        .pipe(Effect.mapError(() => failed("crash-mismatch", "The crash projection input could not be written.")));
       const crash = yield* runCrashProbe(
         processSpawner,
         runtimeProbeEntry,
@@ -304,8 +303,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         base.report.base.run.id,
         base.baseTelemetry.mode,
         beforeCrashDigest,
-        encodedCrashOutcome,
-        encodedCrashEvent
+        crashInputPath
       );
       const interactiveWitness = yield* rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
         Effect.flatMap(

@@ -5,8 +5,10 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { contentDigestSync, digestOmittingSync } from "@/schema/Digest";
+import { ExtractOutcome } from "@/schema/Evidence";
 import { InferenceEventId, StatementId } from "@/schema/Ids";
 import { C1EvalReport } from "@/schema/Projection";
+import { ProvenanceEvent } from "@/schema/Provenance";
 
 const $I = $SemanticaId.create("schema/Reasoning");
 
@@ -540,6 +542,27 @@ export class GEntailmentWitness extends S.Class<GEntailmentWitness>($I`GEntailme
   { expectationDigest: Sha256Hex, cases: S.NonEmptyArray(GEntailmentCaseWitness) },
   $I.annote("GEntailmentWitness", {
     description: "Gold fixture digest and passing closure/event witnesses for all C2 cases.",
+  })
+) {}
+
+/**
+ * Projection-relevant ledger input committed by the process killed in the C2 crash probe.
+ *
+ * **Example** (Inspect the committed extraction field)
+ *
+ * ```ts
+ * import { CrashProjectionInput } from "@/schema/Reasoning"
+ *
+ * console.log(CrashProjectionInput.fields.outcome !== undefined) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CrashProjectionInput extends S.Class<CrashProjectionInput>($I`CrashProjectionInput`)(
+  { event: ProvenanceEvent, outcome: ExtractOutcome },
+  $I.annote("CrashProjectionInput", {
+    description: "Typed extraction batch and provenance event committed immediately before the injected SIGKILL.",
   })
 ) {}
 
