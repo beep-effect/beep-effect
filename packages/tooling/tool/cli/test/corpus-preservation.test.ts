@@ -203,13 +203,6 @@ describe("T7 corpus preservation", () => {
         yield* fs.writeFile(path.join(salvageRoot, "growth.bin"), new Uint8Array([5]));
         const grewPastCeiling = yield* runT7Preservation(options).pipe(Effect.flip, Effect.provide(context));
         expect(grewPastCeiling._tag).toBe("PreservationCeilingExceededError");
-
-        yield* approveT7Preservation(corpusRoot, Number.MAX_SAFE_INTEGER, "synthetic-operator").pipe(
-          Effect.provide(context)
-        );
-        yield* fs.truncate(path.join(salvageRoot, "growth.bin"), proposed.measurement.destFreeBytes + 1);
-        const insufficientCurrentFree = yield* runT7Preservation(options).pipe(Effect.flip, Effect.provide(context));
-        expect(insufficientCurrentFree._tag).toBe("PreservationCeilingExceededError");
       })
     )
   );

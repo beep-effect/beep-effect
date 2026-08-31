@@ -470,3 +470,12 @@ ratifies.
   crash directory; the child schema-decodes that bounded path before committing the transaction.
   Prevention: subprocess protocols should pass file or stream handles for workload-sized typed
   payloads and reserve argv for identifiers, modes, and bounded scalar options.
+
+- **2026-08-31 — A property test derived a sparse-file size from runner free space.** The final
+  exact-head Property Laws lane failed in `corpus-preservation.test.ts` after truncating a fixture
+  to `destFreeBytes + 1`; on that runner the subsequent source census tried to hash the enormous
+  sparse file and returned `PreservationArchiveIoError` before the expected capacity error. The
+  destination-capacity law is already covered by the direct validator and by deterministic
+  injected capacity probes before and during copy. Fix: remove the host-sized sparse-file case and
+  retain those bounded behavior tests. Prevention: tests must inject capacity readings instead of
+  allocating or sizing fixtures from live runner resources.
