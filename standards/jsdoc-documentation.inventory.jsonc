@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-31T07:49:22.633Z",
+  "generatedAt": "2026-08-31T08:58:46.849Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -146250,8 +146250,8 @@
           "exportKind": "const",
           "filePath": "src/ConformanceLedger/ConformanceLedger.evidence.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts",
-          "line": 171,
-          "anchor": "packages-tooling-test-kit-test-utils-src-conformanceledger-conformanceledger-evidence-ts-171-conformanceledgerevidence",
+          "line": 174,
+          "anchor": "packages-tooling-test-kit-test-utils-src-conformanceledger-conformanceledger-evidence-ts-174-conformanceledgerevidence",
           "currentTags": [
             "@internal",
             "@category",
@@ -416464,8 +416464,8 @@
           "exportKind": "type",
           "filePath": "src/Conformance/Conformance.annotations.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.annotations.ts",
-          "line": 159,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-annotations-ts-159-annotation",
+          "line": 160,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-annotations-ts-160-annotation",
           "currentTags": [
             "@see",
             "@category",
@@ -416563,8 +416563,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.collector.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.collector.ts",
-          "line": 44,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-collector-ts-44-collectconformanceannotationsresult",
+          "line": 43,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-collector-ts-43-collectconformanceannotationsresult",
           "currentTags": [
             "@param",
             "@returns",
@@ -416588,8 +416588,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.collector.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.collector.ts",
-          "line": 80,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-collector-ts-80-collectconformanceannotations",
+          "line": 79,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-collector-ts-79-collectconformanceannotations",
           "currentTags": [
             "@param",
             "@returns",
@@ -416999,8 +416999,8 @@
           "exportKind": "type",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 48,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-48-gitobjectid",
+          "line": 54,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-54-gitobjectid",
           "currentTags": [
             "@category",
             "@since"
@@ -417021,8 +417021,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 75,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-75-specificationdate",
+          "line": 81,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-81-specificationdate",
           "currentTags": [
             "@category",
             "@since"
@@ -417043,8 +417043,8 @@
           "exportKind": "type",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 89,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-89-specificationdate",
+          "line": 95,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-95-specificationdate",
           "currentTags": [
             "@category",
             "@since"
@@ -417065,8 +417065,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 106,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-106-specificationsourcerole",
+          "line": 112,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-112-specificationsourcerole",
           "currentTags": [
             "@category",
             "@since"
@@ -417087,8 +417087,8 @@
           "exportKind": "type",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 126,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-126-specificationsourcerole",
+          "line": 132,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-132-specificationsourcerole",
           "currentTags": [
             "@see",
             "@category",
@@ -417110,8 +417110,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 227,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-227-specificationrevision",
+          "line": 233,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-233-specificationrevision",
           "currentTags": [
             "@category",
             "@since"
@@ -417132,8 +417132,8 @@
           "exportKind": "type",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 250,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-250-specificationrevision",
+          "line": 256,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-256-specificationrevision",
           "currentTags": [
             "@see",
             "@category",
@@ -417155,8 +417155,8 @@
           "exportKind": "class",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 277,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-277-specificationsource",
+          "line": 283,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-283-specificationsource",
           "currentTags": [
             "@category",
             "@since"
@@ -417177,8 +417177,8 @@
           "exportKind": "class",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 317,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-317-specificationreference",
+          "line": 323,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-323-specificationreference",
           "currentTags": [
             "@category",
             "@since"
@@ -417199,8 +417199,8 @@
           "exportKind": "const",
           "filePath": "src/Conformance/Conformance.source.schema.ts",
           "repoPath": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-          "line": 350,
-          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-350-revisionlabel",
+          "line": 356,
+          "anchor": "packages-foundation-modeling-schema-src-conformance-conformance-source-schema-ts-356-revisionlabel",
           "currentTags": [
             "@param",
             "@returns",
@@ -456417,8 +456417,8 @@
           "exportKind": "type",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 35,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-35-semanticschemametadataannotationpayload",
+          "line": 34,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-34-semanticschemametadataannotationpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -456439,8 +456439,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 63,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-63-makesemanticschemametadataresult",
+          "line": 62,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-62-makesemanticschemametadataresult",
           "currentTags": [
             "@param",
             "@returns",
@@ -456463,8 +456463,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 93,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-93-makesemanticschemametadata",
+          "line": 92,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-92-makesemanticschemametadata",
           "currentTags": [
             "@param",
             "@returns",
@@ -456488,8 +456488,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 127,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-127-annotatesemanticschema",
+          "line": 126,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-126-annotatesemanticschema",
           "currentTags": [
             "@param",
             "@returns",
@@ -456513,8 +456513,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 163,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-163-collectsemanticschemametadataresult",
+          "line": 162,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-162-collectsemanticschemametadataresult",
           "currentTags": [
             "@param",
             "@returns",
@@ -456538,8 +456538,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 199,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-199-collectsemanticschemametadata",
+          "line": 198,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-198-collectsemanticschemametadata",
           "currentTags": [
             "@param",
             "@returns",
@@ -456564,8 +456564,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 222,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-222-getsemanticschemametadataresult",
+          "line": 221,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-221-getsemanticschemametadataresult",
           "currentTags": [
             "@param",
             "@returns",
@@ -456588,8 +456588,8 @@
           "exportKind": "const",
           "filePath": "src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
           "repoPath": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts",
-          "line": 247,
-          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-247-getsemanticschemametadata",
+          "line": 246,
+          "anchor": "packages-foundation-modeling-rdf-src-semanticschemametadata-semanticschemametadata-annotations-ts-246-getsemanticschemametadata",
           "currentTags": [
             "@param",
             "@returns",
@@ -489919,8 +489919,8 @@
           "exportKind": "re-export",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 78,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-78-export-htmlconformanceissue-htmlconformancerule-from-internal-conformance-html-conformance-contracts-ts",
+          "line": 79,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-79-export-htmlconformanceissue-htmlconformancerule-from-internal-conformance-html-conformance-contracts-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -489938,8 +489938,8 @@
           "exportKind": "re-export",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 82,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-82-export-computeheadingoutline-htmlbestpracticeissue-htmlbestpracticerule-htmlcomputedheadinglevel-htmlheadingoutlineentry-inspectbestpractices-from-internal-conformance-html-heading-conformance-ts",
+          "line": 83,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-83-export-computeheadingoutline-htmlbestpracticeissue-htmlbestpracticerule-htmlcomputedheadinglevel-htmlheadingoutlineentry-inspectbestpractices-from-internal-conformance-html-heading-conformance-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -489957,8 +489957,8 @@
           "exportKind": "class",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 106,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-106-htmlconformanceerror",
+          "line": 107,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-107-htmlconformanceerror",
           "currentTags": [
             "@category",
             "@since"
@@ -489979,8 +489979,8 @@
           "exportKind": "const",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 158,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-158-conformanthtml",
+          "line": 159,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-159-conformanthtml",
           "currentTags": [
             "@invariant",
             "@see",
@@ -490003,8 +490003,8 @@
           "exportKind": "type",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 182,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-182-conformanthtml",
+          "line": 183,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-183-conformanthtml",
           "currentTags": [
             "@category",
             "@since"
@@ -490025,8 +490025,8 @@
           "exportKind": "const",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 200,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-200-conformanthtmlnode",
+          "line": 201,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-201-conformanthtmlnode",
           "currentTags": [
             "@category",
             "@since"
@@ -490047,8 +490047,8 @@
           "exportKind": "type",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 218,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-218-conformanthtmlnode",
+          "line": 219,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-219-conformanthtmlnode",
           "currentTags": [
             "@category",
             "@since"
@@ -490069,8 +490069,8 @@
           "exportKind": "const",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 2180,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-2180-inspectconformance",
+          "line": 2182,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-2182-inspectconformance",
           "currentTags": [
             "@category",
             "@since"
@@ -490091,8 +490091,8 @@
           "exportKind": "const",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 2242,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-2242-conform",
+          "line": 2248,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-2248-conform",
           "currentTags": [
             "@effects",
             "@category",
@@ -490114,8 +490114,8 @@
           "exportKind": "const",
           "filePath": "src/Html.conformance.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.conformance.ts",
-          "line": 2274,
-          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-2274-conformantroot",
+          "line": 2280,
+          "anchor": "packages-foundation-modeling-html-src-html-conformance-ts-2280-conformantroot",
           "currentTags": [
             "@category",
             "@since"
@@ -516344,8 +516344,8 @@
           "exportKind": "type",
           "filePath": "src/Pandoc.conformance.ts",
           "repoPath": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-          "line": 98,
-          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-98-pandoccheckedinvariantids",
+          "line": 94,
+          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-94-pandoccheckedinvariantids",
           "currentTags": [
             "@category",
             "@since"
@@ -516366,8 +516366,8 @@
           "exportKind": "const",
           "filePath": "src/Pandoc.conformance.ts",
           "repoPath": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-          "line": 156,
-          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-156-pandocconformanceissue",
+          "line": 148,
+          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-148-pandocconformanceissue",
           "currentTags": [
             "@category",
             "@since"
@@ -516388,8 +516388,8 @@
           "exportKind": "type",
           "filePath": "src/Pandoc.conformance.ts",
           "repoPath": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-          "line": 170,
-          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-170-pandocconformanceissue",
+          "line": 162,
+          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-162-pandocconformanceissue",
           "currentTags": [
             "@category",
             "@since"
@@ -516410,8 +516410,8 @@
           "exportKind": "const",
           "filePath": "src/Pandoc.conformance.ts",
           "repoPath": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-          "line": 244,
-          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-244-pandocconformanceresult",
+          "line": 240,
+          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-240-pandocconformanceresult",
           "currentTags": [
             "@invariant",
             "@see",
@@ -516434,8 +516434,8 @@
           "exportKind": "type",
           "filePath": "src/Pandoc.conformance.ts",
           "repoPath": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-          "line": 264,
-          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-264-pandocconformanceresult",
+          "line": 260,
+          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-260-pandocconformanceresult",
           "currentTags": [
             "@see",
             "@category",
@@ -516457,8 +516457,8 @@
           "exportKind": "const",
           "filePath": "src/Pandoc.conformance.ts",
           "repoPath": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-          "line": 336,
-          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-336-inspectpandocconformance",
+          "line": 332,
+          "anchor": "packages-foundation-modeling-pandoc-ast-src-pandoc-conformance-ts-332-inspectpandocconformance",
           "currentTags": [
             "@param",
             "@returns",

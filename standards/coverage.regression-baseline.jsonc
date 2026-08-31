@@ -9601,7 +9601,7 @@
     },
     "@beep/html": {
       "path": "packages/foundation/modeling/html",
-      "lines": 99.22,
+      "lines": 99.23,
       "statements": 99.29,
       "branches": 100,
       "functions": 98.79,
@@ -18543,7 +18543,7 @@
       "path": "packages/foundation/modeling/pandoc-ast",
       "lines": 90.57,
       "statements": 90.49,
-      "branches": 90.66,
+      "branches": 90.72,
       "functions": 87.6,
       "uncovered": {
         "lines": 101,
@@ -33609,7 +33609,7 @@
       "path": "packages/tooling/test-kit/test-utils",
       "lines": 78.88,
       "statements": 79.37,
-      "branches": 71.6,
+      "branches": 71.95,
       "functions": 66.98,
       "uncovered": {
         "lines": 95,
