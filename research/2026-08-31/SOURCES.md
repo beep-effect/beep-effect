@@ -2,7 +2,7 @@
 
 Short sanitized excerpts only. Canonical links.
 
-## f-law-01 — USPTO ODP four-field gate + petition includeDocuments 500s still hold (live check)
+## f-law-01 — USPTO ODP four-field gate still holds (live); petition includeDocuments 500s unverified
 - URL: https://patent.dev/heads-up-complete-your-uspto-profile-by-august-18/
 - Kind: web / axis: law
 ```

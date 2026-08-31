@@ -11,7 +11,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | --- | --- | --- | --- | --- |
 | w-schema-binary | Effect SchemaBinary / cluster wire | v4 default transport; overnight #7506/#7507/#7508 harden it; no published rc.113; Changesets #7446 still stages unpublished rc.113 | Effect#7446 | keep |
 | w-drizzle-taggederror | drizzle Schema.TaggedErrorClass | still open; beep #852 merged and does not close it | drizzle-orm#6162 | keep |
-| w-uspto-odp-auth | USPTO ODP profile + API key | four fields still mandatory; petition includeDocuments still 500s (unauth 401 cannot re-verify) | patent.dev Aug 2026 live check | keep |
+| w-uspto-odp-auth | USPTO ODP profile + API key | four fields still mandatory (live banner); petition includeDocuments 500s standing/unverified (unauth 401; no authenticated probe) | data.uspto.gov banner + patent.dev Aug 2026 | keep |
 | w-skills-over-mcp | Agent Plugins vs SEP-2640 | skill contract fork; SEP PR still open; Rayrun implements draft list/get+digests; Agent Plugins co-evolution paper (arXiv 2608.28497) adds packaging evidence | mcp#2640, ray.run/docs/skills, arXiv 2608.28497 | keep |
 | w-trustshift | MCP TrustShift delayed defect | install-time scanners miss it; skillscan (created 2026-08-31) is adjacent pre-install audit tooling; still unread before any #853 un-park | arXiv 2608.23763, daffnjk/agent-skill-security-scanner | keep |
 | w-instant-sunset | Instant Cloud sunset 2027-08-31 | official essay unchanged; self-host is the path | instantdb essay 2026-08-22 | keep |

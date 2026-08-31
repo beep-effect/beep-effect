@@ -26,7 +26,7 @@ None of the standing claims broke.
 
 ### Settled (refutation quota)
 
-- **USPTO ODP four-field gate — HOLDS.** Live data.uspto.gov banner still mandates four profile fields as of 2026-08-18; patent.dev still asserts petition `includeDocuments=true` → HTTP 500; unauth probe returns 401 (cannot re-verify 500 without key); no in-window USPTO fix.
+- **USPTO ODP four-field gate — HOLDS.** Live data.uspto.gov banner still mandates four profile fields as of 2026-08-18. Standing petition `includeDocuments=true` HTTP 500s are unverified this window (patent.dev still asserts them; unauth probe returned 401 and did not exercise the path; no authenticated probe; no in-window USPTO rollback note).
 - **drizzle TaggedErrorClass — HOLDS.** #6162 still OPEN (`closed_at=null`, last update 2026-08-25).
 - **Instant Cloud sunset 2027-08-31 — HOLDS.** Official essay unchanged (shutdown 2027-08-31; backups through 2028-08-31).
 - **SEP-2640 — HOLDS (unsettled).** #2640 still OPEN (SEP draft label + extension; no in-window update since 2026-08-29T18:46Z).
@@ -51,7 +51,7 @@ Sweden Lifos/rättspraxis + awesome-legal-mcp next to `gov-legal-mcp` / court-re
 
 ## Appendix — topical notes
 
-Law: the public-law MCP pattern (Croatia yesterday, Sweden today) is the foil for gov-legal-mcp, now with a first public catalog (awesome-legal-mcp / legalaimcp.com) and connector-directory posture (lawful-mcp). LLM-as-judge legal IR (NormasTCU, QUEST) warns that citation eval must prefer rank-aware metrics. OED Mitchell has no follow-on; ODP HOLD unchanged.
+Law: the public-law MCP pattern (Croatia yesterday, Sweden today) is the foil for gov-legal-mcp, now with a first public catalog (awesome-legal-mcp / legalaimcp.com) and connector-directory posture (lawful-mcp). LLM-as-judge legal IR (NormasTCU, QUEST) warns that citation eval must prefer rank-aware metrics. OED Mitchell has no follow-on; ODP four-field HOLD unchanged (includeDocuments 500s unverified).
 
 Effect: #7532 CIDR landed; #7265 MCP adapter is the Schema-as-tool-contract rising edge, still gated on unpublished rc.113. Jazz identity landed; tagged-error close (#2435) continues wire-v1 hygiene. Do not pin rc.113.
 

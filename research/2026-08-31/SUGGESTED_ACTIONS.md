@@ -57,9 +57,9 @@ bun run beep research capture https://arxiv.org/abs/2608.27746 --tags law,arxiv,
 
 ## Remainder
 
-### f-law-01 — Refute: USPTO ODP four-field gate and petition includeDocuments 500s still hold
+### f-law-01 — Refute: USPTO ODP four-field gate still holds; includeDocuments 500s unverified
 
-Standing USPTO ODP claim HOLDS. Live data.uspto.gov banner still mandates four profile fields as of 2026-08-18; patent.dev essay unchanged: Job Title, Organization Name, Organization Type, and Intended Use remain mandatory or ODP products/API keys revoke. Prior live check that GET petition decisions with includeDocuments=true returns HTTP 500 across 2004–2026 is not walked back. Unauth probe returns 401 (500 untestable without key). No in-window USPTO fix.
+Standing USPTO ODP four-field gate HOLDS (live data.uspto.gov banner). patent.dev essay unchanged: Job Title, Organization Name, Organization Type, and Intended Use remain mandatory or ODP products/API keys revoke. The standing includeDocuments HTTP 500 report is unverified this window: unauth probe returned 401 and did not exercise includeDocuments=true; no authenticated probe; no in-window USPTO rollback note. Keep the watch.
 
 ```
 bun run beep research capture https://patent.dev/heads-up-complete-your-uspto-profile-by-august-18/ --tags law,uspto,odp,refute
