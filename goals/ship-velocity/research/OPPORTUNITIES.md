@@ -4,6 +4,43 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-31 — a zero-finding goals baseline cannot clear staleness
+
+- **Doing:** clearing Yeet's stale goals-doctor gate after updating the observation receipt.
+- **Evidence:** `yeet status --remote` reported that `goals/goals-doctor.baseline.jsonc` was older
+  than the observation file and instructed `bun run beep goals doctor --write-baseline`. The
+  command reported that it wrote a baseline with zero finding keys, but produced no file diff. A
+  commit therefore cannot advance the baseline path, and repeating the prescribed command cannot
+  clear a commit-age staleness check.
+- **Would have prevented it:** store a source fingerprint in the baseline or compare the current
+  finding-key set with the committed set. Do not use path commit age when a valid zero-finding
+  rewrite is content-identical.
+
+## 2026-08-31 — a zsh loop variable erased command lookup
+
+- **Doing:** checking whether concurrent packet edits still had an open writer before preserving
+  them on the PR branch.
+- **Evidence:** a zsh loop used `path` as its iterator. In zsh, the special `path` array is tied to
+  `PATH`, so the assignment replaced command lookup and the same shell reported `stat` and `git`
+  as not found. The command made no repository change.
+- **Would have prevented it:** reserve zsh's special parameter names in agent shell snippets, use a
+  task-specific iterator such as `target_file`, or run portable snippets under Bash explicitly.
+
+## 2026-08-31 — reference resolution did not prove cache authentication
+
+- **Doing:** running the final authenticated remote-read sample across a freshly frozen set of
+  live checkouts.
+- **Evidence:** the output-suppressed `op run --env-file=.env -- true` preflight resolved the
+  existing references, and the configured endpoint and team matched the live repository
+  variables. The canary `beep cache probe` nevertheless reported `Remote caching unavailable
+  (Authentication failed)`. Sanitized control-plane metadata showed that the authoritative AWS
+  read-token parameter was updated on 2026-08-12, while the referenced 1Password item was last
+  updated in February. No secret value or reference path was printed, copied, or stored.
+- **Would have prevented it:** add a rotation-time mirror verification and read-only service
+  canary to the operator workflow. The timestamp difference suggests mirror drift, but does not
+  prove a value mismatch or its cause. Reference resolvability should be reported separately from
+  successful remote-cache authentication.
+
 ## 2026-08-30 — scoped goal doctor invocation no longer matches the CLI
 
 - **Doing:** validating the packet after merging current `origin/main` into PR #929.
