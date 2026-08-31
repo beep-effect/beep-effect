@@ -217,9 +217,11 @@ const documentViolationReason = flow(
  * **Gotchas**
  *
  * Trusted raw nodes carry no presence flag of their own, so an issue list that
- * names no footnote, scalar, or URL violation renders the raw-node phrasing.
- * Callers pass a non-empty violation list; an empty one would read as a raw-node
- * refusal.
+ * names no footnote, scalar, URL, or HTML-projection violation renders the
+ * raw-node phrasing. When multiple specialized categories are present, the
+ * more actionable URL, scalar, and footnote explanations take precedence over
+ * the structural HTML-projection explanation. Callers pass a non-empty
+ * violation list; an empty one would read as a raw-node refusal.
  *
  * **Example** (Explain a trusted raw node refusal)
  *

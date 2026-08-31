@@ -13,7 +13,7 @@
  */
 
 import { Html } from "@beep/html";
-import { HtmlConformanceIssue, HtmlConformanceRule } from "@beep/html/Html.conformance";
+import { HtmlConformanceIssue } from "@beep/html/Html.conformance";
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -289,6 +289,12 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
  * })
  * issue._tag // => "HtmlProjection"
  * ```
+ *
+ * **Details**
+ *
+ * `path` addresses the projected `@beep/html` tree using the HTML
+ * conformance inspector's path syntax. Other safety variants address the
+ * source Markdown AST.
  *
  * @invariant Every instance describes a hard author-conformance failure returned by the canonical `Document.toHtml` projection.
  * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for the mandatory heading-level progression rule.
@@ -611,7 +617,6 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
 const htmlProjectionSafetyIssues = flow(
   Document.toHtml,
   Html.Conformant.issues,
-  A.filter((issue) => !HtmlConformanceRule.is.duplicateId(issue.rule)),
   A.map((issue) =>
     HtmlProjectionSafetyViolation.make({
       path: issue.path,
@@ -696,8 +701,6 @@ const SafeDocumentCheck = S.makeFilter<Document>(
  * Result.isSuccess(result) // => true
  * ```
  *
- * @invariant Every admitted document projects through {@link Document.toHtml} to an HTML fragment with no hard author-conformance issues.
- * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for one cross-block structural invariant enforced by the projection check.
  * @category validation
  * @since 0.0.0
  */
@@ -745,6 +748,8 @@ export type SafeInline = typeof SafeInline.Type;
  * Result.isSuccess(result) // => true
  * ```
  *
+ * @invariant Every admitted document projects through {@link Document.toHtml} to an HTML fragment with no hard author-conformance issues.
+ * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for one cross-block structural invariant enforced by the projection check.
  * @category validation
  * @since 0.0.0
  */
