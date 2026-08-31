@@ -14,9 +14,10 @@ import { NLPService } from "@beep/nlp-processing/NLPService";
 import { SourceTextExtractor } from "@beep/provenance";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { F1FixtureId } from "@/fixtures/F1";
 import { CanonicalizerLive } from "@/layers/CanonicalizerLive";
@@ -24,7 +25,7 @@ import { ChunkerLive } from "@/layers/ChunkerLive";
 import { HostedExtractorLive, PatternExtractorLive } from "@/layers/ExtractorLive";
 import { ActiveModelIdentityLive, AnthropicExtractionModelIdentity } from "@/layers/LanguageModelLive";
 import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
-import { ClaimBody } from "@/schema/Evidence";
+import { ClaimBody, FrozenRelationPredicate, RelationExtractionCandidate } from "@/schema/Evidence";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ParseOutcome } from "@/schema/Text";
 import { Canonicalizer } from "@/services/Canonicalizer";
@@ -151,6 +152,27 @@ const hostedFailureLayer = (reason: "model-generation-failed" | "model-output-pa
   );
 
 describe("C0 hosted extractor", () => {
+  it("keeps the frozen target vocabulary separate from the legacy-preview relation contract", () => {
+    expect(FrozenRelationPredicate.Options).toEqual([
+      "affiliated with",
+      "authored by",
+      "located in",
+      "re-evaluates claim due to",
+      "selected",
+      "shows",
+    ]);
+    expect(
+      Result.isSuccess(
+        S.decodeResult(RelationExtractionCandidate)({
+          evidenceQuote: "Ada trained Engine.",
+          object: "Engine",
+          predicate: "trained",
+          subject: "Ada",
+        })
+      )
+    ).toBe(true);
+  });
+
   it("preserves hosted coreference cluster assignments on entity claims", () => {
     const text = "Ada wrote notes.";
     const extractions = [grounded("person", "Ada", 0, O.some({ cluster: "person-ada" }))];
@@ -180,21 +202,19 @@ describe("C0 hosted extractor", () => {
     );
   });
 
-  it("resolves NFC-equal relation endpoints to the nearest preceding entity", () => {
-    const decomposed = "Cafe\u0301";
-    const text = `${decomposed} met Engine. Ada praised it.`;
-    const relationStart = text.indexOf("Ada");
+  it("anchors repeated endpoint surfaces inside relation evidence and synthesizes same-batch entities", () => {
+    const text = "Ada wrote notes. Ada selected Engine.";
+    const relationStart = text.lastIndexOf("Ada");
+    const engineStart = text.indexOf("Engine");
     const extractions = [
-      grounded("organization", decomposed, 0),
-      grounded("method", "Engine", text.indexOf("Engine")),
       grounded(
         "relation",
-        "Ada praised it.",
+        "Ada selected Engine.",
         relationStart,
         O.some({
           object: "Engine",
-          predicate: "praised",
-          subject: "Café",
+          predicate: "selected",
+          subject: "Ada",
         })
       ),
     ];
@@ -212,27 +232,28 @@ describe("C0 hosted extractor", () => {
           }
           const entities = A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Entity");
           const relation = A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Relation");
-          const nearestSubject = A.findFirst(
-            entities,
-            (claim) => claim.body.startChar === 0 && claim.body.kind === "Entity"
-          );
+          const subject = A.findFirst(entities, (claim) => claim.body.startChar === relationStart);
+          const object = A.findFirst(entities, (claim) => claim.body.startChar === engineStart);
+          expect(entities).toHaveLength(2);
           expect(
             O.map(relation, (claim) =>
               ClaimBody.match(claim.body, {
                 Entity: () => O.none(),
-                Relation: (body) => O.some(body.subject),
+                Relation: (body) => O.some([body.subject, body.object]),
                 Structure: () => O.none(),
               })
             )
-          ).toEqual(O.map(nearestSubject, (claim) => O.some(claim.id)));
+          ).toEqual(
+            O.all([O.map(subject, (claim) => claim.id), O.map(object, (claim) => claim.id)]).pipe(O.map(O.some))
+          );
           expect(outcome.batch.degraded).toEqual([]);
         })
       )
     );
   });
 
-  it("uses an upstream-disambiguated grounded span when surface text repeats", () => {
-    const text = "Ada wrote notes. Ada praised Engine.";
+  it("reuses base entity claims already anchored inside the relation evidence", () => {
+    const text = "Ada wrote notes. Ada selected Engine.";
     const secondAda = text.lastIndexOf("Ada");
     const engine = text.indexOf("Engine");
     const extractions = [
@@ -240,9 +261,9 @@ describe("C0 hosted extractor", () => {
       grounded("method", "Engine", engine),
       grounded(
         "relation",
-        "Ada praised Engine.",
+        "Ada selected Engine.",
         secondAda,
-        O.some({ object: "Engine", predicate: "praised", subject: "Ada" })
+        O.some({ object: "Engine", predicate: "selected", subject: "Ada" })
       ),
     ];
 
@@ -256,6 +277,7 @@ describe("C0 hosted extractor", () => {
           expect(outcome.outcome).toBe("Extracted");
           if (outcome.outcome === "Extracted") {
             expect(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Relation")).toHaveLength(1);
+            expect(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Entity")).toHaveLength(2);
             expect(
               A.findFirst(outcome.batch.claims, (claim) => claim.body.kind === "Entity").pipe(
                 O.map((claim) => claim.body.startChar)
@@ -287,6 +309,56 @@ describe("C0 hosted extractor", () => {
           if (outcome.outcome === "Extracted") {
             expect(outcome.batch.degraded).toMatchObject([{ kind: "relation-unresolved" }]);
             expect(A.some(outcome.batch.claims, (claim) => claim.body.kind === "Relation")).toBe(false);
+          }
+        })
+      )
+    );
+  });
+
+  it("fails a malformed relation contract as typed model-output degradation", () => {
+    const text = "Ada selected Engine.";
+    const extractions = [grounded("relation", text, 0, O.some({ object: "Engine", subject: "Ada" }))];
+
+    return Effect.runPromise(
+      provideScopedLayer(Layer.merge(baseLayer, hostedLayer(extractions)))(
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
+
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(outcome.batch.degraded).toMatchObject([{ kind: "model-output-invalid" }]);
+            expect(outcome.batch.claims).toEqual([]);
+          }
+        })
+      )
+    );
+  });
+
+  it("disqualifies fuzzy alignment for relation evidence", () => {
+    const text = "Ada selected Engine.";
+    const extraction = GroundedExtraction.cases.match_fuzzy.make({
+      alignmentStatus: "match_fuzzy",
+      attributes: O.some({ object: "Engine", predicate: "selected", subject: "Ada" }),
+      confidence: O.none(),
+      label: "relation",
+      matchedText: text,
+      span: Contract.Span.make({ end: NonNegativeInt.make(text.length), start: NonNegativeInt.make(0) }),
+      text,
+    });
+
+    return Effect.runPromise(
+      provideScopedLayer(Layer.merge(baseLayer, hostedLayer([extraction])))(
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical(text);
+          const extractor = yield* HostedExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
+
+          expect(outcome.outcome).toBe("Extracted");
+          if (outcome.outcome === "Extracted") {
+            expect(outcome.batch.degraded).toMatchObject([{ kind: "fabricated-span" }]);
+            expect(outcome.batch.claims).toEqual([]);
           }
         })
       )

@@ -30,10 +30,10 @@
     {
       "role": "abstract",
       "depth": 0,
-      "startChar": 2442,
-      "endChar": 3781,
-      "quoteSha256": "0aff6fe4f2c1e38ef75e91c5bc831a2cdadf415678461515129340fb56ecbac0",
-      "verified": false
+      "startChar": 2433,
+      "endChar": 2441,
+      "quoteSha256": "d21b4a64a2d8656a0fdf7ab2e89a49164ac504686cfa2a3d442e87c209286330",
+      "verified": true
     },
     {
       "role": "section",
