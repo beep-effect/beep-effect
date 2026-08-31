@@ -91,6 +91,9 @@
       "path": "packages/drivers/box"
     },
     {
+      "path": "packages/drivers/box-provisioning"
+    },
+    {
       "path": "packages/drivers/cosmos"
     },
     {

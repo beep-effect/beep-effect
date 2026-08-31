@@ -19,6 +19,7 @@ import {
 } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -148,6 +149,42 @@ const makeFakeClient = (overrides: FakeBoxClientOverrides = {}): FakeBoxClient =
     uploads: { ...defaults.uploads, ...overrides.uploads },
     users: { ...defaults.users, ...overrides.users },
   };
+};
+
+const resolveEmptyEntries = (..._args: ReadonlyArray<unknown>): Promise<unknown> => Promise.resolve({ entries: [] });
+
+const provisioningClient = {
+  folderMetadata: {
+    getFolderMetadata: resolveEmptyEntries,
+  },
+  listCollaborations: {
+    getFolderCollaborations: resolveEmptyEntries,
+  },
+  metadataCascadePolicies: {
+    getMetadataCascadePolicies: resolveEmptyEntries,
+  },
+  metadataTemplates: {
+    getEnterpriseMetadataTemplates: resolveEmptyEntries,
+  },
+  retentionPolicies: {
+    getRetentionPolicies: resolveEmptyEntries,
+  },
+  retentionPolicyAssignments: {
+    getRetentionPolicyAssignments: resolveEmptyEntries,
+  },
+  signRequests: {
+    getSignRequests: resolveEmptyEntries,
+  },
+  signTemplates: {
+    getSignTemplates: resolveEmptyEntries,
+  },
+  userCollaborations: {
+    getCollaborationById: (..._args: ReadonlyArray<unknown>) =>
+      Promise.resolve({ id: "collaboration-id", type: "collaboration" }),
+  },
+  webhooks: {
+    getWebhooks: resolveEmptyEntries,
+  },
 };
 
 const chunksToText = (chunks: Iterable<Uint8Array>): string =>
@@ -297,7 +334,7 @@ describe("@beep/box", () => {
 
     expect(error.status).toEqual(O.none());
     expect(outOfRange.status).toEqual(O.none());
-    expect(error.sdkVersion).toBe("10.11.1");
+    expect(error.sdkVersion).toBe("10.14.0");
   });
 
   it("sanitizes raw string SDK throws", () => {
@@ -325,7 +362,7 @@ describe("@beep/box", () => {
         if (O.isSome(error)) {
           expect(error.value).toBeInstanceOf(B.BoxError);
           expect(error.value.reason).toBe("config");
-          expect(error.value.sdkVersion).toBe("10.11.1");
+          expect(error.value.sdkVersion).toBe("10.14.0");
         }
       }
     })
@@ -433,6 +470,69 @@ describe("@beep/box", () => {
     );
   });
 
+  layer(B.Box.makeLayerFromClient(provisioningClient))((it) => {
+    it.effect(
+      "decodes every Box provisioning discovery surface",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
+        const folderMetadata = yield* box.folderMetadata.getFolderMetadata(
+          B.FolderMetadataGetFolderMetadataPayload.make({ folderId: "folder-id" })
+        );
+        const folderCollaborations = yield* box.listCollaborations.getFolderCollaborations(
+          B.ListCollaborationsGetFolderCollaborationsPayload.make({ folderId: "folder-id" })
+        );
+        const cascadePolicies = yield* box.metadataCascadePolicies.getMetadataCascadePolicies(
+          B.MetadataCascadePoliciesGetMetadataCascadePoliciesPayload.make({ queryParams: { folderId: "folder-id" } })
+        );
+        const metadataTemplates = yield* box.metadataTemplates.getEnterpriseMetadataTemplates(
+          B.MetadataTemplatesGetEnterpriseMetadataTemplatesPayload.make({})
+        );
+        const retentionPolicies = yield* box.retentionPolicies.getRetentionPolicies(
+          B.RetentionPoliciesGetRetentionPoliciesPayload.make({})
+        );
+        const retentionAssignments = yield* box.retentionPolicyAssignments.getRetentionPolicyAssignments(
+          B.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload.make({ retentionPolicyId: "policy-id" })
+        );
+        const signRequests = yield* box.signRequests.getSignRequests(B.SignRequestsGetSignRequestsPayload.make({}));
+        const signTemplates = yield* box.signTemplates.getSignTemplates(
+          B.SignTemplatesGetSignTemplatesPayload.make({})
+        );
+        const collaboration = yield* box.userCollaborations.getCollaborationById(
+          B.UserCollaborationsGetCollaborationByIdPayload.make({ collaborationId: "collaboration-id" })
+        );
+        const webhooks = yield* box.webhooks.getWebhooks(B.WebhooksGetWebhooksPayload.make({}));
+
+        expect(folderMetadata).toBeInstanceOf(B.Metadatas);
+        expect(folderCollaborations).toBeInstanceOf(B.Collaborations);
+        expect(cascadePolicies).toBeInstanceOf(B.MetadataCascadePolicies);
+        expect(metadataTemplates).toBeInstanceOf(B.MetadataTemplates);
+        expect(retentionPolicies).toBeInstanceOf(B.RetentionPolicies);
+        expect(retentionAssignments).toBeInstanceOf(B.RetentionPolicyAssignments);
+        expect(signRequests).toBeInstanceOf(B.SignRequests);
+        expect(signTemplates).toBeInstanceOf(B.SignTemplates);
+        expect(collaboration).toBeInstanceOf(B.Collaboration);
+        expect(webhooks).toBeInstanceOf(B.Webhooks);
+      })
+    );
+
+    it.effect(
+      "exposes the provisioning mutation operations required by the reconciler",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
+
+        expect(P.isFunction(box.userCollaborations.createCollaboration)).toBe(true);
+        expect(P.isFunction(box.userCollaborations.updateCollaborationById)).toBe(true);
+        expect(P.isFunction(box.userCollaborations.deleteCollaborationById)).toBe(true);
+        expect(P.isFunction(box.webhooks.createWebhook)).toBe(true);
+        expect(P.isFunction(box.webhooks.updateWebhookById)).toBe(true);
+        expect(P.isFunction(box.webhooks.deleteWebhookById)).toBe(true);
+        expect(P.isFunction(box.signRequests.createSignRequest)).toBe(true);
+        expect(P.isFunction(box.signRequests.cancelSignRequest)).toBe(true);
+        expect(P.isFunction(box.signRequests.resendSignRequest)).toBe(true);
+      })
+    );
+  });
+
   layer(B.Box.makeLayerFromClient(makeFakeClient({ downloads: { downloadFile: () => Promise.resolve(undefined) } })))(
     (it) => {
       it.effect(
@@ -534,7 +634,7 @@ describe("@beep/box", () => {
             expect(error.value.status).toEqual(O.some(429));
             expect(error.value.code).toEqual(O.some("rate_limit"));
             expect(error.value.requestId).toEqual(O.some("request-id"));
-            expect(error.value.sdkVersion).toBe("10.11.1");
+            expect(error.value.sdkVersion).toBe("10.14.0");
             expect(error.value.cause).toEqual(O.some("Unknown"));
           }
         }

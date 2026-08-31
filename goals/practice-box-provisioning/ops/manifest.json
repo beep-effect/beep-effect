@@ -12,8 +12,10 @@
   "packetPath": "goals/practice-box-provisioning",
   "lifecycle": "active",
   "mission": "Expand @beep/box with the provisioning manager surface and ship the Effect-native desired-state reconciler for the service-identity-owned client/matter tree",
-  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First actions: CCG approval verification, SDK provenance repair, package-home choice, Box quote table.",
-  "blockedBy": [],
+  "statusNote": "P0 and P1 are complete. The budgeted @beep/box surface and @beep/box-provisioning reconciler pass canonical package verification. P2 is at the operator-attended live credential and private-intent gate.",
+  "blockedBy": [
+    "P2 live dry-run and apply require 1Password-backed CCG environment injection, the private starter intent, and the operator present."
+  ],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -52,17 +54,17 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
