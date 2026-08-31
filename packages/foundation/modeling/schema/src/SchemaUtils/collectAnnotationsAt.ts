@@ -5,10 +5,9 @@
  * @since 0.0.0
  */
 
+import { Equivalence, Match } from "effect";
 import * as A from "effect/Array";
-import * as Equivalence from "effect/Equivalence";
 import { dual } from "effect/Function";
-import * as Match from "effect/Match";
 import type * as S from "effect/Schema";
 import type * as SchemaAST from "effect/SchemaAST";
 

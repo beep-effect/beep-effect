@@ -3036,9 +3036,18 @@ ${pipe(
 }`;
   const autocompleteFieldGroups = readonlyArrayRecord(classification.autocompleteFieldGroups);
   const autocompleteInputStateGroups = readonlyArrayRecord(classification.autocompleteInputStateGroups);
-  const inputAttributeApplicability = readonlyArrayRecord(classification.inputAttributeApplicability);
+  const inputAttributeApplicability = `{
+${pipe(
+  R.toEntries(classification.inputAttributeApplicability),
+  A.map(
+    ([state, attributes]) => `  ${encodeJson(state)}: freezeConditionalInputAttributeNames(${encodeJson(attributes)}),`
+  ),
+  A.join("\n")
+)}
+}`;
   const autocompleteContactFields = encodeJson(classification.autocompleteContactFields);
   const buttonSubmitOnlyAttributes = encodeJson(classification.buttonSubmitOnlyAttributes);
+  const inputStateNames = encodeJson(inputStates);
   const conditionalInputAttributeNames = encodeJson(conditionalInputAttributes);
   const iconLinkRelations = encodeJson(classification.iconLinkRelations);
   const idReferenceAttributes = encodeJson(classification.idReferenceAttributes);
@@ -3406,6 +3415,68 @@ export const HTML_AUTOCOMPLETE_INPUT_STATE_GROUPS: Readonly<Record<string, Reado
 export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.freeze(${autocompleteContactFields});
 
 /**
+ * Exact generated domain of HTML input type states.
+ *
+ * **Example** (Check an input state)
+ *
+ * \`\`\`ts
+ * import { HtmlInputStateName } from "@beep/html/Html.meta"
+ *
+ * HtmlInputStateName.is.file("file") // => true
+ * \`\`\`
+ *
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#states-of-the-type-attribute | WHATWG input type states} for the normative state inventory.
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlInputStateName = LiteralKit(${inputStateNames}).pipe(
+  $I.annoteSchema("HtmlInputStateName", {
+    description: "Exact generated domain of HTML input type states.",
+  })
+);
+
+/**
+ * Runtime input-state name accepted by {@link HtmlInputStateName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlInputStateName = typeof HtmlInputStateName.Type;
+
+/**
+ * Exact generated domain of conditionally applicable input attributes.
+ *
+ * **Example** (Check a conditional input attribute)
+ *
+ * \`\`\`ts
+ * import { HtmlConditionalInputAttributeName } from "@beep/html/Html.meta"
+ *
+ * HtmlConditionalInputAttributeName.is.accept("accept") // => true
+ * \`\`\`
+ *
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#input-type-attr-summary | WHATWG input attribute summary} for state-specific applicability.
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlConditionalInputAttributeName = LiteralKit(${conditionalInputAttributeNames}).pipe(
+  $I.annoteSchema("HtmlConditionalInputAttributeName", {
+    description: "Exact generated domain of conditionally applicable input attributes.",
+  })
+);
+
+/**
+ * Runtime conditional input-attribute name accepted by {@link HtmlConditionalInputAttributeName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlConditionalInputAttributeName = typeof HtmlConditionalInputAttributeName.Type;
+
+const freezeConditionalInputAttributeNames = <
+  const Names extends ReadonlyArray<HtmlConditionalInputAttributeName>,
+>(names: Names): Readonly<Names> => Object.freeze(names);
+
+/**
  * Exact conditional attribute applicability for every input type state.
  *
  * **Example** (Read input attribute applicability)
@@ -3416,12 +3487,13 @@ export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.fr
  * HTML_INPUT_ATTRIBUTE_APPLICABILITY.file.includes("accept") // => true
  * \`\`\`
  *
+ * @invariant Every standard input state occurs exactly once and every value belongs to {@link HtmlConditionalInputAttributeName}.
  * @category constants
  * @since 0.0.0
  */
-export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze(
+export const HTML_INPUT_ATTRIBUTE_APPLICABILITY = Object.freeze(
   ${inputAttributeApplicability}
-);
+) satisfies Readonly<Record<HtmlInputStateName, ReadonlyArray<HtmlConditionalInputAttributeName>>>;
 
 /**
  * Conditional input attributes covered by the applicability table.
@@ -3437,7 +3509,7 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
  * @category constants
  * @since 0.0.0
  */
-export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
+export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<HtmlConditionalInputAttributeName> = Object.freeze(
   ${conditionalInputAttributeNames}
 );
 

@@ -23,6 +23,7 @@ import {
   PandocListNumberDelimiter,
   PandocListNumberStyle,
   PandocMathType,
+  PandocMetaValue,
   PandocTablePayload,
   PandocTarget,
   Para,
@@ -79,6 +80,7 @@ const SemanticClosureDocumentArbitrary = fc
   );
 const JsonArbitrary = S.toArbitrary(S.Json)(fc);
 const decodeUnknownJsonString = Unknown.decodeUnknownEffectFromJsonString;
+const emptyAttr = ["", [], []];
 const pinnedPandocConstructorNames = [
   "Pandoc",
   "Meta",
@@ -212,6 +214,13 @@ const tableWire = ({
   ],
   meta: {},
 });
+
+const captionPlainTextFromWire = (caption: unknown): string => {
+  const block = Effect.runSync(decodePandocJson(tableWire({ caption }))).blocks[0];
+
+  expect(block?._tag).toBe("table");
+  return block?._tag === "table" ? block.captionPlainText : "";
+};
 
 describe("Pandoc.codec", () => {
   it("derives semantic documents without arbitrary warnings", () => {});
@@ -1041,6 +1050,133 @@ describe("Pandoc.codec", () => {
       })
     ));
 
+  it("round-trips populated citations in a non-empty short table caption", () => {
+    const citation = {
+      citationHash: 17,
+      citationId: "doe-2024",
+      citationMode: { t: "NormalCitation" },
+      citationNoteNum: 2,
+      citationPrefix: [{ c: "see", t: "Str" }],
+      citationSuffix: [{ c: "p. 4", t: "Str" }],
+    };
+    const wire = tableWire({
+      caption: [
+        [
+          {
+            c: [[citation], [{ c: "Doe", t: "Str" }]],
+            t: "Cite",
+          },
+        ],
+        [],
+      ],
+    });
+
+    const semantic = Effect.runSync(decodePandocJsonStrict(wire));
+    expect(Effect.runSync(encodePandocJson(semantic))).toEqual(wire);
+    expect(captionPlainTextFromWire(wire.blocks[0]?.c[1])).toBe("Doe");
+
+    const lossless = Effect.runSync(decodePandocJsonLossless(wire));
+    expect(lossless.issues).toEqual([]);
+    expect(Effect.runSync(encodePandocJsonLossless(lossless))).toEqual(wire);
+  });
+
+  it("round-trips a non-empty short Figure caption", () => {
+    const wire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [
+        {
+          c: [emptyAttr, [[{ c: "Short", t: "Str" }], []], []],
+          t: "Figure",
+        },
+      ],
+      meta: {},
+    };
+
+    const semantic = Effect.runSync(decodePandocJsonStrict(wire));
+    expect(Effect.runSync(encodePandocJson(semantic))).toEqual(wire);
+  });
+
+  it("rejects an unsupported citation mode without relying on an earlier malformed block", () => {
+    const wire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [
+        {
+          c: [
+            {
+              c: [
+                [
+                  {
+                    citationHash: 0,
+                    citationId: "future-mode",
+                    citationMode: { t: "FutureCitationMode" },
+                    citationNoteNum: 0,
+                    citationPrefix: [],
+                    citationSuffix: [],
+                  },
+                ],
+                [],
+              ],
+              t: "Cite",
+            },
+          ],
+          t: "Para",
+        },
+      ],
+      meta: {},
+    };
+
+    expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+    expect(
+      Effect.runSync(decodePandocJsonLossless(wire)).issues.map((issue) => [issue.constructor, issue.pointer])
+    ).toEqual([["FutureCitationMode", "/blocks/0/c/0/c/0/0/citationMode"]]);
+  });
+
+  it("projects every current inline caption constructor to stable plaintext", () => {
+    const inlineCases: ReadonlyArray<readonly [unknown, string]> = [
+      [{ c: "text", t: "Str" }, "text"],
+      [{ t: "Space" }, " "],
+      [{ t: "SoftBreak" }, " "],
+      [{ t: "LineBreak" }, "\n"],
+      [{ c: [{ c: "emphasis", t: "Str" }], t: "Emph" }, "emphasis"],
+      [{ c: [{ c: "underline", t: "Str" }], t: "Underline" }, "underline"],
+      [{ c: [{ c: "strong", t: "Str" }], t: "Strong" }, "strong"],
+      [{ c: [{ c: "strikeout", t: "Str" }], t: "Strikeout" }, "strikeout"],
+      [{ c: [{ c: "superscript", t: "Str" }], t: "Superscript" }, "superscript"],
+      [{ c: [{ c: "subscript", t: "Str" }], t: "Subscript" }, "subscript"],
+      [{ c: [{ c: "small-caps", t: "Str" }], t: "SmallCaps" }, "small-caps"],
+      [{ c: [{ t: "DoubleQuote" }, [{ c: "quoted", t: "Str" }]], t: "Quoted" }, "quoted"],
+      [{ c: [[], [{ c: "cited", t: "Str" }]], t: "Cite" }, "cited"],
+      [{ c: [emptyAttr, "code"], t: "Code" }, "code"],
+      [{ c: [emptyAttr, [{ c: "link", t: "Str" }], ["https://example.com", ""]], t: "Link" }, "link"],
+      [{ c: [emptyAttr, [{ c: "image", t: "Str" }], ["image.png", ""]], t: "Image" }, "image"],
+      [{ c: [emptyAttr, [{ c: "span", t: "Str" }]], t: "Span" }, "span"],
+      [{ c: [{ t: "InlineMath" }, "math"], t: "Math" }, "math"],
+      [{ c: ["html", "raw"], t: "RawInline" }, "raw"],
+      [{ c: [{ c: [{ c: "note", t: "Str" }], t: "Para" }], t: "Note" }, "note"],
+      [{ c: { retained: true }, t: "FutureInline" }, ""],
+    ];
+
+    for (const [inline, expected] of inlineCases) {
+      expect(captionPlainTextFromWire([[inline], []])).toBe(expected);
+    }
+  });
+
+  it("falls back to current long-caption block constructors when the short caption is absent", () => {
+    const blockCases: ReadonlyArray<readonly [unknown, string]> = [
+      [{ c: [{ c: "plain", t: "Str" }], t: "Plain" }, "plain"],
+      [{ c: [{ c: "paragraph", t: "Str" }], t: "Para" }, "paragraph"],
+      [{ c: [2, emptyAttr, [{ c: "heading", t: "Str" }]], t: "Header" }, "heading"],
+      [{ c: [emptyAttr, "code-block"], t: "CodeBlock" }, "code-block"],
+      [{ c: ["html", "raw-block"], t: "RawBlock" }, "raw-block"],
+      [{ c: [{ c: [{ c: "quote", t: "Str" }], t: "Para" }], t: "BlockQuote" }, "quote"],
+      [{ c: { retained: true }, t: "FutureBlock" }, ""],
+    ];
+
+    for (const [block, expected] of blockCases) {
+      expect(captionPlainTextFromWire([null, [block]])).toBe(expected);
+    }
+  });
+
   it("rejects unsupported Math subtypes strictly, retains them losslessly, and preserves ordered-list semantics", () => {
     const unsupportedMath = {
       "pandoc-api-version": [1, 23, 1],
@@ -1210,6 +1346,7 @@ describe("Pandoc.codec", () => {
         };
         const document = yield* decodePandocJson(wire);
 
+        expect(S.is(PandocMetaValue)(document.meta.title)).toBe(true);
         expect(document.meta.title).toEqual(MetaString.make({ value: "Document" }));
         expect(document.meta.nested?._tag).toBe("metaMap");
         if (document.meta.nested?._tag === "metaMap") {

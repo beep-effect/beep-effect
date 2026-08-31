@@ -25,13 +25,13 @@
         "pandoc.codec.constructor-context",
         "pandoc.codec.nullary-payloads",
         "pandoc.table.recursive-payload",
+        "pandoc.table.column-width-payload",
         "pandoc.meta.recursive-values",
         "pandoc.api-version.exact-profile",
         "pandoc.list.constructor-domains",
         "pandoc.math.constructor-domain",
         "pandoc.semantic-subset",
-        "pandoc.raw.exact-retention",
-        "pandoc.table.column-width-payload"
+        "pandoc.raw.exact-retention"
       ]
     },
     {

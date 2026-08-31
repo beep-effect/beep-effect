@@ -3,7 +3,8 @@
   "packageName": "@beep/html",
   "profileIds": [
     "html-whatwg-living-2026-08-30",
-    "html-current-vendored-2026-06-15"
+    "html-current-vendored-2026-06-15",
+    "html-safe-output-policy-e6e88af6"
   ],
   "coverage": [
     {
@@ -19,7 +20,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.inventory.generated-elements"
+          "validator": "HtmlNode"
         },
         {
           "kind": "test",
@@ -34,13 +35,15 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.inventory.generated-elements"
+          "validator": "HtmlNode"
         }
       ],
       "positiveTestIds": [
         "test/Html.test.ts#covers-every-WHATWG-element-from-the-pinned-dataset-conforming-obsolete"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Html.test.ts#rejects-tags-outside-the-generated-HtmlNode-inventory"
+      ],
       "status": "covered"
     },
     {
@@ -58,7 +61,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.inventory.approved-refresh-drift"
+          "validator": "HtmlNode"
         },
         {
           "kind": "runtime",
@@ -81,7 +84,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.ast.literal-tag-discrimination"
+          "validator": "HtmlNode"
         },
         {
           "kind": "test",
@@ -96,7 +99,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.ast.literal-tag-discrimination"
+          "validator": "HtmlNode"
         }
       ],
       "positiveTestIds": [
@@ -131,7 +134,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.element.local-content-model"
+          "validator": "HtmlNode"
         },
         {
           "kind": "runtime",
@@ -169,16 +172,13 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.heading.phrasing-children"
-        },
-        {
-          "kind": "runtime",
           "validator": "inspectConformance"
         }
       ],
       "positiveTestIds": [],
       "negativeTestIds": [
-        "test/Html.heading-conformance.test.ts#rejects-heading-descendants-because-heading-content-is-phrasing-only"
+        "test/Html.heading-conformance.test.ts#rejects-heading-descendants-because-heading-content-is-phrasing-only",
+        "test/Html.heading-conformance.test.ts#rejects-non-phrasing-flow-children-in-headings"
       ],
       "status": "partial"
     },
@@ -190,7 +190,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "inspectConformance"
+          "validator": "computeHeadingOutline"
         },
         {
           "kind": "test",
@@ -201,14 +201,16 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "inspectConformance"
+          "validator": "computeHeadingOutline"
         }
       ],
       "positiveTestIds": [
         "test/Html.heading-conformance.test.ts#applies-ancestor-offsets-and-reset-boundaries",
         "test/Html.heading-conformance.test.ts#caps-computed-heading-levels-at-nine"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Html.heading-conformance.test.ts#rejects-an-offset-induced-skipped-computed-heading-level"
+      ],
       "status": "covered"
     },
     {
@@ -235,7 +237,8 @@
       ],
       "positiveTestIds": [],
       "negativeTestIds": [
-        "test/Html.heading-conformance.test.ts#rejects-a-skipped-computed-heading-level-in-tree-order"
+        "test/Html.heading-conformance.test.ts#rejects-a-skipped-computed-heading-level-in-tree-order",
+        "test/Html.heading-conformance.test.ts#rejects-an-offset-induced-skipped-computed-heading-level"
       ],
       "status": "covered"
     },
@@ -279,7 +282,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.document.structure"
+          "validator": "HtmlDocument"
         },
         {
           "kind": "runtime",
@@ -298,7 +301,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.document.structure"
+          "validator": "HtmlDocument"
         },
         {
           "kind": "runtime",
@@ -352,10 +355,6 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.conditional-requirements"
-        },
-        {
-          "kind": "runtime",
           "validator": "inspectConformance"
         },
         {
@@ -368,10 +367,6 @@
         {
           "kind": "typeLevel",
           "mechanism": "@beep/html exported schema type for html.attributes.conditional-requirements"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.conditional-requirements"
         },
         {
           "kind": "runtime",
@@ -395,10 +390,6 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.input-state-applicability"
-        },
-        {
-          "kind": "runtime",
           "validator": "inspectConformance"
         },
         {
@@ -411,10 +402,6 @@
         {
           "kind": "typeLevel",
           "mechanism": "@beep/html exported schema type for html.attributes.input-state-applicability"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.input-state-applicability"
         },
         {
           "kind": "runtime",
@@ -441,7 +428,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "resolveScriptState and inspectConformance"
+          "validator": "resolveScriptState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
         },
         {
           "kind": "test",
@@ -456,7 +447,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "resolveScriptState and inspectConformance"
+          "validator": "resolveScriptState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
         }
       ],
       "positiveTestIds": [
@@ -514,8 +509,8 @@
       ],
       "targetEnforcement": [
         {
-          "kind": "runtime",
-          "validator": "Profile-specific script payload language adapters"
+          "kind": "notEnforced",
+          "gap": "Profile-specific script payload language adapters are required before this target can name an executable validator."
         }
       ],
       "positiveTestIds": [],
@@ -534,7 +529,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.microsyntaxes"
+          "validator": "HtmlNode"
         },
         {
           "kind": "test",
@@ -549,7 +544,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.microsyntaxes"
+          "validator": "HtmlNode"
         }
       ],
       "positiveTestIds": [
@@ -628,10 +623,6 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.track.language-tags"
-        },
-        {
-          "kind": "runtime",
           "validator": "inspectConformance"
         },
         {
@@ -641,10 +632,6 @@
         }
       ],
       "targetEnforcement": [
-        {
-          "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.track.language-tags"
-        },
         {
           "kind": "runtime",
           "validator": "inspectConformance"
@@ -667,7 +654,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.responsive.srcset"
+          "validator": "inspectSrcset"
         },
         {
           "kind": "runtime",
@@ -682,7 +669,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.responsive.srcset"
+          "validator": "inspectSrcset"
         },
         {
           "kind": "runtime",
@@ -706,7 +693,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.responsive.sizes"
+          "validator": "inspectSourceSizeList"
         },
         {
           "kind": "runtime",
@@ -721,7 +708,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.responsive.sizes"
+          "validator": "inspectSourceSizeList"
         },
         {
           "kind": "runtime",
@@ -745,10 +732,6 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.foreign.names-and-namespaces"
-        },
-        {
-          "kind": "runtime",
           "validator": "inspectConformance"
         },
         {
@@ -758,10 +741,6 @@
         }
       ],
       "targetEnforcement": [
-        {
-          "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.foreign.names-and-namespaces"
-        },
         {
           "kind": "runtime",
           "validator": "inspectConformance"
@@ -784,7 +763,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html adapter boundary for html.serialization.text-modes"
+          "validator": "serialize"
         },
         {
           "kind": "test",
@@ -795,7 +774,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html adapter boundary for html.serialization.text-modes"
+          "validator": "serialize"
         }
       ],
       "positiveTestIds": [
@@ -803,75 +782,6 @@
       ],
       "negativeTestIds": [
         "test/Html.security.test.ts#rejects-scalar-hazards-ambiguous-comments-raw-end-tags-and-plaintext"
-      ],
-      "status": "covered"
-    },
-    {
-      "invariantId": "html.safe-profile.active-content",
-      "profileIds": [
-        "html-whatwg-living-2026-08-30"
-      ],
-      "currentEnforcement": [
-        {
-          "kind": "runtime",
-          "validator": "inspectConformance"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/html adapter boundary for html.safe-profile.active-content"
-        },
-        {
-          "kind": "test",
-          "suite": "test/Html.security.test.ts",
-          "oracle": "Pinned source rule and package expectation for html.safe-profile.active-content"
-        }
-      ],
-      "targetEnforcement": [
-        {
-          "kind": "runtime",
-          "validator": "inspectConformance"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/html adapter boundary for html.safe-profile.active-content"
-        }
-      ],
-      "positiveTestIds": [
-        "test/Html.security.test.ts#admits-only-self-targets-or-protected-blank-targets"
-      ],
-      "negativeTestIds": [
-        "test/Html.security.test.ts#denies-active-foreign-form-data-event-style-and-broad-global-attributes",
-        "test/Html.security.test.ts#rejects-prototype-spread-JSON-and-plain-object-proof-forgeries"
-      ],
-      "status": "covered"
-    },
-    {
-      "invariantId": "html.aria.role-compatibility",
-      "profileIds": [
-        "html-whatwg-living-2026-08-30"
-      ],
-      "currentEnforcement": [
-        {
-          "kind": "runtime",
-          "validator": "inspectConformance"
-        },
-        {
-          "kind": "test",
-          "suite": "test/Html.coverage-matrix.test.ts",
-          "oracle": "Pinned source rule and package expectation for html.aria.role-compatibility"
-        }
-      ],
-      "targetEnforcement": [
-        {
-          "kind": "runtime",
-          "validator": "inspectConformance"
-        }
-      ],
-      "positiveTestIds": [
-        "test/Html.coverage-matrix.test.ts#applies-role-compatibility-across-matching-mismatching-and-absent-roles"
-      ],
-      "negativeTestIds": [
-        "test/Html.coverage-matrix.test.ts#applies-each-element-aware-ARIA-compatibility-rule"
       ],
       "status": "covered"
     },
@@ -901,7 +811,9 @@
       "positiveTestIds": [
         "test/Html.coverage-matrix.test.ts#covers-picture-datalist-select-ruby-and-obsolete-element-alternatives"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Html.coverage-matrix.test.ts#rejects-obsolete-elements-at-the-inspectConformance-boundary"
+      ],
       "status": "covered"
     },
     {
@@ -918,7 +830,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.spec.per-rule-traceability"
+          "validator": "inspectConformance"
         },
         {
           "kind": "runtime",
@@ -970,6 +882,83 @@
       "positiveTestIds": [],
       "negativeTestIds": [],
       "status": "unsupportedProfile"
+    },
+    {
+      "invariantId": "html.safe-profile.active-content",
+      "profileIds": [
+        "html-safe-output-policy-e6e88af6"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.security.test.ts",
+          "oracle": "Package safe-output policy behavior for html.safe-profile.active-content"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.security.test.ts#admits-only-self-targets-or-protected-blank-targets"
+      ],
+      "negativeTestIds": [
+        "test/Html.security.test.ts#denies-active-foreign-form-data-event-style-and-broad-global-attributes",
+        "test/Html.security.test.ts#rejects-prototype-spread-JSON-and-plain-object-proof-forgeries"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.aria.role-compatibility",
+      "profileIds": [
+        "html-safe-output-policy-e6e88af6"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Package safe-output policy behavior for html.aria.role-compatibility"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.coverage-matrix.test.ts#applies-role-compatibility-across-matching-mismatching-and-absent-roles"
+      ],
+      "negativeTestIds": [
+        "test/Html.coverage-matrix.test.ts#applies-each-element-aware-ARIA-compatibility-rule"
+      ],
+      "status": "covered"
     }
   ]
 }

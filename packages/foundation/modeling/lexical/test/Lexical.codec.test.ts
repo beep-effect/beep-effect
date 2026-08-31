@@ -4,6 +4,7 @@ import {
   blockToLexical,
   documentToEditorState,
   editorStateToDocument,
+  LexicalNode,
   ListNode,
   nodeToBlocks,
   ParagraphNode,
@@ -152,6 +153,33 @@ describe("Lexical.codec", { concurrent: false }, () => {
       });
 
       expect(roundTrip(document)).toEqual(document);
+    }
+  });
+
+  it("materializes deterministic text for an empty Markdown link", () => {
+    const href = "https://example.com/empty";
+    const document = MdModel.Document.make({
+      children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [] })] })],
+    });
+
+    expect(roundTrip(document)).toEqual(
+      MdModel.Document.make({
+        children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [mdText(href)] })] })],
+      })
+    );
+  });
+
+  it("materializes one runtime list item for empty Markdown lists", () => {
+    const emptyLists = [
+      MdModel.Ul.make({ children: [] }),
+      MdModel.Ol.make({ children: [] }),
+      MdModel.TaskList.make({ children: [] }),
+    ];
+
+    for (const block of emptyLists) {
+      const node = Effect.runSync(blockToLexical(block));
+
+      expect(node).toMatchObject({ type: "list", children: [expect.objectContaining({ type: "listitem" })] });
     }
   });
 
@@ -616,6 +644,22 @@ describe("Lexical.codec", { concurrent: false }, () => {
       // is the one-round-loop seed-exclude form: the env floor cannot raise it.
       { numRuns: 50 }
     );
+  });
+
+  it("wraps a loose text node in a Markdown paragraph", () => {
+    const looseText = Result.getOrThrow(
+      S.decodeResult(LexicalNode)({
+        type: "text",
+        version: 1,
+        detail: 0,
+        format: 0,
+        mode: "normal",
+        style: "",
+        text: "loose",
+      })
+    );
+
+    expect(nodeToBlocks(looseText)).toEqual([MdModel.P.make({ children: [mdText("loose")] })]);
   });
 
   it("stabilizes after one Md → Lexical → Md pass (lossy codec idempotent on its stable image)", () => {

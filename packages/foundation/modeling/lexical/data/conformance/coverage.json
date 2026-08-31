@@ -15,11 +15,11 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.source.upstream-parity"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.source.upstream-parity"
+          "validator": "documentToEditorState"
         }
       ],
       "positiveTestIds": [],
@@ -36,7 +36,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.ast.type-discrimination"
+          "validator": "LexicalNode"
         },
         {
           "kind": "test",
@@ -51,7 +51,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.ast.type-discrimination"
+          "validator": "LexicalNode"
         }
       ],
       "positiveTestIds": [
@@ -72,7 +72,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.node.version-one"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "test",
@@ -87,7 +87,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.node.version-one"
+          "validator": "SerializedEditorState"
         }
       ],
       "positiveTestIds": [
@@ -104,7 +104,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.strict.closed-objects"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "test",
@@ -115,7 +115,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.strict.closed-objects"
+          "validator": "SerializedEditorState"
         }
       ],
       "positiveTestIds": [],
@@ -130,7 +130,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.lossless.open-wire"
+          "validator": "SerializedEditorStateWire"
         },
         {
           "kind": "test",
@@ -141,14 +141,16 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.lossless.open-wire"
+          "validator": "SerializedEditorStateWire"
         }
       ],
       "positiveTestIds": [
         "test/Lexical.model.test.ts#round-trips-arbitrary-open-wire-states-without-losing-extension-fields",
         "test/Lexical.model.test.ts#preserves-opaque-future-children-fields-without-imposing-semantic-child-grammar"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Lexical.model.test.ts#requires-strict-NodeState-values-to-be-lossless-JSON"
+      ],
       "status": "covered"
     },
     {
@@ -157,11 +159,11 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.strict.future-node-reporting"
+          "validator": "decodeEditorStateLossless"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema advisory inspector"
+          "validator": "analyzeEditorStateCompatibility"
         },
         {
           "kind": "test",
@@ -172,11 +174,11 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.strict.future-node-reporting"
+          "validator": "decodeEditorStateLossless"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema advisory inspector"
+          "validator": "analyzeEditorStateCompatibility"
         }
       ],
       "positiveTestIds": [
@@ -193,11 +195,11 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.tree.parent-child-grammar"
+          "validator": "LexicalNode"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         },
         {
           "kind": "test",
@@ -208,11 +210,11 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.tree.parent-child-grammar"
+          "validator": "LexicalNode"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         }
       ],
       "positiveTestIds": [
@@ -229,11 +231,11 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.root.nonempty"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         },
         {
           "kind": "test",
@@ -244,15 +246,15 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.root.nonempty"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.root.nonempty"
+          "validator": "documentToEditorState"
         }
       ],
       "positiveTestIds": [
@@ -273,11 +275,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.heading.tag-domain"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.heading.tag-domain"
+          "validator": "documentToEditorState"
         },
         {
           "kind": "test",
@@ -292,11 +294,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.heading.tag-domain"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.heading.tag-domain"
+          "validator": "documentToEditorState"
         }
       ],
       "positiveTestIds": [
@@ -313,15 +315,15 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.list.metadata-consistency"
+          "validator": "ListNode"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.list.metadata-consistency"
+          "validator": "blockToLexical"
         },
         {
           "kind": "test",
@@ -336,18 +338,19 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.list.metadata-consistency"
+          "validator": "ListNode"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.list.metadata-consistency"
+          "validator": "blockToLexical"
         }
       ],
       "positiveTestIds": [
+        "test/Lexical.codec.test.ts#constructs-every-Markdown-list-projection-through-the-canonical-ListNode-payload-cases",
         "test/Lexical.model.test.ts#generates-only-runtime-canonical-list-metadata",
         "test/Lexical.model.test.ts#keeps-canonical-list-metadata-fixed-through-the-real-Lexical-runtime"
       ],
@@ -367,11 +370,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.table.structure"
+          "validator": "LexicalNode"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         },
         {
           "kind": "test",
@@ -386,11 +389,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.table.structure"
+          "validator": "LexicalNode"
         },
         {
           "kind": "runtime",
-          "validator": "strict Lexical schema compatibility checks"
+          "validator": "analyzeEditorStateCompatibility"
         }
       ],
       "positiveTestIds": [
@@ -411,7 +414,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.text.format-bitmasks"
+          "validator": "TextFormatMask"
         },
         {
           "kind": "test",
@@ -426,7 +429,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.text.format-bitmasks"
+          "validator": "TextFormatMask"
         }
       ],
       "positiveTestIds": [],
@@ -441,7 +444,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.node-state.json-only"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "test",
@@ -452,7 +455,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.node-state.json-only"
+          "validator": "SerializedEditorState"
         }
       ],
       "positiveTestIds": [
@@ -469,11 +472,11 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.safe.urls-and-styles"
+          "validator": "SafeUrl"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.safe.urls-and-styles"
+          "validator": "sanitizeUrl"
         },
         {
           "kind": "test",
@@ -484,11 +487,11 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.safe.urls-and-styles"
+          "validator": "SafeUrl"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.safe.urls-and-styles"
+          "validator": "sanitizeUrl"
         }
       ],
       "positiveTestIds": [
@@ -505,7 +508,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.nullish.option-boundary"
+          "validator": "SerializedEditorState"
         },
         {
           "kind": "test",
@@ -516,14 +519,16 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema Effect Schema decode boundary for lexical.nullish.option-boundary"
+          "validator": "SerializedEditorState"
         }
       ],
       "positiveTestIds": [
         "test/Lexical.model.test.ts#decodes-the-fixture-editor-state-and-captures-nullish-wire-values-as-Options",
         "test/Lexical.model.test.ts#round-trips-the-fixture-through-decode-encode-without-wire-drift"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Lexical.model.test.ts#rejects-values-outside-nullish-optional-field-domains"
+      ],
       "status": "covered"
     },
     {
@@ -532,7 +537,11 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.adapter.md-core-identity"
+          "validator": "documentToEditorState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "editorStateToDocument"
         },
         {
           "kind": "test",
@@ -543,11 +552,15 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.adapter.md-core-identity"
+          "validator": "documentToEditorState"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema advisory inspector"
+          "validator": "editorStateToDocument"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectEditorStateConformance"
         }
       ],
       "positiveTestIds": [
@@ -564,7 +577,11 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.adapter.lossiness-reporting"
+          "validator": "documentToEditorState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "editorStateToDocument"
         },
         {
           "kind": "test",
@@ -575,11 +592,15 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema adapter boundary for lexical.adapter.lossiness-reporting"
+          "validator": "documentToEditorState"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/lexical-schema advisory inspector"
+          "validator": "editorStateToDocument"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectEditorStateConformance"
         }
       ],
       "positiveTestIds": [

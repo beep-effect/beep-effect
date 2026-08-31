@@ -5,11 +5,11 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { pipe, Result } from "effect";
+import { MutableHashSet, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as S from "effect/Schema";
+import * as SchemaParser from "effect/SchemaParser";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { InvariantDescriptor } from "./Conformance.invariant.schema.ts";
 import { ConformanceProfile } from "./Conformance.profile.schema.ts";
@@ -173,7 +173,6 @@ declare module "effect/Schema" {
   }
 }
 
-/* istanbul ignore next -- public callers receive schema issues through Result decoding */
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
@@ -196,7 +195,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * @since 0.0.0
  */
 export const makeAnnotationResult = (annotation: unknown): Result.Result<Annotation, S.SchemaError> =>
-  Annotation.decodeUnknownResult(annotation);
+  pipe(SchemaParser.decodeUnknownResult(Annotation)(annotation), Result.mapError(schemaIssueToError));
 
 /**
  * Validate an encoded conformance annotation before attaching or reusing it.

@@ -3,6 +3,9 @@
 This directory is the reviewable provenance surface for the
 `html-whatwg-living-2026-08-30` target profile and the older
 `html-current-vendored-2026-06-15` profile that the generator consumes today.
+The separate `html-safe-output-policy-e6e88af6` profile records the
+package-owned `SafeHtmlAst` policy without presenting that stricter policy as a
+WHATWG author-conformance requirement.
 The package-level [source ledger](../SOURCES.md) remains authoritative for the
 existing generator inputs; this narrower ledger records their relationship to
 the semantic conformance initiative.
@@ -22,6 +25,10 @@ the semantic conformance initiative.
   components used by `track[srclang]` validation.
 - `classification.json` and `obsolete-interfaces.json` are package-reviewed
   interpretations and gap closures. They are not external specifications.
+- The pinned `Html.policy.ts` source is the exact implementation reference for
+  `inspectSafeHtml` and `enforceSafeHtml`. Its deny-by-default element,
+  attribute, URL, target, role, and ARIA rules are package policy, not WHATWG
+  general conformance.
 
 ## Current bytes versus approved refresh
 

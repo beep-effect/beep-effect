@@ -284,6 +284,17 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(state.root.children[7]).toMatchObject({ artifactId: "artifact-123", label: O.some("Quarterly report") });
   });
 
+  it("rejects values outside nullish optional field domains", () => {
+    const invalidDirection = {
+      root: {
+        ...fixture.root,
+        direction: "sideways",
+      },
+    };
+
+    expect(S.decodeUnknownResult(SerializedEditorState)(invalidDirection)._tag).toBe("Failure");
+  });
+
   it("round-trips the fixture through decode/encode without wire drift", () => {
     const state = S.decodeUnknownSync(SerializedEditorState)(fixture);
     expect(S.encodeSync(SerializedEditorState)(state)).toEqual(fixture);

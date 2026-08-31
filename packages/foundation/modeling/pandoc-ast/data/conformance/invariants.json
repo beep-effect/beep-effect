@@ -54,7 +54,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.registry.known-name-exhaustiveness"
+          "validator": "UnknownBlock"
         },
         {
           "kind": "test",
@@ -98,7 +98,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.ast.internal-tag-discrimination"
+          "validator": "PandocDocument"
         },
         {
           "kind": "test",
@@ -135,16 +135,16 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.codec.strict-lossless-separation"
+          "validator": "decodePandocJsonLossless"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectPandocConformance"
         },
         {
           "kind": "test",
           "suite": "test/Pandoc.codec.test.ts",
           "oracle": "Pinned source rule and package expectation for pandoc.codec.strict-lossless-separation"
-        },
-        {
-          "kind": "runtime",
-          "validator": "inspectPandocConformance"
         },
         {
           "kind": "test",
@@ -178,7 +178,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.codec.future-constructors"
+          "validator": "UnknownBlock"
         },
         {
           "kind": "test",
@@ -214,7 +214,8 @@
       ],
       "testIds": [
         "test/Pandoc.codec.test.ts#retains-exact-future-constructors-including-absent-payloads-and-extension-fields",
-        "test/Pandoc.codec.test.ts#preserves-arbitrary-future-JSON-through-the-public-lossless-profile"
+        "test/Pandoc.codec.test.ts#preserves-arbitrary-future-JSON-through-the-public-lossless-profile",
+        "test/Pandoc.codec.test.ts#rejects-known-names-from-semantic-unknown-constructors-and-retains-valid-future-constructors"
       ]
     },
     {
@@ -235,7 +236,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "decodePandocJsonLossless recursive inspector"
+          "validator": "decodePandocJsonLossless"
         },
         {
           "kind": "test",
@@ -268,11 +269,11 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.codec.constructor-context"
+          "validator": "decodePandocJsonStrict"
         },
         {
           "kind": "runtime",
-          "validator": "strict Pandoc decode and compatibility checks"
+          "validator": "decodePandocJsonLossless"
         },
         {
           "kind": "test",
@@ -309,7 +310,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.codec.nullary-payloads"
+          "validator": "decodePandocJsonStrict"
         },
         {
           "kind": "test",
@@ -341,11 +342,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.table.recursive-payload"
+          "validator": "PandocTablePayload"
         },
         {
           "kind": "runtime",
-          "validator": "strict Pandoc decode and compatibility checks"
+          "validator": "decodePandocJsonStrict"
         },
         {
           "kind": "test",
@@ -380,7 +381,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "PandocColumnWidth schema and strict table decoder"
+          "validator": "PandocColumnWidth"
         },
         {
           "kind": "test",
@@ -413,7 +414,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.meta.recursive-values"
+          "validator": "PandocMetaValue"
         },
         {
           "kind": "test",
@@ -474,11 +475,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast adapter boundary for pandoc.header.level-adaptation"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/pandoc-ast advisory inspector"
+          "validator": "pandocToDocument"
         },
         {
           "kind": "test",
@@ -515,11 +512,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.list.constructor-domains"
+          "validator": "decodePandocJsonStrict"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast adapter boundary for pandoc.list.constructor-domains"
+          "validator": "pandocToDocument"
         },
         {
           "kind": "test",
@@ -556,11 +553,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast Effect Schema decode boundary for pandoc.math.constructor-domain"
+          "validator": "decodePandocJsonStrict"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast adapter boundary for pandoc.math.constructor-domain"
+          "validator": "pandocToDocument"
         },
         {
           "kind": "test",
@@ -591,7 +588,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast adapter boundary for pandoc.mapping.supported-report"
+          "validator": "pandocToDocument"
         },
         {
           "kind": "test",
@@ -610,7 +607,8 @@
         }
       ],
       "testIds": [
-        "test/Pandoc.mapping.test.ts#maps-md-core-Pandoc-JSON-to-beep-md-with-a-supported-report"
+        "test/Pandoc.mapping.test.ts#maps-md-core-Pandoc-JSON-to-beep-md-with-a-supported-report",
+        "test/Pandoc.mapping.test.ts#records-DOCX-origin-compatibility-gaps-while-producing-partial-Md-output"
       ]
     },
     {
@@ -623,11 +621,11 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast adapter boundary for pandoc.mapping.lossiness-reporting"
+          "validator": "pandocToDocument"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast advisory inspector"
+          "validator": "documentToPandoc"
         },
         {
           "kind": "test",
@@ -668,11 +666,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/pandoc-ast adapter boundary for pandoc.image-description.profile"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/pandoc-ast advisory inspector"
+          "validator": "pandocToDocument"
         },
         {
           "kind": "test",
@@ -796,7 +790,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "decodePandocJsonLossless recursive inspector"
+          "validator": "decodePandocJsonLossless"
         },
         {
           "kind": "runtime",
@@ -840,7 +834,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "decodePandocJsonStrict and encodePandocJson"
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "encodePandocJson"
         },
         {
           "kind": "test",
@@ -855,7 +853,8 @@
         }
       ],
       "testIds": [
-        "test/Pandoc.semantic-conformance.test.ts#retains-RawInline-and-RawBlock-format-and-text-exactly"
+        "test/Pandoc.semantic-conformance.test.ts#retains-RawInline-and-RawBlock-format-and-text-exactly",
+        "test/Pandoc.semantic-conformance.test.ts#rejects-malformed-raw-format-and-text-payloads"
       ]
     }
   ]

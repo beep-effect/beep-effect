@@ -12,39 +12,11 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Match, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { HTML_INPUT_ATTRIBUTE_APPLICABILITY, HtmlTag } from "./Html.meta.ts";
+import { HTML_INPUT_ATTRIBUTE_APPLICABILITY, HtmlInputStateName, HtmlTag } from "./Html.meta.ts";
+import type { HtmlConditionalInputAttributeName } from "./Html.meta.ts";
 import type { Button, Input } from "./Html.model.ts";
 
 const $I = $HtmlId.create("Html.form-control");
-
-const InputStateName = LiteralKit([
-  "hidden",
-  "text",
-  "search",
-  "tel",
-  "url",
-  "email",
-  "password",
-  "date",
-  "month",
-  "week",
-  "time",
-  "datetime-local",
-  "number",
-  "range",
-  "color",
-  "checkbox",
-  "radio",
-  "file",
-  "submit",
-  "image",
-  "reset",
-  "button",
-]).pipe(
-  $I.annoteSchema("InputStateName", {
-    description: "Effective states defined for the HTML input type attribute.",
-  })
-);
 
 /**
  * Closed semantic projection of an input element's effective type state.
@@ -65,11 +37,11 @@ const InputStateName = LiteralKit([
  * ```
  *
  * @invariant `state` is exactly one of the 22 standard input type states.
- * @see https://html.spec.whatwg.org/multipage/input.html#states-of-the-type-attribute for the normative input-state algorithm.
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#states-of-the-type-attribute} for the normative input-state algorithm.
  * @category models
  * @since 0.0.0
  */
-export const InputState = InputStateName.toTaggedUnion("state")({
+export const InputState = HtmlInputStateName.toTaggedUnion("state")({
   hidden: {},
   text: {},
   search: {},
@@ -108,7 +80,7 @@ export const InputState = InputStateName.toTaggedUnion("state")({
  */
 export type InputState = typeof InputState.Type;
 
-const makeInputState: (state: typeof InputStateName.Type) => InputState = InputStateName.$match({
+const makeInputState: (state: HtmlInputStateName) => InputState = HtmlInputStateName.$match({
   hidden: () => InputState.cases.hidden.make({}),
   text: () => InputState.cases.text.make({}),
   search: () => InputState.cases.search.make({}),
@@ -151,14 +123,14 @@ const makeInputState: (state: typeof InputStateName.Type) => InputState = InputS
  * ```
  *
  * @invariant A missing `type` resolves to `text`; an explicit type resolves to its corresponding state.
- * @see https://html.spec.whatwg.org/multipage/input.html#attr-input-type for the missing and invalid value defaults.
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#attr-input-type} for the missing and invalid value defaults.
  * @category normalization
  * @since 0.0.0
  */
 export const resolveInputState = (input: Input.Type): InputState =>
   pipe(
     input.type,
-    O.getOrElse(() => InputStateName.Enum.text),
+    O.getOrElse(() => HtmlInputStateName.Enum.text),
     makeInputState
   );
 
@@ -180,34 +152,35 @@ export const resolveInputState = (input: Input.Type): InputState =>
  *
  * @returns The generated conditional-attribute allowlist for the supplied state.
  * @invariant Every {@link InputState} member is handled explicitly.
- * @see https://html.spec.whatwg.org/multipage/input.html#input-type-attr-summary for the state applicability summary.
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#input-type-attr-summary} for the state applicability summary.
  * @category getters
  * @since 0.0.0
  */
-export const inputStateAllowedAttributes: (state: InputState) => ReadonlyArray<string> = InputState.match({
-  hidden: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.hidden,
-  text: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.text,
-  search: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.search,
-  tel: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.tel,
-  url: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.url,
-  email: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.email,
-  password: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.password,
-  date: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.date,
-  month: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.month,
-  week: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.week,
-  time: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.time,
-  "datetime-local": () => HTML_INPUT_ATTRIBUTE_APPLICABILITY["datetime-local"],
-  number: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.number,
-  range: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.range,
-  color: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.color,
-  checkbox: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.checkbox,
-  radio: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.radio,
-  file: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.file,
-  submit: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.submit,
-  image: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.image,
-  reset: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.reset,
-  button: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.button,
-});
+export const inputStateAllowedAttributes: (state: InputState) => ReadonlyArray<HtmlConditionalInputAttributeName> =
+  InputState.match({
+    hidden: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.hidden,
+    text: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.text,
+    search: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.search,
+    tel: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.tel,
+    url: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.url,
+    email: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.email,
+    password: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.password,
+    date: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.date,
+    month: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.month,
+    week: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.week,
+    time: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.time,
+    "datetime-local": () => HTML_INPUT_ATTRIBUTE_APPLICABILITY["datetime-local"],
+    number: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.number,
+    range: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.range,
+    color: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.color,
+    checkbox: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.checkbox,
+    radio: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.radio,
+    file: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.file,
+    submit: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.submit,
+    image: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.image,
+    reset: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.reset,
+    button: () => HTML_INPUT_ATTRIBUTE_APPLICABILITY.button,
+  });
 
 const ButtonStateName = LiteralKit(["submit", "nonSubmit"]).pipe(
   $I.annoteSchema("ButtonStateName", {
@@ -253,7 +226,7 @@ const ButtonNonSubmitBasis = LiteralKit([
  * ```
  *
  * @invariant Submit cases cannot carry non-submit reasons, and non-submit cases cannot carry submit reasons.
- * @see https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type for the effective submit-button rules.
+ * @see {@link https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type} for the effective submit-button rules.
  * @category models
  * @since 0.0.0
  */
@@ -326,7 +299,7 @@ const resolveAutoButtonState: {
  *
  * @param immediateParent - The direct HTML-element parent, or `None` at a root or non-HTML boundary.
  * @invariant The result applies the WHATWG Auto-state submit predicate without rewriting the button's `type` field.
- * @see https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element for the normative parent and command conditions.
+ * @see {@link https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element} for the normative parent and command conditions.
  * @category normalization
  * @since 0.0.0
  */

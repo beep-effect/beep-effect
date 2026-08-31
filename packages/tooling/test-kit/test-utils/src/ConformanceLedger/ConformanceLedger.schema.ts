@@ -1,3 +1,10 @@
+/**
+ * Schema models and strict decoders for package conformance ledgers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $TestUtilsId } from "@beep/identity/packages";
 import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";

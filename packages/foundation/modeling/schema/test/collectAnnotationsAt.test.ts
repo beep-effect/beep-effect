@@ -1,13 +1,13 @@
 import { collectAnnotationsAt } from "@beep/schema/SchemaUtils/collectAnnotationsAt";
 import { describe, expect, it } from "@effect/vitest";
-import { identity } from "effect/Function";
+import { Effect, identity } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
 describe("collectAnnotationsAt", () => {
   it("supports data-first and data-last calls with deterministic root-first order", () => {
     const Name = S.String.annotate({ traversalLabel: "name" });
-    const Count = S.Number.annotate({ traversalLabel: "count" });
+    const Count = S.Finite.annotate({ traversalLabel: "count" });
     const Root = S.Struct({ name: Name, counts: S.Array(Count) }).annotate({ traversalLabel: "root" });
 
     expect(collectAnnotationsAt(Root, "traversalLabel")).toEqual(["root", "name", "count"]);
@@ -25,6 +25,14 @@ describe("collectAnnotationsAt", () => {
     const Root = S.Struct({ value: Value });
 
     expect(collectAnnotationsAt(Root, "traversalLabel")).toEqual(["ordinary", "check", "key"]);
+  });
+
+  it("traverses filter groups and visits a reused nested check once within its owner", () => {
+    const Shared = S.makeFilter(() => true, { traversalLabel: "shared" });
+    const Group = S.makeFilterGroup([Shared, Shared], { traversalLabel: "group" });
+    const Value = S.String.check(Group);
+
+    expect(collectAnnotationsAt(Value, "traversalLabel")).toEqual(["group", "shared"]);
   });
 
   it("retains structurally equal sibling ASTs and counts reused checks once per owner", () => {
@@ -68,6 +76,56 @@ describe("collectAnnotationsAt", () => {
     expect(collectAnnotationsAt(Codec, "traversalLabel")).toEqual(["decoded", "encoded"]);
   });
 
+  it("traverses constructor-default targets after structural children", () => {
+    const Value = S.String.annotate({ traversalLabel: "value" }).pipe(
+      S.withConstructorDefault(Effect.succeed("fallback"))
+    );
+
+    expect(collectAnnotationsAt(Value, "traversalLabel")).toEqual(["value"]);
+  });
+
+  it("traverses declaration parameters, union members, and record index signatures", () => {
+    const Declaration = S.declare<string>((input): input is string => typeof input === "string", {
+      traversalLabel: "declaration",
+    });
+    const Union = S.Union([
+      S.String.annotate({ traversalLabel: "left" }),
+      S.Finite.annotate({ traversalLabel: "right" }),
+    ]);
+    const Record = S.Record(
+      S.String.annotate({ traversalLabel: "record-key" }),
+      S.Finite.annotate({ traversalLabel: "record-value" })
+    );
+
+    expect(collectAnnotationsAt(Declaration, "traversalLabel")).toEqual(["declaration"]);
+    expect(collectAnnotationsAt(Union, "traversalLabel")).toEqual(["left", "right"]);
+    expect(collectAnnotationsAt(Record, "traversalLabel")).toEqual(["record-key", "record-value"]);
+  });
+
+  it("visits every leaf AST variant without manufacturing annotations", () => {
+    const leafSchemas: ReadonlyArray<readonly [string, S.Top]> = [
+      ["null", S.Null],
+      ["undefined", S.Undefined],
+      ["void", S.Void],
+      ["never", S.Never],
+      ["unknown", S.Unknown],
+      ["any", S.Any],
+      ["string", S.String],
+      ["number", S.Finite],
+      ["boolean", S.Boolean],
+      ["bigint", S.BigInt],
+      ["symbol", S.Symbol],
+      ["literal", S.Literal("literal")],
+      ["unique-symbol", S.UniqueSymbol(Symbol.for("collectAnnotationsAt"))],
+      ["object", S.ObjectKeyword],
+      ["enum", S.Enum({ Only: "only" })],
+    ];
+
+    for (const [label, schema] of leafSchemas) {
+      expect(collectAnnotationsAt(schema, "traversalLabel"), label).toEqual([]);
+    }
+  });
+
   it("traverses template literal parts in declaration order", () => {
     const Template = S.TemplateLiteral([
       S.Literal("prefix-").annotate({ traversalLabel: "prefix" }),
@@ -75,5 +133,13 @@ describe("collectAnnotationsAt", () => {
     ]).annotate({ traversalLabel: "template" });
 
     expect(collectAnnotationsAt(Template, "traversalLabel")).toEqual(["template", "prefix", "value"]);
+  });
+
+  it("propagates errors thrown by a Suspend thunk", () => {
+    const Broken = S.suspend((): S.Codec<string> => {
+      throw new Error("boom");
+    });
+
+    expect(() => collectAnnotationsAt(Broken, "traversalLabel")).toThrow("boom");
   });
 });

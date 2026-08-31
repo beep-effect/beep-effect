@@ -3,7 +3,8 @@
   "packageName": "@beep/html",
   "profileIds": [
     "html-whatwg-living-2026-08-30",
-    "html-current-vendored-2026-06-15"
+    "html-current-vendored-2026-06-15",
+    "html-safe-output-policy-e6e88af6"
   ],
   "invariants": [
     {
@@ -20,7 +21,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.inventory.generated-elements"
+          "validator": "HtmlNode"
         },
         {
           "kind": "test",
@@ -35,7 +36,8 @@
         }
       ],
       "testIds": [
-        "test/Html.test.ts#covers-every-WHATWG-element-from-the-pinned-dataset-conforming-obsolete"
+        "test/Html.test.ts#covers-every-WHATWG-element-from-the-pinned-dataset-conforming-obsolete",
+        "test/Html.test.ts#rejects-tags-outside-the-generated-HtmlNode-inventory"
       ]
     },
     {
@@ -81,7 +83,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.ast.literal-tag-discrimination"
+          "validator": "HtmlNode"
         },
         {
           "kind": "test",
@@ -140,7 +142,7 @@
     {
       "id": "html.heading.phrasing-children",
       "title": "Heading elements must contain only permitted phrasing content",
-      "statement": "H1 through H6 retain broad HtmlChildren at the local schema boundary, while inspectConformance rejects nested heading descendants through the generated phrasing-only content model.",
+      "statement": "H1 through H6 retain broad HtmlChildren at the local schema boundary, while inspectConformance rejects heading descendants and non-phrasing flow children through the generated phrasing-only content model.",
       "strength": "must",
       "scope": "children",
       "decidability": "contextualRuntime",
@@ -158,11 +160,12 @@
       "references": [
         {
           "sourceId": "html-whatwg-source-approved",
-          "section": "headings-and-outlines"
+          "section": "the-h1,-h2,-h3,-h4,-h5,-and-h6-elements"
         }
       ],
       "testIds": [
-        "test/Html.heading-conformance.test.ts#rejects-heading-descendants-because-heading-content-is-phrasing-only"
+        "test/Html.heading-conformance.test.ts#rejects-heading-descendants-because-heading-content-is-phrasing-only",
+        "test/Html.heading-conformance.test.ts#rejects-non-phrasing-flow-children-in-headings"
       ]
     },
     {
@@ -175,7 +178,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "inspectConformance"
+          "validator": "computeHeadingOutline"
         },
         {
           "kind": "test",
@@ -191,7 +194,8 @@
       ],
       "testIds": [
         "test/Html.heading-conformance.test.ts#applies-ancestor-offsets-and-reset-boundaries",
-        "test/Html.heading-conformance.test.ts#caps-computed-heading-levels-at-nine"
+        "test/Html.heading-conformance.test.ts#caps-computed-heading-levels-at-nine",
+        "test/Html.heading-conformance.test.ts#rejects-an-offset-induced-skipped-computed-heading-level"
       ]
     },
     {
@@ -219,7 +223,8 @@
         }
       ],
       "testIds": [
-        "test/Html.heading-conformance.test.ts#rejects-a-skipped-computed-heading-level-in-tree-order"
+        "test/Html.heading-conformance.test.ts#rejects-a-skipped-computed-heading-level-in-tree-order",
+        "test/Html.heading-conformance.test.ts#rejects-an-offset-induced-skipped-computed-heading-level"
       ]
     },
     {
@@ -264,7 +269,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.document.structure"
+          "validator": "HtmlDocument"
         },
         {
           "kind": "runtime",
@@ -335,10 +340,6 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.conditional-requirements"
-        },
-        {
-          "kind": "runtime",
           "validator": "inspectConformance"
         },
         {
@@ -371,10 +372,6 @@
       "scope": "attributes",
       "decidability": "contextualRuntime",
       "enforcement": [
-        {
-          "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.input-state-applicability"
-        },
         {
           "kind": "runtime",
           "validator": "inspectConformance"
@@ -414,7 +411,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "resolveScriptState and inspectConformance"
+          "validator": "resolveScriptState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
         },
         {
           "kind": "test",
@@ -513,7 +514,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.attributes.microsyntaxes"
+          "validator": "HtmlNode"
         },
         {
           "kind": "test",
@@ -617,10 +618,6 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.track.language-tags"
-        },
-        {
-          "kind": "runtime",
           "validator": "inspectConformance"
         },
         {
@@ -659,7 +656,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.responsive.srcset"
+          "validator": "inspectSrcset"
         },
         {
           "kind": "runtime",
@@ -693,7 +690,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.responsive.sizes"
+          "validator": "inspectSourceSizeList"
         },
         {
           "kind": "runtime",
@@ -725,10 +722,6 @@
       "scope": "value",
       "decidability": "contextualRuntime",
       "enforcement": [
-        {
-          "kind": "runtime",
-          "validator": "@beep/html Effect Schema decode boundary for html.foreign.names-and-namespaces"
-        },
         {
           "kind": "runtime",
           "validator": "inspectConformance"
@@ -773,7 +766,7 @@
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/html adapter boundary for html.serialization.text-modes"
+          "validator": "serialize"
         },
         {
           "kind": "test",
@@ -809,69 +802,6 @@
       ]
     },
     {
-      "id": "html.safe-profile.active-content",
-      "title": "The safe profile must reject active content and unsafe attributes",
-      "statement": "SafeHtml narrows the broad structural AST by denying active, event, style, form, foreign, and unsafe URL surfaces and by issuing an opaque conformance proof.",
-      "strength": "must",
-      "scope": "value",
-      "decidability": "contextualRuntime",
-      "enforcement": [
-        {
-          "kind": "runtime",
-          "validator": "inspectConformance"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/html adapter boundary for html.safe-profile.active-content"
-        },
-        {
-          "kind": "test",
-          "suite": "test/Html.security.test.ts",
-          "oracle": "Pinned source rule and package expectation for html.safe-profile.active-content"
-        }
-      ],
-      "references": [
-        {
-          "sourceId": "html-classification-current-local",
-          "section": "conformanceRules"
-        }
-      ],
-      "testIds": [
-        "test/Html.security.test.ts#admits-only-self-targets-or-protected-blank-targets",
-        "test/Html.security.test.ts#denies-active-foreign-form-data-event-style-and-broad-global-attributes",
-        "test/Html.security.test.ts#rejects-prototype-spread-JSON-and-plain-object-proof-forgeries"
-      ]
-    },
-    {
-      "id": "html.aria.role-compatibility",
-      "title": "ARIA roles and element-specific role compatibility must be checked",
-      "statement": "The conformance pass checks configured role compatibility and element-aware ARIA rules; it does not claim exhaustive accessibility conformance.",
-      "strength": "should",
-      "scope": "attributes",
-      "decidability": "contextualRuntime",
-      "enforcement": [
-        {
-          "kind": "runtime",
-          "validator": "inspectConformance"
-        },
-        {
-          "kind": "test",
-          "suite": "test/Html.coverage-matrix.test.ts",
-          "oracle": "Pinned source rule and package expectation for html.aria.role-compatibility"
-        }
-      ],
-      "references": [
-        {
-          "sourceId": "html-classification-current-local",
-          "section": "conformanceRules"
-        }
-      ],
-      "testIds": [
-        "test/Html.coverage-matrix.test.ts#applies-role-compatibility-across-matching-mismatching-and-absent-roles",
-        "test/Html.coverage-matrix.test.ts#applies-each-element-aware-ARIA-compatibility-rule"
-      ]
-    },
-    {
       "id": "html.obsolete.nonconforming-elements",
       "title": "Obsolete elements must remain losslessly decodable but be reported as non-conforming",
       "statement": "The broad AST retains obsolete element wires for compatibility, while conformance metadata marks them non-conforming.",
@@ -900,7 +830,8 @@
         }
       ],
       "testIds": [
-        "test/Html.coverage-matrix.test.ts#covers-picture-datalist-select-ruby-and-obsolete-element-alternatives"
+        "test/Html.coverage-matrix.test.ts#covers-picture-datalist-select-ruby-and-obsolete-element-alternatives",
+        "test/Html.coverage-matrix.test.ts#rejects-obsolete-elements-at-the-inspectConformance-boundary"
       ]
     },
     {
@@ -969,6 +900,73 @@
         }
       ],
       "testIds": []
+    },
+    {
+      "id": "html.safe-profile.active-content",
+      "title": "The safe profile must reject active content and unsafe attributes",
+      "statement": "SafeHtmlAst narrows the broad conformant AST by denying active, event, style, form, foreign, and unsafe URL surfaces and by issuing an opaque policy proof.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.security.test.ts",
+          "oracle": "Package safe-output policy behavior for html.safe-profile.active-content"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-safe-policy-source-current-local",
+          "section": "SafeHtmlAst, inspectSafeHtml, enforceSafeHtml"
+        }
+      ],
+      "testIds": [
+        "test/Html.security.test.ts#admits-only-self-targets-or-protected-blank-targets",
+        "test/Html.security.test.ts#denies-active-foreign-form-data-event-style-and-broad-global-attributes",
+        "test/Html.security.test.ts#rejects-prototype-spread-JSON-and-plain-object-proof-forgeries"
+      ]
+    },
+    {
+      "id": "html.aria.role-compatibility",
+      "title": "The safe profile should enforce its finite role and ARIA compatibility policy",
+      "statement": "SafeHtmlAst accepts only the package policy's finite role and ARIA subset with element-aware compatibility checks; it does not claim exhaustive accessibility conformance.",
+      "strength": "should",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Package safe-output policy behavior for html.aria.role-compatibility"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-safe-policy-source-current-local",
+          "section": "roleCompatibility, isCompatibleAriaAttribute, inspectSafeHtml"
+        }
+      ],
+      "testIds": [
+        "test/Html.coverage-matrix.test.ts#applies-role-compatibility-across-matching-mismatching-and-absent-roles",
+        "test/Html.coverage-matrix.test.ts#applies-each-element-aware-ARIA-compatibility-rule"
+      ]
     }
   ]
 }

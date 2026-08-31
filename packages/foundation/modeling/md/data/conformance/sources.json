@@ -15,7 +15,7 @@
       "sourceIds": [
         "md-commonmark-0.31.2-spec",
         "md-commonmark-0.31.2-examples",
-        "md-gfm-0.29.0.gfm.13-extensions",
+        "md-gfm-0.29-published-spec",
         "md-micromark-4.0.2",
         "md-beep-extensions-baseline"
       ],
@@ -40,8 +40,9 @@
       "id": "gfm-0.29.0.gfm.13",
       "title": "GitHub Flavored Markdown semantic AST",
       "version": "0.29.0.gfm.13",
-      "description": "Tracked GFM obligations across decoded AST, adapters, and explicit corpus gaps.",
+      "description": "Published GFM 0.29 obligations across the decoded AST and adapters, with the separate CommonMark 0.31.2 target and unexecuted cmark-gfm corpora recorded as explicit gaps.",
       "sourceIds": [
+        "md-gfm-0.29-published-spec",
         "md-commonmark-0.31.2-spec",
         "md-gfm-0.29.0.gfm.13-spec",
         "md-gfm-0.29.0.gfm.13-extensions",
@@ -49,6 +50,7 @@
       ],
       "invariantIds": [
         "md.profile.explicit-boundaries",
+        "md.profile.gfm-commonmark-version-divergence",
         "md.corpus.gfm-exhaustive",
         "md.ast.literal-tag-discrimination",
         "md.heading.level-domain",
@@ -75,7 +77,7 @@
       "description": "Implemented package-owned Markdown extension, safety-boundary, and rendering invariants.",
       "sourceIds": [
         "md-commonmark-0.31.2-spec",
-        "md-gfm-0.29.0.gfm.13-extensions",
+        "md-gfm-0.29-published-spec",
         "md-beep-extensions-baseline"
       ],
       "invariantIds": [
@@ -124,13 +126,26 @@
       "scope": "Approved target differential corpus; not yet vendored or wired into package tests. Consumed anchors: examples."
     },
     {
-      "id": "md-gfm-0.29.0.gfm.13-spec",
-      "title": "GitHub Flavored Markdown base specification fixture",
+      "id": "md-gfm-0.29-published-spec",
+      "title": "GitHub Flavored Markdown Specification 0.29-gfm",
       "role": "primarySpecification",
-      "canonicalUrl": "https://github.com/github/cmark-gfm/blob/587a12bb54d95ac37241377e6ddc93ea0e45439b/test/spec.txt",
+      "canonicalUrl": "https://github.github.com/gfm/",
+      "revision": {
+        "kind": "retrievedSnapshot",
+        "retrievedOn": "2026-08-31"
+      },
+      "contentSha256": "b153d814fdfc8624bb6da7449162c1cd707a637f7d1c1b636eb44b9cf63fa220",
+      "license": "CC-BY-SA-4.0",
+      "scope": "Published GFM 0.29 authority for the CommonMark superset and table, task-list, strikethrough, autolink, and tag-filter extensions. Consumed anchors: introduction, tables-extension, task-list-items-extension, strikethrough-extension, autolinks-extension, disallowed-raw-html-extension."
+    },
+    {
+      "id": "md-gfm-0.29.0.gfm.13-spec",
+      "title": "cmark-gfm 0.29.0.gfm.13 base conformance corpus",
+      "role": "conformanceCorpus",
+      "canonicalUrl": "https://raw.githubusercontent.com/github/cmark-gfm/587a12bb54d95ac37241377e6ddc93ea0e45439b/test/spec.txt",
       "revision": {
         "kind": "gitCommit",
-        "repository": "https://github.com/github/cmark-gfm",
+        "repository": "https://github.com/github/cmark-gfm.git",
         "commit": "587a12bb54d95ac37241377e6ddc93ea0e45439b"
       },
       "contentSha256": "7d8e5814befec287ac116786d81ff14e0adc9b13295b4494649e995408fd871c",
@@ -139,12 +154,12 @@
     },
     {
       "id": "md-gfm-0.29.0.gfm.13-extensions",
-      "title": "GitHub Flavored Markdown extension fixtures",
-      "role": "primarySpecification",
-      "canonicalUrl": "https://github.com/github/cmark-gfm/blob/587a12bb54d95ac37241377e6ddc93ea0e45439b/test/extensions.txt",
+      "title": "cmark-gfm 0.29.0.gfm.13 extension conformance corpus",
+      "role": "conformanceCorpus",
+      "canonicalUrl": "https://raw.githubusercontent.com/github/cmark-gfm/587a12bb54d95ac37241377e6ddc93ea0e45439b/test/extensions.txt",
       "revision": {
         "kind": "gitCommit",
-        "repository": "https://github.com/github/cmark-gfm",
+        "repository": "https://github.com/github/cmark-gfm.git",
         "commit": "587a12bb54d95ac37241377e6ddc93ea0e45439b"
       },
       "contentSha256": "a2a45e98be9fca95f564f927265a0f63beea6cae5369d1cf4bde44caa51b2a3a",
@@ -165,19 +180,6 @@
       "scope": "Development-only differential oracle used by focused tests; it is not a normative source and does not currently provide full CommonMark corpus coverage. Consumed anchors: package."
     },
     {
-      "id": "md-micromark-gfm-3.0.0",
-      "title": "micromark-extension-gfm 3.0.0 npm artifact",
-      "role": "implementationReference",
-      "canonicalUrl": "https://registry.npmjs.org/micromark-extension-gfm/-/micromark-extension-gfm-3.0.0.tgz",
-      "revision": {
-        "kind": "release",
-        "version": "3.0.0"
-      },
-      "contentSha256": "35f3336120e336f7bf4737a93ca90b5549a353efc9496a31feec97215b756cf1",
-      "license": "MIT",
-      "scope": "Approved implementation oracle for future GFM differential checks; currently present only in the root catalog and not consumed by @beep/md tests. Consumed anchors: package."
-    },
-    {
       "id": "md-beep-extensions-baseline",
       "title": "Beep Markdown extension profile baseline",
       "role": "implementationReference",
@@ -190,6 +192,19 @@
       "contentSha256": "9176ad9b581bf13f7656d3cec0f93338bc8b56a8d3825d022afd8acc3f54a805",
       "license": "MIT",
       "scope": "Immutable public pre-initiative package-owned extension baseline, including math, footnotes, admonitions, embeds, YouTube blocks, and trust-aware raw nodes. Consumed anchors: Inline, Block, Document."
+    },
+    {
+      "id": "md-micromark-gfm-3.0.0",
+      "title": "micromark-extension-gfm 3.0.0 npm artifact",
+      "role": "implementationReference",
+      "canonicalUrl": "https://registry.npmjs.org/micromark-extension-gfm/-/micromark-extension-gfm-3.0.0.tgz",
+      "revision": {
+        "kind": "release",
+        "version": "3.0.0"
+      },
+      "contentSha256": "35f3336120e336f7bf4737a93ca90b5549a353efc9496a31feec97215b756cf1",
+      "license": "MIT",
+      "scope": "Approved implementation oracle for future GFM differential checks; currently present only in the root catalog and not consumed by @beep/md tests. Consumed anchors: package."
     }
   ]
 }

@@ -5,9 +5,8 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Result } from "effect";
+import { Result, Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { LocalDateFromString } from "../LocalDate/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
@@ -30,12 +29,13 @@ const $I = $SchemaId.create("Conformance/source");
  * Result.isSuccess(result) // => true
  * ```
  *
+ * @invariant Decoded object identifiers use lowercase hexadecimal text so one Git object has one encoded identity.
  * @category specifications
  * @since 0.0.0
  */
-export const GitObjectId = S.String.check(S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i)).pipe(
+export const GitObjectId = S.String.check(S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)).pipe(
   $I.annoteSchema("GitObjectId", {
-    description: "Full 40- or 64-hexadecimal Git object identifier.",
+    description: "Canonical lowercase full 40- or 64-hexadecimal Git object identifier.",
   })
 );
 

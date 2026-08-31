@@ -1,6 +1,12 @@
-import { Effect, pipe } from "effect";
+/**
+ * Cross-ledger consistency checks used by package conformance tests.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { Effect, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { conformanceLedgerEvidence } from "./ConformanceLedger.evidence.ts";
@@ -53,6 +59,16 @@ const unresolvedStrings = (references: ReadonlyArray<string>, registry: Readonly
 const describeValues = A.join(", ");
 
 const describeStringSet = (values: ReadonlyArray<string>): string => `[${describeValues(values)}]`;
+
+const selectRecordsInIdOrder = <Record extends { readonly id: string }>(
+  ids: ReadonlyArray<string>,
+  records: ReadonlyArray<Record>
+): ReadonlyArray<Record> =>
+  pipe(
+    ids,
+    A.map((id) => A.findFirst(records, (record) => Str.Equivalence(record.id, id))),
+    A.getSomes
+  );
 
 const duplicateIssues = (label: string, values: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.map(duplicateStrings(values), (value) => `${label} contains duplicate id ${value}`);
@@ -165,7 +181,7 @@ export const validateConformanceAnnotationAgainstLedgerArtifacts = Effect.fn(
     A.flatMap(({ invariantIds }) => invariantIds),
     A.dedupe
   );
-  const expectedInvariants = A.filter(invariants.invariants, ({ id }) => A.contains(expectedInvariantIds, id));
+  const expectedInvariants = selectRecordsInIdOrder(expectedInvariantIds, invariants.invariants);
   const expectedSourceIds = pipe(
     [
       A.flatMap(expectedProfiles, ({ sourceIds }) => sourceIds),
@@ -174,7 +190,7 @@ export const validateConformanceAnnotationAgainstLedgerArtifacts = Effect.fn(
     A.flatten,
     A.dedupe
   );
-  const expectedSources = A.filter(sources.sources, ({ id }) => A.contains(expectedSourceIds, id));
+  const expectedSources = selectRecordsInIdOrder(expectedSourceIds, sources.sources);
 
   return A.flatten([
     headerIssues("sources.json", sources, expectedPackageName, ledgerProfileIds),
@@ -293,7 +309,7 @@ export const validateConformanceLedgerArtifacts = Effect.fn("ConformanceLedger.v
       )}; profile=${describeStringSet(profile.invariantIds)}`
     );
   });
-  const evidenceIssues = yield* testEvidenceIssues(packageRoot, invariants.invariants);
+  const evidenceIssues = yield* testEvidenceIssues(packageRoot, invariants.invariants, coverage.coverage);
 
   return A.flatten([
     headerIssues("sources.json", sources, expectedPackageName, profileIds),

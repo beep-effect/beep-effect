@@ -4,16 +4,32 @@ import {
   BeepMarkdownSpecificationProfile,
   CommonMarkDocument,
   CommonMarkSpecificationProfile,
+  formatMarkdownConformanceIssue,
   GfmDocument,
   GfmSpecificationProfile,
   inspectMarkdownDocumentLosslessly,
   inspectMarkdownSpecificationConformance,
+  MarkdownConformanceIssue,
   MarkdownConformanceProfile,
   markdownConformanceIssues,
   refineStrictMarkdownDocument,
 } from "@beep/md/Md.conformance";
 import { CompatibilityUrlPolicy, UrlPolicySpec } from "@beep/md/Md.escape";
-import { Heading, HeadingValue, OrderedListStart, Text } from "@beep/md/Md.model";
+import {
+  Block,
+  Del,
+  Document,
+  FootnoteIdentifier,
+  Heading,
+  HeadingLevel,
+  HeadingValue,
+  Inline,
+  ListItemChild,
+  OrderedListStart,
+  TableCell,
+  TaskItem,
+  Text,
+} from "@beep/md/Md.model";
 import { renderHtmlBlock } from "@beep/md/Md.render";
 import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.safe";
 import { ConformanceReport } from "@beep/schema/Conformance";
@@ -21,7 +37,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import type { MarkdownConformanceIssue } from "@beep/md/Md.conformance";
 
 const tags = (issues: ReadonlyArray<MarkdownConformanceIssue>): ReadonlyArray<MarkdownConformanceIssue["_tag"]> =>
   A.map(issues, ({ _tag }) => _tag);
@@ -30,6 +45,7 @@ describe("Markdown semantic conformance", () => {
   it("exposes six flat heading payload cases with exhaustive helpers", () => {
     const heading = HeadingValue.cases[2].make({ children: [Text.make({ value: "Overview" })] });
 
+    expect(S.is(HeadingLevel)(heading.level)).toBe(true);
     expect(heading).toEqual({ level: 2, children: [Text.make({ value: "Overview" })] });
     expect(HeadingValue.guards[2](heading)).toBe(true);
     expect(HeadingValue.guards[1](heading)).toBe(false);
@@ -45,7 +61,7 @@ describe("Markdown semantic conformance", () => {
       })
     ).toBe("h2");
 
-    const publicHeading = Heading.make({ level: 2, children: heading.children });
+    const publicHeading = Heading.make(heading);
     expect(publicHeading).toEqual({ _tag: "heading", level: 2, children: heading.children });
     expect(renderHtmlBlock(publicHeading)).toBe("<h2>Overview</h2>");
   });
@@ -58,6 +74,105 @@ describe("Markdown semantic conformance", () => {
     expect(UrlPolicySpec.guards.Compatibility(policy)).toBe(true);
     expect(DocumentSafetyViolation.guards.RawNode(issue)).toBe(true);
     expect(issue).toEqual(RawNodeSafetyViolation.make({ path: [], nodeTag: "rawHtml" }));
+  });
+
+  it("rejects block children at the heading schema boundary", () => {
+    const result = S.decodeUnknownResult(Heading)({
+      _tag: "heading",
+      level: 2,
+      children: [{ _tag: "p", children: [] }],
+    });
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("rejects unknown Markdown variant tags", () => {
+    expect(Result.isFailure(S.decodeUnknownResult(Inline)({ _tag: "futureInline" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(Block)({ _tag: "futureBlock" }))).toBe(true);
+  });
+
+  it("rejects values outside the list item content grammar", () => {
+    const result = S.decodeUnknownResult(ListItemChild)({ _tag: "futureListItemChild" });
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("rejects non-boolean GFM task item state", () => {
+    const result = S.decodeUnknownResult(TaskItem)({
+      _tag: "taskItem",
+      checked: "yes",
+      children: [],
+    });
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("rejects block children inside GFM strikethrough", () => {
+    const result = S.decodeUnknownResult(Del)({
+      _tag: "del",
+      children: [{ _tag: "p", children: [] }],
+    });
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("rejects block children inside GFM table cells", () => {
+    const result = S.decodeUnknownResult(TableCell)({
+      _tag: "tableCell",
+      children: [{ _tag: "p", children: [] }],
+    });
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("formats every conformance issue variant as a stable diagnostic", () => {
+    const identifier = FootnoteIdentifier.fromUnknown("note");
+    const issues: ReadonlyArray<MarkdownConformanceIssue> = [
+      MarkdownConformanceIssue.cases.NestedLink.make({ path: [] }),
+      MarkdownConformanceIssue.cases.UnsupportedNode.make({
+        path: [],
+        nodeTag: "inlineMath",
+        profile: MarkdownConformanceProfile.Enum.CommonMark,
+      }),
+      MarkdownConformanceIssue.cases.EmptyList.make({ path: [], listTag: "ul" }),
+      MarkdownConformanceIssue.cases.OrderedListStart.make({ path: [], start: 1_000_000_000 }),
+      MarkdownConformanceIssue.cases.GfmTableHeader.make({ path: [] }),
+      MarkdownConformanceIssue.cases.GfmTableRowWidth.make({ path: [], expected: 2, actual: 1 }),
+      MarkdownConformanceIssue.cases.GfmTableAlignmentWidth.make({ path: [], expected: 2, actual: 1 }),
+      MarkdownConformanceIssue.cases.GfmDisallowedRawHtml.make({ path: [] }),
+      MarkdownConformanceIssue.cases.DuplicateFootnoteDefinition.make({ path: [], identifier }),
+      MarkdownConformanceIssue.cases.UndefinedFootnoteReference.make({ path: [], identifier }),
+    ];
+
+    expect(A.map(issues, formatMarkdownConformanceIssue)).toEqual([
+      "A link is nested inside another link.",
+      "The inlineMath node is not part of commonmark-0.31.2.",
+      "The ul list has no items.",
+      "The ordered-list start 1000000000 is outside CommonMark's 0..999999999 range.",
+      "A GFM table requires a non-empty header row.",
+      "The GFM table row has 1 cells; the header has 2.",
+      "The GFM alignment list has 1 entries; the header has 2 cells.",
+      "Raw HTML contains a tag filtered by GFM.",
+      "Footnote note is defined more than once.",
+      "Footnote note is referenced but not defined.",
+    ]);
+  });
+
+  it("supports data-last inspection across headings and Beep block extensions", () => {
+    const inspectCommonMark = markdownConformanceIssues(MarkdownConformanceProfile.Enum.CommonMark);
+    const document = Md.make([
+      Md.h2([Md.em("emphasis"), Md.inlineMath("x")]),
+      Md.youtubeUnsafe("M7lc1UVf-VE"),
+      Md.admonition("warning", "Careful"),
+      Md.embed("video", "https://example.com/video"),
+    ]);
+
+    expect(tags(inspectCommonMark(document))).toEqual([
+      "UnsupportedNode",
+      "UnsupportedNode",
+      "UnsupportedNode",
+      "UnsupportedNode",
+    ]);
   });
 
   it("rejects nested links strictly while retaining the exact lossless tree", () => {
@@ -117,13 +232,18 @@ describe("Markdown semantic conformance", () => {
 
   it("enforces GFM header, rectangularity, and alignment width as tree invariants", () => {
     const document = Md.make([Md.table([["a", "b"], ["c"]], { headerRow: false, align: ["left"] })]);
+    const emptyTable = Md.make([Md.table([], { headerRow: false })]);
 
+    expect(S.is(Document)(document)).toBe(true);
     expect(tags(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Gfm))).toEqual([
       "GfmTableHeader",
       "GfmTableRowWidth",
       "GfmTableAlignmentWidth",
     ]);
     expect(S.is(GfmDocument)(document)).toBe(false);
+    expect(tags(markdownConformanceIssues(emptyTable, MarkdownConformanceProfile.Enum.Gfm))).toEqual([
+      "GfmTableHeader",
+    ]);
   });
 
   it("applies the GFM raw-HTML filter without attributing it to CommonMark or Beep", () => {
@@ -152,6 +272,23 @@ describe("Markdown semantic conformance", () => {
     expect(S.is(BeepMarkdownDocument)(document)).toBe(false);
   });
 
+  it("accepts one recursively discovered definition for its matching footnote reference", () => {
+    const document = Md.make([
+      Md.p(Md.footnoteRef("note")),
+      Md.blockquote([Md.footnoteDef("note", Md.p("Defined once"))]),
+    ]);
+
+    expect(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Beep)).toEqual([]);
+    expect(S.is(BeepMarkdownDocument)(document)).toBe(true);
+  });
+
+  it("walks nested block children inside list items", () => {
+    const document = Md.make([Md.ul([Md.li([Md.p("Parent"), Md.ul(["Child"])])])]);
+
+    expect(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.CommonMark)).toEqual([]);
+    expect(S.is(CommonMarkDocument)(document)).toBe(true);
+  });
+
   it("issues distinct strict brands for documents accepted by each profile", () => {
     const document = Md.make([Md.p("Hello")]);
 
@@ -161,6 +298,8 @@ describe("Markdown semantic conformance", () => {
     expect(Result.isSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.CommonMark))).toBe(
       true
     );
+    expect(Result.isSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Gfm))).toBe(true);
+    expect(Result.isSuccess(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Beep))).toBe(true);
   });
 
   it("projects implemented checks into shared specification reports", () => {
@@ -177,12 +316,32 @@ describe("Markdown semantic conformance", () => {
     expect(CommonMarkSpecificationProfile.sourceIds).toEqual([
       "md-commonmark-0.31.2-spec",
       "md-commonmark-0.31.2-examples",
-      "md-gfm-0.29.0.gfm.13-extensions",
+      "md-gfm-0.29-published-spec",
       "md-micromark-4.0.2",
       "md-beep-extensions-baseline",
     ]);
+    expect(GfmSpecificationProfile.sourceIds).toEqual([
+      "md-gfm-0.29-published-spec",
+      "md-commonmark-0.31.2-spec",
+      "md-gfm-0.29.0.gfm.13-spec",
+      "md-gfm-0.29.0.gfm.13-extensions",
+      "md-beep-extensions-baseline",
+    ]);
+    expect(GfmSpecificationProfile.invariantIds).toContain("md.profile.gfm-commonmark-version-divergence");
     expect(GfmSpecificationProfile.invariantIds).toContain("md.gfm.disallowed-raw-html");
     expect(BeepMarkdownSpecificationProfile.invariantIds).toContain("md.footnote.unique-definitions");
+  });
+
+  it("retains must strength for required structural invariants in shared reports", () => {
+    const report = inspectMarkdownSpecificationConformance(
+      Md.make([Md.ul([])]),
+      MarkdownConformanceProfile.Enum.CommonMark
+    );
+
+    expect(report.status).toBe("nonConforming");
+    if (report.status === "nonConforming") {
+      expect(report.issues[0]?.strength).toBe("must");
+    }
   });
 
   it("keeps every runtime-checked invariant inside its published profile", () => {

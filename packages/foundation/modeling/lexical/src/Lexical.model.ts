@@ -20,10 +20,9 @@ import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
 import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, Result, SchemaGetter } from "effect";
+import { Effect, Result, SchemaGetter, Struct } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as Struct from "effect/Struct";
 import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conformance/Lexical.strict-invariants.ts";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
 import type { CodeFenceLanguage as MdCodeFenceLanguage } from "@beep/md/Md.model";
@@ -1112,7 +1111,8 @@ export declare namespace BaseNode {
  */
 const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode.Encoded> => RawLexicalNode)).pipe(
   $I.annoteSchema("NodeChildren", {
-    description: "Ordered recursive child node list decoded structurally before the public tree grammar is checked.",
+    description:
+      "Ordered recursive child list decoded through the structural RawLexicalNode union; the public LexicalNode schema applies the parent-child grammar.",
   })
 );
 
@@ -1138,7 +1138,8 @@ const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode
 export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
   {
     children: NodeChildren.annotateKey({
-      description: "Child nodes in document order, recursively decoded through the LexicalNode tagged union.",
+      description:
+        "Child nodes in document order, structurally decoded without applying the public LexicalNode parent-child grammar.",
     }),
     direction: S.OptionFromNullOr(Direction).pipe(
       SchemaUtils.withNoneDefault,
@@ -1390,7 +1391,7 @@ export declare namespace TextNode {
  * ```
  *
  * @invariant Strict tab nodes store exactly `"\t"`, use normal mode, and carry Lexical's unmergeable detail bit.
- * @see [Lexical 0.49.0 TabNode source](https://github.com/facebook/lexical/blob/v0.49.0/packages/lexical/src/nodes/LexicalTabNode.ts)
+ * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical/src/nodes/LexicalTabNode.ts | Pinned Lexical TabNode source} for the upstream serialized shape.
  * @category models
  * @since 0.0.0
  */
@@ -1715,8 +1716,7 @@ export declare namespace HeadingNode {
  * QuoteNode.name // => "QuoteNode"
  * ```
  *
- * @invariant Shadow-root quotes admit block children; legacy quotes admit inline children.
- * @see [Lexical 0.49.0 QuoteNode source](https://github.com/facebook/lexical/blob/v0.49.0/packages/lexical-rich-text/src/index.ts)
+ * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical-rich-text/src/index.ts | Pinned Lexical QuoteNode source} for the upstream serialized shape.
  * @category models
  * @since 0.0.0
  */
@@ -1905,7 +1905,7 @@ const ListNodeValueFields = ListNode.mapFields(Struct.omit(["type", "listType", 
  * ```
  *
  * @invariant Numbered lists use `ol`; bullet and check lists use `ul`.
- * @see [Lexical 0.49.0 ListNode source](https://github.com/facebook/lexical/blob/v0.49.0/packages/lexical-list/src/LexicalListNode.ts) for the upstream list-type-to-tag derivation.
+ * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical-list/src/LexicalListNode.ts | Pinned Lexical ListNode source} for the upstream list-type-to-tag derivation.
  * @category models
  * @since 0.0.0
  */
@@ -2663,6 +2663,7 @@ const RawLexicalNode = S.Union([
  * Result.isSuccess(result) && result.success.type === "linebreak" // => true
  * ```
  *
+ * @invariant Quote children are block-compatible only in shadow-root mode; legacy quote children are inline-only.
  * @category models
  * @since 0.0.0
  */

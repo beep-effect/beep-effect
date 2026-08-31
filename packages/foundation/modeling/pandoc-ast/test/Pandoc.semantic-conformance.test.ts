@@ -112,6 +112,25 @@ describe("Pandoc current constructor semantic conformance", () => {
     expect(Effect.runSync(encodePandocJson(semantic))).toEqual(wire);
   });
 
+  it("rejects malformed raw format and text payloads", () => {
+    const wire = {
+      "pandoc-api-version": [1, 23, 1],
+      blocks: [
+        { c: [{ c: [42, "inline"], t: "RawInline" }], t: "Para" },
+        { c: ["html", 42], t: "RawBlock" },
+      ],
+      meta: {},
+    };
+
+    expect(Effect.runSyncExit(decodePandocJsonStrict(wire))._tag).toBe("Failure");
+    expect(
+      Effect.runSync(decodePandocJsonLossless(wire)).issues.map((issue) => [issue.constructor, issue.pointer])
+    ).toEqual([
+      ["RawInline", "/blocks/0/c/0"],
+      ["RawBlock", "/blocks/1"],
+    ]);
+  });
+
   it("discriminates finite ColWidth from nullary ColWidthDefault", () => {
     expect(S.is(PandocColumnWidth)({ c: 0.5, t: "ColWidth" })).toBe(true);
     expect(S.is(PandocColumnWidth)({ t: "ColWidthDefault" })).toBe(true);
@@ -235,6 +254,16 @@ describe("Pandoc conformance facade", () => {
         blocks: [{ c: {}, t: "Figure" }],
         meta: {},
       });
+    }
+  });
+
+  it("classifies a malformed Pandoc envelope as invalid before wire retention", () => {
+    const result = Effect.runSync(inspectPandocConformance(null));
+
+    expect(result._tag).toBe("invalid");
+    if (result._tag === "invalid") {
+      expect(result.issues).toEqual([]);
+      expect(result.wire).toBeUndefined();
     }
   });
 

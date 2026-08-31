@@ -12,431 +12,12 @@
       "description": "Result produced by the architecture lab app contract harness."
     },
     {
-      "file": "apps/labs/api-docs/src/Api.ts",
-      "symbol": "Health",
-      "kind": "schema-class",
-      "owner": "@beep/api-docs",
-      "identity": "Health",
-      "description": "Service health snapshot returned by GET /health."
-    },
-    {
-      "file": "apps/labs/api-docs/src/Catalog.models.ts",
-      "symbol": "ApiAudience",
-      "kind": "literal-kit",
-      "owner": "@beep/api-docs",
-      "identity": "ApiAudience",
-      "description": "Whether this repository serves an API or consumes an external API."
-    },
-    {
-      "file": "apps/labs/api-docs/src/Catalog.models.ts",
-      "symbol": "CatalogEntryMeta",
-      "kind": "tagged-union",
-      "owner": "@beep/api-docs",
-      "identity": "CatalogEntryMeta",
-      "description": "Route identity and index-page copy for one API docs catalog entry."
-    },
-    {
-      "file": "apps/labs/api-docs/src/Catalog.models.ts",
-      "symbol": "CatalogSlug",
-      "kind": "brand",
-      "owner": "@beep/api-docs",
-      "identity": "CatalogSlug",
-      "description": "Branded lowercase kebab-case identifier used in API docs routes."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/server/build-bundle.ts",
-      "symbol": "BundleBuildError",
-      "kind": "tagged-error",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "BundleBuildError"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/server/build-bundle.ts",
-      "symbol": "BundleBuildInput",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "BundleBuildInput",
-      "description": "Caller-selected final roots and frozen provider recording for one transactional bundle build."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/server/build-bundle.ts",
-      "symbol": "PublicationReadbackInput",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "PublicationReadbackInput",
-      "description": "The exact staged JSON bytes and expected mutable policy validated before atomic publication."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/server/provider-smoke.ts",
-      "symbol": "ProviderSmokeError",
-      "kind": "tagged-error",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProviderSmokeError"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ExtractedField",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ExtractedField",
-      "description": "A normalized field value grounded by @beep/langextract to an exact source-text slice."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "FrozenProviderRecording",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "FrozenProviderRecording",
-      "description": "The exact ordered, sanitized live-provider result committed for deterministic offline replay v1."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "FrozenProviderRecordingFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "GoldenReplayReceipt",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "GoldenReplayReceipt",
-      "description": "Proof that normalized data, rules, citations, projections, and identity replay without network or provider."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "GoldenReplayReceiptFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ImmutableDemoBundle",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ImmutableDemoBundle",
-      "description": "The complete immutable replay payload; mutable approvals and reviewed claims are stored separately."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ImmutableDemoBundleFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "MissingField",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "MissingField",
-      "description": "An explicit missing value retained as a review question instead of inferred."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "MutableRetentionMetadata",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "MutableRetentionMetadata",
-      "description": "The schema-validated mutable retention authority and its effective disposition date."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "MutableRetentionMetadataFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "MutableReviewLedger",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "MutableReviewLedger",
-      "description": "Mutable approvals and reviewed claims governed by the explicit 2026-09-30 disposition."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "MutableReviewLedgerFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "NormalizedFixture",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "NormalizedFixture",
-      "description": "One complete deterministic RFQ normalization with split sources and retained missing values."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ProjectionSnapshot",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProjectionSnapshot",
-      "description": "Stable PGlite, DuckDB, and bounded Oxigraph query outputs for the committed golden run."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ProjectionStoreMetadata",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProjectionStoreMetadata",
-      "description": "Version and bundle identity metadata persisted alongside the PGlite and DuckDB stores."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ProjectionStoreMetadataFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ProviderCandidate",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProviderCandidate",
-      "description": "A provider candidate stripped of request ids, usage, authorization data, and transport metadata."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ProviderCandidateListFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ProviderRecording",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProviderRecording",
-      "description": "A sanitized successful live extraction recording that makes the golden run provider-independent."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "ProviderRecordingFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "RetentionAuthorization",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "RetentionAuthorization",
-      "description": "A reviewed consent or promotion record that grants a later mutable-corpus disposition date."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "RetentionAuthorizationFromJsonString",
-      "kind": "codec",
-      "owner": "@beep/lejeune-bolt-workbench"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "RuleResult",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "RuleResult",
-      "description": "An advisory rule result carrying source, revision, exact evidence, facts, disposition, and stop point."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "RuleSource",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "RuleSource",
-      "description": "A rule authority that opens to a governing public source and pins a minimal exact evidence span."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts",
-      "symbol": "SourceDocument",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "SourceDocument",
-      "description": "A parsed synthetic source whose exact text and SHA-256 digest are stable across rebuilds."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "Approval",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "Approval",
-      "description": "A lab-local review record that never represents a quote send, substitution, or order."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "Component",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "Component",
-      "description": "A bolt, nut, washer, or DTI participating in one fixed-story assembly."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "EntityId",
-      "kind": "brand",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "EntityId",
-      "description": "Stable lowercase kebab-case identifier for one lab-local ontology instance."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "ExpertClaim",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ExpertClaim",
-      "description": "A cited and review-gated veteran claim limited to the fixed demo story."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "Finish",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "Finish",
-      "description": "A lab-scoped coating or plain-finish designation used by the two RFQ fixtures."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "IsoDate",
-      "kind": "brand",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "IsoDate",
-      "description": "Calendar date encoded as YYYY-MM-DD."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "IsoTimestamp",
-      "kind": "brand",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "IsoTimestamp",
-      "description": "Millisecond-precision UTC timestamp used by synthetic and review records."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "LotCertificate",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "LotCertificate",
-      "description": "A dated synthetic certificate pointer with no copied mill or third-party payload."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "OntologyClassName",
-      "kind": "literal-kit",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "OntologyClassName",
-      "description": "The complete and closed twelve-class ontology for the fixed LeJeune lunch scenario."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "ProductVariant",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProductVariant",
-      "description": "A fixed-story fastener variant linked to its standard, finish, and assembly components."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "Project",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "Project",
-      "description": "A synthetic project identity and delivery date used by a fixed RFQ pair."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "QuoteLine",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "QuoteLine",
-      "description": "A normalized quantity request linked to its RFQ and fixed product variant."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "RFQ",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "RFQ",
-      "description": "A fixed-layout RFQ that preserves every required value the sources did not provide."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "Standard",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "Standard",
-      "description": "A technical designation with an explicit revision or access date and an opening URL."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "SupplierOffer",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "SupplierOffer",
-      "description": "A dated synthetic offer that cannot be mistaken for current supplier price or availability."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts",
-      "symbol": "Tool",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "Tool",
-      "description": "A fixed-story installation or verification tool referenced without supplier authority."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/FixtureManifest.ts",
-      "symbol": "FrozenFixtureManifest",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "FrozenFixtureManifest",
-      "description": "The committed acceptance oracle for fixture bytes, exact spans, and deliberate unknowns."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/FixtureManifest.ts",
-      "symbol": "FrozenSourceHash",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "FrozenSourceHash",
-      "description": "A committed source identifier and deterministic SHA-256 digest."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/Sources.ts",
-      "symbol": "FixtureError",
-      "kind": "tagged-error",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "FixtureError"
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/fixtures/Sources.ts",
-      "symbol": "GeneratedFixtureArtifacts",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "GeneratedFixtureArtifacts",
-      "description": "Deterministic synthetic Office bytes and their four parsed exact-text source records."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/runtime/Projections.ts",
-      "symbol": "ProjectionInput",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProjectionInput",
-      "description": "The normalized fixtures, cited rules, and synthetic records projected into the three local stores."
-    },
-    {
-      "file": "apps/labs/lejeune-bolt-workbench/src/runtime/Projections.ts",
-      "symbol": "ProjectionLayerOptions",
-      "kind": "schema-class",
-      "owner": "@beep/lejeune-bolt-workbench",
-      "identity": "ProjectionLayerOptions",
-      "description": "Caller-selected machine-local paths for one scoped projection layer."
-    },
-    {
       "file": "apps/labs/semantica/src/canary/Command.ts",
       "symbol": "CanaryOptions",
       "kind": "schema-class",
       "owner": "@beep/semantica",
       "identity": "CanaryOptions",
-      "description": "Manifest, source selection, optional paper, and replay mode parsed for one canary stage."
+      "description": "Manifest, paper selection, and replay mode parsed for one canary stage."
     },
     {
       "file": "apps/labs/semantica/src/canary/Command.ts",
@@ -444,12 +25,6 @@
       "kind": "tagged-error",
       "owner": "@beep/semantica",
       "identity": "StageNotImplemented"
-    },
-    {
-      "file": "apps/labs/semantica/src/canary/Gold.ts",
-      "symbol": "proposeGold",
-      "kind": "schema-const",
-      "owner": "@beep/semantica"
     },
     {
       "file": "apps/labs/semantica/src/corpus/ByteWitness.ts",
@@ -582,14 +157,6 @@
       "description": "Expected successful parse or declared typed degradation for an F1 fixture."
     },
     {
-      "file": "apps/labs/semantica/src/runtime/Config.ts",
-      "symbol": "RuntimeMode",
-      "kind": "literal-kit",
-      "owner": "@beep/semantica",
-      "identity": "RuntimeMode",
-      "description": "Explicit live-provider or cache-only runtime selection."
-    },
-    {
       "file": "apps/labs/semantica/src/schema/Degraded.ts",
       "symbol": "DegradedKind",
       "kind": "literal-kit",
@@ -630,13 +197,6 @@
     },
     {
       "file": "apps/labs/semantica/src/schema/Errors.ts",
-      "symbol": "C0ExecutionFailed",
-      "kind": "tagged-error",
-      "owner": "@beep/semantica",
-      "identity": "C0ExecutionFailed"
-    },
-    {
-      "file": "apps/labs/semantica/src/schema/Errors.ts",
       "symbol": "DocumentUnavailable",
       "kind": "tagged-error",
       "owner": "@beep/semantica",
@@ -655,13 +215,6 @@
       "kind": "tagged-error",
       "owner": "@beep/semantica",
       "identity": "LedgerFailed"
-    },
-    {
-      "file": "apps/labs/semantica/src/schema/Errors.ts",
-      "symbol": "ModelRevisionUnpinned",
-      "kind": "tagged-error",
-      "owner": "@beep/semantica",
-      "identity": "ModelRevisionUnpinned"
     },
     {
       "file": "apps/labs/semantica/src/schema/Errors.ts",
@@ -730,14 +283,6 @@
       "owner": "@beep/semantica",
       "identity": "EvalSelection",
       "description": "Unique W1 paper ids and non-empty F1 fixture ids selected for one evaluation run."
-    },
-    {
-      "file": "apps/labs/semantica/src/schema/Eval.ts",
-      "symbol": "EvalSelectionMode",
-      "kind": "literal-kit",
-      "owner": "@beep/semantica",
-      "identity": "EvalSelectionMode",
-      "description": "Fixture-only or fixture-plus-W1 source selection for one evaluation execution."
     },
     {
       "file": "apps/labs/semantica/src/schema/Eval.ts",
@@ -873,7 +418,7 @@
       "kind": "schema-class",
       "owner": "@beep/semantica",
       "identity": "GoldEntityLabel",
-      "description": "Entity surface label, explicit coreference cluster, and type grounded to canonical paper text with a spot-check marker."
+      "description": "Entity surface label and type grounded to canonical paper text with a spot-check marker."
     },
     {
       "file": "apps/labs/semantica/src/schema/Gold.ts",
@@ -956,22 +501,6 @@
       "description": "Full SHA-256 identity of one replay-stable evaluation run."
     },
     {
-      "file": "apps/labs/semantica/src/schema/Ledger.ts",
-      "symbol": "LedgerDocumentSnapshot",
-      "kind": "schema-class",
-      "owner": "@beep/semantica",
-      "identity": "LedgerDocumentSnapshot",
-      "description": "One ledger document with its parse outcome, optional canonical text, and verified chunks."
-    },
-    {
-      "file": "apps/labs/semantica/src/schema/Ledger.ts",
-      "symbol": "LedgerSnapshot",
-      "kind": "schema-class",
-      "owner": "@beep/semantica",
-      "identity": "LedgerSnapshot",
-      "description": "Evaluator read model containing document outcomes, chunks, lane batches, claims, and events."
-    },
-    {
       "file": "apps/labs/semantica/src/schema/MediaType.ts",
       "symbol": "MediaType",
       "kind": "literal-kit",
@@ -1049,7 +578,7 @@
       "kind": "schema-class",
       "owner": "@beep/semantica",
       "identity": "EvalRunTelemetry",
-      "description": "Live-or-replay timing and available byte measurements kept outside every replay-stable digest preimage."
+      "description": "Live-or-replay timing and byte measurements kept outside every replay-stable digest preimage."
     },
     {
       "file": "apps/labs/semantica/src/schema/Text.ts",
@@ -1074,14 +603,6 @@
       "owner": "@beep/semantica",
       "identity": "ParseOutcome",
       "description": "Parser outcome preserving either raw text or a typed degraded state."
-    },
-    {
-      "file": "apps/labs/semantica/src/services/DocumentSource.ts",
-      "symbol": "DocumentSelection",
-      "kind": "schema-class",
-      "owner": "@beep/semantica",
-      "identity": "DocumentSelection",
-      "description": "Verified manifest, F1 index, W1 inclusion, and optional W1 paper selection."
     },
     {
       "file": "apps/oip-web/src/app/api/contact/ContactRouteResponse.ts",
@@ -6607,7 +6128,7 @@
       "kind": "schema-class",
       "owner": "@beep/libpff",
       "identity": "PffexportEngineConfig",
-      "description": "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, existing-export policy, optional sandbox, and optional per-archive timeout."
+      "description": "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, existing-export policy, and optional per-archive timeout."
     },
     {
       "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
@@ -8011,22 +7532,6 @@
       "owner": "@beep/openai-compat",
       "identity": "OpenAiCompatLanguageModelConfig",
       "description": "Request-time tuning options shared by OpenAI-compatible language-model adapters."
-    },
-    {
-      "file": "packages/drivers/openai/src/OpenAi.config.ts",
-      "symbol": "OpenAiEmbeddingModelOptions",
-      "kind": "schema-class",
-      "owner": "@beep/openai",
-      "identity": "OpenAiEmbeddingModelOptions",
-      "description": "Options accepted by the OpenAI embedding-model Layer factory."
-    },
-    {
-      "file": "packages/drivers/openai/src/OpenAi.config.ts",
-      "symbol": "OpenAiLanguageModelOptions",
-      "kind": "schema-class",
-      "owner": "@beep/openai",
-      "identity": "OpenAiLanguageModelOptions",
-      "description": "Options accepted by the OpenAI language-model Layer factory."
     },
     {
       "file": "packages/drivers/openclaw/src/Openclaw.errors.ts",
@@ -11901,18 +11406,6 @@
     },
     {
       "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "BeginVerifiedSpanHistoryInput",
-      "kind": "schema-class",
-      "owner": "@beep/langextract"
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "ContinueVerifiedSpanHistoryInput",
-      "kind": "schema-class",
-      "owner": "@beep/langextract"
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
       "symbol": "RawTextChunk",
       "kind": "schema-class",
       "owner": "@beep/langextract",
@@ -11942,92 +11435,6 @@
       "owner": "@beep/langextract",
       "identity": "Utf16TextRange",
       "description": "Canonical non-empty half-open UTF-16 code-unit source-text range."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanAttemptFailure",
-      "kind": "schema-class",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanAttemptFailure",
-      "description": "Sanitized stage and reason retained when a source, locator, or anchor verification fails closed."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanAttemptFailureReason",
-      "kind": "union",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanAttemptFailureReason",
-      "description": "Typed fail-closed reason retained by a verified-span attempt regardless of failure stage."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanAttemptFailureStage",
-      "kind": "literal-kit",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanAttemptFailureStage",
-      "description": "Closed stage vocabulary for source, locator, and exact-anchor verification failures."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanAttemptId",
-      "kind": "brand",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanAttemptId",
-      "description": "Stable identifier linking one persisted verified-span attempt to its predecessor."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanAttemptKind",
-      "kind": "literal-kit",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanAttemptKind",
-      "description": "Closed kind vocabulary for initial/current verification and explicit re-anchor attempts."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanAttemptOutcome",
-      "kind": "tagged-union",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanAttemptOutcome",
-      "description": "Closed persisted outcome for verified, fail-closed, and no-candidate extraction attempts."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanAttemptRecord",
-      "kind": "schema-class",
-      "owner": "@beep/langextract"
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanCandidateAnchorReceipt",
-      "kind": "schema-class",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanCandidateAnchorReceipt",
-      "description": "Verified anchor receipt paired with its stable position in the retained raw candidate batch."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanEngine",
-      "kind": "schema-class",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanEngine",
-      "description": "Named and versioned engine responsible for one raw grounded-extraction candidate batch."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
-      "symbol": "VerifiedSpanHistory",
-      "kind": "schema-class",
-      "owner": "@beep/langextract",
-      "identity": "VerifiedSpanHistory",
-      "description": "Append-only same-matter history linking source verification, fail-closed drift, and re-anchor attempts."
-    },
-    {
-      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.normalization.ts",
-      "symbol": "NormalizedTextWithRawOffsets",
-      "kind": "schema-class",
-      "owner": "@beep/langextract",
-      "identity": "NormalizedTextWithRawOffsets",
-      "description": "Normalized locator text paired with the raw UTF-16 source range behind each normalized code unit."
     },
     {
       "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
@@ -13248,30 +12655,6 @@
     },
     {
       "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
-      "symbol": "HtmlBestPracticeIssue",
-      "kind": "schema-class",
-      "owner": "@beep/html",
-      "identity": "HtmlBestPracticeIssue",
-      "description": "Path-addressed, non-fatal HTML authoring recommendation."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
-      "symbol": "HtmlBestPracticeRule",
-      "kind": "literal-kit",
-      "owner": "@beep/html",
-      "identity": "HtmlBestPracticeRule",
-      "description": "Advisory HTML authoring rule kept separate from hard conformance failures."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
-      "symbol": "HtmlComputedHeadingLevel",
-      "kind": "literal-kit",
-      "owner": "@beep/html",
-      "identity": "HtmlComputedHeadingLevel",
-      "description": "Computed HTML heading level after ancestor offsets, capped at nine."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
       "symbol": "HtmlConformanceError",
       "kind": "tagged-error",
       "owner": "@beep/html",
@@ -13292,14 +12675,6 @@
       "owner": "@beep/html",
       "identity": "HtmlConformanceRule",
       "description": "Rule identifier emitted by HTML AST conformance validation."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
-      "symbol": "HtmlHeadingOutlineEntry",
-      "kind": "schema-class",
-      "owner": "@beep/html",
-      "identity": "HtmlHeadingOutlineEntry",
-      "description": "Path-addressed HTML heading with its computed semantic level."
     },
     {
       "file": "packages/foundation/modeling/html/src/Html.contract.ts",
@@ -14683,37 +14058,6 @@
       "description": "Conservative allowlist of inert HTML output elements."
     },
     {
-      "file": "packages/foundation/modeling/html/src/Html.script.ts",
-      "symbol": "HtmlMimeType",
-      "kind": "brand",
-      "owner": "@beep/html",
-      "identity": "HtmlMimeType",
-      "description": "Author-valid MIME type string used by HTML attribute conformance checks."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.script.ts",
-      "symbol": "InvalidScriptType",
-      "kind": "tagged-error",
-      "owner": "@beep/html",
-      "identity": "InvalidScriptType"
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.script.ts",
-      "symbol": "JavaScriptMimeTypeEssence",
-      "kind": "literal-kit",
-      "owner": "@beep/html",
-      "identity": "JavaScriptMimeTypeEssence",
-      "description": "Exact JavaScript MIME type essence strings recognized by the HTML script type algorithm."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.script.ts",
-      "symbol": "ScriptDataBlockMimeType",
-      "kind": "brand",
-      "owner": "@beep/html",
-      "identity": "ScriptDataBlockMimeType",
-      "description": "Author-valid MIME string that is not a JavaScript essence match, carried by a script data block."
-    },
-    {
       "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
       "symbol": "HtmlSerializeError",
       "kind": "tagged-error",
@@ -14835,14 +14179,6 @@
       "owner": "@beep/lexical-schema",
       "identity": "ArtifactUri",
       "description": "artifact:// URI carrying a package-owned artifact reference id through the Md link projection."
-    },
-    {
-      "file": "packages/foundation/modeling/lexical/src/Lexical.conformance.ts",
-      "symbol": "LexicalConformanceResult",
-      "kind": "tagged-union",
-      "owner": "@beep/lexical-schema",
-      "identity": "LexicalConformanceResult",
-      "description": "Exhaustive strict, normalizable, unsupported, or invalid Lexical editor-state classification."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -14997,14 +14333,6 @@
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
-      "symbol": "QuoteNode",
-      "kind": "schema-const",
-      "owner": "@beep/lexical-schema",
-      "identity": "QuoteNode",
-      "description": "A serialized Lexical quote whose optional shadow-root mode controls its child grammar."
-    },
-    {
-      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
       "symbol": "SafeInlineStyle",
       "kind": "codec",
       "owner": "@beep/lexical-schema",
@@ -15042,14 +14370,6 @@
       "owner": "@beep/lexical-schema",
       "identity": "SerializedEditorStateWire",
       "description": "Lossless JSON-only editor-state envelope retaining top-level and recursive extension fields."
-    },
-    {
-      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
-      "symbol": "TabNode",
-      "kind": "brand",
-      "owner": "@beep/lexical-schema",
-      "identity": "TabNode",
-      "description": "A serialized Lexical tab leaf node with canonical tab text, mode, and unmergeable detail."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -15120,69 +14440,6 @@
       "description": "Lexical text node editability mode: normal text, indivisible token text, or segmented text."
     },
     {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "BeepMarkdownDocument",
-      "kind": "brand",
-      "owner": "@beep/md",
-      "identity": "BeepMarkdownDocument",
-      "description": "Markdown AST satisfying every implemented Beep extension semantic-tree check."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "CommonMarkDocument",
-      "kind": "brand",
-      "owner": "@beep/md",
-      "identity": "CommonMarkDocument",
-      "description": "Markdown AST satisfying every implemented CommonMark 0.31.2 semantic-tree check."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "GfmDocument",
-      "kind": "brand",
-      "owner": "@beep/md",
-      "identity": "GfmDocument",
-      "description": "Markdown AST satisfying every implemented pinned-GFM semantic-tree check."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "LosslessMarkdownConformanceReport",
-      "kind": "schema-class",
-      "owner": "@beep/md",
-      "identity": "LosslessMarkdownConformanceReport",
-      "description": "Lossless Markdown profile inspection retaining the exact supplied document and all issues."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "MarkdownConformanceError",
-      "kind": "tagged-error",
-      "owner": "@beep/md",
-      "identity": "MarkdownConformanceError"
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "MarkdownConformanceIssue",
-      "kind": "tagged-union",
-      "owner": "@beep/md",
-      "identity": "MarkdownConformanceIssue",
-      "description": "Exhaustive path-located semantic Markdown conformance issue."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "MarkdownConformanceProfile",
-      "kind": "literal-kit",
-      "owner": "@beep/md",
-      "identity": "MarkdownConformanceProfile",
-      "description": "Specification profile selected for semantic Markdown AST validation."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.conformance.ts",
-      "symbol": "MarkdownExtensionNodeTag",
-      "kind": "literal-kit",
-      "owner": "@beep/md",
-      "identity": "MarkdownExtensionNodeTag",
-      "description": "Markdown AST member governed by GFM or Beep extension profiles."
-    },
-    {
       "file": "packages/foundation/modeling/md/src/Md.escape.ts",
       "symbol": "AllowListUrlPolicySpec",
       "kind": "tagged-class",
@@ -15209,7 +14466,7 @@
     {
       "file": "packages/foundation/modeling/md/src/Md.escape.ts",
       "symbol": "UrlPolicySpec",
-      "kind": "tagged-union",
+      "kind": "union",
       "owner": "@beep/md",
       "identity": "UrlPolicySpec",
       "description": "Canonical tagged URL destination policy."
@@ -15352,14 +14609,6 @@
     },
     {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
-      "symbol": "HeadingValue",
-      "kind": "tagged-union",
-      "owner": "@beep/md",
-      "identity": "HeadingValue",
-      "description": "Flat discriminated union of Markdown heading payloads keyed by semantic level."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.model.ts",
       "symbol": "Hr",
       "kind": "tagged-class",
       "owner": "@beep/md",
@@ -15445,14 +14694,6 @@
       "owner": "@beep/md",
       "identity": "Ol",
       "description": "Ordered list block."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.model.ts",
-      "symbol": "OrderedListStart",
-      "kind": "union",
-      "owner": "@beep/md",
-      "identity": "OrderedListStart",
-      "description": "Non-negative ordered-list start retained by the broad Markdown AST."
     },
     {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
@@ -15632,7 +14873,7 @@
     {
       "file": "packages/foundation/modeling/md/src/Md.safe.ts",
       "symbol": "DocumentSafetyViolation",
-      "kind": "tagged-union",
+      "kind": "union",
       "owner": "@beep/md",
       "identity": "DocumentSafetyViolation",
       "description": "Path-located Markdown user-content safety violation."
@@ -16522,29 +15763,6 @@
     },
     {
       "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorAlignmentManifestEntry",
-      "kind": "schema-class",
-      "owner": "@beep/ontology",
-      "identity": "VendorAlignmentManifestEntry",
-      "description": "Asset-pack manifest directive for one vetted external concept alignment."
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorAlignmentTargetNotFound",
-      "kind": "tagged-error",
-      "owner": "@beep/ontology",
-      "identity": "VendorAlignmentTargetNotFound"
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorConceptSlice",
-      "kind": "schema-class",
-      "owner": "@beep/ontology",
-      "identity": "VendorConceptSlice",
-      "description": "Minimal external JSON-LD class fields required to verify a manifested alignment."
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
       "symbol": "VendorLoadStatus",
       "kind": "literal-kit",
       "owner": "@beep/ontology",
@@ -16557,21 +15775,7 @@
       "kind": "schema-class",
       "owner": "@beep/ontology",
       "identity": "VendorManifestEntry",
-      "description": "Manifest row for one verified, explicitly vetted, alignment-free JSON-LD taxonomy slice."
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorSliceAlignmentNotAdmitted",
-      "kind": "tagged-error",
-      "owner": "@beep/ontology",
-      "identity": "VendorSliceAlignmentNotAdmitted"
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorSliceConceptMismatch",
-      "kind": "tagged-error",
-      "owner": "@beep/ontology",
-      "identity": "VendorSliceConceptMismatch"
+      "description": "Manifest row for one explicitly vetted JSON-LD taxonomy slice."
     },
     {
       "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
@@ -16671,38 +15875,6 @@
       "description": "Diagnostic produced while inspecting a lossless Pandoc document."
     },
     {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-      "symbol": "PandocCheckedInvariantIds",
-      "kind": "schema-const",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocCheckedInvariantIds",
-      "description": "Complete ordered invariant set checked by the Pandoc conformance facade."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-      "symbol": "PandocConformanceInvariantId",
-      "kind": "literal-kit",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocConformanceInvariantId",
-      "description": "Stable identifier for an invariant checked by Pandoc conformance inspection."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-      "symbol": "PandocConformanceIssue",
-      "kind": "tagged-union",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocConformanceIssue",
-      "description": "Exhaustive unsupported-but-lossless Pandoc conformance reason."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
-      "symbol": "PandocConformanceResult",
-      "kind": "tagged-union",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocConformanceResult",
-      "description": "Exhaustive compatible, unsupported, or invalid Pandoc JSON classification."
-    },
-    {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
       "symbol": "DocumentToPandocResult",
       "kind": "schema-class",
@@ -16743,22 +15915,6 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "Citation",
-      "kind": "schema-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "Citation",
-      "description": "Structured Pandoc citation record embedded in a Cite inline."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "Cite",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "Cite",
-      "description": "Pandoc citation inline with structured citations and rendered fallback content."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
       "symbol": "Code",
       "kind": "tagged-class",
       "owner": "@beep/pandoc-ast",
@@ -16775,14 +15931,6 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "DefinitionList",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "DefinitionList",
-      "description": "Pandoc definition list with structurally typed term/definition pairs."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
       "symbol": "Div",
       "kind": "tagged-class",
       "owner": "@beep/pandoc-ast",
@@ -16796,14 +15944,6 @@
       "owner": "@beep/pandoc-ast",
       "identity": "Emph",
       "description": "Pandoc emphasis inline."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "Figure",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "Figure",
-      "description": "Pandoc figure block with attributes, caption, and block content."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
@@ -16828,14 +15968,6 @@
       "owner": "@beep/pandoc-ast",
       "identity": "Image",
       "description": "Pandoc image inline."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "LineBlock",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "LineBlock",
-      "description": "Pandoc line block containing multiple non-breaking inline lines."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
@@ -16951,43 +16083,11 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "PandocCaption",
-      "kind": "schema-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocCaption",
-      "description": "Pandoc table or figure caption with optional short and required long forms."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "PandocColumnWidth",
-      "kind": "tagged-union",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocColumnWidth",
-      "description": "Discriminated Pandoc column-width constructors in exact JSON wire form."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "PandocDefinitionListItem",
-      "kind": "schema-const",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocDefinitionListItem",
-      "description": "Pandoc definition-list term and its ordered block-list definitions."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
       "symbol": "PandocDocument",
       "kind": "tagged-class",
       "owner": "@beep/pandoc-ast",
       "identity": "PandocDocument",
       "description": "Root Pandoc JSON document."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "PandocFormat",
-      "kind": "schema-const",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocFormat",
-      "description": "Exact format identifier carried by Pandoc raw content nodes."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
@@ -17087,38 +16187,6 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "Quoted",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "Quoted",
-      "description": "Pandoc quoted inline content with an explicit quotation style."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "RawBlock",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "RawBlock",
-      "description": "Pandoc raw block content with an explicit source format."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "RawInline",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "RawInline",
-      "description": "Pandoc raw inline content with an explicit source format."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "SmallCaps",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "SmallCaps",
-      "description": "Pandoc small-capital inline content."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
       "symbol": "SoftBreak",
       "kind": "tagged-class",
       "owner": "@beep/pandoc-ast",
@@ -17167,35 +16235,11 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "Subscript",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "Subscript",
-      "description": "Pandoc subscript inline content."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "Superscript",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "Superscript",
-      "description": "Pandoc superscript inline content."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
       "symbol": "Table",
       "kind": "tagged-class",
       "owner": "@beep/pandoc-ast",
       "identity": "Table",
       "description": "Pandoc table block captured as an explicit gap node."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
-      "symbol": "Underline",
-      "kind": "tagged-class",
-      "owner": "@beep/pandoc-ast",
-      "identity": "Underline",
-      "description": "Pandoc underlined inline content."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
@@ -17279,14 +16323,6 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts",
-      "symbol": "PandocCitationMode",
-      "kind": "literal-kit",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocCitationModeConstructorName",
-      "description": "Exhaustive Pandoc 1.23.1 citation-mode constructor-name registry."
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts",
       "symbol": "PandocListNumberDelimiter",
       "kind": "literal-kit",
       "owner": "@beep/pandoc-ast"
@@ -17302,14 +16338,6 @@
       "symbol": "PandocMathType",
       "kind": "literal-kit",
       "owner": "@beep/pandoc-ast"
-    },
-    {
-      "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts",
-      "symbol": "PandocQuoteType",
-      "kind": "literal-kit",
-      "owner": "@beep/pandoc-ast",
-      "identity": "PandocQuoteTypeConstructorName",
-      "description": "Exhaustive Pandoc 1.23.1 quote-type constructor-name registry."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts",
@@ -17373,22 +16401,6 @@
       "owner": "@beep/provenance",
       "identity": "VerifiedTextAnchorErrorReason",
       "description": "Fail-closed reasons emitted while binding a text anchor to an exact source identity."
-    },
-    {
-      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
-      "symbol": "VerifySourceTextIdentityInput",
-      "kind": "schema-class",
-      "owner": "@beep/provenance",
-      "identity": "VerifySourceTextIdentityInput",
-      "description": "Expected and resolved source identities plus the exact raw source text whose digest must match the resolved identity."
-    },
-    {
-      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
-      "symbol": "VerifyTextAnchorAgainstVerifiedSourceInput",
-      "kind": "schema-class",
-      "owner": "@beep/provenance",
-      "identity": "VerifyTextAnchorAgainstVerifiedSourceInput",
-      "description": "Candidate anchor and opaque proof of the exact source text against which it must be checked."
     },
     {
       "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
@@ -18022,7 +17034,7 @@
       "description": "RDF term union aligned with RDF/JS."
     },
     {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "symbol": "SemanticRepresentation",
       "kind": "schema-class",
       "owner": "@beep/rdf",
@@ -18030,7 +17042,7 @@
       "description": "Single representation note attached to semantic-web schemas."
     },
     {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "symbol": "SemanticRepresentationKind",
       "kind": "literal-kit",
       "owner": "@beep/rdf",
@@ -18038,7 +17050,7 @@
       "description": "Representation label for semantic-web values."
     },
     {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "symbol": "SemanticSchemaMetadata",
       "kind": "schema-class",
       "owner": "@beep/rdf",
@@ -18046,7 +17058,7 @@
       "description": "Typed metadata payload stored in the semanticSchemaMetadata annotation key."
     },
     {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "symbol": "SemanticSchemaMetadataKind",
       "kind": "literal-kit",
       "owner": "@beep/rdf",
@@ -18054,15 +17066,15 @@
       "description": "Closed v1 metadata kind domain for semantic-web schemas."
     },
     {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "symbol": "SemanticSchemaSpecification",
       "kind": "schema-class",
       "owner": "@beep/rdf",
       "identity": "SemanticSchemaSpecification",
-      "description": "Single specification reference with optional lossless provenance attached to public semantic-web schemas."
+      "description": "Single specification reference attached to public semantic-web schemas."
     },
     {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "symbol": "SemanticSchemaSpecificationDisposition",
       "kind": "literal-kit",
       "owner": "@beep/rdf",
@@ -18070,7 +17082,7 @@
       "description": "Specification disposition attached to a semantic schema reference."
     },
     {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "symbol": "SemanticSchemaStatus",
       "kind": "literal-kit",
       "owner": "@beep/rdf",
@@ -18536,110 +17548,6 @@
       "owner": "@beep/schema",
       "identity": "TrimmedNonEmptyText",
       "description": "Trimmed text that must be non-empty after normalization."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-      "symbol": "InvariantDecidability",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "InvariantDecidability",
-      "description": "Strongest boundary at which an invariant can be decided."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-      "symbol": "InvariantDescriptor",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "InvariantDescriptor",
-      "description": "Specification-backed statement of one semantic or structural invariant."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-      "symbol": "InvariantEnforcement",
-      "kind": "tagged-union",
-      "owner": "@beep/schema",
-      "identity": "InvariantEnforcement",
-      "description": "Discriminated evidence describing how an invariant is enforced or why it is not."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-      "symbol": "InvariantScope",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "InvariantScope",
-      "description": "Structural region governed by a conformance invariant."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-      "symbol": "RequirementStrength",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "RequirementStrength",
-      "description": "RFC-style requirement strength carried by a conformance invariant."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.policy.schema.ts",
-      "symbol": "ConformancePolicy",
-      "kind": "tagged-union",
-      "owner": "@beep/schema",
-      "identity": "ConformancePolicy",
-      "description": "Discriminated validation policy separating strict, diagnostic, and lossless boundaries."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.profile.schema.ts",
-      "symbol": "ConformanceProfile",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "ConformanceProfile",
-      "description": "Versioned set of sources and invariants implemented as one conformance profile."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts",
-      "symbol": "ConformanceIssue",
-      "kind": "tagged-union",
-      "owner": "@beep/schema",
-      "identity": "ConformanceIssue",
-      "description": "Discriminated conformance finding separating violations from indeterminate outcomes."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts",
-      "symbol": "ConformanceReport",
-      "kind": "tagged-union",
-      "owner": "@beep/schema",
-      "identity": "ConformanceReport",
-      "description": "Exhaustive conformance result whose status determines whether issues may occur."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-      "symbol": "SpecificationReference",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "SpecificationReference",
-      "description": "Locator from an invariant to a section of a registered authority."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-      "symbol": "SpecificationRevision",
-      "kind": "tagged-union",
-      "owner": "@beep/schema",
-      "identity": "SpecificationRevision",
-      "description": "Discriminated revision identity for an authoritative source."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-      "symbol": "SpecificationSource",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "SpecificationSource",
-      "description": "Immutable authority record used to ground conformance claims."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts",
-      "symbol": "SpecificationSourceRole",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "SpecificationSourceRole",
-      "description": "Semantic role an authority plays in a conformance profile."
     },
     {
       "file": "packages/foundation/modeling/schema/src/ContinentCode.ts",
@@ -19438,62 +18346,6 @@
       "owner": "@beep/schema",
       "identity": "WindowsUncPath",
       "description": "A Windows UNC file path with valid server, share, and leaf segments."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-      "symbol": "DetectFileOptions",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "DetectFileOptions",
-      "description": "Options controlling how many leading bytes file detection inspects."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-      "symbol": "DetectedFileInfo",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "DetectedFileInfo",
-      "description": "Canonical file-type metadata paired with one of its signatures that matched content."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-      "symbol": "FileContent",
-      "kind": "union",
-      "owner": "@beep/schema",
-      "identity": "FileContent",
-      "description": "File bytes represented as a readonly byte array, Uint8Array, or ArrayBuffer."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-      "symbol": "FileSignature",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "FileSignature",
-      "description": "A non-empty byte sequence, absolute file offset, valid skipped positions, and optional compatibility metadata."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-      "symbol": "FileType",
-      "kind": "literal-kit",
-      "owner": "@beep/schema",
-      "identity": "FileType",
-      "description": "A file extension supported by the file type checker."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-      "symbol": "FileTypeInfo",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "FileTypeInfo",
-      "description": "A supported file extension, MIME type, description, and one or more identifying signatures."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
-      "symbol": "ValidateFileTypeOptions",
-      "kind": "schema-class",
-      "owner": "@beep/schema",
-      "identity": "ValidateFileTypeOptions",
-      "description": "Options controlling byte-window size and acceptance of closely related formats."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Fixed32.ts",
@@ -21364,14 +20216,6 @@
       "owner": "@beep/schema",
       "identity": "OptionFromNullableStr",
       "description": "An option from a nullable string"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/String.ts",
-      "symbol": "OptionFromOptionalStrWithNoneDefault",
-      "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "OptionFromOptionalStrWithNoneDefault",
-      "description": "Optional string property codec decoded as Option with None as the missing-key default."
     },
     {
       "file": "packages/foundation/modeling/schema/src/String.ts",
@@ -24896,190 +23740,6 @@
       "description": "Court level classification inferred from a reporter series."
     },
     {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ArtifactCompatibilityPolicy",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ArtifactCompatibilityPolicy",
-      "description": "Machine-readable partition of additive-safe and identity/schema-breaking artifact changes."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ArtifactCompatibilityStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ArtifactCompatibilityStatus",
-      "description": "Compatibility verdict between two court/reporter artifacts."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ArtifactDriftChange",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ArtifactDriftChange",
-      "description": "One reviewable lifecycle or compatibility change between court/reporter artifacts."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ArtifactDriftChangeKind",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ArtifactDriftChangeKind",
-      "description": "Exhaustive change classes emitted by the court/reporter compatibility classifier."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ArtifactDriftReport",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ArtifactDriftReport",
-      "description": "Complete reviewable compatibility report between two exact court/reporter artifact versions."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ContextualAlias",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ContextualAlias",
-      "description": "An alias whose text maps to more than one stable identity and therefore requires context."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtHierarchyLevel",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtHierarchyLevel",
-      "description": "Source-faithful non-null courts-db hierarchy level vocabulary."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtId",
-      "kind": "brand",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtId",
-      "description": "Stable public identity issued to one courts-db court."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtReporterArtifactComparison",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtReporterArtifactComparison",
-      "description": "Cross-version comparison input with open schema and projection header fields."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtReporterArtifactContract",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtReporterArtifactContract",
-      "description": "Combined exact-version court/reporter artifact plus its machine-readable lifecycle compatibility policy."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtReporterArtifactVersion",
-      "kind": "brand",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtReporterArtifactVersion",
-      "description": "Exact identifier for one combined pinned court/reporter artifact."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtSystem",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtSystem",
-      "description": "Source-faithful courts-db system vocabulary at the pinned commit."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtType",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtType",
-      "description": "Source-faithful non-null courts-db type vocabulary at the pinned commit."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtVocabularyArtifact",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtVocabularyArtifact",
-      "description": "Machine-readable courts-db vocabulary projection with stable IDs and provenance."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "CourtVocabularyRecord",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "CourtVocabularyRecord",
-      "description": "Public source-faithful court vocabulary record with stable identity, lifecycle, aliases, and resolver-private fields omitted."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "EffectiveRange",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "EffectiveRange",
-      "description": "Inclusive source effective range with independently optional endpoints."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ReporterCiteType",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ReporterCiteType",
-      "description": "Canonical reporters-db string cite_type vocabulary."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ReporterEdition",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ReporterEdition",
-      "description": "One named reporters-db edition and its effective range."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ReporterId",
-      "kind": "brand",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ReporterId",
-      "description": "Stable opaque public identity issued to one reporters-db record."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ReporterVocabularyArtifact",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ReporterVocabularyArtifact",
-      "description": "Machine-readable reporters-db vocabulary projection with stable IDs and provenance."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "ReporterVocabularyRecord",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "ReporterVocabularyRecord",
-      "description": "Public reporters-db vocabulary record with stable identity, canonical cite type, editions, aliases, and lifecycle."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "VocabularyEntryStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "VocabularyEntryStatus",
-      "description": "Lifecycle state retained on every issued vocabulary identity."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.model.ts",
-      "symbol": "VocabularySourceProvenance",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "VocabularySourceProvenance",
-      "description": "Pinned source identity and regeneration metadata for one court or reporter projection."
-    },
-    {
       "file": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
       "symbol": "DocketCitation",
       "kind": "schema-class",
@@ -25350,45 +24010,6 @@
       "owner": "@beep/law-practice-domain",
       "identity": "PartyKind",
       "description": "The kind of legal person a party is: a natural person or a juristic person."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
-      "symbol": "PatentApplicationDocument",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "PatentApplicationDocument",
-      "description": "Normalized Markdown patent application with ordered sections and validated claim dependencies."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
-      "symbol": "PatentApplicationSection",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-domain",
-      "identity": "PatentApplicationSection",
-      "description": "Patent application section normalized from one recognized Markdown heading and its content."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
-      "symbol": "PatentApplicationSectionRole",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "PatentApplicationSectionRole",
-      "description": "Closed patent specification section roles in the preferred order of 37 CFR 1.77(b)."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
-      "symbol": "PatentClaimTransition",
-      "kind": "literal-kit",
-      "owner": "@beep/law-practice-domain",
-      "identity": "PatentClaimTransition",
-      "description": "Canonical transition phrase separating a patent claim preamble from its body."
-    },
-    {
-      "file": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-      "symbol": "PatentDocumentNormalizationError",
-      "kind": "tagged-error",
-      "owner": "@beep/law-practice-domain",
-      "identity": "PatentDocumentNormalizationError"
     },
     {
       "file": "packages/law-practice/domain/src/values/PatentDocumentTriplet/PatentDocumentTriplet.model.ts",
@@ -25763,14 +24384,6 @@
       "owner": "@beep/law-practice-server",
       "identity": "PracticeKgClaimsSummary",
       "description": "Extracted, extraction-failed, and persisted-claim counts for a batch."
-    },
-    {
-      "file": "packages/law-practice/server/src/PracticeKg.claims.ts",
-      "symbol": "PracticeKgPatentDocumentInput",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-server",
-      "identity": "PracticeKgPatentDocumentInput",
-      "description": "Normalized patent application document and batch persistence provenance."
     },
     {
       "file": "packages/law-practice/server/src/PracticeKg.claims.ts",
@@ -26175,21 +24788,6 @@
       "owner": "@beep/law-practice-use-cases",
       "identity": "OfficeActionReviewInput",
       "description": "Schema-backed input for reviewing one office-action source artifact."
-    },
-    {
-      "file": "packages/law-practice/use-cases/src/PatentClaimCandidate/PatentClaimCandidate.ts",
-      "symbol": "PatentClaimCandidateError",
-      "kind": "tagged-error",
-      "owner": "@beep/law-practice-use-cases",
-      "identity": "PatentClaimCandidateError"
-    },
-    {
-      "file": "packages/law-practice/use-cases/src/PatentClaimCandidate/PatentClaimCandidate.ts",
-      "symbol": "PatentClaimCandidateInput",
-      "kind": "schema-class",
-      "owner": "@beep/law-practice-use-cases",
-      "identity": "PatentClaimCandidateInput",
-      "description": "Typed patent claim and provenance required to construct an epistemic candidate with evidence."
     },
     {
       "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
@@ -27587,27 +26185,11 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
-      "symbol": "AgentEffectivenessAnnotationCheckFindingCode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AgentEffectivenessAnnotationCheckFindingCode",
-      "description": "Closed finding codes emitted by the annotation privacy and schema check."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
       "symbol": "AgentEffectivenessAnnotationCheckReport",
       "kind": "schema-class",
       "owner": "@beep/repo-ai-metrics",
       "identity": "AgentEffectivenessAnnotationCheckReport",
       "description": "Report-only privacy/schema check result for a local annotation plan."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
-      "symbol": "AgentEffectivenessAnnotationOptimization",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AgentEffectivenessAnnotationOptimization",
-      "description": "Direction that counts as better for a planned agent-effectiveness metric."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
@@ -27627,35 +26209,11 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
-      "symbol": "AgentEffectivenessAnnotationSource",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AgentEffectivenessAnnotationSource",
-      "description": "Repo-owned evidence sources that can produce planned agent-effectiveness annotations."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
-      "symbol": "AgentEffectivenessAnnotationTargetKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AgentEffectivenessAnnotationTargetKind",
-      "description": "Local evidence target kinds supported by an agent-effectiveness annotation plan."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
       "symbol": "AgentEffectivenessAnnotationValue",
       "kind": "union",
       "owner": "@beep/repo-ai-metrics",
       "identity": "AgentEffectivenessAnnotationValue",
       "description": "Sanitized primitive value allowed in an agent-effectiveness annotation plan."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
-      "symbol": "AgentEffectivenessArtifactSchemaVersion",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AgentEffectivenessArtifactSchemaVersion",
-      "description": "Compatibility versions for persisted agent-effectiveness JSON artifacts."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
@@ -27751,14 +26309,6 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "AgentEffectivenessJsdocWorkerSection",
       "description": "Read-only JSDoc worker-eval evidence summarized for the agent-effectiveness doctor."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
-      "symbol": "AgentEffectivenessMutationPolicy",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AgentEffectivenessMutationPolicy",
-      "description": "How an annotation plan or Phoenix sync result handled remote mutation."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
@@ -27858,14 +26408,6 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/archive.ts",
-      "symbol": "AiMetricsArchiveAlgorithm",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsArchiveAlgorithm",
-      "description": "Encryption algorithm identifier shared by raw AI metrics archive models."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/archive.ts",
       "symbol": "AiMetricsArchiveError",
       "kind": "tagged-error",
       "owner": "@beep/repo-ai-metrics",
@@ -27878,6 +26420,14 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "AiMetricsEncryptedRawArchiveEnvelope",
       "description": "Encrypted raw transcript archive envelope with private source paths represented by salted hashes."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/archive.ts",
+      "symbol": "AiMetricsRawArchiveKey",
+      "kind": "schema-const",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsRawArchiveKey",
+      "description": "Redacted base64 AES-256-GCM key used for raw archive encryption."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/archive.ts",
@@ -27976,14 +26526,6 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
-      "symbol": "AiMetricsAbsoluteDataRoot",
-      "kind": "brand",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsAbsoluteDataRoot",
-      "description": "Absolute non-root filesystem path accepted for an AI metrics data root."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/data-root.ts",
       "symbol": "AiMetricsDataRoot",
       "kind": "schema-class",
       "owner": "@beep/repo-ai-metrics",
@@ -28043,14 +26585,6 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "AiMetricsDerivedStorageWriteResult",
       "description": "Safe counts and export paths produced by one DuckDB derived storage write."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
-      "symbol": "AiMetricsDerivedTable",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsDerivedTable",
-      "description": "Derived DuckDB tables exported to AI metrics Parquet snapshots."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
@@ -28153,30 +26687,6 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "HookPulseAgentKind",
       "description": "Coding-agent harnesses that emit hook-pulse ledger records."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/hook-pulse.ts",
-      "symbol": "HookPulseDisarmSentinel",
-      "kind": "schema-class",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "HookPulseDisarmSentinel",
-      "description": "Current hook-pulse disarm state written by the operator switch."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/hook-pulse.ts",
-      "symbol": "HookPulseDisarmWindow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "HookPulseDisarmWindow",
-      "description": "One closed interval during which hook-pulse collection was disarmed."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/hook-pulse.ts",
-      "symbol": "HookPulseDisarmWindowSchemaVersion",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "HookPulseDisarmWindowSchemaVersion",
-      "description": "Version identifiers accepted by the hook-pulse disarm-window ledger."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/hook-pulse.ts",
@@ -28472,59 +26982,11 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
-      "symbol": "AiMetricsMirrorLatestPointer",
-      "kind": "schema-class",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsMirrorLatestPointer",
-      "description": "Local pointer to the latest sanitized AI metrics mirror bundle."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
-      "symbol": "AiMetricsMirrorOmittedDataClass",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsMirrorOmittedDataClass",
-      "description": "Sensitive data classes deliberately omitted from deploy-safe mirror bundles."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
       "symbol": "AiMetricsMirrorPrivacyProof",
       "kind": "schema-class",
       "owner": "@beep/repo-ai-metrics",
       "identity": "AiMetricsMirrorPrivacyProof",
       "description": "Machine-readable proof that the manifest and status omit raw archive and local path fields."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
-      "symbol": "AiMetricsMirrorSchemaVersion",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsMirrorSchemaVersion",
-      "description": "Version identifiers accepted by persisted AI metrics mirror contracts."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
-      "symbol": "AiMetricsMirrorSourceDataClass",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsMirrorSourceDataClass",
-      "description": "Sanitized source data class accepted by deploy-safe mirror manifests."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
-      "symbol": "AiMetricsMirrorStatus",
-      "kind": "schema-class",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsMirrorStatus",
-      "description": "Persisted synchronization status for one sanitized AI metrics mirror bundle."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
-      "symbol": "AiMetricsMirrorSyncStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsMirrorSyncStatus",
-      "description": "Synchronization states persisted beside a local mirror bundle."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/mirror.ts",
@@ -28557,14 +27019,6 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "AgentTurn",
       "description": "Single normalized transcript line suitable for derived analytics and OTel export."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/models.ts",
-      "symbol": "AiMetricsCoverageGap",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsCoverageGap",
-      "description": "Canonical AI-metrics scorecard coverage-gap codes."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/models.ts",
@@ -28648,14 +27102,6 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/models.ts",
-      "symbol": "AiMetricsTranscriptEventName",
-      "kind": "union",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsTranscriptEventName",
-      "description": "Normalized event names emitted by supported AI transcript sources."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/models.ts",
       "symbol": "AiMetricsTranscriptSource",
       "kind": "literal-kit",
       "owner": "@beep/repo-ai-metrics",
@@ -28680,27 +27126,11 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/models.ts",
-      "symbol": "ClaudeTranscriptEventName",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "ClaudeTranscriptEventName",
-      "description": "Bounded event-name vocabulary accepted from Claude transcript records."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/models.ts",
       "symbol": "ClaudeTranscriptLine",
       "kind": "schema-class",
       "owner": "@beep/repo-ai-metrics",
       "identity": "ClaudeTranscriptLine",
       "description": "Boundary shape decoded from Claude Code project JSONL lines."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/models.ts",
-      "symbol": "CodexTranscriptEventName",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "CodexTranscriptEventName",
-      "description": "Bounded event-name vocabulary accepted from Codex transcript records."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/models.ts",
@@ -28720,27 +27150,11 @@
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/models.ts",
-      "symbol": "CountRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "CountRow",
-      "description": "Numeric count returned by an aggregate DuckDB query."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/models.ts",
       "symbol": "ModelCall",
       "kind": "schema-class",
       "owner": "@beep/repo-ai-metrics",
       "identity": "ModelCall",
       "description": "Provider/model usage, latency, and token measurement for a coding-agent run."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/models.ts",
-      "symbol": "OpenClawTranscriptEventName",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "OpenClawTranscriptEventName",
-      "description": "Bounded event-name vocabulary accepted from OpenClaw transcript records."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/models.ts",
@@ -28781,14 +27195,6 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "TranscriptIngestSummary",
       "description": "Line-count, timestamp, and event-name summary from transcript ingestion with private paths hashed."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
-      "symbol": "AiMetricsOtlpAttributeKey",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsOtlpAttributeKey",
-      "description": "Attribute keys approved for redacted AI metrics OTLP span export."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
@@ -28922,14 +27328,6 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "AiMetricsRetentionInventory",
       "description": "Path-safe retained AI metrics raw, derived, and report inventory for one selector."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/retention.ts",
-      "symbol": "AiMetricsRetentionMutationMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-ai-metrics",
-      "identity": "AiMetricsRetentionMutationMode",
-      "description": "Mutation operation recorded by AI metrics retention delete and compact workflows."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/retention.ts",
@@ -32965,61 +31363,6 @@
       "description": "Internal descriptor for a canonical proof file used to generate architecture operation plans."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
-      "symbol": "CacheCommandError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "CacheCommandError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
-      "symbol": "CacheDashboardReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CacheDashboardReport",
-      "description": "First-touch remote-cache rate, timing distributions, and correctness tripwires."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
-      "symbol": "CacheLambdaSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CacheLambdaSummary",
-      "description": "Aggregate remote-cache access counts without secret data."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
-      "symbol": "CacheRunMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "CacheRunMode",
-      "description": "Cache posture inferred for one Turbo summary run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
-      "symbol": "CacheWallTime",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CacheWallTime",
-      "description": "Turbo run wall-clock percentiles grouped by cache posture."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
-      "symbol": "CacheWarmLane",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CacheWarmLane",
-      "description": "One cache-warm subprocess receipt."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
-      "symbol": "CacheWarmReceipt",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CacheWarmReceipt",
-      "description": "Exact-main, pinned-toolchain cache recovery receipt."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
       "symbol": "CiCommandError",
       "kind": "tagged-error",
@@ -33080,7 +31423,7 @@
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "DocgenLaneMode",
-      "description": "Docgen lane execution mode, including CLI-owned automatic scope selection."
+      "description": "Docgen lane execution mode computed by the workflow lane-gate."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
@@ -33441,48 +31784,6 @@
       "identity": "CorpusCommandError"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
-      "symbol": "PreservationArchiveIoError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationArchiveIoError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
-      "symbol": "PreservationCeilingExceededError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationCeilingExceededError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
-      "symbol": "PreservationPreflightMissingError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationPreflightMissingError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
-      "symbol": "PreservationPreflightUnapprovedError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationPreflightUnapprovedError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
-      "symbol": "PreservationUnapprovedRowsError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationUnapprovedRowsError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
-      "symbol": "PreservationVerificationFailure",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationVerificationFailure"
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ArchiveMove.schemas.ts",
       "symbol": "CorpusArchiveMoveManifestRecord",
       "kind": "schema-class",
@@ -33627,182 +31928,6 @@
       "description": "Summary counts returned by corpus organize."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "ArchiveWriterLiveOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ArchiveWriterLiveOptions",
-      "description": "Schema-backed test hook invoked between staged payload sync and the source stability re-stat."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "ArchiveWriterPayloadSyncHookInput",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ArchiveWriterPayloadSyncHookInput",
-      "description": "Source and staged-destination paths observed after payload sync and before source re-stat."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "CapacityMeasurement",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CapacityMeasurement",
-      "description": "Canonical source identity, object count, and byte totals measured against destination free space before the archive run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "CapacityPreflight",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "CapacityPreflight",
-      "description": "Two-state capacity preflight: measured-and-proposed, or approved with an explicit disk ceiling."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "CorpusLedgerRecord",
-      "kind": "union",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusLedgerRecord",
-      "description": "One line of the shared corpus provenance ledger: a tagged T7 archive record or an untagged legacy salvage record."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "InheritedLossClass",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "InheritedLossClass",
-      "description": "Ratified opening-balance loss classes inherited from the collector run; the preservation gate records them without claiming recovery."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "InheritedLossRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "InheritedLossRow",
-      "description": "Aggregate opening-balance entry for one inherited loss class, referencing out-of-repo evidence without corpus content."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationAttemptKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationAttemptKind",
-      "description": "Discriminator domain for one archive attempt outcome."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationAttemptOutcome",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationAttemptOutcome",
-      "description": "Exhaustive outcomes of one copy-while-hashing archive attempt under restoration bar v2."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationManifestRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationManifestRow",
-      "description": "Append-only destination-manifest row for one archive attempt over one T7 object."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationObjectIdentity",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationObjectIdentity",
-      "description": "Occurrence identity of one T7 archive object: source class, relative path, size, and mtime."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationPassKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationPassKind",
-      "description": "Attempt kinds that may stand as approved terminal manifest rows."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationRunSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationRunSummary",
-      "description": "Attempt, approved-terminal, and unapproved-terminal counts from one preservation run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationSourceClass",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationSourceClass",
-      "description": "Whether an archive object comes from the salvage tree or is the verbatim root archive preserved as its own object."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationVerificationOutcome",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationVerificationOutcome",
-      "description": "Exhaustive fresh-process verification outcomes for one terminal destination-manifest row."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationVerificationReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationVerificationReport",
-      "description": "Per-object verification rows paired with their aggregate preservation summary."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationVerificationRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationVerificationRow",
-      "description": "Independent re-verification result for one terminal destination-manifest row."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "PreservationVerificationSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PreservationVerificationSummary",
-      "description": "Aggregate counts for one fresh-process verification pass over the destination manifest."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "SourceStabilityObservation",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "SourceStabilityObservation",
-      "description": "Size and mtime re-stat snapshot taken immediately before or after a streaming copy attempt."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "StreamingHashResult",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "StreamingHashResult",
-      "description": "SHA-256 digest and byte count produced without materializing the complete file in memory."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "T7ArchiveProvenanceRecord",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "T7ArchiveProvenanceRecord",
-      "description": "Tagged provenance-ledger row for one verified T7 archive object, appended beside untagged legacy salvage rows."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
-      "symbol": "T7PreservationOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "T7PreservationOptions",
-      "description": "Out-of-repo corpus archive home and removable-drive root used by a preservation operation."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "CorpusRestorationRecord",
       "kind": "tagged-union",
@@ -33881,110 +32006,6 @@
       "owner": "@beep/repo-cli",
       "identity": "UnmatchedMetadataRestorationRecord",
       "description": "A $I metadata file whose paired $R content file is absent from the salvaged corpus."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "ArchiveLedgerRecord",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "ArchiveLedgerRecord",
-      "description": "Schema-versioned preflight, attempt, terminal, inherited-loss, and seal rows for preservation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "ArchiveObjectKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ArchiveObjectKind",
-      "description": "Filesystem object kind preserved by the bar-v2 archive runner."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "ArchiveVerificationRecord",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "ArchiveVerificationRecord",
-      "description": "PASS or fail-closed row produced by an independent archive verifier."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "CollectorManifestRecord",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "CollectorManifestRecord",
-      "description": "Status-tagged source, destination, size, and outcome row from the inherited collector ledger."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "MailRestorationScope",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "MailRestorationScope",
-      "description": "Whether mail restoration processes one metadata-selected store or the complete preserved estate."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "RestorationAcceptanceRecord",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RestorationAcceptanceRecord",
-      "description": "Separate immutable PASS record emitted only after one family ledger independently reconciles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "RestorationLegacyWordOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RestorationLegacyWordOptions",
-      "description": "Pinned converter identity, source denominator, elapsed-time ceiling, and declared visual fidelity threshold for one conversion run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "RestorationMailOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RestorationMailOptions",
-      "description": "Frozen engine locations, denominator, elapsed-time ceiling, and disk amplification ceiling for one mail restoration scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "RestorationPreserveOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RestorationPreserveOptions",
-      "description": "Explicit capacity policy, source locations, archive destination label, and optional recovery-test controls for one preservation run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "RestorationRecycleOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RestorationRecycleOptions",
-      "description": "Expected three-volume and inherited-missing-payload denominators for recycle reconciliation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "RestorationRunSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RestorationRunSummary",
-      "description": "Aggregate-only terminal counts and byte/time measurements for one acceptance family."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "RestorationVerifyOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RestorationVerifyOptions",
-      "description": "Corpus root and preservation run label independently reparsed and verified from a fresh process."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
-      "symbol": "TransformationLedgerRecord",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "TransformationLedgerRecord",
-      "description": "Schema-versioned start, interruption, terminal, mapping, and acceptance rows for bounded families."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
@@ -34785,54 +32806,6 @@
       "description": "A section of documentation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-      "symbol": "ExplorationAtlasRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ExplorationAtlasRow",
-      "description": "One deterministic Atlas navigation row derived from normalized D3 exploration state."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-      "symbol": "ExplorationProjection",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ExplorationProjection",
-      "description": "Whole Atlas and README projection plan plus fail-closed derivation issues."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-      "symbol": "ExplorationProjectionAuthority",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ExplorationProjectionAuthority",
-      "description": "Authority used to normalize an exploration into D3 projection state."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-      "symbol": "ExplorationProjectionState",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ExplorationProjectionState",
-      "description": "Normalized D3 exploration state derived from a stream or an explicit manifest adoption snapshot."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-      "symbol": "ExplorationStage",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ExplorationStage",
-      "description": "One stage in the exploration fuzzy-front-end lifecycle."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-      "symbol": "ExplorationStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ExplorationStatus",
-      "description": "Exploration lifecycle status rendered in the Atlas."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Files/Files.errors.ts",
       "symbol": "FilesCommandError",
       "kind": "tagged-error",
@@ -35176,14 +33149,6 @@
       "description": "Summary counts returned by files detect-faces."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/FileTransaction.ts",
-      "symbol": "StagedFileCommitRecord",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "StagedFileCommitRecord",
-      "description": "Mutable commit progress and immutable paths for one staged filesystem replacement."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Files/internal/FlattenMedia.schemas.ts",
       "symbol": "FlattenMediaOptions",
       "kind": "schema-class",
@@ -35358,172 +33323,6 @@
     {
       "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
       "symbol": "decodeImageCurationManifestJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "MatchPersonOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "MatchPersonOptions",
-      "description": "Validated command inputs for a local person-matching run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchDisposition",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchDisposition",
-      "description": "The classification assigned to an image after matching its detected faces against references."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchEntry",
-      "description": "The matching disposition and face evidence for one source image."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchEntryReason",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchEntryReason",
-      "description": "A machine-readable diagnostic reason attached to a candidate-image entry."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchFace",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchFace",
-      "description": "Detection, quality, and identity-match evidence for one detected face."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchFaceBox",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchFaceBox",
-      "description": "An axis-aligned face bounding box in source-image pixel coordinates."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchModel",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchModel",
-      "description": "Provenance for the model installation and runtime used by a person-matching run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchModelArtifact",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchModelArtifact",
-      "description": "A named, checksummed model artifact consumed by the person-matching worker."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchModelArtifactName",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchModelArtifactName",
-      "description": "The filename of a pinned ONNX artifact used by the buffalo_l worker runtime."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchParameters",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchParameters",
-      "description": "JSON-safe thresholds and traversal mode supplied to the person-matching worker."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchQualityFlag",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchQualityFlag",
-      "description": "A review warning derived from target-face size, sharpness, brightness, or pose."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchReference",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchReference",
-      "description": "Acceptance and diagnostic metadata for one person-matching reference image."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchReferenceRejectionReason",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchReferenceRejectionReason",
-      "description": "A machine-readable reason a reference image did not contribute an identity embedding."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchReport",
-      "description": "The versioned public manifest emitted by the person-matching command."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchSummary",
-      "description": "Disposition and reference-acceptance counts for a person-matching run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchWorkerError",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchWorkerError",
-      "description": "A stable worker error code and human-readable failure message."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchWorkerErrorCode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchWorkerErrorCode",
-      "description": "A stable error code emitted by the local person-matching worker."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchWorkerFailure",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchWorkerFailure",
-      "description": "A failed versioned response from the local person-matching Python worker."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchWorkerReport",
-      "kind": "union",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchWorkerReport",
-      "description": "A versioned success or failure response emitted by the person-matching Python worker."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "PersonMatchWorkerSuccess",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PersonMatchWorkerSuccess",
-      "description": "A successful versioned response from the local person-matching Python worker."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts",
-      "symbol": "decodePersonMatchWorkerReportJson",
       "kind": "codec",
       "owner": "@beep/repo-cli"
     },
@@ -36037,102 +33836,6 @@
       "description": "Planned mechanical migration outcome for one goal packet."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "DriftClassification",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DriftClassification",
-      "description": "Compatibility classification for one translated manifest change."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "FleetLintFinding",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "FleetLintFinding",
-      "description": "One sorted cross-packet graph integrity finding."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "FleetLintFindingKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "FleetLintFindingKind",
-      "description": "Cross-packet graph integrity finding kinds."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "ManifestShapeProbe",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ManifestShapeProbe",
-      "description": "Observed goal-manifest field shape; declared version is evidence rather than dispatch authority."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "ManifestTranslation",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ManifestTranslation",
-      "description": "One surgical v2 goal-manifest translation plan."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "ManifestTranslationPlan",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ManifestTranslationPlan",
-      "description": "Actual-shape probe, optional surgical translation, and explicit issues and assumptions."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "MigrationSeverity",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "MigrationSeverity",
-      "description": "Packet migration finding severity: violations block apply; warnings do not."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "PacketGenesisSeed",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PacketGenesisSeed",
-      "description": "One honest current-snapshot genesis event and trace plan."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "TranslationAssumption",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TranslationAssumption",
-      "description": "One named assumption used by manifest translation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "TranslationIssue",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TranslationIssue",
-      "description": "Manifest-translation issue with blocking severity."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts",
-      "symbol": "TranslationReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TranslationReport",
-      "description": "Deterministic packet-convention migration report with explicit issues and assumptions."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts",
-      "symbol": "PacketForkRepairOutcome",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PacketForkRepairOutcome",
-      "description": "Verified result of one staged packet-fork repair."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.errors.ts",
       "symbol": "PacketCasConflictError",
       "kind": "tagged-error",
@@ -36352,7 +34055,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "PacketTransitionOutcome",
-      "description": "Committed-transition result with an explicit append, skipped, or streamless disposition."
+      "description": "Committed-transition result: appended event count, new tip, trace projection path."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts",
@@ -38353,14 +36056,6 @@
       "description": "Options accepted by runKnipRatchet: baseline location and write mode."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
-      "symbol": "LaneProofSession",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "LaneProofSession",
-      "description": "Prepared proof-reuse session for one immutable virtual-tree snapshot."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
       "symbol": "PackageVerifyReport",
       "kind": "schema-class",
@@ -39755,7 +37450,7 @@
       "kind": "union",
       "owner": "@beep/repo-cli",
       "identity": "YeetAckResolution",
-      "description": "What was done about one inbox row: a fix, wontfix, review thread, or expiring waiver."
+      "description": "What was done about one inbox row: a fix commit, a reasoned wontfix, or a review thread."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
@@ -39772,14 +37467,6 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetAckThreadResolution",
       "description": "Acknowledgment that the failure's follow-up lives in a linked review thread."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
-      "symbol": "YeetAckWaiveResolution",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetAckWaiveResolution",
-      "description": "A temporary, attributed waiver for one named local or hosted shard."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
@@ -39899,22 +37586,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetBaseDriftCapsule",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetBaseDriftCapsule",
-      "description": "Base drift observed for the current pull request head."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetBaseDriftRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetBaseDriftRow",
-      "description": "One P2 base-drift row surfaced only at session start."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
       "symbol": "YeetCheckFailedRow",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -39935,7 +37606,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "YeetInboxPaths",
-      "description": "Resolved inbox locations for one checkout: bounded active index, history, acknowledgments, and root."
+      "description": "Resolved inbox locations for one checkout: the inbox dir, the failures file, and the acks dir."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
@@ -39952,54 +37623,6 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetInboxSeverity",
       "description": "Enforcement tier of one inbox row: P0 denies, P1 injects, P2 surfaces at session start."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetLocalShardFailedRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetLocalShardFailedRow",
-      "description": "One P0 local-shard poison pill inherited by every session in the checkout."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetLocalShardFailureCapsule",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetLocalShardFailureCapsule",
-      "description": "One named local proof shard that exited unsuccessfully on a repository head."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetReviewThreadCapsule",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetReviewThreadCapsule",
-      "description": "One unresolved review thread observed on the current pull request head."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetReviewThreadRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetReviewThreadRow",
-      "description": "One P1 review-thread row injected as repair context without denying tools."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetSiblingCollisionCapsule",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetSiblingCollisionCapsule",
-      "description": "Paths simultaneously claimed by an owning checkout and one sibling checkout."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
-      "symbol": "YeetSiblingCollisionRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetSiblingCollisionRow",
-      "description": "One P0 sibling-checkout collision delivered to the owning checkout."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
@@ -40032,14 +37655,6 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetInboxView",
       "description": "Every deduplicated inbox entry, the count of skipped lines, and whether the failures file was unreadable."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/LocalShardPoison.ts",
-      "symbol": "YeetLocalShardOutcome",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetLocalShardOutcome",
-      "description": "Result coordinates for one named local proof shard on one repository head."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
@@ -40160,22 +37775,6 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetMonitorReviewComment",
       "description": "Normalized GitHub inline review comment streamed during Yeet monitoring."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
-      "symbol": "YeetMonitorAwaitingLog",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetMonitorAwaitingLog",
-      "description": "A red job inside an in-progress run whose failing-step log is not yet fetchable."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
-      "symbol": "YeetMonitorAwaitingRun",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetMonitorAwaitingRun",
-      "description": "A flake-matching red job deferred until its parent workflow run completes."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
@@ -40427,14 +38026,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
-      "symbol": "GhStatusCheck",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GhStatusCheck",
-      "description": "GitHub PR check payload used by yeet status remote summaries."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
       "symbol": "GhStatusWorkflowRun",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -40631,7 +38222,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "YeetMergeReadyCriteria",
-      "description": "Observed state of every truthful merge-protocol criterion; the Greptile score is display-only."
+      "description": "Observed state of each merge-protocol criterion; the Greptile score is display-only."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
@@ -40639,7 +38230,7 @@
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "YeetMergeReadyCriterion",
-      "description": "One hard criterion of the truthful merge protocol."
+      "description": "One hard criterion of the merge protocol."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
@@ -40707,27 +38298,11 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
-      "symbol": "YeetCommentPosted",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetCommentPosted",
-      "description": "One new PR review or conversation comment observed by the watch stream."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
       "symbol": "YeetHeadChanged",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "YeetHeadChanged",
       "description": "The PR head moved to a new SHA; transitions before it belong to a superseded wave."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
-      "symbol": "YeetMergeReadyCriterionChanged",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetMergeReadyCriterionChanged",
-      "description": "One truthful merge-readiness criterion flipped between watch polls."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
@@ -41561,13 +39136,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
-      "symbol": "AdmissionWorkloadRegistrationError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionWorkloadRegistrationError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
       "symbol": "BoundedOutput",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -41669,36 +39237,6 @@
       "description": "Difference between current numeric totals and the committed baseline totals."
     },
     {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
-      "symbol": "AdmissionJournalAdmitted",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionJournalAdmitted",
-      "description": "Durable transition recorded when a queued ticket becomes an active admission lease."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
-      "symbol": "AdmissionJournalEvent",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionJournalEvent",
-      "description": "Schema-decoded transition stored in the machine-wide admission journal."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
-      "symbol": "AdmissionJournalReleased",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionJournalReleased",
-      "description": "Durable transition recorded when an active admission lease is released."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
-      "symbol": "decodeAdmissionJournalEvent",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
       "symbol": "GitRenameEntry",
       "kind": "schema-class",
@@ -41713,77 +39251,6 @@
       "owner": "@beep/repo-cli",
       "identity": "GitTreeEntry",
       "description": "Git tree mode, object type, object id, and exact repository-relative path."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "AdmissionConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionConfig",
-      "description": "Machine-wide admission policy knobs with chartered ship-velocity D1 defaults."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "AdmissionPriority",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionPriority",
-      "description": "Queue ordering class for one admission request."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "AdmissionRequest",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionRequest",
-      "description": "One admission request for heavyweight repository work."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "AdmissionSnapshot",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionSnapshot",
-      "description": "Point-in-time view of machine-wide admission leases, queue, and capacity."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "AdmissionWorkKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "AdmissionWorkKind",
-      "description": "Class of heavyweight repository work admitted through the machine-wide scheduler."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "DeadLeaseScopePlan",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "DeadLeaseScopePlan",
-      "description": "Conservative stop, reap, or retain decision for one verified dead admission lease."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "QualitySchedulerError",
-      "kind": "tagged-error",
-      "owner": "@beep/repo-cli",
-      "identity": "QualitySchedulerError"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "YeetAdmissionLease",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetAdmissionLease",
-      "description": "One machine-wide admission lease charging heavy repository work against memory capacity."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
-      "symbol": "YeetAdmissionTicket",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "YeetAdmissionTicket",
-      "description": "One durable admission-queue ticket owned by a waiting contender process."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts",
@@ -41912,94 +39379,6 @@
       "owner": "@beep/repo-cli",
       "identity": "RepoProofSurface",
       "description": "Named repository proof surface backed by a GitHub checks mode."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts",
-      "symbol": "RunScopeRecord",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RunScopeRecord",
-      "description": "Scope attachment and optional accounting state retained on an admission lease."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts",
-      "symbol": "RunScopeStopOutcome",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "RunScopeStopOutcome",
-      "description": "Bounded result of stopping or confirming absence of one dead admission run scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts",
-      "symbol": "RunScopeSupport",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "RunScopeSupport",
-      "description": "Availability state for systemd user-manager run scopes."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts",
-      "symbol": "RunScopeTelemetry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RunScopeTelemetry",
-      "description": "Optional accounting values read from one systemd run scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.schemas.ts",
-      "symbol": "RuntimeRootChoice",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RuntimeRootChoice",
-      "description": "Absolute base directory for machine-wide coordination state and how it was selected."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.schemas.ts",
-      "symbol": "RuntimeRootKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "RuntimeRootKind",
-      "description": "Origin of the chosen runtime root: the invariant host coordination root or an injected test override."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
-      "symbol": "TmpfsReapAction",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "TmpfsReapAction",
-      "description": "Filesystem or Git operation selected for a classified janitor candidate."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
-      "symbol": "TmpfsReapCandidate",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TmpfsReapCandidate",
-      "description": "One classified temporary artifact with the evidence and action chosen by the janitor."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
-      "symbol": "TmpfsReapClass",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "TmpfsReapClass",
-      "description": "Artifact family recognized by the tmpfs janitor's closed classification policy."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
-      "symbol": "TmpfsReapReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TmpfsReapReport",
-      "description": "Auditable result of one dry-run or applied tmpfs artifact janitor pass."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
-      "symbol": "TmpfsReapSkipReason",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "TmpfsReapSkipReason",
-      "description": "Safety condition that prevented a classified janitor candidate from being reaped."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts",

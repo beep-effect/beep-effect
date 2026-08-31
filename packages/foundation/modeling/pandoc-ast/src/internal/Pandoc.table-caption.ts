@@ -7,6 +7,9 @@
 
 import { A, O, Str } from "@beep/utils";
 import { Match } from "effect";
+import { constant } from "effect/Function";
+
+const emptyString = constant(Str.empty);
 
 interface TableCaptionWireDecoders {
   readonly decodeConstructorOption: (input: unknown) => O.Option<{
@@ -22,6 +25,12 @@ interface TableCaptionWireDecoders {
 
 /**
  * Build a caption plaintext projection from schema-backed wire decoders.
+ *
+ * **Details**
+ *
+ * A non-empty short caption deliberately wins over the long block caption for
+ * this plaintext preview. An absent or empty short caption falls back to the
+ * long form. The retained table payload remains the lossless source of truth.
  *
  * **Example** (Project an emphasized caption)
  *
@@ -51,6 +60,7 @@ interface TableCaptionWireDecoders {
  *
  * @param decoders - Schema-backed decoders owned by the Pandoc model boundary.
  * @returns A total best-effort plaintext projection over validated table-caption wire.
+ * @invariant Non-empty short-caption text is preferred; otherwise the long-caption projection is returned.
  * @internal
  * @category formatting
  * @since 0.0.0
@@ -71,7 +81,7 @@ export const makeTableCaptionPlainTextFromPayload = ({
     O.getOrElse(
       O.map(decodeConstructorOption(input), (wire) =>
         Match.value(wire.t).pipe(
-          Match.when("Str", () => O.getOrElse(decodeStringOption(wire.c), () => "")),
+          Match.when("Str", () => O.getOrElse(decodeStringOption(wire.c), emptyString)),
           Match.when("Space", () => " "),
           Match.when("SoftBreak", () => " "),
           Match.when("LineBreak", () => "\n"),
@@ -83,24 +93,25 @@ export const makeTableCaptionPlainTextFromPayload = ({
               ),
             () => inlineArrayPlainText(wire.c)
           ),
-          Match.when("Quoted", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), () => "")),
-          Match.when("Cite", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), () => "")),
-          Match.when("Code", () => O.getOrElse(jsonStringAt(wire.c, 1), () => "")),
-          Match.when("Link", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), () => "")),
-          Match.when("Image", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), () => "")),
-          Match.when("Span", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), () => "")),
-          Match.when("Math", () => O.getOrElse(jsonStringAt(wire.c, 1), () => "")),
-          Match.when("RawInline", () => O.getOrElse(jsonStringAt(wire.c, 1), () => "")),
-          Match.orElse(() => "")
+          Match.when("Quoted", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), emptyString)),
+          Match.when("Cite", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), emptyString)),
+          Match.when("Code", () => O.getOrElse(jsonStringAt(wire.c, 1), emptyString)),
+          Match.when("Link", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), emptyString)),
+          Match.when("Image", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), emptyString)),
+          Match.when("Span", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 1), inlineArrayPlainText), emptyString)),
+          Match.when("Math", () => O.getOrElse(jsonStringAt(wire.c, 1), emptyString)),
+          Match.when("RawInline", () => O.getOrElse(jsonStringAt(wire.c, 1), emptyString)),
+          Match.when("Note", () => blockArrayPlainText(wire.c)),
+          Match.orElse(emptyString)
         )
       ),
-      () => ""
+      emptyString
     );
 
   function inlineArrayPlainText(input: unknown): string {
     return O.getOrElse(
       O.map(decodeJsonArrayOption(input), (values) => A.join(A.map(values, inlinePlainTextFromWire), "")),
-      () => ""
+      emptyString
     );
   }
 
@@ -110,26 +121,26 @@ export const makeTableCaptionPlainTextFromPayload = ({
         Match.value(wire.t).pipe(
           Match.when("Plain", () => inlineArrayPlainText(wire.c)),
           Match.when("Para", () => inlineArrayPlainText(wire.c)),
-          Match.when("Header", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 2), inlineArrayPlainText), () => "")),
-          Match.when("CodeBlock", () => O.getOrElse(jsonStringAt(wire.c, 1), () => "")),
-          Match.when("RawBlock", () => O.getOrElse(jsonStringAt(wire.c, 1), () => "")),
+          Match.when("Header", () => O.getOrElse(O.map(jsonArrayAt(wire.c, 2), inlineArrayPlainText), emptyString)),
+          Match.when("CodeBlock", () => O.getOrElse(jsonStringAt(wire.c, 1), emptyString)),
+          Match.when("RawBlock", () => O.getOrElse(jsonStringAt(wire.c, 1), emptyString)),
           Match.when("BlockQuote", () => blockArrayPlainText(wire.c)),
-          Match.orElse(() => "")
+          Match.orElse(emptyString)
         )
       ),
-      () => ""
+      emptyString
     );
 
   function blockArrayPlainText(input: unknown): string {
     return O.getOrElse(
       O.map(decodeJsonArrayOption(input), (values) => A.join(A.map(values, blockPlainTextFromWire), "\n")),
-      () => ""
+      emptyString
     );
   }
 
   return (input) =>
     O.match(decodeTableCaptionPairOption(input), {
-      onNone: () => "",
+      onNone: emptyString,
       onSome: ([shortCaption, longCaption]) => {
         const short = shortCaption === null ? "" : inlineArrayPlainText(shortCaption);
         return Str.isNonEmpty(short) ? short : blockArrayPlainText(longCaption);

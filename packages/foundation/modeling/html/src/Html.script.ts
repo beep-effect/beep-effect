@@ -9,7 +9,7 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Match, pipe, Result } from "effect";
+import { flow, Match, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -36,7 +36,7 @@ const htmlMimeTypePattern =
  * ```
  *
  * @invariant Values match the MIME Sniffing valid MIME type string grammar used for author conformance.
- * @see https://mimesniff.spec.whatwg.org/#valid-mime-type for the normative valid MIME type string definition.
+ * @see {@link https://mimesniff.spec.whatwg.org/#valid-mime-type} for the normative valid MIME type string definition.
  * @category schemas
  * @since 0.0.0
  */
@@ -77,7 +77,7 @@ export type HtmlMimeType = typeof HtmlMimeType.Type;
  * ```
  *
  * @invariant The literal set is exactly the JavaScript MIME type essence list from MIME Sniffing.
- * @see https://mimesniff.spec.whatwg.org/#javascript-mime-type for the normative essence-string registry.
+ * @see {@link https://mimesniff.spec.whatwg.org/#javascript-mime-type} for the normative essence-string registry.
  * @category models
  * @since 0.0.0
  */
@@ -114,8 +114,7 @@ export const JavaScriptMimeTypeEssence = LiteralKit([
 export type JavaScriptMimeTypeEssence = typeof JavaScriptMimeTypeEssence.Type;
 
 const isJavaScriptMimeTypeEssence = S.is(JavaScriptMimeTypeEssence);
-const isJavaScriptMimeTypeEssenceMatch = (value: string): boolean =>
-  pipe(value, toAsciiLowerCase, isJavaScriptMimeTypeEssence);
+const isJavaScriptMimeTypeEssenceMatch = flow(toAsciiLowerCase, isJavaScriptMimeTypeEssence);
 
 /**
  * Valid MIME string that is not a JavaScript essence match, carried by a
@@ -132,7 +131,7 @@ const isJavaScriptMimeTypeEssenceMatch = (value: string): boolean =>
  * ```
  *
  * @invariant Values are valid MIME strings and are not JavaScript MIME type essence matches.
- * @see https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type for the data-block authoring constraint.
+ * @see {@link https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type} for the data-block authoring constraint.
  * @category schemas
  * @since 0.0.0
  */
@@ -186,7 +185,7 @@ const ScriptStateName = LiteralKit(["classic", "module", "importMap", "speculati
  * ```
  *
  * @invariant The union contains classic, module, import-map, speculation-rules, and valid data-block states only.
- * @see https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type for the normative script type algorithm.
+ * @see {@link https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type} for the normative script type algorithm.
  * @category models
  * @since 0.0.0
  */
@@ -284,7 +283,7 @@ const resolveExplicitScriptType = (value: string): Result.Result<ScriptState, In
  *
  * @returns A successful semantic state or a typed invalid-author-value error.
  * @invariant Resolution never rewrites the source Script node or invents an unsupported standards state.
- * @see https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type for the normative classification order.
+ * @see {@link https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type} for the normative classification order.
  * @category normalization
  * @since 0.0.0
  */

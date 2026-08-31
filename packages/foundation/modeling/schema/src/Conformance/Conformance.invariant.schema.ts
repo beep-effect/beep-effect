@@ -5,9 +5,9 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
+import { Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SpecificationReference } from "./Conformance.source.schema.ts";
@@ -136,10 +136,23 @@ class TypeLevelEnforcement extends S.Class<TypeLevelEnforcement>($I`TypeLevelEnf
   })
 ) {}
 
+const RuntimeValidatorIdentifier = S.String.check(
+  S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*$/u, {
+    identifier: $I`RuntimeValidatorIdentifierPattern`,
+    title: "Runtime validator identifier",
+    description: "An executable JavaScript identifier or dot-separated property path naming one runtime validator.",
+    message: "Expected one executable validator identifier such as inspectConformance or Heading.validateOutline",
+  })
+).pipe(
+  $I.annoteSchema("RuntimeValidatorIdentifier", {
+    description: "Executable JavaScript identifier or property path naming one runtime conformance validator.",
+  })
+);
+
 class RuntimeEnforcement extends S.Class<RuntimeEnforcement>($I`RuntimeEnforcement`)(
   {
     kind: S.tag("runtime"),
-    validator: S.NonEmptyString,
+    validator: RuntimeValidatorIdentifier,
   },
   $I.annote("RuntimeEnforcement", {
     description: "Evidence that runtime schema decoding or validation checks an invariant.",

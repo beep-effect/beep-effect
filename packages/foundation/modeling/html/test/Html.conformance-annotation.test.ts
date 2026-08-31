@@ -1,4 +1,5 @@
 import { ConformantHtml } from "@beep/html/Html.conformance";
+import { SafeHtmlAst } from "@beep/html/Html.policy";
 import * as Conformance from "@beep/schema/Conformance";
 import { validateConformanceAnnotationAgainstLedgerArtifacts } from "@beep/test-utils/ConformanceLedger";
 import { describe, expect, it } from "@effect/vitest";
@@ -19,10 +20,10 @@ describe("@beep/html conformance annotations", () => {
     expect(A.map(annotation.sources, ({ id }) => id)).toEqual([
       "html-whatwg-source-approved",
       "html-mimesniff-source-approved",
-      "html-webref-dfns-current-local",
-      "html-webref-elements-current-local",
       "html-webref-dfns-approved-target",
       "html-webref-elements-approved-target",
+      "html-webref-dfns-current-local",
+      "html-webref-elements-current-local",
       "html-whatwg-content-model-current-local",
       "html-iana-language-subtag-registry-current-local",
       "html-classification-current-local",
@@ -52,8 +53,6 @@ describe("@beep/html conformance annotations", () => {
       "html.responsive.sizes",
       "html.foreign.names-and-namespaces",
       "html.serialization.text-modes",
-      "html.safe-profile.active-content",
-      "html.aria.role-compatibility",
       "html.obsolete.nonconforming-elements",
       "html.spec.per-rule-traceability",
       "html.parser.tree-construction",
@@ -61,13 +60,28 @@ describe("@beep/html conformance annotations", () => {
     ]);
   });
 
-  it.effect("matches the exact selected HTML ledger records and enforcement evidence", () => {
-    const annotation = ConformantHtml.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
+  it("collects the package safe-output policy from the SafeHtmlAst proof schema", () => {
+    const annotation = SafeHtmlAst.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
 
-    return validateConformanceAnnotationAgainstLedgerArtifacts(
-      new URL("../", import.meta.url),
-      "@beep/html",
-      annotation
-    ).pipe(Effect.map((issues) => expect(issues).toEqual([])));
+    expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
+    expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["html-safe-output-policy-e6e88af6"]);
+    expect(A.map(annotation.sources, ({ id }) => id)).toEqual(["html-safe-policy-source-current-local"]);
+    expect(A.map(annotation.invariants, ({ id }) => id)).toEqual([
+      "html.safe-profile.active-content",
+      "html.aria.role-compatibility",
+    ]);
+  });
+
+  it.effect("matches the exact selected HTML ledger records and enforcement evidence", () => {
+    const whatwg = ConformantHtml.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
+    const safety = SafeHtmlAst.pipe(Conformance.collectConformanceAnnotations, A.head, O.getOrThrow);
+
+    return Effect.all(
+      [
+        validateConformanceAnnotationAgainstLedgerArtifacts(new URL("../", import.meta.url), "@beep/html", whatwg),
+        validateConformanceAnnotationAgainstLedgerArtifacts(new URL("../", import.meta.url), "@beep/html", safety),
+      ],
+      { concurrency: "unbounded" }
+    ).pipe(Effect.map((results) => expect(results).toEqual([[], []])));
   });
 });

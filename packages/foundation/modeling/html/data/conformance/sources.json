@@ -3,14 +3,15 @@
   "packageName": "@beep/html",
   "profileIds": [
     "html-whatwg-living-2026-08-30",
-    "html-current-vendored-2026-06-15"
+    "html-current-vendored-2026-06-15",
+    "html-safe-output-policy-e6e88af6"
   ],
   "profiles": [
     {
       "id": "html-whatwg-living-2026-08-30",
       "title": "WHATWG HTML semantic conformance",
       "version": "778afd942c67b78335a4becc28c1c725a25d1cab",
-      "description": "Target WHATWG HTML profile with generated local schemas, contextual validation, safe policy, and explicit gaps.",
+      "description": "Target WHATWG HTML profile with generated local schemas, contextual validation, and explicit gaps.",
       "sourceIds": [
         "html-whatwg-source-approved",
         "html-mimesniff-source-approved",
@@ -47,8 +48,6 @@
         "html.responsive.sizes",
         "html.foreign.names-and-namespaces",
         "html.serialization.text-modes",
-        "html.safe-profile.active-content",
-        "html.aria.role-compatibility",
         "html.obsolete.nonconforming-elements",
         "html.spec.per-rule-traceability",
         "html.parser.tree-construction",
@@ -76,6 +75,19 @@
         "html.element.local-content-model",
         "html.obsolete.nonconforming-elements"
       ]
+    },
+    {
+      "id": "html-safe-output-policy-e6e88af6",
+      "title": "@beep/html conservative safe-output policy",
+      "version": "e6e88af611c2d677c8348e9e6722687b6c34c454",
+      "description": "Package-owned deny-by-default browser-output policy applied after general HTML conformance; it is not a WHATWG conformance profile.",
+      "sourceIds": [
+        "html-safe-policy-source-current-local"
+      ],
+      "invariantIds": [
+        "html.safe-profile.active-content",
+        "html.aria.role-compatibility"
+      ]
     }
   ],
   "sources": [
@@ -83,7 +95,7 @@
       "id": "html-whatwg-source-approved",
       "title": "WHATWG HTML source",
       "role": "primarySpecification",
-      "canonicalUrl": "https://github.com/whatwg/html/blob/778afd942c67b78335a4becc28c1c725a25d1cab/source",
+      "canonicalUrl": "https://raw.githubusercontent.com/whatwg/html/778afd942c67b78335a4becc28c1c725a25d1cab/source",
       "revision": {
         "kind": "gitCommit",
         "repository": "https://github.com/whatwg/html",
@@ -97,7 +109,7 @@
       "id": "html-mimesniff-source-approved",
       "title": "WHATWG MIME Sniffing source",
       "role": "normativeDependency",
-      "canonicalUrl": "https://github.com/whatwg/mimesniff/blob/39aa53511b13953d84fef8d4131d6f61d0ccbde6/mimesniff.bs",
+      "canonicalUrl": "https://raw.githubusercontent.com/whatwg/mimesniff/39aa53511b13953d84fef8d4131d6f61d0ccbde6/mimesniff.bs",
       "revision": {
         "kind": "gitCommit",
         "repository": "https://github.com/whatwg/mimesniff",
@@ -194,7 +206,7 @@
       "id": "html-classification-current-local",
       "title": "Reviewed HTML classification and conformance rules",
       "role": "implementationReference",
-      "canonicalUrl": "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/html/data/overrides/classification.json",
+      "canonicalUrl": "https://raw.githubusercontent.com/beep-effect/beep-effect/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/html/data/overrides/classification.json",
       "revision": {
         "kind": "gitCommit",
         "repository": "https://github.com/beep-effect/beep-effect",
@@ -208,7 +220,7 @@
       "id": "html-obsolete-interfaces-current-local",
       "title": "Reviewed obsolete HTML interface mapping",
       "role": "implementationReference",
-      "canonicalUrl": "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/html/data/overrides/obsolete-interfaces.json",
+      "canonicalUrl": "https://raw.githubusercontent.com/beep-effect/beep-effect/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/html/data/overrides/obsolete-interfaces.json",
       "revision": {
         "kind": "gitCommit",
         "repository": "https://github.com/beep-effect/beep-effect",
@@ -217,6 +229,20 @@
       "contentSha256": "fb9db066956e67f808ac8474013a32850f3013a4576061158b383d0badc5c5ac",
       "license": "MIT",
       "scope": "Immutable public pre-initiative package-owned generator-input baseline for data/overrides/obsolete-interfaces.json. DOM interface names for obsolete generated elements absent from the current webref element index. Consumed anchors: interfaces."
+    },
+    {
+      "id": "html-safe-policy-source-current-local",
+      "title": "@beep/html conservative safe-output policy",
+      "role": "implementationReference",
+      "canonicalUrl": "https://raw.githubusercontent.com/beep-effect/beep-effect/e6e88af611c2d677c8348e9e6722687b6c34c454/packages/foundation/modeling/html/src/Html.policy.ts",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/beep-effect/beep-effect",
+        "commit": "e6e88af611c2d677c8348e9e6722687b6c34c454"
+      },
+      "contentSha256": "eb11258d9933cc5296673b3fdc12d88dc702ae4b84a09eb56b2c39eb26b759fd",
+      "license": "MIT",
+      "scope": "Exact package-owned implementation reference for the conservative SafeHtmlAst policy. This policy is stricter than general WHATWG author conformance and does not claim to be a WHATWG requirement. Consumed symbols: SafeHtmlAst, inspectSafeHtml, enforceSafeHtml."
     }
   ]
 }

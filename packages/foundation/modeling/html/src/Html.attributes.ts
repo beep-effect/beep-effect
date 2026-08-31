@@ -21,15 +21,12 @@ import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Eq from "@beep/utils/Equal";
 import * as Struct from "@beep/utils/Struct";
+import { Effect, SchemaIssue, SchemaTransformation, Tuple } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import { flow, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
-import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
-import * as Tuple from "effect/Tuple";
 import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
 import { readonlyStruct } from "./internal/Html.readonly.ts";
 
@@ -928,7 +925,7 @@ export type ButtonCommand = typeof ButtonCommand.Type;
  * ```
  *
  * @invariant Values are integers from zero through eight, inclusive.
- * @see [WHATWG HTML heading levels and offsets](https://html.spec.whatwg.org/multipage/sections.html#heading-levels-and-offsets)
+ * @see {@link https://html.spec.whatwg.org/multipage/sections.html#heading-levels-and-offsets | WHATWG HTML heading levels and offsets} for the normative heading-level definition.
  * @category schemas
  * @since 0.0.0
  */

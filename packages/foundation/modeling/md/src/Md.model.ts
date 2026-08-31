@@ -7,11 +7,9 @@
 
 import { $MdId } from "@beep/identity";
 import { JsonObject, LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
-import { pipe } from "effect/Function";
+import { SchemaGetter, Tuple } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 
 const $I = $MdId.create("Md.model");
 
@@ -1544,23 +1542,20 @@ const makeHeadingValueMember = <Level extends HeadingLevel>({ literal }: S.Liter
  * ```
  *
  * @invariant `level` is exactly one of the six CommonMark heading levels and `children` contains only inline nodes.
- * @see https://spec.commonmark.org/0.31.2/#atx-headings for the normative ATX heading level rules.
- * @see https://spec.commonmark.org/0.31.2/#setext-headings for the normative setext heading level rules.
+ * @see {@link https://spec.commonmark.org/0.31.2/#atx-headings} for the normative ATX heading level rules.
+ * @see {@link https://spec.commonmark.org/0.31.2/#setext-headings} for the normative setext heading level rules.
  * @category models
  * @since 0.0.0
  */
-export const HeadingValue = HeadingLevel.mapMembers((members) =>
-  pipe(
-    members,
-    Tuple.evolve([
-      makeHeadingValueMember,
-      makeHeadingValueMember,
-      makeHeadingValueMember,
-      makeHeadingValueMember,
-      makeHeadingValueMember,
-      makeHeadingValueMember,
-    ])
-  )
+export const HeadingValue = HeadingLevel.mapMembers(
+  Tuple.evolve([
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+  ])
 ).pipe(
   S.toTaggedUnion("level"),
   $I.annoteSchema("HeadingValue", {
@@ -1600,9 +1595,10 @@ export declare namespace HeadingValue {
  * **Example** (Make heading node)
  *
  * ```ts import.meta.vitest name="Make heading node"
- * import { Heading, Text } from "@beep/md/Md.model"
+ * import { Heading, HeadingValue, Text } from "@beep/md/Md.model"
  *
- * const node = Heading.make({ level: 1, children: [Text.make({ value: "Title" })] })
+ * const payload = HeadingValue.cases[1].make({ children: [Text.make({ value: "Title" })] })
+ * const node = Heading.make(payload)
  * node._tag // => "heading"
  * node.level // => 1
  * ```
@@ -1879,7 +1875,7 @@ export declare namespace Ul {
  * ```
  *
  * @invariant Values are non-negative integers; strict CommonMark and GFM validation additionally caps them at 999999999.
- * @see https://spec.commonmark.org/0.31.2/#list-items for the normative ordered-list marker range.
+ * @see {@link https://spec.commonmark.org/0.31.2/#list-items} for the normative ordered-list marker range.
  * @category models
  * @since 0.0.0
  */

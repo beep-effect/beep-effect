@@ -5,6 +5,7 @@ import {
   collectSemanticSchemaMetadataResult,
   getSemanticSchemaMetadata,
   getSemanticSchemaMetadataResult,
+  makeSemanticSchemaMetadata,
   makeSemanticSchemaMetadataResult,
   SemanticSchemaSpecification,
 } from "@beep/rdf/SemanticSchemaMetadata";
@@ -189,9 +190,19 @@ describe("semantic schema conformance", () => {
       semanticSchemaMetadata: "not-metadata" as unknown as SemanticSchemaMetadata,
     });
 
-    expect(Result.isFailure(collectSemanticSchemaMetadataResult(Invalid))).toBe(true);
+    const collectedResult = collectSemanticSchemaMetadataResult(Invalid);
+    const metadataResult = makeSemanticSchemaMetadataResult({ kind: "unknown" });
+
+    expect(Result.isFailure(collectedResult)).toBe(true);
+    if (Result.isFailure(collectedResult)) {
+      expect(collectedResult.failure).toBeInstanceOf(S.SchemaError);
+    }
     expect(() => collectSemanticSchemaMetadata(Invalid)).toThrow(S.SchemaError);
-    expect(Result.isFailure(makeSemanticSchemaMetadataResult({ kind: "unknown" }))).toBe(true);
+    expect(Result.isFailure(metadataResult)).toBe(true);
+    if (Result.isFailure(metadataResult)) {
+      expect(metadataResult.failure).toBeInstanceOf(S.SchemaError);
+    }
+    expect(() => makeSemanticSchemaMetadata({ ...semanticMetadata, canonicalName: "" })).toThrow(S.SchemaError);
   });
 
   it("returns a schema failure when a Suspend thunk throws during metadata traversal", () => {
@@ -199,7 +210,12 @@ describe("semantic schema conformance", () => {
       throw new Error("boom");
     });
 
-    expect(Result.isFailure(collectSemanticSchemaMetadataResult(Broken))).toBe(true);
+    const result = collectSemanticSchemaMetadataResult(Broken);
+
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toBeInstanceOf(S.SchemaError);
+    }
     expect(() => collectSemanticSchemaMetadata(Broken)).toThrow(S.SchemaError);
   });
 

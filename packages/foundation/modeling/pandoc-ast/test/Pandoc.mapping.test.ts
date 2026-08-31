@@ -208,6 +208,109 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
+  it("projects current inline and block constructors through definition-list plaintext", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const attr = ["", [], []];
+        const str = (value: string) => ({ c: value, t: "Str" });
+        const plain = (value: string) => ({ c: [str(value)], t: "Plain" });
+        const paragraph = (value: string) => ({ c: [str(value)], t: "Para" });
+        const richTerm = [
+          str("text"),
+          { t: "Space" },
+          { t: "SoftBreak" },
+          { t: "LineBreak" },
+          { c: [str("emphasis")], t: "Emph" },
+          { c: [str("underline")], t: "Underline" },
+          { c: [str("strong")], t: "Strong" },
+          { c: [str("strikeout")], t: "Strikeout" },
+          { c: [str("superscript")], t: "Superscript" },
+          { c: [str("subscript")], t: "Subscript" },
+          { c: [str("small-caps")], t: "SmallCaps" },
+          { c: [{ t: "SingleQuote" }, [str("quoted")]], t: "Quoted" },
+          { c: [[], [str("cited")]], t: "Cite" },
+          { c: [attr, "code"], t: "Code" },
+          { c: [attr, [str("link")], ["https://example.com", ""]], t: "Link" },
+          { c: [attr, [str("image")], ["image.png", ""]], t: "Image" },
+          { c: [attr, [str("span")]], t: "Span" },
+          { c: [paragraph("note")], t: "Note" },
+          { c: [{ t: "InlineMath" }, "math"], t: "Math" },
+          { c: ["html", "raw-inline"], t: "RawInline" },
+          { c: { retained: true }, t: "FutureInline" },
+        ];
+        const table = {
+          c: [
+            attr,
+            [null, [paragraph("table caption")]],
+            [[{ t: "AlignDefault" }, { t: "ColWidthDefault" }]],
+            [attr, []],
+            [[attr, 0, [], [[attr, [[attr, { t: "AlignDefault" }, 1, 1, [paragraph("cell")]]]]]]],
+            [attr, []],
+          ],
+          t: "Table",
+        };
+        const definitions = [
+          [plain("plain")],
+          [paragraph("paragraph")],
+          [{ c: [[str("first")], [str("second")]], t: "LineBlock" }],
+          [{ c: [2, attr, [str("heading")]], t: "Header" }],
+          [{ c: [paragraph("quote")], t: "BlockQuote" }],
+          [{ c: [attr, "code-block"], t: "CodeBlock" }],
+          [{ c: ["html", "raw-block"], t: "RawBlock" }],
+          [{ c: [[plain("bullet")]], t: "BulletList" }],
+          [
+            {
+              c: [[1, { t: "DefaultStyle" }, { t: "DefaultDelim" }], [[plain("ordered")]]],
+              t: "OrderedList",
+            },
+          ],
+          [{ c: [[[str("nested term")], [[paragraph("nested definition")]]]], t: "DefinitionList" }],
+          [{ t: "HorizontalRule" }],
+          [{ c: [attr, [paragraph("div")]], t: "Div" }],
+          [table],
+          [{ c: [attr, [null, [paragraph("figure caption")]], [paragraph("figure body")]], t: "Figure" }],
+          [{ c: { retained: true }, t: "FutureBlock" }],
+        ];
+        const pandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: [[richTerm, definitions]], t: "DefinitionList" }],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+        const block = result.document.children[0];
+
+        expect(block?._tag).toBe("p");
+        if (block?._tag !== "p" || block.children[0]?._tag !== "text") {
+          throw new Error("expected a flattened definition-list paragraph");
+        }
+
+        expect(block.children[0].value).toContain("underlinestrongstrikeoutsuperscriptsubscriptsmall-capsquotedcited");
+        expect(block.children[0].value).toContain("first\nsecond");
+        expect(block.children[0].value).toContain("raw-block");
+        expect(block.children[0].value).toContain("figure body");
+        expect(block.children[0].value).toContain("table caption");
+        expect(A.map(result.report.issues, ({ construct }) => construct)).toEqual(
+          expect.arrayContaining([
+            "Underline",
+            "Superscript",
+            "Subscript",
+            "SmallCaps",
+            "Quoted",
+            "Cite",
+            "Note",
+            "RawInline",
+            "LineBlock",
+            "RawBlock",
+            "DefinitionList",
+            "Table",
+            "Figure",
+            "FutureInline",
+            "FutureBlock",
+          ])
+        );
+      })
+    ));
+
   it("round-trips an Md math block through a Pandoc display-math paragraph", () =>
     Effect.runPromise(
       Effect.gen(function* () {

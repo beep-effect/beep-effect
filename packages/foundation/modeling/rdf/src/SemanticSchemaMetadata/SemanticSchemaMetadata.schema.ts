@@ -10,6 +10,7 @@ import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Sha256 from "@beep/schema/Sha256";
+import { URLStr } from "@beep/schema/URL";
 import * as S from "effect/Schema";
 import type { Result } from "effect";
 import type * as AST from "effect/SchemaAST";
@@ -212,7 +213,7 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
     name: S.NonEmptyString,
     version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     section: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    url: S.OptionFromOptionalKey(URLStr).pipe(SchemaUtils.withNoneDefault),
     localRef: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     disposition: SemanticSchemaSpecificationDisposition,
     sourceId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),

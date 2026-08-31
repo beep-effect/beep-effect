@@ -7,14 +7,13 @@
 
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A } from "@beep/utils";
-import { pipe, Result } from "effect";
+import { pipe, Result, SchemaIssue } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaParser from "effect/SchemaParser";
 import { SemanticSchemaMetadata } from "./SemanticSchemaMetadata.schema.ts";
 import type { O } from "@beep/utils";
 
-/* istanbul ignore next -- public callers receive schema issues through Result decoding */
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
@@ -64,7 +63,7 @@ declare module "effect/Schema" {
 export const makeSemanticSchemaMetadataResult = (
   metadata: unknown
 ): Result.Result<SemanticSchemaMetadataAnnotationPayload, S.SchemaError> =>
-  SemanticSchemaMetadata.decodeUnknownResult(metadata);
+  pipe(SchemaParser.decodeUnknownResult(SemanticSchemaMetadata)(metadata), Result.mapError(schemaIssueToError));
 
 /**
  * Validate a metadata payload before attaching it to a public schema.
@@ -135,7 +134,7 @@ export const annotateSemanticSchema: {
 );
 
 const CollectedSemanticSchemaMetadata = SemanticSchemaMetadata.pipe(S.toType, S.Array);
-const decodeCollectedSemanticSchemaMetadata = S.decodeUnknownResult(CollectedSemanticSchemaMetadata);
+const decodeCollectedSemanticSchemaMetadata = SchemaParser.decodeUnknownResult(CollectedSemanticSchemaMetadata);
 const annotationTraversalError = (): S.SchemaError =>
   new S.SchemaError(
     new SchemaIssue.InvalidValue({ message: "Schema annotation traversal failed while evaluating a Suspend thunk" })
@@ -169,7 +168,8 @@ export const collectSemanticSchemaMetadataResult = (
       try: () => SchemaUtils.collectAnnotationsAt(schema, "semanticSchemaMetadata"),
       catch: annotationTraversalError,
     }),
-    Result.flatMap(decodeCollectedSemanticSchemaMetadata)
+    Result.flatMap(decodeCollectedSemanticSchemaMetadata),
+    Result.mapError(schemaIssueToError)
   );
 
 /**

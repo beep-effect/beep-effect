@@ -3388,9 +3388,12 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
    * **Details**
    *
    * The complete structured caption remains in {@link payload}. This preview
-   * recursively retains text from current inline formatting constructors
-   * without claiming that a gap-node getter is a lossless inline projection.
+   * deliberately prefers a non-empty short caption and otherwise falls back
+   * to the long block caption. It recursively retains text from current inline
+   * formatting constructors without claiming that a gap-node getter is a
+   * lossless inline projection.
    *
+   * @invariant A non-empty short-caption projection takes precedence over the long-caption projection.
    * @category getters
    * @since 0.0.0
    */

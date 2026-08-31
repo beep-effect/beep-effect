@@ -9601,22 +9601,22 @@
     },
     "@beep/html": {
       "path": "packages/foundation/modeling/html",
-      "lines": 99.08,
-      "statements": 99.17,
+      "lines": 99.22,
+      "statements": 99.29,
       "branches": 100,
-      "functions": 98.44,
+      "functions": 98.79,
       "uncovered": {
-        "lines": 15,
-        "statements": 15,
+        "lines": 14,
+        "statements": 14,
         "branches": 0,
-        "functions": 10
+        "functions": 9
       },
       "files": {
         "packages/foundation/modeling/html/src/Html.attributes.ts": {
           "lines": 99.2,
           "statements": 99.21,
           "branches": 100,
-          "functions": 96.66,
+          "functions": 96.55,
           "uncovered": {
             "lines": 1,
             "statements": 1,
@@ -9625,15 +9625,15 @@
           }
         },
         "packages/foundation/modeling/html/src/Html.conformance.ts": {
-          "lines": 98.91,
-          "statements": 99.02,
+          "lines": 99.05,
+          "statements": 99.14,
           "branches": 100,
-          "functions": 98.34,
+          "functions": 98.59,
           "uncovered": {
-            "lines": 7,
-            "statements": 7,
+            "lines": 6,
+            "statements": 6,
             "branches": 0,
-            "functions": 6
+            "functions": 5
           }
         },
         "packages/foundation/modeling/html/src/Html.contract.ts": {
@@ -9649,6 +9649,18 @@
           }
         },
         "packages/foundation/modeling/html/src/Html.foreign.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/Html.form-control.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -9706,6 +9718,18 @@
             "statements": 2,
             "branches": 0,
             "functions": 1
+          }
+        },
+        "packages/foundation/modeling/html/src/Html.script.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/html/src/Html.serialize.ts": {
@@ -9793,6 +9817,126 @@
           }
         },
         "packages/foundation/modeling/html/src/internal/Html.readonly.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-authoring-invariants.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-boundary-invariants.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-contracts.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-profile-registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-source-registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-structure-invariants.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.heading-conformance.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.policy-conformance-registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/internal/conformance/Html.script-conformance.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -14152,15 +14296,15 @@
     },
     "@beep/lexical-schema": {
       "path": "packages/foundation/modeling/lexical",
-      "lines": 89.6,
-      "statements": 90.07,
-      "branches": 91.48,
-      "functions": 84,
+      "lines": 91.57,
+      "statements": 91.97,
+      "branches": 94.77,
+      "functions": 86.55,
       "uncovered": {
-        "lines": 39,
-        "statements": 40,
-        "branches": 8,
-        "functions": 40
+        "lines": 38,
+        "statements": 39,
+        "branches": 7,
+        "functions": 39
       },
       "files": {
         "packages/foundation/modeling/lexical/src/Lexical.behavior.ts": {
@@ -14176,10 +14320,10 @@
           }
         },
         "packages/foundation/modeling/lexical/src/Lexical.codec.ts": {
-          "lines": 81.95,
-          "statements": 81.99,
-          "branches": 86.95,
-          "functions": 75.48,
+          "lines": 83.18,
+          "statements": 83.33,
+          "branches": 88.67,
+          "functions": 76.39,
           "uncovered": {
             "lines": 37,
             "statements": 38,
@@ -14187,31 +14331,67 @@
             "functions": 38
           }
         },
-        "packages/foundation/modeling/lexical/src/Lexical.model.ts": {
-          "lines": 99.15,
-          "statements": 99.28,
+        "packages/foundation/modeling/lexical/src/Lexical.conformance.ts": {
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 98.41,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/lexical/src/Lexical.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/lexical/src/Lexical.normalize.ts": {
           "lines": 96.66,
           "statements": 96.77,
-          "branches": 89.47,
+          "branches": 94.73,
           "functions": 92.85,
           "uncovered": {
             "lines": 1,
             "statements": 1,
-            "branches": 2,
+            "branches": 1,
             "functions": 1
           }
         },
         "packages/foundation/modeling/lexical/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.conformance-registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.strict-invariants.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -14722,14 +14902,14 @@
     },
     "@beep/md": {
       "path": "packages/foundation/modeling/md",
-      "lines": 95.82,
-      "statements": 95.7,
-      "branches": 88.94,
-      "functions": 93.68,
+      "lines": 96.49,
+      "statements": 96.39,
+      "branches": 90.87,
+      "functions": 94.61,
       "uncovered": {
         "lines": 38,
         "statements": 42,
-        "branches": 24,
+        "branches": 23,
         "functions": 35
       },
       "files": {
@@ -14742,6 +14922,18 @@
             "lines": 0,
             "statements": 0,
             "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/md/src/Md.conformance.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
@@ -14782,14 +14974,14 @@
           }
         },
         "packages/foundation/modeling/md/src/Md.render.ts": {
-          "lines": 93.31,
-          "statements": 93.34,
-          "branches": 86.88,
-          "functions": 90.98,
+          "lines": 93.49,
+          "statements": 93.51,
+          "branches": 87.71,
+          "functions": 91.25,
           "uncovered": {
             "lines": 27,
             "statements": 28,
-            "branches": 8,
+            "branches": 7,
             "functions": 23
           }
         },
@@ -14818,6 +15010,54 @@
           }
         },
         "packages/foundation/modeling/md/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/md/src/internal/conformance/Md.invariant-registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/md/src/internal/conformance/Md.semantic-inspector.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -18301,50 +18541,62 @@
     },
     "@beep/pandoc-ast": {
       "path": "packages/foundation/modeling/pandoc-ast",
-      "lines": 85.21,
-      "statements": 85.37,
-      "branches": 86.71,
-      "functions": 79.44,
+      "lines": 90.57,
+      "statements": 90.49,
+      "branches": 90.66,
+      "functions": 87.6,
       "uncovered": {
-        "lines": 127,
-        "statements": 137,
-        "branches": 17,
-        "functions": 119
+        "lines": 101,
+        "statements": 110,
+        "branches": 14,
+        "functions": 89
       },
       "files": {
         "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts": {
-          "lines": 89.18,
-          "statements": 89.75,
-          "branches": 96.15,
-          "functions": 84.66,
+          "lines": 94.02,
+          "statements": 94.39,
+          "branches": 97.22,
+          "functions": 91.13,
           "uncovered": {
-            "lines": 45,
-            "statements": 46,
+            "lines": 32,
+            "statements": 32,
             "branches": 1,
-            "functions": 46
+            "functions": 32
+          }
+        },
+        "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts": {
-          "lines": 71.92,
-          "statements": 72.92,
-          "branches": 81.48,
-          "functions": 68.83,
+          "lines": 79.2,
+          "statements": 79.51,
+          "branches": 85.22,
+          "functions": 79.56,
           "uncovered": {
-            "lines": 80,
-            "statements": 88,
-            "branches": 15,
-            "functions": 72
+            "lines": 68,
+            "statements": 76,
+            "branches": 13,
+            "functions": 56
           }
         },
         "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts": {
-          "lines": 99.13,
-          "statements": 98.33,
-          "branches": 94.11,
-          "functions": 97.43,
+          "lines": 100,
+          "statements": 98.96,
+          "branches": 100,
+          "functions": 96.29,
           "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 1,
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
             "functions": 1
           }
         },
@@ -18373,6 +18625,30 @@
           }
         },
         "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.table-caption.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/pandoc-ast/src/internal/conformance/Pandoc.conformance-registry.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -19828,10 +20104,10 @@
     },
     "@beep/rdf": {
       "path": "packages/foundation/modeling/rdf",
-      "lines": 98.43,
-      "statements": 98.49,
+      "lines": 98.42,
+      "statements": 98.48,
       "branches": 100,
-      "functions": 95.58,
+      "functions": 95.66,
       "uncovered": {
         "lines": 15,
         "statements": 15,
@@ -19923,7 +20199,43 @@
             "functions": 7
           }
         },
-        "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts": {
+        "packages/foundation/modeling/rdf/src/SemanticSchemaConformance.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.annotations.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -28219,10 +28531,10 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 94.47,
-      "statements": 93.6,
-      "branches": 89.24,
-      "functions": 89,
+      "lines": 94.75,
+      "statements": 93.93,
+      "branches": 89.79,
+      "functions": 89.73,
       "uncovered": {
         "lines": 202,
         "statements": 246,
@@ -28492,6 +28804,102 @@
             "statements": 3,
             "branches": 0,
             "functions": 3
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.annotations.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.collector.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.policy.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.profile.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.report.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/Conformance.source.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Conformance/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/ContinentCode.ts": {
@@ -30631,6 +31039,18 @@
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/codecStatics.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/SchemaUtils/collectAnnotationsAt.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -33187,10 +33607,10 @@
     },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 68.75,
-      "statements": 68.26,
-      "branches": 63.49,
-      "functions": 49.64,
+      "lines": 78.88,
+      "statements": 79.37,
+      "branches": 71.6,
+      "functions": 66.98,
       "uncovered": {
         "lines": 95,
         "statements": 99,
@@ -33198,6 +33618,54 @@
         "functions": 70
       },
       "files": {
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/test-kit/test-utils/src/Entity.ts": {
           "lines": 100,
           "statements": 100,

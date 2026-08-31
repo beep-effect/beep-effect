@@ -2,6 +2,7 @@ import {
   conform,
   conformantRoot,
   enforceSafeHtml,
+  HtmlDocument,
   inspectConformance,
   inspectSafeHtml,
   safeHtmlAstConformant,
@@ -47,6 +48,7 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { ConformantHtml, SafeHtml, SafeHtmlAst } from "@beep/html";
 
 const text = Text.fromValue;
@@ -62,10 +64,11 @@ describe("@beep/html conformance branch matrix", () => {
     const html = Html.make({
       children: [Head.make({ children: [Title.make({ content: "Beep" })] }), Body.make({ children: [] })],
     });
-    const canonical = Document.make({
+    const canonical = HtmlDocument.make({
       doctype: O.some(Doctype.html()),
       children: [comment("before root"), html],
     });
+    expect(S.is(HtmlDocument)(canonical)).toBe(true);
     expect(inspectConformance(canonical)).toStrictEqual([]);
 
     const doctypes = [
@@ -164,6 +167,10 @@ describe("@beep/html conformance branch matrix", () => {
     ).toBe(true);
     expect(hasRule(Acronym.make({ children: [] }), "obsoleteElement")).toBe(true);
     expect(hasRule(Div.make({ children: [] }), "obsoleteElement")).toBe(false);
+  });
+
+  it("rejects obsolete elements at the inspectConformance boundary", () => {
+    expect(hasRule(Acronym.make({ children: [] }), "obsoleteElement")).toBe(true);
   });
 
   it("allows and rejects foreign/text children according to the generated content tokens", () => {

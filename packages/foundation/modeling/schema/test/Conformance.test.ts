@@ -13,9 +13,11 @@ import {
   Revision,
   revisionLabel,
 } from "@beep/schema/Conformance";
+import { URLStr } from "@beep/schema/URL";
 import { describe, expect, it } from "@effect/vitest";
 import { pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -81,10 +83,19 @@ describe("Conformance", () => {
       },
     });
 
+    const collectedResult = collectAnnotationsResult(Invalid);
+    const annotationResult = makeAnnotationResult({ sources: [], profiles: [], invariants: [] });
+
     expect(Scalar).toBeDefined();
-    expect(Result.isFailure(collectAnnotationsResult(Invalid))).toBe(true);
+    expect(Result.isFailure(collectedResult)).toBe(true);
+    if (Result.isFailure(collectedResult)) {
+      expect(collectedResult.failure).toBeInstanceOf(S.SchemaError);
+    }
     expect(() => collectAnnotations(Invalid)).toThrow(S.SchemaError);
-    expect(Result.isFailure(makeAnnotationResult({ sources: [], profiles: [], invariants: [] }))).toBe(true);
+    expect(Result.isFailure(annotationResult)).toBe(true);
+    if (Result.isFailure(annotationResult)) {
+      expect(annotationResult.failure).toBeInstanceOf(S.SchemaError);
+    }
   });
 
   it("returns a schema failure when a Suspend thunk throws during annotation traversal", () => {
@@ -92,7 +103,12 @@ describe("Conformance", () => {
       throw new Error("boom");
     });
 
-    expect(Result.isFailure(collectAnnotationsResult(Broken))).toBe(true);
+    const result = collectAnnotationsResult(Broken);
+
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toBeInstanceOf(S.SchemaError);
+    }
     expect(() => collectAnnotations(Broken)).toThrow(S.SchemaError);
   });
 
@@ -101,17 +117,23 @@ describe("Conformance", () => {
       ...annotationInput.sources[0],
       title: "Duplicate Specification",
     };
-    const duplicateResult = S.decodeUnknownResult(Annotation)({
+    const duplicateResult = S.decodeResult(Annotation)({
       ...annotationInput,
       sources: [annotationInput.sources[0], duplicateSource],
     });
-    const danglingResult = S.decodeUnknownResult(Annotation)({
+    const danglingResult = S.decodeResult(Annotation)({
       ...annotationInput,
       profiles: [{ ...annotationInput.profiles[0], sourceIds: ["missing-source"] }],
     });
 
     expect(Result.isFailure(duplicateResult)).toBe(true);
     expect(Result.isFailure(danglingResult)).toBe(true);
+    expect(() =>
+      makeAnnotation({
+        ...annotationInput,
+        sources: [annotationInput.sources[0], duplicateSource],
+      })
+    ).toThrow(S.SchemaError);
   });
 
   it("rejects duplicate profile selections and references outside a selecting profile", () => {
@@ -121,7 +143,7 @@ describe("Conformance", () => {
       title: "Secondary Specification",
       contentSha256: "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
     };
-    const duplicateSelection = S.decodeUnknownResult(Annotation)({
+    const duplicateSelection = S.decodeResult(Annotation)({
       ...annotationInput,
       profiles: [
         {
@@ -131,7 +153,7 @@ describe("Conformance", () => {
         },
       ],
     });
-    const outsideProfile = S.decodeUnknownResult(Annotation)({
+    const outsideProfile = S.decodeResult(Annotation)({
       ...annotationInput,
       sources: [annotationInput.sources[0], secondarySource],
       invariants: [
@@ -215,7 +237,7 @@ describe("Conformance", () => {
 
     expect(
       Result.isSuccess(
-        S.decodeUnknownResult(Invariant)({
+        S.decodeResult(Invariant)({
           ...invariant,
           decidability: "externalAuthority",
           enforcement: [{ kind: "notEnforced", gap: "The authority must decide this condition." }],
@@ -224,7 +246,7 @@ describe("Conformance", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeUnknownResult(Invariant)({
+        S.decodeResult(Invariant)({
           ...invariant,
           references: [
             { sourceId: "example-spec", section: "Rule" },
@@ -235,7 +257,7 @@ describe("Conformance", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeUnknownResult(Invariant)({
+        S.decodeResult(Invariant)({
           ...invariant,
           enforcement: [
             { kind: "runtime", validator: "Example.validate" },
@@ -246,12 +268,38 @@ describe("Conformance", () => {
     ).toBe(true);
     expect(
       Result.isSuccess(
-        S.decodeUnknownResult(Invariant)({
+        S.decodeResult(Invariant)({
           ...invariant,
           decidability: "contextualRuntime",
           enforcement: [{ kind: "documented", rationale: "The caller supplies the deciding context." }],
         })
       )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        S.decodeResult(Invariant)({
+          ...invariant,
+          decidability: "undecidable",
+          enforcement: [
+            { kind: "documented", rationale: "This mathematical condition is documented for consumers." },
+            { kind: "notEnforced", gap: "No finite local procedure can decide the condition." },
+          ],
+        })
+      )
+    ).toBe(true);
+    expect(
+      A.every(
+        [
+          "@beep/html Effect Schema decode boundary",
+          "inspectConformance and resolveScriptState",
+          "decodePandocJsonStrict,encodePandocJson",
+          "Heading.validateOutline()",
+        ],
+        (validator) => Result.isFailure(S.decodeUnknownResult(Enforcement)({ kind: "runtime", validator }))
+      )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(S.decodeUnknownResult(Enforcement)({ kind: "runtime", validator: "Heading.validateOutline" }))
     ).toBe(true);
   });
 
@@ -287,6 +335,11 @@ describe("Conformance", () => {
     const invalidRevisions = [
       { kind: "gitCommit", repository: "https://example.com/repository.git", commit: "main" },
       { kind: "gitCommit", repository: "https://example.com/repository.git", commit: "abc123" },
+      {
+        kind: "gitCommit",
+        repository: "https://example.com/repository.git",
+        commit: "1ED08F66DF016A18C6D7D56BD97AA778912CB37B",
+      },
       { kind: "datedSnapshot", date: "banana" },
       { kind: "datedSnapshot", date: "2026-02-30" },
       { kind: "retrievedSnapshot", retrievedOn: "2026-13-01" },
@@ -297,14 +350,33 @@ describe("Conformance", () => {
     );
     expect(
       Result.isSuccess(
-        S.decodeUnknownResult(Revision)({
+        S.decodeResult(Revision)({
           kind: "gitCommit",
           repository: "https://example.com/repository.git",
           commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
         })
       )
     ).toBe(true);
-    expect(Result.isSuccess(S.decodeUnknownResult(Revision)({ kind: "datedSnapshot", date: "2024-02-29" }))).toBe(true);
+    expect(Result.isSuccess(S.decodeResult(Revision)({ kind: "datedSnapshot", date: "2024-02-29" }))).toBe(true);
+  });
+
+  it("formats every immutable source revision kind", () => {
+    const commit = Revision.cases.gitCommit.make({
+      repository: URLStr.make("https://example.com/repository.git"),
+      commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+    });
+    const datedSnapshot = Revision.cases.datedSnapshot.make({ date: "2026-08-31" });
+    const registryVersion = Revision.cases.registryVersion.make({ registry: "Example Registry", version: "2.0 rc1" });
+    const retrievedSnapshot = Revision.cases.retrievedSnapshot.make({ retrievedOn: "2026-08-30" });
+    const packageRevision = Revision.cases.packageRevision.make({ packageName: "@beep/md", version: "0.0.0" });
+
+    expect(revisionLabel(commit)).toBe(
+      "gitCommit:https%3A%2F%2Fexample.com%2Frepository.git#1ed08f66df016a18c6d7d56bd97aa778912cb37b"
+    );
+    expect(revisionLabel(datedSnapshot)).toBe("datedSnapshot:2026-08-31");
+    expect(revisionLabel(registryVersion)).toBe("registryVersion:Example%20Registry@2.0%20rc1");
+    expect(revisionLabel(retrievedSnapshot)).toBe("retrievedSnapshot:2026-08-30");
+    expect(revisionLabel(packageRevision)).toBe("packageRevision:%40beep%2Fmd@0.0.0");
   });
 
   it("round-trips schema-derived conformance variants", () => {
@@ -381,9 +453,38 @@ describe("Conformance", () => {
       Report.cases.nonConforming.make({
         profileIds: ["example"],
         checkedInvariantIds: ["example.rule"],
-        issues: uncheckedIssue.issues,
+        issues: [
+          {
+            kind: "violation",
+            invariantId: "example.unchecked",
+            strength: "must",
+            path: [],
+            message: "This issue was not part of the checked set.",
+            reference: O.none(),
+          },
+        ],
       })
     ).toThrow();
+  });
+
+  it("constructs an indeterminate report when every issue names a checked invariant", () => {
+    const report = Report.cases.indeterminate.make({
+      profileIds: ["example"],
+      checkedInvariantIds: ["example.external"],
+      issues: [
+        {
+          kind: "indeterminate",
+          invariantId: "example.external",
+          path: ["value"],
+          message: "The external condition could not be decided.",
+          reason: "The authority was unavailable.",
+          reference: O.none(),
+        },
+      ],
+    });
+
+    expect(report.status).toBe("indeterminate");
+    expect(report.issues[0]?.path).toEqual(["value"]);
   });
 
   it("retains indeterminate outcomes alongside definite violations", () => {
@@ -395,15 +496,19 @@ describe("Conformance", () => {
           kind: "violation",
           invariantId: "example.rule",
           strength: "must",
+          path: [],
           message: "The checked value violates the local rule.",
+          reference: O.none(),
         },
       ],
       indeterminateIssues: [
         {
           kind: "indeterminate",
           invariantId: "example.external",
+          path: [],
           message: "The external condition was not available.",
           reason: "External authority was offline.",
+          reference: O.none(),
         },
       ],
     });

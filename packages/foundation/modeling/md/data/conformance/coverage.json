@@ -21,11 +21,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.profile.explicit-boundaries"
-        },
-        {
-          "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -40,11 +36,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.profile.explicit-boundaries"
-        },
-        {
-          "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [
@@ -58,6 +50,25 @@
       "status": "covered"
     },
     {
+      "invariantId": "md.profile.gfm-commonmark-version-divergence",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "No published GFM authority defines a composite GFM profile based on CommonMark 0.31.2; the package can only keep the two approved targets explicitly distinct."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "No official composite GFM revision exists for the package's separate authority versions."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
       "invariantId": "md.corpus.commonmark-exhaustive",
       "profileIds": ["commonmark-0.31.2"],
       "currentEnforcement": [
@@ -69,11 +80,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.corpus.commonmark-exhaustive"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.corpus.commonmark-exhaustive"
+          "validator": "runCommonMarkConformanceCorpus"
         }
       ],
       "positiveTestIds": [],
@@ -92,11 +99,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.corpus.gfm-exhaustive"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.corpus.gfm-exhaustive"
+          "validator": "runGfmConformanceCorpus"
         }
       ],
       "positiveTestIds": [],
@@ -117,11 +120,15 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.ast.literal-tag-discrimination"
+          "validator": "Inline"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Block"
         },
         {
           "kind": "test",
-          "suite": "test/Md.test.ts",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
           "oracle": "Pinned source rule and package expectation for md.ast.literal-tag-discrimination"
         }
       ],
@@ -132,13 +139,19 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.ast.literal-tag-discrimination"
+          "validator": "Inline"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Block"
         }
       ],
       "positiveTestIds": [
         "test/Md.test.ts#round-trips-schema-derived-Markdown-AST-nodes"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-unknown-Markdown-variant-tags"
+      ],
       "status": "covered"
     },
     {
@@ -155,11 +168,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.heading.level-domain"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.heading.level-domain"
+          "validator": "HeadingLevel"
         },
         {
           "kind": "test",
@@ -174,11 +183,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.heading.level-domain"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.heading.level-domain"
+          "validator": "HeadingLevel"
         }
       ],
       "positiveTestIds": [
@@ -204,11 +209,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.heading.inline-children"
+          "validator": "Heading"
         },
         {
           "kind": "test",
-          "suite": "test/Md.test.ts",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
           "oracle": "Pinned source rule and package expectation for md.heading.inline-children"
         }
       ],
@@ -219,13 +224,15 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.heading.inline-children"
+          "validator": "Heading"
         }
       ],
       "positiveTestIds": [
         "test/Md.test.ts#round-trips-schema-derived-Markdown-AST-nodes"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-block-children-at-the-heading-schema-boundary"
+      ],
       "status": "covered"
     },
     {
@@ -257,11 +264,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.link.nested-links"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -272,11 +275,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.link.nested-links"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [
@@ -297,7 +296,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -308,7 +307,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [],
@@ -327,7 +326,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -338,7 +337,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [
@@ -363,15 +362,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.list.item-content"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.list.item-content"
+          "validator": "ListItemChild"
         },
         {
           "kind": "test",
-          "suite": "test/Md.test.ts",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
           "oracle": "Pinned source rule and package expectation for md.list.item-content"
         }
       ],
@@ -382,17 +377,15 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.list.item-content"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.list.item-content"
+          "validator": "ListItemChild"
         }
       ],
       "positiveTestIds": [
         "test/Md.test.ts#supports-template-interpolation-for-inline-and-block-containers"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-values-outside-the-list-item-content-grammar"
+      ],
       "status": "covered"
     },
     {
@@ -405,15 +398,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.gfm.task-lists"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.gfm.task-lists"
+          "validator": "TaskItem"
         },
         {
           "kind": "test",
-          "suite": "test/Md.test.ts",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
           "oracle": "Pinned source rule and package expectation for md.gfm.task-lists"
         }
       ],
@@ -424,17 +413,15 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.gfm.task-lists"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.gfm.task-lists"
+          "validator": "TaskItem"
         }
       ],
       "positiveTestIds": [
         "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-non-boolean-GFM-task-item-state"
+      ],
       "status": "covered"
     },
     {
@@ -447,15 +434,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.gfm.strikethrough"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.gfm.strikethrough"
+          "validator": "Del"
         },
         {
           "kind": "test",
-          "suite": "test/Md.test.ts",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
           "oracle": "Pinned source rule and package expectation for md.gfm.strikethrough"
         }
       ],
@@ -466,17 +449,15 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.gfm.strikethrough"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.gfm.strikethrough"
+          "validator": "Del"
         }
       ],
       "positiveTestIds": [
         "test/Md.test.ts#renders-inline-Markdown-and-HTML-variants-with-escaped-text-by-default"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-block-children-inside-GFM-strikethrough"
+      ],
       "status": "covered"
     },
     {
@@ -489,15 +470,11 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.gfm.table-structure"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.gfm.table-structure"
+          "validator": "TableCell"
         },
         {
           "kind": "test",
-          "suite": "test/Md.test.ts",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
           "oracle": "Pinned source rule and package expectation for md.gfm.table-structure"
         }
       ],
@@ -508,17 +485,15 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.gfm.table-structure"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.gfm.table-structure"
+          "validator": "TableCell"
         }
       ],
       "positiveTestIds": [
         "test/Md.test.ts#renders-later-table-rows-when-the-first-row-has-no-cells"
       ],
-      "negativeTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-block-children-inside-GFM-table-cells"
+      ],
       "status": "covered"
     },
     {
@@ -527,7 +502,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -538,7 +513,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [],
@@ -553,7 +528,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -564,7 +539,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [],
@@ -579,7 +554,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -590,7 +565,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [
@@ -607,7 +582,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -618,7 +593,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [],
@@ -633,7 +608,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "documentSafetyIssues, SafeDocument, and refineSafeDocument"
+          "validator": "documentSafetyIssues"
         },
         {
           "kind": "test",
@@ -644,7 +619,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "documentSafetyIssues, SafeDocument, and refineSafeDocument"
+          "validator": "documentSafetyIssues"
         }
       ],
       "positiveTestIds": [
@@ -661,11 +636,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "documentSafetyIssues, SafeDocument, and refineSafeDocument"
-        },
-        {
-          "kind": "runtime",
-          "validator": "makeMarkdownAdapter and makeHtmlFragmentAdapter URL policy boundaries"
+          "validator": "documentSafetyIssues"
         },
         {
           "kind": "test",
@@ -676,11 +647,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "documentSafetyIssues, SafeDocument, and refineSafeDocument"
-        },
-        {
-          "kind": "runtime",
-          "validator": "makeMarkdownAdapter and makeHtmlFragmentAdapter URL policy boundaries"
+          "validator": "documentSafetyIssues"
         }
       ],
       "positiveTestIds": [
@@ -701,7 +668,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -712,7 +679,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [],
@@ -729,7 +696,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -740,7 +707,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [],
@@ -759,7 +726,7 @@
       "currentEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.render.escaping"
+          "validator": "renderMarkdownInline"
         },
         {
           "kind": "test",
@@ -770,7 +737,7 @@
       "targetEnforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.render.escaping"
+          "validator": "renderMarkdownInline"
         }
       ],
       "positiveTestIds": [
@@ -793,15 +760,11 @@
       "targetEnforcement": [
         {
           "kind": "typeLevel",
-          "mechanism": "@beep/md exported schema type for md.soft-break-representation"
+          "mechanism": "A dedicated semantic soft-break member in the Markdown inline union"
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.soft-break-representation"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.soft-break-representation"
+          "validator": "SoftBreak"
         }
       ],
       "positiveTestIds": [],
@@ -841,11 +804,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.extensions.nonstandard-members"
-        },
-        {
-          "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         },
         {
           "kind": "test",
@@ -860,11 +819,7 @@
         },
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.extensions.nonstandard-members"
-        },
-        {
-          "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "markdownConformanceIssues"
         }
       ],
       "positiveTestIds": [

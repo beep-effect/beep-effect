@@ -3,7 +3,8 @@
   "packageName": "@beep/html",
   "profileIds": [
     "html-whatwg-living-2026-08-30",
-    "html-current-vendored-2026-06-15"
+    "html-current-vendored-2026-06-15",
+    "html-safe-output-policy-e6e88af6"
   ],
   "items": [
     {

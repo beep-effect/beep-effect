@@ -6,7 +6,13 @@ import {
   resolveButtonState,
   resolveInputState,
 } from "@beep/html/Html.form-control";
-import { HTML_INPUT_ATTRIBUTE_APPLICABILITY, HtmlTag } from "@beep/html/Html.meta";
+import {
+  HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES,
+  HTML_INPUT_ATTRIBUTE_APPLICABILITY,
+  HtmlConditionalInputAttributeName,
+  HtmlInputStateName,
+  HtmlTag,
+} from "@beep/html/Html.meta";
 import { Button, Input, Select } from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -22,6 +28,19 @@ const InputStateArbitrary = S.toArbitrary(InputState)(fc);
 const ButtonStateArbitrary = S.toArbitrary(ButtonState)(fc);
 
 describe("HTML form-control semantic states", () => {
+  it("keeps both applicability axes inside their generated finite domains", () => {
+    const states = R.keys(HTML_INPUT_ATTRIBUTE_APPLICABILITY);
+    const applicableAttributes = A.flatten(R.values(HTML_INPUT_ATTRIBUTE_APPLICABILITY));
+
+    expect(states).toHaveLength(HtmlInputStateName.Options.length);
+    expect(A.every(HtmlInputStateName.Options, (state) => A.contains(states, state))).toBe(true);
+    expect(A.every(states, S.is(HtmlInputStateName))).toBe(true);
+    expect(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES).toEqual(HtmlConditionalInputAttributeName.Options);
+    expect(A.every(applicableAttributes, S.is(HtmlConditionalInputAttributeName))).toBe(true);
+    expect(S.is(HtmlInputStateName)("unsupported")).toBe(false);
+    expect(S.is(HtmlConditionalInputAttributeName)("nonstandard")).toBe(false);
+  });
+
   it("normalizes every input type while preserving the missing wire state", () => {
     const missing = Input.make({});
     expect(O.isNone(missing.type)).toBe(true);

@@ -4,21 +4,20 @@
  * @since 0.0.0
  */
 
-import { pipe, Result } from "effect";
+import { pipe, Result, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaParser from "effect/SchemaParser";
 import { collectAnnotationsAt } from "../SchemaUtils/collectAnnotationsAt.ts";
 import { Annotation } from "./Conformance.annotations.ts";
 
 const CollectedConformanceAnnotations = Annotation.pipe(S.toType, S.Array);
-const decodeCollectedConformanceAnnotations = S.decodeUnknownResult(CollectedConformanceAnnotations);
+const decodeCollectedConformanceAnnotations = SchemaParser.decodeUnknownResult(CollectedConformanceAnnotations);
 
 const annotationTraversalError = (): S.SchemaError =>
   new S.SchemaError(
     new SchemaIssue.InvalidValue({ message: "Schema annotation traversal failed while evaluating a Suspend thunk" })
   );
 
-/* istanbul ignore next -- compatibility callers receive schema issues as throws */
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
@@ -50,7 +49,8 @@ export const collectConformanceAnnotationsResult = (
       try: () => collectAnnotationsAt(schema, "conformance"),
       catch: annotationTraversalError,
     }),
-    Result.flatMap(decodeCollectedConformanceAnnotations)
+    Result.flatMap(decodeCollectedConformanceAnnotations),
+    Result.mapError(schemaIssueToError)
   );
 
 /**

@@ -147,6 +147,14 @@ const strictNodeChildren: (node: LexicalNode.Type) => boolean = Match.type<Lexic
   })
 );
 
+/**
+ * Checks the strict recursive child grammar for a decoded Lexical node.
+ *
+ * @invariant Shadow-root quotes admit block children; legacy quotes admit inline children.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
 export function hasStrictNodeChildren(node: LexicalNode.Type): boolean {
   return strictNodeChildren(node);
 }
