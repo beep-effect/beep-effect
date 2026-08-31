@@ -7,8 +7,8 @@
 
 import * as B from "@beep/box";
 import { $BoxProvisioningId } from "@beep/identity";
-import { HttpsUrl, LiteralKit } from "@beep/schema";
-import { Context, Effect, Layer, MutableHashSet, pipe } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Context, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -17,85 +17,32 @@ import {
   BoxDiscoveryAvailable,
   BoxDiscoveryBlocked,
   BoxDiscoveryPermissionBlocked,
-  BoxObservedCollaboration,
-  BoxObservedFolder,
   BoxObservedState,
-  BoxObservedWebhook,
   BoxProviderId,
 } from "./BoxProvisioningObserved.ts";
+import {
+  collectMarkerPages,
+  listFolderCollaborations,
+  listFolderItems,
+  listObservedWebhooks,
+  markerQuery,
+  toObservedCollaboration,
+  toObservedFolderFromMini,
+} from "./internal/live.ts";
 import type { BoxDesiredState, BoxEntitlementAvailability } from "./BoxProvisioningIntent.ts";
-import type { BoxDiscovery, BoxDiscoveryKind } from "./BoxProvisioningObserved.ts";
+import type { BoxDiscovery, BoxDiscoveryKind, BoxObservedFolder } from "./BoxProvisioningObserved.ts";
+import type { MarkerPage } from "./internal/live.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningInventory");
-const markerPageLimit = 1000;
-
-type MarkerPage<A> = {
-  readonly entries?: ReadonlyArray<A>;
-  readonly nextMarker?: string | null;
-};
-
-const collectMarkerPages = Effect.fn("BoxProvisioningInventory.collectMarkerPages")(function* <A, E>(
-  load: (marker: O.Option<string>) => Effect.Effect<MarkerPage<A>, E>
-): Effect.fn.Return<ReadonlyArray<A>, E> {
-  let marker = O.none<string>();
-  let entries = A.empty<A>();
-  const seen = MutableHashSet.empty<string>();
-
-  while (true) {
-    const page = yield* load(marker);
-    entries = A.appendAll(entries, O.getOrElse(O.fromNullishOr(page.entries), A.empty<A>));
-    const next = O.fromNullishOr(page.nextMarker);
-    if (O.isNone(next) || MutableHashSet.has(seen, next.value)) {
-      return entries;
-    }
-    MutableHashSet.add(seen, next.value);
-    marker = next;
-  }
-});
-
-const markerQuery = (marker: O.Option<string>) =>
-  O.match(marker, {
-    onNone: () => ({ limit: markerPageLimit }),
-    onSome: (value) => ({ limit: markerPageLimit, marker: value }),
-  });
-
-const markerFolderQuery = (marker: O.Option<string>) => ({ ...markerQuery(marker), usemarker: true });
-
-const listFolderItems = (box: B.Box["Service"], folderId: string) =>
-  collectMarkerPages<B.Item, B.BoxError>((marker) =>
-    box.folders.getFolderItems(
-      B.FoldersGetFolderItemsPayload.make({
-        folderId,
-        optionalsInput: { queryParams: markerFolderQuery(marker) },
-      })
-    )
-  );
-
-const toObservedFolder = (
-  item: B.FolderMini,
-  parentProviderId: BoxProviderId
-): Effect.Effect<BoxObservedFolder, BoxProvisioningInvariantError> =>
-  O.match(O.fromNullishOr(item.name), {
-    onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "unreadable-sdk-response" })),
-    onSome: (name) =>
-      Effect.succeed(
-        BoxObservedFolder.make({
-          providerId: BoxProviderId.make(item.id),
-          parentProviderId: O.some(parentProviderId),
-          name,
-          etag: O.fromNullishOr(item.etag),
-        })
-      ),
-  });
 
 const scanFolderTree = Effect.fn("BoxProvisioningInventory.scanFolderTree")(function* (
   box: B.Box["Service"],
   parentProviderId: BoxProviderId
 ): Effect.fn.Return<ReadonlyArray<BoxObservedFolder>, B.BoxError | BoxProvisioningInvariantError> {
-  const items = yield* listFolderItems(box, parentProviderId);
+  const items = yield* listFolderItems({ box, folderId: parentProviderId });
   const children = yield* Effect.forEach(
     A.filter(items, S.is(B.FolderMini)),
-    (item) => toObservedFolder(item, parentProviderId),
+    (item) => toObservedFolderFromMini({ item, parentProviderId }),
     { concurrency: 1 }
   );
   const descendants = yield* Effect.forEach(children, (child) => scanFolderTree(box, child.providerId), {
@@ -104,118 +51,19 @@ const scanFolderTree = Effect.fn("BoxProvisioningInventory.scanFolderTree")(func
   return A.appendAll(children, A.flatten(descendants));
 });
 
-const listFolderCollaborations = (box: B.Box["Service"], folderId: BoxProviderId) =>
-  collectMarkerPages<B.Collaboration, B.BoxError>((marker) =>
-    box.listCollaborations.getFolderCollaborations(
-      B.ListCollaborationsGetFolderCollaborationsPayload.make({
-        folderId,
-        optionalsInput: { queryParams: markerQuery(marker) },
-      })
-    )
-  );
-
-type CollaborationPrincipal = {
-  readonly principal: string;
-  readonly principalProviderId: O.Option<BoxProviderId>;
-  readonly principalType: "user" | "group";
-};
-
-const makeCollaborationPrincipal =
-  (principalType: CollaborationPrincipal["principalType"], principalProviderId: O.Option<BoxProviderId>) =>
-  (principal: string): CollaborationPrincipal => ({ principal, principalProviderId, principalType });
-
-const collaborationPrincipal = (collaboration: B.Collaboration): O.Option<CollaborationPrincipal> => {
-  const pendingInvite = pipe(
-    O.fromNullishOr(collaboration.inviteEmail),
-    O.map(makeCollaborationPrincipal("user", O.none()))
-  );
-  return pipe(
-    O.fromNullishOr(collaboration.accessibleBy),
-    O.flatMap((accessibleBy): O.Option<CollaborationPrincipal> => {
-      const principalProviderId = pipe(O.fromNullishOr(accessibleBy.id), O.map(BoxProviderId.make));
-      if (S.is(B.UserCollaborations)(accessibleBy)) {
-        return pipe(
-          O.fromNullishOr(accessibleBy.login),
-          O.orElse(() => O.fromNullishOr(accessibleBy.id)),
-          O.map(makeCollaborationPrincipal("user", principalProviderId))
-        );
-      }
-      return pipe(O.fromNullishOr(accessibleBy.id), O.map(makeCollaborationPrincipal("group", principalProviderId)));
-    }),
-    O.orElse(() => pendingInvite)
-  );
-};
-
-const toObservedCollaboration = (
-  folderProviderId: BoxProviderId,
-  collaboration: B.Collaboration
-): Effect.Effect<BoxObservedCollaboration, BoxProvisioningInvariantError> =>
-  O.match(O.all({ principal: collaborationPrincipal(collaboration), role: O.fromNullishOr(collaboration.role) }), {
-    onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "unreadable-sdk-response" })),
-    onSome: ({ principal, role }) =>
-      Effect.succeed(
-        BoxObservedCollaboration.make({
-          providerId: BoxProviderId.make(collaboration.id),
-          folderProviderId,
-          principalType: principal.principalType,
-          principal: principal.principal,
-          principalProviderId: principal.principalProviderId,
-          role,
-        })
-      ),
-  });
-
 const observeCollaborations = (box: B.Box["Service"], folders: ReadonlyArray<BoxObservedFolder>) =>
   Effect.forEach(
     folders,
     (folder) =>
-      listFolderCollaborations(box, folder.providerId).pipe(
+      listFolderCollaborations({ box, folderId: folder.providerId }).pipe(
         Effect.flatMap((collaborations) =>
-          Effect.forEach(collaborations, (collaboration) => toObservedCollaboration(folder.providerId, collaboration))
+          Effect.forEach(collaborations, (collaboration) =>
+            toObservedCollaboration({ collaboration, folderProviderId: folder.providerId })
+          )
         )
       ),
     { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
-
-const RawWebhook = S.Struct({
-  id: S.NonEmptyString,
-  target: S.Struct({ id: S.NonEmptyString }),
-  address: HttpsUrl,
-  triggers: S.Array(S.NonEmptyString),
-});
-
-const toObservedWebhook = (webhook: unknown): Effect.Effect<BoxObservedWebhook, BoxProvisioningInvariantError> =>
-  S.decodeUnknownEffect(RawWebhook)(webhook).pipe(
-    Effect.map((decoded) =>
-      BoxObservedWebhook.make({
-        providerId: BoxProviderId.make(decoded.id),
-        targetProviderId: BoxProviderId.make(decoded.target.id),
-        address: decoded.address,
-        triggers: decoded.triggers,
-      })
-    ),
-    Effect.mapError(() => BoxProvisioningInvariantError.make({ code: "unreadable-sdk-response" }))
-  );
-
-const observeWebhooks = (box: B.Box["Service"]) =>
-  collectMarkerPages<B.WebhookMini, B.BoxError>((marker) =>
-    box.webhooks.getWebhooks(B.WebhooksGetWebhooksPayload.make({ queryParams: markerQuery(marker) }))
-  ).pipe(
-    Effect.flatMap((webhooks) =>
-      Effect.forEach(
-        webhooks,
-        (webhook) =>
-          O.match(O.fromNullishOr(webhook.id), {
-            onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "unreadable-sdk-response" })),
-            onSome: (webhookId) =>
-              box.webhooks
-                .getWebhookById(B.WebhooksGetWebhookByIdPayload.make({ webhookId }))
-                .pipe(Effect.flatMap(toObservedWebhook)),
-          }),
-        { concurrency: 1 }
-      )
-    )
-  );
 
 const PermissionErrorCode = LiteralKit(["access_denied_insufficient_permissions", "insufficient_scope"]);
 
@@ -363,7 +211,7 @@ const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
     const [collaborations, webhooks, metadata, retention, signRequests, signTemplates] = yield* Effect.all(
       [
         observeCollaborations(box, folders),
-        observeWebhooks(box),
+        listObservedWebhooks(box),
         observeMetadata(box, rootFolderId, desired.entitlements.metadata),
         observeRetention(box, desired.entitlements.retention),
         observeSignRequests(box),
