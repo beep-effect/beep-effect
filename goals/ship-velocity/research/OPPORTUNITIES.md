@@ -974,3 +974,15 @@ worktree provisioner should install the complete workspace instead of linking on
 - What would have prevented it: include the coordination protocol in both journal event variants
   and copy the verdict or scheduler peak into every terminal release row, then expose a bounded
   closeout query that joins the records by nonce.
+
+## 2026-08-30 — A queued Yeet verify disappeared without a terminal attempt receipt
+
+- What was happening: the final closeout `beep yeet verify` waited behind a live same-origin
+  legacy proof and reached position one, but its client process exited before admission after more
+  than 22 minutes in the queue.
+- Evidence: scheduler status showed the holder still heartbeating in an active run scope, with no
+  dead or quarantined state. The closeout ticket then disappeared, no new verdict was written, and
+  `attempts.ndjson` retained an `attempt-started` row without a matching `attempt-finished` row.
+- What would have prevented it: make queued attempts reconnectable, or ensure every client exit
+  writes a terminal cancellation receipt before its ticket is removed. A durable reason should
+  distinguish operator interruption, signal exit, lost observer, and scheduler rejection.
