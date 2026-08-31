@@ -526,3 +526,17 @@ evidence, what would have prevented it). Redact for the public repo.
   reattachable across agent continuations, or persist a Yeet resume command
   that can prove whether admission and each later publish phase began before
   safely resuming from the first incomplete phase.
+
+## 2026-08-30 — admission wait ended at a second repository lock
+
+- **Doing:** resuming only the missing merge-preview parity phase after an
+  interrupted publish had already passed cheap-gates and pre-push.
+- **Evidence:** `bun run beep yeet verify --ci-parity` remained in scheduler
+  position three for 1,729 seconds, then exited before parity with `Another Yeet
+  full proof for this repository is active.` The machine admission ticket and
+  repository origin lock were both healthy, but they serialized independently,
+  turning one wait into a terminal second-lock refusal.
+- **Would have prevented it:** make origin-lock availability part of scheduler
+  admission eligibility, or keep the admitted command waiting on its live
+  origin owner while preserving queue position instead of failing after the
+  machine-budget wait has completed.
