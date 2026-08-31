@@ -91,52 +91,6 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
 });
 
 /**
- * Read a specific pull request through `gh pr view`.
- *
- * **Example** (Inspect a prior PR state)
- *
- * ```ts
- * import { Effect } from "effect"
- * import { RepoRunContext, runGhPullRequestViewForNumber } from "@beep/repo-cli/test/Yeet"
- *
- * declare const context: RepoRunContext
- * const state = runGhPullRequestViewForNumber(context, 874).pipe(Effect.map((view) => view.state))
- * console.log(Effect.isEffect(state)) // true
- * ```
- *
- * @param context - Repository context used as the GitHub CLI working directory.
- * @param prNumber - Pull request number to inspect independently of the current branch.
- * @returns Decoded pull request metadata.
- * @category clients
- * @since 0.0.0
- */
-export const runGhPullRequestViewForNumber = Effect.fn("Yeet.runGhPullRequestViewForNumber")(function* (
-  context: RepoRunContext,
-  prNumber: number
-): Effect.fn.Return<GhPrView, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const command = `gh pr view ${prNumber} --json number,headRefName,state`;
-  const output = yield* ghOutput({
-    args: ["pr", "view", String(prNumber), "--json", "number,headRefName,state"],
-    cwd: context.repoRoot,
-    label: command,
-    onFailure: (failure) => {
-      if (failure._tag === "spawn") return YeetCommandError.new(`Failed to inspect PR #${prNumber}.`)(failure.cause);
-      return YeetCommandError.make({
-        message:
-          failure._tag === "truncated"
-            ? `gh pr view output for PR #${prNumber} exceeded the repo-run capture limit.`
-            : `Failed to inspect prior PR #${prNumber} before replacing its ownership lease.`,
-        command,
-        exitCode: failure._tag === "nonzero-exit" ? failure.exitCode : 1,
-      });
-    },
-  });
-  return yield* decodeGhPullRequestView(output).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to decode gh pr view JSON for PR #${prNumber}.`))
-  );
-});
-
-/**
  * Return the open pull request for the current branch when one exists.
  *
  * **Example** (Check open PR option tag)

@@ -27,6 +27,7 @@ import {
   emptyTurboPlanSnapshot,
   executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
+  findOpenPullRequest,
   GhActor,
   GhRestIssueComment,
   GhRestReviewComment,
@@ -66,6 +67,7 @@ import {
   repoProofStepDefinition,
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
+  runGhPullRequestView,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
   shouldSkipCommitForReusablePublishForTesting,
@@ -78,6 +80,7 @@ import {
   tryReclaimStaleProofLockForTesting,
   tryRecoverObservedProofLockReapClaimForTesting,
   validateMonitorGuards,
+  validateOpenPullRequest,
   validateProofCoordinatorDirectoryForTesting,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
@@ -190,6 +193,26 @@ const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out
     else Bun.env[name] = previous;
   }
 };
+
+const withEnvVarEffect = <Out, Error, Requirements>(
+  name: string,
+  value: string | undefined,
+  use: Effect.Effect<Out, Error, Requirements>
+): Effect.Effect<Out, Error, Requirements> =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = Bun.env[name];
+      if (value === undefined) delete Bun.env[name];
+      else Bun.env[name] = value;
+      return previous;
+    }),
+    () => use,
+    (previous) =>
+      Effect.sync(() => {
+        if (previous === undefined) delete Bun.env[name];
+        else Bun.env[name] = previous;
+      })
+  );
 
 type TempTrackedFileRepo = {
   readonly filePath: string;
@@ -422,6 +445,42 @@ const findStep = (steps: ReadonlyArray<RepoPlanStep>, label: string): RepoPlanSt
     A.findFirst((step) => step.label === label),
     O.getOrThrow
   );
+
+describe("yeet pull request lifecycle", () => {
+  it("reads, finds, and validates the current branch pull request", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const binDir = path.join(tmpDir, "bin");
+          const ghPath = path.join(binDir, "gh");
+          yield* fs.makeDirectory(binDir);
+          yield* fs.writeFileString(
+            ghPath,
+            `#!/bin/sh
+printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
+`
+          );
+          yield* fs.chmod(ghPath, 0o755);
+
+          yield* withEnvVarEffect(
+            "PATH",
+            `${binDir}:${Bun.env.PATH ?? ""}`,
+            Effect.gen(function* () {
+              const current = yield* runGhPullRequestView(tempContext);
+              const found = yield* findOpenPullRequest(tempContext);
+              yield* validateOpenPullRequest(tempContext);
+
+              expect(current.number).toBe(874);
+              expect(current.headRefName).toBe(tempContext.branch);
+              expect(O.map(found, (view) => view.number)).toEqual(O.some(874));
+            })
+          );
+        })
+      )
+    ));
+});
 
 describe("yeet planner", () => {
   it("keeps yeet command error optional context at the command boundary", () => {
