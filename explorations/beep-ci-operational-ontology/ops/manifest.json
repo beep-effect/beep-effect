@@ -6,9 +6,12 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Auditor run 2 (first_run: false, prior index orun-2026-08-29T08:20:55Z.index.yaml): journal/verdict corpus extension + adapter v1.1.0 over 163 parked candidates, 76 parked ledger rows, 4 waived constraints, the VerificationLane placement obligation, and the six S6-surfaced vocabulary/telemetry gaps (hasGrantState, capacityAtAdmissionTokens/activeTokens carriers, admittedBy source direction, work-kind/priority predicates, CQ coverage 1/25). Then S7 projection. S5 and S6 are COMPLETE and ratified \u2014 do not redo them."
+      "Auditor run 2 (first_run: false, prior index orun-2026-08-29T08:20:55Z.index.yaml): review the updated ontology-foundational-auditor skill on main first, then run over the extended corpus — 163 parked candidates, 76 parked ledger rows, 4 waived constraints, the VerificationLane placement obligation, the six S6-surfaced vocabulary/telemetry gaps, PLUS the S7 additions: the five provisional ciops-prov: ordering predicates + class ScheduleStep (ruling 2, sitting 1 of S7) and the replay censorship finding 'lease death is unjournaled' (phantom grant evidence in research/s7-replay-evidence.md). S5/S6/S7 are COMPLETE — do not redo them.",
+      "S8 IRI scheme: deferred per the standing pipeline; ciops-prov: namespace re-proposal rides auditor run 2."
     ],
-    "sources": ["research/SOURCES.md"],
+    "sources": [
+      "research/SOURCES.md"
+    ],
     "links": {
       "goals": [],
       "docs": [],
