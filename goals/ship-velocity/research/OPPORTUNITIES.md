@@ -986,3 +986,21 @@ worktree provisioner should install the complete workspace instead of linking on
 - What would have prevented it: make queued attempts reconnectable, or ensure every client exit
   writes a terminal cancellation receipt before its ticket is removed. A durable reason should
   distinguish operator interruption, signal exit, lost observer, and scheduler rejection.
+## 2026-08-30 — The root test wrapper treated focused file paths as Turbo task names
+
+- **Doing:** validating the Yeet merge resolution against four focused repo-cli test files.
+- **Evidence:** `bun run test packages/tooling/tool/cli/test/yeet.test.ts ...` forwarded each file
+  path after `turbo run test`; Turbo rejected them as missing tasks before Vitest ran.
+- **Would have prevented it:** route file arguments to the owning package's Vitest command, or
+  reject unsupported positional paths before constructing the Turbo invocation.
+
+## 2026-08-30 — A detached pre-commit observer stranded Lefthook after its child exited
+
+- **Doing:** committing the packet reconciliation after the focused merge tests and goal checks
+  passed.
+- **Evidence:** the command observer ended after gitleaks passed and Lefthook announced `typos`.
+  Git, the pre-commit shell, and Lefthook then remained asleep for nearly six minutes with no
+  `typos` child. After terminating only that orphaned process tree, the exact `typos` command
+  completed in 0.25 seconds at exit 0.
+- **Would have prevented it:** preserve and return the live command handle whenever capture
+  yields, and make Lefthook finalize a parallel command when its child has already exited.

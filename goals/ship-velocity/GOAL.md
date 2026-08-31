@@ -7,11 +7,12 @@ next unfinished item. Evidence and design rationale live in `goals/ship-velocity
 Five workstreams:
 
 - **A Backpressure**: `yeet monitor --watch` accumulates failure capsules and dispatches
-  remediation immediately (no exit-on-first-red, no wait-for-suite-end); hook-mutex ACK inbox in
-  `<checkout>/.beep/inbox/` (PreToolUse denies on unacked P0, SessionStart/UserPromptSubmit
-  splice+consume); Stop-hook + yeet poison-pill so sessions cannot wander off a red; PR leases
-  with dead-owner takeover; package-scoped `audit` gates run by every sub-agent immediately
-  after touching a package (and emitted by create-package).
+  remediation immediately (no exit-on-first-red, no wait-for-suite-end); the ACK inbox in
+  `<checkout>/.beep/inbox/` injects P0 context at active tool boundaries and blocks Stop while a
+  P0 is unacknowledged; package-scoped `audit` gates run by every sub-agent immediately after
+  touching a package (and emitted by create-package). Operator PR #921 retired the published-PR
+  ownership lease, watcher, takeover, and mutation fence before closeout, so no dead harness can
+  strand the checkout behind that lease and no automatic takeover is claimed.
 - **B Parity**: local green ⇒ 17/17 required remote green. Yeet lanes call `beep ci lane <id>`
   (same argv as CI); coverage runs locally with the baseline pinned from origin/main; missing
   cheap lanes (codegen, commitlint-range, desktop-ipc, base-pinned gitleaks) join default
@@ -40,6 +41,7 @@ closeout bundles all remaining items into one Yeet-published PR.
 Closeout status (2026-08-30): the operator accepted the concentrated 24-hour production sample
 instead of the original seven-day duration proxy. Continue from
 `research/metrics-closeout.md`; do not reopen satisfied evidence families. The terminal
-same-origin dual proof is green. The remaining gates are an authenticated cross-checkout
-remote-cache read sample after `op signin` (the reference set already exists) and Yeet
-`merge-ready: yes` for the final closeout PR. Keep lifecycle active until both are true.
+same-origin dual proof is green. PR #921 is the recorded operator supersession of A4, not an A4
+success receipt. The remaining gates are an authenticated cross-checkout remote-cache read sample
+after `op signin` (the reference set already exists) and Yeet `merge-ready: yes` for the final
+closeout PR. Keep lifecycle active until both are true.

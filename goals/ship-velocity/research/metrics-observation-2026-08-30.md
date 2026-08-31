@@ -193,6 +193,14 @@ or dead-owner incident occurred, so there is no fabricated production takeover l
 configured bound plus the executable takeover tests are the acceptance evidence for the absent
 incident class.
 
+This paragraph records the architecture that existed during the sample. Operator PR #921 merged
+at `2026-08-31T00:53:53Z` as `5a4fc2707a792c510f98b6c14b8cae1851e3118b` and intentionally
+removed the published-PR lease, user watcher, automatic takeover, and mutation fence. It retained
+P0 inbox delivery and the hard Stop/SubagentStop gate. Closeout therefore treats A4 as superseded,
+not satisfied: the historical 270-second bound remains evidence of the retired implementation,
+current main has no ownership lease that can strand a dead harness, and no automatic takeover
+latency is claimed.
+
 ### Cache provisioning refresh
 
 A post-repair activity scan found 11 checkout roots. All 11 now carry a git-ignored, reference-only
