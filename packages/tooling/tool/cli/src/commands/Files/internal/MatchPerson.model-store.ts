@@ -717,31 +717,30 @@ export const prepareAdaFaceArtifacts = Effect.fn("Files.PersonMatchModelStore.pr
 
   return yield* Effect.acquireUseRelease(
     acquireModelStoreLock(canonicalRoot),
-    () =>
-      Effect.gen(function* () {
-        const artifactsRoot = yield* ensureCanonicalDirectory(
-          path.join(canonicalRoot, artifactDirectoryName),
-          "AdaFace pinned artifact directory"
-        );
-        yield* Effect.forEach(
-          pinnedArtifacts,
-          (artifact) =>
-            ensureCanonicalDirectory(
-              path.join(artifactsRoot, artifact.component),
-              `AdaFace ${artifact.component} artifact directory`
-            ).pipe(
-              Effect.flatMap((directory) =>
-                ensureArtifact(artifact, path.join(directory, artifactFileName), canonicalRoot)
-              )
-            ),
-          { concurrency: 1, discard: true }
-        );
-        yield* validateExactArtifactAllowlist(artifactsRoot);
-        return PreparedAdaFaceArtifacts.make({
-          alignerPath: artifactPath(path, canonicalRoot, alignerArtifact),
-          recognizerPath: artifactPath(path, canonicalRoot, recognizerArtifact),
-        });
-      }),
+    Effect.fnUntraced(function* () {
+      const artifactsRoot = yield* ensureCanonicalDirectory(
+        path.join(canonicalRoot, artifactDirectoryName),
+        "AdaFace pinned artifact directory"
+      );
+      yield* Effect.forEach(
+        pinnedArtifacts,
+        (artifact) =>
+          ensureCanonicalDirectory(
+            path.join(artifactsRoot, artifact.component),
+            `AdaFace ${artifact.component} artifact directory`
+          ).pipe(
+            Effect.flatMap((directory) =>
+              ensureArtifact(artifact, path.join(directory, artifactFileName), canonicalRoot)
+            )
+          ),
+        { concurrency: 1, discard: true }
+      );
+      yield* validateExactArtifactAllowlist(artifactsRoot);
+      return PreparedAdaFaceArtifacts.make({
+        alignerPath: artifactPath(path, canonicalRoot, alignerArtifact),
+        recognizerPath: artifactPath(path, canonicalRoot, recognizerArtifact),
+      });
+    }),
     releaseModelStoreLock
   ).pipe(
     Effect.withSpan("Files.PersonMatchModelStore.prepareAdaFaceArtifacts", {
