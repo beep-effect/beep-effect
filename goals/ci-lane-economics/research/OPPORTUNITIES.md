@@ -438,3 +438,118 @@ evidence, what would have prevented it). Redact for the public repo.
   infrastructure repair's first live profile—one repo-utils worker plus an
   eighth mixed queue preserves the aggregate cap while targeting the actual
   tail.
+
+## 2026-08-30 — the timing collector still cannot express the P3 live week
+
+- **Doing:** collecting the representative post-merge week of required PR and
+  push jobs for the P3 p95 proof after required fleet lanes moved into the
+  reusable `Heavy` workflow.
+- **Evidence:** `bun run beep ci lane-timings --help` still accepts only
+  `--runs 1-100`. `LaneTimings.ts` reads the latest unfiltered repository-wide
+  Actions runs from `actions/runs?per_page=<limit>` and emits rows without the
+  workflow, event, head SHA, or run timestamps needed to select and audit an
+  exact seven-day population. The live ruleset now spans both ordinary Check
+  contexts and six `Heavy / ...` contexts, so the latest 100 repository-wide
+  workflows are neither a stable week boundary nor a complete lane census.
+- **Would have prevented it:** add workflow, event, since/until, and head-SHA
+  filters; retain run provenance on every row; paginate beyond 100 runs; and
+  emit successful attempt-one percentiles separately from attributed failures,
+  cancellations, and reruns.
+
+## 2026-08-30 — installed gh rejects paginated slurp with inline jq
+
+- **Doing:** counting Check and Heavy workflow runs inside the bounded P3 week
+  without writing raw Actions payloads to disk.
+- **Evidence:** both `gh api --paginate --slurp ... --jq ...` calls stopped at
+  argument validation with ``the `--slurp` option is not supported with `--jq`
+  or `--template` `` before making the API request.
+- **Would have prevented it:** document the installed CLI's composition rule in
+  the evidence recipe, or make `gh api` support applying its jq expression to
+  the slurped page array; the compatible fallback is `--slurp | jq`.
+
+## 2026-08-30 — nested command interpolation stopped the census before launch
+
+- **Doing:** launching the bounded 476-run job join through the JavaScript tool
+  wrapper while retaining shell variables inside an `xargs` worker.
+- **Evidence:** the wrapper evaluated the nested shell expression first and
+  stopped with `ReferenceError: run_id is not defined`; no API request or
+  census row ran.
+- **Would have prevented it:** escape nested shell interpolation in JavaScript
+  template strings, or pass long collection commands through an argument form
+  that does not give two languages ownership of the same `${...}` syntax.
+
+## 2026-08-30 — parallel job fetches corrupted the NDJSON aggregation stream
+
+- **Doing:** repeating the 476-run join with compact failure/rerun output after
+  the first result exceeded the tool transcript limit.
+- **Evidence:** twelve concurrent `gh api | jq -c` workers wrote to one pipe;
+  their buffered output interleaved and the final reducer stopped at `jq:
+  parse error: Invalid numeric literal`. The API fetches themselves continued
+  until the broken downstream pipe closed.
+- **Would have prevented it:** give each worker an isolated result channel and
+  perform an ordered merge, or make the repository collector own paginated,
+  bounded-concurrency joins instead of composing raw concurrent stdout.
+
+## 2026-08-30 — the P2-to-P3 manifest transition drifted the goals index again
+
+- **Doing:** running the collected cheap gates after moving the packet's P2
+  phase to complete and P3 to in progress.
+- **Evidence:** `cheap-gates:goals-index` failed with `local goals/INDEX.md
+  drifts from goals/*/ops/manifest.json` and named `bun run beep goals index
+  --write` as the repair. The remaining cheap preflight gates continued.
+- **Would have prevented it:** make the phase-transition writer regenerate the
+  local goals projection atomically, or make the gate repair this deterministic
+  ignored projection before comparison.
+
+## 2026-08-30 — overlapping test-tsgo lanes shared one checkout temp path
+
+- **Doing:** running the required affected CI check beside the collected cheap
+  gates; both independently entered the repository-wide `test-tsgo` census.
+- **Evidence:** the cheap-gates process failed with `Failed to write
+  node_modules/.tmp/tsgo-test-checks/packages-tooling-library-codegen-kit.tsconfig.json`
+  while the affected CI-lane process completed all 953 files plus the tsgo
+  smoke check successfully.
+- **Would have prevented it:** namespace `test-tsgo` temporary directories by
+  invocation, or serialize this census within one checkout even when the outer
+  commands do not use heavyweight admission.
+
+## 2026-08-30 — queued publish had no durable resume handle
+
+- **Doing:** waiting for the single publish-time full proof to receive machine
+  admission after the evidence commit was created.
+- **Evidence:** the live publish reported scheduler position three, then its
+  observation handle returned `Unknown process id`. Current process and
+  scheduler state contained neither the publish process nor its ticket, while
+  the remote branch and PR were still absent. The retained Yeet verdict covered
+  only the earlier cheap-gates run, so no admitted full proof had started.
+- **Would have prevented it:** make queued publish sessions durable and
+  reattachable across agent continuations, or persist a Yeet resume command
+  that can prove whether admission and each later publish phase began before
+  safely resuming from the first incomplete phase.
+
+## 2026-08-30 — admission wait ended at a second repository lock
+
+- **Doing:** resuming only the missing merge-preview parity phase after an
+  interrupted publish had already passed cheap-gates and pre-push.
+- **Evidence:** `bun run beep yeet verify --ci-parity` remained in scheduler
+  position three for 1,729 seconds, then exited before parity with `Another Yeet
+  full proof for this repository is active.` The machine admission ticket and
+  repository origin lock were both healthy, but they serialized independently,
+  turning one wait into a terminal second-lock refusal.
+- **Would have prevented it:** make origin-lock availability part of scheduler
+  admission eligibility, or keep the admitted command waiting on its live
+  origin owner while preserving queue position instead of failing after the
+  machine-budget wait has completed.
+
+## 2026-08-30 — publish monitor treated pending checks as a failed lane
+
+- **Doing:** completing the one admitted `yeet publish --pr --monitor` cycle
+  after the exact head had been pushed and PR #930 had opened.
+- **Evidence:** the full pre-push and CI-parity lanes passed, but
+  `monitor:02-pr-checks-watch` exited after 964 ms while the status summary
+  reported 17 required checks, zero failing, and ten pending. The verdict still
+  labeled the monitor lane failed and proposed rerunning the Nix lane even
+  though Nix was pending rather than failed.
+- **Would have prevented it:** keep the monitor attached while required checks
+  are pending, and derive repair commands only from terminal failing required
+  contexts rather than from a generic nonzero pending-check exit.
