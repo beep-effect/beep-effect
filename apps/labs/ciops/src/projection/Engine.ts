@@ -21,8 +21,8 @@ const inputFailure = (message: string) => PolicyDecodeError.make({ message });
  * **Example** (Read a review-fix charge)
  *
  * ```ts
- * import { admissionWeightFor } from "@beep/ciops/projection/Engine"
- * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@beep/ciops/projection/Schemas"
+ * import { admissionWeightFor } from "@beep/ciops/src/projection/Engine"
+ * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@beep/ciops/src/projection/Schemas"
  * import { PosInt } from "@beep/schema"
  *
  * const policy = AdmissionPolicyParams.make({
@@ -171,13 +171,13 @@ const admitInto =
  * **Example** (Project an empty queue)
  *
  * ```ts
- * import { projectSchedule } from "@beep/ciops/projection/Engine"
+ * import { projectSchedule } from "@beep/ciops/src/projection/Engine"
  * import {
  *   AdmissionPolicyParams,
  *   AdmissionTokenWeights,
  *   ProjectionInput,
  *   emptyTokenLedger
- * } from "@beep/ciops/projection/Schemas"
+ * } from "@beep/ciops/src/projection/Schemas"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import { Effect } from "effect"
  *

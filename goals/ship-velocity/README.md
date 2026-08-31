@@ -50,6 +50,7 @@ remains active because the existing 1Password reference resolves but the cache c
 credentials. Control-plane timestamp drift makes mirror drift the leading hypothesis, but does not
 prove a secret mismatch or its cause. The operator must repair authentication before the
 cross-checkout remote-read sample can run. PR #929 reached Yeet `merge-ready: yes` and merged on
-2026-08-31 as the implementation-repair PR. PR #937 remains the final evidence PR and must reach
-Yeet `merge-ready: yes`; see
+2026-08-31 as the implementation-repair PR. PR #937 later merged as an observation-state follow-up
+without the cache evidence, status flip, or reflection. A successor final-evidence PR now owns
+those artifacts and must reach Yeet `merge-ready: yes`; see
 [research/metrics-closeout.md](research/metrics-closeout.md).

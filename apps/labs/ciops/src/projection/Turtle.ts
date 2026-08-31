@@ -27,45 +27,66 @@ const turtleLiteral = (value: string): string =>
     Str.replaceAll(/\n/g, "\\n")
   )}"`;
 
-const requestTriples = (request: PendingRequest, index: number): ReadonlyArray<string> => {
-  const subject = `ciops-prov:request-${index}`;
-  return [
-    `${subject} ciops:admissionChargeTokens "${request.weightTokens}"^^xsd:integer .`,
-    `${subject} ciops:hasOriginKey ${turtleLiteral(request.originKey)} .`,
-    `${subject} rdf:type ciops:SeatRequest .`,
-    `${subject} rdf:type ciops:WorkUnitSpecification .`,
-  ];
-};
+// Injective PN_LOCAL encoding: alphanumerics stay verbatim and every other
+// UTF-8 byte becomes a %HH PLX escape, so distinct proposal ids can never
+// mint the same node and the structural "-step-"/"-request-" suffixes below
+// cannot be forged by id content.
+const pnLocalSlug = (value: string): string =>
+  A.join(
+    A.map(A.fromIterable(new TextEncoder().encode(value)), (byte) =>
+      /[A-Za-z0-9]/.test(String.fromCharCode(byte))
+        ? String.fromCharCode(byte)
+        : `%${byte.toString(16).toUpperCase().padStart(2, "0")}`
+    ),
+    ""
+  );
+
+const requestTriples =
+  (proposalNode: string) =>
+  (request: PendingRequest, index: number): ReadonlyArray<string> => {
+    const subject = `${proposalNode}-request-${index}`;
+    return [
+      `${subject} ciops:admissionChargeTokens "${request.weightTokens}"^^xsd:integer .`,
+      `${subject} ciops:hasOriginKey ${turtleLiteral(request.originKey)} .`,
+      `${subject} rdf:type ciops:SeatRequest .`,
+    ];
+  };
 
 const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
+  const proposalNode = `ciops-prov:${pnLocalSlug(proposal.proposalId)}`;
   const admittedRequests = A.map(proposal.steps, (step) => step.request);
   const requests = A.appendAll(admittedRequests, proposal.deferredTail);
-  const defaultTriples = pipe(
-    A.append(A.flatMap(requests, requestTriples), "ciops-prov:proposal rdf:type ciops:ScheduleProposal ."),
+  const ratifiedTriples = pipe(
+    A.append(A.flatMap(requests, requestTriples(proposalNode)), `${proposalNode} rdf:type ciops:ScheduleProposal .`),
     A.sort(Order.String)
   );
   const provisionalTriples = pipe(
     A.append(
       A.flatMap(proposal.steps, (step, index) => {
-        const stepSubject = `ciops-prov:step-${step.stepIndex}`;
+        const stepSubject = `${proposalNode}-step-${step.stepIndex}`;
         return [
-          `ciops-prov:proposal ciops-prov:hasStep ${stepSubject} .`,
+          `${proposalNode} ciops-prov:hasStep ${stepSubject} .`,
           `${stepSubject} ciops-prov:hasScope ${turtleLiteral(step.scope)} .`,
-          `${stepSubject} ciops-prov:schedulesWorkUnit ciops-prov:request-${index} .`,
+          `${stepSubject} ciops-prov:schedulesSeatRequest ${proposalNode}-request-${index} .`,
           `${stepSubject} ciops-prov:stepIndex "${step.stepIndex}"^^xsd:integer .`,
           `${stepSubject} rdf:type ciops-prov:ScheduleStep .`,
         ];
       }),
-      "ciops-prov:scheduler ciops-prov:hasCurrentProposal ciops-prov:proposal ."
+      `ciops-prov:scheduler ciops-prov:hasCurrentProposal ${proposalNode} .`
     ),
-    A.sort(Order.String),
-    A.map((triple) => `  ${triple}`)
+    A.sort(Order.String)
   );
   const content = A.join(
     [
       A.join(prefixes, "\n"),
-      A.join(defaultTriples, "\n"),
-      `ciops-prov:ordering {\n${A.join(provisionalTriples, "\n")}\n}`,
+      A.join(ratifiedTriples, "\n"),
+      A.join(
+        A.prepend(
+          provisionalTriples,
+          "# PROVISIONAL GRAPH — closure OPEN; excluded from negation and ratified typing."
+        ),
+        "\n"
+      ),
     ],
     "\n\n"
   );
@@ -77,15 +98,18 @@ const serializeProposal = (proposal: ScheduleProposal): TurtleDocument => {
  *
  * **Details**
  *
- * Ratified node classes and properties use `ciops:`. The provisional
- * `ScheduleStep` class and ordering edges live only inside the
- * `ciops-prov:ordering` named graph, whose triples are lexically sorted.
+ * The output is valid Turtle. Ratified node classes and properties use
+ * `ciops:`; the provisional `ScheduleStep` class and ordering edges follow
+ * under the S6-census provisional comment header, prefix-separated as
+ * `ciops-prov:`. Every proposal mints a distinct node id from its
+ * `proposalId`, so `hasCurrentProposal` genuinely re-points across loads,
+ * and each section is lexically sorted for byte determinism.
  *
  * **Example** (Emit an empty proposal)
  *
  * ```ts
- * import { emitScheduleAbox } from "@beep/ciops/projection/Turtle"
- * import { ScheduleProposal } from "@beep/ciops/projection/Schemas"
+ * import { emitScheduleAbox } from "@beep/ciops/src/projection/Turtle"
+ * import { ScheduleProposal } from "@beep/ciops/src/projection/Schemas"
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *

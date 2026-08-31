@@ -29,10 +29,6 @@
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test"
   },
-  "exports": {
-    "./*": "./src/*.ts",
-    "./package.json": "./package.json"
-  },
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",

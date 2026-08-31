@@ -90,6 +90,40 @@ weight 5, reconstructed active tokens 8 to 3. All 41 first-choice comparisons
 then pass. The run-2 censorship finding is: **journal lacks lease-eviction
 events**; equivalently, lease death is unjournaled.
 
+## PR #936 review amendments
+
+Codex review raised six P1 findings; all were judged valid and landed as a
+follow-up wave:
+
+- **Unique phantom attribution.** A recorded admission proves capacity was
+  freed, not which grant died. The eviction now fires only when exactly one
+  active never-released grant exists at the trigger instant; with several
+  candidates the replay fails typed (`Ambiguous dead-lease censorship`)
+  instead of guessing. The frozen journal has exactly one candidate at
+  event 66, so the golden gate is unaffected.
+- **Valid Turtle.** The provisional ordering statements previously used a
+  TriG named-graph block, which Turtle parsers reject. Emission now matches
+  the actual S6 census precedent (`extraction/s6/graphs/census.ttl`): one
+  valid-Turtle document, provisional triples prefix-separated under the
+  `# PROVISIONAL GRAPH` comment header.
+- **Distinct proposal identity.** Every emitted proposal now mints its node
+  id from `proposalId` (PN_LOCAL-sanitized); steps and requests are scoped
+  under that node, so successive emissions no longer merge and
+  `hasCurrentProposal` genuinely re-points.
+- **SeatRequest / WorkUnitSpecification split.** Request nodes are typed
+  `ciops:SeatRequest` only; the double-typing collapsed two ratified
+  identity criteria. The provisional edge was renamed
+  `ciops-prov:schedulesSeatRequest` because the journal carries no
+  work-unit-specification identity — `schedulesWorkUnit` joins the same
+  run-2 finding class as `admittedBy` (unusable from journal bytes). The
+  run-2 re-proposal queue tracks the renamed edge in place of ruling 2's
+  original `schedulesWorkUnit` spelling.
+- **No source wildcard export.** The lab's `package.json` export map exposed
+  `./*` despite the app publishing no source surface; removed — tests and
+  scripts resolve through the workspace tsconfig/vitest aliases.
+- **Lockfile importer.** `bun.lock`'s ciops importer block omitted the
+  declared `@beep/schema` dependency; regenerated.
+
 ## Final verification
 
 ### Typecheck

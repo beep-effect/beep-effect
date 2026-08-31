@@ -89,6 +89,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
