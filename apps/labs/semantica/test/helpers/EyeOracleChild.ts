@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file -- spawned EYE oracle process entry resolved by path at runtime
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 import { queryOnce, SwiplEye } from "eyereasoner";

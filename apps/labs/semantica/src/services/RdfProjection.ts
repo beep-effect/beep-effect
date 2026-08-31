@@ -26,7 +26,7 @@ interface RdfProjectionTriple {
  * @category models
  * @since 0.0.0
  */
-export interface RdfProjectionBuild {
+interface RdfProjectionBuild {
   readonly dataset: Rdf.Dataset;
   readonly serializedQuads: ReadonlyArray<string>;
   readonly serializedTriples: ReadonlyArray<RdfProjectionTriple>;

@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file -- package script entry invoked outside the import graph
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 import { sha256TextSync } from "@/schema/Digest";

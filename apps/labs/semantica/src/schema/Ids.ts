@@ -398,4 +398,4 @@ export const InferenceEventId = Sha256Hex.pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type InferenceEventId = typeof InferenceEventId.Type;
+type InferenceEventId = typeof InferenceEventId.Type;

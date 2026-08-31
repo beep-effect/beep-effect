@@ -1,3 +1,4 @@
+// fallow-ignore-file unused-file -- spawned crash-probe process entry resolved by path at runtime
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";

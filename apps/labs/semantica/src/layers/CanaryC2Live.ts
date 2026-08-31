@@ -28,7 +28,6 @@ import { CanaryC1 } from "@/services/CanaryC1";
 import { CanaryC2 } from "@/services/CanaryC2";
 import { RdfProjection } from "@/services/RdfProjection";
 import { Reasoner } from "@/services/Reasoner";
-import type { RdfProjectionBuild } from "@/services/RdfProjection";
 
 const C2_SCHEMA_VERSION = "c2-eval-report/v1";
 const C2_STAGE = "c2";
@@ -45,20 +44,6 @@ const statement = Effect.fn("CanaryC2.statement")(function* (triple: RdfTriple) 
     Effect.mapError(() => failed("rule-invalid", "A C2 RDF statement did not encode."))
   );
 });
-
-const projectionStatements = (build: RdfProjectionBuild) =>
-  Effect.forEach(
-    build.serializedTriples,
-    (triple) =>
-      statement(
-        RdfTriple.make({
-          object: triple.object,
-          predicate: triple.predicate,
-          subject: triple.subject,
-        })
-      ),
-    { concurrency: 1 }
-  );
 
 const seedTriples = (run: string): A.NonEmptyReadonlyArray<RdfTriple> => {
   const projection = `<urn:semantica:c2:${run}:projection>`;
@@ -157,7 +142,18 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
       if (!Str.Equivalence(firstDigest, secondDigest)) {
         return yield* failed("crash-mismatch", "Projection identity changed across the crash checkpoint rebuild.");
       }
-      const projected = yield* projectionStatements(secondProjection);
+      const projected = yield* Effect.forEach(
+        secondProjection.serializedTriples,
+        (triple) =>
+          statement(
+            RdfTriple.make({
+              object: triple.object,
+              predicate: triple.predicate,
+              subject: triple.subject,
+            })
+          ),
+        { concurrency: 1 }
+      );
       const seeds = yield* Effect.forEach(seedTriples(base.report.base.run.id), statement, { concurrency: 1 });
       const asserted = A.appendAll(projected, seeds);
       const full = yield* reasoner.close(asserted);
