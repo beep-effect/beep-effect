@@ -294,12 +294,17 @@ therefore does not close the cache gate. The operator must verify or refresh the
 1Password mirror, or otherwise repair cache authentication, then authorize the exact `op run`
 wrapper and rerun the cross-checkout sample.
 
+After PR #937 merged on 2026-08-31, a fresh canary on current `main` reproduced the same remote
+authentication failure. Its second pass replayed eight local cache hits, which does not count as a
+remote-read receipt.
+
 ### Closeout state after the terminal trial
 
 The evidence-volume ruling closes the calendar-duration question, and the terminal dual proof
 closes the concurrency condition. PR #929 reached Yeet `merge-ready: yes` and merged on
 2026-08-31 as the implementation-repair PR. The packet remains active because cache authentication
 still blocks a fresh remote-read observation from every active root. Lifecycle and P5 status remain
-unchanged until authentication is repaired and the sample succeeds. PR #937 remains the final
-evidence PR and must itself reach Yeet `merge-ready: yes` after the evidence, status flip, and
-reflection land.
+unchanged until authentication is repaired and the sample succeeds. PR #937 merged as
+`c57f63ac76cd3f25fbc700bad3032d6ce6a06d94` before those artifacts landed. Its green hosted checks
+and Greptile `5/5` do not satisfy the semantic completion gate. A successor final-evidence PR now
+owns the cache receipt, status flip, reflection, and terminal Yeet `merge-ready: yes` proof.

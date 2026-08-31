@@ -36,7 +36,7 @@ const $I = $CiopsId.create("projection/Replay");
  * **Example** (Recognize a passing verdict)
  *
  * ```ts
- * import { ReplayEventOutcome } from "@beep/ciops/projection/Replay"
+ * import { ReplayEventOutcome } from "@beep/ciops/src/projection/Replay"
  *
  * console.log(ReplayEventOutcome.is.pass("pass")) // true
  * ```
@@ -65,7 +65,7 @@ export type ReplayEventOutcome = typeof ReplayEventOutcome.Type;
  * **Example** (Construct a passing event verdict)
  *
  * ```ts
- * import { ReplayEventVerdict } from "@beep/ciops/projection/Replay"
+ * import { ReplayEventVerdict } from "@beep/ciops/src/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const verdict = ReplayEventVerdict.make({
@@ -110,7 +110,7 @@ export class ReplayEventVerdict extends S.Class<ReplayEventVerdict>($I`ReplayEve
  * **Example** (Record an inferred eviction)
  *
  * ```ts
- * import { InferredLeaseEviction } from "@beep/ciops/projection/Replay"
+ * import { InferredLeaseEviction } from "@beep/ciops/src/projection/Replay"
  * import { NonNegativeInt, PosInt } from "@beep/schema"
  *
  * const eviction = InferredLeaseEviction.make({
@@ -145,7 +145,7 @@ export class InferredLeaseEviction extends S.Class<InferredLeaseEviction>($I`Inf
  * **Example** (Construct an empty replay report)
  *
  * ```ts
- * import { ReplayReport } from "@beep/ciops/projection/Replay"
+ * import { ReplayReport } from "@beep/ciops/src/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const report = ReplayReport.make({
@@ -195,7 +195,7 @@ const decodeJournalLine = Effect.fnUntraced(function* (
  * **Example** (Decode an empty journal)
  *
  * ```ts
- * import { decodeAdmissionJournal } from "@beep/ciops/projection/Replay"
+ * import { decodeAdmissionJournal } from "@beep/ciops/src/projection/Replay"
  * import { Effect } from "effect"
  *
  * console.log(Effect.runSync(decodeAdmissionJournal("")).length) // 0
@@ -306,8 +306,8 @@ const releaseFromLedger = Effect.fnUntraced(function* (
  * **Example** (Replay an empty event stream)
  *
  * ```ts
- * import { replayAdmissionJournal } from "@beep/ciops/projection/Replay"
- * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@beep/ciops/projection/Schemas"
+ * import { replayAdmissionJournal } from "@beep/ciops/src/projection/Replay"
+ * import { AdmissionPolicyParams, AdmissionTokenWeights } from "@beep/ciops/src/projection/Schemas"
  * import { PosInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
@@ -362,39 +362,54 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
   const replayAdmitted = Effect.fn("Replay.admitted")(function* (
     admitted: AdmissionJournalAdmitted
   ): Effect.fn.Return<void, PolicyDecodeError> {
-    if (ledger.activeTokenTotal + admitted.weightTokens > policy.capacityMaxTokens) {
+    while (ledger.activeTokenTotal + admitted.weightTokens > policy.capacityMaxTokens) {
       const activePhantomAdmissions = A.filter(
         admittedEvents,
         (candidate) => HashSet.has(phantomNonces, candidate.nonce) && HashMap.has(ledger.activeGrants, candidate.nonce)
       );
-      for (const phantom of activePhantomAdmissions) {
-        if (ledger.activeTokenTotal + admitted.weightTokens <= policy.capacityMaxTokens) {
-          break;
-        }
-        const weightTokens = yield* HashMap.get(ledger.activeGrants, phantom.nonce).pipe(
-          O.match({
-            onNone: () => Effect.fail(replayInputFailure(`Phantom admission nonce "${phantom.nonce}" was not active.`)),
-            onSome: Effect.succeed,
-          })
-        );
-        const activeTokenTotalBefore = ledger.activeTokenTotal;
-        const activeTokenTotalAfter = NonNegativeInt.make(activeTokenTotalBefore - weightTokens);
-        ledger = TokenLedgerState.make({
-          activeGrants: HashMap.remove(ledger.activeGrants, phantom.nonce),
-          activeReviewFixNonces: HashSet.remove(ledger.activeReviewFixNonces, phantom.nonce),
-          activeTokenTotal: activeTokenTotalAfter,
-        });
-        evictions = A.append(
-          evictions,
-          InferredLeaseEviction.make({
-            eventIndex: NonNegativeInt.make(eventIndex),
-            evictedNonce: phantom.nonce,
-            weightTokens,
-            activeTokenTotalBefore,
-            activeTokenTotalAfter,
-          })
+      const candidateCount = A.length(activePhantomAdmissions);
+      if (candidateCount === 0) {
+        break;
+      }
+      // The recorded admission proves capacity was freed, not which grant died:
+      // evict only when the phantom attribution is unique, never by guessing.
+      if (candidateCount > 1) {
+        return yield* replayInputFailure(
+          `Ambiguous dead-lease censorship at event ${eventIndex}: ${candidateCount} active never-released grants (${A.join(
+            A.map(activePhantomAdmissions, (candidate) => candidate.nonce),
+            ", "
+          )}); refusing to attribute the eviction.`
         );
       }
+      const phantom = yield* A.head(activePhantomAdmissions).pipe(
+        O.match({
+          onNone: () => Effect.fail(replayInputFailure("Phantom candidate set became empty mid-eviction.")),
+          onSome: Effect.succeed,
+        })
+      );
+      const weightTokens = yield* HashMap.get(ledger.activeGrants, phantom.nonce).pipe(
+        O.match({
+          onNone: () => Effect.fail(replayInputFailure(`Phantom admission nonce "${phantom.nonce}" was not active.`)),
+          onSome: Effect.succeed,
+        })
+      );
+      const activeTokenTotalBefore = ledger.activeTokenTotal;
+      const activeTokenTotalAfter = NonNegativeInt.make(activeTokenTotalBefore - weightTokens);
+      ledger = TokenLedgerState.make({
+        activeGrants: HashMap.remove(ledger.activeGrants, phantom.nonce),
+        activeReviewFixNonces: HashSet.remove(ledger.activeReviewFixNonces, phantom.nonce),
+        activeTokenTotal: activeTokenTotalAfter,
+      });
+      evictions = A.append(
+        evictions,
+        InferredLeaseEviction.make({
+          eventIndex: NonNegativeInt.make(eventIndex),
+          evictedNonce: phantom.nonce,
+          weightTokens,
+          activeTokenTotalBefore,
+          activeTokenTotalAfter,
+        })
+      );
     }
     const pending = pendingAtAdmission(admittedEvents, admitted);
     const proposal = yield* projectSchedule(
@@ -478,7 +493,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
  * **Example** (Accept an empty replay report)
  *
  * ```ts
- * import { ReplayReport, requireReplayMatch } from "@beep/ciops/projection/Replay"
+ * import { ReplayReport, requireReplayMatch } from "@beep/ciops/src/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
@@ -515,7 +530,7 @@ export const requireReplayMatch = Effect.fn("Replay.requireReplayMatch")(functio
  * **Example** (Render a pass summary)
  *
  * ```ts
- * import { ReplayReport, renderReplayEvidence } from "@beep/ciops/projection/Replay"
+ * import { ReplayReport, renderReplayEvidence } from "@beep/ciops/src/projection/Replay"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const report = ReplayReport.make({
@@ -591,7 +606,7 @@ export const renderReplayEvidence: {
       "",
       evictionBody,
       "",
-      "The deployed scheduler reaps dead admission state through pid and `/proc` start-time liveness without writing a release event (`packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts`). The replay therefore evicts provably phantom grants—grants never released within the journal horizon—only when a recorded admission proves the deployed ledger no longer contained them. This is a run-2 censorship finding: journal lacks lease-eviction events.",
+      "The deployed scheduler reaps dead admission state through pid and `/proc` start-time liveness without writing a release event (`packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts`). The replay therefore evicts provably phantom grants—grants never released within the journal horizon—only when a recorded admission proves the deployed ledger no longer contained them, and only when the phantom attribution is unique: with more than one active never-released grant the replay fails typed instead of guessing which lease died. This is a run-2 censorship finding: journal lacks lease-eviction events.",
     ],
     "\n"
   )}\n`;

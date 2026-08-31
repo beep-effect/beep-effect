@@ -151,5 +151,7 @@ the C5 metric correction and the new C7 item below.
   implementation-repair PR. The existing 1Password reference resolves, but the authenticated
   cache canary rejects its credentials. Timestamp drift makes a stale mirror the leading
   hypothesis, not a proven mismatch or cause. The operator must repair authentication before the
-  cross-checkout remote-read observation can run. PR #937 remains the final evidence PR and must
-  reach Yeet `merge-ready: yes`; see `research/metrics-closeout.md`.
+  cross-checkout remote-read observation can run. PR #937 merged on 2026-08-31 without that
+  evidence, the status flip, or the reflection, so it did not satisfy the final closeout PR gate.
+  A successor final-evidence PR now owns those artifacts and must reach Yeet `merge-ready: yes`;
+  see `research/metrics-closeout.md`.
