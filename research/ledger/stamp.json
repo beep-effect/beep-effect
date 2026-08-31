@@ -1,11 +1,11 @@
 {
-  "lastSuccessfulRun": "2026-08-30T08:14:00-05:00",
-  "lastSuccessfulPacket": "research/2026-08-30",
-  "lastSuccessfulPr": 896,
-  "lastAttemptedRun": "2026-08-30T08:14:00-05:00",
+  "lastSuccessfulRun": "2026-08-31T08:52:00-05:00",
+  "lastSuccessfulPacket": "research/2026-08-31",
+  "lastSuccessfulPr": 0,
+  "lastAttemptedRun": "2026-08-31T08:52:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-08-30",
-  "note": "Advances stamp after human-merged #883 (2026-08-29). This run is partial (X still client-not-enrolled; arXiv Sunday announcement gap). Publisher must fill lastSuccessfulPr after PR opens; human admit is still required before treating as success in the next skip check if policy requires merged PR.",
+  "lastAttemptedPacket": "research/2026-08-31",
+  "note": "Advances stamp after human-merged #896 (2026-08-30). This run is partial (X still client-not-enrolled). Publisher fills lastSuccessfulPr after PR opens. Human admit still required. Monday: no tombstone reaper.",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",
