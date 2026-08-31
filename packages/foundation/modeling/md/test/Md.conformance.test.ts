@@ -176,9 +176,32 @@ describe("Markdown semantic conformance", () => {
     expect(messages).toEqual(["A link is nested inside another link."]);
     expect(CommonMarkSpecificationProfile.sourceIds).toEqual([
       "md-commonmark-0.31.2-spec",
+      "md-commonmark-0.31.2-examples",
+      "md-gfm-0.29.0.gfm.13-extensions",
+      "md-micromark-4.0.2",
       "md-beep-extensions-baseline",
     ]);
     expect(GfmSpecificationProfile.invariantIds).toContain("md.gfm.disallowed-raw-html");
     expect(BeepMarkdownSpecificationProfile.invariantIds).toContain("md.footnote.unique-definitions");
+  });
+
+  it("keeps every runtime-checked invariant inside its published profile", () => {
+    const document = Md.make([Md.p("Hello")]);
+    const commonMarkReport = inspectMarkdownSpecificationConformance(
+      document,
+      MarkdownConformanceProfile.Enum.CommonMark
+    );
+    const gfmReport = inspectMarkdownSpecificationConformance(document, MarkdownConformanceProfile.Enum.Gfm);
+    const beepReport = inspectMarkdownSpecificationConformance(document, MarkdownConformanceProfile.Enum.Beep);
+
+    expect(
+      A.every(commonMarkReport.checkedInvariantIds, (id) => A.contains(CommonMarkSpecificationProfile.invariantIds, id))
+    ).toBe(true);
+    expect(A.every(gfmReport.checkedInvariantIds, (id) => A.contains(GfmSpecificationProfile.invariantIds, id))).toBe(
+      true
+    );
+    expect(
+      A.every(beepReport.checkedInvariantIds, (id) => A.contains(BeepMarkdownSpecificationProfile.invariantIds, id))
+    ).toBe(true);
   });
 });

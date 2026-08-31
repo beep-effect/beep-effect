@@ -206,7 +206,7 @@ const pandocBlockText: (block: PandocBlock.Type) => string = Match.type<PandocBl
       ),
     horizontalrule: () => "",
     div: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
-    table: (block) => A.join(A.map(block.caption, pandocInlineText), ""),
+    table: (block) => block.captionPlainText,
     figure: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
     unknownBlock: () => "",
   })
@@ -748,19 +748,25 @@ const pandocListItemsToMd = (
     })
   );
 
+const pandocParagraphToMd = (
+  node: Plain.Type | Para.Type,
+  path: JsonPath
+): Effect.Effect<Projection<Md.P | Md.MathBlock>, S.SchemaError> => {
+  const first = node.children[0];
+
+  return node.children.length === 1 && first?._tag === "math" && first.mathType === "DisplayMath"
+    ? Effect.succeed(emptyProjection(Md.MathBlock.make({ value: first.text })))
+    : Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: Md.P.make({ children: value }),
+      }));
+};
+
 const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect<Projection<Md.Block>, S.SchemaError> =>
   Match.value(block).pipe(
     Match.tagsExhaustive({
-      plain: (node) =>
-        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: Md.P.make({ children: value }),
-        })),
-      para: (node) =>
-        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
-          issues,
-          value: Md.P.make({ children: value }),
-        })),
+      plain: (node) => pandocParagraphToMd(node, path),
+      para: (node) => pandocParagraphToMd(node, path),
       lineBlock: (node) =>
         Effect.map(
           Effect.forEach(node.lines, (line, index) => pandocInlinesToMd(line, appendIndex(path, "lines", index))),
@@ -867,19 +873,19 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
                   }),
                 ]
               : []),
-            ...(node.start < 1
+            ...(node.start < 0
               ? [
                   issue({
                     construct: "OrderedList",
                     direction: "pandoc-to-md",
-                    message: "Pandoc ordered-list start below one is clamped to the first ordinal.",
+                    message: "A negative Pandoc ordered-list start is clamped to zero for the Md domain.",
                     path,
                     severity: "lossy",
                   }),
                 ]
               : []),
           ],
-          value: Md.Ol.make({ children: value, start: PosInt.make(node.start < 1 ? 1 : node.start) }),
+          value: Md.Ol.make({ children: value, start: node.start <= 0 ? 0 : PosInt.make(node.start) }),
         })),
       definitionList: (node) =>
         Effect.map(
@@ -931,7 +937,7 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
           value: Md.BlockQuote.make({ children: value }),
         })),
       table: (node) => {
-        const caption = A.join(A.map(node.caption, pandocInlineText), "");
+        const caption = node.captionPlainText;
         return Effect.succeed({
           issues: [
             issue({

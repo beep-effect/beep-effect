@@ -18,6 +18,7 @@ import * as Md from "@beep/md/Md.model";
 import { MappedLiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import { A, dual, N, O, P, Str } from "@beep/utils";
 import { Effect, flow, Match, pipe } from "effect";
+import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
 import { nodeToPlainText } from "./Lexical.behavior.ts";
 import {
@@ -667,7 +668,14 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
   heading: (node) => [
     Md.Heading.make({ level: HeadingLevelTag.From.Enum[node.tag], children: textRunToInlines(node.children) }),
   ],
-  quote: (node) => [Md.BlockQuote.make({ children: [Md.P.make({ children: textRunToInlines(node.children) })] })],
+  quote: (node) => [
+    Md.BlockQuote.make({
+      children: Bool.match(O.contains(node.shadowRoot, true), {
+        onFalse: () => [Md.P.make({ children: textRunToInlines(node.children) })],
+        onTrue: () => A.flatMap(node.children, nodeToBlocks),
+      }),
+    }),
+  ],
   code: (node) => [Md.Pre.make({ value: A.join(A.map(node.children, codeChildText), ""), language: node.language })],
   table: (node) => [tableToBlock(node)],
   tablerow: (node) => [Md.Table.make({ headerRow: false, children: [tableRowToMd(node)] })],

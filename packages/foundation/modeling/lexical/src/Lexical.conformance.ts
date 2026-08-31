@@ -700,7 +700,7 @@ const BeepLexicalConformanceAnnotation = {
       id: "lexical.adapter.lossiness-reporting",
       title: "Every lossy or normalized Markdown conversion must be explicit",
       statement:
-        "Table alignment, unsupported text bits, code metadata, multi-block quotes, and out-of-profile nodes are normalized or degraded through tested policy rather than silently reinterpreted.",
+        "Table alignment, unsupported text bits, code metadata, Markdown-origin multi-block quotes, and out-of-profile nodes are normalized or degraded through tested policy rather than silently reinterpreted, while shadow-root Lexical quotes preserve their block structure.",
       strength: "must",
       scope: "conversion",
       decidability: "localRuntime",
@@ -708,10 +708,6 @@ const BeepLexicalConformanceAnnotation = {
         {
           kind: "runtime",
           validator: "@beep/lexical-schema adapter boundary for lexical.adapter.lossiness-reporting",
-        },
-        {
-          kind: "runtime",
-          validator: "@beep/lexical-schema advisory inspector",
         },
         {
           kind: "test",
@@ -729,6 +725,7 @@ const BeepLexicalConformanceAnnotation = {
         "test/Lexical.codec.test.ts#stabilizes-after-one-Md-Lexical-Md-pass-lossy-codec-idempotent-on-its-stable-image",
         "test/Lexical.codec.test.ts#drops-Lexical-only-text-format-bits-underline-per-the-lossiness-profile",
         "test/Lexical.codec.test.ts#normalizes-multi-block-quotes-into-a-single-linebreak-separated-paragraph",
+        "test/Lexical.codec.test.ts#preserves-block-structure-for-shadow-root-quotes",
       ],
     },
   ],

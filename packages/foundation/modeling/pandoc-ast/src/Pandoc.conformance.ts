@@ -560,6 +560,7 @@ const PandocJsonConformanceAnnotation = {
       ],
       testIds: [
         "test/Pandoc.mapping.test.ts#preserves-beep-md-titles-ordered-starts-and-math-in-Pandoc-projection",
+        "test/Pandoc.mapping.test.ts#round-trips-an-Md-math-block-through-a-Pandoc-display-math-paragraph",
         "test/Pandoc.codec.test.ts#rejects-unsupported-Math-subtypes-strictly-retains-them-losslessly-and-preserves-ordered-list-semantics",
         "test/Pandoc.codec.test.ts#rejects-known-or-malformed-nullary-constructors-in-a-Math-type-slot",
       ],

@@ -492,9 +492,9 @@ const HtmlWhatwgConformanceAnnotation = {
     },
     {
       id: "html.heading.no-skipped-levels",
-      title: "Computed heading levels must not skip a level in tree order",
+      title: "A computed heading level must be at most one greater than the preceding heading level",
       statement:
-        "inspectConformance emits a headingOutline error when a computed heading level increases by more than one relative to the preceding heading in tree order.",
+        "inspectConformance emits a headingOutline error when a heading following another in tree order has a computed level greater than the preceding heading's level plus one.",
       strength: "must",
       scope: "document",
       decidability: "contextualRuntime",
@@ -512,7 +512,7 @@ const HtmlWhatwgConformanceAnnotation = {
       references: [
         {
           sourceId: "html-whatwg-source-approved",
-          section: "heading-levels-and-offsets",
+          section: "headings-and-outlines",
         },
       ],
       testIds: ["test/Html.heading-conformance.test.ts#rejects-a-skipped-computed-heading-level-in-tree-order"],

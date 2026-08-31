@@ -44,10 +44,39 @@ const tableRowWidth = (row: TableRowNode.Type): number =>
 const tableOptionWithin = (value: O.Option<number>, maximum: number): boolean =>
   !O.exists(value, (candidate) => candidate > maximum);
 
-const hasValidRowSpans = (rows: ReadonlyArray<TableRowNode.Type>): boolean =>
-  A.every(rows, (row, rowIndex) =>
-    A.every(tableCells(row), (cell) => optionValueOrOne(cell.rowSpan) <= rows.length - rowIndex)
+const placeTableCell = (occupancy: ReadonlyArray<number>, cell: TableCellNode.Type): O.Option<ReadonlyArray<number>> =>
+  A.findFirstIndex(occupancy, (remainingRows) => remainingRows === 0).pipe(
+    O.filter((startColumn) => {
+      const endColumn = startColumn + optionValueOrOne(cell.colSpan);
+      return (
+        endColumn <= occupancy.length &&
+        A.every(
+          occupancy,
+          (remainingRows, columnIndex) => columnIndex < startColumn || columnIndex >= endColumn || remainingRows === 0
+        )
+      );
+    }),
+    O.map((startColumn) => {
+      const endColumn = startColumn + optionValueOrOne(cell.colSpan);
+      const rowSpan = optionValueOrOne(cell.rowSpan);
+      return A.map(occupancy, (remainingRows, columnIndex) =>
+        columnIndex >= startColumn && columnIndex < endColumn ? rowSpan : remainingRows
+      );
+    })
   );
+
+const fillTableRow = (occupancy: ReadonlyArray<number>, row: TableRowNode.Type): O.Option<ReadonlyArray<number>> =>
+  A.reduce(tableCells(row), O.some(occupancy), (state, cell) =>
+    O.flatMap(state, (current) => placeTableCell(current, cell))
+  ).pipe(
+    O.filter((filled) => A.every(filled, (remainingRows) => remainingRows > 0)),
+    O.map(A.map((remainingRows) => remainingRows - 1))
+  );
+
+const hasValidTableGrid = (rows: ReadonlyArray<TableRowNode.Type>, columnCount: number): boolean =>
+  A.reduce(rows, O.some<ReadonlyArray<number>>(A.makeBy(columnCount, () => 0)), (state, row) =>
+    O.flatMap(state, (occupancy) => fillTableRow(occupancy, row))
+  ).pipe(O.exists(A.every((remainingRows) => remainingRows === 0)));
 
 const hasStrictTableChildren = (node: TableNode.Type): boolean => {
   const rows = tableRows(node);
@@ -61,10 +90,9 @@ const hasStrictTableChildren = (node: TableNode.Type): boolean => {
       (row) =>
         A.isReadonlyArrayNonEmpty(row.children) &&
         tableCells(row).length === row.children.length &&
-        tableRowWidth(row) === columnCount &&
         hasStrictNodeChildren(row)
     ) &&
-    hasValidRowSpans(rows) &&
+    hasValidTableGrid(rows, columnCount) &&
     !O.exists(node.colWidths, (widths) => widths.length !== columnCount) &&
     tableOptionWithin(node.frozenColumnCount, columnCount) &&
     tableOptionWithin(node.frozenRowCount, rows.length)

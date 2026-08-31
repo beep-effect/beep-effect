@@ -7,7 +7,6 @@
 
 import { $PandocAstId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { A, O } from "@beep/utils";
 import * as S from "effect/Schema";
 import {
   isPandocKnownConstructorName,
@@ -18,6 +17,8 @@ import {
   PandocQuoteType,
   PandocTableAlignmentConstructorName,
 } from "./internal/Pandoc.registry.ts";
+import { makeTableCaptionPlainTextFromPayload } from "./internal/Pandoc.table-caption.ts";
+import type { O } from "@beep/utils";
 
 const $I = $PandocAstId.create("Pandoc.model");
 type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]>[0];
@@ -3335,43 +3336,12 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
  */
 export type PandocTablePayload = typeof PandocTablePayload.Type;
 
-const tableCaptionInlineFromWire = (input: S.Json): O.Option<PandocInline.Type> =>
-  O.flatMap(decodePandocConstructorOption(input), (wire) => {
-    if (wire.t === "Str") {
-      return O.map(decodePandocStringOption(wire.c), (text) => Str.make({ text }));
-    }
-    if (wire.t === "Space") {
-      return O.some(Space.make());
-    }
-    if (wire.t === "SoftBreak") {
-      return O.some(SoftBreak.make());
-    }
-    if (wire.t === "LineBreak") {
-      return O.some(LineBreak.make());
-    }
-    return O.none();
-  });
-
-const tableCaptionInlinesFromBlockWire = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
-  O.getOrElse(
-    O.map(
-      O.flatMap(
-        O.filter(decodePandocConstructorOption(input), (wire) => wire.t === "Plain" || wire.t === "Para"),
-        (wire) => decodePandocJsonArrayOption(wire.c)
-      ),
-      (values) => A.getSomes(A.map(values, tableCaptionInlineFromWire))
-    ),
-    A.emptyReadonly
-  );
-
-const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
-  O.match(decodePandocTableCaptionPairOption(input), {
-    onNone: A.emptyReadonly,
-    onSome: ([shortCaption, longCaption]) => {
-      const short = shortCaption === null ? [] : A.getSomes(A.map(shortCaption, tableCaptionInlineFromWire));
-      return A.isReadonlyArrayNonEmpty(short) ? short : A.flatMap(longCaption, tableCaptionInlinesFromBlockWire);
-    },
-  });
+const tableCaptionPlainTextFromPayload = makeTableCaptionPlainTextFromPayload({
+  decodeConstructorOption: decodePandocConstructorOption,
+  decodeJsonArrayOption: decodePandocJsonArrayOption,
+  decodeStringOption: decodePandocStringOption,
+  decodeTableCaptionPairOption: decodePandocTableCaptionPairOption,
+});
 
 /**
  * Pandoc table block captured as an explicit gap node.
@@ -3413,13 +3383,19 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
   }
 
   /**
-   * Best-effort caption derived from the canonical payload.
+   * Best-effort caption plaintext derived from the canonical payload.
+   *
+   * **Details**
+   *
+   * The complete structured caption remains in {@link payload}. This preview
+   * recursively retains text from current inline formatting constructors
+   * without claiming that a gap-node getter is a lossless inline projection.
    *
    * @category getters
    * @since 0.0.0
    */
-  get caption(): ReadonlyArray<PandocInline.Type> {
-    return tableCaptionFromPayload(this.payload[1]);
+  get captionPlainText(): string {
+    return tableCaptionPlainTextFromPayload(this.payload[1]);
   }
 }
 
@@ -3447,7 +3423,7 @@ export declare namespace Table {
   export interface Type {
     readonly _tag: "table";
     readonly attr: PandocAttr.Type;
-    readonly caption: PandocInlineChildren.Type;
+    readonly captionPlainText: string;
     readonly payload: PandocTablePayload;
   }
 

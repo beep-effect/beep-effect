@@ -1,4 +1,11 @@
-import { BeepMarkdownDocument, CommonMarkDocument, GfmDocument } from "@beep/md/Md.conformance";
+import {
+  BeepMarkdownDocument,
+  BeepMarkdownSpecificationProfile,
+  CommonMarkDocument,
+  CommonMarkSpecificationProfile,
+  GfmDocument,
+  GfmSpecificationProfile,
+} from "@beep/md/Md.conformance";
 import * as Conformance from "@beep/schema/Conformance";
 import { validateConformanceAnnotationAgainstLedgerArtifacts } from "@beep/test-utils/ConformanceLedger";
 import { describe, expect, it } from "@effect/vitest";
@@ -13,16 +20,8 @@ describe("@beep/md conformance annotations", () => {
 
     expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["commonmark-0.31.2"]);
-    expect(A.map(annotation.sources, ({ id }) => id)).toEqual([
-      "md-commonmark-0.31.2-spec",
-      "md-beep-extensions-baseline",
-    ]);
-    expect(A.map(annotation.invariants, ({ id }) => id)).toEqual([
-      "md.link.nested-links",
-      "md.list.nonempty",
-      "md.list.ordered-start-range",
-      "md.extensions.nonstandard-members",
-    ]);
+    expect(A.map(annotation.sources, ({ id }) => id)).toEqual(CommonMarkSpecificationProfile.sourceIds);
+    expect(A.map(annotation.invariants, ({ id }) => id)).toEqual(CommonMarkSpecificationProfile.invariantIds);
   });
 
   it("collects the GFM profile from its strict document schema", () => {
@@ -30,22 +29,8 @@ describe("@beep/md conformance annotations", () => {
 
     expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["gfm-0.29.0.gfm.13"]);
-    expect(A.map(annotation.sources, ({ id }) => id)).toEqual([
-      "md-commonmark-0.31.2-spec",
-      "md-gfm-0.29.0.gfm.13-spec",
-      "md-gfm-0.29.0.gfm.13-extensions",
-      "md-beep-extensions-baseline",
-    ]);
-    expect(A.map(annotation.invariants, ({ id }) => id)).toEqual([
-      "md.link.nested-links",
-      "md.list.nonempty",
-      "md.list.ordered-start-range",
-      "md.gfm.table-rectangularity",
-      "md.gfm.table-alignment-width",
-      "md.gfm.disallowed-raw-html",
-      "md.gfm.table-header",
-      "md.extensions.nonstandard-members",
-    ]);
+    expect(A.map(annotation.sources, ({ id }) => id)).toEqual(GfmSpecificationProfile.sourceIds);
+    expect(A.map(annotation.invariants, ({ id }) => id)).toEqual(GfmSpecificationProfile.invariantIds);
   });
 
   it("collects the Beep extension profile from the strict Markdown document schema", () => {
@@ -53,18 +38,8 @@ describe("@beep/md conformance annotations", () => {
 
     expect(S.is(Conformance.Annotation)(annotation)).toBe(true);
     expect(A.map(annotation.profiles, ({ id }) => id)).toEqual(["beep-md-extensions-v1"]);
-    expect(A.map(annotation.sources, ({ id }) => id)).toEqual([
-      "md-commonmark-0.31.2-spec",
-      "md-beep-extensions-baseline",
-    ]);
-    expect(A.map(annotation.invariants, ({ id }) => id)).toEqual([
-      "md.link.nested-links",
-      "md.list.nonempty",
-      "md.list.ordered-start-range",
-      "md.footnote.unique-definitions",
-      "md.footnote.defined-references",
-      "md.extensions.nonstandard-members",
-    ]);
+    expect(A.map(annotation.sources, ({ id }) => id)).toEqual(BeepMarkdownSpecificationProfile.sourceIds);
+    expect(A.map(annotation.invariants, ({ id }) => id)).toEqual(BeepMarkdownSpecificationProfile.invariantIds);
   });
 
   it.effect("matches every strict Markdown annotation to exact ledger records and enforcement evidence", () => {

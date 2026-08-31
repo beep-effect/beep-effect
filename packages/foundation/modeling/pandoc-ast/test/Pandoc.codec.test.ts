@@ -464,6 +464,32 @@ describe("Pandoc.codec", () => {
           meta: {},
         },
       },
+      {
+        expected: [["Decimal", "/blocks/0/c/0/1"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [[1, { c: 1, t: "Decimal" }, { t: "Period" }], []],
+              t: "OrderedList",
+            },
+          ],
+          meta: {},
+        },
+      },
+      {
+        expected: [["Period", "/blocks/0/c/0/2"]],
+        wire: {
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [[1, { t: "Decimal" }, { c: 1, t: "Period" }], []],
+              t: "OrderedList",
+            },
+          ],
+          meta: {},
+        },
+      },
     ];
 
     for (const { expected, wire } of malformed) {
@@ -1011,10 +1037,7 @@ describe("Pandoc.codec", () => {
           _tag: "table",
           payload: table.payload,
         });
-        expect(table.caption[0]?._tag).toBe("str");
-        if (table.caption[0]?._tag === "str") {
-          expect(table.caption[0].text).toBe("Evidence");
-        }
+        expect(table.captionPlainText).toBe("Evidence");
       })
     ));
 

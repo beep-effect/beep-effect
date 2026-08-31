@@ -28,6 +28,7 @@ import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
+import { QuoteNode as RuntimeQuoteNode } from "@lexical/rich-text";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -82,6 +83,14 @@ const text = (value: string, format = 0) =>
     style: "",
     text: value,
   }) as const;
+
+const paragraphNode = (children: ReadonlyArray<ReturnType<typeof text>>) => ({
+  ...element,
+  type: "paragraph",
+  children,
+  textFormat: 0,
+  textStyle: "",
+});
 
 /**
  * Encoded fixture mirroring what Lexical 0.45 writes for an assistant turn:
@@ -641,6 +650,31 @@ describe("Lexical.model", { concurrent: false }, () => {
 
       expect(editor.parseEditorState(source).toJSON().root.children[0]).toMatchObject({ listType, tag });
     });
+  });
+
+  it("keeps shadow-root quote topology fixed through the real Lexical runtime", () => {
+    const editor = createEditor({
+      namespace: "lexical-schema-shadow-root-quote-fixed-point",
+      nodes: [RuntimeQuoteNode],
+    });
+    const state = {
+      root: {
+        ...element,
+        type: "root",
+        children: [
+          {
+            ...element,
+            type: "quote",
+            shadowRoot: true,
+            children: [paragraphNode([text("first block")]), paragraphNode([text("second block")])],
+          },
+        ],
+      },
+    };
+    const strict = Effect.runSync(decodeEditorStateStrict(state));
+    const source = Effect.runSync(S.encodeEffect(EditorStateFromJson)(strict));
+
+    expect(editor.parseEditorState(source).toJSON()).toEqual(state);
   });
 
   it("enforces the strict v1 child grammar on the established semantic schema", () => {

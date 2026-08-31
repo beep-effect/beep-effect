@@ -10,7 +10,6 @@ import {
   PandocMappingIssue,
   profileFromIssues,
 } from "@beep/pandoc-ast/Pandoc.report";
-import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -209,6 +208,21 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
+  it("round-trips an Md math block through a Pandoc display-math paragraph", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const source = Md.Document.make({
+          children: [Md.MathBlock.make({ value: "a^2 + b^2 = c^2" })],
+        });
+        const encoded = yield* documentToPandoc(source);
+        const decoded = yield* pandocToDocument(encoded.pandoc);
+
+        expect(encoded.report.issues).toEqual([]);
+        expect(decoded.report.issues).toEqual([]);
+        expect(decoded.document).toEqual(source);
+      })
+    ));
+
   it("records DOCX-origin compatibility gaps while producing partial Md output", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -363,8 +377,8 @@ describe("Pandoc.mapping", () => {
               ],
             }),
             Md.Ol.make({
-              children: [Md.Li.make({ children: [text("third")] })],
-              start: PosInt.make(3),
+              children: [Md.Li.make({ children: [text("zero")] })],
+              start: Md.OrderedListStart.make(0),
             }),
             Md.MathBlock.make({ value: "a^2 + b^2 = c^2" }),
           ],
@@ -394,13 +408,22 @@ describe("Pandoc.mapping", () => {
         const list = result.pandoc.blocks[1];
         expect(list?._tag).toBe("orderedlist");
         if (list?._tag === "orderedlist") {
-          expect(list.start).toBe(3);
+          expect(list.start).toBe(0);
         }
 
         const displayMath = expectPara(result.pandoc.blocks[2]).children[0];
         expect(displayMath?._tag).toBe("math");
         if (displayMath?._tag === "math") {
           expect(displayMath.mathType).toBe("DisplayMath");
+        }
+
+        const roundTrip = yield* pandocToDocument(result.pandoc);
+        const orderedList = roundTrip.document.children[1];
+
+        expect(roundTrip.report.issues).toEqual([]);
+        expect(orderedList?._tag).toBe("ol");
+        if (orderedList?._tag === "ol") {
+          expect(orderedList.start).toBe(0);
         }
       })
     ));
@@ -424,6 +447,33 @@ describe("Pandoc.mapping", () => {
         expect(expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url).toBe(
           "https://www.youtube.com/watch?v=ab-CD_12xyz"
         );
+      })
+    ));
+
+  it("retains structured table-caption text in the explicit gap projection", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const pandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                ["", [], []],
+                [null, [{ c: [{ c: [{ c: "Evidence", t: "Str" }], t: "Emph" }], t: "Plain" }]],
+                [],
+                [["", [], []], []],
+                [],
+                [["", [], []], []],
+              ],
+              t: "Table",
+            },
+          ],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+
+        expect(result.report.profile).toBe("gap");
+        expectParagraphText(result.document.children[0], "Evidence");
       })
     ));
 

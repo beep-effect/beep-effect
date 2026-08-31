@@ -179,4 +179,40 @@ describe("Lexical strict semantic invariants", () => {
       )
     ).toBe(true);
   });
+
+  it("accepts logical table grids occupied by prior row spans", () => {
+    const cell = (extra: Readonly<Record<string, unknown>> = {}) => ({
+      ...element,
+      type: "tablecell",
+      headerState: 0,
+      children: [paragraph()],
+      ...extra,
+    });
+    const row = (children: ReadonlyArray<unknown>) => ({ ...element, type: "tablerow", children });
+    const table = {
+      ...element,
+      type: "table",
+      children: [row([cell({ rowSpan: 2 }), cell()]), row([cell()])],
+    };
+
+    expect(Result.isSuccess(decode(state(table)))).toBe(true);
+  });
+
+  it("rejects table grid collisions with prior row spans", () => {
+    const cell = (extra: Readonly<Record<string, unknown>> = {}) => ({
+      ...element,
+      type: "tablecell",
+      headerState: 0,
+      children: [paragraph()],
+      ...extra,
+    });
+    const row = (children: ReadonlyArray<unknown>) => ({ ...element, type: "tablerow", children });
+    const table = {
+      ...element,
+      type: "table",
+      children: [row([cell({ rowSpan: 2 }), cell()]), row([cell(), cell()])],
+    };
+
+    expect(Result.isFailure(decode(state(table)))).toBe(true);
+  });
 });

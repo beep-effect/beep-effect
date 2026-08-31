@@ -9,8 +9,10 @@ import * as S from "effect/Schema";
 const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const packageName = "@beep/example";
 const profileId = "example-profile";
+const secondaryProfileId = "example-secondary-profile";
 const sourceId = "example-source";
 const invariantId = "example.invariant";
+const secondaryInvariantId = "example.secondary-invariant";
 
 const source = {
   id: sourceId,
@@ -30,6 +32,15 @@ const profile = {
   invariantIds: [invariantId],
 };
 
+const secondaryProfile = {
+  id: secondaryProfileId,
+  title: "Example Secondary Profile",
+  version: "1.0",
+  description: "Second conformance-ledger test profile.",
+  sourceIds: [sourceId],
+  invariantIds: [secondaryInvariantId],
+};
+
 const enforcement = [{ kind: "runtime", validator: "Example.validate" }];
 
 const invariant = {
@@ -44,9 +55,19 @@ const invariant = {
   testIds: [],
 };
 
+const secondaryInvariant = {
+  ...invariant,
+  id: secondaryInvariantId,
+  title: "Secondary example invariant",
+  statement: "The example value satisfies the second profile's local runtime rule.",
+};
+
 const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(function* (options: {
   readonly coverageStatus: string;
   readonly inventorySourceId: string;
+  readonly primaryProfileInvariantIds?: ReadonlyArray<string>;
+  readonly primaryCoverageProfileIds?: ReadonlyArray<string>;
+  readonly secondaryCoverageProfileIds?: ReadonlyArray<string>;
 }) {
   const fileSystem = yield* FileSystem.FileSystem;
   const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-conformance-ledger-" });
@@ -59,9 +80,12 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
         encodeJson({
           schemaVersion: 1,
           packageName,
-          profileIds: [profileId],
+          profileIds: [profileId, secondaryProfileId],
           sources: [source],
-          profiles: [profile],
+          profiles: [
+            { ...profile, invariantIds: options.primaryProfileInvariantIds ?? profile.invariantIds },
+            secondaryProfile,
+          ],
         })
       ),
       fileSystem.writeFileString(
@@ -69,7 +93,7 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
         encodeJson({
           schemaVersion: 1,
           packageName,
-          profileIds: [profileId],
+          profileIds: [profileId, secondaryProfileId],
           items: [
             {
               id: "example.member",
@@ -90,8 +114,8 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
         encodeJson({
           schemaVersion: 1,
           packageName,
-          profileIds: [profileId],
-          invariants: [invariant],
+          profileIds: [profileId, secondaryProfileId],
+          invariants: [invariant, secondaryInvariant],
         })
       ),
       fileSystem.writeFileString(
@@ -99,16 +123,25 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
         encodeJson({
           schemaVersion: 1,
           packageName,
-          profileIds: [profileId],
+          profileIds: [profileId, secondaryProfileId],
           coverage: [
             {
               invariantId,
-              profileIds: [profileId],
+              profileIds: options.primaryCoverageProfileIds ?? [profileId],
               currentEnforcement: enforcement,
               targetEnforcement: enforcement,
               positiveTestIds: [],
               negativeTestIds: [],
               status: options.coverageStatus,
+            },
+            {
+              invariantId: secondaryInvariantId,
+              profileIds: options.secondaryCoverageProfileIds ?? [secondaryProfileId],
+              currentEnforcement: enforcement,
+              targetEnforcement: enforcement,
+              positiveTestIds: [],
+              negativeTestIds: [],
+              status: "covered",
             },
           ],
         })
@@ -121,7 +154,7 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
   return yield* validateConformanceLedgerArtifacts(pathToFileURL(`${root}/`), packageName);
 });
 
-const runFixture = (options: { readonly coverageStatus: string; readonly inventorySourceId: string }) =>
+const runFixture = (options: Parameters<typeof validateFixture>[0]) =>
   Effect.scoped(validateFixture(options)).pipe(Effect.provide(BunFileSystem.layer));
 
 describe("conformance-ledger validation", () => {
@@ -138,6 +171,48 @@ describe("conformance-ledger validation", () => {
       const issues = yield* runFixture({ coverageStatus: "covered", inventorySourceId: "missing-source" });
 
       expect(issues).toEqual(["inventory.json items references unknown id missing-source"]);
+    })
+  );
+
+  it.effect("reports profile invariants missing from coverage selection", () =>
+    Effect.gen(function* () {
+      const issues = yield* runFixture({
+        coverageStatus: "covered",
+        inventorySourceId: sourceId,
+        primaryProfileInvariantIds: [invariantId, secondaryInvariantId],
+      });
+
+      expect(issues).toEqual([
+        "coverage.json profile example-profile invariantIds differ from sources.json; coverage=[example.invariant]; profile=[example.invariant, example.secondary-invariant]",
+      ]);
+    })
+  );
+
+  it.effect("reports coverage selections missing from the profile", () =>
+    Effect.gen(function* () {
+      const issues = yield* runFixture({
+        coverageStatus: "covered",
+        inventorySourceId: sourceId,
+        secondaryCoverageProfileIds: [secondaryProfileId, profileId],
+      });
+
+      expect(issues).toEqual([
+        "coverage.json profile example-profile invariantIds differ from sources.json; coverage=[example.invariant, example.secondary-invariant]; profile=[example.invariant]",
+      ]);
+    })
+  );
+
+  it.effect("reports duplicate profile selections within one coverage entry", () =>
+    Effect.gen(function* () {
+      const issues = yield* runFixture({
+        coverageStatus: "covered",
+        inventorySourceId: sourceId,
+        primaryCoverageProfileIds: [profileId, profileId],
+      });
+
+      expect(issues).toEqual([
+        "coverage.json invariant example.invariant profileIds contains duplicate id example-profile",
+      ]);
     })
   );
 });

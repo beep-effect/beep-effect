@@ -614,14 +614,14 @@
     {
       "id": "md.safe.raw-content",
       "title": "Untrusted safe documents must reject raw Markdown and raw HTML nodes",
-      "statement": "The broad AST retains trusted raw nodes, while refineSafeDocument reports them before safe HTML projection.",
+      "statement": "The broad AST retains trusted raw nodes, while documentSafetyIssues, SafeDocument, and refineSafeDocument reject them before safe HTML projection.",
       "strength": "must",
       "scope": "document",
       "decidability": "contextualRuntime",
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
+          "validator": "documentSafetyIssues, SafeDocument, and refineSafeDocument"
         },
         {
           "kind": "test",
@@ -647,22 +647,18 @@
     {
       "id": "md.safe.urls-and-scalars",
       "title": "Safe documents must reject unsafe URLs and invalid scalar strings",
-      "statement": "URL policy and scalar checks are applied recursively, and denied targets render as inert content rather than executable links.",
+      "statement": "The SafeDocument boundary rejects unsafe URLs and invalid scalar strings recursively, while render policies degrade denied targets to inert content.",
       "strength": "must",
       "scope": "value",
       "decidability": "contextualRuntime",
       "enforcement": [
         {
           "kind": "runtime",
-          "validator": "@beep/md Effect Schema decode boundary for md.safe.urls-and-scalars"
+          "validator": "documentSafetyIssues, SafeDocument, and refineSafeDocument"
         },
         {
           "kind": "runtime",
-          "validator": "markdownConformanceIssues and strict profile schemas"
-        },
-        {
-          "kind": "runtime",
-          "validator": "@beep/md adapter boundary for md.safe.urls-and-scalars"
+          "validator": "makeMarkdownAdapter and makeHtmlFragmentAdapter URL policy boundaries"
         },
         {
           "kind": "test",
@@ -683,7 +679,10 @@
       "testIds": [
         "test/Md.test.ts#keeps-canonical-URL-policy-sanitization-at-a-fixed-point",
         "test/Md.test.ts#applies-a-custom-URL-policy-across-every-recursive-render-fold",
-        "test/Md.test.ts#renders-policy-denied-top-level-and-nested-YouTube-blocks-as-inert-text"
+        "test/Md.test.ts#refines-user-authored-documents-without-changing-their-encoded-wire",
+        "test/Md.test.ts#renders-policy-denied-top-level-and-nested-YouTube-blocks-as-inert-text",
+        "test/Md.test.ts#keeps-active-HTML-constructs-outside-the-SafeDocument-to-SafeHtml-path",
+        "test/Md.test.ts#rejects-values-that-cannot-complete-the-total-SafeDocument-to-SafeHtml-projection"
       ]
     },
     {

@@ -543,7 +543,8 @@
         }
       ],
       "positiveTestIds": [
-        "test/Pandoc.mapping.test.ts#preserves-beep-md-titles-ordered-starts-and-math-in-Pandoc-projection"
+        "test/Pandoc.mapping.test.ts#preserves-beep-md-titles-ordered-starts-and-math-in-Pandoc-projection",
+        "test/Pandoc.mapping.test.ts#round-trips-an-Md-math-block-through-a-Pandoc-display-math-paragraph"
       ],
       "negativeTestIds": [
         "test/Pandoc.codec.test.ts#rejects-unsupported-Math-subtypes-strictly-retains-them-losslessly-and-preserves-ordered-list-semantics",
@@ -616,7 +617,8 @@
       ],
       "negativeTestIds": [
         "test/Pandoc.mapping.test.ts#records-DOCX-origin-compatibility-gaps-while-producing-partial-Md-output",
-        "test/Pandoc.mapping.test.ts#maps-beep-md-documents-to-Pandoc-with-explicit-lossiness-for-raw-content-and-task-lists"
+        "test/Pandoc.mapping.test.ts#maps-beep-md-documents-to-Pandoc-with-explicit-lossiness-for-raw-content-and-task-lists",
+        "test/Pandoc.mapping.test.ts#retains-structured-table-caption-text-in-the-explicit-gap-projection"
       ],
       "status": "covered"
     },

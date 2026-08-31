@@ -652,4 +652,85 @@ describe("Lexical.codec", { concurrent: false }, () => {
       })
     );
   });
+
+  it("preserves block structure for shadow-root quotes", () => {
+    const state = Result.getOrThrow(
+      S.decodeResult(SerializedEditorState)({
+        root: {
+          type: "root",
+          version: 1,
+          direction: null,
+          format: "",
+          indent: 0,
+          children: [
+            {
+              type: "quote",
+              version: 1,
+              direction: null,
+              format: "",
+              indent: 0,
+              shadowRoot: true,
+              children: [
+                {
+                  type: "heading",
+                  version: 1,
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  tag: "h2",
+                  children: [
+                    { type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "Title" },
+                  ],
+                },
+                {
+                  type: "list",
+                  version: 1,
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  listType: "bullet",
+                  start: 1,
+                  tag: "ul",
+                  children: [
+                    {
+                      type: "listitem",
+                      version: 1,
+                      direction: null,
+                      format: "",
+                      indent: 0,
+                      value: 1,
+                      children: [
+                        {
+                          type: "text",
+                          version: 1,
+                          detail: 0,
+                          format: 0,
+                          mode: "normal",
+                          style: "",
+                          text: "Item",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      })
+    );
+
+    expect(editorStateToDocument(state)).toEqual(
+      MdModel.Document.make({
+        children: [
+          MdModel.BlockQuote.make({
+            children: [
+              MdModel.Heading.make({ level: 2, children: [mdText("Title")] }),
+              MdModel.Ul.make({ children: [MdModel.Li.make({ children: [mdText("Item")] })] }),
+            ],
+          }),
+        ],
+      })
+    );
+  });
 });

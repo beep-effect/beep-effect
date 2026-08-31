@@ -52,6 +52,8 @@ const unresolvedStrings = (references: ReadonlyArray<string>, registry: Readonly
 
 const describeValues = A.join(", ");
 
+const describeStringSet = (values: ReadonlyArray<string>): string => `[${describeValues(values)}]`;
+
 const duplicateIssues = (label: string, values: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.map(duplicateStrings(values), (value) => `${label} contains duplicate id ${value}`);
 
@@ -200,8 +202,9 @@ export const validateConformanceAnnotationAgainstLedgerArtifacts = Effect.fn(
  * **Details**
  *
  * JSON decoding uses the shared `@beep/schema/Conformance` source, profile, invariant, and enforcement schemas. The
- * returned diagnostics cover package/profile coherence, reference integrity, coverage bijection, evidence mirroring,
- * duplicate inventory identities, and referenced test-title existence.
+ * returned diagnostics cover package/profile coherence, exact bidirectional profile-invariant selection, reference
+ * integrity, coverage bijection, evidence mirroring, duplicate inventory identities, and referenced test-title
+ * existence.
  *
  * **Example** (Prepare a package ledger validation)
  *
@@ -219,7 +222,7 @@ export const validateConformanceAnnotationAgainstLedgerArtifacts = Effect.fn(
  * @param packageRoot - Package-root file URL containing `data/conformance` and `test` directories.
  * @param expectedPackageName - Exact workspace package name expected in all four JSON ledgers.
  * @returns An Effect that fails for unreadable or schema-invalid artifacts and otherwise returns all integrity diagnostics.
- * @invariant An empty result proves every invariant has exactly one aligned coverage entry and every test ID names a declared test.
+ * @invariant An empty result proves profile invariant selections are exact, every invariant has one aligned coverage entry, and every test ID names a declared test.
  * @category testing
  * @since 0.0.0
  */
@@ -262,6 +265,7 @@ export const validateConformanceLedgerArtifacts = Effect.fn("ConformanceLedger.v
           const coverageTestIds = pipe(A.appendAll(entry.positiveTestIds, entry.negativeTestIds), A.dedupe);
 
           return A.flatten([
+            duplicateIssues(`coverage.json invariant ${entry.invariantId} profileIds`, entry.profileIds),
             issueUnless(
               enforcementArrayEquivalence(entry.currentEnforcement, invariant.enforcement),
               `coverage currentEnforcement differs from invariant ${entry.invariantId}`
@@ -275,6 +279,20 @@ export const validateConformanceLedgerArtifacts = Effect.fn("ConformanceLedger.v
       })
     )
   );
+  const profileInvariantAlignmentIssues = A.flatMap(sources.profiles, (profile) => {
+    const coverageInvariantIdsForProfile = pipe(
+      coverage.coverage,
+      A.filter(({ profileIds: entryProfileIds }) => A.contains(entryProfileIds, profile.id)),
+      A.map(({ invariantId }) => invariantId)
+    );
+
+    return issueUnless(
+      sameStringSet(coverageInvariantIdsForProfile, profile.invariantIds),
+      `coverage.json profile ${profile.id} invariantIds differ from sources.json; coverage=${describeStringSet(
+        coverageInvariantIdsForProfile
+      )}; profile=${describeStringSet(profile.invariantIds)}`
+    );
+  });
   const evidenceIssues = yield* testEvidenceIssues(packageRoot, invariants.invariants);
 
   return A.flatten([
@@ -294,6 +312,7 @@ export const validateConformanceLedgerArtifacts = Effect.fn("ConformanceLedger.v
       )}; invariants=${describeValues(invariantIds)}`
     ),
     issueUnless(Str.isNonEmpty(Str.trim(sourcesMarkdown)), "SOURCES.md must contain a readable source explanation"),
+    profileInvariantAlignmentIssues,
     coverageAlignmentIssues,
     evidenceIssues,
   ]);

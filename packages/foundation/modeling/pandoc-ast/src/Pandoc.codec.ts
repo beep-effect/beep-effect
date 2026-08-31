@@ -607,10 +607,19 @@ const decodeJsonArray = S.decodeUnknownEffect(S.Array(S.Json));
 const decodeJsonRecord = S.decodeUnknownEffect(S.Record(S.String, S.Json));
 const decodeAbsentPayload = S.decodeUnknownEffect(S.Undefined);
 
-const decodeAndTakeT = flow(decodeConstructor, Effect.map(Struct.get("t")));
+const listNumberStyleFromWire = Effect.fn("Pandoc.listNumberStyleFromWire")(function* (input: unknown) {
+  const wire = yield* decodeConstructor(input);
+  const style = yield* decodeListNumberStyle(wire.t);
+  yield* decodeAbsentPayload(wire.c);
+  return style;
+});
 
-const listNumberStyleFromWire = flow(decodeAndTakeT, Effect.flatMap(decodeListNumberStyle));
-const listNumberDelimiterFromWire = flow(decodeAndTakeT, Effect.flatMap(decodeListNumberDelimiter));
+const listNumberDelimiterFromWire = Effect.fn("Pandoc.listNumberDelimiterFromWire")(function* (input: unknown) {
+  const wire = yield* decodeConstructor(input);
+  const delimiter = yield* decodeListNumberDelimiter(wire.t);
+  yield* decodeAbsentPayload(wire.c);
+  return delimiter;
+});
 
 const attrFromWire: (input: unknown) => Effect.Effect<PandocAttr, S.SchemaError> = decodeAttrWire;
 
@@ -1555,10 +1564,19 @@ function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
 
 const inspectOrderedList = (payload: unknown, path: JsonPathType): LosslessInspection =>
   inspectDecoded(decodeOrderedListPayloadWire(payload), "block", "OrderedList", path, ([[, style, delimiter], items]) =>
-    inspectDecoded(listNumberStyleFromWire(style), "block", "OrderedList", path, () =>
-      inspectDecoded(listNumberDelimiterFromWire(delimiter), "block", "OrderedList", path, () =>
-        inspectBlockItems(items, appendPath(path, "c", 1), "OrderedList", path)
-      )
+    inspectDecoded(
+      listNumberStyleFromWire(style),
+      "block",
+      O.getOrElse(O.map(decodeConstructorOption(style), Struct.get("t")), () => "OrderedList"),
+      appendPath(path, "c", 0, 1),
+      () =>
+        inspectDecoded(
+          listNumberDelimiterFromWire(delimiter),
+          "block",
+          O.getOrElse(O.map(decodeConstructorOption(delimiter), Struct.get("t")), () => "OrderedList"),
+          appendPath(path, "c", 0, 2),
+          () => inspectBlockItems(items, appendPath(path, "c", 1), "OrderedList", path)
+        )
     )
   );
 

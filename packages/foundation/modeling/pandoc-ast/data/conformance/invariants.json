@@ -576,6 +576,7 @@
       ],
       "testIds": [
         "test/Pandoc.mapping.test.ts#preserves-beep-md-titles-ordered-starts-and-math-in-Pandoc-projection",
+        "test/Pandoc.mapping.test.ts#round-trips-an-Md-math-block-through-a-Pandoc-display-math-paragraph",
         "test/Pandoc.codec.test.ts#rejects-unsupported-Math-subtypes-strictly-retains-them-losslessly-and-preserves-ordered-list-semantics",
         "test/Pandoc.codec.test.ts#rejects-known-or-malformed-nullary-constructors-in-a-Math-type-slot"
       ]
@@ -653,6 +654,7 @@
         "test/Pandoc.mapping.test.ts#preserves-mapping-report-invariants-for-schema-derived-documents",
         "test/Pandoc.mapping.test.ts#records-DOCX-origin-compatibility-gaps-while-producing-partial-Md-output",
         "test/Pandoc.mapping.test.ts#maps-beep-md-documents-to-Pandoc-with-explicit-lossiness-for-raw-content-and-task-lists",
+        "test/Pandoc.mapping.test.ts#retains-structured-table-caption-text-in-the-explicit-gap-projection",
         "test/Pandoc.semantic-conformance.test.ts#classifies-every-newly-modeled-Markdown-projection-as-lossy-or-unsupported"
       ]
     },

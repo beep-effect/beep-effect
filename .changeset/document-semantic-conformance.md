@@ -5,6 +5,7 @@
 "@beep/md": minor
 "@beep/lexical-schema": minor
 "@beep/pandoc-ast": minor
+"@beep/repo-configs": patch
 "@beep/test-utils": minor
 ---
 
