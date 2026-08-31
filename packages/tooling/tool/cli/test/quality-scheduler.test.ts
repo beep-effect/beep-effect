@@ -24,6 +24,7 @@ import {
   RuntimeRootChoice,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
+  validatePrivateCoordinationDirectory,
   withQualityAdmission,
   YeetAdmissionLease,
   YeetAdmissionTicket,
@@ -305,6 +306,27 @@ const listDirectory = Effect.fnUntraced(function* (directory: string) {
 });
 
 describe("quality-scheduler", () => {
+  it.effect("accepts an owner-agnostic private directory and rejects an unsafe mode", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "quality-scheduler-private-directory-" });
+      yield* fs.chmod(directory, 0o700);
+
+      const options = {
+        effectiveUserId: O.none<number>(),
+        label: "Test coordination directory",
+        onStatError: () => "stat failed",
+        onViolation: (message: string) => message,
+      };
+
+      yield* validatePrivateCoordinationDirectory(directory, options);
+      yield* fs.chmod(directory, 0o755);
+      const failure = yield* validatePrivateCoordinationDirectory(directory, options).pipe(Effect.flip);
+
+      expect(failure).toContain("expected 0700");
+    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+  );
+
   describe("capacity formula", () => {
     it("matches the chartered D1 table", () => {
       const config = AdmissionConfig.make({});
