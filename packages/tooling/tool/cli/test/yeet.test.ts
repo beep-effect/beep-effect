@@ -2775,11 +2775,12 @@ describe("yeet publish scope helpers", () => {
         startedAt: "2026-06-11T00:00:00.000Z",
       })
     );
-    expect(proofLockDispositionForTesting(O.none(), false, false)).toBe("refuse-unreadable");
-    expect(proofLockDispositionForTesting(O.none(), true, false)).toBe("refuse-unreadable");
-    expect(proofLockDispositionForTesting(state, true, false)).toBe("refuse-active");
-    expect(proofLockDispositionForTesting(state, false, false)).toBe("replace-stale");
-    expect(proofLockDispositionForTesting(O.none(), false, true)).toBe("refuse-legacy");
+    expect(proofLockDispositionForTesting(O.none(), "dead", false)).toBe("refuse-unreadable");
+    expect(proofLockDispositionForTesting(O.none(), "alive", false)).toBe("refuse-unreadable");
+    expect(proofLockDispositionForTesting(state, "alive", false)).toBe("refuse-active");
+    expect(proofLockDispositionForTesting(state, "dead", false)).toBe("replace-stale");
+    expect(proofLockDispositionForTesting(state, "unknown", false)).toBe("refuse-unverifiable");
+    expect(proofLockDispositionForTesting(O.none(), "dead", true)).toBe("refuse-legacy");
   });
 
   it("derives one opaque machine-local proof coordinator per repository identity", () =>

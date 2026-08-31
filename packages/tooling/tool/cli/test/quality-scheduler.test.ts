@@ -16,6 +16,7 @@ import {
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
+  processIdentityStatusWithStartForTesting,
   provideRuntimeRootForTesting,
   RunScopeRecord,
   RuntimeRootChoice,
@@ -45,11 +46,19 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 const DEAD_PID = 2_147_483_647;
 
 describe("process identity liveness", () => {
-  it.effect("rejects a recorded identity when the current process start is unreadable", () =>
+  it.effect("classifies a recorded identity as unknown when the current process start is unreadable", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* processIdentityStatusWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
+      ).toBe("unknown");
+    })
+  );
+
+  it.effect("retains an unverifiable recorded identity during admission repair", () =>
     Effect.gen(function* () {
       expect(
         yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
-      ).toBe(false);
+      ).toBe(true);
     })
   );
 

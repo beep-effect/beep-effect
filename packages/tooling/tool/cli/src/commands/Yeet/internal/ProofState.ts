@@ -18,8 +18,9 @@ import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import {
   commandTextForStep,
   currentEffectiveUserIdOption,
-  isProcessIdentityAlive,
   isProcessPidAlive,
+  ProcessIdentityStatus,
+  processIdentityStatus,
   processStartTimeForPid,
   validatePrivateCoordinationDirectory,
 } from "../../../internal/repo-run/index.ts";
@@ -138,7 +139,13 @@ class YeetProofLockReapClaim extends S.Class<YeetProofLockReapClaim>($I`YeetProo
   })
 ) {}
 
-const ProofLockDisposition = LiteralKit(["replace-stale", "refuse-active", "refuse-legacy", "refuse-unreadable"]).pipe(
+const ProofLockDisposition = LiteralKit([
+  "replace-stale",
+  "refuse-active",
+  "refuse-legacy",
+  "refuse-unreadable",
+  "refuse-unverifiable",
+]).pipe(
   $I.annoteSchema("ProofLockDisposition", {
     description: "Fail-closed action selected for one observed proof-lock generation.",
   })
@@ -455,16 +462,18 @@ const decodeProofLockReapClaim = S.decodeUnknownEffect(S.fromJsonString(YeetProo
 
 const proofLockDisposition = (
   state: O.Option<YeetProofLockState>,
-  ownerAlive: boolean,
+  ownerStatus: ProcessIdentityStatus,
   legacyState: boolean
 ): ProofLockDisposition =>
   legacyState
     ? ProofLockDisposition.Enum["refuse-legacy"]
     : O.isNone(state)
       ? ProofLockDisposition.Enum["refuse-unreadable"]
-      : ownerAlive
-        ? ProofLockDisposition.Enum["refuse-active"]
-        : ProofLockDisposition.Enum["replace-stale"];
+      : ProcessIdentityStatus.$match(ownerStatus, {
+          alive: () => ProofLockDisposition.Enum["refuse-active"],
+          dead: () => ProofLockDisposition.Enum["replace-stale"],
+          unknown: () => ProofLockDisposition.Enum["refuse-unverifiable"],
+        });
 
 /**
  * Decide whether an existing proof lock is stale, active, legacy, or unreadable.
@@ -486,15 +495,18 @@ const proofLockDisposition = (
  *   startedAt: "2026-07-08T00:00:00.000Z"
  * })
  *
- * strictEqual(proofLockDispositionForTesting(O.some(state), false, false), "replace-stale")
+ * strictEqual(proofLockDispositionForTesting(O.some(state), "dead", false), "replace-stale")
  * ```
  *
  * @category testing
  * @since 0.0.0
  */
 export const proofLockDispositionForTesting: {
-  (ownerAlive: boolean, legacyState: boolean): (state: O.Option<YeetProofLockState>) => ProofLockDisposition;
-  (state: O.Option<YeetProofLockState>, ownerAlive: boolean, legacyState: boolean): ProofLockDisposition;
+  (
+    ownerStatus: ProcessIdentityStatus,
+    legacyState: boolean
+  ): (state: O.Option<YeetProofLockState>) => ProofLockDisposition;
+  (state: O.Option<YeetProofLockState>, ownerStatus: ProcessIdentityStatus, legacyState: boolean): ProofLockDisposition;
 } = dual(3, proofLockDisposition);
 
 // Atomic exclusive create: succeeds only when this process is the one that
@@ -763,7 +775,7 @@ export const tryReclaimStaleProofLockForTesting = tryReclaimStaleProofLock;
 
 interface ObservedProofLockState {
   readonly legacyState: O.Option<YeetProofLockStateV2>;
-  readonly ownerAlive: boolean;
+  readonly ownerStatus: ProcessIdentityStatus;
   readonly retirementState: O.Option<YeetProofLockRetirementState>;
   readonly state: O.Option<YeetProofLockState>;
   readonly text: string;
@@ -792,14 +804,14 @@ const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* 
           Effect.orElseSucceed(O.none<YeetProofLockRetirementState>)
         )
       : O.none<YeetProofLockRetirementState>();
-  const ownerAlive = yield* pipe(
+  const ownerStatus = yield* pipe(
     state,
     O.match({
-      onNone: () => Effect.succeed(false),
-      onSome: isProcessIdentityAlive,
+      onNone: () => Effect.succeed(ProcessIdentityStatus.Enum.dead),
+      onSome: processIdentityStatus,
     })
   );
-  return { text, state, legacyState, retirementState, ownerAlive };
+  return { text, state, legacyState, retirementState, ownerStatus };
 });
 
 const tryReplaceStaleProofLock = Effect.fn("Yeet.tryReplaceStaleProofLock")(function* (
@@ -832,6 +844,18 @@ const activeProofLockRefusal = (lockPath: string, state: O.Option<YeetProofLockS
   });
 };
 
+const unverifiableProofLockRefusal = (lockPath: string, owner: YeetProofLockState): YeetCommandError =>
+  YeetCommandError.make({
+    message:
+      `Cannot verify the process identity recorded by the Yeet proof lock at ${lockPath}. ` +
+      `Owner checkout ${owner.checkoutRoot} on ${owner.branch}, pid ${owner.pid}, started ${owner.startedAt}.\n` +
+      "The coordinator refuses both unsafe reclamation and indefinite queueing behind an unverifiable PID. " +
+      "Retry after process identity inspection is available, or remove the lock only after independently confirming its owner is gone.",
+    command: "bun run beep yeet verify",
+    exitCode: 1,
+    file: lockPath,
+  });
+
 interface FullProofLockContention {
   readonly lease: O.Option<YeetProofLockLease>;
   readonly observed: ObservedProofLockState;
@@ -846,9 +870,12 @@ const contendForFullProofLockCore = Effect.fn("Yeet.contendForFullProofLockCore"
   lease: YeetProofLockLease
 ): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   let observed = yield* observeProofLockState(lockPath);
-  const disposition = proofLockDisposition(observed.state, observed.ownerAlive, O.isSome(observed.legacyState));
+  const disposition = proofLockDisposition(observed.state, observed.ownerStatus, O.isSome(observed.legacyState));
   if (ProofLockDisposition.is["refuse-legacy"](disposition) && O.isSome(observed.legacyState)) {
     return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
+  }
+  if (ProofLockDisposition.is["refuse-unverifiable"](disposition) && O.isSome(observed.state)) {
+    return yield* unverifiableProofLockRefusal(lockPath, observed.state.value);
   }
 
   if (ProofLockDisposition.is["replace-stale"](disposition) && O.isSome(observed.state)) {
@@ -1208,9 +1235,11 @@ const retireObservedProofLock = Effect.fn("Yeet.retireObservedProofLock")(functi
             )
           : Effect.fail(activeProofLockRefusal(lockPath, observed.state)),
       onSome: (owner) =>
-        observed.ownerAlive
-          ? Effect.succeed(O.none<boolean>())
-          : replaceStaleProofLockWithRetirement(lockPath, retirementText, owner, observed),
+        ProcessIdentityStatus.$match(observed.ownerStatus, {
+          alive: () => Effect.succeed(O.none<boolean>()),
+          dead: () => replaceStaleProofLockWithRetirement(lockPath, retirementText, owner, observed),
+          unknown: () => Effect.fail(unverifiableProofLockRefusal(lockPath, owner)),
+        }),
     })
   );
 });

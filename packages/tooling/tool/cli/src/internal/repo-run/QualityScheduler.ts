@@ -20,6 +20,7 @@
 import { randomUUID } from "node:crypto";
 import { freemem, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import {
   Clock,
@@ -276,24 +277,77 @@ export const processStartTimeForPid = Effect.fnUntraced(function* (
     .pipe(Effect.map(parseAdmissionProcStatStartTime), Effect.orElseSucceed(O.none<string>));
 });
 
-// An owner is dead when its pid is gone, or when a recorded /proc start time
-// cannot be confirmed. Legacy owners without a recorded identity retain the
-// pid-only behavior.
-const isProcessIdentityAliveWithStart = Effect.fnUntraced(function* <Requirements>(
+/**
+ * Result of inspecting a PID plus its recorded Linux process start time.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessIdentityStatus = LiteralKit(["alive", "dead", "unknown"]).pipe(
+  $I.annoteSchema("ProcessIdentityStatus", {
+    description: "Whether a recorded process identity is live, dead, or temporarily unverifiable.",
+  })
+);
+
+/**
+ * Type represented by {@link ProcessIdentityStatus}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProcessIdentityStatus = typeof ProcessIdentityStatus.Type;
+
+// A missing PID or a start-time mismatch proves an owner dead. A readable
+// match proves it alive. A live PID whose recorded identity cannot currently
+// be read remains unknown so callers can choose a context-safe policy.
+const processIdentityStatusWithStart = Effect.fnUntraced(function* <Requirements>(
   owner: {
     readonly pid: number;
     readonly procStart: string;
   },
   currentStart: Effect.Effect<O.Option<string>, never, Requirements>
-): Effect.fn.Return<boolean, never, Requirements> {
+): Effect.fn.Return<ProcessIdentityStatus, never, Requirements> {
   const alive = yield* isProcessPidAlive(owner.pid);
   if (!alive) {
-    return false;
+    return ProcessIdentityStatus.Enum.dead;
   }
   if (Str.isEmpty(owner.procStart)) {
-    return true;
+    return ProcessIdentityStatus.Enum.alive;
   }
-  return O.contains(owner.procStart)(yield* currentStart);
+  return O.match(yield* currentStart, {
+    onNone: () => ProcessIdentityStatus.Enum.unknown,
+    onSome: (start) => (start === owner.procStart ? ProcessIdentityStatus.Enum.alive : ProcessIdentityStatus.Enum.dead),
+  });
+});
+
+/**
+ * Inspect a process identity using both its PID and recorded start time.
+ *
+ * **Details**
+ *
+ * A live PID with an unreadable current start time is `unknown`, distinct
+ * from a missing PID or mismatched start time that proves the owner `dead`.
+ *
+ * **Example** (Inspect the current process)
+ *
+ * ```ts
+ * import { processIdentityStatus } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * const status = processIdentityStatus({ pid: process.pid, procStart: "" })
+ * console.log(Effect.isEffect(status)) // true
+ * ```
+ *
+ * @param owner - PID and optional Linux process start time recorded by an owner.
+ * @returns The observed process-identity status.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const processIdentityStatus = Effect.fnUntraced(function* (owner: {
+  readonly pid: number;
+  readonly procStart: string;
+}): Effect.fn.Return<ProcessIdentityStatus, never, FileSystem.FileSystem> {
+  return yield* processIdentityStatusWithStart(owner, processStartTimeForPid(owner.pid));
 });
 
 /**
@@ -302,9 +356,10 @@ const isProcessIdentityAliveWithStart = Effect.fnUntraced(function* <Requirement
  * **Details**
  *
  * A start-time mismatch proves the PID was recycled. An unreadable current
- * identity cannot confirm a non-empty recorded identity and is treated as
- * dead so a recycled PID cannot strand admission state. Empty recorded start
- * times retain the legacy PID-only behavior.
+ * identity remains conservatively live so normal admission repair cannot reap
+ * or stop an owner that may still be running. Callers that cannot wait behind
+ * an unverifiable identity inspect {@link processIdentityStatus} directly.
+ * Empty recorded start times retain the legacy PID-only behavior.
  *
  * **Example** (Check a recorded process identity)
  *
@@ -325,7 +380,7 @@ export const isProcessIdentityAlive = Effect.fnUntraced(function* (owner: {
   readonly pid: number;
   readonly procStart: string;
 }): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  return yield* isProcessIdentityAliveWithStart(owner, processStartTimeForPid(owner.pid));
+  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatus(owner));
 });
 
 /**
@@ -334,7 +389,8 @@ export const isProcessIdentityAlive = Effect.fnUntraced(function* (owner: {
  * **Details**
  *
  * This test seam keeps PID liveness real while allowing regression tests to
- * model an unreadable `/proc/<pid>/stat` entry.
+ * model an unreadable `/proc/<pid>/stat` entry. Unknown identities remain
+ * conservatively alive for admission repair.
  *
  * **Example** (Model an unreadable current identity)
  *
@@ -349,7 +405,7 @@ export const isProcessIdentityAlive = Effect.fnUntraced(function* (owner: {
  *     O.none()
  *   )
  * )
- * console.log(alive) // false
+ * console.log(alive) // true
  * ```
  *
  * @param owner - PID and recorded process start time to check.
@@ -365,7 +421,42 @@ export const isProcessIdentityAliveWithStartForTesting = Effect.fnUntraced(funct
   },
   currentStart: O.Option<string>
 ): Effect.fn.Return<boolean> {
-  return yield* isProcessIdentityAliveWithStart(owner, Effect.succeed(currentStart));
+  return !ProcessIdentityStatus.is.dead(yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart)));
+});
+
+/**
+ * Inspect process-identity status with a supplied current start time.
+ *
+ * **Example** (Model an unreadable current identity)
+ *
+ * ```ts
+ * import { processIdentityStatusWithStartForTesting } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const status = Effect.runSync(
+ *   processIdentityStatusWithStartForTesting(
+ *     { pid: process.pid, procStart: "recorded-start" },
+ *     O.none()
+ *   )
+ * )
+ * console.log(status) // "unknown"
+ * ```
+ *
+ * @param owner - PID and recorded process start time to inspect.
+ * @param currentStart - Simulated current process start time.
+ * @returns The simulated process-identity status.
+ * @category testing
+ * @since 0.0.0
+ */
+export const processIdentityStatusWithStartForTesting = Effect.fnUntraced(function* (
+  owner: {
+    readonly pid: number;
+    readonly procStart: string;
+  },
+  currentStart: O.Option<string>
+): Effect.fn.Return<ProcessIdentityStatus> {
+  return yield* processIdentityStatusWithStart(owner, Effect.succeed(currentStart));
 });
 
 interface AdmissionDirectories {
