@@ -277,6 +277,12 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
 /**
  * An HTML conformance issue produced by the canonical Markdown projection.
  *
+ * **Details**
+ *
+ * `path` addresses the projected `@beep/html` tree using the HTML
+ * conformance inspector's path syntax. Other safety variants address the
+ * source Markdown AST.
+ *
  * **Example** (Use HtmlProjectionSafetyViolation)
  *
  * ```ts import.meta.vitest name="Use HtmlProjectionSafetyViolation"
@@ -289,12 +295,6 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
  * })
  * issue._tag // => "HtmlProjection"
  * ```
- *
- * **Details**
- *
- * `path` addresses the projected `@beep/html` tree using the HTML
- * conformance inspector's path syntax. Other safety variants address the
- * source Markdown AST.
  *
  * @invariant Every instance describes a hard author-conformance failure returned by the canonical `Document.toHtml` projection.
  * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for the mandatory heading-level progression rule.
