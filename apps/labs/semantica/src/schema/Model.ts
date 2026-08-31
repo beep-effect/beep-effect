@@ -1,5 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { LiteralKit, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { identity } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $SemanticaId.create("schema/Model");
@@ -18,9 +20,9 @@ const $I = $SemanticaId.create("schema/Model");
  * @category schemas
  * @since 0.0.0
  */
-export const ProviderFamily = LiteralKit(["anthropic", "xai", "wink"]).pipe(
+export const ProviderFamily = LiteralKit(["anthropic", "openai", "xai", "wink"]).pipe(
   $I.annoteSchema("ProviderFamily", {
-    description: "Anthropic and xAI hosted providers plus the local Wink pattern provider.",
+    description: "Anthropic, OpenAI, and xAI hosted providers plus the local Wink pattern provider.",
   })
 );
 
@@ -56,9 +58,9 @@ export type ProviderFamily = typeof ProviderFamily.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const TaskType = LiteralKit(["extraction", "gold-proposal"]).pipe(
+export const TaskType = LiteralKit(["embedding", "extraction", "gold-proposal"]).pipe(
   $I.annoteSchema("TaskType", {
-    description: "Extraction and gold-proposal roles that distinguish otherwise identical models.",
+    description: "Embedding, extraction, and gold-proposal roles that distinguish otherwise identical models.",
   })
 );
 
@@ -102,15 +104,33 @@ export type TaskType = typeof TaskType.Type;
  * @category models
  * @since 0.0.0
  */
-export class ModelIdentity extends S.Class<ModelIdentity>($I`ModelIdentity`)(
+const ModelIdentityFields = S.Struct({
+  artifactHash: Sha256Hex,
+  dimension: S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault),
+  name: S.NonEmptyString,
+  provider: ProviderFamily,
+  revision: S.NonEmptyString,
+  taskType: TaskType,
+});
+
+const ModelIdentityDimensionCheck = S.makeFilter(
+  (model: typeof ModelIdentityFields.Type) =>
+    TaskType.$match(model.taskType, {
+      embedding: () => O.isSome(model.dimension),
+      extraction: () => O.isNone(model.dimension),
+      "gold-proposal": () => O.isNone(model.dimension),
+    }),
   {
-    provider: ProviderFamily,
-    name: S.NonEmptyString,
-    revision: S.NonEmptyString,
-    artifactHash: Sha256Hex,
-    taskType: TaskType,
-  },
+    identifier: $I`ModelIdentityDimensionCheck`,
+    title: "Model identity dimension ownership",
+    description: "Requires only embedding identities to carry a positive vector dimension.",
+    message: "ModelIdentity dimension must be present exactly when taskType is embedding.",
+  }
+);
+
+export class ModelIdentity extends S.Class<ModelIdentity>($I`ModelIdentity`)(
+  ModelIdentityFields.mapFields(identity).check(ModelIdentityDimensionCheck),
   $I.annote("ModelIdentity", {
-    description: "Pinned provider family, model name, revision, prompt artifact hash, and task role.",
+    description: "Pinned provider, model name, revision, artifact, task role, and embedding dimension when applicable.",
   })
 ) {}
