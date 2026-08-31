@@ -18,7 +18,7 @@ const $I = $CiopsId.create("Api");
  * **Example** (Create a healthy response)
  *
  * ```ts
- * import { Health } from "@beep/ciops/Api"
+ * import { Health } from "@beep/ciops/src/Api"
  *
  * const health = Health.make({ status: "ok" })
  * console.log(health.status) // "ok"
@@ -46,7 +46,7 @@ const ApiGroup = HttpApiGroup.make("ciops").add(HttpApiEndpoint.get("health", "/
  * **Example** (Inspect the API identifier)
  *
  * ```ts
- * import { Api } from "@beep/ciops/Api"
+ * import { Api } from "@beep/ciops/src/Api"
  *
  * console.log(Api.identifier) // "ciops-api"
  * ```
