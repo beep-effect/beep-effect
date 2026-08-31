@@ -6,6 +6,7 @@
 "@beep/architecture-lab-domain": patch
 "@beep/architecture-lab-use-cases": patch
 "@beep/box": patch
+"@beep/box-provisioning": patch
 "@beep/chalk": patch
 "@beep/codegen-kit": patch
 "@beep/db-admin": patch
