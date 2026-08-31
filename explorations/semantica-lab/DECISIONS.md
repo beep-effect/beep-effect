@@ -9,16 +9,16 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Stage `P2 C0`: the evidence-quote relation candidate cleared E5 and E6 on 2026-08-30 and the `semantica-canary` packet is active. Publish the lab candidate through its mergeable PR, then spend its single live probe on F1 plus one relation paper. Do not scaffold a queued MAP row from the failed gate; MAP v1.0's extractor prose is superseded by this table (dated note in MAP.md). | E1-E8 candidate definition at stage `decompose`; "define a new exact-evidence relation candidate" as open work; stage `graduate` and its PR A/B/C sequence |
+| Next work | Finish the C0 evidence PR at `merge-ready: yes` and land it, then begin `P3 C1`. The sibling `openai-driver` packet is merged and `completed-retained`, so no dependency remains after the C0 phase boundary. | P2 live probe and R2 gate; E1-E9 re-entry work; stage `graduate` and its PR A/B/C sequence |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
 | Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
 | Embeddings | park-pending-canary; contract = `effect/unstable/ai` `EmbeddingModel`; M1 Layer = the shipped `@effect/ai-openai` `OpenAiEmbeddingModel` composed through a new `@beep/openai` driver that mirrors `@beep/anthropic` (S3-rev) — use `OpenAiEmbeddingModel.model()` where `Dimensions` is needed (`.layer` provides `EmbeddingModel` only); the driver is its own goal packet `openai-driver` at template weight, key-only config (M3); Anthropic has no embeddings API; local Snowflake/ONNX lane parked | S3 (openai-compat `/embeddings` op); G6 "via the agents slice"; S3-rev's "`.layer` provides Dimensions" |
-| Input | park-pending-canary; per-stage slate is probe order; PDF first probe = `@beep/doc-text` (the exact string the product pipeline digests); breaker retry = direct `unpdf` text items with `disableNormalization: true` inside the lab (same MIT dep) if G-structure needs page/font structure; MuPDF parked (AGPL subprocess, new binary) (M1) | the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
+| Input | **pick-one** (C0, 2026-08-30): the proven C0 input stack, with `@beep/doc-text` for born-digital W1 PDFs, identity decoding for Markdown, and the lab's deterministic HTML text extraction. All 25 W1 papers parsed in R2 without the direct-`unpdf` retry; MuPDF stays parked. | `park-pending-canary`; the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
 | Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
 | Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
-| Extraction | **active re-entry** (E9, 2026-08-30): the evidence-quote candidate passed its zero-spend preview with 10 grounded cached relations on two papers, and gold-v1 was reviewed, repaired, and refrozen. Its endpoint policy scopes unique subject/object alignment to the evidence span; fuzzy relation evidence is disqualified. One live probe plus one retry remain, and a second park is terminal (E8). | `park` (S1, 2026-08-26); `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
+| Extraction | **pick-one** (C0, 2026-08-30): the hybrid extractor contract—hosted LangExtract-shaped extraction with exact evidence-quote grounding, plus the fail-closed Wink pattern comparator and its declared unsupported losses. The candidate passed all three relation papers and full-W1 R2 without retry; the legacy relation-dropping handoff and fabricated-span adapter remain parked. | E9 `active re-entry`; `park` (S1, 2026-08-26); `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the `EvalReport` digest with network off; Tier-L/Tier-D numbers live in a per-run `EvalRunTelemetry` sidecar outside the digest (R1) | A8's fully-offline M1; "byte-identical EvalReports" |
@@ -657,3 +657,23 @@ Decisions, grilled and locked 2026-08-27:
   The E5/E6 gates therefore clear and `semantica-canary` returns to active
   P2. No live probe was spent by the preview or annotation pass; E8's one
   probe plus one retry remain.
+
+## 2026-08-30 (C0 pass) — Input and Extraction verdicts
+
+Source:
+[`goals/semantica-canary/history/p2-c0-r2.md`](../../goals/semantica-canary/history/p2-c0-r2.md).
+
+- **Input: `pick-one`.** The first-probe C0 stack parsed every F1 fixture and
+  all 25 W1 papers through its declared media path. The full live and replay
+  reports had zero unexpected degradation and zero failed anchors. The
+  born-digital PDF winner is `@beep/doc-text`; the direct-`unpdf` retry was not
+  used, and MuPDF remains parked.
+- **Extraction: `pick-one`.** The selected family contract is hybrid: hosted
+  LangExtract-shaped extraction uses the evidence-quote contract with exact,
+  uniquely scoped endpoint grounding; Wink supplies the fail-closed pattern
+  comparator and declares unsupported structure and relation losses. The
+  three relation papers emitted 10, 9, and 9 hosted claims. The full 34-document
+  live and offline reports were byte-identical at digest
+  `7d1918096fc2ae893b9257a0a84aeb7def1cad7bf8f4d5c8add13c660faf210a`.
+  The retry was not used. The legacy relation-dropping handoff and Wink's
+  fabricated-span adapter remain parked; they are not the selected boundary.
