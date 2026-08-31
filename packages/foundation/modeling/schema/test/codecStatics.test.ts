@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { staticDescriptorInstaller } from "@beep/schema/SchemaUtils/internal/staticDescriptors";
 import {
   CodecStaticKey,
   CodecStaticSelectionError,
@@ -191,6 +192,47 @@ describe("withCodecStatics", () => {
       expect(yield* Effect.tryPromise(() => Selected.encodeUnknownPromise(42))).toBe("42");
     })
   );
+});
+
+describe("staticDescriptorInstaller", () => {
+  it("fails closed when strict installation encounters an existing property", () => {
+    expect(() =>
+      staticDescriptorInstaller.install({ is: true }, { is: false }, "strict", (key) => {
+        throw new Error(`translated conflict: ${key}`);
+      })
+    ).toThrow("translated conflict: is");
+    expect(() => staticDescriptorInstaller.install({ is: true }, { is: false }, "strict")).toThrow(
+      "Cannot redefine existing static 'is' in strict mode."
+    );
+  });
+
+  it("preserves identical legacy statics", () => {
+    const is = () => true;
+    const target = { is };
+
+    expect(staticDescriptorInstaller.install(target, { is })).toBe(target);
+    expect(target.is).toBe(is);
+  });
+
+  it("hardens accessor descriptors and reports definition failures", () => {
+    const statics = {} as { readonly value: number };
+    Reflect.defineProperty(statics, "value", {
+      configurable: true,
+      enumerable: true,
+      get: () => 42,
+    });
+
+    const installed = staticDescriptorInstaller.install({}, statics, "strict");
+    expect(installed.value).toBe(42);
+    expect(Reflect.getOwnPropertyDescriptor(installed, "value")).toMatchObject({
+      configurable: false,
+      enumerable: false,
+    });
+
+    expect(() => staticDescriptorInstaller.install(Object.preventExtensions({}), { value: 42 }, "strict")).toThrow(
+      "Cannot define static 'value'."
+    );
+  });
 });
 
 describe("classStatics", () => {
