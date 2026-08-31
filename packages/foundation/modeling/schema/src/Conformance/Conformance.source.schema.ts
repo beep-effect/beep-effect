@@ -33,7 +33,13 @@ const $I = $SchemaId.create("Conformance/source");
  * @category specifications
  * @since 0.0.0
  */
-export const GitObjectId = S.String.check(S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)).pipe(
+export const GitObjectId = S.String.check(
+  S.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/, {
+    identifier: $I`GitObjectIdPattern`,
+    title: "Canonical Git object identifier",
+    description: "A full lowercase hexadecimal Git object identifier with SHA-1 or SHA-256 width.",
+  })
+).pipe(
   $I.annoteSchema("GitObjectId", {
     description: "Canonical lowercase full 40- or 64-hexadecimal Git object identifier.",
   })

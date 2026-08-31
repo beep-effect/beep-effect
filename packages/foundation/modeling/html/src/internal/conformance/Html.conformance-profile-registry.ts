@@ -74,20 +74,13 @@ export const HtmlConformanceProfiles = defineProfiles([
     description:
       "Currently vendored derived indices, registry data, and reviewed overrides consumed by offline HTML generation.",
     sourceIds: [
-      "html-whatwg-source-approved",
       "html-webref-dfns-current-local",
       "html-webref-elements-current-local",
-      "html-webref-dfns-approved-target",
       "html-whatwg-content-model-current-local",
       "html-iana-language-subtag-registry-current-local",
       "html-classification-current-local",
       "html-obsolete-interfaces-current-local",
     ],
-    invariantIds: [
-      "html.inventory.generated-elements",
-      "html.inventory.approved-refresh-drift",
-      "html.element.local-content-model",
-      "html.obsolete.nonconforming-elements",
-    ],
+    invariantIds: ["html.inventory.generated-elements", "html.obsolete.nonconforming-elements"],
   },
 ]);

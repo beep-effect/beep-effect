@@ -13,6 +13,7 @@ import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { InvariantDescriptor } from "./Conformance.invariant.schema.ts";
 import { ConformanceProfile } from "./Conformance.profile.schema.ts";
 import { SpecificationSource } from "./Conformance.source.schema.ts";
+import type * as Brand from "effect/Brand";
 
 const $I = $SchemaId.create("Conformance/annotations");
 
@@ -136,6 +137,7 @@ const AnnotationConsistency = S.makeFilter(isConsistentAnnotation, {
  * @since 0.0.0
  */
 export const Annotation = AnnotationFields.check(AnnotationConsistency).pipe(
+  S.brand("@beep/schema/Conformance/Annotation"),
   SchemaUtils.withResultCodecStatics,
   SchemaUtils.withStatics((schema) => {
     const toType = S.toType(schema);
@@ -157,17 +159,16 @@ export const Annotation = AnnotationFields.check(AnnotationConsistency).pipe(
  */
 export type Annotation = typeof Annotation.Type;
 
-// Internal carrier avoids a recursive global-annotation/schema type cycle.
-interface ConformanceAnnotationPayload {
-  readonly invariants: readonly [unknown, ...Array<unknown>];
-  readonly profiles: readonly [unknown, ...Array<unknown>];
-  readonly sources: readonly [unknown, ...Array<unknown>];
-}
+// Effect schema annotations participate in the type of every schema used to
+// define Annotation, so referring to Annotation here creates a circular type.
+// The nominal carrier keeps direct attachment helper-only without duplicating
+// the complete decoded registry shape.
+type ValidatedConformanceAnnotation = Brand.Brand<"@beep/schema/Conformance/Annotation">;
 
 declare module "effect/Schema" {
   namespace Annotations {
     interface Annotations {
-      readonly conformance?: ConformanceAnnotationPayload | undefined;
+      readonly conformance?: ValidatedConformanceAnnotation | undefined;
     }
   }
 }

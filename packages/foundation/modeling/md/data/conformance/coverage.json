@@ -9,11 +9,7 @@
   "coverage": [
     {
       "invariantId": "md.profile.explicit-boundaries",
-      "profileIds": [
-        "commonmark-0.31.2",
-        "gfm-0.29.0.gfm.13",
-        "beep-md-extensions-v1"
-      ],
+      "profileIds": ["gfm-0.29.0.gfm.13", "beep-md-extensions-v1"],
       "currentEnforcement": [
         {
           "kind": "typeLevel",

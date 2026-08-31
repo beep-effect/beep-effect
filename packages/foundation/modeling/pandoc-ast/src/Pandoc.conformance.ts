@@ -79,11 +79,7 @@ export type PandocConformanceInvariantId = typeof PandocConformanceInvariantId.T
  * @category diagnostics
  * @since 0.0.0
  */
-export const PandocCheckedInvariantIds = S.Tuple([
-  S.Literal("pandoc.semantic-subset"),
-  S.Literal("pandoc.raw.exact-retention"),
-  S.Literal("pandoc.table.column-width-payload"),
-]).pipe(
+export const PandocCheckedInvariantIds = S.Tuple(PandocConformanceInvariantId.members).pipe(
   $I.annoteSchema("PandocCheckedInvariantIds", {
     description: "Complete ordered invariant set checked by the Pandoc conformance facade.",
   })
@@ -97,11 +93,7 @@ export const PandocCheckedInvariantIds = S.Tuple([
  */
 export type PandocCheckedInvariantIds = typeof PandocCheckedInvariantIds.Type;
 
-const checkedInvariantIds = PandocCheckedInvariantIds.make([
-  "pandoc.semantic-subset",
-  "pandoc.raw.exact-retention",
-  "pandoc.table.column-width-payload",
-]);
+const checkedInvariantIds = PandocCheckedInvariantIds.make(PandocConformanceInvariantId.Options);
 
 const PandocConformanceWire = S.Record(S.String, S.Json).pipe(
   $I.annoteSchema("PandocConformanceWire", {
@@ -200,7 +192,7 @@ class InvalidPandocDocument extends S.TaggedClass<InvalidPandocDocument>($I`Inva
     checkedInvariantIds: PandocCheckedInvariantIds,
     issues: S.Array(PandocLosslessIssue),
     message: S.NonEmptyString,
-    wire: S.optionalKey(PandocConformanceWire),
+    wire: S.OptionFromOptionalKey(PandocConformanceWire).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("InvalidPandocDocument", {
     description: "Input that fails the Pandoc JSON envelope or a pinned current-constructor payload invariant.",
@@ -216,6 +208,9 @@ class InvalidPandocDocument extends S.TaggedClass<InvalidPandocDocument>($I`Inva
  * grammar and strict encoding reproduces its exact JSON. `unsupported` keeps
  * valid future constructors or a non-canonical lossless wire explicit.
  * `invalid` identifies a malformed envelope or current-constructor payload.
+ * Its retained wire is `Some` after lossless envelope decoding and `None` when
+ * decoding fails before an exact JSON object can be retained; encoding omits
+ * the absent `wire` key.
  * No `normalizable` case exists because this package declares no semantics-
  * preserving canonical rewrite.
  *
@@ -236,6 +231,7 @@ class InvalidPandocDocument extends S.TaggedClass<InvalidPandocDocument>($I`Inva
  *
  * @invariant Every input is classified into exactly one exhaustive result case.
  * @invariant `compatible` values are exact fixed points of strict decode followed by encode.
+ * @invariant An `invalid` result represents absent retained wire as `Option.none()` rather than `undefined`.
  * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs | Pandoc JSON AST types} for the pinned wire constructors.
  * @see {@link https://pandoc.org/MANUAL.html#json-filters | Pandoc JSON filters} for the filter interchange contract.
  * @category diagnostics
@@ -298,13 +294,13 @@ const jsonEquivalence = S.toEquivalence(S.Json);
 const invalidResult = (
   message: string,
   issues: ReadonlyArray<PandocLosslessIssue>,
-  wire?: Readonly<Record<string, S.Json>>
+  wire: O.Option<JsonRecord> = O.none()
 ): PandocConformanceResult =>
   PandocConformanceResult.cases.invalid.make({
     checkedInvariantIds,
     issues,
     message,
-    ...O.getSomesStruct({ wire: O.fromUndefinedOr(wire) }),
+    wire,
   });
 
 /**
@@ -333,54 +329,56 @@ const invalidResult = (
  * @category validation
  * @since 0.0.0
  */
-export const inspectPandocConformance = (input: unknown): Effect.Effect<PandocConformanceResult> =>
-  decodePandocJsonLossless(input).pipe(
-    Effect.flatMap((lossless) => {
-      const issues = lossless.issues;
-      if (A.isReadonlyArrayNonEmpty(issues)) {
-        return Effect.succeed(
-          invalidResult("Pandoc JSON contains malformed pinned constructor payloads.", issues, lossless.wire)
-        );
-      }
+export const inspectPandocConformance = Effect.fn("Pandoc.inspectPandocConformance")(
+  (input: unknown): Effect.Effect<PandocConformanceResult> =>
+    decodePandocJsonLossless(input).pipe(
+      Effect.flatMap((lossless) => {
+        const issues = lossless.issues;
+        if (A.isReadonlyArrayNonEmpty(issues)) {
+          return Effect.succeed(
+            invalidResult("Pandoc JSON contains malformed pinned constructor payloads.", issues, O.some(lossless.wire))
+          );
+        }
 
-      return decodePandocJsonStrict(lossless.wire).pipe(
-        Effect.flatMap((document) =>
-          encodePandocJson(document).pipe(
-            Effect.map((encoded) => {
-              const futureConstructors = A.dedupe(collectFutureConstructorNames(lossless.wire));
-              const futureIssues = A.map(futureConstructors, (constructor) =>
-                PandocConformanceIssue.cases.futureConstructor.make({ constructor })
-              );
-              const conformanceIssues = jsonEquivalence(lossless.wire, {
-                "pandoc-api-version": encoded["pandoc-api-version"],
-                blocks: encoded.blocks,
-                meta: encoded.meta,
-              })
-                ? futureIssues
-                : A.append(
-                    futureIssues,
-                    PandocConformanceIssue.cases.nonCanonicalWire.make({
-                      message: "Strict semantic encoding does not reproduce the retained Pandoc JSON exactly.",
+        return decodePandocJsonStrict(lossless.wire).pipe(
+          Effect.flatMap((document) =>
+            encodePandocJson(document).pipe(
+              Effect.map((encoded) => {
+                const futureConstructors = A.dedupe(collectFutureConstructorNames(lossless.wire));
+                const futureIssues = A.map(futureConstructors, (constructor) =>
+                  PandocConformanceIssue.cases.futureConstructor.make({ constructor })
+                );
+                const conformanceIssues = jsonEquivalence(lossless.wire, {
+                  "pandoc-api-version": encoded["pandoc-api-version"],
+                  blocks: encoded.blocks,
+                  meta: encoded.meta,
+                })
+                  ? futureIssues
+                  : A.append(
+                      futureIssues,
+                      PandocConformanceIssue.cases.nonCanonicalWire.make({
+                        message: "Strict semantic encoding does not reproduce the retained Pandoc JSON exactly.",
+                      })
+                    );
+
+                return A.isReadonlyArrayNonEmpty(conformanceIssues)
+                  ? PandocConformanceResult.cases.unsupported.make({
+                      checkedInvariantIds,
+                      document,
+                      issues: conformanceIssues,
+                      wire: lossless.wire,
                     })
-                  );
-
-              return A.isReadonlyArrayNonEmpty(conformanceIssues)
-                ? PandocConformanceResult.cases.unsupported.make({
-                    checkedInvariantIds,
-                    document,
-                    issues: conformanceIssues,
-                    wire: lossless.wire,
-                  })
-                : PandocConformanceResult.cases.compatible.make({
-                    checkedInvariantIds,
-                    document,
-                    wire: lossless.wire,
-                  });
-            })
-          )
-        ),
-        Effect.catch((error) => Effect.succeed(invalidResult(error.message, issues, lossless.wire)))
-      );
-    }),
-    Effect.catch((error) => Effect.succeed(invalidResult(error.message, A.emptyReadonly())))
-  );
+                  : PandocConformanceResult.cases.compatible.make({
+                      checkedInvariantIds,
+                      document,
+                      wire: lossless.wire,
+                    });
+              })
+            )
+          ),
+          Effect.catch((error) => Effect.succeed(invalidResult(error.message, issues, O.some(lossless.wire))))
+        );
+      }),
+      Effect.catch((error) => Effect.succeed(invalidResult(error.message, A.emptyReadonly())))
+    )
+);

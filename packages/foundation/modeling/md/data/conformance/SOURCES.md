@@ -8,12 +8,17 @@ The package has three intentionally distinct profiles:
   admonitions, embeds, YouTube blocks, and trust-aware raw content.
 
 CommonMark `spec.txt` is the normative source for the CommonMark profile and
-`spec.json` is its machine-readable example index. The published
-[GFM 0.29 specification](https://github.github.com/gfm/) is the normative GFM
-authority. The pinned cmark-gfm `test/spec.txt` and `test/extensions.txt` files
-are conformance corpora, not specifications. None of the approved corpus bytes
-is currently vendored or run exhaustively by package tests, so corresponding
-coverage is recorded as a gap rather than inferred from the AST shape.
+`spec.json` is its machine-readable example index. The CommonMark profile does
+not select the separate GFM authority or the cross-profile invariant that cites
+it; CommonMark extension rejection remains covered by the package-owned
+`md.extensions.nonstandard-members` invariant. The published
+[GFM 0.29 specification](https://github.github.com/gfm/) is recorded as release
+`0.29-gfm`; its source scope retains the 2026-08-31 retrieval context for the
+recorded digest. The pinned cmark-gfm `test/spec.txt` and `test/extensions.txt`
+files are conformance corpora, not specifications. None of the approved corpus
+bytes is currently vendored or run exhaustively by package tests, so
+corresponding coverage is recorded as a gap rather than inferred from the AST
+shape.
 
 The GFM publication identifies itself as version `0.29-gfm`, whereas the
 package separately targets CommonMark `0.31.2`. Those versions are recorded as

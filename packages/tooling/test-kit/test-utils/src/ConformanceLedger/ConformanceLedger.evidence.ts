@@ -136,10 +136,13 @@ const testEvidenceIssues = Effect.fn("ConformanceLedger.testEvidenceIssues")(fun
         onNone: A.empty<string>,
         onSome: (invariant) =>
           Str.Equivalence(entry.status, "covered") &&
-          Conformance.RequirementStrength.is.must(invariant.strength) &&
+          (Conformance.RequirementStrength.is.must(invariant.strength) ||
+            Conformance.RequirementStrength.is.mustNot(invariant.strength)) &&
           A.some(entry.currentEnforcement, Conformance.InvariantEnforcement.guards.runtime) &&
           Num.Equivalence(A.length(entry.negativeTestIds), 0)
-            ? [`covered runtime must invariant ${entry.invariantId} must cite at least one negative test`]
+            ? [
+                `covered runtime ${invariant.strength} invariant ${entry.invariantId} must cite at least one negative test`,
+              ]
             : A.empty<string>(),
       })
     )

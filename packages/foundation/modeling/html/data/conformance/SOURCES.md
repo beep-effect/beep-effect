@@ -19,8 +19,9 @@ the semantic conformance initiative.
 - W3C webref JSON is a derived machine-readable index. It is useful for
   exhaustive inventories, but it does not replace the WHATWG requirements.
 - `whatwg/content-model.json` was extracted from the non-normative list of
-  elements. It is a current local generator input, not a complete normative
-  content model.
+  elements. Its source record pins an immutable public copy of the exact
+  committed JSON bytes, not the HTML page from which they were derived. It is
+  a current local generator input, not a complete normative content model.
 - The IANA Language Subtag Registry is the registry authority for language-tag
   components used by `track[srclang]` validation.
 - `classification.json` and `obsolete-interfaces.json` are package-reviewed
@@ -35,9 +36,13 @@ the semantic conformance initiative.
 The current webref inputs are still pinned to commit
 `99e9e5eccbfc924203bda66a2328eade5cc08e7b`. The approved refresh records use
 commit `f3b81966c45f34f62df20e7f8d6f66d5b5ba9279`, but those target bytes are not
-yet vendored and must not be described as generator inputs. Likewise, the
-approved WHATWG source commit is recorded as target authority while the current
-content-model JSON remains a dated derived snapshot.
+yet vendored and must not be described as generator inputs. The current-vendored
+profile therefore selects only the six files read by `scripts/generate.ts` and
+only the inventory invariants whose references stay inside that source set.
+Target-refresh and normative content-model invariants remain in the WHATWG
+target profile. Likewise, the approved WHATWG source commit is recorded as
+target authority while the current content-model JSON remains a dated derived
+snapshot pinned at the package commit that first published those exact bytes.
 
 The digest for the current local webref element index covers the committed
 18,704-byte file. It differs from the pinned 18,703-byte upstream response only

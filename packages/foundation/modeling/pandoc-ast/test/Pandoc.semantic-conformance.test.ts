@@ -5,6 +5,7 @@ import { PandocColumnWidth } from "@beep/pandoc-ast/Pandoc.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -249,11 +250,13 @@ describe("Pandoc conformance facade", () => {
     expect(result._tag).toBe("invalid");
     if (result._tag === "invalid") {
       expect(result.issues.map((issue) => [issue.constructor, issue.pointer])).toEqual([["Figure", "/blocks/0"]]);
-      expect(result.wire).toEqual({
-        "pandoc-api-version": [1, 23, 1],
-        blocks: [{ c: {}, t: "Figure" }],
-        meta: {},
-      });
+      expect(result.wire).toEqual(
+        O.some({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: {}, t: "Figure" }],
+          meta: {},
+        })
+      );
     }
   });
 
@@ -263,7 +266,8 @@ describe("Pandoc conformance facade", () => {
     expect(result._tag).toBe("invalid");
     if (result._tag === "invalid") {
       expect(result.issues).toEqual([]);
-      expect(result.wire).toBeUndefined();
+      expect(O.isNone(result.wire)).toBe(true);
+      expect(Effect.runSync(S.encodeEffect(PandocConformanceResult)(result))).not.toHaveProperty("wire");
     }
   });
 

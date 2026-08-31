@@ -24,6 +24,7 @@ import {
   Document,
   Dt,
   ForeignElement,
+  Fragment,
   Head,
   Hr,
   Html,
@@ -60,6 +61,34 @@ const inspectSafe = (root: Parameters<typeof conform>[0]) =>
 const serializeExit = (root: Parameters<typeof serialize>[0]) => Effect.runSyncExit(serialize(root));
 
 describe("@beep/html conformance branch matrix", () => {
+  it("rejects a structurally invalid recursive conformance view", () => {
+    const issues = Reflect.apply(inspectConformance, undefined, [
+      { _tag: "#fragment", children: [{ _tag: "div", children: [null] }] },
+    ]);
+
+    expect(issues).toStrictEqual([
+      expect.objectContaining({
+        path: [],
+        rule: "encodingFailure",
+      }),
+    ]);
+  });
+
+  it("constructs recursive conformance views with canonical Option doctypes", () => {
+    const fragment = Fragment.make({
+      children: [Div.make({ children: [Span.make({ children: [text("nested")] })] })],
+    });
+
+    expect(inspectConformance(fragment)).toStrictEqual([]);
+
+    const html = Html.make({
+      children: [Head.make({ children: [Title.make({ content: "Beep" })] }), Body.make({ children: [] })],
+    });
+    const document = Document.make({ doctype: O.some(Doctype.html()), children: [html] });
+
+    expect(inspectConformance(document)).toStrictEqual([]);
+  });
+
   it("locates every document doctype and root-placement failure", () => {
     const html = Html.make({
       children: [Head.make({ children: [Title.make({ content: "Beep" })] }), Body.make({ children: [] })],

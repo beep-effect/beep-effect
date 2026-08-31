@@ -403,16 +403,28 @@ describe("conformance-ledger validation", () => {
     })
   );
 
-  it.effect("requires negative evidence before a runtime must invariant can be covered", () =>
+  it.effect("requires negative evidence before a hard runtime invariant can be covered", () =>
     Effect.gen(function* () {
-      const issues = yield* runFixture({
+      const mustIssues = yield* runFixture({
         coverageStatus: "covered",
         inventorySourceId: sourceId,
         primaryTestIds: [`${evidenceFile}#recognizes-a-double-quoted-title`],
         primaryNegativeTestIds: [],
       });
+      const mustNotIssues = yield* runFixture({
+        coverageStatus: "covered",
+        inventorySourceId: sourceId,
+        primaryStrength: "mustNot",
+        primaryTestIds: [`${evidenceFile}#recognizes-a-double-quoted-title`],
+        primaryNegativeTestIds: [],
+      });
 
-      expect(issues).toEqual([`covered runtime must invariant ${invariantId} must cite at least one negative test`]);
+      expect(mustIssues).toEqual([
+        `covered runtime must invariant ${invariantId} must cite at least one negative test`,
+      ]);
+      expect(mustNotIssues).toEqual([
+        `covered runtime mustNot invariant ${invariantId} must cite at least one negative test`,
+      ]);
     })
   );
 

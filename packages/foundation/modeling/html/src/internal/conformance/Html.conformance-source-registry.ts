@@ -118,15 +118,17 @@ export const HtmlConformanceSources = defineSources([
     id: "html-whatwg-content-model-current-local",
     title: "WHATWG list-of-elements derived content-model index currently vendored",
     role: "implementationReference",
-    canonicalUrl: "https://html.spec.whatwg.org/multipage/indices.html",
+    canonicalUrl:
+      "https://raw.githubusercontent.com/beep-effect/beep-effect/dc9e7d2707508787a0c5daf9f33c5cf1b6259e87/packages/foundation/modeling/html/data/whatwg/content-model.json",
     revision: {
-      kind: "retrievedSnapshot",
-      retrievedOn: "2026-06-15",
+      kind: "gitCommit",
+      repository: "https://github.com/beep-effect/beep-effect",
+      commit: "dc9e7d2707508787a0c5daf9f33c5cf1b6259e87",
     },
     contentSha256: "84ace8b4308951d97b55655d368c16328829f9de466499762d1f52997245d41b",
     license: "CC-BY-4.0",
     scope:
-      "Current local generator input at data/whatwg/content-model.json. Non-normative category, attribute, and child-token index for 114 elements; reviewed overrides cover the remaining inventory and contextual rules. Consumed anchors: elements-3.",
+      "Immutable public copy of the exact current generator input at data/whatwg/content-model.json, derived from the WHATWG list of elements on 2026-06-15. Non-normative category, attribute, and child-token index for 114 elements; reviewed overrides cover the remaining inventory and contextual rules. Consumed anchors: elements-3.",
   },
   {
     id: "html-iana-language-subtag-registry-current-local",

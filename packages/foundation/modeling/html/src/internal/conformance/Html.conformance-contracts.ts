@@ -8,6 +8,7 @@
 
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -16,11 +17,10 @@ import { Doctype } from "../../Html.nodes.ts";
 
 const $I = $HtmlId.create("Html.conformance");
 
-interface HtmlChildViewShape {
+interface HtmlChildViewCommonShape {
   readonly _tag: string;
   readonly alt?: unknown;
   readonly attributes?: unknown;
-  readonly children?: ReadonlyArray<HtmlChildViewShape>;
   readonly content?: unknown;
   readonly headingoffset?: unknown;
   readonly headingreset?: unknown;
@@ -36,11 +36,22 @@ interface HtmlChildViewShape {
   readonly value?: unknown;
 }
 
+interface HtmlChildViewTypeShape extends HtmlChildViewCommonShape {
+  readonly children?: ReadonlyArray<HtmlChildViewTypeShape>;
+}
+
+interface HtmlChildViewEncodedShape extends HtmlChildViewCommonShape {
+  readonly children?: ReadonlyArray<HtmlChildViewEncodedShape>;
+}
+
 const htmlChildViewFields = {
   _tag: S.String,
   alt: S.Unknown.pipe(S.optionalKey),
   attributes: S.Unknown.pipe(S.optionalKey),
-  children: S.suspend((): S.Codec<HtmlChildViewShape> => HtmlChildView).pipe(S.Array, S.optionalKey),
+  children: S.suspend((): S.Codec<HtmlChildViewTypeShape, HtmlChildViewEncodedShape> => HtmlChildView).pipe(
+    S.Array,
+    S.optionalKey
+  ),
   content: S.Unknown.pipe(S.optionalKey),
   headingoffset: S.Unknown.pipe(S.optionalKey),
   headingreset: S.Unknown.pipe(S.optionalKey),
@@ -87,7 +98,7 @@ export type HtmlChildView = typeof HtmlChildView.Type;
  */
 export const HtmlRootView = S.Struct({
   ...htmlChildViewFields,
-  doctype: Doctype.pipe(S.Option, S.optionalKey),
+  doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
 }).pipe(
   $I.annoteSchema("HtmlRootView", {
     description: "HTML conformance root view with an optional document type declaration.",

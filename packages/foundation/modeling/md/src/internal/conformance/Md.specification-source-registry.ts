@@ -42,13 +42,13 @@ export const MarkdownSpecificationSources = {
     role: "primarySpecification",
     canonicalUrl: "https://github.github.com/gfm/",
     revision: {
-      kind: "retrievedSnapshot",
-      retrievedOn: "2026-08-31",
+      kind: "release",
+      version: "0.29-gfm",
     },
     contentSha256: "b153d814fdfc8624bb6da7449162c1cd707a637f7d1c1b636eb44b9cf63fa220",
     license: "CC-BY-SA-4.0",
     scope:
-      "Published GFM 0.29 authority for the CommonMark superset and table, task-list, strikethrough, autolink, and tag-filter extensions. Consumed anchors: introduction, tables-extension, task-list-items-extension, strikethrough-extension, autolinks-extension, disallowed-raw-html-extension.",
+      "Published GFM 0.29-gfm release authority for the CommonMark superset and table, task-list, strikethrough, autolink, and tag-filter extensions; the recorded digest covers the publication bytes retrieved on 2026-08-31. Consumed anchors: introduction, tables-extension, task-list-items-extension, strikethrough-extension, autolinks-extension, disallowed-raw-html-extension.",
   },
   "md-gfm-0.29.0.gfm.13-spec": {
     id: "md-gfm-0.29.0.gfm.13-spec",

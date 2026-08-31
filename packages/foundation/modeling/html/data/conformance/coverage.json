@@ -49,8 +49,7 @@
     {
       "invariantId": "html.inventory.approved-refresh-drift",
       "profileIds": [
-        "html-whatwg-living-2026-08-30",
-        "html-current-vendored-2026-06-15"
+        "html-whatwg-living-2026-08-30"
       ],
       "currentEnforcement": [
         {
@@ -113,8 +112,7 @@
     {
       "invariantId": "html.element.local-content-model",
       "profileIds": [
-        "html-whatwg-living-2026-08-30",
-        "html-current-vendored-2026-06-15"
+        "html-whatwg-living-2026-08-30"
       ],
       "currentEnforcement": [
         {

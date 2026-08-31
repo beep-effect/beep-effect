@@ -62,6 +62,7 @@ import {
   htmlAttributeValue as attributeValue,
   htmlChildPath as childPath,
   htmlChildrenOf as childrenOf,
+  HtmlChildView,
   HtmlConformanceIssue,
   hasHtmlAttribute as hasAttribute,
   makeHtmlConformanceIssue as makeIssue,
@@ -71,7 +72,7 @@ import { inspectHeadingOutline } from "./internal/conformance/Html.heading-confo
 import { inspectScriptConformance } from "./internal/conformance/Html.script-conformance.ts";
 import { isValidBcp47LanguageTag } from "./internal/Html.language-tag.ts";
 import type { HtmlAttributeRequirement } from "./Html.meta.ts";
-import type { HtmlChildView, HtmlRootView } from "./internal/conformance/Html.conformance-contracts.ts";
+import type { HtmlRootView } from "./internal/conformance/Html.conformance-contracts.ts";
 
 const $I = $HtmlId.create("Html.conformance");
 
@@ -252,6 +253,7 @@ const snapshotRoot = (root: HtmlRoot.Type): Effect.Effect<HtmlRoot.Type, HtmlCon
 const isHtmlTag = S.is(HtmlTag);
 const isButton = S.is(Button);
 const isInput = S.is(Input);
+const isHtmlChildView = S.is(HtmlChildView);
 const isFiniteNumber = S.is(S.Finite);
 const isString = S.is(S.String);
 const readProperty = (value: unknown, key: PropertyKey): unknown => Reflect.get(Object(value), key);
@@ -1375,7 +1377,7 @@ const inspectAttributeRelationships = (
   return [...requiredIssues, ...equalityIssues, ...numericIssues];
 };
 
-const inspectDocumentVisibilityLimits = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> => {
+const inspectDocumentVisibilityLimits = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> => {
   const occurrences = elementOccurrences(root, []);
   return A.flatMap(R.toEntries(ELEMENT_META), ([tag, meta]) =>
     pipe(
@@ -1427,7 +1429,7 @@ const idOccurrences = (node: HtmlChildView, path: ReadonlyArray<string>): Readon
   return [...own, ...A.flatMap(childrenOf(node), (child, index) => idOccurrences(child, childPath(path, index)))];
 };
 
-const inspectDuplicateIds = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> =>
+const inspectDuplicateIds = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> =>
   pipe(
     idOccurrences(root, []),
     A.groupBy((occurrence) => occurrence.value),
@@ -1456,7 +1458,7 @@ const nearestTablePath = (
 const samePath = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   left.length === right.length && A.every(left, (segment, index) => right[index] === segment);
 
-const inspectIdReferences = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> => {
+const inspectIdReferences = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> => {
   const ids = idOccurrences(root, []);
   const elements = elementOccurrences(root, []);
   const tables = A.filter(elements, (occurrence) => occurrence.tag === "table");
@@ -1563,7 +1565,7 @@ const uniqueAttributeOccurrences = (
   ];
 };
 
-const inspectDuplicateUniqueAttributes = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> =>
+const inspectDuplicateUniqueAttributes = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> =>
   pipe(
     uniqueAttributeOccurrences(root, []),
     A.groupBy((occurrence) => `${occurrence.tag}/${occurrence.attribute}`),
@@ -2178,10 +2180,14 @@ const inspectChild = (
  * @since 0.0.0
  */
 export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConformanceIssue> => {
-  const view: HtmlRootView = root;
+  if (!isHtmlChildView(root)) {
+    return [makeIssue([], "encodingFailure", "The HTML root did not satisfy the recursive conformance-view schema")];
+  }
+
+  const view: HtmlChildView = root;
+  const doctype: HtmlRootView["doctype"] = root._tag === "#document" ? root.doctype : O.none();
   const structuralIssues = Match.value(view._tag).pipe(
     Match.when("#document", (): ReadonlyArray<HtmlConformanceIssue> => {
-      const doctype = pipe(view.doctype, O.fromUndefinedOr, O.getOrElse(O.none));
       const children = childrenOf(view);
       const doctypeIssues = O.match(doctype, {
         onNone: () => [makeIssue(["doctype"], "documentDoctype", "A conformant document requires <!doctype html>")],

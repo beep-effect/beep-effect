@@ -76,6 +76,7 @@ describe("Conformance", () => {
     // @ts-expect-error The registered annotation key rejects scalar payloads.
     const Scalar = S.String.annotate({ conformance: "not-a-registry" });
     const Invalid = S.String.annotate({
+      // @ts-expect-error Direct attachment requires metadata validated and branded by Annotation.
       conformance: {
         sources: ["not-a-source"],
         profiles: ["not-a-profile"],

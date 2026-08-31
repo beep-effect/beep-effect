@@ -21,7 +21,6 @@ export const MarkdownProfileIds = {
 const commonMarkProfileSourceIds = [
   "md-commonmark-0.31.2-spec",
   "md-commonmark-0.31.2-examples",
-  "md-gfm-0.29-published-spec",
   "md-micromark-4.0.2",
   "md-beep-extensions-baseline",
 ] satisfies A.NonEmptyReadonlyArray<MarkdownSpecificationSourceId>;
@@ -41,7 +40,6 @@ const beepProfileSourceIds = [
 ] satisfies A.NonEmptyReadonlyArray<MarkdownSpecificationSourceId>;
 
 const commonMarkProfileInvariantIds = [
-  "md.profile.explicit-boundaries",
   "md.corpus.commonmark-exhaustive",
   "md.ast.literal-tag-discrimination",
   "md.heading.level-domain",

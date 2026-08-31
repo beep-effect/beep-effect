@@ -331,7 +331,6 @@ describe("Markdown semantic conformance", () => {
     expect(CommonMarkSpecificationProfile.sourceIds).toEqual([
       "md-commonmark-0.31.2-spec",
       "md-commonmark-0.31.2-examples",
-      "md-gfm-0.29-published-spec",
       "md-micromark-4.0.2",
       "md-beep-extensions-baseline",
     ]);
