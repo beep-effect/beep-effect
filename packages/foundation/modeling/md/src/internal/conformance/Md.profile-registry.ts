@@ -36,6 +36,7 @@ const gfmProfileSourceIds = [
 const beepProfileSourceIds = [
   "md-commonmark-0.31.2-spec",
   "md-gfm-0.29-published-spec",
+  "md-html-whatwg-source-approved",
   "md-beep-extensions-baseline",
 ] satisfies A.NonEmptyReadonlyArray<MarkdownSpecificationSourceId>;
 
@@ -88,6 +89,7 @@ const beepProfileInvariantIds = [
   "md.list.item-content",
   "md.safe.raw-content",
   "md.safe.urls-and-scalars",
+  "md.safe.html-projection-conformance",
   "md.footnote.unique-definitions",
   "md.footnote.defined-references",
   "md.render.escaping",

@@ -37,6 +37,12 @@ must not be attributed to CommonMark or GFM unless a cited rule actually
 defines them. Normal conformance generation and tests must use committed bytes
 only; acquisition or refresh is a separate networked operation.
 
+The Beep profile also selects the same pinned WHATWG HTML source used by
+`@beep/html`. That authority governs only the narrower `SafeDocument` HTML
+projection boundary: valid CommonMark documents remain free to use any heading
+sequence, while a `SafeDocument` must project without hard HTML
+author-conformance failures such as skipped heading levels.
+
 The package-reviewed source entry is an immutable public pre-initiative
 baseline at commit `1ed08f66df016a18c6d7d56bd97aa778912cb37b`; it is not a
 digest of the dirty working tree or the final initiative implementation.

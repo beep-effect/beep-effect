@@ -700,6 +700,40 @@ export const MarkdownInvariantDescriptors = {
       "test/Md.test.ts#rejects-values-that-cannot-complete-the-total-SafeDocument-to-SafeHtml-projection",
     ],
   },
+  "md.safe.html-projection-conformance": {
+    id: "md.safe.html-projection-conformance",
+    title: "Safe documents must project to hard-conformant HTML",
+    statement:
+      "The SafeDocument brand admits a Markdown document only when Document.toHtml produces no hard HTML author-conformance issue, preserving a total SafeDocument-to-SafeHtml renderer.",
+    strength: "must",
+    scope: "document",
+    decidability: "contextualRuntime",
+    enforcement: [
+      {
+        kind: "typeLevel",
+        mechanism: "@beep/md SafeDocument brand for md.safe.html-projection-conformance",
+      },
+      {
+        kind: "runtime",
+        validator: "documentSafetyIssues",
+      },
+      {
+        kind: "test",
+        suite: "test/Md.test.ts",
+        oracle: "Pinned source rule and package expectation for md.safe.html-projection-conformance",
+      },
+    ],
+    references: [
+      {
+        sourceId: "md-html-whatwg-source-approved",
+        section: "headings-and-outlines",
+      },
+    ],
+    testIds: [
+      "test/Md.test.ts#rejects-a-heading-outline-that-the-safe-HTML-projection-cannot-render",
+      "test/Md.test.ts#renders-every-schema-derived-SafeDocument-without-failing",
+    ],
+  },
   "md.footnote.unique-definitions": {
     id: "md.footnote.unique-definitions",
     title: "Footnote definition identifiers must be unique throughout a document",

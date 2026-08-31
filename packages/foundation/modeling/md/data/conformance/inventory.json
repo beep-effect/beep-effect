@@ -396,11 +396,14 @@
     {
       "id": "md.union.document-safety-violation",
       "symbol": "DocumentSafetyViolation",
-      "tag": "DuplicateFootnoteDefinition | RawNode | InvalidScalar | UnsafeUrl",
+      "tag": "DuplicateFootnoteDefinition | HtmlProjection | RawNode | InvalidScalar | UnsafeUrl",
       "kind": "tagged-union",
       "existingDiscriminator": "_tag",
       "currentEnforcementLayers": ["type", "decode", "tree"],
-      "sources": ["md-beep-extensions-baseline"],
+      "sources": [
+        "md-html-whatwg-source-approved",
+        "md-beep-extensions-baseline"
+      ],
       "candidateDisposition": "retain-existing-tagged-union",
       "candidateReason": "The public path-located safety diagnostic union exposes exhaustive cases for every implemented trust-boundary rejection."
     },

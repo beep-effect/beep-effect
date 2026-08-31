@@ -659,6 +659,42 @@
       "status": "covered"
     },
     {
+      "invariantId": "md.safe.html-projection-conformance",
+      "profileIds": ["beep-md-extensions-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md SafeDocument brand for md.safe.html-projection-conformance"
+        },
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.safe.html-projection-conformance"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md SafeDocument brand for md.safe.html-projection-conformance"
+        },
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-every-schema-derived-SafeDocument-without-failing"
+      ],
+      "negativeTestIds": [
+        "test/Md.test.ts#rejects-a-heading-outline-that-the-safe-HTML-projection-cannot-render"
+      ],
+      "status": "covered"
+    },
+    {
       "invariantId": "md.footnote.unique-definitions",
       "profileIds": ["beep-md-extensions-v1"],
       "currentEnforcement": [

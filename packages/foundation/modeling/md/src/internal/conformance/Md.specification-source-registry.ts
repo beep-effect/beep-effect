@@ -82,6 +82,21 @@ export const MarkdownSpecificationSources = {
     scope:
       "Approved target GFM extension corpus for tables, task-list items, strikethrough, autolinks, and tag filtering; not yet vendored or wired into package tests. Consumed anchors: tables, task-list-items, strikethrough-extension, autolinks-extension, disallowed-raw-html-extension.",
   },
+  "md-html-whatwg-source-approved": {
+    id: "md-html-whatwg-source-approved",
+    title: "WHATWG HTML source",
+    role: "primarySpecification",
+    canonicalUrl: "https://raw.githubusercontent.com/whatwg/html/778afd942c67b78335a4becc28c1c725a25d1cab/source",
+    revision: {
+      kind: "gitCommit",
+      repository: "https://github.com/whatwg/html",
+      commit: "778afd942c67b78335a4becc28c1c725a25d1cab",
+    },
+    contentSha256: "550116d4525b762ffb6f3777de8c2179d61c6e8376bf1455c66e303aa977164d",
+    license: "CC-BY-4.0",
+    scope:
+      "Approved target authority for the hard HTML author-conformance rules enforced after Markdown projection. Consumed anchors: headings-and-outlines.",
+  },
   "md-micromark-4.0.2": {
     id: "md-micromark-4.0.2",
     title: "micromark 4.0.2 npm artifact",
