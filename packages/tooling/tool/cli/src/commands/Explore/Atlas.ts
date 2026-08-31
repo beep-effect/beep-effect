@@ -715,12 +715,14 @@ const refuseIssues = (projection: ExplorationProjection) =>
  * console.log(Effect.isEffect(writeExplorationAtlas())) // true
  * ```
  *
+ * @param repoRoot - Optional repository root override for callers that already resolved it.
+ * @returns The deterministic Atlas bytes after every changed projection is written.
  * @category use-cases
  * @since 0.0.0
  */
-export const writeExplorationAtlas = Effect.fn("Explore.writeExplorationAtlas")(function* () {
+export const writeExplorationAtlas = Effect.fn("Explore.writeExplorationAtlas")(function* (repoRoot?: string) {
   const path = yield* Path.Path;
-  const projection = yield* buildExplorationProjection();
+  const projection = yield* buildExplorationProjection(repoRoot);
   if (A.isReadonlyArrayNonEmpty(projection.issues)) return yield* refuseIssues(projection);
   yield* writeContainedFileString(
     projection.root,
@@ -728,6 +730,7 @@ export const writeExplorationAtlas = Effect.fn("Explore.writeExplorationAtlas")(
     projection.atlasContent
   );
   for (const readme of projection.readmes) {
+    if (readme.existing === readme.projected) continue;
     yield* writeContainedFileString(projection.root, readme.path, readme.projected);
   }
   return projection.atlasContent;

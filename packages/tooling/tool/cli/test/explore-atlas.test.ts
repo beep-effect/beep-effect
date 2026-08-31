@@ -1,4 +1,8 @@
-import { buildExplorationProjection, explorationProjectionDriftPaths } from "@beep/repo-cli/commands/Explore";
+import {
+  buildExplorationProjection,
+  explorationProjectionDriftPaths,
+  writeExplorationAtlas,
+} from "@beep/repo-cli/commands/Explore";
 import {
   PacketEvent,
   PacketEventStoreLive,
@@ -85,6 +89,34 @@ const writeStream = Effect.fnUntraced(function* (
 });
 
 describe("exploration projections", () => {
+  it("preserves metadata when projected README bytes are already current", () =>
+    Effect.runPromise(
+      provideTestLayer(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-metadata-" });
+          yield* writePacket(
+            root,
+            "alpha",
+            manifest("alpha", "Alpha", "active", "research"),
+            readme("Alpha", "research", "active")
+          );
+          yield* writeExplorationAtlas(root);
+
+          const readmePath = path.join(root, "explorations", "alpha", "README.md");
+          yield* fs.chmod(readmePath, 0o744);
+          const before = yield* fs.readFileString(readmePath);
+          yield* writeExplorationAtlas(root);
+          const after = yield* fs.stat(readmePath);
+
+          expect(yield* fs.readFileString(readmePath)).toBe(before);
+          expect(after.mode & 0o777).toBe(0o744);
+          yield* fs.remove(root, { recursive: true });
+        })
+      )
+    ));
+
   it("renders adoption-derived D3 state and preserves authored README sections", () =>
     Effect.runPromise(
       provideTestLayer(
