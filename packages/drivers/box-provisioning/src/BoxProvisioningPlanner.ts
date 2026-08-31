@@ -65,6 +65,14 @@ type ActionBaseInput = {
   readonly state: "absent" | "present" | "unchanged";
 };
 
+type DependentActionInput = {
+  readonly afterDigest: O.Option<Sha256Hex>;
+  readonly folder: FolderResolution;
+  readonly logicalKey: BoxLogicalKey;
+  readonly matchKind: string;
+  readonly resourceKind: "collaboration" | "webhook";
+};
+
 const actionKey = (
   actionTag: ActionBaseInput["actionTag"],
   resourceKind: BoxResourceKind,
@@ -107,6 +115,71 @@ const folderDepth = (folders: ReadonlyArray<BoxFolderIntent>, folder: BoxFolderI
 
 const sameTriggers = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   Equal.equals(A.sort(left, Order.String), A.sort(right, Order.String));
+
+const dependentAction = <Candidate>(
+  input: DependentActionInput,
+  candidates: ReadonlyArray<Candidate>,
+  onSingle: (candidate: Candidate) => BoxPlanAction
+): BoxPlanAction => {
+  const dependencies = [input.folder.actionKey];
+  if (input.folder.blocked) {
+    return BoxBlockedAction.make({
+      ...actionBase({
+        actionTag: "Blocked",
+        afterDigest: input.afterDigest,
+        beforeDigest: O.none(),
+        dependencies,
+        destructive: false,
+        etag: O.none(),
+        logicalKey: input.logicalKey,
+        providerId: O.none(),
+        resourceKind: input.resourceKind,
+        state: "absent",
+      }),
+      reason: BoxBlockedByPolicy.make({ policy: "blocked-folder-dependency" }),
+    });
+  }
+  return A.match(candidates, {
+    onEmpty: () =>
+      BoxCreateAction.make(
+        actionBase({
+          actionTag: "Create",
+          afterDigest: input.afterDigest,
+          beforeDigest: O.none(),
+          dependencies,
+          destructive: false,
+          etag: O.none(),
+          logicalKey: input.logicalKey,
+          providerId: O.none(),
+          resourceKind: input.resourceKind,
+          state: "absent",
+        })
+      ),
+    onNonEmpty: (matches) =>
+      A.match(A.drop(matches, 1), {
+        onEmpty: () => onSingle(matches[0]),
+        onNonEmpty: () =>
+          BoxBlockedAction.make({
+            ...actionBase({
+              actionTag: "Blocked",
+              afterDigest: input.afterDigest,
+              beforeDigest: O.none(),
+              dependencies,
+              destructive: false,
+              etag: O.none(),
+              logicalKey: input.logicalKey,
+              providerId: O.none(),
+              resourceKind: input.resourceKind,
+              state: "present",
+            }),
+            reason: BoxBlockedByAmbiguity.make({
+              candidateCount: A.length(matches),
+              matchKind: input.matchKind,
+            }),
+          }),
+      }),
+  });
+};
 
 const folderAction = (
   desired: BoxFolderIntent,
@@ -178,23 +251,6 @@ const collaborationAction = (
   observed: ReadonlyArray<BoxObservedCollaboration>
 ): BoxPlanAction => {
   const afterDigest = O.some(encodedDigest(BoxCollaborationIntent, desired));
-  if (folder.blocked) {
-    return BoxBlockedAction.make({
-      ...actionBase({
-        actionTag: "Blocked",
-        afterDigest,
-        beforeDigest: O.none(),
-        dependencies: [folder.actionKey],
-        destructive: false,
-        etag: O.none(),
-        logicalKey: desired.logicalKey,
-        providerId: O.none(),
-        resourceKind: "collaboration",
-        state: "absent",
-      }),
-      reason: BoxBlockedByPolicy.make({ policy: "blocked-folder-dependency" }),
-    });
-  }
   const candidates = O.match(folder.providerId, {
     onNone: A.empty<BoxObservedCollaboration>,
     onSome: (folderProviderId) =>
@@ -206,56 +262,32 @@ const collaborationAction = (
           Equal.equals(candidate.principalType, desired.principalType)
       ),
   });
-  if (A.isArrayEmpty(candidates)) {
-    return BoxCreateAction.make(
-      actionBase({
-        actionTag: "Create",
+  return dependentAction(
+    {
+      afterDigest,
+      folder,
+      logicalKey: desired.logicalKey,
+      matchKind: "folder-principal",
+      resourceKind: "collaboration",
+    },
+    candidates,
+    (candidate) => {
+      const unchanged = Equal.equals(candidate.role, desired.role);
+      const base = actionBase({
+        actionTag: unchanged ? "Noop" : "Update",
         afterDigest,
-        beforeDigest: O.none(),
+        beforeDigest: O.some(encodedDigest(BoxObservedCollaboration, candidate)),
         dependencies: [folder.actionKey],
         destructive: false,
         etag: O.none(),
         logicalKey: desired.logicalKey,
-        providerId: O.none(),
+        providerId: O.some(candidate.providerId),
         resourceKind: "collaboration",
-        state: "absent",
-      })
-    );
-  }
-  if (A.length(candidates) > 1) {
-    return BoxBlockedAction.make({
-      ...actionBase({
-        actionTag: "Blocked",
-        afterDigest,
-        beforeDigest: O.none(),
-        dependencies: [folder.actionKey],
-        destructive: false,
-        etag: O.none(),
-        logicalKey: desired.logicalKey,
-        providerId: O.none(),
-        resourceKind: "collaboration",
-        state: "present",
-      }),
-      reason: BoxBlockedByAmbiguity.make({
-        candidateCount: A.length(candidates),
-        matchKind: "folder-principal",
-      }),
-    });
-  }
-  const candidate = candidates[0];
-  const base = actionBase({
-    actionTag: Equal.equals(candidate.role, desired.role) ? "Noop" : "Update",
-    afterDigest,
-    beforeDigest: O.some(encodedDigest(BoxObservedCollaboration, candidate)),
-    dependencies: [folder.actionKey],
-    destructive: false,
-    etag: O.none(),
-    logicalKey: desired.logicalKey,
-    providerId: O.some(candidate.providerId),
-    resourceKind: "collaboration",
-    state: Equal.equals(candidate.role, desired.role) ? "unchanged" : "present",
-  });
-  return Equal.equals(candidate.role, desired.role) ? BoxNoopAction.make(base) : BoxUpdateAction.make(base);
+        state: unchanged ? "unchanged" : "present",
+      });
+      return unchanged ? BoxNoopAction.make(base) : BoxUpdateAction.make(base);
+    }
+  );
 };
 
 const webhookAction = (
@@ -264,23 +296,6 @@ const webhookAction = (
   observed: ReadonlyArray<BoxObservedWebhook>
 ): BoxPlanAction => {
   const afterDigest = O.some(encodedDigest(BoxWebhookIntent, desired));
-  if (folder.blocked) {
-    return BoxBlockedAction.make({
-      ...actionBase({
-        actionTag: "Blocked",
-        afterDigest,
-        beforeDigest: O.none(),
-        dependencies: [folder.actionKey],
-        destructive: false,
-        etag: O.none(),
-        logicalKey: desired.logicalKey,
-        providerId: O.none(),
-        resourceKind: "webhook",
-        state: "absent",
-      }),
-      reason: BoxBlockedByPolicy.make({ policy: "blocked-folder-dependency" }),
-    });
-  }
   const candidates = O.match(folder.providerId, {
     onNone: A.empty<BoxObservedWebhook>,
     onSome: (folderProviderId) =>
@@ -290,54 +305,32 @@ const webhookAction = (
           Equal.equals(candidate.targetProviderId, folderProviderId) && Equal.equals(candidate.address, desired.address)
       ),
   });
-  if (A.isArrayEmpty(candidates)) {
-    return BoxCreateAction.make(
-      actionBase({
-        actionTag: "Create",
+  return dependentAction(
+    {
+      afterDigest,
+      folder,
+      logicalKey: desired.logicalKey,
+      matchKind: "target-callback",
+      resourceKind: "webhook",
+    },
+    candidates,
+    (candidate) => {
+      const unchanged = sameTriggers(candidate.triggers, desired.triggers);
+      const base = actionBase({
+        actionTag: unchanged ? "Noop" : "Update",
         afterDigest,
-        beforeDigest: O.none(),
+        beforeDigest: O.some(encodedDigest(BoxObservedWebhook, candidate)),
         dependencies: [folder.actionKey],
         destructive: false,
         etag: O.none(),
         logicalKey: desired.logicalKey,
-        providerId: O.none(),
+        providerId: O.some(candidate.providerId),
         resourceKind: "webhook",
-        state: "absent",
-      })
-    );
-  }
-  if (A.length(candidates) > 1) {
-    return BoxBlockedAction.make({
-      ...actionBase({
-        actionTag: "Blocked",
-        afterDigest,
-        beforeDigest: O.none(),
-        dependencies: [folder.actionKey],
-        destructive: false,
-        etag: O.none(),
-        logicalKey: desired.logicalKey,
-        providerId: O.none(),
-        resourceKind: "webhook",
-        state: "present",
-      }),
-      reason: BoxBlockedByAmbiguity.make({ candidateCount: A.length(candidates), matchKind: "target-callback" }),
-    });
-  }
-  const candidate = candidates[0];
-  const unchanged = sameTriggers(candidate.triggers, desired.triggers);
-  const base = actionBase({
-    actionTag: unchanged ? "Noop" : "Update",
-    afterDigest,
-    beforeDigest: O.some(encodedDigest(BoxObservedWebhook, candidate)),
-    dependencies: [folder.actionKey],
-    destructive: false,
-    etag: O.none(),
-    logicalKey: desired.logicalKey,
-    providerId: O.some(candidate.providerId),
-    resourceKind: "webhook",
-    state: unchanged ? "unchanged" : "present",
-  });
-  return unchanged ? BoxNoopAction.make(base) : BoxUpdateAction.make(base);
+        state: unchanged ? "unchanged" : "present",
+      });
+      return unchanged ? BoxNoopAction.make(base) : BoxUpdateAction.make(base);
+    }
+  );
 };
 
 const blockedCapabilityAction = <A extends BoxMetadataIntent | BoxRetentionIntent, I>(
