@@ -3,13 +3,14 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json). The exploration graduated
-on 2026-08-24, then returned to `decompose` on 2026-08-26 when the C0
-Extraction probe breaker fired in
+on 2026-08-24, returned to `decompose` when the C0 Extraction breaker fired,
+and graduated again on 2026-08-30 after the bounded evidence-quote re-entry
+passed C0. C1-C2 remain owned by
 [`semantica-canary`](../../goals/semantica-canary/README.md).
 
 ## Spark
@@ -21,14 +22,12 @@ and opens a neuro-symbolic reasoning work stream.
 
 ## Next Open Question
 
-Does the evidence-quote candidate's zero-spend preview ground at least one
-relation on at least one frozen paper? The candidate is defined (DECISIONS
-E1-E8, 2026-08-27): a fold alignment tier in the shared aligner, a lab-local
-subject/object/evidence-quote relation contract, endpoints anchored inside
-the evidence span, and a target enumerating the frozen gold predicate
-vocabulary verbatim. The preview and the operator gold spot-check-and-repair
-pass both gate the live probe; the paused `semantica-canary` packet resumes
-only after both clear, and a second park is terminal (E8).
+None at this exploration boundary. The evidence-quote candidate passed its
+zero-spend preview, first slice, three-paper relation slate, and full-W1 C0
+gate without using its retry. Input and Extraction verdicts are recorded in
+`DECISIONS.md`; C1-C2 execution resumes from the graduated
+`semantica-canary` goal. A queued MAP gate reopens this packet only when its
+named trigger fires.
 
 ## Read This First
 
@@ -52,6 +51,14 @@ owns *decisions and research* (D2).
 
 ## Trail
 
+- 2026-08-30 (C0 pass; re-graduated): the evidence-quote candidate passed F1
+  plus all three relation papers with 10, 9, and 9 hosted relations, then all
+  25 W1 papers plus F1 live and offline. The full reports were byte-identical
+  at digest
+  `7d1918096fc2ae893b9257a0a84aeb7def1cad7bf8f4d5c8add13c660faf210a`;
+  unexpected degradation and failed anchors were zero. Input and Extraction
+  moved to their C0 `pick-one` verdicts, the retry remained unused, and this
+  packet returned from the bounded `decompose` re-entry to `graduated`.
 - 2026-08-27 (evidence-quote candidate defined): a zero-spend forensic pass
   replayed the three breaker cache entries against regenerated canonical text
   and hydrated the frozen gold relation labels. Findings: 10 of 16 retry
