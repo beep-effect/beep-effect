@@ -164,22 +164,57 @@ export const BoxMethodName = LiteralKit([
   "files.getFileThumbnailById",
   "files.getFileThumbnailUrl",
   "files.updateFileById",
+  "folderMetadata.getFolderMetadata",
+  "folderMetadata.getFolderMetadataById",
   "folders.copyFolder",
   "folders.createFolder",
   "folders.deleteFolderById",
   "folders.getFolderById",
   "folders.getFolderItems",
   "folders.updateFolderById",
+  "listCollaborations.getCollaborations",
+  "listCollaborations.getFileCollaborations",
+  "listCollaborations.getFolderCollaborations",
+  "listCollaborations.getGroupCollaborations",
+  "metadataCascadePolicies.getMetadataCascadePolicies",
+  "metadataCascadePolicies.getMetadataCascadePolicyById",
+  "metadataTemplates.getEnterpriseMetadataTemplates",
+  "metadataTemplates.getGlobalMetadataTemplates",
+  "metadataTemplates.getMetadataTemplate",
+  "metadataTemplates.getMetadataTemplateById",
+  "metadataTemplates.getMetadataTemplatesByInstanceId",
+  "retentionPolicies.getRetentionPolicies",
+  "retentionPolicies.getRetentionPolicyById",
+  "retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment",
+  "retentionPolicyAssignments.getRetentionPolicyAssignmentById",
+  "retentionPolicyAssignments.getRetentionPolicyAssignments",
+  "signRequests.cancelSignRequest",
+  "signRequests.createSignRequest",
+  "signRequests.getSignRequestById",
+  "signRequests.getSignRequests",
+  "signRequests.resendSignRequest",
+  "signTemplates.getSignTemplateById",
+  "signTemplates.getSignTemplates",
   "uploads.preflightFileUploadCheck",
   "uploads.uploadFile",
   "uploads.uploadFileVersion",
   "uploads.uploadWithPreflightCheck",
+  "userCollaborations.createCollaboration",
+  "userCollaborations.deleteCollaborationById",
+  "userCollaborations.getCollaborationById",
+  "userCollaborations.updateCollaborationById",
   "users.createUser",
   "users.deleteUserById",
   "users.getUserById",
   "users.getUserMe",
   "users.getUsers",
   "users.updateUserById",
+  "webhooks.createWebhook",
+  "webhooks.deleteWebhookById",
+  "webhooks.getWebhookById",
+  "webhooks.getWebhooks",
+  "webhooks.updateWebhookById",
+  "webhooks.validateMessage",
   "zipDownloads.createZipDownload",
   "zipDownloads.downloadZip",
   "zipDownloads.getZipDownloadContent",
@@ -210,6 +245,31 @@ export const BoxMethodName = LiteralKit([
  * @since 0.0.0
  */
 export type BoxMethodName = typeof BoxMethodName.Type;
+
+/**
+ * Generated Box SDK schema for AppItem.
+ *
+ * **Example** (Inspect the AppItem schema)
+ *
+ * ```ts
+ * import { AppItem } from "@beep/box"
+ *
+ * console.log(AppItem.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AppItem extends S.Class<AppItem>($I`AppItem`)(
+  {
+    id: S.String,
+    type: S.suspend(() => AppItemTypeField),
+    applicationType: S.String,
+  },
+  $I.annote("AppItem", {
+    description: "Generated Box SDK schema for AppItem."
+  })
+) {}
 
 /**
  * Generated Box SDK schema for AppItemEventSource.
@@ -271,6 +331,444 @@ export const AppItemEventSourceTypeField = S.Literal("app_item").pipe($I.annoteS
  * @since 0.0.0
  */
 export type AppItemEventSourceTypeField = typeof AppItemEventSourceTypeField.Type;
+
+/**
+ * Generated Box SDK schema for AppItemTypeField.
+ *
+ * **Example** (Inspect the AppItemTypeField schema)
+ *
+ * ```ts
+ * import { AppItemTypeField } from "@beep/box"
+ *
+ * console.log(AppItemTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AppItemTypeField = S.Literal("app_item").pipe($I.annoteSchema("AppItemTypeField", {
+    description: "Generated Box SDK schema for AppItemTypeField."
+  }));
+
+/**
+ * Type for {@link AppItemTypeField}.
+ *
+ * **Example** (Reference the AppItemTypeField type)
+ *
+ * ```ts
+ * import type { AppItemTypeField } from "@beep/box"
+ *
+ * type Value = AppItemTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AppItemTypeField = typeof AppItemTypeField.Type;
+
+/**
+ * Generated Box SDK schema for CancelSignRequestHeaders.
+ *
+ * **Example** (Inspect the CancelSignRequestHeaders schema)
+ *
+ * ```ts
+ * import { CancelSignRequestHeaders } from "@beep/box"
+ *
+ * console.log(CancelSignRequestHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CancelSignRequestHeaders extends S.Class<CancelSignRequestHeaders>($I`CancelSignRequestHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("CancelSignRequestHeaders", {
+    description: "Generated Box SDK schema for CancelSignRequestHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CancelSignRequestOptionalsInput.
+ *
+ * **Example** (Inspect the CancelSignRequestOptionalsInput schema)
+ *
+ * ```ts
+ * import { CancelSignRequestOptionalsInput } from "@beep/box"
+ *
+ * console.log(CancelSignRequestOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CancelSignRequestOptionalsInput extends S.Class<CancelSignRequestOptionalsInput>($I`CancelSignRequestOptionalsInput`)(
+  {
+    requestBody: S.suspend(() => SignRequestCancelRequest).pipe(S.optionalKey),
+    headers: S.suspend(() => CancelSignRequestHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("CancelSignRequestOptionalsInput", {
+    description: "Generated Box SDK schema for CancelSignRequestOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for Collaboration.
+ *
+ * **Example** (Inspect the Collaboration schema)
+ *
+ * ```ts
+ * import { Collaboration } from "@beep/box"
+ *
+ * console.log(Collaboration.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Collaboration extends S.Class<Collaboration>($I`Collaboration`)(
+  {
+    id: S.String,
+    type: S.suspend(() => CollaborationTypeField),
+    item: S.suspend(() => CollaborationItem).pipe(S.NullOr, S.optionalKey),
+    appItem: S.suspend(() => AppItem).pipe(S.NullOr, S.optionalKey),
+    accessibleBy: S.suspend(() => CollaborationAccessGrantee).pipe(S.optionalKey),
+    inviteEmail: S.String.pipe(S.NullOr, S.optionalKey),
+    role: S.suspend(() => CollaborationRoleField).pipe(S.optionalKey),
+    expiresAt: BoxSdkDateTime.pipe(S.NullOr, S.optionalKey),
+    isAccessOnly: S.Boolean.pipe(S.optionalKey),
+    status: S.suspend(() => CollaborationStatusField).pipe(S.optionalKey),
+    acknowledgedAt: BoxSdkDateTime.pipe(S.optionalKey),
+    createdBy: S.suspend(() => UserCollaborations).pipe(S.optionalKey),
+    createdAt: BoxSdkDateTime.pipe(S.optionalKey),
+    modifiedAt: BoxSdkDateTime.pipe(S.optionalKey),
+    acceptanceRequirementsStatus: S.suspend(() => CollaborationAcceptanceRequirementsStatusField).pipe(S.optionalKey),
+  },
+  $I.annote("Collaboration", {
+    description: "Generated Box SDK schema for Collaboration."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusField.
+ *
+ * **Example** (Inspect the CollaborationAcceptanceRequirementsStatusField schema)
+ *
+ * ```ts
+ * import { CollaborationAcceptanceRequirementsStatusField } from "@beep/box"
+ *
+ * console.log(CollaborationAcceptanceRequirementsStatusField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CollaborationAcceptanceRequirementsStatusField extends S.Class<CollaborationAcceptanceRequirementsStatusField>($I`CollaborationAcceptanceRequirementsStatusField`)(
+  {
+    termsOfServiceRequirement: S.suspend(() => CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField).pipe(S.optionalKey),
+    strongPasswordRequirement: S.suspend(() => CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField).pipe(S.optionalKey),
+    twoFactorAuthenticationRequirement: S.suspend(() => CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField).pipe(S.optionalKey),
+  },
+  $I.annote("CollaborationAcceptanceRequirementsStatusField", {
+    description: "Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField.
+ *
+ * **Example** (Inspect the CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField schema)
+ *
+ * ```ts
+ * import { CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField } from "@beep/box"
+ *
+ * console.log(CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField extends S.Class<CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField>($I`CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField`)(
+  {
+    enterpriseHasStrongPasswordRequiredForExternalUsers: S.Boolean.pipe(S.optionalKey),
+    userHasStrongPassword: S.Boolean.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField", {
+    description: "Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusStrongPasswordRequirementField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField.
+ *
+ * **Example** (Inspect the CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField schema)
+ *
+ * ```ts
+ * import { CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField } from "@beep/box"
+ *
+ * console.log(CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField extends S.Class<CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField>($I`CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField`)(
+  {
+    isAccepted: S.Boolean.pipe(S.NullOr, S.optionalKey),
+    termsOfService: S.suspend(() => TermsOfServiceBase).pipe(S.optionalKey),
+  },
+  $I.annote("CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField", {
+    description: "Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusTermsOfServiceRequirementField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField.
+ *
+ * **Example** (Inspect the CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField schema)
+ *
+ * ```ts
+ * import { CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField } from "@beep/box"
+ *
+ * console.log(CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField extends S.Class<CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField>($I`CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField`)(
+  {
+    enterpriseHasTwoFactorAuthEnabled: S.Boolean.pipe(S.optionalKey),
+    userHasTwoFactorAuthenticationEnabled: S.Boolean.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField", {
+    description: "Generated Box SDK schema for CollaborationAcceptanceRequirementsStatusTwoFactorAuthenticationRequirementField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CollaborationAccessGrantee.
+ *
+ * **Example** (Inspect the CollaborationAccessGrantee schema)
+ *
+ * ```ts
+ * import { CollaborationAccessGrantee } from "@beep/box"
+ *
+ * console.log(CollaborationAccessGrantee.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CollaborationAccessGrantee = S.Union([S.suspend(() => UserCollaborations), S.suspend(() => GroupMini)]).pipe($I.annoteSchema("CollaborationAccessGrantee", {
+    description: "Generated Box SDK schema for CollaborationAccessGrantee."
+  }));
+
+/**
+ * Type for {@link CollaborationAccessGrantee}.
+ *
+ * **Example** (Reference the CollaborationAccessGrantee type)
+ *
+ * ```ts
+ * import type { CollaborationAccessGrantee } from "@beep/box"
+ *
+ * type Value = CollaborationAccessGrantee
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CollaborationAccessGrantee = typeof CollaborationAccessGrantee.Type;
+
+/**
+ * Generated Box SDK schema for CollaborationItem.
+ *
+ * **Example** (Inspect the CollaborationItem schema)
+ *
+ * ```ts
+ * import { CollaborationItem } from "@beep/box"
+ *
+ * console.log(CollaborationItem.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CollaborationItem = S.Union([S.suspend(() => File), S.suspend(() => Folder), S.suspend(() => WebLink)]).pipe($I.annoteSchema("CollaborationItem", {
+    description: "Generated Box SDK schema for CollaborationItem."
+  }));
+
+/**
+ * Type for {@link CollaborationItem}.
+ *
+ * **Example** (Reference the CollaborationItem type)
+ *
+ * ```ts
+ * import type { CollaborationItem } from "@beep/box"
+ *
+ * type Value = CollaborationItem
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CollaborationItem = typeof CollaborationItem.Type;
+
+/**
+ * Generated Box SDK schema for CollaborationRoleField.
+ *
+ * **Example** (Inspect the CollaborationRoleField schema)
+ *
+ * ```ts
+ * import { CollaborationRoleField } from "@beep/box"
+ *
+ * console.log(CollaborationRoleField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CollaborationRoleField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner", "owner"]), S.String]).pipe($I.annoteSchema("CollaborationRoleField", {
+    description: "Generated Box SDK schema for CollaborationRoleField."
+  }));
+
+/**
+ * Type for {@link CollaborationRoleField}.
+ *
+ * **Example** (Reference the CollaborationRoleField type)
+ *
+ * ```ts
+ * import type { CollaborationRoleField } from "@beep/box"
+ *
+ * type Value = CollaborationRoleField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CollaborationRoleField = typeof CollaborationRoleField.Type;
+
+/**
+ * Generated Box SDK schema for Collaborations.
+ *
+ * **Example** (Inspect the Collaborations schema)
+ *
+ * ```ts
+ * import { Collaborations } from "@beep/box"
+ *
+ * console.log(Collaborations.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Collaborations extends S.Class<Collaborations>($I`Collaborations`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    prevMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    entries: S.suspend(() => Collaboration).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("Collaborations", {
+    description: "Generated Box SDK schema for Collaborations."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CollaborationsOffsetPaginated.
+ *
+ * **Example** (Inspect the CollaborationsOffsetPaginated schema)
+ *
+ * ```ts
+ * import { CollaborationsOffsetPaginated } from "@beep/box"
+ *
+ * console.log(CollaborationsOffsetPaginated.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CollaborationsOffsetPaginated extends S.Class<CollaborationsOffsetPaginated>($I`CollaborationsOffsetPaginated`)(
+  {
+    totalCount: S.Finite.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+    offset: S.Finite.pipe(S.optionalKey),
+    entries: S.suspend(() => Collaboration).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("CollaborationsOffsetPaginated", {
+    description: "Generated Box SDK schema for CollaborationsOffsetPaginated."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CollaborationStatusField.
+ *
+ * **Example** (Inspect the CollaborationStatusField schema)
+ *
+ * ```ts
+ * import { CollaborationStatusField } from "@beep/box"
+ *
+ * console.log(CollaborationStatusField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CollaborationStatusField = S.Union([LiteralKit(["accepted", "pending", "rejected"]), S.String]).pipe($I.annoteSchema("CollaborationStatusField", {
+    description: "Generated Box SDK schema for CollaborationStatusField."
+  }));
+
+/**
+ * Type for {@link CollaborationStatusField}.
+ *
+ * **Example** (Reference the CollaborationStatusField type)
+ *
+ * ```ts
+ * import type { CollaborationStatusField } from "@beep/box"
+ *
+ * type Value = CollaborationStatusField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CollaborationStatusField = typeof CollaborationStatusField.Type;
+
+/**
+ * Generated Box SDK schema for CollaborationTypeField.
+ *
+ * **Example** (Inspect the CollaborationTypeField schema)
+ *
+ * ```ts
+ * import { CollaborationTypeField } from "@beep/box"
+ *
+ * console.log(CollaborationTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CollaborationTypeField = S.Literal("collaboration").pipe($I.annoteSchema("CollaborationTypeField", {
+    description: "Generated Box SDK schema for CollaborationTypeField."
+  }));
+
+/**
+ * Type for {@link CollaborationTypeField}.
+ *
+ * **Example** (Reference the CollaborationTypeField type)
+ *
+ * ```ts
+ * import type { CollaborationTypeField } from "@beep/box"
+ *
+ * type Value = CollaborationTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CollaborationTypeField = typeof CollaborationTypeField.Type;
 
 /**
  * Generated Box SDK schema for Collection.
@@ -636,6 +1134,269 @@ export class CopyFolderRequestBodyParentField extends S.Class<CopyFolderRequestB
     description: "Generated Box SDK schema for CopyFolderRequestBodyParentField."
   })
 ) {}
+
+/**
+ * Generated Box SDK schema for CreateCollaborationHeaders.
+ *
+ * **Example** (Inspect the CreateCollaborationHeaders schema)
+ *
+ * ```ts
+ * import { CreateCollaborationHeaders } from "@beep/box"
+ *
+ * console.log(CreateCollaborationHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateCollaborationHeaders extends S.Class<CreateCollaborationHeaders>($I`CreateCollaborationHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("CreateCollaborationHeaders", {
+    description: "Generated Box SDK schema for CreateCollaborationHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateCollaborationOptionalsInput.
+ *
+ * **Example** (Inspect the CreateCollaborationOptionalsInput schema)
+ *
+ * ```ts
+ * import { CreateCollaborationOptionalsInput } from "@beep/box"
+ *
+ * console.log(CreateCollaborationOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateCollaborationOptionalsInput extends S.Class<CreateCollaborationOptionalsInput>($I`CreateCollaborationOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => CreateCollaborationQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => CreateCollaborationHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("CreateCollaborationOptionalsInput", {
+    description: "Generated Box SDK schema for CreateCollaborationOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateCollaborationQueryParams.
+ *
+ * **Example** (Inspect the CreateCollaborationQueryParams schema)
+ *
+ * ```ts
+ * import { CreateCollaborationQueryParams } from "@beep/box"
+ *
+ * console.log(CreateCollaborationQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateCollaborationQueryParams extends S.Class<CreateCollaborationQueryParams>($I`CreateCollaborationQueryParams`)(
+  {
+    fields: S.String.pipe(S.Array, S.optionalKey),
+    notify: S.Boolean.pipe(S.optionalKey),
+  },
+  $I.annote("CreateCollaborationQueryParams", {
+    description: "Generated Box SDK schema for CreateCollaborationQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateCollaborationRequestBody.
+ *
+ * **Example** (Inspect the CreateCollaborationRequestBody schema)
+ *
+ * ```ts
+ * import { CreateCollaborationRequestBody } from "@beep/box"
+ *
+ * console.log(CreateCollaborationRequestBody.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateCollaborationRequestBody extends S.Class<CreateCollaborationRequestBody>($I`CreateCollaborationRequestBody`)(
+  {
+    item: S.suspend(() => CreateCollaborationRequestBodyItemField),
+    accessibleBy: S.suspend(() => CreateCollaborationRequestBodyAccessibleByField),
+    role: S.suspend(() => CreateCollaborationRequestBodyRoleField),
+    isAccessOnly: S.Boolean.pipe(S.optionalKey),
+    canViewPath: S.Boolean.pipe(S.optionalKey),
+    expiresAt: BoxSdkDateTime.pipe(S.optionalKey),
+  },
+  $I.annote("CreateCollaborationRequestBody", {
+    description: "Generated Box SDK schema for CreateCollaborationRequestBody."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateCollaborationRequestBodyAccessibleByField.
+ *
+ * **Example** (Inspect the CreateCollaborationRequestBodyAccessibleByField schema)
+ *
+ * ```ts
+ * import { CreateCollaborationRequestBodyAccessibleByField } from "@beep/box"
+ *
+ * console.log(CreateCollaborationRequestBodyAccessibleByField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateCollaborationRequestBodyAccessibleByField extends S.Class<CreateCollaborationRequestBodyAccessibleByField>($I`CreateCollaborationRequestBodyAccessibleByField`)(
+  {
+    type: S.suspend(() => CreateCollaborationRequestBodyAccessibleByTypeField),
+    id: S.String.pipe(S.optionalKey),
+    login: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("CreateCollaborationRequestBodyAccessibleByField", {
+    description: "Generated Box SDK schema for CreateCollaborationRequestBodyAccessibleByField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateCollaborationRequestBodyAccessibleByTypeField.
+ *
+ * **Example** (Inspect the CreateCollaborationRequestBodyAccessibleByTypeField schema)
+ *
+ * ```ts
+ * import { CreateCollaborationRequestBodyAccessibleByTypeField } from "@beep/box"
+ *
+ * console.log(CreateCollaborationRequestBodyAccessibleByTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CreateCollaborationRequestBodyAccessibleByTypeField = LiteralKit(["user", "group"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("CreateCollaborationRequestBodyAccessibleByTypeField", {
+        description: "Generated Box SDK schema for CreateCollaborationRequestBodyAccessibleByTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link CreateCollaborationRequestBodyAccessibleByTypeField}.
+ *
+ * **Example** (Reference the CreateCollaborationRequestBodyAccessibleByTypeField type)
+ *
+ * ```ts
+ * import type { CreateCollaborationRequestBodyAccessibleByTypeField } from "@beep/box"
+ *
+ * type Value = CreateCollaborationRequestBodyAccessibleByTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreateCollaborationRequestBodyAccessibleByTypeField = typeof CreateCollaborationRequestBodyAccessibleByTypeField.Type;
+
+/**
+ * Generated Box SDK schema for CreateCollaborationRequestBodyItemField.
+ *
+ * **Example** (Inspect the CreateCollaborationRequestBodyItemField schema)
+ *
+ * ```ts
+ * import { CreateCollaborationRequestBodyItemField } from "@beep/box"
+ *
+ * console.log(CreateCollaborationRequestBodyItemField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateCollaborationRequestBodyItemField extends S.Class<CreateCollaborationRequestBodyItemField>($I`CreateCollaborationRequestBodyItemField`)(
+  {
+    type: S.suspend(() => CreateCollaborationRequestBodyItemTypeField).pipe(S.optionalKey),
+    id: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("CreateCollaborationRequestBodyItemField", {
+    description: "Generated Box SDK schema for CreateCollaborationRequestBodyItemField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateCollaborationRequestBodyItemTypeField.
+ *
+ * **Example** (Inspect the CreateCollaborationRequestBodyItemTypeField schema)
+ *
+ * ```ts
+ * import { CreateCollaborationRequestBodyItemTypeField } from "@beep/box"
+ *
+ * console.log(CreateCollaborationRequestBodyItemTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CreateCollaborationRequestBodyItemTypeField = LiteralKit(["file", "folder"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("CreateCollaborationRequestBodyItemTypeField", {
+        description: "Generated Box SDK schema for CreateCollaborationRequestBodyItemTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link CreateCollaborationRequestBodyItemTypeField}.
+ *
+ * **Example** (Reference the CreateCollaborationRequestBodyItemTypeField type)
+ *
+ * ```ts
+ * import type { CreateCollaborationRequestBodyItemTypeField } from "@beep/box"
+ *
+ * type Value = CreateCollaborationRequestBodyItemTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreateCollaborationRequestBodyItemTypeField = typeof CreateCollaborationRequestBodyItemTypeField.Type;
+
+/**
+ * Generated Box SDK schema for CreateCollaborationRequestBodyRoleField.
+ *
+ * **Example** (Inspect the CreateCollaborationRequestBodyRoleField schema)
+ *
+ * ```ts
+ * import { CreateCollaborationRequestBodyRoleField } from "@beep/box"
+ *
+ * console.log(CreateCollaborationRequestBodyRoleField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CreateCollaborationRequestBodyRoleField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner"]), S.String]).pipe($I.annoteSchema("CreateCollaborationRequestBodyRoleField", {
+    description: "Generated Box SDK schema for CreateCollaborationRequestBodyRoleField."
+  }));
+
+/**
+ * Type for {@link CreateCollaborationRequestBodyRoleField}.
+ *
+ * **Example** (Reference the CreateCollaborationRequestBodyRoleField type)
+ *
+ * ```ts
+ * import type { CreateCollaborationRequestBodyRoleField } from "@beep/box"
+ *
+ * type Value = CreateCollaborationRequestBodyRoleField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreateCollaborationRequestBodyRoleField = typeof CreateCollaborationRequestBodyRoleField.Type;
 
 /**
  * Generated Box SDK schema for CreateFileUploadSessionCommitByUrlHeadersInput.
@@ -1136,6 +1897,53 @@ export const CreateFolderRequestBodySyncStateField = S.Union([LiteralKit(["synce
 export type CreateFolderRequestBodySyncStateField = typeof CreateFolderRequestBodySyncStateField.Type;
 
 /**
+ * Generated Box SDK schema for CreateSignRequestHeaders.
+ *
+ * **Example** (Inspect the CreateSignRequestHeaders schema)
+ *
+ * ```ts
+ * import { CreateSignRequestHeaders } from "@beep/box"
+ *
+ * console.log(CreateSignRequestHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateSignRequestHeaders extends S.Class<CreateSignRequestHeaders>($I`CreateSignRequestHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("CreateSignRequestHeaders", {
+    description: "Generated Box SDK schema for CreateSignRequestHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateSignRequestOptionalsInput.
+ *
+ * **Example** (Inspect the CreateSignRequestOptionalsInput schema)
+ *
+ * ```ts
+ * import { CreateSignRequestOptionalsInput } from "@beep/box"
+ *
+ * console.log(CreateSignRequestOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateSignRequestOptionalsInput extends S.Class<CreateSignRequestOptionalsInput>($I`CreateSignRequestOptionalsInput`)(
+  {
+    headers: S.suspend(() => CreateSignRequestHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("CreateSignRequestOptionalsInput", {
+    description: "Generated Box SDK schema for CreateSignRequestOptionalsInput."
+  })
+) {}
+
+/**
  * Generated Box SDK schema for CreateUserAvatarHeaders.
  *
  * **Example** (Inspect the CreateUserAvatarHeaders schema)
@@ -1362,6 +2170,176 @@ export const CreateUserRequestBodyStatusField = S.Union([LiteralKit(["active", "
 export type CreateUserRequestBodyStatusField = typeof CreateUserRequestBodyStatusField.Type;
 
 /**
+ * Generated Box SDK schema for CreateWebhookHeaders.
+ *
+ * **Example** (Inspect the CreateWebhookHeaders schema)
+ *
+ * ```ts
+ * import { CreateWebhookHeaders } from "@beep/box"
+ *
+ * console.log(CreateWebhookHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateWebhookHeaders extends S.Class<CreateWebhookHeaders>($I`CreateWebhookHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("CreateWebhookHeaders", {
+    description: "Generated Box SDK schema for CreateWebhookHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateWebhookOptionalsInput.
+ *
+ * **Example** (Inspect the CreateWebhookOptionalsInput schema)
+ *
+ * ```ts
+ * import { CreateWebhookOptionalsInput } from "@beep/box"
+ *
+ * console.log(CreateWebhookOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateWebhookOptionalsInput extends S.Class<CreateWebhookOptionalsInput>($I`CreateWebhookOptionalsInput`)(
+  {
+    headers: S.suspend(() => CreateWebhookHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("CreateWebhookOptionalsInput", {
+    description: "Generated Box SDK schema for CreateWebhookOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateWebhookRequestBody.
+ *
+ * **Example** (Inspect the CreateWebhookRequestBody schema)
+ *
+ * ```ts
+ * import { CreateWebhookRequestBody } from "@beep/box"
+ *
+ * console.log(CreateWebhookRequestBody.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateWebhookRequestBody extends S.Class<CreateWebhookRequestBody>($I`CreateWebhookRequestBody`)(
+  {
+    target: S.suspend(() => CreateWebhookRequestBodyTargetField),
+    address: S.String,
+    triggers: S.suspend(() => CreateWebhookRequestBodyTriggersField).pipe(S.Array),
+  },
+  $I.annote("CreateWebhookRequestBody", {
+    description: "Generated Box SDK schema for CreateWebhookRequestBody."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateWebhookRequestBodyTargetField.
+ *
+ * **Example** (Inspect the CreateWebhookRequestBodyTargetField schema)
+ *
+ * ```ts
+ * import { CreateWebhookRequestBodyTargetField } from "@beep/box"
+ *
+ * console.log(CreateWebhookRequestBodyTargetField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateWebhookRequestBodyTargetField extends S.Class<CreateWebhookRequestBodyTargetField>($I`CreateWebhookRequestBodyTargetField`)(
+  {
+    id: S.String.pipe(S.optionalKey),
+    type: S.suspend(() => CreateWebhookRequestBodyTargetTypeField).pipe(S.optionalKey),
+  },
+  $I.annote("CreateWebhookRequestBodyTargetField", {
+    description: "Generated Box SDK schema for CreateWebhookRequestBodyTargetField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateWebhookRequestBodyTargetTypeField.
+ *
+ * **Example** (Inspect the CreateWebhookRequestBodyTargetTypeField schema)
+ *
+ * ```ts
+ * import { CreateWebhookRequestBodyTargetTypeField } from "@beep/box"
+ *
+ * console.log(CreateWebhookRequestBodyTargetTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CreateWebhookRequestBodyTargetTypeField = LiteralKit(["file", "folder"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("CreateWebhookRequestBodyTargetTypeField", {
+        description: "Generated Box SDK schema for CreateWebhookRequestBodyTargetTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link CreateWebhookRequestBodyTargetTypeField}.
+ *
+ * **Example** (Reference the CreateWebhookRequestBodyTargetTypeField type)
+ *
+ * ```ts
+ * import type { CreateWebhookRequestBodyTargetTypeField } from "@beep/box"
+ *
+ * type Value = CreateWebhookRequestBodyTargetTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreateWebhookRequestBodyTargetTypeField = typeof CreateWebhookRequestBodyTargetTypeField.Type;
+
+/**
+ * Generated Box SDK schema for CreateWebhookRequestBodyTriggersField.
+ *
+ * **Example** (Inspect the CreateWebhookRequestBodyTriggersField schema)
+ *
+ * ```ts
+ * import { CreateWebhookRequestBodyTriggersField } from "@beep/box"
+ *
+ * console.log(CreateWebhookRequestBodyTriggersField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CreateWebhookRequestBodyTriggersField = S.Union([LiteralKit(["FILE.UPLOADED", "FILE.PREVIEWED", "FILE.DOWNLOADED", "FILE.TRASHED", "FILE.DELETED", "FILE.RESTORED", "FILE.COPIED", "FILE.MOVED", "FILE.LOCKED", "FILE.UNLOCKED", "FILE.RENAMED", "COMMENT.CREATED", "COMMENT.UPDATED", "COMMENT.DELETED", "TASK_ASSIGNMENT.CREATED", "TASK_ASSIGNMENT.UPDATED", "METADATA_INSTANCE.CREATED", "METADATA_INSTANCE.UPDATED", "METADATA_INSTANCE.DELETED", "FOLDER.CREATED", "FOLDER.RENAMED", "FOLDER.DOWNLOADED", "FOLDER.RESTORED", "FOLDER.DELETED", "FOLDER.COPIED", "FOLDER.MOVED", "FOLDER.TRASHED", "WEBHOOK.DELETED", "COLLABORATION.CREATED", "COLLABORATION.ACCEPTED", "COLLABORATION.REJECTED", "COLLABORATION.REMOVED", "COLLABORATION.UPDATED", "SHARED_LINK.DELETED", "SHARED_LINK.CREATED", "SHARED_LINK.UPDATED", "SIGN_REQUEST.COMPLETED", "SIGN_REQUEST.DECLINED", "SIGN_REQUEST.EXPIRED", "SIGN_REQUEST.SIGNER_EMAIL_BOUNCED", "SIGN_REQUEST.SIGN_SIGNER_SIGNED", "SIGN_REQUEST.SIGN_DOCUMENT_CREATED", "SIGN_REQUEST.SIGN_ERROR_FINALIZING"]), S.String]).pipe($I.annoteSchema("CreateWebhookRequestBodyTriggersField", {
+    description: "Generated Box SDK schema for CreateWebhookRequestBodyTriggersField."
+  }));
+
+/**
+ * Type for {@link CreateWebhookRequestBodyTriggersField}.
+ *
+ * **Example** (Reference the CreateWebhookRequestBodyTriggersField type)
+ *
+ * ```ts
+ * import type { CreateWebhookRequestBodyTriggersField } from "@beep/box"
+ *
+ * type Value = CreateWebhookRequestBodyTriggersField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreateWebhookRequestBodyTriggersField = typeof CreateWebhookRequestBodyTriggersField.Type;
+
+/**
  * Generated Box SDK schema for CreateZipDownloadHeaders.
  *
  * **Example** (Inspect the CreateZipDownloadHeaders schema)
@@ -1405,6 +2383,53 @@ export class CreateZipDownloadOptionalsInput extends S.Class<CreateZipDownloadOp
   },
   $I.annote("CreateZipDownloadOptionalsInput", {
     description: "Generated Box SDK schema for CreateZipDownloadOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for DeleteCollaborationByIdHeaders.
+ *
+ * **Example** (Inspect the DeleteCollaborationByIdHeaders schema)
+ *
+ * ```ts
+ * import { DeleteCollaborationByIdHeaders } from "@beep/box"
+ *
+ * console.log(DeleteCollaborationByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeleteCollaborationByIdHeaders extends S.Class<DeleteCollaborationByIdHeaders>($I`DeleteCollaborationByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("DeleteCollaborationByIdHeaders", {
+    description: "Generated Box SDK schema for DeleteCollaborationByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for DeleteCollaborationByIdOptionalsInput.
+ *
+ * **Example** (Inspect the DeleteCollaborationByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { DeleteCollaborationByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(DeleteCollaborationByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeleteCollaborationByIdOptionalsInput extends S.Class<DeleteCollaborationByIdOptionalsInput>($I`DeleteCollaborationByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => DeleteCollaborationByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("DeleteCollaborationByIdOptionalsInput", {
+    description: "Generated Box SDK schema for DeleteCollaborationByIdOptionalsInput."
   })
 ) {}
 
@@ -1738,6 +2763,53 @@ export class DeleteUserByIdQueryParams extends S.Class<DeleteUserByIdQueryParams
   },
   $I.annote("DeleteUserByIdQueryParams", {
     description: "Generated Box SDK schema for DeleteUserByIdQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for DeleteWebhookByIdHeaders.
+ *
+ * **Example** (Inspect the DeleteWebhookByIdHeaders schema)
+ *
+ * ```ts
+ * import { DeleteWebhookByIdHeaders } from "@beep/box"
+ *
+ * console.log(DeleteWebhookByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeleteWebhookByIdHeaders extends S.Class<DeleteWebhookByIdHeaders>($I`DeleteWebhookByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("DeleteWebhookByIdHeaders", {
+    description: "Generated Box SDK schema for DeleteWebhookByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for DeleteWebhookByIdOptionalsInput.
+ *
+ * **Example** (Inspect the DeleteWebhookByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { DeleteWebhookByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(DeleteWebhookByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeleteWebhookByIdOptionalsInput extends S.Class<DeleteWebhookByIdOptionalsInput>($I`DeleteWebhookByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => DeleteWebhookByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("DeleteWebhookByIdOptionalsInput", {
+    description: "Generated Box SDK schema for DeleteWebhookByIdOptionalsInput."
   })
 ) {}
 
@@ -3071,6 +4143,32 @@ export class FileSharedLinkPermissionsField extends S.Class<FileSharedLinkPermis
 ) {}
 
 /**
+ * Generated Box SDK schema for FilesUnderRetention.
+ *
+ * **Example** (Inspect the FilesUnderRetention schema)
+ *
+ * ```ts
+ * import { FilesUnderRetention } from "@beep/box"
+ *
+ * console.log(FilesUnderRetention.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FilesUnderRetention extends S.Class<FilesUnderRetention>($I`FilesUnderRetention`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    prevMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    entries: S.suspend(() => FileMini).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("FilesUnderRetention", {
+    description: "Generated Box SDK schema for FilesUnderRetention."
+  })
+) {}
+
+/**
  * Generated Box SDK schema for FileVersionBase.
  *
  * **Example** (Inspect the FileVersionBase schema)
@@ -3828,6 +4926,184 @@ export const GenericSource = S.Record(S.String, S.Unknown).pipe($I.annoteSchema(
 export type GenericSource = typeof GenericSource.Type;
 
 /**
+ * Generated Box SDK schema for GetCollaborationByIdHeaders.
+ *
+ * **Example** (Inspect the GetCollaborationByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetCollaborationByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetCollaborationByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetCollaborationByIdHeaders extends S.Class<GetCollaborationByIdHeaders>($I`GetCollaborationByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetCollaborationByIdHeaders", {
+    description: "Generated Box SDK schema for GetCollaborationByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetCollaborationByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetCollaborationByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetCollaborationByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetCollaborationByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetCollaborationByIdOptionalsInput extends S.Class<GetCollaborationByIdOptionalsInput>($I`GetCollaborationByIdOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetCollaborationByIdQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetCollaborationByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetCollaborationByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetCollaborationByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetCollaborationByIdQueryParams.
+ *
+ * **Example** (Inspect the GetCollaborationByIdQueryParams schema)
+ *
+ * ```ts
+ * import { GetCollaborationByIdQueryParams } from "@beep/box"
+ *
+ * console.log(GetCollaborationByIdQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetCollaborationByIdQueryParams extends S.Class<GetCollaborationByIdQueryParams>($I`GetCollaborationByIdQueryParams`)(
+  {
+    fields: S.String.pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("GetCollaborationByIdQueryParams", {
+    description: "Generated Box SDK schema for GetCollaborationByIdQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetCollaborationsHeaders.
+ *
+ * **Example** (Inspect the GetCollaborationsHeaders schema)
+ *
+ * ```ts
+ * import { GetCollaborationsHeaders } from "@beep/box"
+ *
+ * console.log(GetCollaborationsHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetCollaborationsHeaders extends S.Class<GetCollaborationsHeaders>($I`GetCollaborationsHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetCollaborationsHeaders", {
+    description: "Generated Box SDK schema for GetCollaborationsHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetCollaborationsOptionalsInput.
+ *
+ * **Example** (Inspect the GetCollaborationsOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetCollaborationsOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetCollaborationsOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetCollaborationsOptionalsInput extends S.Class<GetCollaborationsOptionalsInput>($I`GetCollaborationsOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetCollaborationsHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetCollaborationsOptionalsInput", {
+    description: "Generated Box SDK schema for GetCollaborationsOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetCollaborationsQueryParams.
+ *
+ * **Example** (Inspect the GetCollaborationsQueryParams schema)
+ *
+ * ```ts
+ * import { GetCollaborationsQueryParams } from "@beep/box"
+ *
+ * console.log(GetCollaborationsQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetCollaborationsQueryParams extends S.Class<GetCollaborationsQueryParams>($I`GetCollaborationsQueryParams`)(
+  {
+    status: S.suspend(() => GetCollaborationsQueryParamsStatusField),
+    fields: S.String.pipe(S.Array, S.optionalKey),
+    offset: S.Finite.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetCollaborationsQueryParams", {
+    description: "Generated Box SDK schema for GetCollaborationsQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetCollaborationsQueryParamsStatusField.
+ *
+ * **Example** (Inspect the GetCollaborationsQueryParamsStatusField schema)
+ *
+ * ```ts
+ * import { GetCollaborationsQueryParamsStatusField } from "@beep/box"
+ *
+ * console.log(GetCollaborationsQueryParamsStatusField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GetCollaborationsQueryParamsStatusField = S.Union([LiteralKit(["pending"]), S.String]).pipe($I.annoteSchema("GetCollaborationsQueryParamsStatusField", {
+    description: "Generated Box SDK schema for GetCollaborationsQueryParamsStatusField."
+  }));
+
+/**
+ * Type for {@link GetCollaborationsQueryParamsStatusField}.
+ *
+ * **Example** (Reference the GetCollaborationsQueryParamsStatusField type)
+ *
+ * ```ts
+ * import type { GetCollaborationsQueryParamsStatusField } from "@beep/box"
+ *
+ * type Value = GetCollaborationsQueryParamsStatusField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetCollaborationsQueryParamsStatusField = typeof GetCollaborationsQueryParamsStatusField.Type;
+
+/**
  * Generated Box SDK schema for GetDownloadFileUrlHeaders.
  *
  * **Example** (Inspect the GetDownloadFileUrlHeaders schema)
@@ -3898,6 +5174,53 @@ export class GetDownloadFileUrlQueryParams extends S.Class<GetDownloadFileUrlQue
   },
   $I.annote("GetDownloadFileUrlQueryParams", {
     description: "Generated Box SDK schema for GetDownloadFileUrlQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetEnterpriseMetadataTemplatesHeadersInput.
+ *
+ * **Example** (Inspect the GetEnterpriseMetadataTemplatesHeadersInput schema)
+ *
+ * ```ts
+ * import { GetEnterpriseMetadataTemplatesHeadersInput } from "@beep/box"
+ *
+ * console.log(GetEnterpriseMetadataTemplatesHeadersInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetEnterpriseMetadataTemplatesHeadersInput extends S.Class<GetEnterpriseMetadataTemplatesHeadersInput>($I`GetEnterpriseMetadataTemplatesHeadersInput`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetEnterpriseMetadataTemplatesHeadersInput", {
+    description: "Generated Box SDK schema for GetEnterpriseMetadataTemplatesHeadersInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetEnterpriseMetadataTemplatesQueryParams.
+ *
+ * **Example** (Inspect the GetEnterpriseMetadataTemplatesQueryParams schema)
+ *
+ * ```ts
+ * import { GetEnterpriseMetadataTemplatesQueryParams } from "@beep/box"
+ *
+ * console.log(GetEnterpriseMetadataTemplatesQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetEnterpriseMetadataTemplatesQueryParams extends S.Class<GetEnterpriseMetadataTemplatesQueryParams>($I`GetEnterpriseMetadataTemplatesQueryParams`)(
+  {
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetEnterpriseMetadataTemplatesQueryParams", {
+    description: "Generated Box SDK schema for GetEnterpriseMetadataTemplatesQueryParams."
   })
 ) {}
 
@@ -4233,6 +5556,151 @@ export class GetFileByIdQueryParams extends S.Class<GetFileByIdQueryParams>($I`G
   },
   $I.annote("GetFileByIdQueryParams", {
     description: "Generated Box SDK schema for GetFileByIdQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFileCollaborationsHeaders.
+ *
+ * **Example** (Inspect the GetFileCollaborationsHeaders schema)
+ *
+ * ```ts
+ * import { GetFileCollaborationsHeaders } from "@beep/box"
+ *
+ * console.log(GetFileCollaborationsHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFileCollaborationsHeaders extends S.Class<GetFileCollaborationsHeaders>($I`GetFileCollaborationsHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetFileCollaborationsHeaders", {
+    description: "Generated Box SDK schema for GetFileCollaborationsHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFileCollaborationsOptionalsInput.
+ *
+ * **Example** (Inspect the GetFileCollaborationsOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetFileCollaborationsOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetFileCollaborationsOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFileCollaborationsOptionalsInput extends S.Class<GetFileCollaborationsOptionalsInput>($I`GetFileCollaborationsOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetFileCollaborationsQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetFileCollaborationsHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetFileCollaborationsOptionalsInput", {
+    description: "Generated Box SDK schema for GetFileCollaborationsOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFileCollaborationsQueryParams.
+ *
+ * **Example** (Inspect the GetFileCollaborationsQueryParams schema)
+ *
+ * ```ts
+ * import { GetFileCollaborationsQueryParams } from "@beep/box"
+ *
+ * console.log(GetFileCollaborationsQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFileCollaborationsQueryParams extends S.Class<GetFileCollaborationsQueryParams>($I`GetFileCollaborationsQueryParams`)(
+  {
+    fields: S.String.pipe(S.Array, S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+    marker: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("GetFileCollaborationsQueryParams", {
+    description: "Generated Box SDK schema for GetFileCollaborationsQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFilesUnderRetentionPolicyAssignmentHeaders.
+ *
+ * **Example** (Inspect the GetFilesUnderRetentionPolicyAssignmentHeaders schema)
+ *
+ * ```ts
+ * import { GetFilesUnderRetentionPolicyAssignmentHeaders } from "@beep/box"
+ *
+ * console.log(GetFilesUnderRetentionPolicyAssignmentHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFilesUnderRetentionPolicyAssignmentHeaders extends S.Class<GetFilesUnderRetentionPolicyAssignmentHeaders>($I`GetFilesUnderRetentionPolicyAssignmentHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetFilesUnderRetentionPolicyAssignmentHeaders", {
+    description: "Generated Box SDK schema for GetFilesUnderRetentionPolicyAssignmentHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFilesUnderRetentionPolicyAssignmentOptionalsInput.
+ *
+ * **Example** (Inspect the GetFilesUnderRetentionPolicyAssignmentOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetFilesUnderRetentionPolicyAssignmentOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetFilesUnderRetentionPolicyAssignmentOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFilesUnderRetentionPolicyAssignmentOptionalsInput extends S.Class<GetFilesUnderRetentionPolicyAssignmentOptionalsInput>($I`GetFilesUnderRetentionPolicyAssignmentOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetFilesUnderRetentionPolicyAssignmentQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetFilesUnderRetentionPolicyAssignmentHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetFilesUnderRetentionPolicyAssignmentOptionalsInput", {
+    description: "Generated Box SDK schema for GetFilesUnderRetentionPolicyAssignmentOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFilesUnderRetentionPolicyAssignmentQueryParams.
+ *
+ * **Example** (Inspect the GetFilesUnderRetentionPolicyAssignmentQueryParams schema)
+ *
+ * ```ts
+ * import { GetFilesUnderRetentionPolicyAssignmentQueryParams } from "@beep/box"
+ *
+ * console.log(GetFilesUnderRetentionPolicyAssignmentQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFilesUnderRetentionPolicyAssignmentQueryParams extends S.Class<GetFilesUnderRetentionPolicyAssignmentQueryParams>($I`GetFilesUnderRetentionPolicyAssignmentQueryParams`)(
+  {
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetFilesUnderRetentionPolicyAssignmentQueryParams", {
+    description: "Generated Box SDK schema for GetFilesUnderRetentionPolicyAssignmentQueryParams."
   })
 ) {}
 
@@ -4836,6 +6304,79 @@ export const GetFolderByIdQueryParamsSortField = S.Union([LiteralKit(["id", "nam
 export type GetFolderByIdQueryParamsSortField = typeof GetFolderByIdQueryParamsSortField.Type;
 
 /**
+ * Generated Box SDK schema for GetFolderCollaborationsHeaders.
+ *
+ * **Example** (Inspect the GetFolderCollaborationsHeaders schema)
+ *
+ * ```ts
+ * import { GetFolderCollaborationsHeaders } from "@beep/box"
+ *
+ * console.log(GetFolderCollaborationsHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderCollaborationsHeaders extends S.Class<GetFolderCollaborationsHeaders>($I`GetFolderCollaborationsHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderCollaborationsHeaders", {
+    description: "Generated Box SDK schema for GetFolderCollaborationsHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFolderCollaborationsOptionalsInput.
+ *
+ * **Example** (Inspect the GetFolderCollaborationsOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetFolderCollaborationsOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetFolderCollaborationsOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderCollaborationsOptionalsInput extends S.Class<GetFolderCollaborationsOptionalsInput>($I`GetFolderCollaborationsOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetFolderCollaborationsQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetFolderCollaborationsHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderCollaborationsOptionalsInput", {
+    description: "Generated Box SDK schema for GetFolderCollaborationsOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFolderCollaborationsQueryParams.
+ *
+ * **Example** (Inspect the GetFolderCollaborationsQueryParams schema)
+ *
+ * ```ts
+ * import { GetFolderCollaborationsQueryParams } from "@beep/box"
+ *
+ * console.log(GetFolderCollaborationsQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderCollaborationsQueryParams extends S.Class<GetFolderCollaborationsQueryParams>($I`GetFolderCollaborationsQueryParams`)(
+  {
+    fields: S.String.pipe(S.Array, S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+    marker: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderCollaborationsQueryParams", {
+    description: "Generated Box SDK schema for GetFolderCollaborationsQueryParams."
+  })
+) {}
+
+/**
  * Generated Box SDK schema for GetFolderItemsHeaders.
  *
  * **Example** (Inspect the GetFolderItemsHeaders schema)
@@ -4980,6 +6521,1128 @@ export const GetFolderItemsQueryParamsSortField = S.Union([LiteralKit(["id", "na
  * @since 0.0.0
  */
 export type GetFolderItemsQueryParamsSortField = typeof GetFolderItemsQueryParamsSortField.Type;
+
+/**
+ * Generated Box SDK schema for GetFolderMetadataByIdHeaders.
+ *
+ * **Example** (Inspect the GetFolderMetadataByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetFolderMetadataByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetFolderMetadataByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderMetadataByIdHeaders extends S.Class<GetFolderMetadataByIdHeaders>($I`GetFolderMetadataByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderMetadataByIdHeaders", {
+    description: "Generated Box SDK schema for GetFolderMetadataByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFolderMetadataByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetFolderMetadataByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetFolderMetadataByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetFolderMetadataByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderMetadataByIdOptionalsInput extends S.Class<GetFolderMetadataByIdOptionalsInput>($I`GetFolderMetadataByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetFolderMetadataByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderMetadataByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetFolderMetadataByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFolderMetadataByIdScope.
+ *
+ * **Example** (Inspect the GetFolderMetadataByIdScope schema)
+ *
+ * ```ts
+ * import { GetFolderMetadataByIdScope } from "@beep/box"
+ *
+ * console.log(GetFolderMetadataByIdScope.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GetFolderMetadataByIdScope = S.Union([LiteralKit(["global", "enterprise"]), S.String]).pipe($I.annoteSchema("GetFolderMetadataByIdScope", {
+    description: "Generated Box SDK schema for GetFolderMetadataByIdScope."
+  }));
+
+/**
+ * Type for {@link GetFolderMetadataByIdScope}.
+ *
+ * **Example** (Reference the GetFolderMetadataByIdScope type)
+ *
+ * ```ts
+ * import type { GetFolderMetadataByIdScope } from "@beep/box"
+ *
+ * type Value = GetFolderMetadataByIdScope
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetFolderMetadataByIdScope = typeof GetFolderMetadataByIdScope.Type;
+
+/**
+ * Generated Box SDK schema for GetFolderMetadataHeaders.
+ *
+ * **Example** (Inspect the GetFolderMetadataHeaders schema)
+ *
+ * ```ts
+ * import { GetFolderMetadataHeaders } from "@beep/box"
+ *
+ * console.log(GetFolderMetadataHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderMetadataHeaders extends S.Class<GetFolderMetadataHeaders>($I`GetFolderMetadataHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderMetadataHeaders", {
+    description: "Generated Box SDK schema for GetFolderMetadataHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFolderMetadataOptionalsInput.
+ *
+ * **Example** (Inspect the GetFolderMetadataOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetFolderMetadataOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetFolderMetadataOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderMetadataOptionalsInput extends S.Class<GetFolderMetadataOptionalsInput>($I`GetFolderMetadataOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetFolderMetadataQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetFolderMetadataHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderMetadataOptionalsInput", {
+    description: "Generated Box SDK schema for GetFolderMetadataOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetFolderMetadataQueryParams.
+ *
+ * **Example** (Inspect the GetFolderMetadataQueryParams schema)
+ *
+ * ```ts
+ * import { GetFolderMetadataQueryParams } from "@beep/box"
+ *
+ * console.log(GetFolderMetadataQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetFolderMetadataQueryParams extends S.Class<GetFolderMetadataQueryParams>($I`GetFolderMetadataQueryParams`)(
+  {
+    view: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("GetFolderMetadataQueryParams", {
+    description: "Generated Box SDK schema for GetFolderMetadataQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetGlobalMetadataTemplatesHeadersInput.
+ *
+ * **Example** (Inspect the GetGlobalMetadataTemplatesHeadersInput schema)
+ *
+ * ```ts
+ * import { GetGlobalMetadataTemplatesHeadersInput } from "@beep/box"
+ *
+ * console.log(GetGlobalMetadataTemplatesHeadersInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetGlobalMetadataTemplatesHeadersInput extends S.Class<GetGlobalMetadataTemplatesHeadersInput>($I`GetGlobalMetadataTemplatesHeadersInput`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetGlobalMetadataTemplatesHeadersInput", {
+    description: "Generated Box SDK schema for GetGlobalMetadataTemplatesHeadersInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetGlobalMetadataTemplatesQueryParams.
+ *
+ * **Example** (Inspect the GetGlobalMetadataTemplatesQueryParams schema)
+ *
+ * ```ts
+ * import { GetGlobalMetadataTemplatesQueryParams } from "@beep/box"
+ *
+ * console.log(GetGlobalMetadataTemplatesQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetGlobalMetadataTemplatesQueryParams extends S.Class<GetGlobalMetadataTemplatesQueryParams>($I`GetGlobalMetadataTemplatesQueryParams`)(
+  {
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetGlobalMetadataTemplatesQueryParams", {
+    description: "Generated Box SDK schema for GetGlobalMetadataTemplatesQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetGroupCollaborationsHeaders.
+ *
+ * **Example** (Inspect the GetGroupCollaborationsHeaders schema)
+ *
+ * ```ts
+ * import { GetGroupCollaborationsHeaders } from "@beep/box"
+ *
+ * console.log(GetGroupCollaborationsHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetGroupCollaborationsHeaders extends S.Class<GetGroupCollaborationsHeaders>($I`GetGroupCollaborationsHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetGroupCollaborationsHeaders", {
+    description: "Generated Box SDK schema for GetGroupCollaborationsHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetGroupCollaborationsOptionalsInput.
+ *
+ * **Example** (Inspect the GetGroupCollaborationsOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetGroupCollaborationsOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetGroupCollaborationsOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetGroupCollaborationsOptionalsInput extends S.Class<GetGroupCollaborationsOptionalsInput>($I`GetGroupCollaborationsOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetGroupCollaborationsQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetGroupCollaborationsHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetGroupCollaborationsOptionalsInput", {
+    description: "Generated Box SDK schema for GetGroupCollaborationsOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetGroupCollaborationsQueryParams.
+ *
+ * **Example** (Inspect the GetGroupCollaborationsQueryParams schema)
+ *
+ * ```ts
+ * import { GetGroupCollaborationsQueryParams } from "@beep/box"
+ *
+ * console.log(GetGroupCollaborationsQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetGroupCollaborationsQueryParams extends S.Class<GetGroupCollaborationsQueryParams>($I`GetGroupCollaborationsQueryParams`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    offset: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetGroupCollaborationsQueryParams", {
+    description: "Generated Box SDK schema for GetGroupCollaborationsQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataCascadePoliciesHeaders.
+ *
+ * **Example** (Inspect the GetMetadataCascadePoliciesHeaders schema)
+ *
+ * ```ts
+ * import { GetMetadataCascadePoliciesHeaders } from "@beep/box"
+ *
+ * console.log(GetMetadataCascadePoliciesHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataCascadePoliciesHeaders extends S.Class<GetMetadataCascadePoliciesHeaders>($I`GetMetadataCascadePoliciesHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataCascadePoliciesHeaders", {
+    description: "Generated Box SDK schema for GetMetadataCascadePoliciesHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataCascadePoliciesOptionalsInput.
+ *
+ * **Example** (Inspect the GetMetadataCascadePoliciesOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetMetadataCascadePoliciesOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetMetadataCascadePoliciesOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataCascadePoliciesOptionalsInput extends S.Class<GetMetadataCascadePoliciesOptionalsInput>($I`GetMetadataCascadePoliciesOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetMetadataCascadePoliciesHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataCascadePoliciesOptionalsInput", {
+    description: "Generated Box SDK schema for GetMetadataCascadePoliciesOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataCascadePoliciesQueryParams.
+ *
+ * **Example** (Inspect the GetMetadataCascadePoliciesQueryParams schema)
+ *
+ * ```ts
+ * import { GetMetadataCascadePoliciesQueryParams } from "@beep/box"
+ *
+ * console.log(GetMetadataCascadePoliciesQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataCascadePoliciesQueryParams extends S.Class<GetMetadataCascadePoliciesQueryParams>($I`GetMetadataCascadePoliciesQueryParams`)(
+  {
+    folderId: S.String,
+    ownerEnterpriseId: S.String.pipe(S.optionalKey),
+    marker: S.String.pipe(S.optionalKey),
+    offset: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataCascadePoliciesQueryParams", {
+    description: "Generated Box SDK schema for GetMetadataCascadePoliciesQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataCascadePolicyByIdHeaders.
+ *
+ * **Example** (Inspect the GetMetadataCascadePolicyByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetMetadataCascadePolicyByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetMetadataCascadePolicyByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataCascadePolicyByIdHeaders extends S.Class<GetMetadataCascadePolicyByIdHeaders>($I`GetMetadataCascadePolicyByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataCascadePolicyByIdHeaders", {
+    description: "Generated Box SDK schema for GetMetadataCascadePolicyByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataCascadePolicyByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetMetadataCascadePolicyByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetMetadataCascadePolicyByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetMetadataCascadePolicyByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataCascadePolicyByIdOptionalsInput extends S.Class<GetMetadataCascadePolicyByIdOptionalsInput>($I`GetMetadataCascadePolicyByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetMetadataCascadePolicyByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataCascadePolicyByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetMetadataCascadePolicyByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplateByIdHeaders.
+ *
+ * **Example** (Inspect the GetMetadataTemplateByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplateByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplateByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataTemplateByIdHeaders extends S.Class<GetMetadataTemplateByIdHeaders>($I`GetMetadataTemplateByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataTemplateByIdHeaders", {
+    description: "Generated Box SDK schema for GetMetadataTemplateByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplateByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetMetadataTemplateByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplateByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplateByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataTemplateByIdOptionalsInput extends S.Class<GetMetadataTemplateByIdOptionalsInput>($I`GetMetadataTemplateByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetMetadataTemplateByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataTemplateByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetMetadataTemplateByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplateHeaders.
+ *
+ * **Example** (Inspect the GetMetadataTemplateHeaders schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplateHeaders } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplateHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataTemplateHeaders extends S.Class<GetMetadataTemplateHeaders>($I`GetMetadataTemplateHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataTemplateHeaders", {
+    description: "Generated Box SDK schema for GetMetadataTemplateHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplateOptionalsInput.
+ *
+ * **Example** (Inspect the GetMetadataTemplateOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplateOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplateOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataTemplateOptionalsInput extends S.Class<GetMetadataTemplateOptionalsInput>($I`GetMetadataTemplateOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetMetadataTemplateHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataTemplateOptionalsInput", {
+    description: "Generated Box SDK schema for GetMetadataTemplateOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplatesByInstanceIdHeaders.
+ *
+ * **Example** (Inspect the GetMetadataTemplatesByInstanceIdHeaders schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplatesByInstanceIdHeaders } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplatesByInstanceIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataTemplatesByInstanceIdHeaders extends S.Class<GetMetadataTemplatesByInstanceIdHeaders>($I`GetMetadataTemplatesByInstanceIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataTemplatesByInstanceIdHeaders", {
+    description: "Generated Box SDK schema for GetMetadataTemplatesByInstanceIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplatesByInstanceIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetMetadataTemplatesByInstanceIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplatesByInstanceIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplatesByInstanceIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataTemplatesByInstanceIdOptionalsInput extends S.Class<GetMetadataTemplatesByInstanceIdOptionalsInput>($I`GetMetadataTemplatesByInstanceIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetMetadataTemplatesByInstanceIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataTemplatesByInstanceIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetMetadataTemplatesByInstanceIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplatesByInstanceIdQueryParams.
+ *
+ * **Example** (Inspect the GetMetadataTemplatesByInstanceIdQueryParams schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplatesByInstanceIdQueryParams } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplatesByInstanceIdQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetMetadataTemplatesByInstanceIdQueryParams extends S.Class<GetMetadataTemplatesByInstanceIdQueryParams>($I`GetMetadataTemplatesByInstanceIdQueryParams`)(
+  {
+    metadataInstanceId: S.String,
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetMetadataTemplatesByInstanceIdQueryParams", {
+    description: "Generated Box SDK schema for GetMetadataTemplatesByInstanceIdQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetMetadataTemplateScope.
+ *
+ * **Example** (Inspect the GetMetadataTemplateScope schema)
+ *
+ * ```ts
+ * import { GetMetadataTemplateScope } from "@beep/box"
+ *
+ * console.log(GetMetadataTemplateScope.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GetMetadataTemplateScope = S.Union([LiteralKit(["global", "enterprise"]), S.String]).pipe($I.annoteSchema("GetMetadataTemplateScope", {
+    description: "Generated Box SDK schema for GetMetadataTemplateScope."
+  }));
+
+/**
+ * Type for {@link GetMetadataTemplateScope}.
+ *
+ * **Example** (Reference the GetMetadataTemplateScope type)
+ *
+ * ```ts
+ * import type { GetMetadataTemplateScope } from "@beep/box"
+ *
+ * type Value = GetMetadataTemplateScope
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetMetadataTemplateScope = typeof GetMetadataTemplateScope.Type;
+
+/**
+ * Generated Box SDK schema for GetRetentionPoliciesHeadersInput.
+ *
+ * **Example** (Inspect the GetRetentionPoliciesHeadersInput schema)
+ *
+ * ```ts
+ * import { GetRetentionPoliciesHeadersInput } from "@beep/box"
+ *
+ * console.log(GetRetentionPoliciesHeadersInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPoliciesHeadersInput extends S.Class<GetRetentionPoliciesHeadersInput>($I`GetRetentionPoliciesHeadersInput`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPoliciesHeadersInput", {
+    description: "Generated Box SDK schema for GetRetentionPoliciesHeadersInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPoliciesQueryParams.
+ *
+ * **Example** (Inspect the GetRetentionPoliciesQueryParams schema)
+ *
+ * ```ts
+ * import { GetRetentionPoliciesQueryParams } from "@beep/box"
+ *
+ * console.log(GetRetentionPoliciesQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPoliciesQueryParams extends S.Class<GetRetentionPoliciesQueryParams>($I`GetRetentionPoliciesQueryParams`)(
+  {
+    policyName: S.String.pipe(S.optionalKey),
+    policyType: S.suspend(() => GetRetentionPoliciesQueryParamsPolicyTypeField).pipe(S.optionalKey),
+    createdByUserId: S.String.pipe(S.optionalKey),
+    fields: S.String.pipe(S.Array, S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+    marker: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPoliciesQueryParams", {
+    description: "Generated Box SDK schema for GetRetentionPoliciesQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPoliciesQueryParamsPolicyTypeField.
+ *
+ * **Example** (Inspect the GetRetentionPoliciesQueryParamsPolicyTypeField schema)
+ *
+ * ```ts
+ * import { GetRetentionPoliciesQueryParamsPolicyTypeField } from "@beep/box"
+ *
+ * console.log(GetRetentionPoliciesQueryParamsPolicyTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GetRetentionPoliciesQueryParamsPolicyTypeField = S.Union([LiteralKit(["finite", "indefinite"]), S.String]).pipe($I.annoteSchema("GetRetentionPoliciesQueryParamsPolicyTypeField", {
+    description: "Generated Box SDK schema for GetRetentionPoliciesQueryParamsPolicyTypeField."
+  }));
+
+/**
+ * Type for {@link GetRetentionPoliciesQueryParamsPolicyTypeField}.
+ *
+ * **Example** (Reference the GetRetentionPoliciesQueryParamsPolicyTypeField type)
+ *
+ * ```ts
+ * import type { GetRetentionPoliciesQueryParamsPolicyTypeField } from "@beep/box"
+ *
+ * type Value = GetRetentionPoliciesQueryParamsPolicyTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetRetentionPoliciesQueryParamsPolicyTypeField = typeof GetRetentionPoliciesQueryParamsPolicyTypeField.Type;
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyAssignmentByIdHeaders.
+ *
+ * **Example** (Inspect the GetRetentionPolicyAssignmentByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyAssignmentByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyAssignmentByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyAssignmentByIdHeaders extends S.Class<GetRetentionPolicyAssignmentByIdHeaders>($I`GetRetentionPolicyAssignmentByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyAssignmentByIdHeaders", {
+    description: "Generated Box SDK schema for GetRetentionPolicyAssignmentByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyAssignmentByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetRetentionPolicyAssignmentByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyAssignmentByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyAssignmentByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyAssignmentByIdOptionalsInput extends S.Class<GetRetentionPolicyAssignmentByIdOptionalsInput>($I`GetRetentionPolicyAssignmentByIdOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetRetentionPolicyAssignmentByIdQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetRetentionPolicyAssignmentByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyAssignmentByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetRetentionPolicyAssignmentByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyAssignmentByIdQueryParams.
+ *
+ * **Example** (Inspect the GetRetentionPolicyAssignmentByIdQueryParams schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyAssignmentByIdQueryParams } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyAssignmentByIdQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyAssignmentByIdQueryParams extends S.Class<GetRetentionPolicyAssignmentByIdQueryParams>($I`GetRetentionPolicyAssignmentByIdQueryParams`)(
+  {
+    fields: S.String.pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyAssignmentByIdQueryParams", {
+    description: "Generated Box SDK schema for GetRetentionPolicyAssignmentByIdQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyAssignmentsHeaders.
+ *
+ * **Example** (Inspect the GetRetentionPolicyAssignmentsHeaders schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyAssignmentsHeaders } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyAssignmentsHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyAssignmentsHeaders extends S.Class<GetRetentionPolicyAssignmentsHeaders>($I`GetRetentionPolicyAssignmentsHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyAssignmentsHeaders", {
+    description: "Generated Box SDK schema for GetRetentionPolicyAssignmentsHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyAssignmentsOptionalsInput.
+ *
+ * **Example** (Inspect the GetRetentionPolicyAssignmentsOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyAssignmentsOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyAssignmentsOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyAssignmentsOptionalsInput extends S.Class<GetRetentionPolicyAssignmentsOptionalsInput>($I`GetRetentionPolicyAssignmentsOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetRetentionPolicyAssignmentsQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetRetentionPolicyAssignmentsHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyAssignmentsOptionalsInput", {
+    description: "Generated Box SDK schema for GetRetentionPolicyAssignmentsOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyAssignmentsQueryParams.
+ *
+ * **Example** (Inspect the GetRetentionPolicyAssignmentsQueryParams schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyAssignmentsQueryParams } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyAssignmentsQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyAssignmentsQueryParams extends S.Class<GetRetentionPolicyAssignmentsQueryParams>($I`GetRetentionPolicyAssignmentsQueryParams`)(
+  {
+    type: S.suspend(() => GetRetentionPolicyAssignmentsQueryParamsTypeField).pipe(S.optionalKey),
+    fields: S.String.pipe(S.Array, S.optionalKey),
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyAssignmentsQueryParams", {
+    description: "Generated Box SDK schema for GetRetentionPolicyAssignmentsQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyAssignmentsQueryParamsTypeField.
+ *
+ * **Example** (Inspect the GetRetentionPolicyAssignmentsQueryParamsTypeField schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyAssignmentsQueryParamsTypeField } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyAssignmentsQueryParamsTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GetRetentionPolicyAssignmentsQueryParamsTypeField = LiteralKit(["folder", "enterprise", "metadata_template"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("GetRetentionPolicyAssignmentsQueryParamsTypeField", {
+        description: "Generated Box SDK schema for GetRetentionPolicyAssignmentsQueryParamsTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link GetRetentionPolicyAssignmentsQueryParamsTypeField}.
+ *
+ * **Example** (Reference the GetRetentionPolicyAssignmentsQueryParamsTypeField type)
+ *
+ * ```ts
+ * import type { GetRetentionPolicyAssignmentsQueryParamsTypeField } from "@beep/box"
+ *
+ * type Value = GetRetentionPolicyAssignmentsQueryParamsTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GetRetentionPolicyAssignmentsQueryParamsTypeField = typeof GetRetentionPolicyAssignmentsQueryParamsTypeField.Type;
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyByIdHeaders.
+ *
+ * **Example** (Inspect the GetRetentionPolicyByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyByIdHeaders extends S.Class<GetRetentionPolicyByIdHeaders>($I`GetRetentionPolicyByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyByIdHeaders", {
+    description: "Generated Box SDK schema for GetRetentionPolicyByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetRetentionPolicyByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyByIdOptionalsInput extends S.Class<GetRetentionPolicyByIdOptionalsInput>($I`GetRetentionPolicyByIdOptionalsInput`)(
+  {
+    queryParams: S.suspend(() => GetRetentionPolicyByIdQueryParams).pipe(S.optionalKey),
+    headers: S.suspend(() => GetRetentionPolicyByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetRetentionPolicyByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetRetentionPolicyByIdQueryParams.
+ *
+ * **Example** (Inspect the GetRetentionPolicyByIdQueryParams schema)
+ *
+ * ```ts
+ * import { GetRetentionPolicyByIdQueryParams } from "@beep/box"
+ *
+ * console.log(GetRetentionPolicyByIdQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetRetentionPolicyByIdQueryParams extends S.Class<GetRetentionPolicyByIdQueryParams>($I`GetRetentionPolicyByIdQueryParams`)(
+  {
+    fields: S.String.pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("GetRetentionPolicyByIdQueryParams", {
+    description: "Generated Box SDK schema for GetRetentionPolicyByIdQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignRequestByIdHeaders.
+ *
+ * **Example** (Inspect the GetSignRequestByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetSignRequestByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetSignRequestByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignRequestByIdHeaders extends S.Class<GetSignRequestByIdHeaders>($I`GetSignRequestByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetSignRequestByIdHeaders", {
+    description: "Generated Box SDK schema for GetSignRequestByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignRequestByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetSignRequestByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetSignRequestByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetSignRequestByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignRequestByIdOptionalsInput extends S.Class<GetSignRequestByIdOptionalsInput>($I`GetSignRequestByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetSignRequestByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetSignRequestByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetSignRequestByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignRequestsHeadersInput.
+ *
+ * **Example** (Inspect the GetSignRequestsHeadersInput schema)
+ *
+ * ```ts
+ * import { GetSignRequestsHeadersInput } from "@beep/box"
+ *
+ * console.log(GetSignRequestsHeadersInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignRequestsHeadersInput extends S.Class<GetSignRequestsHeadersInput>($I`GetSignRequestsHeadersInput`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetSignRequestsHeadersInput", {
+    description: "Generated Box SDK schema for GetSignRequestsHeadersInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignRequestsQueryParams.
+ *
+ * **Example** (Inspect the GetSignRequestsQueryParams schema)
+ *
+ * ```ts
+ * import { GetSignRequestsQueryParams } from "@beep/box"
+ *
+ * console.log(GetSignRequestsQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignRequestsQueryParams extends S.Class<GetSignRequestsQueryParams>($I`GetSignRequestsQueryParams`)(
+  {
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+    senders: S.String.pipe(S.Array, S.optionalKey),
+    sharedRequests: S.Boolean.pipe(S.optionalKey),
+  },
+  $I.annote("GetSignRequestsQueryParams", {
+    description: "Generated Box SDK schema for GetSignRequestsQueryParams."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignTemplateByIdHeaders.
+ *
+ * **Example** (Inspect the GetSignTemplateByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetSignTemplateByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetSignTemplateByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignTemplateByIdHeaders extends S.Class<GetSignTemplateByIdHeaders>($I`GetSignTemplateByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetSignTemplateByIdHeaders", {
+    description: "Generated Box SDK schema for GetSignTemplateByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignTemplateByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetSignTemplateByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetSignTemplateByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetSignTemplateByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignTemplateByIdOptionalsInput extends S.Class<GetSignTemplateByIdOptionalsInput>($I`GetSignTemplateByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetSignTemplateByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetSignTemplateByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetSignTemplateByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignTemplatesHeadersInput.
+ *
+ * **Example** (Inspect the GetSignTemplatesHeadersInput schema)
+ *
+ * ```ts
+ * import { GetSignTemplatesHeadersInput } from "@beep/box"
+ *
+ * console.log(GetSignTemplatesHeadersInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignTemplatesHeadersInput extends S.Class<GetSignTemplatesHeadersInput>($I`GetSignTemplatesHeadersInput`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetSignTemplatesHeadersInput", {
+    description: "Generated Box SDK schema for GetSignTemplatesHeadersInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetSignTemplatesQueryParams.
+ *
+ * **Example** (Inspect the GetSignTemplatesQueryParams schema)
+ *
+ * ```ts
+ * import { GetSignTemplatesQueryParams } from "@beep/box"
+ *
+ * console.log(GetSignTemplatesQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetSignTemplatesQueryParams extends S.Class<GetSignTemplatesQueryParams>($I`GetSignTemplatesQueryParams`)(
+  {
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetSignTemplatesQueryParams", {
+    description: "Generated Box SDK schema for GetSignTemplatesQueryParams."
+  })
+) {}
 
 /**
  * Generated Box SDK schema for GetUserAvatarHeaders.
@@ -5231,6 +7894,100 @@ export const GetUsersQueryParamsUserTypeField = S.Union([LiteralKit(["all", "man
  * @since 0.0.0
  */
 export type GetUsersQueryParamsUserTypeField = typeof GetUsersQueryParamsUserTypeField.Type;
+
+/**
+ * Generated Box SDK schema for GetWebhookByIdHeaders.
+ *
+ * **Example** (Inspect the GetWebhookByIdHeaders schema)
+ *
+ * ```ts
+ * import { GetWebhookByIdHeaders } from "@beep/box"
+ *
+ * console.log(GetWebhookByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetWebhookByIdHeaders extends S.Class<GetWebhookByIdHeaders>($I`GetWebhookByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetWebhookByIdHeaders", {
+    description: "Generated Box SDK schema for GetWebhookByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetWebhookByIdOptionalsInput.
+ *
+ * **Example** (Inspect the GetWebhookByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { GetWebhookByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(GetWebhookByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetWebhookByIdOptionalsInput extends S.Class<GetWebhookByIdOptionalsInput>($I`GetWebhookByIdOptionalsInput`)(
+  {
+    headers: S.suspend(() => GetWebhookByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("GetWebhookByIdOptionalsInput", {
+    description: "Generated Box SDK schema for GetWebhookByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetWebhooksHeadersInput.
+ *
+ * **Example** (Inspect the GetWebhooksHeadersInput schema)
+ *
+ * ```ts
+ * import { GetWebhooksHeadersInput } from "@beep/box"
+ *
+ * console.log(GetWebhooksHeadersInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetWebhooksHeadersInput extends S.Class<GetWebhooksHeadersInput>($I`GetWebhooksHeadersInput`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("GetWebhooksHeadersInput", {
+    description: "Generated Box SDK schema for GetWebhooksHeadersInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for GetWebhooksQueryParams.
+ *
+ * **Example** (Inspect the GetWebhooksQueryParams schema)
+ *
+ * ```ts
+ * import { GetWebhooksQueryParams } from "@beep/box"
+ *
+ * console.log(GetWebhooksQueryParams.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GetWebhooksQueryParams extends S.Class<GetWebhooksQueryParams>($I`GetWebhooksQueryParams`)(
+  {
+    marker: S.String.pipe(S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("GetWebhooksQueryParams", {
+    description: "Generated Box SDK schema for GetWebhooksQueryParams."
+  })
+) {}
 
 /**
  * Generated Box SDK schema for GetZipDownloadContentHeaders.
@@ -5564,6 +8321,270 @@ export class ItemsOrderField extends S.Class<ItemsOrderField>($I`ItemsOrderField
 ) {}
 
 /**
+ * Generated Box SDK schema for Metadata.
+ *
+ * **Example** (Inspect the Metadata schema)
+ *
+ * ```ts
+ * import { Metadata } from "@beep/box"
+ *
+ * console.log(Metadata.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Metadata = S.suspend(() => MetadataBase).pipe($I.annoteSchema("Metadata", {
+    description: "Generated Box SDK schema for Metadata."
+  }));
+
+/**
+ * Type for {@link Metadata}.
+ *
+ * **Example** (Reference the Metadata type)
+ *
+ * ```ts
+ * import type { Metadata } from "@beep/box"
+ *
+ * type Value = Metadata
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Metadata = typeof Metadata.Type;
+
+/**
+ * Generated Box SDK schema for MetadataBase.
+ *
+ * **Example** (Inspect the MetadataBase schema)
+ *
+ * ```ts
+ * import { MetadataBase } from "@beep/box"
+ *
+ * console.log(MetadataBase.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataBase extends S.Class<MetadataBase>($I`MetadataBase`)(
+  {
+    parent: S.String.pipe(S.optionalKey),
+    template: S.String.pipe(S.optionalKey),
+    scope: S.String.pipe(S.optionalKey),
+    version: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("MetadataBase", {
+    description: "Generated Box SDK schema for MetadataBase."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataCascadePolicies.
+ *
+ * **Example** (Inspect the MetadataCascadePolicies schema)
+ *
+ * ```ts
+ * import { MetadataCascadePolicies } from "@beep/box"
+ *
+ * console.log(MetadataCascadePolicies.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataCascadePolicies extends S.Class<MetadataCascadePolicies>($I`MetadataCascadePolicies`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    prevMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    entries: S.suspend(() => MetadataCascadePolicy).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("MetadataCascadePolicies", {
+    description: "Generated Box SDK schema for MetadataCascadePolicies."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataCascadePolicy.
+ *
+ * **Example** (Inspect the MetadataCascadePolicy schema)
+ *
+ * ```ts
+ * import { MetadataCascadePolicy } from "@beep/box"
+ *
+ * console.log(MetadataCascadePolicy.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataCascadePolicy extends S.Class<MetadataCascadePolicy>($I`MetadataCascadePolicy`)(
+  {
+    id: S.String,
+    type: S.suspend(() => MetadataCascadePolicyTypeField),
+    ownerEnterprise: S.suspend(() => MetadataCascadePolicyOwnerEnterpriseField).pipe(S.optionalKey),
+    parent: S.suspend(() => MetadataCascadePolicyParentField).pipe(S.optionalKey),
+    scope: S.String.pipe(S.optionalKey),
+    templateKey: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("MetadataCascadePolicy", {
+    description: "Generated Box SDK schema for MetadataCascadePolicy."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataCascadePolicyOwnerEnterpriseField.
+ *
+ * **Example** (Inspect the MetadataCascadePolicyOwnerEnterpriseField schema)
+ *
+ * ```ts
+ * import { MetadataCascadePolicyOwnerEnterpriseField } from "@beep/box"
+ *
+ * console.log(MetadataCascadePolicyOwnerEnterpriseField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataCascadePolicyOwnerEnterpriseField extends S.Class<MetadataCascadePolicyOwnerEnterpriseField>($I`MetadataCascadePolicyOwnerEnterpriseField`)(
+  {
+    type: S.suspend(() => MetadataCascadePolicyOwnerEnterpriseTypeField).pipe(S.optionalKey),
+    id: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("MetadataCascadePolicyOwnerEnterpriseField", {
+    description: "Generated Box SDK schema for MetadataCascadePolicyOwnerEnterpriseField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataCascadePolicyOwnerEnterpriseTypeField.
+ *
+ * **Example** (Inspect the MetadataCascadePolicyOwnerEnterpriseTypeField schema)
+ *
+ * ```ts
+ * import { MetadataCascadePolicyOwnerEnterpriseTypeField } from "@beep/box"
+ *
+ * console.log(MetadataCascadePolicyOwnerEnterpriseTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataCascadePolicyOwnerEnterpriseTypeField = S.Literal("enterprise").pipe($I.annoteSchema("MetadataCascadePolicyOwnerEnterpriseTypeField", {
+    description: "Generated Box SDK schema for MetadataCascadePolicyOwnerEnterpriseTypeField."
+  }));
+
+/**
+ * Type for {@link MetadataCascadePolicyOwnerEnterpriseTypeField}.
+ *
+ * **Example** (Reference the MetadataCascadePolicyOwnerEnterpriseTypeField type)
+ *
+ * ```ts
+ * import type { MetadataCascadePolicyOwnerEnterpriseTypeField } from "@beep/box"
+ *
+ * type Value = MetadataCascadePolicyOwnerEnterpriseTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataCascadePolicyOwnerEnterpriseTypeField = typeof MetadataCascadePolicyOwnerEnterpriseTypeField.Type;
+
+/**
+ * Generated Box SDK schema for MetadataCascadePolicyParentField.
+ *
+ * **Example** (Inspect the MetadataCascadePolicyParentField schema)
+ *
+ * ```ts
+ * import { MetadataCascadePolicyParentField } from "@beep/box"
+ *
+ * console.log(MetadataCascadePolicyParentField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataCascadePolicyParentField extends S.Class<MetadataCascadePolicyParentField>($I`MetadataCascadePolicyParentField`)(
+  {
+    type: S.suspend(() => MetadataCascadePolicyParentTypeField).pipe(S.optionalKey),
+    id: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("MetadataCascadePolicyParentField", {
+    description: "Generated Box SDK schema for MetadataCascadePolicyParentField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataCascadePolicyParentTypeField.
+ *
+ * **Example** (Inspect the MetadataCascadePolicyParentTypeField schema)
+ *
+ * ```ts
+ * import { MetadataCascadePolicyParentTypeField } from "@beep/box"
+ *
+ * console.log(MetadataCascadePolicyParentTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataCascadePolicyParentTypeField = S.Literal("folder").pipe($I.annoteSchema("MetadataCascadePolicyParentTypeField", {
+    description: "Generated Box SDK schema for MetadataCascadePolicyParentTypeField."
+  }));
+
+/**
+ * Type for {@link MetadataCascadePolicyParentTypeField}.
+ *
+ * **Example** (Reference the MetadataCascadePolicyParentTypeField type)
+ *
+ * ```ts
+ * import type { MetadataCascadePolicyParentTypeField } from "@beep/box"
+ *
+ * type Value = MetadataCascadePolicyParentTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataCascadePolicyParentTypeField = typeof MetadataCascadePolicyParentTypeField.Type;
+
+/**
+ * Generated Box SDK schema for MetadataCascadePolicyTypeField.
+ *
+ * **Example** (Inspect the MetadataCascadePolicyTypeField schema)
+ *
+ * ```ts
+ * import { MetadataCascadePolicyTypeField } from "@beep/box"
+ *
+ * console.log(MetadataCascadePolicyTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataCascadePolicyTypeField = S.Literal("metadata_cascade_policy").pipe($I.annoteSchema("MetadataCascadePolicyTypeField", {
+    description: "Generated Box SDK schema for MetadataCascadePolicyTypeField."
+  }));
+
+/**
+ * Type for {@link MetadataCascadePolicyTypeField}.
+ *
+ * **Example** (Reference the MetadataCascadePolicyTypeField type)
+ *
+ * ```ts
+ * import type { MetadataCascadePolicyTypeField } from "@beep/box"
+ *
+ * type Value = MetadataCascadePolicyTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataCascadePolicyTypeField = typeof MetadataCascadePolicyTypeField.Type;
+
+/**
  * Generated Box SDK schema for MetadataFull.
  *
  * **Example** (Inspect the MetadataFull schema)
@@ -5596,6 +8617,241 @@ export const MetadataFull = S.Unknown.pipe($I.annoteSchema("MetadataFull", {
  * @since 0.0.0
  */
 export type MetadataFull = typeof MetadataFull.Type;
+
+/**
+ * Generated Box SDK schema for Metadatas.
+ *
+ * **Example** (Inspect the Metadatas schema)
+ *
+ * ```ts
+ * import { Metadatas } from "@beep/box"
+ *
+ * console.log(Metadatas.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Metadatas extends S.Class<Metadatas>($I`Metadatas`)(
+  {
+    entries: S.suspend(() => Metadata).pipe(S.Array, S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("Metadatas", {
+    description: "Generated Box SDK schema for Metadatas."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataTemplate.
+ *
+ * **Example** (Inspect the MetadataTemplate schema)
+ *
+ * ```ts
+ * import { MetadataTemplate } from "@beep/box"
+ *
+ * console.log(MetadataTemplate.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplate extends S.Class<MetadataTemplate>($I`MetadataTemplate`)(
+  {
+    id: S.String,
+    type: S.suspend(() => MetadataTemplateTypeField),
+    scope: S.String.pipe(S.optionalKey),
+    templateKey: S.String.pipe(S.optionalKey),
+    displayName: S.String.pipe(S.optionalKey),
+    hidden: S.Boolean.pipe(S.optionalKey),
+    fields: S.suspend(() => MetadataTemplateFieldsField).pipe(S.Array, S.optionalKey),
+    copyInstanceOnItemCopy: S.Boolean.pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplate", {
+    description: "Generated Box SDK schema for MetadataTemplate."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataTemplateFieldsField.
+ *
+ * **Example** (Inspect the MetadataTemplateFieldsField schema)
+ *
+ * ```ts
+ * import { MetadataTemplateFieldsField } from "@beep/box"
+ *
+ * console.log(MetadataTemplateFieldsField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplateFieldsField extends S.Class<MetadataTemplateFieldsField>($I`MetadataTemplateFieldsField`)(
+  {
+    type: S.suspend(() => MetadataTemplateFieldsTypeField),
+    key: S.String,
+    displayName: S.String,
+    description: S.String.pipe(S.optionalKey),
+    hidden: S.Boolean.pipe(S.optionalKey),
+    options: S.suspend(() => MetadataTemplateFieldsOptionsField).pipe(S.Array, S.optionalKey),
+    taxonomyKey: S.String.pipe(S.optionalKey),
+    taxonomyId: S.String.pipe(S.optionalKey),
+    namespace: S.String.pipe(S.optionalKey),
+    optionsRules: S.suspend(() => MetadataTemplateFieldsOptionsRulesField).pipe(S.optionalKey),
+    id: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplateFieldsField", {
+    description: "Generated Box SDK schema for MetadataTemplateFieldsField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataTemplateFieldsOptionsField.
+ *
+ * **Example** (Inspect the MetadataTemplateFieldsOptionsField schema)
+ *
+ * ```ts
+ * import { MetadataTemplateFieldsOptionsField } from "@beep/box"
+ *
+ * console.log(MetadataTemplateFieldsOptionsField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplateFieldsOptionsField extends S.Class<MetadataTemplateFieldsOptionsField>($I`MetadataTemplateFieldsOptionsField`)(
+  {
+    key: S.String,
+    id: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplateFieldsOptionsField", {
+    description: "Generated Box SDK schema for MetadataTemplateFieldsOptionsField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataTemplateFieldsOptionsRulesField.
+ *
+ * **Example** (Inspect the MetadataTemplateFieldsOptionsRulesField schema)
+ *
+ * ```ts
+ * import { MetadataTemplateFieldsOptionsRulesField } from "@beep/box"
+ *
+ * console.log(MetadataTemplateFieldsOptionsRulesField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplateFieldsOptionsRulesField extends S.Class<MetadataTemplateFieldsOptionsRulesField>($I`MetadataTemplateFieldsOptionsRulesField`)(
+  {
+    multiSelect: S.Boolean.pipe(S.optionalKey),
+    selectableLevels: S.Finite.pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("MetadataTemplateFieldsOptionsRulesField", {
+    description: "Generated Box SDK schema for MetadataTemplateFieldsOptionsRulesField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataTemplateFieldsTypeField.
+ *
+ * **Example** (Inspect the MetadataTemplateFieldsTypeField schema)
+ *
+ * ```ts
+ * import { MetadataTemplateFieldsTypeField } from "@beep/box"
+ *
+ * console.log(MetadataTemplateFieldsTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataTemplateFieldsTypeField = LiteralKit(["string", "float", "date", "enum", "multiSelect", "taxonomy", "integer"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("MetadataTemplateFieldsTypeField", {
+        description: "Generated Box SDK schema for MetadataTemplateFieldsTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link MetadataTemplateFieldsTypeField}.
+ *
+ * **Example** (Reference the MetadataTemplateFieldsTypeField type)
+ *
+ * ```ts
+ * import type { MetadataTemplateFieldsTypeField } from "@beep/box"
+ *
+ * type Value = MetadataTemplateFieldsTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataTemplateFieldsTypeField = typeof MetadataTemplateFieldsTypeField.Type;
+
+/**
+ * Generated Box SDK schema for MetadataTemplates.
+ *
+ * **Example** (Inspect the MetadataTemplates schema)
+ *
+ * ```ts
+ * import { MetadataTemplates } from "@beep/box"
+ *
+ * console.log(MetadataTemplates.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplates extends S.Class<MetadataTemplates>($I`MetadataTemplates`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    prevMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    entries: S.suspend(() => MetadataTemplate).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("MetadataTemplates", {
+    description: "Generated Box SDK schema for MetadataTemplates."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for MetadataTemplateTypeField.
+ *
+ * **Example** (Inspect the MetadataTemplateTypeField schema)
+ *
+ * ```ts
+ * import { MetadataTemplateTypeField } from "@beep/box"
+ *
+ * console.log(MetadataTemplateTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataTemplateTypeField = S.Literal("metadata_template").pipe($I.annoteSchema("MetadataTemplateTypeField", {
+    description: "Generated Box SDK schema for MetadataTemplateTypeField."
+  }));
+
+/**
+ * Type for {@link MetadataTemplateTypeField}.
+ *
+ * **Example** (Reference the MetadataTemplateTypeField type)
+ *
+ * ```ts
+ * import type { MetadataTemplateTypeField } from "@beep/box"
+ *
+ * type Value = MetadataTemplateTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataTemplateTypeField = typeof MetadataTemplateTypeField.Type;
 
 /**
  * Generated Box SDK schema for PreflightFileUploadCheckHeadersInput.
@@ -5720,6 +8976,53 @@ export class RealtimeServers extends S.Class<RealtimeServers>($I`RealtimeServers
 ) {}
 
 /**
+ * Generated Box SDK schema for ResendSignRequestHeaders.
+ *
+ * **Example** (Inspect the ResendSignRequestHeaders schema)
+ *
+ * ```ts
+ * import { ResendSignRequestHeaders } from "@beep/box"
+ *
+ * console.log(ResendSignRequestHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResendSignRequestHeaders extends S.Class<ResendSignRequestHeaders>($I`ResendSignRequestHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("ResendSignRequestHeaders", {
+    description: "Generated Box SDK schema for ResendSignRequestHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for ResendSignRequestOptionalsInput.
+ *
+ * **Example** (Inspect the ResendSignRequestOptionalsInput schema)
+ *
+ * ```ts
+ * import { ResendSignRequestOptionalsInput } from "@beep/box"
+ *
+ * console.log(ResendSignRequestOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResendSignRequestOptionalsInput extends S.Class<ResendSignRequestOptionalsInput>($I`ResendSignRequestOptionalsInput`)(
+  {
+    headers: S.suspend(() => ResendSignRequestHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("ResendSignRequestOptionalsInput", {
+    description: "Generated Box SDK schema for ResendSignRequestOptionalsInput."
+  })
+) {}
+
+/**
  * Generated Box SDK schema for Resource.
  *
  * **Example** (Inspect the Resource schema)
@@ -5812,6 +9115,1098 @@ export const ResourceScopeScopeField = S.Union([LiteralKit(["annotation_edit", "
 export type ResourceScopeScopeField = typeof ResourceScopeScopeField.Type;
 
 /**
+ * Generated Box SDK schema for RetentionPolicies.
+ *
+ * **Example** (Inspect the RetentionPolicies schema)
+ *
+ * ```ts
+ * import { RetentionPolicies } from "@beep/box"
+ *
+ * console.log(RetentionPolicies.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicies extends S.Class<RetentionPolicies>($I`RetentionPolicies`)(
+  {
+    entries: S.suspend(() => RetentionPolicy).pipe(S.Array, S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("RetentionPolicies", {
+    description: "Generated Box SDK schema for RetentionPolicies."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyBase.
+ *
+ * **Example** (Inspect the RetentionPolicyBase schema)
+ *
+ * ```ts
+ * import { RetentionPolicyBase } from "@beep/box"
+ *
+ * console.log(RetentionPolicyBase.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyBase extends S.Class<RetentionPolicyBase>($I`RetentionPolicyBase`)(
+  {
+    id: S.String,
+    type: S.suspend(() => RetentionPolicyBaseTypeField),
+  },
+  $I.annote("RetentionPolicyBase", {
+    description: "Generated Box SDK schema for RetentionPolicyBase."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyMini.
+ *
+ * **Example** (Inspect the RetentionPolicyMini schema)
+ *
+ * ```ts
+ * import { RetentionPolicyMini } from "@beep/box"
+ *
+ * console.log(RetentionPolicyMini.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyMini extends RetentionPolicyBase.extend<RetentionPolicyMini>($I`RetentionPolicyMini`)(
+  {
+    policyName: S.String.pipe(S.optionalKey),
+    retentionLength: S.String.pipe(S.optionalKey),
+    dispositionAction: S.suspend(() => RetentionPolicyMiniDispositionActionField).pipe(S.optionalKey),
+    maxExtensionLength: S.suspend(() => RetentionPolicyMaxExtensionLengthResponse).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicyMini", {
+    description: "Generated Box SDK schema for RetentionPolicyMini."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicy.
+ *
+ * **Example** (Inspect the RetentionPolicy schema)
+ *
+ * ```ts
+ * import { RetentionPolicy } from "@beep/box"
+ *
+ * console.log(RetentionPolicy.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicy extends RetentionPolicyMini.extend<RetentionPolicy>($I`RetentionPolicy`)(
+  {
+    description: S.String.pipe(S.optionalKey),
+    policyType: S.suspend(() => RetentionPolicyPolicyTypeField).pipe(S.optionalKey),
+    retentionType: S.suspend(() => RetentionPolicyRetentionTypeField).pipe(S.optionalKey),
+    status: S.suspend(() => RetentionPolicyStatusField).pipe(S.optionalKey),
+    createdBy: S.suspend(() => UserMini).pipe(S.optionalKey),
+    createdAt: BoxSdkDateTime.pipe(S.optionalKey),
+    modifiedAt: BoxSdkDateTime.pipe(S.optionalKey),
+    canOwnerExtendRetention: S.Boolean.pipe(S.optionalKey),
+    areOwnersNotified: S.Boolean.pipe(S.optionalKey),
+    customNotificationRecipients: S.suspend(() => UserMini).pipe(S.Array, S.optionalKey),
+    assignmentCounts: S.suspend(() => RetentionPolicyAssignmentCountsField).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicy", {
+    description: "Generated Box SDK schema for RetentionPolicy."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyAssignment.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignment schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignment } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignment.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignment extends S.Class<RetentionPolicyAssignment>($I`RetentionPolicyAssignment`)(
+  {
+    id: S.String,
+    type: S.suspend(() => RetentionPolicyAssignmentTypeField),
+    retentionPolicy: S.suspend(() => RetentionPolicyMini).pipe(S.optionalKey),
+    assignedTo: S.suspend(() => RetentionPolicyAssignmentAssignedToField).pipe(S.optionalKey),
+    filterFields: S.suspend(() => RetentionPolicyAssignmentFilterFieldsField).pipe(S.Array, S.NullOr, S.optionalKey),
+    assignedBy: S.suspend(() => UserMini).pipe(S.optionalKey),
+    assignedAt: BoxSdkDateTime.pipe(S.optionalKey),
+    startDateField: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignment", {
+    description: "Generated Box SDK schema for RetentionPolicyAssignment."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyAssignmentAssignedToField.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentAssignedToField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentAssignedToField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentAssignedToField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignmentAssignedToField extends S.Class<RetentionPolicyAssignmentAssignedToField>($I`RetentionPolicyAssignmentAssignedToField`)(
+  {
+    id: S.String.pipe(S.NullOr, S.optionalKey),
+    type: S.suspend(() => RetentionPolicyAssignmentAssignedToTypeField).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignmentAssignedToField", {
+    description: "Generated Box SDK schema for RetentionPolicyAssignmentAssignedToField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyAssignmentAssignedToTypeField.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentAssignedToTypeField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentAssignedToTypeField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentAssignedToTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyAssignmentAssignedToTypeField = LiteralKit(["folder", "enterprise", "metadata_template"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("RetentionPolicyAssignmentAssignedToTypeField", {
+        description: "Generated Box SDK schema for RetentionPolicyAssignmentAssignedToTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link RetentionPolicyAssignmentAssignedToTypeField}.
+ *
+ * **Example** (Reference the RetentionPolicyAssignmentAssignedToTypeField type)
+ *
+ * ```ts
+ * import type { RetentionPolicyAssignmentAssignedToTypeField } from "@beep/box"
+ *
+ * type Value = RetentionPolicyAssignmentAssignedToTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyAssignmentAssignedToTypeField = typeof RetentionPolicyAssignmentAssignedToTypeField.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyAssignmentCountsField.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentCountsField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentCountsField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentCountsField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignmentCountsField extends S.Class<RetentionPolicyAssignmentCountsField>($I`RetentionPolicyAssignmentCountsField`)(
+  {
+    enterprise: S.Finite.pipe(S.optionalKey),
+    folder: S.Finite.pipe(S.optionalKey),
+    metadataTemplate: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignmentCountsField", {
+    description: "Generated Box SDK schema for RetentionPolicyAssignmentCountsField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyAssignmentFilterFieldsField.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentFilterFieldsField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentFilterFieldsField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentFilterFieldsField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignmentFilterFieldsField extends S.Class<RetentionPolicyAssignmentFilterFieldsField>($I`RetentionPolicyAssignmentFilterFieldsField`)(
+  {
+    field: S.String.pipe(S.NullOr, S.optionalKey),
+    value: S.String.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignmentFilterFieldsField", {
+    description: "Generated Box SDK schema for RetentionPolicyAssignmentFilterFieldsField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyAssignments.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignments schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignments } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignments.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignments extends S.Class<RetentionPolicyAssignments>($I`RetentionPolicyAssignments`)(
+  {
+    entries: S.suspend(() => RetentionPolicyAssignment).pipe(S.Array, S.optionalKey),
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignments", {
+    description: "Generated Box SDK schema for RetentionPolicyAssignments."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for RetentionPolicyAssignmentTypeField.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentTypeField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentTypeField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyAssignmentTypeField = S.Literal("retention_policy_assignment").pipe($I.annoteSchema("RetentionPolicyAssignmentTypeField", {
+    description: "Generated Box SDK schema for RetentionPolicyAssignmentTypeField."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyAssignmentTypeField}.
+ *
+ * **Example** (Reference the RetentionPolicyAssignmentTypeField type)
+ *
+ * ```ts
+ * import type { RetentionPolicyAssignmentTypeField } from "@beep/box"
+ *
+ * type Value = RetentionPolicyAssignmentTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyAssignmentTypeField = typeof RetentionPolicyAssignmentTypeField.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyBaseTypeField.
+ *
+ * **Example** (Inspect the RetentionPolicyBaseTypeField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyBaseTypeField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyBaseTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyBaseTypeField = S.Literal("retention_policy").pipe($I.annoteSchema("RetentionPolicyBaseTypeField", {
+    description: "Generated Box SDK schema for RetentionPolicyBaseTypeField."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyBaseTypeField}.
+ *
+ * **Example** (Reference the RetentionPolicyBaseTypeField type)
+ *
+ * ```ts
+ * import type { RetentionPolicyBaseTypeField } from "@beep/box"
+ *
+ * type Value = RetentionPolicyBaseTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyBaseTypeField = typeof RetentionPolicyBaseTypeField.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyMaxExtensionLengthResponse.
+ *
+ * **Example** (Inspect the RetentionPolicyMaxExtensionLengthResponse schema)
+ *
+ * ```ts
+ * import { RetentionPolicyMaxExtensionLengthResponse } from "@beep/box"
+ *
+ * console.log(RetentionPolicyMaxExtensionLengthResponse.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyMaxExtensionLengthResponse = S.Union([S.suspend(() => RetentionPolicyMaxExtensionLengthResponseEnum), S.String]).pipe($I.annoteSchema("RetentionPolicyMaxExtensionLengthResponse", {
+    description: "Generated Box SDK schema for RetentionPolicyMaxExtensionLengthResponse."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyMaxExtensionLengthResponse}.
+ *
+ * **Example** (Reference the RetentionPolicyMaxExtensionLengthResponse type)
+ *
+ * ```ts
+ * import type { RetentionPolicyMaxExtensionLengthResponse } from "@beep/box"
+ *
+ * type Value = RetentionPolicyMaxExtensionLengthResponse
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyMaxExtensionLengthResponse = typeof RetentionPolicyMaxExtensionLengthResponse.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyMaxExtensionLengthResponseEnum.
+ *
+ * **Example** (Inspect the RetentionPolicyMaxExtensionLengthResponseEnum schema)
+ *
+ * ```ts
+ * import { RetentionPolicyMaxExtensionLengthResponseEnum } from "@beep/box"
+ *
+ * console.log(RetentionPolicyMaxExtensionLengthResponseEnum.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyMaxExtensionLengthResponseEnum = S.Union([LiteralKit(["none"]), S.String]).pipe($I.annoteSchema("RetentionPolicyMaxExtensionLengthResponseEnum", {
+    description: "Generated Box SDK schema for RetentionPolicyMaxExtensionLengthResponseEnum."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyMaxExtensionLengthResponseEnum}.
+ *
+ * **Example** (Reference the RetentionPolicyMaxExtensionLengthResponseEnum type)
+ *
+ * ```ts
+ * import type { RetentionPolicyMaxExtensionLengthResponseEnum } from "@beep/box"
+ *
+ * type Value = RetentionPolicyMaxExtensionLengthResponseEnum
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyMaxExtensionLengthResponseEnum = typeof RetentionPolicyMaxExtensionLengthResponseEnum.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyMiniDispositionActionField.
+ *
+ * **Example** (Inspect the RetentionPolicyMiniDispositionActionField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyMiniDispositionActionField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyMiniDispositionActionField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyMiniDispositionActionField = S.Union([LiteralKit(["permanently_delete", "remove_retention"]), S.String]).pipe($I.annoteSchema("RetentionPolicyMiniDispositionActionField", {
+    description: "Generated Box SDK schema for RetentionPolicyMiniDispositionActionField."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyMiniDispositionActionField}.
+ *
+ * **Example** (Reference the RetentionPolicyMiniDispositionActionField type)
+ *
+ * ```ts
+ * import type { RetentionPolicyMiniDispositionActionField } from "@beep/box"
+ *
+ * type Value = RetentionPolicyMiniDispositionActionField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyMiniDispositionActionField = typeof RetentionPolicyMiniDispositionActionField.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyPolicyTypeField.
+ *
+ * **Example** (Inspect the RetentionPolicyPolicyTypeField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyPolicyTypeField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyPolicyTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyPolicyTypeField = S.Union([LiteralKit(["finite", "indefinite"]), S.String]).pipe($I.annoteSchema("RetentionPolicyPolicyTypeField", {
+    description: "Generated Box SDK schema for RetentionPolicyPolicyTypeField."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyPolicyTypeField}.
+ *
+ * **Example** (Reference the RetentionPolicyPolicyTypeField type)
+ *
+ * ```ts
+ * import type { RetentionPolicyPolicyTypeField } from "@beep/box"
+ *
+ * type Value = RetentionPolicyPolicyTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyPolicyTypeField = typeof RetentionPolicyPolicyTypeField.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyRetentionTypeField.
+ *
+ * **Example** (Inspect the RetentionPolicyRetentionTypeField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyRetentionTypeField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyRetentionTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyRetentionTypeField = S.Union([LiteralKit(["modifiable", "non_modifiable"]), S.String]).pipe($I.annoteSchema("RetentionPolicyRetentionTypeField", {
+    description: "Generated Box SDK schema for RetentionPolicyRetentionTypeField."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyRetentionTypeField}.
+ *
+ * **Example** (Reference the RetentionPolicyRetentionTypeField type)
+ *
+ * ```ts
+ * import type { RetentionPolicyRetentionTypeField } from "@beep/box"
+ *
+ * type Value = RetentionPolicyRetentionTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyRetentionTypeField = typeof RetentionPolicyRetentionTypeField.Type;
+
+/**
+ * Generated Box SDK schema for RetentionPolicyStatusField.
+ *
+ * **Example** (Inspect the RetentionPolicyStatusField schema)
+ *
+ * ```ts
+ * import { RetentionPolicyStatusField } from "@beep/box"
+ *
+ * console.log(RetentionPolicyStatusField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyStatusField = S.Union([LiteralKit(["active", "retired"]), S.String]).pipe($I.annoteSchema("RetentionPolicyStatusField", {
+    description: "Generated Box SDK schema for RetentionPolicyStatusField."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyStatusField}.
+ *
+ * **Example** (Reference the RetentionPolicyStatusField type)
+ *
+ * ```ts
+ * import type { RetentionPolicyStatusField } from "@beep/box"
+ *
+ * type Value = RetentionPolicyStatusField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyStatusField = typeof RetentionPolicyStatusField.Type;
+
+/**
+ * Generated Box SDK schema for SignRequest.
+ *
+ * **Example** (Inspect the SignRequest schema)
+ *
+ * ```ts
+ * import { SignRequest } from "@beep/box"
+ *
+ * console.log(SignRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignRequest = S.Unknown.pipe($I.annoteSchema("SignRequest", {
+    description: "Generated Box SDK schema for SignRequest."
+  }));
+
+/**
+ * Type for {@link SignRequest}.
+ *
+ * **Example** (Reference the SignRequest type)
+ *
+ * ```ts
+ * import type { SignRequest } from "@beep/box"
+ *
+ * type Value = SignRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignRequest = typeof SignRequest.Type;
+
+/**
+ * Generated Box SDK schema for SignRequestCancelRequest.
+ *
+ * **Example** (Inspect the SignRequestCancelRequest schema)
+ *
+ * ```ts
+ * import { SignRequestCancelRequest } from "@beep/box"
+ *
+ * console.log(SignRequestCancelRequest.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignRequestCancelRequest extends S.Class<SignRequestCancelRequest>($I`SignRequestCancelRequest`)(
+  {
+    reason: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("SignRequestCancelRequest", {
+    description: "Generated Box SDK schema for SignRequestCancelRequest."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignRequestCreateRequest.
+ *
+ * **Example** (Inspect the SignRequestCreateRequest schema)
+ *
+ * ```ts
+ * import { SignRequestCreateRequest } from "@beep/box"
+ *
+ * console.log(SignRequestCreateRequest.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignRequestCreateRequest = S.Unknown.pipe($I.annoteSchema("SignRequestCreateRequest", {
+    description: "Generated Box SDK schema for SignRequestCreateRequest."
+  }));
+
+/**
+ * Type for {@link SignRequestCreateRequest}.
+ *
+ * **Example** (Reference the SignRequestCreateRequest type)
+ *
+ * ```ts
+ * import type { SignRequestCreateRequest } from "@beep/box"
+ *
+ * type Value = SignRequestCreateRequest
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignRequestCreateRequest = typeof SignRequestCreateRequest.Type;
+
+/**
+ * Generated Box SDK schema for SignRequests.
+ *
+ * **Example** (Inspect the SignRequests schema)
+ *
+ * ```ts
+ * import { SignRequests } from "@beep/box"
+ *
+ * console.log(SignRequests.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignRequests extends S.Class<SignRequests>($I`SignRequests`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    entries: S.suspend(() => SignRequest).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("SignRequests", {
+    description: "Generated Box SDK schema for SignRequests."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignTemplate.
+ *
+ * **Example** (Inspect the SignTemplate schema)
+ *
+ * ```ts
+ * import { SignTemplate } from "@beep/box"
+ *
+ * console.log(SignTemplate.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplate extends S.Class<SignTemplate>($I`SignTemplate`)(
+  {
+    type: S.suspend(() => SignTemplateTypeField).pipe(S.optionalKey),
+    id: S.String.pipe(S.optionalKey),
+    name: S.String.pipe(S.NullOr, S.optionalKey),
+    emailSubject: S.String.pipe(S.NullOr, S.optionalKey),
+    emailMessage: S.String.pipe(S.NullOr, S.optionalKey),
+    daysValid: S.Finite.pipe(S.NullOr, S.optionalKey),
+    parentFolder: S.suspend(() => FolderMini).pipe(S.optionalKey),
+    sourceFiles: S.suspend(() => FileMini).pipe(S.Array, S.optionalKey),
+    areFieldsLocked: S.Boolean.pipe(S.optionalKey),
+    areOptionsLocked: S.Boolean.pipe(S.optionalKey),
+    areRecipientsLocked: S.Boolean.pipe(S.optionalKey),
+    areEmailSettingsLocked: S.Boolean.pipe(S.optionalKey),
+    areFilesLocked: S.Boolean.pipe(S.optionalKey),
+    signers: S.suspend(() => TemplateSigner).pipe(S.Array, S.optionalKey),
+    additionalInfo: S.suspend(() => SignTemplateAdditionalInfoField).pipe(S.optionalKey),
+    readySignLink: S.suspend(() => SignTemplateReadySignLinkField).pipe(S.NullOr, S.optionalKey),
+    customBranding: S.suspend(() => SignTemplateCustomBrandingField).pipe(S.NullOr, S.optionalKey),
+    requestFlow: S.String.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("SignTemplate", {
+    description: "Generated Box SDK schema for SignTemplate."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignTemplateAdditionalInfoField.
+ *
+ * **Example** (Inspect the SignTemplateAdditionalInfoField schema)
+ *
+ * ```ts
+ * import { SignTemplateAdditionalInfoField } from "@beep/box"
+ *
+ * console.log(SignTemplateAdditionalInfoField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplateAdditionalInfoField extends S.Class<SignTemplateAdditionalInfoField>($I`SignTemplateAdditionalInfoField`)(
+  {
+    nonEditable: S.suspend(() => SignTemplateAdditionalInfoNonEditableField).pipe(S.Array, S.optionalKey),
+    required: S.suspend(() => SignTemplateAdditionalInfoRequiredField).pipe(S.optionalKey),
+  },
+  $I.annote("SignTemplateAdditionalInfoField", {
+    description: "Generated Box SDK schema for SignTemplateAdditionalInfoField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignTemplateAdditionalInfoNonEditableField.
+ *
+ * **Example** (Inspect the SignTemplateAdditionalInfoNonEditableField schema)
+ *
+ * ```ts
+ * import { SignTemplateAdditionalInfoNonEditableField } from "@beep/box"
+ *
+ * console.log(SignTemplateAdditionalInfoNonEditableField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignTemplateAdditionalInfoNonEditableField = S.Union([LiteralKit(["email_subject", "email_message", "name", "days_valid", "signers", "source_files"]), S.String]).pipe($I.annoteSchema("SignTemplateAdditionalInfoNonEditableField", {
+    description: "Generated Box SDK schema for SignTemplateAdditionalInfoNonEditableField."
+  }));
+
+/**
+ * Type for {@link SignTemplateAdditionalInfoNonEditableField}.
+ *
+ * **Example** (Reference the SignTemplateAdditionalInfoNonEditableField type)
+ *
+ * ```ts
+ * import type { SignTemplateAdditionalInfoNonEditableField } from "@beep/box"
+ *
+ * type Value = SignTemplateAdditionalInfoNonEditableField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignTemplateAdditionalInfoNonEditableField = typeof SignTemplateAdditionalInfoNonEditableField.Type;
+
+/**
+ * Generated Box SDK schema for SignTemplateAdditionalInfoRequiredField.
+ *
+ * **Example** (Inspect the SignTemplateAdditionalInfoRequiredField schema)
+ *
+ * ```ts
+ * import { SignTemplateAdditionalInfoRequiredField } from "@beep/box"
+ *
+ * console.log(SignTemplateAdditionalInfoRequiredField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplateAdditionalInfoRequiredField extends S.Class<SignTemplateAdditionalInfoRequiredField>($I`SignTemplateAdditionalInfoRequiredField`)(
+  {
+    signers: S.suspend(() => SignTemplateAdditionalInfoRequiredSignersField).pipe(S.Array, S.Array, S.optionalKey),
+  },
+  $I.annote("SignTemplateAdditionalInfoRequiredField", {
+    description: "Generated Box SDK schema for SignTemplateAdditionalInfoRequiredField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignTemplateAdditionalInfoRequiredSignersField.
+ *
+ * **Example** (Inspect the SignTemplateAdditionalInfoRequiredSignersField schema)
+ *
+ * ```ts
+ * import { SignTemplateAdditionalInfoRequiredSignersField } from "@beep/box"
+ *
+ * console.log(SignTemplateAdditionalInfoRequiredSignersField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignTemplateAdditionalInfoRequiredSignersField = S.Union([LiteralKit(["email"]), S.String]).pipe($I.annoteSchema("SignTemplateAdditionalInfoRequiredSignersField", {
+    description: "Generated Box SDK schema for SignTemplateAdditionalInfoRequiredSignersField."
+  }));
+
+/**
+ * Type for {@link SignTemplateAdditionalInfoRequiredSignersField}.
+ *
+ * **Example** (Reference the SignTemplateAdditionalInfoRequiredSignersField type)
+ *
+ * ```ts
+ * import type { SignTemplateAdditionalInfoRequiredSignersField } from "@beep/box"
+ *
+ * type Value = SignTemplateAdditionalInfoRequiredSignersField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignTemplateAdditionalInfoRequiredSignersField = typeof SignTemplateAdditionalInfoRequiredSignersField.Type;
+
+/**
+ * Generated Box SDK schema for SignTemplateCustomBrandingField.
+ *
+ * **Example** (Inspect the SignTemplateCustomBrandingField schema)
+ *
+ * ```ts
+ * import { SignTemplateCustomBrandingField } from "@beep/box"
+ *
+ * console.log(SignTemplateCustomBrandingField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplateCustomBrandingField extends S.Class<SignTemplateCustomBrandingField>($I`SignTemplateCustomBrandingField`)(
+  {
+    companyName: S.String.pipe(S.NullOr, S.optionalKey),
+    logoUri: S.String.pipe(S.NullOr, S.optionalKey),
+    brandingColor: S.String.pipe(S.NullOr, S.optionalKey),
+    emailFooterText: S.String.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("SignTemplateCustomBrandingField", {
+    description: "Generated Box SDK schema for SignTemplateCustomBrandingField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignTemplateReadySignLinkField.
+ *
+ * **Example** (Inspect the SignTemplateReadySignLinkField schema)
+ *
+ * ```ts
+ * import { SignTemplateReadySignLinkField } from "@beep/box"
+ *
+ * console.log(SignTemplateReadySignLinkField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplateReadySignLinkField extends S.Class<SignTemplateReadySignLinkField>($I`SignTemplateReadySignLinkField`)(
+  {
+    url: S.String.pipe(S.optionalKey),
+    name: S.String.pipe(S.NullOr, S.optionalKey),
+    instructions: S.String.pipe(S.NullOr, S.optionalKey),
+    folderId: S.String.pipe(S.NullOr, S.optionalKey),
+    isNotificationDisabled: S.Boolean.pipe(S.optionalKey),
+    isActive: S.Boolean.pipe(S.optionalKey),
+  },
+  $I.annote("SignTemplateReadySignLinkField", {
+    description: "Generated Box SDK schema for SignTemplateReadySignLinkField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignTemplates.
+ *
+ * **Example** (Inspect the SignTemplates schema)
+ *
+ * ```ts
+ * import { SignTemplates } from "@beep/box"
+ *
+ * console.log(SignTemplates.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplates extends S.Class<SignTemplates>($I`SignTemplates`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    prevMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    entries: S.suspend(() => SignTemplate).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("SignTemplates", {
+    description: "Generated Box SDK schema for SignTemplates."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for SignTemplateTypeField.
+ *
+ * **Example** (Inspect the SignTemplateTypeField schema)
+ *
+ * ```ts
+ * import { SignTemplateTypeField } from "@beep/box"
+ *
+ * console.log(SignTemplateTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignTemplateTypeField = S.Literal("sign-template").pipe($I.annoteSchema("SignTemplateTypeField", {
+    description: "Generated Box SDK schema for SignTemplateTypeField."
+  }));
+
+/**
+ * Type for {@link SignTemplateTypeField}.
+ *
+ * **Example** (Reference the SignTemplateTypeField type)
+ *
+ * ```ts
+ * import type { SignTemplateTypeField } from "@beep/box"
+ *
+ * type Value = SignTemplateTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignTemplateTypeField = typeof SignTemplateTypeField.Type;
+
+/**
+ * Generated Box SDK schema for TemplateSigner.
+ *
+ * **Example** (Inspect the TemplateSigner schema)
+ *
+ * ```ts
+ * import { TemplateSigner } from "@beep/box"
+ *
+ * console.log(TemplateSigner.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TemplateSigner extends S.Class<TemplateSigner>($I`TemplateSigner`)(
+  {
+    inputs: S.suspend(() => TemplateSignerInput).pipe(S.Array, S.optionalKey),
+    email: S.String.pipe(S.NullOr, S.optionalKey),
+    role: S.suspend(() => TemplateSignerRoleField).pipe(S.optionalKey),
+    isInPerson: S.Boolean.pipe(S.optionalKey),
+    order: S.Finite.pipe(S.optionalKey),
+    signerGroupId: S.String.pipe(S.NullOr, S.optionalKey),
+    label: S.String.pipe(S.NullOr, S.optionalKey),
+    publicId: S.String.pipe(S.optionalKey),
+    isPasswordRequired: S.Boolean.pipe(S.NullOr, S.optionalKey),
+    isPhoneNumberRequired: S.Boolean.pipe(S.NullOr, S.optionalKey),
+    loginRequired: S.Boolean.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("TemplateSigner", {
+    description: "Generated Box SDK schema for TemplateSigner."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for TemplateSignerInput.
+ *
+ * **Example** (Inspect the TemplateSignerInput schema)
+ *
+ * ```ts
+ * import { TemplateSignerInput } from "@beep/box"
+ *
+ * console.log(TemplateSignerInput.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TemplateSignerInput = S.Unknown.pipe($I.annoteSchema("TemplateSignerInput", {
+    description: "Generated Box SDK schema for TemplateSignerInput."
+  }));
+
+/**
+ * Type for {@link TemplateSignerInput}.
+ *
+ * **Example** (Reference the TemplateSignerInput type)
+ *
+ * ```ts
+ * import type { TemplateSignerInput } from "@beep/box"
+ *
+ * type Value = TemplateSignerInput
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TemplateSignerInput = typeof TemplateSignerInput.Type;
+
+/**
+ * Generated Box SDK schema for TemplateSignerRoleField.
+ *
+ * **Example** (Inspect the TemplateSignerRoleField schema)
+ *
+ * ```ts
+ * import { TemplateSignerRoleField } from "@beep/box"
+ *
+ * console.log(TemplateSignerRoleField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TemplateSignerRoleField = S.Union([LiteralKit(["signer", "approver", "final_copy_reader"]), S.String]).pipe($I.annoteSchema("TemplateSignerRoleField", {
+    description: "Generated Box SDK schema for TemplateSignerRoleField."
+  }));
+
+/**
+ * Type for {@link TemplateSignerRoleField}.
+ *
+ * **Example** (Reference the TemplateSignerRoleField type)
+ *
+ * ```ts
+ * import type { TemplateSignerRoleField } from "@beep/box"
+ *
+ * type Value = TemplateSignerRoleField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TemplateSignerRoleField = typeof TemplateSignerRoleField.Type;
+
+/**
+ * Generated Box SDK schema for TermsOfServiceBase.
+ *
+ * **Example** (Inspect the TermsOfServiceBase schema)
+ *
+ * ```ts
+ * import { TermsOfServiceBase } from "@beep/box"
+ *
+ * console.log(TermsOfServiceBase.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TermsOfServiceBase extends S.Class<TermsOfServiceBase>($I`TermsOfServiceBase`)(
+  {
+    id: S.String,
+    type: S.suspend(() => TermsOfServiceBaseTypeField),
+  },
+  $I.annote("TermsOfServiceBase", {
+    description: "Generated Box SDK schema for TermsOfServiceBase."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for TermsOfServiceBaseTypeField.
+ *
+ * **Example** (Inspect the TermsOfServiceBaseTypeField schema)
+ *
+ * ```ts
+ * import { TermsOfServiceBaseTypeField } from "@beep/box"
+ *
+ * console.log(TermsOfServiceBaseTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TermsOfServiceBaseTypeField = S.Literal("terms_of_service").pipe($I.annoteSchema("TermsOfServiceBaseTypeField", {
+    description: "Generated Box SDK schema for TermsOfServiceBaseTypeField."
+  }));
+
+/**
+ * Type for {@link TermsOfServiceBaseTypeField}.
+ *
+ * **Example** (Reference the TermsOfServiceBaseTypeField type)
+ *
+ * ```ts
+ * import type { TermsOfServiceBaseTypeField } from "@beep/box"
+ *
+ * type Value = TermsOfServiceBaseTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TermsOfServiceBaseTypeField = typeof TermsOfServiceBaseTypeField.Type;
+
+/**
  * Generated Box SDK schema for TrackingCode.
  *
  * **Example** (Inspect the TrackingCode schema)
@@ -5869,6 +10264,148 @@ export const TrackingCodeTypeField = S.Literal("tracking_code").pipe($I.annoteSc
  * @since 0.0.0
  */
 export type TrackingCodeTypeField = typeof TrackingCodeTypeField.Type;
+
+/**
+ * Generated Box SDK schema for UpdateCollaborationByIdHeaders.
+ *
+ * **Example** (Inspect the UpdateCollaborationByIdHeaders schema)
+ *
+ * ```ts
+ * import { UpdateCollaborationByIdHeaders } from "@beep/box"
+ *
+ * console.log(UpdateCollaborationByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UpdateCollaborationByIdHeaders extends S.Class<UpdateCollaborationByIdHeaders>($I`UpdateCollaborationByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("UpdateCollaborationByIdHeaders", {
+    description: "Generated Box SDK schema for UpdateCollaborationByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UpdateCollaborationByIdOptionalsInput.
+ *
+ * **Example** (Inspect the UpdateCollaborationByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { UpdateCollaborationByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(UpdateCollaborationByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UpdateCollaborationByIdOptionalsInput extends S.Class<UpdateCollaborationByIdOptionalsInput>($I`UpdateCollaborationByIdOptionalsInput`)(
+  {
+    requestBody: S.suspend(() => UpdateCollaborationByIdRequestBody).pipe(S.optionalKey),
+    headers: S.suspend(() => UpdateCollaborationByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("UpdateCollaborationByIdOptionalsInput", {
+    description: "Generated Box SDK schema for UpdateCollaborationByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UpdateCollaborationByIdRequestBody.
+ *
+ * **Example** (Inspect the UpdateCollaborationByIdRequestBody schema)
+ *
+ * ```ts
+ * import { UpdateCollaborationByIdRequestBody } from "@beep/box"
+ *
+ * console.log(UpdateCollaborationByIdRequestBody.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UpdateCollaborationByIdRequestBody extends S.Class<UpdateCollaborationByIdRequestBody>($I`UpdateCollaborationByIdRequestBody`)(
+  {
+    role: S.suspend(() => UpdateCollaborationByIdRequestBodyRoleField).pipe(S.optionalKey),
+    status: S.suspend(() => UpdateCollaborationByIdRequestBodyStatusField).pipe(S.optionalKey),
+    expiresAt: BoxSdkDateTime.pipe(S.optionalKey),
+    canViewPath: S.Boolean.pipe(S.optionalKey),
+  },
+  $I.annote("UpdateCollaborationByIdRequestBody", {
+    description: "Generated Box SDK schema for UpdateCollaborationByIdRequestBody."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UpdateCollaborationByIdRequestBodyRoleField.
+ *
+ * **Example** (Inspect the UpdateCollaborationByIdRequestBodyRoleField schema)
+ *
+ * ```ts
+ * import { UpdateCollaborationByIdRequestBodyRoleField } from "@beep/box"
+ *
+ * console.log(UpdateCollaborationByIdRequestBodyRoleField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UpdateCollaborationByIdRequestBodyRoleField = S.Union([LiteralKit(["editor", "viewer", "previewer", "uploader", "previewer uploader", "viewer uploader", "co-owner", "owner"]), S.String]).pipe($I.annoteSchema("UpdateCollaborationByIdRequestBodyRoleField", {
+    description: "Generated Box SDK schema for UpdateCollaborationByIdRequestBodyRoleField."
+  }));
+
+/**
+ * Type for {@link UpdateCollaborationByIdRequestBodyRoleField}.
+ *
+ * **Example** (Reference the UpdateCollaborationByIdRequestBodyRoleField type)
+ *
+ * ```ts
+ * import type { UpdateCollaborationByIdRequestBodyRoleField } from "@beep/box"
+ *
+ * type Value = UpdateCollaborationByIdRequestBodyRoleField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UpdateCollaborationByIdRequestBodyRoleField = typeof UpdateCollaborationByIdRequestBodyRoleField.Type;
+
+/**
+ * Generated Box SDK schema for UpdateCollaborationByIdRequestBodyStatusField.
+ *
+ * **Example** (Inspect the UpdateCollaborationByIdRequestBodyStatusField schema)
+ *
+ * ```ts
+ * import { UpdateCollaborationByIdRequestBodyStatusField } from "@beep/box"
+ *
+ * console.log(UpdateCollaborationByIdRequestBodyStatusField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UpdateCollaborationByIdRequestBodyStatusField = S.Union([LiteralKit(["pending", "accepted", "rejected"]), S.String]).pipe($I.annoteSchema("UpdateCollaborationByIdRequestBodyStatusField", {
+    description: "Generated Box SDK schema for UpdateCollaborationByIdRequestBodyStatusField."
+  }));
+
+/**
+ * Type for {@link UpdateCollaborationByIdRequestBodyStatusField}.
+ *
+ * **Example** (Reference the UpdateCollaborationByIdRequestBodyStatusField type)
+ *
+ * ```ts
+ * import type { UpdateCollaborationByIdRequestBodyStatusField } from "@beep/box"
+ *
+ * type Value = UpdateCollaborationByIdRequestBodyStatusField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UpdateCollaborationByIdRequestBodyStatusField = typeof UpdateCollaborationByIdRequestBodyStatusField.Type;
 
 /**
  * Generated Box SDK schema for UpdateFileByIdHeaders.
@@ -6759,6 +11296,177 @@ export const UpdateUserByIdRequestBodyStatusField = S.Union([LiteralKit(["active
 export type UpdateUserByIdRequestBodyStatusField = typeof UpdateUserByIdRequestBodyStatusField.Type;
 
 /**
+ * Generated Box SDK schema for UpdateWebhookByIdHeaders.
+ *
+ * **Example** (Inspect the UpdateWebhookByIdHeaders schema)
+ *
+ * ```ts
+ * import { UpdateWebhookByIdHeaders } from "@beep/box"
+ *
+ * console.log(UpdateWebhookByIdHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UpdateWebhookByIdHeaders extends S.Class<UpdateWebhookByIdHeaders>($I`UpdateWebhookByIdHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("UpdateWebhookByIdHeaders", {
+    description: "Generated Box SDK schema for UpdateWebhookByIdHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UpdateWebhookByIdOptionalsInput.
+ *
+ * **Example** (Inspect the UpdateWebhookByIdOptionalsInput schema)
+ *
+ * ```ts
+ * import { UpdateWebhookByIdOptionalsInput } from "@beep/box"
+ *
+ * console.log(UpdateWebhookByIdOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UpdateWebhookByIdOptionalsInput extends S.Class<UpdateWebhookByIdOptionalsInput>($I`UpdateWebhookByIdOptionalsInput`)(
+  {
+    requestBody: S.suspend(() => UpdateWebhookByIdRequestBody).pipe(S.optionalKey),
+    headers: S.suspend(() => UpdateWebhookByIdHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("UpdateWebhookByIdOptionalsInput", {
+    description: "Generated Box SDK schema for UpdateWebhookByIdOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UpdateWebhookByIdRequestBody.
+ *
+ * **Example** (Inspect the UpdateWebhookByIdRequestBody schema)
+ *
+ * ```ts
+ * import { UpdateWebhookByIdRequestBody } from "@beep/box"
+ *
+ * console.log(UpdateWebhookByIdRequestBody.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UpdateWebhookByIdRequestBody extends S.Class<UpdateWebhookByIdRequestBody>($I`UpdateWebhookByIdRequestBody`)(
+  {
+    target: S.suspend(() => UpdateWebhookByIdRequestBodyTargetField).pipe(S.optionalKey),
+    address: S.String.pipe(S.optionalKey),
+    triggers: S.suspend(() => UpdateWebhookByIdRequestBodyTriggersField).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("UpdateWebhookByIdRequestBody", {
+    description: "Generated Box SDK schema for UpdateWebhookByIdRequestBody."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UpdateWebhookByIdRequestBodyTargetField.
+ *
+ * **Example** (Inspect the UpdateWebhookByIdRequestBodyTargetField schema)
+ *
+ * ```ts
+ * import { UpdateWebhookByIdRequestBodyTargetField } from "@beep/box"
+ *
+ * console.log(UpdateWebhookByIdRequestBodyTargetField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UpdateWebhookByIdRequestBodyTargetField extends S.Class<UpdateWebhookByIdRequestBodyTargetField>($I`UpdateWebhookByIdRequestBodyTargetField`)(
+  {
+    id: S.String.pipe(S.optionalKey),
+    type: S.suspend(() => UpdateWebhookByIdRequestBodyTargetTypeField).pipe(S.optionalKey),
+  },
+  $I.annote("UpdateWebhookByIdRequestBodyTargetField", {
+    description: "Generated Box SDK schema for UpdateWebhookByIdRequestBodyTargetField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UpdateWebhookByIdRequestBodyTargetTypeField.
+ *
+ * **Example** (Inspect the UpdateWebhookByIdRequestBodyTargetTypeField schema)
+ *
+ * ```ts
+ * import { UpdateWebhookByIdRequestBodyTargetTypeField } from "@beep/box"
+ *
+ * console.log(UpdateWebhookByIdRequestBodyTargetTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UpdateWebhookByIdRequestBodyTargetTypeField = LiteralKit(["file", "folder"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("UpdateWebhookByIdRequestBodyTargetTypeField", {
+        description: "Generated Box SDK schema for UpdateWebhookByIdRequestBodyTargetTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link UpdateWebhookByIdRequestBodyTargetTypeField}.
+ *
+ * **Example** (Reference the UpdateWebhookByIdRequestBodyTargetTypeField type)
+ *
+ * ```ts
+ * import type { UpdateWebhookByIdRequestBodyTargetTypeField } from "@beep/box"
+ *
+ * type Value = UpdateWebhookByIdRequestBodyTargetTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UpdateWebhookByIdRequestBodyTargetTypeField = typeof UpdateWebhookByIdRequestBodyTargetTypeField.Type;
+
+/**
+ * Generated Box SDK schema for UpdateWebhookByIdRequestBodyTriggersField.
+ *
+ * **Example** (Inspect the UpdateWebhookByIdRequestBodyTriggersField schema)
+ *
+ * ```ts
+ * import { UpdateWebhookByIdRequestBodyTriggersField } from "@beep/box"
+ *
+ * console.log(UpdateWebhookByIdRequestBodyTriggersField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UpdateWebhookByIdRequestBodyTriggersField = S.Union([LiteralKit(["FILE.UPLOADED", "FILE.PREVIEWED", "FILE.DOWNLOADED", "FILE.TRASHED", "FILE.DELETED", "FILE.RESTORED", "FILE.COPIED", "FILE.MOVED", "FILE.LOCKED", "FILE.UNLOCKED", "FILE.RENAMED", "COMMENT.CREATED", "COMMENT.UPDATED", "COMMENT.DELETED", "TASK_ASSIGNMENT.CREATED", "TASK_ASSIGNMENT.UPDATED", "METADATA_INSTANCE.CREATED", "METADATA_INSTANCE.UPDATED", "METADATA_INSTANCE.DELETED", "FOLDER.CREATED", "FOLDER.RENAMED", "FOLDER.DOWNLOADED", "FOLDER.RESTORED", "FOLDER.DELETED", "FOLDER.COPIED", "FOLDER.MOVED", "FOLDER.TRASHED", "WEBHOOK.DELETED", "COLLABORATION.CREATED", "COLLABORATION.ACCEPTED", "COLLABORATION.REJECTED", "COLLABORATION.REMOVED", "COLLABORATION.UPDATED", "SHARED_LINK.DELETED", "SHARED_LINK.CREATED", "SHARED_LINK.UPDATED", "SIGN_REQUEST.COMPLETED", "SIGN_REQUEST.DECLINED", "SIGN_REQUEST.EXPIRED", "SIGN_REQUEST.SIGNER_EMAIL_BOUNCED", "SIGN_REQUEST.SIGN_SIGNER_SIGNED", "SIGN_REQUEST.SIGN_DOCUMENT_CREATED", "SIGN_REQUEST.SIGN_ERROR_FINALIZING"]), S.String]).pipe($I.annoteSchema("UpdateWebhookByIdRequestBodyTriggersField", {
+    description: "Generated Box SDK schema for UpdateWebhookByIdRequestBodyTriggersField."
+  }));
+
+/**
+ * Type for {@link UpdateWebhookByIdRequestBodyTriggersField}.
+ *
+ * **Example** (Reference the UpdateWebhookByIdRequestBodyTriggersField type)
+ *
+ * ```ts
+ * import type { UpdateWebhookByIdRequestBodyTriggersField } from "@beep/box"
+ *
+ * type Value = UpdateWebhookByIdRequestBodyTriggersField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UpdateWebhookByIdRequestBodyTriggersField = typeof UpdateWebhookByIdRequestBodyTriggersField.Type;
+
+/**
  * Generated Box SDK schema for UploadedPart.
  *
  * **Example** (Inspect the UploadedPart schema)
@@ -7617,6 +12325,31 @@ export const UserBaseTypeField = S.Literal("user").pipe($I.annoteSchema("UserBas
 export type UserBaseTypeField = typeof UserBaseTypeField.Type;
 
 /**
+ * Generated Box SDK schema for UserCollaborations.
+ *
+ * **Example** (Inspect the UserCollaborations schema)
+ *
+ * ```ts
+ * import { UserCollaborations } from "@beep/box"
+ *
+ * console.log(UserCollaborations.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UserCollaborations extends UserBase.extend<UserCollaborations>($I`UserCollaborations`)(
+  {
+    name: S.String.pipe(S.optionalKey),
+    login: S.String.pipe(S.optionalKey),
+    isActive: S.Boolean.pipe(S.optionalKey),
+  },
+  $I.annote("UserCollaborations", {
+    description: "Generated Box SDK schema for UserCollaborations."
+  })
+) {}
+
+/**
  * Generated Box SDK schema for UserFull.
  *
  * **Example** (Inspect the UserFull schema)
@@ -7888,6 +12621,213 @@ export const UserStatusField = S.Union([LiteralKit(["active", "inactive", "canno
  * @since 0.0.0
  */
 export type UserStatusField = typeof UserStatusField.Type;
+
+/**
+ * Generated Box SDK schema for ValidateMessageOptionalsInput.
+ *
+ * **Example** (Inspect the ValidateMessageOptionalsInput schema)
+ *
+ * ```ts
+ * import { ValidateMessageOptionalsInput } from "@beep/box"
+ *
+ * console.log(ValidateMessageOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ValidateMessageOptionalsInput extends S.Class<ValidateMessageOptionalsInput>($I`ValidateMessageOptionalsInput`)(
+  {
+    secondaryKey: S.String.pipe(S.optionalKey),
+    maxAge: S.Finite.pipe(S.optionalKey),
+  },
+  $I.annote("ValidateMessageOptionalsInput", {
+    description: "Generated Box SDK schema for ValidateMessageOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for Webhook.
+ *
+ * **Example** (Inspect the Webhook schema)
+ *
+ * ```ts
+ * import { Webhook } from "@beep/box"
+ *
+ * console.log(Webhook.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Webhook = S.Unknown.pipe($I.annoteSchema("Webhook", {
+    description: "Generated Box SDK schema for Webhook."
+  }));
+
+/**
+ * Type for {@link Webhook}.
+ *
+ * **Example** (Reference the Webhook type)
+ *
+ * ```ts
+ * import type { Webhook } from "@beep/box"
+ *
+ * type Value = Webhook
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Webhook = typeof Webhook.Type;
+
+/**
+ * Generated Box SDK schema for WebhookMini.
+ *
+ * **Example** (Inspect the WebhookMini schema)
+ *
+ * ```ts
+ * import { WebhookMini } from "@beep/box"
+ *
+ * console.log(WebhookMini.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhookMini extends S.Class<WebhookMini>($I`WebhookMini`)(
+  {
+    id: S.String.pipe(S.optionalKey),
+    type: S.suspend(() => WebhookMiniTypeField).pipe(S.optionalKey),
+    target: S.suspend(() => WebhookMiniTargetField).pipe(S.optionalKey),
+  },
+  $I.annote("WebhookMini", {
+    description: "Generated Box SDK schema for WebhookMini."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for WebhookMiniTargetField.
+ *
+ * **Example** (Inspect the WebhookMiniTargetField schema)
+ *
+ * ```ts
+ * import { WebhookMiniTargetField } from "@beep/box"
+ *
+ * console.log(WebhookMiniTargetField.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhookMiniTargetField extends S.Class<WebhookMiniTargetField>($I`WebhookMiniTargetField`)(
+  {
+    id: S.String.pipe(S.optionalKey),
+    type: S.suspend(() => WebhookMiniTargetTypeField).pipe(S.optionalKey),
+  },
+  $I.annote("WebhookMiniTargetField", {
+    description: "Generated Box SDK schema for WebhookMiniTargetField."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for WebhookMiniTargetTypeField.
+ *
+ * **Example** (Inspect the WebhookMiniTargetTypeField schema)
+ *
+ * ```ts
+ * import { WebhookMiniTargetTypeField } from "@beep/box"
+ *
+ * console.log(WebhookMiniTargetTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhookMiniTargetTypeField = LiteralKit(["file", "folder"]).pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema("WebhookMiniTargetTypeField", {
+        description: "Generated Box SDK schema for WebhookMiniTargetTypeField."
+      }),
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+);
+
+/**
+ * Type for {@link WebhookMiniTargetTypeField}.
+ *
+ * **Example** (Reference the WebhookMiniTargetTypeField type)
+ *
+ * ```ts
+ * import type { WebhookMiniTargetTypeField } from "@beep/box"
+ *
+ * type Value = WebhookMiniTargetTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhookMiniTargetTypeField = typeof WebhookMiniTargetTypeField.Type;
+
+/**
+ * Generated Box SDK schema for WebhookMiniTypeField.
+ *
+ * **Example** (Inspect the WebhookMiniTypeField schema)
+ *
+ * ```ts
+ * import { WebhookMiniTypeField } from "@beep/box"
+ *
+ * console.log(WebhookMiniTypeField.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhookMiniTypeField = S.Literal("webhook").pipe($I.annoteSchema("WebhookMiniTypeField", {
+    description: "Generated Box SDK schema for WebhookMiniTypeField."
+  }));
+
+/**
+ * Type for {@link WebhookMiniTypeField}.
+ *
+ * **Example** (Reference the WebhookMiniTypeField type)
+ *
+ * ```ts
+ * import type { WebhookMiniTypeField } from "@beep/box"
+ *
+ * type Value = WebhookMiniTypeField
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhookMiniTypeField = typeof WebhookMiniTypeField.Type;
+
+/**
+ * Generated Box SDK schema for Webhooks.
+ *
+ * **Example** (Inspect the Webhooks schema)
+ *
+ * ```ts
+ * import { Webhooks } from "@beep/box"
+ *
+ * console.log(Webhooks.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Webhooks extends S.Class<Webhooks>($I`Webhooks`)(
+  {
+    limit: S.Finite.pipe(S.optionalKey),
+    nextMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    prevMarker: S.String.pipe(S.NullOr, S.optionalKey),
+    entries: S.suspend(() => WebhookMini).pipe(S.Array, S.optionalKey),
+  },
+  $I.annote("Webhooks", {
+    description: "Generated Box SDK schema for Webhooks."
+  })
+) {}
 
 /**
  * Generated Box SDK schema for WebLinkBase.
@@ -8968,6 +13908,56 @@ export class FilesUpdateFileByIdPayload extends S.Class<FilesUpdateFileByIdPaylo
 ) {}
 
 /**
+ * Payload for Box SDK method folderMetadata.getFolderMetadata.
+ *
+ * **Example** (Inspect the FolderMetadataGetFolderMetadataPayload schema)
+ *
+ * ```ts
+ * import { FolderMetadataGetFolderMetadataPayload } from "@beep/box"
+ *
+ * console.log(FolderMetadataGetFolderMetadataPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FolderMetadataGetFolderMetadataPayload extends S.Class<FolderMetadataGetFolderMetadataPayload>($I`FolderMetadataGetFolderMetadataPayload`)(
+  {
+    folderId: S.String,
+    optionalsInput: S.suspend(() => GetFolderMetadataOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("FolderMetadataGetFolderMetadataPayload", {
+    description: "Payload for Box SDK method folderMetadata.getFolderMetadata."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method folderMetadata.getFolderMetadataById.
+ *
+ * **Example** (Inspect the FolderMetadataGetFolderMetadataByIdPayload schema)
+ *
+ * ```ts
+ * import { FolderMetadataGetFolderMetadataByIdPayload } from "@beep/box"
+ *
+ * console.log(FolderMetadataGetFolderMetadataByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FolderMetadataGetFolderMetadataByIdPayload extends S.Class<FolderMetadataGetFolderMetadataByIdPayload>($I`FolderMetadataGetFolderMetadataByIdPayload`)(
+  {
+    folderId: S.String,
+    scope: S.suspend(() => GetFolderMetadataByIdScope),
+    templateKey: S.String,
+    optionalsInput: S.suspend(() => GetFolderMetadataByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("FolderMetadataGetFolderMetadataByIdPayload", {
+    description: "Payload for Box SDK method folderMetadata.getFolderMetadataById."
+  })
+) {}
+
+/**
  * Payload for Box SDK method folders.copyFolder.
  *
  * **Example** (Inspect the FoldersCopyFolderPayload schema)
@@ -9113,6 +14103,564 @@ export class FoldersUpdateFolderByIdPayload extends S.Class<FoldersUpdateFolderB
 ) {}
 
 /**
+ * Payload for Box SDK method listCollaborations.getCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetCollaborationsPayload schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetCollaborationsPayload } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetCollaborationsPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ListCollaborationsGetCollaborationsPayload extends S.Class<ListCollaborationsGetCollaborationsPayload>($I`ListCollaborationsGetCollaborationsPayload`)(
+  {
+    queryParams: S.suspend(() => GetCollaborationsQueryParams),
+    optionalsInput: S.suspend(() => GetCollaborationsOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("ListCollaborationsGetCollaborationsPayload", {
+    description: "Payload for Box SDK method listCollaborations.getCollaborations."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method listCollaborations.getFileCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetFileCollaborationsPayload schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetFileCollaborationsPayload } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetFileCollaborationsPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ListCollaborationsGetFileCollaborationsPayload extends S.Class<ListCollaborationsGetFileCollaborationsPayload>($I`ListCollaborationsGetFileCollaborationsPayload`)(
+  {
+    fileId: S.String,
+    optionalsInput: S.suspend(() => GetFileCollaborationsOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("ListCollaborationsGetFileCollaborationsPayload", {
+    description: "Payload for Box SDK method listCollaborations.getFileCollaborations."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method listCollaborations.getFolderCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetFolderCollaborationsPayload schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetFolderCollaborationsPayload } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetFolderCollaborationsPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ListCollaborationsGetFolderCollaborationsPayload extends S.Class<ListCollaborationsGetFolderCollaborationsPayload>($I`ListCollaborationsGetFolderCollaborationsPayload`)(
+  {
+    folderId: S.String,
+    optionalsInput: S.suspend(() => GetFolderCollaborationsOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("ListCollaborationsGetFolderCollaborationsPayload", {
+    description: "Payload for Box SDK method listCollaborations.getFolderCollaborations."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method listCollaborations.getGroupCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetGroupCollaborationsPayload schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetGroupCollaborationsPayload } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetGroupCollaborationsPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ListCollaborationsGetGroupCollaborationsPayload extends S.Class<ListCollaborationsGetGroupCollaborationsPayload>($I`ListCollaborationsGetGroupCollaborationsPayload`)(
+  {
+    groupId: S.String,
+    optionalsInput: S.suspend(() => GetGroupCollaborationsOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("ListCollaborationsGetGroupCollaborationsPayload", {
+    description: "Payload for Box SDK method listCollaborations.getGroupCollaborations."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method metadataCascadePolicies.getMetadataCascadePolicies.
+ *
+ * **Example** (Inspect the MetadataCascadePoliciesGetMetadataCascadePoliciesPayload schema)
+ *
+ * ```ts
+ * import { MetadataCascadePoliciesGetMetadataCascadePoliciesPayload } from "@beep/box"
+ *
+ * console.log(MetadataCascadePoliciesGetMetadataCascadePoliciesPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataCascadePoliciesGetMetadataCascadePoliciesPayload extends S.Class<MetadataCascadePoliciesGetMetadataCascadePoliciesPayload>($I`MetadataCascadePoliciesGetMetadataCascadePoliciesPayload`)(
+  {
+    queryParams: S.suspend(() => GetMetadataCascadePoliciesQueryParams),
+    optionalsInput: S.suspend(() => GetMetadataCascadePoliciesOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("MetadataCascadePoliciesGetMetadataCascadePoliciesPayload", {
+    description: "Payload for Box SDK method metadataCascadePolicies.getMetadataCascadePolicies."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method metadataCascadePolicies.getMetadataCascadePolicyById.
+ *
+ * **Example** (Inspect the MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload schema)
+ *
+ * ```ts
+ * import { MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload } from "@beep/box"
+ *
+ * console.log(MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload extends S.Class<MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload>($I`MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload`)(
+  {
+    metadataCascadePolicyId: S.String,
+    optionalsInput: S.suspend(() => GetMetadataCascadePolicyByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload", {
+    description: "Payload for Box SDK method metadataCascadePolicies.getMetadataCascadePolicyById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method metadataTemplates.getEnterpriseMetadataTemplates.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetEnterpriseMetadataTemplatesPayload schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetEnterpriseMetadataTemplatesPayload } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetEnterpriseMetadataTemplatesPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplatesGetEnterpriseMetadataTemplatesPayload extends S.Class<MetadataTemplatesGetEnterpriseMetadataTemplatesPayload>($I`MetadataTemplatesGetEnterpriseMetadataTemplatesPayload`)(
+  {
+    queryParams: S.suspend(() => GetEnterpriseMetadataTemplatesQueryParams).pipe(S.optionalKey),
+    headersInput: S.suspend(() => GetEnterpriseMetadataTemplatesHeadersInput).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplatesGetEnterpriseMetadataTemplatesPayload", {
+    description: "Payload for Box SDK method metadataTemplates.getEnterpriseMetadataTemplates."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method metadataTemplates.getGlobalMetadataTemplates.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetGlobalMetadataTemplatesPayload schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetGlobalMetadataTemplatesPayload } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetGlobalMetadataTemplatesPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplatesGetGlobalMetadataTemplatesPayload extends S.Class<MetadataTemplatesGetGlobalMetadataTemplatesPayload>($I`MetadataTemplatesGetGlobalMetadataTemplatesPayload`)(
+  {
+    queryParams: S.suspend(() => GetGlobalMetadataTemplatesQueryParams).pipe(S.optionalKey),
+    headersInput: S.suspend(() => GetGlobalMetadataTemplatesHeadersInput).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplatesGetGlobalMetadataTemplatesPayload", {
+    description: "Payload for Box SDK method metadataTemplates.getGlobalMetadataTemplates."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method metadataTemplates.getMetadataTemplate.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetMetadataTemplatePayload schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetMetadataTemplatePayload } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetMetadataTemplatePayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplatesGetMetadataTemplatePayload extends S.Class<MetadataTemplatesGetMetadataTemplatePayload>($I`MetadataTemplatesGetMetadataTemplatePayload`)(
+  {
+    scope: S.suspend(() => GetMetadataTemplateScope),
+    templateKey: S.String,
+    optionalsInput: S.suspend(() => GetMetadataTemplateOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplatesGetMetadataTemplatePayload", {
+    description: "Payload for Box SDK method metadataTemplates.getMetadataTemplate."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method metadataTemplates.getMetadataTemplateById.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetMetadataTemplateByIdPayload schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetMetadataTemplateByIdPayload } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetMetadataTemplateByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplatesGetMetadataTemplateByIdPayload extends S.Class<MetadataTemplatesGetMetadataTemplateByIdPayload>($I`MetadataTemplatesGetMetadataTemplateByIdPayload`)(
+  {
+    templateId: S.String,
+    optionalsInput: S.suspend(() => GetMetadataTemplateByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplatesGetMetadataTemplateByIdPayload", {
+    description: "Payload for Box SDK method metadataTemplates.getMetadataTemplateById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method metadataTemplates.getMetadataTemplatesByInstanceId.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload extends S.Class<MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload>($I`MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload`)(
+  {
+    queryParams: S.suspend(() => GetMetadataTemplatesByInstanceIdQueryParams),
+    optionalsInput: S.suspend(() => GetMetadataTemplatesByInstanceIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload", {
+    description: "Payload for Box SDK method metadataTemplates.getMetadataTemplatesByInstanceId."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method retentionPolicies.getRetentionPolicies.
+ *
+ * **Example** (Inspect the RetentionPoliciesGetRetentionPoliciesPayload schema)
+ *
+ * ```ts
+ * import { RetentionPoliciesGetRetentionPoliciesPayload } from "@beep/box"
+ *
+ * console.log(RetentionPoliciesGetRetentionPoliciesPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPoliciesGetRetentionPoliciesPayload extends S.Class<RetentionPoliciesGetRetentionPoliciesPayload>($I`RetentionPoliciesGetRetentionPoliciesPayload`)(
+  {
+    queryParams: S.suspend(() => GetRetentionPoliciesQueryParams).pipe(S.optionalKey),
+    headersInput: S.suspend(() => GetRetentionPoliciesHeadersInput).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPoliciesGetRetentionPoliciesPayload", {
+    description: "Payload for Box SDK method retentionPolicies.getRetentionPolicies."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method retentionPolicies.getRetentionPolicyById.
+ *
+ * **Example** (Inspect the RetentionPoliciesGetRetentionPolicyByIdPayload schema)
+ *
+ * ```ts
+ * import { RetentionPoliciesGetRetentionPolicyByIdPayload } from "@beep/box"
+ *
+ * console.log(RetentionPoliciesGetRetentionPolicyByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPoliciesGetRetentionPolicyByIdPayload extends S.Class<RetentionPoliciesGetRetentionPolicyByIdPayload>($I`RetentionPoliciesGetRetentionPolicyByIdPayload`)(
+  {
+    retentionPolicyId: S.String,
+    optionalsInput: S.suspend(() => GetRetentionPolicyByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPoliciesGetRetentionPolicyByIdPayload", {
+    description: "Payload for Box SDK method retentionPolicies.getRetentionPolicyById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload extends S.Class<RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload>($I`RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload`)(
+  {
+    retentionPolicyAssignmentId: S.String,
+    optionalsInput: S.suspend(() => GetFilesUnderRetentionPolicyAssignmentOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload", {
+    description: "Payload for Box SDK method retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignmentById.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload extends S.Class<RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload>($I`RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload`)(
+  {
+    retentionPolicyAssignmentId: S.String,
+    optionalsInput: S.suspend(() => GetRetentionPolicyAssignmentByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload", {
+    description: "Payload for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignmentById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignments.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload extends S.Class<RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload>($I`RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload`)(
+  {
+    retentionPolicyId: S.String,
+    optionalsInput: S.suspend(() => GetRetentionPolicyAssignmentsOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload", {
+    description: "Payload for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignments."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method signRequests.cancelSignRequest.
+ *
+ * **Example** (Inspect the SignRequestsCancelSignRequestPayload schema)
+ *
+ * ```ts
+ * import { SignRequestsCancelSignRequestPayload } from "@beep/box"
+ *
+ * console.log(SignRequestsCancelSignRequestPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignRequestsCancelSignRequestPayload extends S.Class<SignRequestsCancelSignRequestPayload>($I`SignRequestsCancelSignRequestPayload`)(
+  {
+    signRequestId: S.String,
+    optionalsInput: S.suspend(() => CancelSignRequestOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("SignRequestsCancelSignRequestPayload", {
+    description: "Payload for Box SDK method signRequests.cancelSignRequest."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method signRequests.createSignRequest.
+ *
+ * **Example** (Inspect the SignRequestsCreateSignRequestPayload schema)
+ *
+ * ```ts
+ * import { SignRequestsCreateSignRequestPayload } from "@beep/box"
+ *
+ * console.log(SignRequestsCreateSignRequestPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignRequestsCreateSignRequestPayload extends S.Class<SignRequestsCreateSignRequestPayload>($I`SignRequestsCreateSignRequestPayload`)(
+  {
+    requestBody: S.suspend(() => SignRequestCreateRequest),
+    optionalsInput: S.suspend(() => CreateSignRequestOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("SignRequestsCreateSignRequestPayload", {
+    description: "Payload for Box SDK method signRequests.createSignRequest."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method signRequests.getSignRequestById.
+ *
+ * **Example** (Inspect the SignRequestsGetSignRequestByIdPayload schema)
+ *
+ * ```ts
+ * import { SignRequestsGetSignRequestByIdPayload } from "@beep/box"
+ *
+ * console.log(SignRequestsGetSignRequestByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignRequestsGetSignRequestByIdPayload extends S.Class<SignRequestsGetSignRequestByIdPayload>($I`SignRequestsGetSignRequestByIdPayload`)(
+  {
+    signRequestId: S.String,
+    optionalsInput: S.suspend(() => GetSignRequestByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("SignRequestsGetSignRequestByIdPayload", {
+    description: "Payload for Box SDK method signRequests.getSignRequestById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method signRequests.getSignRequests.
+ *
+ * **Example** (Inspect the SignRequestsGetSignRequestsPayload schema)
+ *
+ * ```ts
+ * import { SignRequestsGetSignRequestsPayload } from "@beep/box"
+ *
+ * console.log(SignRequestsGetSignRequestsPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignRequestsGetSignRequestsPayload extends S.Class<SignRequestsGetSignRequestsPayload>($I`SignRequestsGetSignRequestsPayload`)(
+  {
+    queryParams: S.suspend(() => GetSignRequestsQueryParams).pipe(S.optionalKey),
+    headersInput: S.suspend(() => GetSignRequestsHeadersInput).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("SignRequestsGetSignRequestsPayload", {
+    description: "Payload for Box SDK method signRequests.getSignRequests."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method signRequests.resendSignRequest.
+ *
+ * **Example** (Inspect the SignRequestsResendSignRequestPayload schema)
+ *
+ * ```ts
+ * import { SignRequestsResendSignRequestPayload } from "@beep/box"
+ *
+ * console.log(SignRequestsResendSignRequestPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignRequestsResendSignRequestPayload extends S.Class<SignRequestsResendSignRequestPayload>($I`SignRequestsResendSignRequestPayload`)(
+  {
+    signRequestId: S.String,
+    optionalsInput: S.suspend(() => ResendSignRequestOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("SignRequestsResendSignRequestPayload", {
+    description: "Payload for Box SDK method signRequests.resendSignRequest."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method signTemplates.getSignTemplateById.
+ *
+ * **Example** (Inspect the SignTemplatesGetSignTemplateByIdPayload schema)
+ *
+ * ```ts
+ * import { SignTemplatesGetSignTemplateByIdPayload } from "@beep/box"
+ *
+ * console.log(SignTemplatesGetSignTemplateByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplatesGetSignTemplateByIdPayload extends S.Class<SignTemplatesGetSignTemplateByIdPayload>($I`SignTemplatesGetSignTemplateByIdPayload`)(
+  {
+    templateId: S.String,
+    optionalsInput: S.suspend(() => GetSignTemplateByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("SignTemplatesGetSignTemplateByIdPayload", {
+    description: "Payload for Box SDK method signTemplates.getSignTemplateById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method signTemplates.getSignTemplates.
+ *
+ * **Example** (Inspect the SignTemplatesGetSignTemplatesPayload schema)
+ *
+ * ```ts
+ * import { SignTemplatesGetSignTemplatesPayload } from "@beep/box"
+ *
+ * console.log(SignTemplatesGetSignTemplatesPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SignTemplatesGetSignTemplatesPayload extends S.Class<SignTemplatesGetSignTemplatesPayload>($I`SignTemplatesGetSignTemplatesPayload`)(
+  {
+    queryParams: S.suspend(() => GetSignTemplatesQueryParams).pipe(S.optionalKey),
+    headersInput: S.suspend(() => GetSignTemplatesHeadersInput).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("SignTemplatesGetSignTemplatesPayload", {
+    description: "Payload for Box SDK method signTemplates.getSignTemplates."
+  })
+) {}
+
+/**
  * Payload for Box SDK method uploads.preflightFileUploadCheck.
  *
  * **Example** (Inspect the UploadsPreflightFileUploadCheckPayload schema)
@@ -9134,6 +14682,102 @@ export class UploadsPreflightFileUploadCheckPayload extends S.Class<UploadsPrefl
   },
   $I.annote("UploadsPreflightFileUploadCheckPayload", {
     description: "Payload for Box SDK method uploads.preflightFileUploadCheck."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method userCollaborations.createCollaboration.
+ *
+ * **Example** (Inspect the UserCollaborationsCreateCollaborationPayload schema)
+ *
+ * ```ts
+ * import { UserCollaborationsCreateCollaborationPayload } from "@beep/box"
+ *
+ * console.log(UserCollaborationsCreateCollaborationPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UserCollaborationsCreateCollaborationPayload extends S.Class<UserCollaborationsCreateCollaborationPayload>($I`UserCollaborationsCreateCollaborationPayload`)(
+  {
+    requestBody: S.suspend(() => CreateCollaborationRequestBody),
+    optionalsInput: S.suspend(() => CreateCollaborationOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("UserCollaborationsCreateCollaborationPayload", {
+    description: "Payload for Box SDK method userCollaborations.createCollaboration."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method userCollaborations.deleteCollaborationById.
+ *
+ * **Example** (Inspect the UserCollaborationsDeleteCollaborationByIdPayload schema)
+ *
+ * ```ts
+ * import { UserCollaborationsDeleteCollaborationByIdPayload } from "@beep/box"
+ *
+ * console.log(UserCollaborationsDeleteCollaborationByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UserCollaborationsDeleteCollaborationByIdPayload extends S.Class<UserCollaborationsDeleteCollaborationByIdPayload>($I`UserCollaborationsDeleteCollaborationByIdPayload`)(
+  {
+    collaborationId: S.String,
+    optionalsInput: S.suspend(() => DeleteCollaborationByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("UserCollaborationsDeleteCollaborationByIdPayload", {
+    description: "Payload for Box SDK method userCollaborations.deleteCollaborationById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method userCollaborations.getCollaborationById.
+ *
+ * **Example** (Inspect the UserCollaborationsGetCollaborationByIdPayload schema)
+ *
+ * ```ts
+ * import { UserCollaborationsGetCollaborationByIdPayload } from "@beep/box"
+ *
+ * console.log(UserCollaborationsGetCollaborationByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UserCollaborationsGetCollaborationByIdPayload extends S.Class<UserCollaborationsGetCollaborationByIdPayload>($I`UserCollaborationsGetCollaborationByIdPayload`)(
+  {
+    collaborationId: S.String,
+    optionalsInput: S.suspend(() => GetCollaborationByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("UserCollaborationsGetCollaborationByIdPayload", {
+    description: "Payload for Box SDK method userCollaborations.getCollaborationById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method userCollaborations.updateCollaborationById.
+ *
+ * **Example** (Inspect the UserCollaborationsUpdateCollaborationByIdPayload schema)
+ *
+ * ```ts
+ * import { UserCollaborationsUpdateCollaborationByIdPayload } from "@beep/box"
+ *
+ * console.log(UserCollaborationsUpdateCollaborationByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UserCollaborationsUpdateCollaborationByIdPayload extends S.Class<UserCollaborationsUpdateCollaborationByIdPayload>($I`UserCollaborationsUpdateCollaborationByIdPayload`)(
+  {
+    collaborationId: S.String,
+    optionalsInput: S.suspend(() => UpdateCollaborationByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("UserCollaborationsUpdateCollaborationByIdPayload", {
+    description: "Payload for Box SDK method userCollaborations.updateCollaborationById."
   })
 ) {}
 
@@ -9280,6 +14924,153 @@ export class UsersUpdateUserByIdPayload extends S.Class<UsersUpdateUserByIdPaylo
   },
   $I.annote("UsersUpdateUserByIdPayload", {
     description: "Payload for Box SDK method users.updateUserById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method webhooks.createWebhook.
+ *
+ * **Example** (Inspect the WebhooksCreateWebhookPayload schema)
+ *
+ * ```ts
+ * import { WebhooksCreateWebhookPayload } from "@beep/box"
+ *
+ * console.log(WebhooksCreateWebhookPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhooksCreateWebhookPayload extends S.Class<WebhooksCreateWebhookPayload>($I`WebhooksCreateWebhookPayload`)(
+  {
+    requestBody: S.suspend(() => CreateWebhookRequestBody),
+    optionalsInput: S.suspend(() => CreateWebhookOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("WebhooksCreateWebhookPayload", {
+    description: "Payload for Box SDK method webhooks.createWebhook."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method webhooks.deleteWebhookById.
+ *
+ * **Example** (Inspect the WebhooksDeleteWebhookByIdPayload schema)
+ *
+ * ```ts
+ * import { WebhooksDeleteWebhookByIdPayload } from "@beep/box"
+ *
+ * console.log(WebhooksDeleteWebhookByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhooksDeleteWebhookByIdPayload extends S.Class<WebhooksDeleteWebhookByIdPayload>($I`WebhooksDeleteWebhookByIdPayload`)(
+  {
+    webhookId: S.String,
+    optionalsInput: S.suspend(() => DeleteWebhookByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("WebhooksDeleteWebhookByIdPayload", {
+    description: "Payload for Box SDK method webhooks.deleteWebhookById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method webhooks.getWebhookById.
+ *
+ * **Example** (Inspect the WebhooksGetWebhookByIdPayload schema)
+ *
+ * ```ts
+ * import { WebhooksGetWebhookByIdPayload } from "@beep/box"
+ *
+ * console.log(WebhooksGetWebhookByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhooksGetWebhookByIdPayload extends S.Class<WebhooksGetWebhookByIdPayload>($I`WebhooksGetWebhookByIdPayload`)(
+  {
+    webhookId: S.String,
+    optionalsInput: S.suspend(() => GetWebhookByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("WebhooksGetWebhookByIdPayload", {
+    description: "Payload for Box SDK method webhooks.getWebhookById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method webhooks.getWebhooks.
+ *
+ * **Example** (Inspect the WebhooksGetWebhooksPayload schema)
+ *
+ * ```ts
+ * import { WebhooksGetWebhooksPayload } from "@beep/box"
+ *
+ * console.log(WebhooksGetWebhooksPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhooksGetWebhooksPayload extends S.Class<WebhooksGetWebhooksPayload>($I`WebhooksGetWebhooksPayload`)(
+  {
+    queryParams: S.suspend(() => GetWebhooksQueryParams).pipe(S.optionalKey),
+    headersInput: S.suspend(() => GetWebhooksHeadersInput).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("WebhooksGetWebhooksPayload", {
+    description: "Payload for Box SDK method webhooks.getWebhooks."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method webhooks.updateWebhookById.
+ *
+ * **Example** (Inspect the WebhooksUpdateWebhookByIdPayload schema)
+ *
+ * ```ts
+ * import { WebhooksUpdateWebhookByIdPayload } from "@beep/box"
+ *
+ * console.log(WebhooksUpdateWebhookByIdPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhooksUpdateWebhookByIdPayload extends S.Class<WebhooksUpdateWebhookByIdPayload>($I`WebhooksUpdateWebhookByIdPayload`)(
+  {
+    webhookId: S.String,
+    optionalsInput: S.suspend(() => UpdateWebhookByIdOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("WebhooksUpdateWebhookByIdPayload", {
+    description: "Payload for Box SDK method webhooks.updateWebhookById."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method webhooks.validateMessage.
+ *
+ * **Example** (Inspect the WebhooksValidateMessagePayload schema)
+ *
+ * ```ts
+ * import { WebhooksValidateMessagePayload } from "@beep/box"
+ *
+ * console.log(WebhooksValidateMessagePayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WebhooksValidateMessagePayload extends S.Class<WebhooksValidateMessagePayload>($I`WebhooksValidateMessagePayload`)(
+  {
+    body: S.String,
+    headers: S.Record(S.String, S.String),
+    primaryKey: S.String,
+    optionalsInput: S.suspend(() => ValidateMessageOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("WebhooksValidateMessagePayload", {
+    description: "Payload for Box SDK method webhooks.validateMessage."
   })
 ) {}
 
@@ -9978,6 +15769,74 @@ export const FilesUpdateFileByIdSuccess = S.suspend(() => FileFull).pipe($I.anno
 export type FilesUpdateFileByIdSuccess = typeof FilesUpdateFileByIdSuccess.Type;
 
 /**
+ * Decoded success value for Box SDK method folderMetadata.getFolderMetadata.
+ *
+ * **Example** (Inspect the FolderMetadataGetFolderMetadataSuccess schema)
+ *
+ * ```ts
+ * import { FolderMetadataGetFolderMetadataSuccess } from "@beep/box"
+ *
+ * console.log(FolderMetadataGetFolderMetadataSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FolderMetadataGetFolderMetadataSuccess = S.suspend(() => Metadatas).pipe($I.annoteSchema("FolderMetadataGetFolderMetadataSuccess", {
+    description: "Decoded success value for Box SDK method folderMetadata.getFolderMetadata."
+  }));
+
+/**
+ * Type for {@link FolderMetadataGetFolderMetadataSuccess}.
+ *
+ * **Example** (Reference the FolderMetadataGetFolderMetadataSuccess type)
+ *
+ * ```ts
+ * import type { FolderMetadataGetFolderMetadataSuccess } from "@beep/box"
+ *
+ * type Value = FolderMetadataGetFolderMetadataSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FolderMetadataGetFolderMetadataSuccess = typeof FolderMetadataGetFolderMetadataSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method folderMetadata.getFolderMetadataById.
+ *
+ * **Example** (Inspect the FolderMetadataGetFolderMetadataByIdSuccess schema)
+ *
+ * ```ts
+ * import { FolderMetadataGetFolderMetadataByIdSuccess } from "@beep/box"
+ *
+ * console.log(FolderMetadataGetFolderMetadataByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FolderMetadataGetFolderMetadataByIdSuccess = S.suspend(() => MetadataFull).pipe($I.annoteSchema("FolderMetadataGetFolderMetadataByIdSuccess", {
+    description: "Decoded success value for Box SDK method folderMetadata.getFolderMetadataById."
+  }));
+
+/**
+ * Type for {@link FolderMetadataGetFolderMetadataByIdSuccess}.
+ *
+ * **Example** (Reference the FolderMetadataGetFolderMetadataByIdSuccess type)
+ *
+ * ```ts
+ * import type { FolderMetadataGetFolderMetadataByIdSuccess } from "@beep/box"
+ *
+ * type Value = FolderMetadataGetFolderMetadataByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FolderMetadataGetFolderMetadataByIdSuccess = typeof FolderMetadataGetFolderMetadataByIdSuccess.Type;
+
+/**
  * Decoded success value for Box SDK method folders.copyFolder.
  *
  * **Example** (Inspect the FoldersCopyFolderSuccess schema)
@@ -10182,6 +16041,788 @@ export const FoldersUpdateFolderByIdSuccess = S.suspend(() => FolderFull).pipe($
 export type FoldersUpdateFolderByIdSuccess = typeof FoldersUpdateFolderByIdSuccess.Type;
 
 /**
+ * Decoded success value for Box SDK method listCollaborations.getCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetCollaborationsSuccess schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetCollaborationsSuccess } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetCollaborationsSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ListCollaborationsGetCollaborationsSuccess = S.suspend(() => CollaborationsOffsetPaginated).pipe($I.annoteSchema("ListCollaborationsGetCollaborationsSuccess", {
+    description: "Decoded success value for Box SDK method listCollaborations.getCollaborations."
+  }));
+
+/**
+ * Type for {@link ListCollaborationsGetCollaborationsSuccess}.
+ *
+ * **Example** (Reference the ListCollaborationsGetCollaborationsSuccess type)
+ *
+ * ```ts
+ * import type { ListCollaborationsGetCollaborationsSuccess } from "@beep/box"
+ *
+ * type Value = ListCollaborationsGetCollaborationsSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ListCollaborationsGetCollaborationsSuccess = typeof ListCollaborationsGetCollaborationsSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method listCollaborations.getFileCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetFileCollaborationsSuccess schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetFileCollaborationsSuccess } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetFileCollaborationsSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ListCollaborationsGetFileCollaborationsSuccess = S.suspend(() => Collaborations).pipe($I.annoteSchema("ListCollaborationsGetFileCollaborationsSuccess", {
+    description: "Decoded success value for Box SDK method listCollaborations.getFileCollaborations."
+  }));
+
+/**
+ * Type for {@link ListCollaborationsGetFileCollaborationsSuccess}.
+ *
+ * **Example** (Reference the ListCollaborationsGetFileCollaborationsSuccess type)
+ *
+ * ```ts
+ * import type { ListCollaborationsGetFileCollaborationsSuccess } from "@beep/box"
+ *
+ * type Value = ListCollaborationsGetFileCollaborationsSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ListCollaborationsGetFileCollaborationsSuccess = typeof ListCollaborationsGetFileCollaborationsSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method listCollaborations.getFolderCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetFolderCollaborationsSuccess schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetFolderCollaborationsSuccess } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetFolderCollaborationsSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ListCollaborationsGetFolderCollaborationsSuccess = S.suspend(() => Collaborations).pipe($I.annoteSchema("ListCollaborationsGetFolderCollaborationsSuccess", {
+    description: "Decoded success value for Box SDK method listCollaborations.getFolderCollaborations."
+  }));
+
+/**
+ * Type for {@link ListCollaborationsGetFolderCollaborationsSuccess}.
+ *
+ * **Example** (Reference the ListCollaborationsGetFolderCollaborationsSuccess type)
+ *
+ * ```ts
+ * import type { ListCollaborationsGetFolderCollaborationsSuccess } from "@beep/box"
+ *
+ * type Value = ListCollaborationsGetFolderCollaborationsSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ListCollaborationsGetFolderCollaborationsSuccess = typeof ListCollaborationsGetFolderCollaborationsSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method listCollaborations.getGroupCollaborations.
+ *
+ * **Example** (Inspect the ListCollaborationsGetGroupCollaborationsSuccess schema)
+ *
+ * ```ts
+ * import { ListCollaborationsGetGroupCollaborationsSuccess } from "@beep/box"
+ *
+ * console.log(ListCollaborationsGetGroupCollaborationsSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ListCollaborationsGetGroupCollaborationsSuccess = S.suspend(() => CollaborationsOffsetPaginated).pipe($I.annoteSchema("ListCollaborationsGetGroupCollaborationsSuccess", {
+    description: "Decoded success value for Box SDK method listCollaborations.getGroupCollaborations."
+  }));
+
+/**
+ * Type for {@link ListCollaborationsGetGroupCollaborationsSuccess}.
+ *
+ * **Example** (Reference the ListCollaborationsGetGroupCollaborationsSuccess type)
+ *
+ * ```ts
+ * import type { ListCollaborationsGetGroupCollaborationsSuccess } from "@beep/box"
+ *
+ * type Value = ListCollaborationsGetGroupCollaborationsSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ListCollaborationsGetGroupCollaborationsSuccess = typeof ListCollaborationsGetGroupCollaborationsSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method metadataCascadePolicies.getMetadataCascadePolicies.
+ *
+ * **Example** (Inspect the MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess schema)
+ *
+ * ```ts
+ * import { MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess } from "@beep/box"
+ *
+ * console.log(MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess = S.suspend(() => MetadataCascadePolicies).pipe($I.annoteSchema("MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess", {
+    description: "Decoded success value for Box SDK method metadataCascadePolicies.getMetadataCascadePolicies."
+  }));
+
+/**
+ * Type for {@link MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess}.
+ *
+ * **Example** (Reference the MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess type)
+ *
+ * ```ts
+ * import type { MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess } from "@beep/box"
+ *
+ * type Value = MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess = typeof MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method metadataCascadePolicies.getMetadataCascadePolicyById.
+ *
+ * **Example** (Inspect the MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess schema)
+ *
+ * ```ts
+ * import { MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess } from "@beep/box"
+ *
+ * console.log(MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess = S.suspend(() => MetadataCascadePolicy).pipe($I.annoteSchema("MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess", {
+    description: "Decoded success value for Box SDK method metadataCascadePolicies.getMetadataCascadePolicyById."
+  }));
+
+/**
+ * Type for {@link MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess}.
+ *
+ * **Example** (Reference the MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess type)
+ *
+ * ```ts
+ * import type { MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess } from "@beep/box"
+ *
+ * type Value = MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess = typeof MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method metadataTemplates.getEnterpriseMetadataTemplates.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess = S.suspend(() => MetadataTemplates).pipe($I.annoteSchema("MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess", {
+    description: "Decoded success value for Box SDK method metadataTemplates.getEnterpriseMetadataTemplates."
+  }));
+
+/**
+ * Type for {@link MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess}.
+ *
+ * **Example** (Reference the MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess type)
+ *
+ * ```ts
+ * import type { MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess } from "@beep/box"
+ *
+ * type Value = MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess = typeof MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method metadataTemplates.getGlobalMetadataTemplates.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetGlobalMetadataTemplatesSuccess schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetGlobalMetadataTemplatesSuccess } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetGlobalMetadataTemplatesSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataTemplatesGetGlobalMetadataTemplatesSuccess = S.suspend(() => MetadataTemplates).pipe($I.annoteSchema("MetadataTemplatesGetGlobalMetadataTemplatesSuccess", {
+    description: "Decoded success value for Box SDK method metadataTemplates.getGlobalMetadataTemplates."
+  }));
+
+/**
+ * Type for {@link MetadataTemplatesGetGlobalMetadataTemplatesSuccess}.
+ *
+ * **Example** (Reference the MetadataTemplatesGetGlobalMetadataTemplatesSuccess type)
+ *
+ * ```ts
+ * import type { MetadataTemplatesGetGlobalMetadataTemplatesSuccess } from "@beep/box"
+ *
+ * type Value = MetadataTemplatesGetGlobalMetadataTemplatesSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataTemplatesGetGlobalMetadataTemplatesSuccess = typeof MetadataTemplatesGetGlobalMetadataTemplatesSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method metadataTemplates.getMetadataTemplate.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetMetadataTemplateSuccess schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetMetadataTemplateSuccess } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetMetadataTemplateSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataTemplatesGetMetadataTemplateSuccess = S.suspend(() => MetadataTemplate).pipe($I.annoteSchema("MetadataTemplatesGetMetadataTemplateSuccess", {
+    description: "Decoded success value for Box SDK method metadataTemplates.getMetadataTemplate."
+  }));
+
+/**
+ * Type for {@link MetadataTemplatesGetMetadataTemplateSuccess}.
+ *
+ * **Example** (Reference the MetadataTemplatesGetMetadataTemplateSuccess type)
+ *
+ * ```ts
+ * import type { MetadataTemplatesGetMetadataTemplateSuccess } from "@beep/box"
+ *
+ * type Value = MetadataTemplatesGetMetadataTemplateSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataTemplatesGetMetadataTemplateSuccess = typeof MetadataTemplatesGetMetadataTemplateSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method metadataTemplates.getMetadataTemplateById.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetMetadataTemplateByIdSuccess schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetMetadataTemplateByIdSuccess } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetMetadataTemplateByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataTemplatesGetMetadataTemplateByIdSuccess = S.suspend(() => MetadataTemplate).pipe($I.annoteSchema("MetadataTemplatesGetMetadataTemplateByIdSuccess", {
+    description: "Decoded success value for Box SDK method metadataTemplates.getMetadataTemplateById."
+  }));
+
+/**
+ * Type for {@link MetadataTemplatesGetMetadataTemplateByIdSuccess}.
+ *
+ * **Example** (Reference the MetadataTemplatesGetMetadataTemplateByIdSuccess type)
+ *
+ * ```ts
+ * import type { MetadataTemplatesGetMetadataTemplateByIdSuccess } from "@beep/box"
+ *
+ * type Value = MetadataTemplatesGetMetadataTemplateByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataTemplatesGetMetadataTemplateByIdSuccess = typeof MetadataTemplatesGetMetadataTemplateByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method metadataTemplates.getMetadataTemplatesByInstanceId.
+ *
+ * **Example** (Inspect the MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess schema)
+ *
+ * ```ts
+ * import { MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess } from "@beep/box"
+ *
+ * console.log(MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess = S.suspend(() => MetadataTemplates).pipe($I.annoteSchema("MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess", {
+    description: "Decoded success value for Box SDK method metadataTemplates.getMetadataTemplatesByInstanceId."
+  }));
+
+/**
+ * Type for {@link MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess}.
+ *
+ * **Example** (Reference the MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess type)
+ *
+ * ```ts
+ * import type { MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess } from "@beep/box"
+ *
+ * type Value = MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess = typeof MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method retentionPolicies.getRetentionPolicies.
+ *
+ * **Example** (Inspect the RetentionPoliciesGetRetentionPoliciesSuccess schema)
+ *
+ * ```ts
+ * import { RetentionPoliciesGetRetentionPoliciesSuccess } from "@beep/box"
+ *
+ * console.log(RetentionPoliciesGetRetentionPoliciesSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPoliciesGetRetentionPoliciesSuccess = S.suspend(() => RetentionPolicies).pipe($I.annoteSchema("RetentionPoliciesGetRetentionPoliciesSuccess", {
+    description: "Decoded success value for Box SDK method retentionPolicies.getRetentionPolicies."
+  }));
+
+/**
+ * Type for {@link RetentionPoliciesGetRetentionPoliciesSuccess}.
+ *
+ * **Example** (Reference the RetentionPoliciesGetRetentionPoliciesSuccess type)
+ *
+ * ```ts
+ * import type { RetentionPoliciesGetRetentionPoliciesSuccess } from "@beep/box"
+ *
+ * type Value = RetentionPoliciesGetRetentionPoliciesSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPoliciesGetRetentionPoliciesSuccess = typeof RetentionPoliciesGetRetentionPoliciesSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method retentionPolicies.getRetentionPolicyById.
+ *
+ * **Example** (Inspect the RetentionPoliciesGetRetentionPolicyByIdSuccess schema)
+ *
+ * ```ts
+ * import { RetentionPoliciesGetRetentionPolicyByIdSuccess } from "@beep/box"
+ *
+ * console.log(RetentionPoliciesGetRetentionPolicyByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPoliciesGetRetentionPolicyByIdSuccess = S.suspend(() => RetentionPolicy).pipe($I.annoteSchema("RetentionPoliciesGetRetentionPolicyByIdSuccess", {
+    description: "Decoded success value for Box SDK method retentionPolicies.getRetentionPolicyById."
+  }));
+
+/**
+ * Type for {@link RetentionPoliciesGetRetentionPolicyByIdSuccess}.
+ *
+ * **Example** (Reference the RetentionPoliciesGetRetentionPolicyByIdSuccess type)
+ *
+ * ```ts
+ * import type { RetentionPoliciesGetRetentionPolicyByIdSuccess } from "@beep/box"
+ *
+ * type Value = RetentionPoliciesGetRetentionPolicyByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPoliciesGetRetentionPolicyByIdSuccess = typeof RetentionPoliciesGetRetentionPolicyByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess = S.suspend(() => FilesUnderRetention).pipe($I.annoteSchema("RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess", {
+    description: "Decoded success value for Box SDK method retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess}.
+ *
+ * **Example** (Reference the RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess type)
+ *
+ * ```ts
+ * import type { RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess } from "@beep/box"
+ *
+ * type Value = RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess = typeof RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignmentById.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess = S.suspend(() => RetentionPolicyAssignment).pipe($I.annoteSchema("RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess", {
+    description: "Decoded success value for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignmentById."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess}.
+ *
+ * **Example** (Reference the RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess type)
+ *
+ * ```ts
+ * import type { RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess } from "@beep/box"
+ *
+ * type Value = RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess = typeof RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignments.
+ *
+ * **Example** (Inspect the RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess schema)
+ *
+ * ```ts
+ * import { RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess } from "@beep/box"
+ *
+ * console.log(RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess = S.suspend(() => RetentionPolicyAssignments).pipe($I.annoteSchema("RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess", {
+    description: "Decoded success value for Box SDK method retentionPolicyAssignments.getRetentionPolicyAssignments."
+  }));
+
+/**
+ * Type for {@link RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess}.
+ *
+ * **Example** (Reference the RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess type)
+ *
+ * ```ts
+ * import type { RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess } from "@beep/box"
+ *
+ * type Value = RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess = typeof RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method signRequests.cancelSignRequest.
+ *
+ * **Example** (Inspect the SignRequestsCancelSignRequestSuccess schema)
+ *
+ * ```ts
+ * import { SignRequestsCancelSignRequestSuccess } from "@beep/box"
+ *
+ * console.log(SignRequestsCancelSignRequestSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignRequestsCancelSignRequestSuccess = S.suspend(() => SignRequest).pipe($I.annoteSchema("SignRequestsCancelSignRequestSuccess", {
+    description: "Decoded success value for Box SDK method signRequests.cancelSignRequest."
+  }));
+
+/**
+ * Type for {@link SignRequestsCancelSignRequestSuccess}.
+ *
+ * **Example** (Reference the SignRequestsCancelSignRequestSuccess type)
+ *
+ * ```ts
+ * import type { SignRequestsCancelSignRequestSuccess } from "@beep/box"
+ *
+ * type Value = SignRequestsCancelSignRequestSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignRequestsCancelSignRequestSuccess = typeof SignRequestsCancelSignRequestSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method signRequests.createSignRequest.
+ *
+ * **Example** (Inspect the SignRequestsCreateSignRequestSuccess schema)
+ *
+ * ```ts
+ * import { SignRequestsCreateSignRequestSuccess } from "@beep/box"
+ *
+ * console.log(SignRequestsCreateSignRequestSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignRequestsCreateSignRequestSuccess = S.suspend(() => SignRequest).pipe($I.annoteSchema("SignRequestsCreateSignRequestSuccess", {
+    description: "Decoded success value for Box SDK method signRequests.createSignRequest."
+  }));
+
+/**
+ * Type for {@link SignRequestsCreateSignRequestSuccess}.
+ *
+ * **Example** (Reference the SignRequestsCreateSignRequestSuccess type)
+ *
+ * ```ts
+ * import type { SignRequestsCreateSignRequestSuccess } from "@beep/box"
+ *
+ * type Value = SignRequestsCreateSignRequestSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignRequestsCreateSignRequestSuccess = typeof SignRequestsCreateSignRequestSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method signRequests.getSignRequestById.
+ *
+ * **Example** (Inspect the SignRequestsGetSignRequestByIdSuccess schema)
+ *
+ * ```ts
+ * import { SignRequestsGetSignRequestByIdSuccess } from "@beep/box"
+ *
+ * console.log(SignRequestsGetSignRequestByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignRequestsGetSignRequestByIdSuccess = S.suspend(() => SignRequest).pipe($I.annoteSchema("SignRequestsGetSignRequestByIdSuccess", {
+    description: "Decoded success value for Box SDK method signRequests.getSignRequestById."
+  }));
+
+/**
+ * Type for {@link SignRequestsGetSignRequestByIdSuccess}.
+ *
+ * **Example** (Reference the SignRequestsGetSignRequestByIdSuccess type)
+ *
+ * ```ts
+ * import type { SignRequestsGetSignRequestByIdSuccess } from "@beep/box"
+ *
+ * type Value = SignRequestsGetSignRequestByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignRequestsGetSignRequestByIdSuccess = typeof SignRequestsGetSignRequestByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method signRequests.getSignRequests.
+ *
+ * **Example** (Inspect the SignRequestsGetSignRequestsSuccess schema)
+ *
+ * ```ts
+ * import { SignRequestsGetSignRequestsSuccess } from "@beep/box"
+ *
+ * console.log(SignRequestsGetSignRequestsSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignRequestsGetSignRequestsSuccess = S.suspend(() => SignRequests).pipe($I.annoteSchema("SignRequestsGetSignRequestsSuccess", {
+    description: "Decoded success value for Box SDK method signRequests.getSignRequests."
+  }));
+
+/**
+ * Type for {@link SignRequestsGetSignRequestsSuccess}.
+ *
+ * **Example** (Reference the SignRequestsGetSignRequestsSuccess type)
+ *
+ * ```ts
+ * import type { SignRequestsGetSignRequestsSuccess } from "@beep/box"
+ *
+ * type Value = SignRequestsGetSignRequestsSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignRequestsGetSignRequestsSuccess = typeof SignRequestsGetSignRequestsSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method signRequests.resendSignRequest.
+ *
+ * **Example** (Inspect the SignRequestsResendSignRequestSuccess schema)
+ *
+ * ```ts
+ * import { SignRequestsResendSignRequestSuccess } from "@beep/box"
+ *
+ * console.log(SignRequestsResendSignRequestSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignRequestsResendSignRequestSuccess = S.Undefined.pipe($I.annoteSchema("SignRequestsResendSignRequestSuccess", {
+    description: "Decoded success value for Box SDK method signRequests.resendSignRequest."
+  }));
+
+/**
+ * Type for {@link SignRequestsResendSignRequestSuccess}.
+ *
+ * **Example** (Reference the SignRequestsResendSignRequestSuccess type)
+ *
+ * ```ts
+ * import type { SignRequestsResendSignRequestSuccess } from "@beep/box"
+ *
+ * type Value = SignRequestsResendSignRequestSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignRequestsResendSignRequestSuccess = typeof SignRequestsResendSignRequestSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method signTemplates.getSignTemplateById.
+ *
+ * **Example** (Inspect the SignTemplatesGetSignTemplateByIdSuccess schema)
+ *
+ * ```ts
+ * import { SignTemplatesGetSignTemplateByIdSuccess } from "@beep/box"
+ *
+ * console.log(SignTemplatesGetSignTemplateByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignTemplatesGetSignTemplateByIdSuccess = S.suspend(() => SignTemplate).pipe($I.annoteSchema("SignTemplatesGetSignTemplateByIdSuccess", {
+    description: "Decoded success value for Box SDK method signTemplates.getSignTemplateById."
+  }));
+
+/**
+ * Type for {@link SignTemplatesGetSignTemplateByIdSuccess}.
+ *
+ * **Example** (Reference the SignTemplatesGetSignTemplateByIdSuccess type)
+ *
+ * ```ts
+ * import type { SignTemplatesGetSignTemplateByIdSuccess } from "@beep/box"
+ *
+ * type Value = SignTemplatesGetSignTemplateByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignTemplatesGetSignTemplateByIdSuccess = typeof SignTemplatesGetSignTemplateByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method signTemplates.getSignTemplates.
+ *
+ * **Example** (Inspect the SignTemplatesGetSignTemplatesSuccess schema)
+ *
+ * ```ts
+ * import { SignTemplatesGetSignTemplatesSuccess } from "@beep/box"
+ *
+ * console.log(SignTemplatesGetSignTemplatesSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SignTemplatesGetSignTemplatesSuccess = S.suspend(() => SignTemplates).pipe($I.annoteSchema("SignTemplatesGetSignTemplatesSuccess", {
+    description: "Decoded success value for Box SDK method signTemplates.getSignTemplates."
+  }));
+
+/**
+ * Type for {@link SignTemplatesGetSignTemplatesSuccess}.
+ *
+ * **Example** (Reference the SignTemplatesGetSignTemplatesSuccess type)
+ *
+ * ```ts
+ * import type { SignTemplatesGetSignTemplatesSuccess } from "@beep/box"
+ *
+ * type Value = SignTemplatesGetSignTemplatesSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SignTemplatesGetSignTemplatesSuccess = typeof SignTemplatesGetSignTemplatesSuccess.Type;
+
+/**
  * Decoded success value for Box SDK method uploads.preflightFileUploadCheck.
  *
  * **Example** (Inspect the UploadsPreflightFileUploadCheckSuccess schema)
@@ -10214,6 +16855,142 @@ export const UploadsPreflightFileUploadCheckSuccess = S.suspend(() => UploadUrl)
  * @since 0.0.0
  */
 export type UploadsPreflightFileUploadCheckSuccess = typeof UploadsPreflightFileUploadCheckSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method userCollaborations.createCollaboration.
+ *
+ * **Example** (Inspect the UserCollaborationsCreateCollaborationSuccess schema)
+ *
+ * ```ts
+ * import { UserCollaborationsCreateCollaborationSuccess } from "@beep/box"
+ *
+ * console.log(UserCollaborationsCreateCollaborationSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UserCollaborationsCreateCollaborationSuccess = S.suspend(() => Collaboration).pipe($I.annoteSchema("UserCollaborationsCreateCollaborationSuccess", {
+    description: "Decoded success value for Box SDK method userCollaborations.createCollaboration."
+  }));
+
+/**
+ * Type for {@link UserCollaborationsCreateCollaborationSuccess}.
+ *
+ * **Example** (Reference the UserCollaborationsCreateCollaborationSuccess type)
+ *
+ * ```ts
+ * import type { UserCollaborationsCreateCollaborationSuccess } from "@beep/box"
+ *
+ * type Value = UserCollaborationsCreateCollaborationSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UserCollaborationsCreateCollaborationSuccess = typeof UserCollaborationsCreateCollaborationSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method userCollaborations.deleteCollaborationById.
+ *
+ * **Example** (Inspect the UserCollaborationsDeleteCollaborationByIdSuccess schema)
+ *
+ * ```ts
+ * import { UserCollaborationsDeleteCollaborationByIdSuccess } from "@beep/box"
+ *
+ * console.log(UserCollaborationsDeleteCollaborationByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UserCollaborationsDeleteCollaborationByIdSuccess = S.Undefined.pipe($I.annoteSchema("UserCollaborationsDeleteCollaborationByIdSuccess", {
+    description: "Decoded success value for Box SDK method userCollaborations.deleteCollaborationById."
+  }));
+
+/**
+ * Type for {@link UserCollaborationsDeleteCollaborationByIdSuccess}.
+ *
+ * **Example** (Reference the UserCollaborationsDeleteCollaborationByIdSuccess type)
+ *
+ * ```ts
+ * import type { UserCollaborationsDeleteCollaborationByIdSuccess } from "@beep/box"
+ *
+ * type Value = UserCollaborationsDeleteCollaborationByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UserCollaborationsDeleteCollaborationByIdSuccess = typeof UserCollaborationsDeleteCollaborationByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method userCollaborations.getCollaborationById.
+ *
+ * **Example** (Inspect the UserCollaborationsGetCollaborationByIdSuccess schema)
+ *
+ * ```ts
+ * import { UserCollaborationsGetCollaborationByIdSuccess } from "@beep/box"
+ *
+ * console.log(UserCollaborationsGetCollaborationByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UserCollaborationsGetCollaborationByIdSuccess = S.suspend(() => Collaboration).pipe($I.annoteSchema("UserCollaborationsGetCollaborationByIdSuccess", {
+    description: "Decoded success value for Box SDK method userCollaborations.getCollaborationById."
+  }));
+
+/**
+ * Type for {@link UserCollaborationsGetCollaborationByIdSuccess}.
+ *
+ * **Example** (Reference the UserCollaborationsGetCollaborationByIdSuccess type)
+ *
+ * ```ts
+ * import type { UserCollaborationsGetCollaborationByIdSuccess } from "@beep/box"
+ *
+ * type Value = UserCollaborationsGetCollaborationByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UserCollaborationsGetCollaborationByIdSuccess = typeof UserCollaborationsGetCollaborationByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method userCollaborations.updateCollaborationById.
+ *
+ * **Example** (Inspect the UserCollaborationsUpdateCollaborationByIdSuccess schema)
+ *
+ * ```ts
+ * import { UserCollaborationsUpdateCollaborationByIdSuccess } from "@beep/box"
+ *
+ * console.log(UserCollaborationsUpdateCollaborationByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UserCollaborationsUpdateCollaborationByIdSuccess = S.suspend(() => Collaboration).pipe(S.UndefinedOr, $I.annoteSchema("UserCollaborationsUpdateCollaborationByIdSuccess", {
+    description: "Decoded success value for Box SDK method userCollaborations.updateCollaborationById."
+  }));
+
+/**
+ * Type for {@link UserCollaborationsUpdateCollaborationByIdSuccess}.
+ *
+ * **Example** (Reference the UserCollaborationsUpdateCollaborationByIdSuccess type)
+ *
+ * ```ts
+ * import type { UserCollaborationsUpdateCollaborationByIdSuccess } from "@beep/box"
+ *
+ * type Value = UserCollaborationsUpdateCollaborationByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UserCollaborationsUpdateCollaborationByIdSuccess = typeof UserCollaborationsUpdateCollaborationByIdSuccess.Type;
 
 /**
  * Decoded success value for Box SDK method users.createUser.
@@ -10418,6 +17195,210 @@ export const UsersUpdateUserByIdSuccess = S.suspend(() => UserFull).pipe($I.anno
  * @since 0.0.0
  */
 export type UsersUpdateUserByIdSuccess = typeof UsersUpdateUserByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method webhooks.createWebhook.
+ *
+ * **Example** (Inspect the WebhooksCreateWebhookSuccess schema)
+ *
+ * ```ts
+ * import { WebhooksCreateWebhookSuccess } from "@beep/box"
+ *
+ * console.log(WebhooksCreateWebhookSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhooksCreateWebhookSuccess = S.suspend(() => Webhook).pipe($I.annoteSchema("WebhooksCreateWebhookSuccess", {
+    description: "Decoded success value for Box SDK method webhooks.createWebhook."
+  }));
+
+/**
+ * Type for {@link WebhooksCreateWebhookSuccess}.
+ *
+ * **Example** (Reference the WebhooksCreateWebhookSuccess type)
+ *
+ * ```ts
+ * import type { WebhooksCreateWebhookSuccess } from "@beep/box"
+ *
+ * type Value = WebhooksCreateWebhookSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhooksCreateWebhookSuccess = typeof WebhooksCreateWebhookSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method webhooks.deleteWebhookById.
+ *
+ * **Example** (Inspect the WebhooksDeleteWebhookByIdSuccess schema)
+ *
+ * ```ts
+ * import { WebhooksDeleteWebhookByIdSuccess } from "@beep/box"
+ *
+ * console.log(WebhooksDeleteWebhookByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhooksDeleteWebhookByIdSuccess = S.Undefined.pipe($I.annoteSchema("WebhooksDeleteWebhookByIdSuccess", {
+    description: "Decoded success value for Box SDK method webhooks.deleteWebhookById."
+  }));
+
+/**
+ * Type for {@link WebhooksDeleteWebhookByIdSuccess}.
+ *
+ * **Example** (Reference the WebhooksDeleteWebhookByIdSuccess type)
+ *
+ * ```ts
+ * import type { WebhooksDeleteWebhookByIdSuccess } from "@beep/box"
+ *
+ * type Value = WebhooksDeleteWebhookByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhooksDeleteWebhookByIdSuccess = typeof WebhooksDeleteWebhookByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method webhooks.getWebhookById.
+ *
+ * **Example** (Inspect the WebhooksGetWebhookByIdSuccess schema)
+ *
+ * ```ts
+ * import { WebhooksGetWebhookByIdSuccess } from "@beep/box"
+ *
+ * console.log(WebhooksGetWebhookByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhooksGetWebhookByIdSuccess = S.suspend(() => Webhook).pipe($I.annoteSchema("WebhooksGetWebhookByIdSuccess", {
+    description: "Decoded success value for Box SDK method webhooks.getWebhookById."
+  }));
+
+/**
+ * Type for {@link WebhooksGetWebhookByIdSuccess}.
+ *
+ * **Example** (Reference the WebhooksGetWebhookByIdSuccess type)
+ *
+ * ```ts
+ * import type { WebhooksGetWebhookByIdSuccess } from "@beep/box"
+ *
+ * type Value = WebhooksGetWebhookByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhooksGetWebhookByIdSuccess = typeof WebhooksGetWebhookByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method webhooks.getWebhooks.
+ *
+ * **Example** (Inspect the WebhooksGetWebhooksSuccess schema)
+ *
+ * ```ts
+ * import { WebhooksGetWebhooksSuccess } from "@beep/box"
+ *
+ * console.log(WebhooksGetWebhooksSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhooksGetWebhooksSuccess = S.suspend(() => Webhooks).pipe($I.annoteSchema("WebhooksGetWebhooksSuccess", {
+    description: "Decoded success value for Box SDK method webhooks.getWebhooks."
+  }));
+
+/**
+ * Type for {@link WebhooksGetWebhooksSuccess}.
+ *
+ * **Example** (Reference the WebhooksGetWebhooksSuccess type)
+ *
+ * ```ts
+ * import type { WebhooksGetWebhooksSuccess } from "@beep/box"
+ *
+ * type Value = WebhooksGetWebhooksSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhooksGetWebhooksSuccess = typeof WebhooksGetWebhooksSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method webhooks.updateWebhookById.
+ *
+ * **Example** (Inspect the WebhooksUpdateWebhookByIdSuccess schema)
+ *
+ * ```ts
+ * import { WebhooksUpdateWebhookByIdSuccess } from "@beep/box"
+ *
+ * console.log(WebhooksUpdateWebhookByIdSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhooksUpdateWebhookByIdSuccess = S.suspend(() => Webhook).pipe($I.annoteSchema("WebhooksUpdateWebhookByIdSuccess", {
+    description: "Decoded success value for Box SDK method webhooks.updateWebhookById."
+  }));
+
+/**
+ * Type for {@link WebhooksUpdateWebhookByIdSuccess}.
+ *
+ * **Example** (Reference the WebhooksUpdateWebhookByIdSuccess type)
+ *
+ * ```ts
+ * import type { WebhooksUpdateWebhookByIdSuccess } from "@beep/box"
+ *
+ * type Value = WebhooksUpdateWebhookByIdSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhooksUpdateWebhookByIdSuccess = typeof WebhooksUpdateWebhookByIdSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method webhooks.validateMessage.
+ *
+ * **Example** (Inspect the WebhooksValidateMessageSuccess schema)
+ *
+ * ```ts
+ * import { WebhooksValidateMessageSuccess } from "@beep/box"
+ *
+ * console.log(WebhooksValidateMessageSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WebhooksValidateMessageSuccess = S.Boolean.pipe($I.annoteSchema("WebhooksValidateMessageSuccess", {
+    description: "Decoded success value for Box SDK method webhooks.validateMessage."
+  }));
+
+/**
+ * Type for {@link WebhooksValidateMessageSuccess}.
+ *
+ * **Example** (Reference the WebhooksValidateMessageSuccess type)
+ *
+ * ```ts
+ * import type { WebhooksValidateMessageSuccess } from "@beep/box"
+ *
+ * type Value = WebhooksValidateMessageSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WebhooksValidateMessageSuccess = typeof WebhooksValidateMessageSuccess.Type;
 
 /**
  * Decoded success value for Box SDK method zipDownloads.createZipDownload.

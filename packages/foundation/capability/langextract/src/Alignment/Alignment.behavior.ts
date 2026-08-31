@@ -166,41 +166,39 @@ const minimalFoldLiteralTokens = ([sourceStart, sourceEnd, text]: NormalizedSegm
     }))
   );
 
-const minimalFoldTokens = (sourceText: string): ReadonlyArray<MinimalFoldToken> =>
-  pipe(
-    sourceText,
-    Str.matchAll(MINIMAL_FOLD_SEGMENTS),
-    A.fromIterable,
-    A.flatMap(
-      (match): ReadonlyArray<MinimalFoldToken> =>
-        pipe(
-          O.fromUndefinedOr(match.index),
-          O.map((sourceStart): ReadonlyArray<MinimalFoldToken> => {
-            const text = match[0];
-            const segmentKind = {
-              endOfLineHyphen: match[1] !== undefined,
-              whitespace: match[2] !== undefined,
-            };
-            return Match.value(segmentKind).pipe(
-              Match.when({ endOfLineHyphen: true }, () => [
-                {
-                  encoded: MINIMAL_FOLD_OPTIONAL_HYPHEN,
-                  optionalHyphen: true,
-                  sourceEnd: Num.sum(sourceStart, Str.length(text)),
-                  sourceStart,
-                },
-              ]),
-              Match.when({ whitespace: true }, () => {
-                const sourceEnd = Num.sum(sourceStart, Str.length(text));
-                return minimalFoldLiteralTokens(normalizedSegment(sourceStart, sourceEnd, " "));
-              }),
-              Match.orElse(() => A.flatMap(lowerSegments(sourceStart, text), minimalFoldLiteralTokens))
-            );
-          }),
-          O.getOrElse(A.empty)
-        )
-    )
-  );
+const minimalFoldTokens: (sourceText: string) => ReadonlyArray<MinimalFoldToken> = flow(
+  Str.matchAll(MINIMAL_FOLD_SEGMENTS),
+  A.fromIterable,
+  A.flatMap(
+    (match): ReadonlyArray<MinimalFoldToken> =>
+      pipe(
+        O.fromUndefinedOr(match.index),
+        O.map((sourceStart): ReadonlyArray<MinimalFoldToken> => {
+          const text = match[0];
+          const segmentKind = {
+            endOfLineHyphen: match[1] !== undefined,
+            whitespace: match[2] !== undefined,
+          };
+          return Match.value(segmentKind).pipe(
+            Match.when({ endOfLineHyphen: true }, () => [
+              {
+                encoded: MINIMAL_FOLD_OPTIONAL_HYPHEN,
+                optionalHyphen: true,
+                sourceEnd: Num.sum(sourceStart, Str.length(text)),
+                sourceStart,
+              },
+            ]),
+            Match.when({ whitespace: true }, () => {
+              const sourceEnd = Num.sum(sourceStart, Str.length(text));
+              return minimalFoldLiteralTokens(normalizedSegment(sourceStart, sourceEnd, " "));
+            }),
+            Match.orElse(() => A.flatMap(lowerSegments(sourceStart, text), minimalFoldLiteralTokens))
+          );
+        }),
+        O.getOrElse(A.empty)
+      )
+  )
+);
 
 const minimalFoldWithSourceOffsets = (sourceText: string): MinimalFoldSourceOffsets => {
   const tokens = minimalFoldTokens(sourceText);

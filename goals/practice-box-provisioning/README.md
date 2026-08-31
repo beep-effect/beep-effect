@@ -24,7 +24,7 @@ Use this command for execution-capable sessions:
 
 `GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
 
-## Read This First
+## Read this first
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth.
@@ -34,16 +34,24 @@ Use this command for execution-capable sessions:
    from the source exploration.
 6. [`history/`](./history/) - evidence and closeouts, if present.
 
-## Current Phase
+## Current phase
 
-P0 Research — verify the CCG platform-app approval flow on the Box Business
-plan, repair the Box SDK version provenance drift, confirm the reconciler
-package home with `bun run beep architecture`, and record the Box quote
-table.
+P2 Verify. The driver expansion and product-neutral reconciler package are
+locally complete. Private 1Password-backed CCG injection and the read-only
+tenant/subject identity bootstrap now pass. Live dry-run and apply still
+require the three private practice inputs and the operator present.
 
-## Latest Evidence
+## Latest evidence
 
-Not started.
+- [`history/2026-08-30-p0-preflight.md`](./history/2026-08-30-p0-preflight.md)
+  records the sanitized CCG verdict, current quote table, package-home decision,
+  SDK provenance, and credential-path gate.
+- [`history/2026-08-30-box-driver-surface.md`](./history/2026-08-30-box-driver-surface.md)
+  records the accepted 19-manager / 69-operation generated surface, type-budget
+  proof, and focused driver verification.
+- [`history/2026-08-30-box-reconciler.md`](./history/2026-08-30-box-reconciler.md)
+  records the schema and service boundaries, dry-run/apply safety tests, and
+  successful canonical package verification.
 
 ## Notes
 
