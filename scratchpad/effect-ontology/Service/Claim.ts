@@ -324,8 +324,8 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
     const toReifiedTriples = (claim: ClaimRow, graphUri?: string) =>
       Effect.sync(() => {
         const quads: Array<Quad> = [];
-        const claimIri = IRI.fromUnknown(`${CLAIMS.namespace}${claim.id}`);
-        const graph = P.isUndefined(graphUri) ? undefined : IRI.fromUnknown(graphUri);
+        const claimIri = IRI.decodeUnknownSync(`${CLAIMS.namespace}${claim.id}`);
+        const graph = P.isUndefined(graphUri) ? undefined : IRI.decodeUnknownSync(graphUri);
 
         // Type assertion
         quads.push(
@@ -344,7 +344,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimSubject,
-            object: IRI.fromUnknown(claim.subjectIri),
+            object: IRI.decodeUnknownSync(claim.subjectIri),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -353,7 +353,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimPredicate,
-            object: IRI.fromUnknown(claim.predicateIri),
+            object: IRI.decodeUnknownSync(claim.predicateIri),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -365,7 +365,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
             canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.claimObject,
-              object: IRI.fromUnknown(claim.objectValue),
+              object: IRI.decodeUnknownSync(claim.objectValue),
               graph: O.fromNullishOr(graph),
             })
           );
@@ -432,7 +432,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.statedIn,
-            object: IRI.fromUnknown(`${CLAIMS.namespace}article/${claim.articleId}`),
+            object: IRI.decodeUnknownSync(`${CLAIMS.namespace}article/${claim.articleId}`),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -483,7 +483,7 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
 
         // Evidence
         if (P.isNotNull(claim.evidenceText)) {
-          const evidenceIri = IRI.fromUnknown(`${claimIri}/evidence`);
+          const evidenceIri = IRI.decodeUnknownSync(`${claimIri}/evidence`);
 
           quads.push(
             canonicalQuad({

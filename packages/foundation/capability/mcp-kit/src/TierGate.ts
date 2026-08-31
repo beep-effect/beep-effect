@@ -218,8 +218,7 @@ export const TierGateVerdict = TierGateOutcomeTag.toTaggedUnion("verdict")({
 }).pipe(
   $I.annoteSchema("TierGateVerdict", {
     description: "Typed approved/refused verdict returned by the tier gate; both cases carry an audit record.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

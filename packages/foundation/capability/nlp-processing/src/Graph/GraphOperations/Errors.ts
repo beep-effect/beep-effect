@@ -11,7 +11,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import * as S from "effect/Schema";
 import { NodeId } from "../EffectGraph.ts";
 
@@ -253,8 +253,7 @@ export const GraphOperationError = S.Union([
 ]).pipe(
   $I.annoteSchema("GraphOperationError", {
     description: "Union of all graph-operation failures.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

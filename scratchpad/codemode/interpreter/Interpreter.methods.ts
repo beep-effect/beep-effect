@@ -11,7 +11,7 @@
  */
 
 import { LiteralKit, SafeObject } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -73,7 +73,7 @@ import {
   typeofValue,
 } from "./Interpreter.references.ts";
 
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 /**
  * Capability used to invoke guest functions and settle guest promises.

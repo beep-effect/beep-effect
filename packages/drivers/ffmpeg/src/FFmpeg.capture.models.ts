@@ -50,8 +50,7 @@ export const PositiveSeconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveSeconds", {
     description: "Positive finite duration measured in seconds.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -97,8 +96,7 @@ export const FileSizeBytes = S.Int.check(
 ).pipe(
   $I.annoteSchema("FileSizeBytes", {
     description: "Non-negative integer file size measured in bytes.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -144,8 +142,7 @@ export const TileCount = S.Int.check(
 ).pipe(
   $I.annoteSchema("TileCount", {
     description: "Positive integer tile-grid count for contact sheets.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -206,8 +203,7 @@ export const JpegQuality = S.Int.check(
 ).pipe(
   $I.annoteSchema("JpegQuality", {
     description: "JPEG quantizer quality in the closed 1-31 range (1 best, 31 worst).",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -253,8 +249,7 @@ export const PixelOffset = S.Int.check(
 ).pipe(
   $I.annoteSchema("PixelOffset", {
     description: "Non-negative integer pixel offset from a frame edge.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -316,7 +311,7 @@ export const LumaValue = S.Finite.check(
   $I.annoteSchema("LumaValue", {
     description: "Mean luma sample value in the closed 0-255 range.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -368,8 +363,7 @@ export const SafeMetadataKey = S.String.check(
 ).pipe(
   $I.annoteSchema("SafeMetadataKey", {
     description: "Container metadata key restricted to letters, digits, and underscores.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

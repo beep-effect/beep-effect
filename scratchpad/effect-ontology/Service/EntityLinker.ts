@@ -105,7 +105,7 @@ export const getMentionsForEntity = dual2(
     // Find all entity IDs that map to this canonical ID
     const matchingIds = R.toEntries(erg.canonicalMap)
       .filter(([_, canonical]) => canonical === canonicalId)
-      .map(([entityId]) => EntityId.fromUnknown(entityId));
+      .map(([entityId]) => EntityId.decodeUnknownSync(entityId));
 
     // Look up MentionRecord nodes in the graph
     const mentions: Array<MentionRecord> = [];

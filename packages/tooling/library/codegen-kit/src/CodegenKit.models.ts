@@ -7,9 +7,11 @@
 
 import { $CodegenKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { CodecStaticKey } from "@beep/schema/SchemaUtils/withCodecStatics";
 import { JsonPatchDocument } from "@effect/openapi-generator/OpenApiPatch";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $CodegenKitId.create("CodegenKit.models");
@@ -313,6 +315,7 @@ class ExtraModule extends S.Class<ExtraModule>($I`ExtraModule`)(
 const emptyPatches = Effect.succeed(A.empty<GeneratePatch>());
 const emptyTransforms = Effect.succeed(A.empty<NamedTransform>());
 const emptyModules = Effect.succeed(A.empty<ExtraModule>());
+const emptyCodecStaticOverrides = Effect.succeed(R.empty<string, ReadonlyArray<CodecStaticKey>>());
 const defaultSchemaStyle = Effect.succeed(SchemaStyle.Enum.struct);
 const defaultWarningPolicy = Effect.succeed(WarningPolicy.Enum.fail);
 
@@ -362,6 +365,10 @@ export class GenerateConfig extends S.Class<GenerateConfig>($I`GenerateConfig`)(
     schemaStyle: SchemaStyle.pipe(
       S.withConstructorDefault(defaultSchemaStyle),
       S.withDecodingDefaultKey(defaultSchemaStyle)
+    ),
+    schemaCodecStatics: S.Record(S.String, S.Array(CodecStaticKey)).pipe(
+      S.withConstructorDefault(emptyCodecStaticOverrides),
+      S.withDecodingDefaultKey(emptyCodecStaticOverrides)
     ),
     onWarning: WarningPolicy.pipe(
       S.withConstructorDefault(defaultWarningPolicy),

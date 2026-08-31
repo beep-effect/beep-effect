@@ -19,7 +19,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { A } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -62,8 +62,7 @@ export const GrantSetDigest = Sha256Hex.pipe(
   S.brand("GrantSetDigest"),
   $I.annoteSchema("GrantSetDigest", {
     description: "SHA-256 digest sealing a frozen grant set's exact contents.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -194,8 +193,7 @@ export const GrantSet = GrantSetState.mapMembers(Tuple.evolve([() => DraftGrantS
   S.toTaggedUnion("state"),
   $I.annoteSchema("GrantSet", {
     description: "Draft/Frozen grant-set union discriminated on state.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -414,7 +412,7 @@ export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
  * import { DateTime } from "effect"
  *
  * const options = ExecutionRequestEvaluationOptions.make({
- *   currentPolicyRevision: PolicyRevision.fromUnknown("1.0.0"),
+ *   currentPolicyRevision: PolicyRevision.decodeUnknownSync("1.0.0"),
  *   now: DateTime.makeUnsafe(0)
  * })
  * console.log(options.currentPolicyRevision)

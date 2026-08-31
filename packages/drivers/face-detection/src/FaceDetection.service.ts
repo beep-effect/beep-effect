@@ -585,7 +585,7 @@ const outputTensor = (
 const confidenceScore = (value: number | undefined): RawFaceDetectionConfidence =>
   pipe(
     O.fromUndefinedOr(value),
-    O.flatMap(RawFaceDetectionConfidence.decodeOption),
+    O.flatMap(RawFaceDetectionConfidence.decodeUnknownOption),
     O.getOrElse(() => 0)
   );
 

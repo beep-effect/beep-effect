@@ -71,7 +71,7 @@ export const RunpodQueryScalar = S.Union([S.Boolean, S.Finite, S.String]).pipe(
  */
 export type RunpodQueryScalar = typeof RunpodQueryScalar.Type;
 
-const RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withCodecStatics);
+const RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withCodecStatics(["is"]));
 
 /**
  * Query value accepted by the raw Runpod request escape hatch.
@@ -91,7 +91,7 @@ export const RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArr
   $I.annoteSchema("RunpodQueryValue", {
     description: "Query value accepted by the raw Runpod request escape hatch.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -235,7 +235,7 @@ interface VoidOperationSpec<Request> {
 const resolveConfig = (config: RunpodConfigInput): ResolvedRunpodConfig =>
   ResolvedRunpodConfig.make({
     apiKey: O.fromUndefinedOr(config.apiKey),
-    apiUrl: RunpodConfigUrl.fromUnknown(config.apiUrl),
+    apiUrl: RunpodConfigUrl.decodeUnknownSync(config.apiUrl),
     headers: config.headers,
   });
 
@@ -330,7 +330,7 @@ const queryEntry: {
   (request: unknown, key: string): O.Option<readonly [string, string | ReadonlyArray<string>]> =>
     pipe(
       readProperty(request, key),
-      O.flatMap(RunpodQueryValue.decodeOption),
+      O.flatMap(RunpodQueryValue.decodeUnknownOption),
       O.map(queryValueToStrings),
       O.filter(A.isReadonlyArrayNonEmpty),
       O.map((values) => [key, A.length(values) === 1 ? values[0] : values] as const)

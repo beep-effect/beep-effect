@@ -4,7 +4,7 @@
  *
  * @since 0.1.0
  */
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -22,7 +22,7 @@ const envelope = {
   permission_mode: "default",
 } as const;
 
-const encodeJson = Unknown.encodeSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 // ---------------------------------------------------------------------------
 // Setup

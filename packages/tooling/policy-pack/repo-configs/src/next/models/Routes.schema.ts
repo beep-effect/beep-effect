@@ -48,6 +48,25 @@ export const RouteHasType = LiteralKit(["header", "cookie", "query", "host"]).pi
  */
 export type RouteHasType = typeof RouteHasType.Type;
 
+const RouteHasDefinition = RouteHasType.toTaggedUnion("type")({
+  header: {
+    key: S.String,
+    value: S.optionalKey(S.String),
+  },
+  cookie: {
+    key: S.String,
+    value: S.optionalKey(S.String),
+  },
+  query: {
+    key: S.String,
+    value: S.optionalKey(S.String),
+  },
+  host: {
+    key: S.optionalKey(S.Undefined),
+    value: S.String,
+  },
+});
+
 /**
  * Match predicate used by Next.js rewrites, headers, redirects, and middleware.
  *
@@ -68,28 +87,11 @@ export type RouteHasType = typeof RouteHasType.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const RouteHas = RouteHasType.toTaggedUnion("type")({
-  header: {
-    key: S.String,
-    value: S.optionalKey(S.String),
-  },
-  cookie: {
-    key: S.String,
-    value: S.optionalKey(S.String),
-  },
-  query: {
-    key: S.String,
-    value: S.optionalKey(S.String),
-  },
-  host: {
-    key: S.optionalKey(S.Undefined),
-    value: S.String,
-  },
-}).pipe(
+export const RouteHas = S.make<(typeof RouteHasDefinition)["Rebuild"]>(RouteHasDefinition.ast).pipe(
   $I.annoteSchema("RouteHas", {
     description: "Match predicate used by Next.js rewrites, headers, redirects, and middleware.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -345,7 +347,7 @@ export const Redirect = S.Union([RedirectPermanent, RedirectStatusCode]).pipe(
     description: "User-facing Next.js redirect route configuration.",
     documentation: "Models the public Next.js redirect fields and omits internal routing fields such as internal.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**

@@ -38,11 +38,11 @@ const makeWinkStringArrayArbitrary = (fc: typeof FastCheck) => fc.array(fc.strin
  * @since 0.0.0
  */
 export const WinkStringArray = S.Array(S.String).pipe(
-  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("WinkStringArray", {
     description: "Array of strings returned by Wink NLP accessors.",
     toArbitrary: () => makeWinkStringArrayArbitrary,
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 /**
@@ -76,7 +76,7 @@ const patternElementToBracketString = (pattern: Pattern): ReadonlyArray<string> 
  * ```ts
  * import { EntityGroupName } from "@beep/wink"
  *
- * const entityGroupName = EntityGroupName.fromUnknown("ProductName")
+ * const entityGroupName = EntityGroupName.decodeUnknownSync("ProductName")
  * console.log(entityGroupName)
  * ```
  *
@@ -88,7 +88,7 @@ export const EntityGroupName = S.NonEmptyString.pipe(
   $I.annoteSchema("EntityGroupName", {
     description: "Stable identifier for a learned wink custom-entity group.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
 );
 
 /**

@@ -191,8 +191,7 @@ export const PatentCitationDiscovery = S.Union([ExaminerObservedDiscovery, AiDis
   $I.annoteSchema("PatentCitationDiscovery", {
     description: "Tagged provenance describing how an occurrence of a patent reference came to be recorded.",
   }),
-  S.toTaggedUnion("kind"),
-  SchemaUtils.withCodecStatics
+  S.toTaggedUnion("kind")
 );
 
 /**

@@ -485,11 +485,11 @@ export class AiMetricsRetentionInventory extends S.Class<AiMetricsRetentionInven
   $I.annote("AiMetricsRetentionInventory", {
     description: "Path-safe retained AI metrics raw, derived, and report inventory for one selector.",
   })
-) {
-  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
-    S.fromJsonString(AiMetricsRetentionInventory)
-  );
-}
+) {}
+
+const AiMetricsRetentionInventoryFromJsonString = S.fromJsonString(AiMetricsRetentionInventory).pipe(
+  SchemaUtils.withCodecStatics(["encodeUnknownEffect"])
+);
 
 /**
  * What a delete or compaction run removed, or would have removed.
@@ -540,11 +540,11 @@ export class AiMetricsRetentionMutationResult extends S.Class<AiMetricsRetention
   $I.annote("AiMetricsRetentionMutationResult", {
     description: "Summary for an AI metrics retention delete or compaction run.",
   })
-) {
-  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
-    S.fromJsonString(AiMetricsRetentionMutationResult)
-  );
-}
+) {}
+
+const AiMetricsRetentionMutationResultFromJsonString = S.fromJsonString(AiMetricsRetentionMutationResult).pipe(
+  SchemaUtils.withCodecStatics(["encodeUnknownEffect"])
+);
 
 /**
  * Policy for preventive local AI metrics retention enforcement.
@@ -636,11 +636,11 @@ export class AiMetricsRetentionEnforcementResult extends S.Class<AiMetricsRetent
   $I.annote("AiMetricsRetentionEnforcementResult", {
     description: "Summary for preventive AI metrics Parquet snapshot retention enforcement.",
   })
-) {
-  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
-    S.fromJsonString(AiMetricsRetentionEnforcementResult)
-  );
-}
+) {}
+
+const AiMetricsRetentionEnforcementResultFromJsonString = S.fromJsonString(AiMetricsRetentionEnforcementResult).pipe(
+  SchemaUtils.withCodecStatics(["encodeUnknownEffect"])
+);
 
 /**
  * Request to replay selected archive objects into a disposable store and verify them.
@@ -745,11 +745,11 @@ export class AiMetricsRetentionRestoreDrillResult extends S.Class<AiMetricsReten
     description:
       "Proof that retained encrypted archive objects can decrypt and replay into disposable derived storage.",
   })
-) {
-  static readonly encodeUnknownEffectFromJsonString = S.encodeUnknownEffect(
-    S.fromJsonString(AiMetricsRetentionRestoreDrillResult)
-  );
-}
+) {}
+
+const AiMetricsRetentionRestoreDrillResultFromJsonString = S.fromJsonString(AiMetricsRetentionRestoreDrillResult).pipe(
+  SchemaUtils.withCodecStatics(["encodeUnknownEffect"])
+);
 
 const listDirectoryFiles = Effect.fn("AiMetrics.retention.listDirectoryFiles")(function* (
   dataRoot: string,
@@ -1604,7 +1604,7 @@ export const aiMetricsRetentionInventoryToJson: (
   result: AiMetricsRetentionInventory
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionInventoryToJson")(
   (result) =>
-    AiMetricsRetentionInventory.encodeUnknownEffectFromJsonString(result).pipe(
+    AiMetricsRetentionInventoryFromJsonString.encodeUnknownEffect(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics retention inventory JSON.", cause))
     )
 );
@@ -1645,7 +1645,7 @@ export const aiMetricsRetentionEnforcementToJson: (
   result: AiMetricsRetentionEnforcementResult
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionEnforcementToJson")(
   (result) =>
-    AiMetricsRetentionEnforcementResult.encodeUnknownEffectFromJsonString(result).pipe(
+    AiMetricsRetentionEnforcementResultFromJsonString.encodeUnknownEffect(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics retention enforcement JSON.", cause))
     )
 );
@@ -1687,7 +1687,7 @@ export const aiMetricsRetentionMutationToJson: (
   result: AiMetricsRetentionMutationResult
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionMutationToJson")(
   (result) =>
-    AiMetricsRetentionMutationResult.encodeUnknownEffectFromJsonString(result).pipe(
+    AiMetricsRetentionMutationResultFromJsonString.encodeUnknownEffect(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics retention mutation JSON.", cause))
     )
 );
@@ -1729,7 +1729,7 @@ export const aiMetricsRetentionRestoreDrillToJson: (
   result: AiMetricsRetentionRestoreDrillResult
 ) => Effect.Effect<string, AiMetricsRetentionError> = Effect.fn("AiMetrics.aiMetricsRetentionRestoreDrillToJson")(
   (result) =>
-    AiMetricsRetentionRestoreDrillResult.encodeUnknownEffectFromJsonString(result).pipe(
+    AiMetricsRetentionRestoreDrillResultFromJsonString.encodeUnknownEffect(result).pipe(
       Effect.mapError((cause) => retentionFailure("Failed to encode AI metrics restore drill JSON.", cause))
     )
 );

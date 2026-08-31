@@ -18,7 +18,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Console, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
@@ -547,7 +547,7 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
     const manifest = yield* fs
       .readFileString(manifestPath)
       .pipe(
-        Effect.flatMap(Unknown.decodeUnknownEffectFromJsonString),
+        Effect.flatMap(UnknownFromJsonString.decodeUnknownEffect),
         Effect.flatMap(decodeManifest),
         Effect.map(O.some),
         Effect.orElseSucceed(O.none<ExplorationManifest>)

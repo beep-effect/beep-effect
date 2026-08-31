@@ -95,7 +95,7 @@ describe("resolveSinkAudience", () => {
     ];
 
     for (const destination of loopback) {
-      expect(resolveSinkAudience(SinkDestination.fromUnknown(destination))).toBe("local-workspace");
+      expect(resolveSinkAudience(SinkDestination.decodeUnknownSync(destination))).toBe("local-workspace");
     }
   });
 
@@ -103,12 +103,12 @@ describe("resolveSinkAudience", () => {
     const external = ["https://registry.example", "http://192.168.1.10/api", "https://localhost.attacker.example"];
 
     for (const destination of external) {
-      expect(resolveSinkAudience(SinkDestination.fromUnknown(destination))).toBe("external-network");
+      expect(resolveSinkAudience(SinkDestination.decodeUnknownSync(destination))).toBe("external-network");
     }
   });
 
   it("takes the stricter branch for unparseable destinations", () => {
-    expect(resolveSinkAudience(SinkDestination.fromUnknown("not a url"))).toBe("external-network");
+    expect(resolveSinkAudience(SinkDestination.decodeUnknownSync("not a url"))).toBe("external-network");
   });
 });
 

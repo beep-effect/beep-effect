@@ -102,7 +102,7 @@ export const EntityIdValue = PosInt.check(
   $I.annoteSchema("EntityIdValue", {
     description: "Storage-neutral positive integer used by shared-kernel persisted entity ids.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"])
 );
 
 /**
@@ -438,15 +438,12 @@ type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, n
  * **Details**
  *
  * The factory pipes each branded id schema through
- * `SchemaUtils.withCodecStatics` (the canonical trio: `is`, `fromUnknown`,
- * `decodeOption`) and `SchemaUtils.withEffectCodecStatics` (`decodeEffect`,
- * `decodeUnknownEffect`, `encodeEffect`, `encodeUnknownEffect`, their
- * `FromJsonString` variants, plus the shared `is` and `asserts`) before
- * attaching the entity metadata statics, so both groups are uniform across the
- * entity-id fleet. The sync group (`decodeSync`, `encodeSync`, ...) is not
- * attached. The Effect group's dual `equivalence` is omitted here because the
- * factory deliberately attaches its own plain two-argument entity-id
- * equivalence last.
+ * The factory selects the direct codec runners used across the entity-id
+ * fleet: `is`, `decodeUnknownSync`, `decodeUnknownOption`, `decodeEffect`,
+ * `decodeUnknownEffect`, `encodeEffect`, and `encodeUnknownEffect`. JSON
+ * boundaries remain explicit `S.fromJsonString(...)` schemas. The dual
+ * `equivalence` helper is omitted because the factory deliberately attaches
+ * its own plain two-argument entity-id equivalence.
  *
  * **Example** (Guard through factory-attached codec statics)
  *
@@ -464,9 +461,17 @@ type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, n
  * @category models
  * @since 0.0.0
  */
-export type EntityIdCodecStatics<TBrand extends string> = Omit<
-  SchemaUtils.CodecStatics<EntityIdSchema<TBrand>> & SchemaUtils.EffectCodecStatics<EntityIdSchema<TBrand>>,
-  "equivalence"
+export type EntityIdCodecStatics<TBrand extends string> = SchemaUtils.SelectedCodecStatics<
+  EntityIdSchema<TBrand>,
+  readonly [
+    "decodeEffect",
+    "decodeUnknownEffect",
+    "decodeUnknownOption",
+    "decodeUnknownSync",
+    "encodeEffect",
+    "encodeUnknownEffect",
+    "is",
+  ]
 >;
 
 const decodeOptionsResult = S.decodeUnknownResult(Options);
@@ -608,12 +613,10 @@ const buildDefinition = <
  * **Details**
  *
  * Every produced id schema carries the entity metadata statics plus the
- * canonical codec trio (`is`, `fromUnknown`, `decodeOption`) and the Effect
- * codec group (see {@link EntityIdCodecStatics}); the sync group is not
- * attached. The codec groups are attached before the entity metadata statics
- * so the factory's plain entity-id `equivalence` stays the canonical
- * equivalence static, including on schemas produced by a later
- * `.annotate(...)` call.
+ * selected direct codec surface described by {@link EntityIdCodecStatics}.
+ * The codec helpers are attached before the entity metadata statics so the
+ * factory's plain entity-id `equivalence` stays canonical, including on
+ * schemas produced by a later `.annotate(...)` call.
  *
  * **Example** (Build slice-scoped id maker)
  *
@@ -655,14 +658,27 @@ export const factory: Factory = dual(
       );
       const typedSchema = schema as S.Codec<EntityIdValueFor<ResolvedBrand<Slice, Name, Overrides>>, number>;
 
-      return attachEntityIdStatics(typedSchema.pipe(SchemaUtils.withCodecStatics, SchemaUtils.withEffectCodecStatics), {
-        brand: definition.brand,
-        definition,
-        entityType: definition.entityType,
-        equivalence: S.toEquivalence(typedSchema),
-        resource: definition.resource,
-        slice,
-        tableName: definition.tableName,
-      });
+      return attachEntityIdStatics(
+        typedSchema.pipe(
+          SchemaUtils.withCodecStatics([
+            "decodeEffect",
+            "decodeUnknownEffect",
+            "decodeUnknownOption",
+            "decodeUnknownSync",
+            "encodeEffect",
+            "encodeUnknownEffect",
+            "is",
+          ])
+        ),
+        {
+          brand: definition.brand,
+          definition,
+          entityType: definition.entityType,
+          equivalence: S.toEquivalence(typedSchema),
+          resource: definition.resource,
+          slice,
+          tableName: definition.tableName,
+        }
+      );
     }
 );

@@ -344,11 +344,24 @@ layer(CodegenKitTestLayer)("@beep/codegen-kit", (it) => {
       expect(output).toContain("index: S.Int");
       expect(output).toContain('$I.annoteSchema("Example"');
       expect(output).toContain('documentation: "top level"');
-      expect(output).toContain("SchemaUtils.withCodecStatics");
+      expect(output).not.toContain("SchemaUtils.withCodecStatics");
       expect(output).toContain("**Example** (Inspect the Example schema)");
       expect(output).toContain("@category schemas");
       expect(output).toContain("@since 0.0.0");
       expect(output).toContain("const __recursive_Example = S.suspend");
+    })
+  );
+
+  it.effect("emits only configured schema codec statics", () =>
+    Effect.gen(function* () {
+      const kit = yield* CodegenKit;
+      const generateConfig = GenerateConfig.make({
+        ...config("schema.gen.ts"),
+        schemaCodecStatics: { Example: ["decodeEffect", "is"] },
+      });
+      const output = yield* kit.postProcess(rawSchemaModule, generateConfig);
+
+      expect(output).toContain('SchemaUtils.withCodecStatics(["decodeEffect", "is"])');
     })
   );
 

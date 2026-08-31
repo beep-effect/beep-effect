@@ -38,7 +38,7 @@ import {
 } from "@beep/repo-cli/commands/Corpus/internal/Preservation";
 import { decodeProvenanceLinesForTesting } from "@beep/repo-cli/commands/Corpus/internal/ServicePrograms";
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
@@ -51,7 +51,7 @@ import { ChildProcessSpawner } from "effect/unstable/process";
 
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeInheritedLossRow = S.decodeUnknownEffect(S.fromJsonString(InheritedLossRow));
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const isT7ArchiveProvenanceRecord = S.is(T7ArchiveProvenanceRecord);
 const runCorpusCommand = Command.runWith(corpusCommand, { version: "0.0.0" });
 const utf8Encoder = new TextEncoder();

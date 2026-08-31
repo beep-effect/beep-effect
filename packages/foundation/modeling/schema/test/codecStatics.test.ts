@@ -1,307 +1,257 @@
 import { fcRuns } from "@beep/fc-runs";
-import { $SchemaId } from "@beep/identity/packages";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { staticDescriptorInstaller } from "@beep/schema/SchemaUtils/internal/staticDescriptors";
 import {
-  withEffectCodecStatics,
-  withExitCodecStatics,
-  withOptionCodecStatics,
-  withPromiseCodecStatics,
-  withResultCodecStatics,
-  withSyncCodecStatics,
-} from "@beep/schema/SchemaUtils/codecStatics";
+  CodecStaticKey,
+  CodecStaticSelectionError,
+  classStatics,
+  withCodecStatics,
+} from "@beep/schema/SchemaUtils/withCodecStatics";
+import { withStatics } from "@beep/schema/SchemaUtils/withStatics";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, pipe } from "effect";
+import { Effect } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { expectTypeOf } from "vitest";
 
 const Count = S.FiniteFromString;
-const CountRecord = S.Struct({ count: Count });
-const DetailedCountRecord = S.Struct({ count: Count, ignored: S.String });
-const invalidEncoded = "nope";
-const invalidDecoded = "42";
-const validJsonEncoded = '"42"';
-const invalidJsonEncoded = '"nope"';
-const numericCountJson = '{"count":42}';
-const encodedCountJson = '{"count":"42"}';
-const prettyCountJson = '{\n  "count": "42"\n}';
-const reviveCount = (_key: string, value: unknown): unknown => (value === 42 ? "42" : value);
+const decodeUnknownCountSync = S.decodeUnknownSync(Count);
+const finiteArbitrary = S.toArbitrary(S.Finite)(fc);
+const isCodecStaticKey = S.is(CodecStaticKey);
+const isCount = S.is(Count);
 
-const expectSharedStatics = <Sch extends S.Top & SchemaUtils.SharedCodecStatics<Sch>>(schema: Sch) => {
-  expect(schema.is(42)).toBe(true);
-  expect(schema.is("42")).toBe(false);
-  expect(schema.equivalence(42, 42)).toBe(true);
-  expect(schema.equivalence(41)(42)).toBe(false);
-  expect(pipe(42, schema.equivalence(42))).toBe(true);
-  schema.asserts(42);
-  expect(() => schema.asserts("42")).toThrow();
+class User extends S.Class<User>("CodecStaticUser")({ name: S.String }) {
+  static readonly utils = classStatics(this, ["decodeUnknownEffect", "is"]);
+}
+
+class Event extends S.TaggedClass<Event>("CodecStaticEvent")("event", { value: S.Finite }) {
+  static readonly utils = classStatics(this, ["is"]);
+}
+
+const decodeUnknownUserEffect = S.decodeUnknownEffect(User);
+const isUser = S.is(User);
+
+const invalidSelectionsAreRejectedAtCompileTime = () => {
+  // @ts-expect-error Duplicate selections are rejected by the tuple type.
+  Count.pipe(withCodecStatics(["is", "is"]));
+  // @ts-expect-error Empty selections are rejected by the tuple type.
+  Count.pipe(withCodecStatics([]));
 };
 
-describe("codec group statics", () => {
-  it("exports the combinators from the SchemaUtils barrel", () => {
-    expect(SchemaUtils.withSyncCodecStatics).toBe(withSyncCodecStatics);
-    expect(SchemaUtils.withPromiseCodecStatics).toBe(withPromiseCodecStatics);
-    expect(SchemaUtils.withEffectCodecStatics).toBe(withEffectCodecStatics);
-    expect(SchemaUtils.withExitCodecStatics).toBe(withExitCodecStatics);
-    expect(SchemaUtils.withOptionCodecStatics).toBe(withOptionCodecStatics);
-    expect(SchemaUtils.withResultCodecStatics).toBe(withResultCodecStatics);
-  });
+describe("withCodecStatics", () => {
+  it("supports pipeable and data-first declarations with exact surfaces", () => {
+    const Piped = Count.pipe(withCodecStatics(["decodeUnknownSync", "is"]));
+    const Direct = withCodecStatics(Count, ["decodeUnknownSync", "is"]);
 
-  it("attaches shared statics and sync codecs for direct and JSON-string boundaries", () => {
-    const Piped = Count.pipe(withSyncCodecStatics);
-    const Direct = withSyncCodecStatics(Count);
-    const Branded = S.String.pipe(S.brand("MySchema"), withSyncCodecStatics);
-
-    expectSharedStatics(Piped);
+    expectTypeOf(invalidSelectionsAreRejectedAtCompileTime).toBeFunction();
     expect(Piped.decodeUnknownSync("42")).toBe(42);
-    expect(Piped.decodeSync("42")).toBe(42);
-    expect(Piped.decodeUnknownSyncFromJsonString(validJsonEncoded)).toBe(42);
-    expect(Piped.decodeSyncFromJsonString(validJsonEncoded)).toBe(42);
-    expect(Piped.encodeSync(42)).toBe("42");
-    expect(Piped.encodeUnknownSync(42)).toBe("42");
-    expect(Piped.encodeSyncFromJsonString(42)).toBe(validJsonEncoded);
-    expect(Piped.encodeUnknownSyncFromJsonString(42)).toBe(validJsonEncoded);
-    expect(() => Piped.decodeUnknownSync(invalidEncoded)).toThrow();
-    expect(() => Piped.decodeSync(invalidEncoded)).toThrow();
-    expect(() => Piped.decodeUnknownSyncFromJsonString(42)).toThrow();
-    expect(() => Piped.decodeSyncFromJsonString(invalidJsonEncoded)).toThrow();
-    expect(() => Piped.encodeUnknownSync(invalidDecoded)).toThrow();
-    expect(() => Piped.encodeUnknownSyncFromJsonString(invalidDecoded)).toThrow();
-    expect(Direct.decodeUnknownSync("7")).toBe(7);
-    expect(Branded.decodeUnknownSync("docs")).toBe("docs");
-    expect(Branded.is("docs")).toBe(true);
-    expect(Branded.encodeUnknownSync(Branded.decodeUnknownSync("docs"))).toBe("docs");
+    expect(Direct.decodeUnknownSync("42")).toBe(42);
+    expect(Piped.is(42)).toBe(true);
+    expect(Reflect.has(Piped, "decodeEffect")).toBe(false);
+    expect(Reflect.has(Direct, "encodeUnknownSync")).toBe(false);
+    expectTypeOf(Piped.decodeUnknownSync).toEqualTypeOf(decodeUnknownCountSync);
+    expectTypeOf(Piped.is).toEqualTypeOf(isCount);
+    expectTypeOf(Direct).toEqualTypeOf(Piped);
+    expectTypeOf(Piped).not.toHaveProperty("decodeEffect");
   });
 
-  it("attached sync statics agree with the raw schema codecs over schema-derived samples", () => {
-    const Piped = Count.pipe(withSyncCodecStatics);
+  it("owns a fresh schema and installs strict hidden descriptors", () => {
+    const Selected = Count.pipe(withCodecStatics(["is"]));
+    const descriptor = Reflect.getOwnPropertyDescriptor(Selected, "is");
+
+    expect(Selected).not.toBe(Count);
+    expect(Reflect.has(Count, "is")).toBe(false);
+    expect(descriptor).toMatchObject({ configurable: false, enumerable: false, writable: false });
+    expect(Object.keys(Selected)).not.toContain("is");
+    expect(Reflect.set(Selected, "is", () => false)).toBe(false);
+  });
+
+  it("agrees with its source schema over schema-derived finite numbers", () => {
+    const Selected = Count.pipe(withCodecStatics(["asserts", "decodeUnknownSync", "encodeSync", "equivalence", "is"]));
+    const assertsCount: (input: unknown) => asserts input is number = Selected.asserts;
 
     fc.assert(
-      fc.property(S.toArbitrary(S.Finite)(fc), (sampled) => {
-        const encoded = Piped.encodeSync(sampled);
-        const decoded = Piped.decodeUnknownSync(encoded);
-        const jsonEncoded = Piped.encodeSyncFromJsonString(sampled);
-        const jsonDecoded = Piped.decodeUnknownSyncFromJsonString(jsonEncoded);
-        expect(Piped.is(sampled)).toBe(S.is(Count)(sampled));
-        expect(Piped.equivalence(decoded, sampled)).toBe(true);
-        expect(Piped.equivalence(jsonDecoded, sampled)).toBe(true);
-        expect(Piped.encodeSync(decoded)).toBe(encoded);
-        expect(Piped.encodeSyncFromJsonString(jsonDecoded)).toBe(jsonEncoded);
+      fc.property(finiteArbitrary, (sampled) => {
+        const encoded = Selected.encodeSync(sampled);
+        const decoded = Selected.decodeUnknownSync(encoded);
+        const asserted: unknown = decoded;
+
+        assertsCount(asserted);
+        expect(asserted).toBe(decoded);
+        expect(Selected.is(sampled)).toBe(true);
+        expect(Selected.equivalence(decoded, sampled)).toBe(true);
+        expect(Selected.encodeSync(decoded)).toBe(encoded);
       }),
       fcRuns(50)
     );
   });
 
-  it("configures JSON parsing, stringification, and schema parsing per sync invocation", () => {
-    const ConfigurableCount = CountRecord.pipe(withSyncCodecStatics);
-    const ConfigurableDetailedCount = DetailedCountRecord.pipe(withSyncCodecStatics);
+  it("preserves the selection through schema rebuilds", () => {
+    const Selected = Count.pipe(withCodecStatics(["decodeUnknownOption", "is"]));
+    const Annotated = Selected.annotate({ title: "Annotated count" });
+    const is = Reflect.get(Annotated, "is");
+    const decodeUnknownOption = Reflect.get(Annotated, "decodeUnknownOption");
 
-    expect(ConfigurableCount.decodeSyncFromJsonString(numericCountJson, { reviver: reviveCount })).toEqual({
-      count: 42,
-    });
-    expect(ConfigurableCount.decodeUnknownSyncFromJsonString(numericCountJson, { reviver: reviveCount })).toEqual({
-      count: 42,
-    });
-    expect(ConfigurableCount.encodeSyncFromJsonString({ count: 42 }, { space: 2 })).toBe(prettyCountJson);
-    expect(ConfigurableCount.encodeUnknownSyncFromJsonString({ count: 42 }, { space: 2 })).toBe(prettyCountJson);
-    expect(
-      ConfigurableDetailedCount.encodeSyncFromJsonString({ count: 42, ignored: "omit" }, { replacer: ["count"] })
-    ).toBe(encodedCountJson);
-    expect(() =>
-      ConfigurableCount.decodeSyncFromJsonString('{"count":"42","extra":true}', {
-        onExcessProperty: "error",
-      })
-    ).toThrow();
+    expect(P.isFunction(is)).toBe(true);
+    expect(P.isFunction(decodeUnknownOption)).toBe(true);
+    if (P.isFunction(is) && P.isFunction(decodeUnknownOption)) {
+      expect(Reflect.apply(is, undefined, [42])).toBe(true);
+      expect(Reflect.apply(decodeUnknownOption, undefined, ["42"])).toStrictEqual(O.some(42));
+    }
+    expect(Reflect.has(Annotated, "decodeEffect")).toBe(false);
   });
 
-  it("attaches Option, Result, and Exit codecs for direct and JSON-string boundaries", () => {
-    const OptionCount = Count.pipe(withOptionCodecStatics);
-    const ResultCount = Count.pipe(withResultCodecStatics);
-    const ExitCount = Count.pipe(withExitCodecStatics);
-
-    expectSharedStatics(OptionCount);
-    expect(OptionCount.decodeUnknownOption("42")).toStrictEqual(O.some(42));
-    expect(OptionCount.decodeOption("42")).toStrictEqual(O.some(42));
-    expect(O.isNone(OptionCount.decodeUnknownOption(invalidEncoded))).toBe(true);
-    expect(O.isNone(OptionCount.decodeOption(invalidEncoded))).toBe(true);
-    expect(OptionCount.encodeOption(42)).toStrictEqual(O.some("42"));
-    expect(OptionCount.encodeUnknownOption(42)).toStrictEqual(O.some("42"));
-    expect(OptionCount.decodeOptionFromJsonString(validJsonEncoded)).toStrictEqual(O.some(42));
-    expect(OptionCount.decodeUnknownOptionFromJsonString(validJsonEncoded)).toStrictEqual(O.some(42));
-    expect(OptionCount.encodeOptionFromJsonString(42)).toStrictEqual(O.some(validJsonEncoded));
-    expect(OptionCount.encodeUnknownOptionFromJsonString(42)).toStrictEqual(O.some(validJsonEncoded));
-    expect(O.isNone(OptionCount.encodeUnknownOption(invalidDecoded))).toBe(true);
-    expect(O.isNone(OptionCount.encodeOption(Number.NaN))).toBe(true);
-    expect(O.isNone(OptionCount.decodeUnknownOptionFromJsonString(42))).toBe(true);
-    expect(O.isNone(OptionCount.decodeOptionFromJsonString(invalidJsonEncoded))).toBe(true);
-    expect(O.isNone(OptionCount.encodeUnknownOptionFromJsonString(invalidDecoded))).toBe(true);
-
-    expectSharedStatics(ResultCount);
-    expect(Result.getOrThrow(ResultCount.decodeUnknownResult("42"))).toBe(42);
-    expect(Result.getOrThrow(ResultCount.decodeResult("42"))).toBe(42);
-    expect(Result.isFailure(ResultCount.decodeUnknownResult(invalidEncoded))).toBe(true);
-    expect(Result.isFailure(ResultCount.decodeResult(invalidEncoded))).toBe(true);
-    expect(Result.getOrThrow(ResultCount.encodeResult(42))).toBe("42");
-    expect(Result.getOrThrow(ResultCount.encodeUnknownResult(42))).toBe("42");
-    expect(Result.getOrThrow(ResultCount.decodeResultFromJsonString(validJsonEncoded))).toBe(42);
-    expect(Result.getOrThrow(ResultCount.decodeUnknownResultFromJsonString(validJsonEncoded))).toBe(42);
-    expect(Result.getOrThrow(ResultCount.encodeResultFromJsonString(42))).toBe(validJsonEncoded);
-    expect(Result.getOrThrow(ResultCount.encodeUnknownResultFromJsonString(42))).toBe(validJsonEncoded);
-    expect(Result.isFailure(ResultCount.encodeUnknownResult(invalidDecoded))).toBe(true);
-    expect(Result.isFailure(ResultCount.decodeUnknownResultFromJsonString(42))).toBe(true);
-    expect(Result.isFailure(ResultCount.decodeResultFromJsonString(invalidJsonEncoded))).toBe(true);
-    expect(Result.isFailure(ResultCount.encodeUnknownResultFromJsonString(invalidDecoded))).toBe(true);
-
-    expectSharedStatics(ExitCount);
-    expect(Exit.getSuccess(ExitCount.decodeUnknownExit("42"))).toStrictEqual(O.some(42));
-    expect(Exit.getSuccess(ExitCount.decodeExit("42"))).toStrictEqual(O.some(42));
-    expect(Exit.isFailure(ExitCount.decodeUnknownExit(invalidEncoded))).toBe(true);
-    expect(Exit.isFailure(ExitCount.decodeExit(invalidEncoded))).toBe(true);
-    expect(Exit.getSuccess(ExitCount.encodeExit(42))).toStrictEqual(O.some("42"));
-    expect(Exit.getSuccess(ExitCount.encodeUnknownExit(42))).toStrictEqual(O.some("42"));
-    expect(Exit.getSuccess(ExitCount.decodeExitFromJsonString(validJsonEncoded))).toStrictEqual(O.some(42));
-    expect(Exit.getSuccess(ExitCount.decodeUnknownExitFromJsonString(validJsonEncoded))).toStrictEqual(O.some(42));
-    expect(Exit.getSuccess(ExitCount.encodeExitFromJsonString(42))).toStrictEqual(O.some(validJsonEncoded));
-    expect(Exit.getSuccess(ExitCount.encodeUnknownExitFromJsonString(42))).toStrictEqual(O.some(validJsonEncoded));
-    expect(Exit.isFailure(ExitCount.encodeUnknownExit(invalidDecoded))).toBe(true);
-    expect(Exit.isFailure(ExitCount.decodeUnknownExitFromJsonString(42))).toBe(true);
-    expect(Exit.isFailure(ExitCount.decodeExitFromJsonString(invalidJsonEncoded))).toBe(true);
-    expect(Exit.isFailure(ExitCount.encodeUnknownExitFromJsonString(invalidDecoded))).toBe(true);
-
-    const OptionCountRecord = CountRecord.pipe(withOptionCodecStatics);
-    const ResultCountRecord = CountRecord.pipe(withResultCodecStatics);
-    const ExitCountRecord = CountRecord.pipe(withExitCodecStatics);
-
-    expect(OptionCountRecord.decodeOptionFromJsonString(numericCountJson, { reviver: reviveCount })).toStrictEqual(
-      O.some({ count: 42 })
+  it("preserves rebuilt schema-owned statics through compatible legacy wrappers", () => {
+    const Selected = S.Union([
+      S.Struct({ type: S.Literal("first"), value: S.String }),
+      S.Struct({ type: S.Literal("second"), value: S.Finite }),
+    ]).pipe(withCodecStatics(["decodeUnknownSync", "is"]));
+    const Tagged = Selected.pipe(
+      S.toTaggedUnion("type"),
+      withStatics(() => ({ decodeUnknownSync: Selected.decodeUnknownSync, is: Selected.is }))
     );
-    expect(OptionCountRecord.encodeUnknownOptionFromJsonString({ count: 42 }, { space: 2 })).toStrictEqual(
-      O.some(prettyCountJson)
-    );
-    expect(
-      Result.getOrThrow(ResultCountRecord.decodeUnknownResultFromJsonString(numericCountJson, { reviver: reviveCount }))
-    ).toEqual({ count: 42 });
-    expect(Result.getOrThrow(ResultCountRecord.encodeResultFromJsonString({ count: 42 }, { space: 2 }))).toBe(
-      prettyCountJson
-    );
-    expect(
-      Exit.getSuccess(ExitCountRecord.decodeExitFromJsonString(numericCountJson, { reviver: reviveCount }))
-    ).toStrictEqual(O.some({ count: 42 }));
-    expect(Exit.getSuccess(ExitCountRecord.encodeUnknownExitFromJsonString({ count: 42 }, { space: 2 }))).toStrictEqual(
-      O.some(prettyCountJson)
-    );
-  });
+    const Annotated = Tagged.annotate({ title: "Annotated tagged union" });
+    const decodeUnknownSync = Reflect.get(Annotated, "decodeUnknownSync");
+    const is = Reflect.get(Annotated, "is");
 
-  it.effect(
-    "attaches Effect codecs for direct and JSON-string boundaries",
-    Effect.fnUntraced(function* () {
-      const EffectCount = Count.pipe(withEffectCodecStatics);
-
-      expectSharedStatics(EffectCount);
-      expect(yield* EffectCount.decodeUnknownEffect("42")).toBe(42);
-      expect(yield* EffectCount.decodeEffect("42")).toBe(42);
-      expect(yield* EffectCount.decodeUnknownEffectFromJsonString(validJsonEncoded)).toBe(42);
-      expect(yield* EffectCount.decodeEffectFromJsonString(validJsonEncoded)).toBe(42);
-      expect(yield* EffectCount.encodeEffect(42)).toBe("42");
-      expect(yield* EffectCount.encodeUnknownEffect(42)).toBe("42");
-      expect(yield* EffectCount.encodeEffectFromJsonString(42)).toBe(validJsonEncoded);
-      expect(yield* EffectCount.encodeUnknownEffectFromJsonString(42)).toBe(validJsonEncoded);
-
-      const failedDecode = yield* Effect.exit(EffectCount.decodeUnknownEffect(invalidEncoded));
-      const failedTypedDecode = yield* Effect.exit(EffectCount.decodeEffect(invalidEncoded));
-      const failedEncode = yield* Effect.exit(EffectCount.encodeUnknownEffect(invalidDecoded));
-      const failedUnknownJsonDecode = yield* Effect.exit(EffectCount.decodeUnknownEffectFromJsonString(42));
-      const failedJsonDecode = yield* Effect.exit(EffectCount.decodeEffectFromJsonString(invalidJsonEncoded));
-      const failedUnknownJsonEncode = yield* Effect.exit(EffectCount.encodeUnknownEffectFromJsonString(invalidDecoded));
-      expect(Exit.isFailure(failedDecode)).toBe(true);
-      expect(Exit.isFailure(failedTypedDecode)).toBe(true);
-      expect(Exit.isFailure(failedEncode)).toBe(true);
-      expect(Exit.isFailure(failedUnknownJsonDecode)).toBe(true);
-      expect(Exit.isFailure(failedJsonDecode)).toBe(true);
-      expect(Exit.isFailure(failedUnknownJsonEncode)).toBe(true);
-
-      const EffectCountRecord = CountRecord.pipe(withEffectCodecStatics);
-      expect(yield* EffectCountRecord.decodeEffectFromJsonString(numericCountJson, { reviver: reviveCount })).toEqual({
-        count: 42,
+    expect(P.isFunction(decodeUnknownSync)).toBe(true);
+    expect(P.isFunction(is)).toBe(true);
+    if (P.isFunction(decodeUnknownSync) && P.isFunction(is)) {
+      expect(Reflect.apply(decodeUnknownSync, undefined, [{ type: "first", value: "ok" }])).toStrictEqual({
+        type: "first",
+        value: "ok",
       });
-      expect(yield* EffectCountRecord.encodeUnknownEffectFromJsonString({ count: 42 }, { space: 2 })).toBe(
-        prettyCountJson
-      );
-    })
-  );
+      expect(Reflect.apply(is, undefined, [{ type: "second", value: 42 }])).toBe(true);
+      expect(is).not.toBe(Selected.is);
+    }
+  });
 
-  it.effect(
-    "attaches Promise codecs for direct and JSON-string boundaries",
-    Effect.fnUntraced(function* () {
-      const PromiseCount = Count.pipe(withPromiseCodecStatics);
+  it("rejects duplicate keys and pre-attached custom statics", () => {
+    const customSymbol = Symbol("custom-static");
+    const FreshCount = Count.rebuild(Count.ast);
+    const WithCustomIs = FreshCount.pipe(withStatics(() => ({ is: () => true })));
+    const WithCustomSymbol = Count.rebuild(Count.ast);
+    Reflect.defineProperty(WithCustomSymbol, customSymbol, { value: true });
+    const WithSelectedIs = Count.pipe(withCodecStatics(["is"]));
 
-      expectSharedStatics(PromiseCount);
-      expect(yield* Effect.tryPromise(() => PromiseCount.decodeUnknownPromise("42"))).toBe(42);
-      expect(yield* Effect.tryPromise(() => PromiseCount.decodePromise("42"))).toBe(42);
-      expect(yield* Effect.tryPromise(() => PromiseCount.decodeUnknownPromiseFromJsonString(validJsonEncoded))).toBe(
-        42
-      );
-      expect(yield* Effect.tryPromise(() => PromiseCount.decodePromiseFromJsonString(validJsonEncoded))).toBe(42);
-      expect(yield* Effect.tryPromise(() => PromiseCount.encodePromise(42))).toBe("42");
-      expect(yield* Effect.tryPromise(() => PromiseCount.encodeUnknownPromise(42))).toBe("42");
-      expect(yield* Effect.tryPromise(() => PromiseCount.encodePromiseFromJsonString(42))).toBe(validJsonEncoded);
-      expect(yield* Effect.tryPromise(() => PromiseCount.encodeUnknownPromiseFromJsonString(42))).toBe(
-        validJsonEncoded
-      );
+    expect(() => Reflect.apply(withCodecStatics, undefined, [Count, ["is", "is"]])).toThrow(CodecStaticSelectionError);
+    expect(() => Reflect.apply(withCodecStatics, undefined, [Count, []])).toThrow(CodecStaticSelectionError);
+    expect(() => WithCustomIs.pipe(withCodecStatics(["is"]))).toThrow(CodecStaticSelectionError);
+    expect(() => WithCustomSymbol.pipe(withCodecStatics(["is"]))).toThrow(/Symbol\(custom-static\)/u);
+    expect(() => WithSelectedIs.pipe(withCodecStatics(["decodeUnknownSync"]))).toThrow(CodecStaticSelectionError);
+    expect(isCodecStaticKey("decodeUnknownJsonStringEffect")).toBe(false);
+  });
 
-      const failedDecode = yield* Effect.result(
-        Effect.tryPromise(() => PromiseCount.decodeUnknownPromise(invalidEncoded))
-      );
-      const failedEncode = yield* Effect.result(
-        Effect.tryPromise(() => PromiseCount.encodeUnknownPromise(invalidDecoded))
-      );
-      const failedUnknownJsonDecode = yield* Effect.result(
-        Effect.tryPromise(() => PromiseCount.decodeUnknownPromiseFromJsonString(42))
-      );
-      const failedJsonDecode = yield* Effect.result(
-        Effect.tryPromise(() => PromiseCount.decodePromiseFromJsonString(invalidJsonEncoded))
-      );
-      const failedUnknownJsonEncode = yield* Effect.result(
-        Effect.tryPromise(() => PromiseCount.encodeUnknownPromiseFromJsonString(invalidDecoded))
-      );
-      expect(Result.isFailure(failedDecode)).toBe(true);
-      expect(Result.isFailure(failedEncode)).toBe(true);
-      expect(Result.isFailure(failedUnknownJsonDecode)).toBe(true);
-      expect(Result.isFailure(failedJsonDecode)).toBe(true);
-      expect(Result.isFailure(failedUnknownJsonEncode)).toBe(true);
-
-      const PromiseCountRecord = CountRecord.pipe(withPromiseCodecStatics);
-      expect(
-        yield* Effect.tryPromise(() =>
-          PromiseCountRecord.decodeUnknownPromiseFromJsonString(numericCountJson, { reviver: reviveCount })
-        )
-      ).toEqual({ count: 42 });
-      expect(
-        yield* Effect.tryPromise(() => PromiseCountRecord.encodePromiseFromJsonString({ count: 42 }, { space: 2 }))
-      ).toBe(prettyCountJson);
-    })
-  );
-
-  it("preserves group statics when identity annotations run later in the pipeline", () => {
-    const Tagged = Count.pipe(
-      withResultCodecStatics,
-      $SchemaId.annoteSchema("TaggedCount", { description: "Count with result codec statics." })
+  it("keeps JSON construction policy separate from per-call parse options", () => {
+    const JsonStruct = S.fromJsonString(S.Struct({ value: S.String }), { space: 2 }).pipe(
+      withCodecStatics(["decodeUnknownResult", "encodeUnknownSync"])
     );
 
-    expect(Tagged.is(42)).toBe(true);
-    expect(Result.isFailure(Tagged.decodeUnknownResult(invalidEncoded))).toBe(true);
-    expect(Result.getOrThrow(Tagged.encodeResult(42))).toBe("42");
+    expect(JsonStruct.encodeUnknownSync({ value: "ok" })).toBe('{\n  "value": "ok"\n}');
+    expect(
+      Result.isFailure(JsonStruct.decodeUnknownResult('{"value":"ok","extra":true}', { onExcessProperty: "error" }))
+    ).toBe(true);
   });
 
-  it("lets two runner groups stack without dropping shared statics", () => {
-    const Stacked = Count.pipe(withOptionCodecStatics, withResultCodecStatics);
+  it.effect(
+    "binds selected Effect, Exit, Option, Promise, Result, and Sync runners once",
+    Effect.fnUntraced(function* () {
+      const Selected = Count.pipe(
+        withCodecStatics([
+          "decodeEffect",
+          "decodeUnknownExit",
+          "decodeUnknownOption",
+          "decodeUnknownPromise",
+          "decodeUnknownResult",
+          "decodeUnknownSync",
+          "encodeEffect",
+          "encodeUnknownExit",
+          "encodeUnknownOption",
+          "encodeUnknownPromise",
+          "encodeUnknownResult",
+          "encodeUnknownSync",
+        ])
+      );
+      const decodeUnknownSync = Selected.decodeUnknownSync;
 
-    expect(Stacked.is(42)).toBe(true);
-    expect(O.isSome(Stacked.decodeUnknownOption("42"))).toBe(true);
-    expect(Result.isSuccess(Stacked.decodeUnknownResult("42"))).toBe(true);
-    expect(Stacked.encodeResult(42)).toStrictEqual(Result.succeed("42"));
-    expect(Stacked.encodeOption(42)).toStrictEqual(O.some("42"));
+      expect(yield* Selected.decodeEffect("42")).toBe(42);
+      expect(yield* Selected.encodeEffect(42)).toBe("42");
+      expect(Exit.getSuccess(Selected.decodeUnknownExit("42"))).toStrictEqual(O.some(42));
+      expect(Exit.getSuccess(Selected.encodeUnknownExit(42))).toStrictEqual(O.some("42"));
+      expect(Selected.decodeUnknownOption("42")).toStrictEqual(O.some(42));
+      expect(Selected.encodeUnknownOption(42)).toStrictEqual(O.some("42"));
+      expect(Result.getOrThrow(Selected.decodeUnknownResult("42"))).toBe(42);
+      expect(Result.getOrThrow(Selected.encodeUnknownResult(42))).toBe("42");
+      expect(Selected.decodeUnknownSync("42")).toBe(42);
+      expect(Selected.decodeUnknownSync).toBe(decodeUnknownSync);
+      expect(Selected.encodeUnknownSync(42)).toBe("42");
+      expect(yield* Effect.tryPromise(() => Selected.decodeUnknownPromise("42"))).toBe(42);
+      expect(yield* Effect.tryPromise(() => Selected.encodeUnknownPromise(42))).toBe("42");
+    })
+  );
+});
+
+describe("staticDescriptorInstaller", () => {
+  it("fails closed when strict installation encounters an existing property", () => {
+    expect(() =>
+      staticDescriptorInstaller.install({ is: true }, { is: false }, "strict", (key) => {
+        throw new Error(`translated conflict: ${key}`);
+      })
+    ).toThrow("translated conflict: is");
+    expect(() => staticDescriptorInstaller.install({ is: true }, { is: false }, "strict")).toThrow(
+      "Cannot redefine existing static 'is' in strict mode."
+    );
   });
+
+  it("preserves identical legacy statics", () => {
+    const is = () => true;
+    const target = { is };
+
+    expect(staticDescriptorInstaller.install(target, { is })).toBe(target);
+    expect(target.is).toBe(is);
+  });
+
+  it("hardens accessor descriptors and reports definition failures", () => {
+    const statics = {} as { readonly value: number };
+    Reflect.defineProperty(statics, "value", {
+      configurable: true,
+      enumerable: true,
+      get: () => 42,
+    });
+
+    const installed = staticDescriptorInstaller.install({}, statics, "strict");
+    expect(installed.value).toBe(42);
+    expect(Reflect.getOwnPropertyDescriptor(installed, "value")).toMatchObject({
+      configurable: false,
+      enumerable: false,
+    });
+
+    expect(() => staticDescriptorInstaller.install(Object.preventExtensions({}), { value: 42 }, "strict")).toThrow(
+      "Cannot define static 'value'."
+    );
+  });
+});
+
+describe("classStatics", () => {
+  it.effect(
+    "provides frozen destructurable bags without replacing class constructors",
+    Effect.fnUntraced(function* () {
+      const { decodeUnknownEffect, is } = User.utils;
+      const user = User.make({ name: "Ada" });
+      const event = Event.make({ value: 1 });
+
+      expect(is(user)).toBe(true);
+      expect((yield* decodeUnknownEffect({ name: "Grace" })).name).toBe("Grace");
+      expect(Event.utils.is(event)).toBe(true);
+      expect(Object.isFrozen(User.utils)).toBe(true);
+      expect(Object.isFrozen(Event.utils)).toBe(true);
+      expect(Reflect.has(User, "decodeUnknownEffect")).toBe(false);
+      expectTypeOf(User.utils.decodeUnknownEffect).toEqualTypeOf(decodeUnknownUserEffect);
+      expectTypeOf(User.utils.is).toEqualTypeOf(isUser);
+      expectTypeOf(User.utils).not.toHaveProperty("decodeUnknownSync");
+    })
+  );
 });

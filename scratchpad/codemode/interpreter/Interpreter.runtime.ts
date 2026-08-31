@@ -13,7 +13,7 @@
 
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, thunkFalse } from "@beep/utils";
 import {
   Cause,
@@ -174,7 +174,7 @@ import {
 import { ScopeStack } from "./Interpreter.scope.ts";
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const StatementNodeType = LiteralKit([
   "ExpressionStatement",
@@ -362,7 +362,7 @@ const OpaqueMemberReference = S.Union([
   GlobalMethodReference,
   JsonMethodReference,
   GeneratorMethodReference,
-]).pipe(S.toTaggedUnion("_tag"), SchemaUtils.withCodecStatics);
+]).pipe(S.toTaggedUnion("_tag"), SchemaUtils.withCodecStatics(["is"]));
 
 type OpaqueMemberReference = typeof OpaqueMemberReference.Type;
 

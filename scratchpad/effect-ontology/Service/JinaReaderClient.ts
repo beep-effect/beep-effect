@@ -130,7 +130,7 @@ const JinaApiResponse = S.Struct({
     links: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }),
 }).pipe(
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 // =============================================================================

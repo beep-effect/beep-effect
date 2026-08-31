@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Console, Duration, Effect, flow, HashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -135,7 +135,7 @@ class DocgenProcessDiagnostic extends S.Class<DocgenProcessDiagnostic>($I`Docgen
 
 const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDryRunDocument));
 const decodeDocgenProcessDiagnostic = S.decodeUnknownOption(DocgenProcessDiagnostic);
-const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 type DocgenLocalEnvironment = Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
 type DocgenLocalOptions = {

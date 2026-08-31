@@ -13,7 +13,6 @@ import { Dataset } from "@beep/rdf/Rdf";
 // build calls `document.createElement` at module top level — which kills a real worker.
 // BrowserWorkerImportGraph.test.ts guards exactly this.
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.ts";
 import { OntologySnapshot } from "./Session.projections.ts";
@@ -96,8 +95,7 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
 }).pipe(
   $I.annoteSchema("WorkerCommand", {
     description: "Effect-Schema typed worker command envelope.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -225,8 +223,7 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
 }).pipe(
   $I.annoteSchema("WorkerResult", {
     description: "Effect-Schema typed worker result envelope.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

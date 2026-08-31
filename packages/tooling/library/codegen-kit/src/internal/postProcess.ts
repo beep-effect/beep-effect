@@ -3,6 +3,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
 import { CodegenPostProcessError } from "../CodegenKit.errors.ts";
@@ -414,6 +415,20 @@ const renderAnnotation = (
 const schemaImportPath = (config: GenerateConfig): string =>
   config.schemaStyle === "class" ? config.packageName : `${config.packageName}/schema`;
 
+const renderCodecStatics = (name: string, config: GenerateConfig): ReadonlyArray<string> =>
+  pipe(
+    R.get(config.schemaCodecStatics, name),
+    O.filter(A.isReadonlyArrayNonEmpty),
+    O.map((keys) => [
+      `  SchemaUtils.withCodecStatics([${pipe(
+        keys,
+        A.map((key) => `"${key}"`),
+        A.join(", ")
+      )}])`,
+    ]),
+    O.getOrElse(A.empty<string>)
+  );
+
 const renderSchemaEntry = (name: string, constLine: string, config: GenerateConfig): string => {
   const expression = prepareSchemaExpression(
     pipe(constLine, Str.replace(new RegExp(`^export const ${name} = `), ""), Str.replace(/;$/, "")),
@@ -436,8 +451,10 @@ const renderSchemaEntry = (name: string, constLine: string, config: GenerateConf
       " * @since 0.0.0",
       " */",
       `export const ${name} = ${expression.expression}.pipe(`,
-      `${renderAnnotation(name, expression.annotations, config)},`,
-      "  SchemaUtils.withCodecStatics",
+      pipe(
+        [renderAnnotation(name, expression.annotations, config), ...renderCodecStatics(name, config)],
+        A.join(",\n")
+      ),
       ");",
       "",
       "/**",
@@ -568,13 +585,16 @@ const defaultHeader = (config: GenerateConfig): string =>
     A.join("\n")
   );
 
+const usesSchemaCodecStatics = (config: GenerateConfig): boolean =>
+  pipe(config.schemaCodecStatics, R.values, A.some(A.isReadonlyArrayNonEmpty));
+
 const renderSchemas = (source: string, config: GenerateConfig): string =>
   pipe(
     [
       config.output.header ?? defaultHeader(config),
       "",
       `import { ${config.identity.composer} } from "@beep/identity";`,
-      'import { SchemaUtils } from "@beep/schema";',
+      ...(usesSchemaCodecStatics(config) ? ['import { SchemaUtils } from "@beep/schema";'] : []),
       'import * as S from "effect/Schema";',
       "",
       `const $I = ${config.identity.composer}.create("${config.identity.moduleId}");`,

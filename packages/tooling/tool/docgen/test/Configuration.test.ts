@@ -1,6 +1,6 @@
 import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Domain from "@beep/repo-docgen/Domain";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Str } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -8,7 +8,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 
-const encodeJson = Unknown.encodeSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const makeLoadArgs = (): Parameters<typeof Configuration.load>[0] => ({
   projectHomepage: O.none(),

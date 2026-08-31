@@ -33,6 +33,8 @@ import { makeCliExtractionLayer } from "../../Runtime/WorkflowLayers.ts";
 import { ExtractionWorkflow } from "../../Service/ExtractionWorkflow.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+
+const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(Unknown, { space: 2 }));
 import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
 import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
 
@@ -216,7 +218,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
         object: r.object,
       })),
     };
-    const outputJson = yield* Unknown.encodeUnknownEffectFromJsonString(output, { space: 2 });
+    const outputJson = yield* encodePrettyUnknown(output);
     yield* Console.log(outputJson);
   } else {
     const rdf = yield* RdfBuilder;

@@ -47,7 +47,7 @@ const ReportId = S.Union([S.Int, S.FiniteFromString.pipe(S.check(S.isInt()))]).p
   $I.annoteSchema("PacerReportId", {
     description: "PCL batch report id accepted as a number or numeric string.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 const invalidReportIdError = (): PacerPclError =>
@@ -56,7 +56,7 @@ const invalidReportIdError = (): PacerPclError =>
 const formatReportDeletePathSegment = (reportId: ReportIdValue): O.Option<string> =>
   P.isNumber(reportId)
     ? pipe(
-        ReportId.decodeOption(reportId),
+        ReportId.decodeUnknownOption(reportId),
         O.map((value) => `${value}`)
       )
     : pipe(O.liftPredicate(Str.isNonEmpty)(reportId), O.map(globalThis.encodeURIComponent), O.filter(Str.isNonEmpty));
@@ -299,7 +299,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
           return yield* withReportCleanup(
             started.reportId,
             Effect.gen(function* () {
-              const reportId = yield* O.match(ReportId.decodeOption(started.reportId), {
+              const reportId = yield* O.match(ReportId.decodeUnknownOption(started.reportId), {
                 onNone: () => Effect.fail(invalidReportIdError()),
                 onSome: Effect.succeed,
               });

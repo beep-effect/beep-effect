@@ -9,7 +9,6 @@
 // Current ACP schema release: v0.11.3
 
 import { $AcpId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $AcpId.create("_generated/schema.gen");
@@ -48,7 +47,6 @@ export const LogoutCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nLogout capabilities supported by the agent.\n\nBy supplying `{}` it means that the agent supports the logout method.",
     identifier: "LogoutCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -112,7 +110,6 @@ export const McpCapabilities = S.Struct({
     documentation: "MCP capabilities supported by the agent",
     identifier: "McpCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -184,7 +181,6 @@ export const PromptCapabilities = S.Struct({
       "Prompt capabilities supported by the agent in `session/prompt` requests.\n\nBaseline agent functionality requires support for [`ContentBlock::Text`]\nand [`ContentBlock::ResourceLink`] in prompt requests.\n\nOther variants must be explicitly opted in to.\nCapabilities for different types of content in prompt requests.\n\nIndicates which content types beyond the baseline (text and resource links)\nthe agent can process.\n\nSee protocol docs: [Prompt Capabilities](https://agentclientprotocol.com/protocol/initialization#prompt-capabilities)",
     identifier: "PromptCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -237,7 +233,6 @@ export const SessionCloseCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/close` method.\n\nBy supplying `{}` it means that the agent supports closing of sessions.",
     identifier: "SessionCloseCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -290,7 +285,6 @@ export const SessionForkCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/fork` method.\n\nBy supplying `{}` it means that the agent supports forking of sessions.",
     identifier: "SessionForkCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -343,7 +337,6 @@ export const SessionListCapabilities = S.Struct({
       "Capabilities for the `session/list` method.\n\nBy supplying `{}` it means that the agent supports listing of sessions.",
     identifier: "SessionListCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -396,7 +389,6 @@ export const SessionResumeCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCapabilities for the `session/resume` method.\n\nBy supplying `{}` it means that the agent supports resuming of sessions.",
     identifier: "SessionResumeCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -436,7 +428,6 @@ export const SessionId = S.String.pipe(
       "A unique identifier for a conversation session between a client and agent.\n\nSessions maintain their own context, conversation history, and state,\nallowing multiple independent interactions with the same agent.\n\nSee protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)",
     identifier: "SessionId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -476,7 +467,6 @@ export const Role = S.Literals(["assistant", "user"]).pipe(
       "The sender or recipient of messages and data in a conversation.",
     identifier: "Role",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -531,7 +521,6 @@ export const TextResourceContents = S.Struct({
     documentation: "Text-based resource contents.",
     identifier: "TextResourceContents",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -586,7 +575,6 @@ export const BlobResourceContents = S.Struct({
     documentation: "Binary resource contents.",
     identifier: "BlobResourceContents",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -654,7 +642,6 @@ export const ToolKind = S.Union(
       "Categories of tools that can be invoked.\n\nTool kinds help clients choose appropriate icons and optimize how they\ndisplay tool execution progress.\n\nSee protocol docs: [Creating](https://agentclientprotocol.com/protocol/tool-calls#creating)",
     identifier: "ToolKind",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -723,7 +710,6 @@ export const ToolCallLocation = S.Struct({
       'A file location being accessed or modified by a tool.\n\nEnables clients to implement "follow-along" features that track\nwhich files the agent is working with in real-time.\n\nSee protocol docs: [Following the Agent](https://agentclientprotocol.com/protocol/tool-calls#following-the-agent)',
     identifier: "ToolCallLocation",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -780,7 +766,6 @@ export const ToolCallStatus = S.Union(
       "Execution status of a tool call.\n\nTool calls progress through different statuses during their lifecycle.\n\nSee protocol docs: [Status](https://agentclientprotocol.com/protocol/tool-calls#status)",
     identifier: "ToolCallStatus",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -819,7 +804,6 @@ export const ToolCallId = S.String.pipe(
     documentation: "Unique identifier for a tool call within a session.",
     identifier: "ToolCallId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -872,7 +856,6 @@ export const PlanEntryPriority = S.Union(
       "Priority levels for plan entries.\n\nUsed to indicate the relative importance or urgency of different\ntasks in the execution plan.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
     identifier: "PlanEntryPriority",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -925,7 +908,6 @@ export const PlanEntryStatus = S.Union(
       "Status of a plan entry in the execution flow.\n\nTracks the lifecycle of each task from planning through completion.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
     identifier: "PlanEntryStatus",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -981,7 +963,6 @@ export const UnstructuredCommandInput = S.Struct({
       "All text that was typed after the command name is provided as input.",
     identifier: "UnstructuredCommandInput",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1020,7 +1001,6 @@ export const SessionModeId = S.String.pipe(
     documentation: "Unique identifier for a Session Mode.",
     identifier: "SessionModeId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1060,7 +1040,6 @@ export const SessionConfigValueId = S.String.pipe(
       "Unique identifier for a session configuration option value.",
     identifier: "SessionConfigValueId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1100,7 +1079,6 @@ export const SessionConfigGroupId = S.String.pipe(
       "Unique identifier for a session configuration option value group.",
     identifier: "SessionConfigGroupId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1150,7 +1128,6 @@ export const SessionConfigOptionCategory = S.Union([
       "Semantic category for a session configuration option.\n\nThis is intended to help Clients distinguish broadly common selectors (e.g. model selector vs\nsession mode selector vs thought/reasoning level) for UX purposes (keyboard shortcuts, icons,\nplacement). It MUST NOT be required for correctness. Clients MUST handle missing or unknown\ncategories gracefully.\n\nCategory names beginning with `_` are free for custom use, like other ACP extension methods.\nCategory names that do not begin with `_` are reserved for the ACP spec.",
     identifier: "SessionConfigOptionCategory",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1190,7 +1167,6 @@ export const SessionConfigId = S.String.pipe(
     documentation: "Unique identifier for a session configuration option.",
     identifier: "SessionConfigId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1238,7 +1214,6 @@ export const Cost = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nCost information for a session.",
     identifier: "Cost",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1278,7 +1253,6 @@ export const ElicitationId = S.String.pipe(
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nUnique identifier for an elicitation.",
     identifier: "ElicitationId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1319,7 +1293,6 @@ export const ExtNotification = S.Json.pipe(
       "Allows the Agent to send an arbitrary notification that is not part of the ACP spec.\nExtension notifications provide a way to send one-way messages for custom functionality\nwhile maintaining protocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
     identifier: "ExtNotification",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1363,7 +1336,6 @@ export const RequestId = S.Union([
       "JSON RPC Request Id\n\nAn identifier established by the Client that MUST contain a String, Number, or NULL value if included. If it is not included it is assumed to be a notification. The value SHOULD normally not be Null [1] and Numbers SHOULD NOT contain fractional parts [2]\n\nThe Server MUST reply with the same value in the Response object if included. This member is used to correlate the context between the two objects.\n\n[1] The use of Null as a value for the id member in a Request object is discouraged, because this specification uses a value of Null for Responses with an unknown id. Also, because JSON-RPC 1.0 uses an id value of Null for Notifications this could cause confusion in handling.\n\n[2] Fractional parts may be problematic, since many decimal fractions cannot be represented exactly as binary fractions.",
     identifier: "RequestId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1419,7 +1391,6 @@ export const PermissionOptionKind = S.Union(
       "The type of permission option being presented to the user.\n\nHelps clients choose appropriate icons and UI treatment.",
     identifier: "PermissionOptionKind",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1458,7 +1429,6 @@ export const PermissionOptionId = S.String.pipe(
     documentation: "Unique identifier for a permission option.",
     identifier: "PermissionOptionId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1517,7 +1487,6 @@ export const EnvVariable = S.Struct({
       "An environment variable to set when launching an MCP server.",
     identifier: "EnvVariable",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1567,7 +1536,6 @@ export const StringFormat = S.Union(
       "String format types for string properties in elicitation schemas.",
     identifier: "StringFormat",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1614,7 +1582,6 @@ export const EnumOption = S.Struct({
       "A titled enum option with a const value and human-readable title.",
     identifier: "EnumOption",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1657,7 +1624,6 @@ export const ElicitationStringType = S.Union(
       "Items definition for untitled multi-select enum properties.",
     identifier: "ElicitationStringType",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1699,7 +1665,6 @@ export const ElicitationSchemaType = S.Union(
     documentation: "Type discriminator for elicitation schemas.",
     identifier: "ElicitationSchemaType",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1740,7 +1705,6 @@ export const ExtRequest = S.Json.pipe(
       "Allows for sending an arbitrary request that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
     identifier: "ExtRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1810,7 +1774,6 @@ export const Implementation = S.Struct({
       "Metadata about the implementation of the client or agent.\nDescribes the name and version of an MCP implementation, with an optional\ntitle for UI representation.",
     identifier: "Implementation",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1888,7 +1851,6 @@ export const AuthEnvVar = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nDescribes a single environment variable for an [`AuthMethodEnvVar`] authentication method.",
     identifier: "AuthEnvVar",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1956,7 +1918,6 @@ export const AuthMethodAgent = S.Struct({
       "Agent handles authentication itself.\n\nThis is the default authentication method type.",
     identifier: "AuthMethodAgent",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2007,7 +1968,6 @@ export const ProtocolVersion = S.Int.check(
         "Protocol version identifier.\n\nThis version is only bumped for breaking changes.\nNon-breaking changes should be introduced via capabilities.",
       format: "uint16",
     }),
-    SchemaUtils.withCodecStatics,
   );
 
 /**
@@ -2059,7 +2019,6 @@ export const AuthenticateResponse = S.Struct({
     documentation: "Response to the `authenticate` method.",
     identifier: "AuthenticateResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2112,7 +2071,6 @@ export const LogoutResponse = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to the `logout` method.",
     identifier: "LogoutResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2152,7 +2110,6 @@ export const ModelId = S.String.pipe(
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA unique identifier for a model.",
     identifier: "ModelId",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2205,7 +2162,6 @@ export const CloseSessionResponse = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from closing a session.",
     identifier: "CloseSessionResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2257,7 +2213,6 @@ export const SetSessionModeResponse = S.Struct({
     documentation: "Response to `session/set_mode` method.",
     identifier: "SetSessionModeResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2320,7 +2275,6 @@ export const StopReason = S.Union(
       "Reasons why an agent stops processing a prompt turn.\n\nSee protocol docs: [Stop Reasons](https://agentclientprotocol.com/protocol/prompt-turn#stop-reasons)",
     identifier: "StopReason",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2424,7 +2378,6 @@ export const Usage = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nToken usage information for a prompt turn.",
     identifier: "Usage",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2477,7 +2430,6 @@ export const SetSessionModelResponse = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse to `session/set_model` method.",
     identifier: "SetSessionModelResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2518,7 +2470,6 @@ export const ExtResponse = S.Json.pipe(
       "Allows for sending an arbitrary response to an [`ExtRequest`] that is not part of the ACP spec.\nExtension methods provide a way to add custom functionality while maintaining\nprotocol compatibility.\n\nSee protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)",
     identifier: "ExtResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2617,7 +2568,6 @@ export const ErrorCode = S.Union([
       "Predefined error codes for common JSON-RPC and ACP-specific errors.\n\nThese codes follow the JSON-RPC 2.0 specification for standard errors\nand use the reserved range (-32000 to -32099) for protocol-specific errors.",
     identifier: "ErrorCode",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2677,7 +2627,6 @@ export const AuthCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication capabilities supported by the client.\n\nAdvertised during initialization to inform the agent which authentication\nmethod types the client can handle. This governs opt-in types that require\nadditional client-side support.",
     identifier: "AuthCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2730,7 +2679,6 @@ export const ElicitationFormCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForm-based elicitation capabilities.",
     identifier: "ElicitationFormCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2784,7 +2732,6 @@ export const ElicitationUrlCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nURL-based elicitation capabilities.",
     identifier: "ElicitationUrlCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2849,7 +2796,6 @@ export const FileSystemCapabilities = S.Struct({
       "File system capabilities that a client may support.\n\nSee protocol docs: [FileSystem](https://agentclientprotocol.com/protocol/initialization#filesystem)",
     identifier: "FileSystemCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2906,7 +2852,6 @@ export const AuthenticateRequest = S.Struct({
       "Request parameters for the authenticate method.\n\nSpecifies which authentication method to use.",
     identifier: "AuthenticateRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2959,7 +2904,6 @@ export const LogoutRequest = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for the logout method.\n\nTerminates the current authenticated session.",
     identifier: "LogoutRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3016,7 +2960,6 @@ export const HttpHeader = S.Struct({
       "An HTTP header to set when making requests to the MCP server.",
     identifier: "HttpHeader",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3087,7 +3030,6 @@ export const ListSessionsRequest = S.Struct({
       "Request parameters for listing existing sessions.\n\nOnly available if the Agent supports the `sessionCapabilities.list` capability.",
     identifier: "ListSessionsRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3139,7 +3081,6 @@ export const WriteTextFileResponse = S.Struct({
     documentation: "Response to `fs/write_text_file`",
     identifier: "WriteTextFileResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3192,7 +3133,6 @@ export const ReadTextFileResponse = S.Struct({
     documentation: "Response containing the contents of a text file.",
     identifier: "ReadTextFileResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3247,7 +3187,6 @@ export const CreateTerminalResponse = S.Struct({
     documentation: "Response containing the ID of the created terminal.",
     identifier: "CreateTerminalResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3322,7 +3261,6 @@ export const TerminalExitStatus = S.Struct({
     documentation: "Exit status of a terminal command.",
     identifier: "TerminalExitStatus",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3374,7 +3312,6 @@ export const ReleaseTerminalResponse = S.Struct({
     documentation: "Response to terminal/release method",
     identifier: "ReleaseTerminalResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3449,7 +3386,6 @@ export const WaitForTerminalExitResponse = S.Struct({
     documentation: "Response containing the exit status of a terminal command.",
     identifier: "WaitForTerminalExitResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3502,7 +3438,6 @@ export const KillTerminalResponse = S.Struct({
     documentation: "Response to `terminal/kill` method",
     identifier: "KillTerminalResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3548,7 +3483,6 @@ export const ElicitationContentValue = S.Union([
     description: "Generated ACP schema for ElicitationContentValue.",
     identifier: "ElicitationContentValue",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3607,7 +3541,6 @@ export const AgentAuthCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nAuthentication-related capabilities supported by the agent.",
     identifier: "AgentAuthCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3683,7 +3616,6 @@ export const SessionCapabilities = S.Struct({
       "Session capabilities supported by the agent.\n\nAs a baseline, all Agents **MUST** support `session/new`, `session/prompt`, `session/cancel`, and `session/update`.\n\nOptionally, they **MAY** support other session methods and notifications by specifying additional capabilities.\n\nNote: `session/load` is still handled by the top-level `load_session` capability. This will be unified in future versions of the protocol.\n\nSee protocol docs: [Session Capabilities](https://agentclientprotocol.com/protocol/initialization#session-capabilities)",
     identifier: "SessionCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3745,7 +3677,6 @@ export const WriteTextFileRequest = S.Struct({
       "Request to write content to a text file.\n\nOnly available if the client supports the `fs.writeTextFile` capability.",
     identifier: "WriteTextFileRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3830,7 +3761,6 @@ export const ReadTextFileRequest = S.Struct({
       "Request to read content from a text file.\n\nOnly available if the client supports the `fs.readTextFile` capability.",
     identifier: "ReadTextFileRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3889,7 +3819,6 @@ export const TerminalOutputRequest = S.Struct({
       "Request to get the current output and status of a terminal.",
     identifier: "TerminalOutputRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -3947,7 +3876,6 @@ export const ReleaseTerminalRequest = S.Struct({
     documentation: "Request to release a terminal and free its resources.",
     identifier: "ReleaseTerminalRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4005,7 +3933,6 @@ export const WaitForTerminalExitRequest = S.Struct({
     documentation: "Request to wait for a terminal command to exit.",
     identifier: "WaitForTerminalExitRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4063,7 +3990,6 @@ export const KillTerminalRequest = S.Struct({
     documentation: "Request to kill a terminal without releasing it.",
     identifier: "KillTerminalRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4138,7 +4064,6 @@ export const SessionInfo = S.Struct({
     documentation: "Information about a session returned by session/list",
     identifier: "SessionInfo",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4194,7 +4119,6 @@ export const CancelNotification = S.Struct({
       "Notification to cancel ongoing operations for a session.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/prompt-turn#cancellation)",
     identifier: "CancelNotification",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4250,7 +4174,6 @@ export const CloseSessionRequest = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for closing an active session.\n\nIf supported, the agent **must** cancel any ongoing work related to the session\n(treat it as if `session/cancel` was called) and then free up any resources\nassociated with the session.\n\nOnly available if the Agent supports the `session.close` capability.",
     identifier: "CloseSessionRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4313,7 +4236,6 @@ export const Annotations = S.Struct({
       "Optional annotations for the client. The client can use annotations to inform how objects are used or displayed",
     identifier: "Annotations",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4359,7 +4281,6 @@ export const EmbeddedResourceResource = S.Union([
     documentation: "Resource content that can be embedded in a message.",
     identifier: "EmbeddedResourceResource",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4425,7 +4346,6 @@ export const PlanEntry = S.Struct({
       "A single entry in the execution plan.\n\nRepresents a task or goal that the assistant intends to accomplish\nas part of fulfilling the user's request.\nSee protocol docs: [Plan Entries](https://agentclientprotocol.com/protocol/agent-plan#plan-entries)",
     identifier: "PlanEntry",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4472,7 +4392,6 @@ export const AvailableCommandInput = S.Union([
     documentation: "The input specification for a command.",
     identifier: "AvailableCommandInput",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4528,7 +4447,6 @@ export const SessionMode = S.Struct({
       "A mode the agent can operate in.\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
     identifier: "SessionMode",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4586,7 +4504,6 @@ export const SetSessionModeRequest = S.Struct({
     documentation: "Request parameters for setting a session mode.",
     identifier: "SetSessionModeRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4652,7 +4569,6 @@ export const SessionConfigSelectOption = S.Struct({
     documentation: "A possible value for a session configuration option.",
     identifier: "SessionConfigSelectOption",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4746,7 +4662,6 @@ export const SetSessionConfigOptionRequest = S.Union([
       "Request parameters for setting a session configuration option.",
     identifier: "SetSessionConfigOptionRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4803,7 +4718,6 @@ export const ElicitationCompleteNotification = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification sent by the agent when a URL-based elicitation is complete.",
     identifier: "ElicitationCompleteNotification",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4870,7 +4784,6 @@ export const PermissionOption = S.Struct({
       "An option presented to the user when requesting permission.",
     identifier: "PermissionOption",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -4937,7 +4850,6 @@ export const RequestPermissionOutcome = S.Union(
     documentation: "The outcome of a permission request.",
     identifier: "RequestPermissionOutcome",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5025,7 +4937,6 @@ export const CreateTerminalRequest = S.Struct({
     documentation: "Request to create a new terminal and execute a command.",
     identifier: "CreateTerminalRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5089,7 +5000,6 @@ export const McpServerStdio = S.Struct({
     documentation: "Stdio transport configuration for MCP.",
     identifier: "McpServerStdio",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5132,7 +5042,6 @@ export const TitledMultiSelectItems = S.Struct({
     documentation: "Items definition for titled multi-select enum properties.",
     identifier: "TitledMultiSelectItems",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5179,7 +5088,6 @@ export const UntitledMultiSelectItems = S.Struct({
       "Items definition for untitled multi-select enum properties.",
     identifier: "UntitledMultiSelectItems",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5315,7 +5223,6 @@ export const AuthMethod = S.Union([
       "Describes an available authentication method.\n\nThe `type` field acts as the discriminator in the serialized JSON form.\nWhen no `type` is present, the method is treated as `agent`.",
     identifier: "AuthMethod",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5382,7 +5289,6 @@ export const ModelInfo = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nInformation about a selectable model.",
     identifier: "ModelInfo",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5441,7 +5347,6 @@ export const SetSessionModelRequest = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for setting a session model.",
     identifier: "SetSessionModelRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5512,7 +5417,6 @@ export const PromptResponse = S.Struct({
       "Response from processing a user prompt.\n\nSee protocol docs: [Check for Completion](https://agentclientprotocol.com/protocol/prompt-turn#4-check-for-completion)",
     identifier: "PromptResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5568,7 +5472,6 @@ export const Error = S.Struct({
       "JSON-RPC error object.\n\nRepresents an error that occurred during method execution, following the\nJSON-RPC 2.0 error object specification with optional additional data.\n\nSee protocol docs: [JSON-RPC Error Object](https://www.jsonrpc.org/specification#error_object)",
     identifier: "Error",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5631,7 +5534,6 @@ export const ElicitationCapabilities = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nElicitation capabilities supported by the client.",
     identifier: "ElicitationCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5694,7 +5596,6 @@ export const TerminalOutputResponse = S.Struct({
     documentation: "Response containing the terminal output and exit status.",
     identifier: "TerminalOutputResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5756,7 +5657,6 @@ export const ElicitationAction = S.Union(
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user's action in response to an elicitation.",
     identifier: "ElicitationAction",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5843,7 +5743,6 @@ export const AgentCapabilities = S.Struct({
       "Capabilities supported by the agent.\n\nAdvertised during initialization to inform the client about\navailable features and content types.\n\nSee protocol docs: [Agent Capabilities](https://agentclientprotocol.com/protocol/initialization#agent-capabilities)",
     identifier: "AgentCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -5907,7 +5806,6 @@ export const ListSessionsResponse = S.Struct({
     documentation: "Response from listing sessions.",
     identifier: "ListSessionsResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6061,7 +5959,6 @@ export const ContentBlock = S.Union(
       "Content blocks represent displayable information in the Agent Client Protocol.\n\nThey provide a structured way to handle various types of user-facing content—whether\nit's text from language models, images for analysis, or embedded resources for context.\n\nContent blocks appear in:\n- User prompts sent via `session/prompt`\n- Language model output streamed through `session/update` notifications\n- Progress updates and results from tool calls\n\nThis structure is compatible with the Model Context Protocol (MCP), enabling\nagents to seamlessly forward content from MCP tool outputs without transformation.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/content)",
     identifier: "ContentBlock",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6124,7 +6021,6 @@ export const AvailableCommand = S.Struct({
     documentation: "Information about a command.",
     identifier: "AvailableCommand",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6182,7 +6078,6 @@ export const SessionModeState = S.Struct({
     documentation: "The set of modes and the one currently active.",
     identifier: "SessionModeState",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6244,7 +6139,6 @@ export const SessionConfigSelectGroup = S.Struct({
       "A group of possible values for a session configuration option.",
     identifier: "SessionConfigSelectGroup",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6301,7 +6195,6 @@ export const RequestPermissionResponse = S.Struct({
     documentation: "Response to a permission request.",
     identifier: "RequestPermissionResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6399,7 +6292,6 @@ export const McpServer = S.Union([
       "Configuration for connecting to an MCP (Model Context Protocol) server.\n\nMCP servers provide tools and context that the agent can use when\nprocessing prompts.\n\nSee protocol docs: [MCP Servers](https://agentclientprotocol.com/protocol/session-setup#mcp-servers)",
     identifier: "McpServer",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6451,7 +6343,6 @@ export const MultiSelectItems = S.Union([
     documentation: "Items for a multi-select (array) property schema.",
     identifier: "MultiSelectItems",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6510,7 +6401,6 @@ export const SessionModelState = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe set of models and the one currently active.",
     identifier: "SessionModelState",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6591,7 +6481,6 @@ export const ClientCapabilities = S.Struct({
       "Capabilities supported by the client.\n\nAdvertised during initialization to inform the agent about\navailable features and methods.\n\nSee protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)",
     identifier: "ClientCapabilities",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6649,7 +6538,6 @@ export const ElicitationResponse = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from the client to an elicitation request.",
     identifier: "ElicitationResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6736,7 +6624,6 @@ export const InitializeResponse = S.Struct({
       "Response to the `initialize` method.\n\nContains the negotiated protocol version and agent capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
     identifier: "InitializeResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6848,7 +6735,6 @@ export const ToolCallContent = S.Union(
       "Content produced by a tool call.\n\nTool calls can produce different types of content including\nstandard content blocks (text, images) or file diffs.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
     identifier: "ToolCallContent",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6917,7 +6803,6 @@ export const PromptRequest = S.Struct({
       "Request parameters for sending a user prompt to the agent.\n\nContains the user's message and any additional context.\n\nSee protocol docs: [User Message](https://agentclientprotocol.com/protocol/prompt-turn#1-user-message)",
     identifier: "PromptRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -6965,7 +6850,6 @@ export const SessionConfigSelectOptions = S.Union([
     documentation: "Possible values for a session configuration option.",
     identifier: "SessionConfigSelectOptions",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7026,7 +6910,6 @@ export const NewSessionRequest = S.Struct({
       "Request parameters for creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
     identifier: "NewSessionRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7088,7 +6971,6 @@ export const LoadSessionRequest = S.Struct({
       "Request parameters for loading an existing session.\n\nOnly available if the Agent supports the `loadSession` capability.\n\nSee protocol docs: [Loading Sessions](https://agentclientprotocol.com/protocol/session-setup#loading-sessions)",
     identifier: "LoadSessionRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7152,7 +7034,6 @@ export const ForkSessionRequest = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for forking an existing session.\n\nCreates a new session based on the context of an existing one, allowing\noperations like generating summaries without affecting the original session's history.\n\nOnly available if the Agent supports the `session.fork` capability.",
     identifier: "ForkSessionRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7216,7 +7097,6 @@ export const ResumeSessionRequest = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest parameters for resuming an existing session.\n\nResumes an existing session without returning previous messages (unlike `session/load`).\nThis is useful for agents that can resume sessions but don't implement full session loading.\n\nOnly available if the Agent supports the `session.resume` capability.",
     identifier: "ResumeSessionRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7505,7 +7385,6 @@ export const ElicitationPropertySchema = S.Union(
       'Property schema for elicitation form fields.\n\nEach variant corresponds to a JSON Schema `"type"` value.\nSingle-select enums use the `String` variant with `enum` or `oneOf` set.\nMulti-select enums use the `Array` variant.',
     identifier: "ElicitationPropertySchema",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7581,7 +7460,6 @@ export const InitializeRequest = S.Struct({
       "Request parameters for the initialize method.\n\nSent by the client to establish connection and negotiate capabilities.\n\nSee protocol docs: [Initialization](https://agentclientprotocol.com/protocol/initialization)",
     identifier: "InitializeRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7681,7 +7559,6 @@ export const ToolCallUpdate = S.Struct({
       "An update to an existing tool call.\n\nUsed to report progress and results as tools execute. All fields except\nthe tool call ID are optional - only changed fields need to be included.\n\nSee protocol docs: [Updating](https://agentclientprotocol.com/protocol/tool-calls#updating)",
     identifier: "ToolCallUpdate",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7811,7 +7688,6 @@ export const SessionConfigOption = S.Union(
       "A session configuration option selector and its current state.",
     identifier: "SessionConfigOption",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7888,7 +7764,6 @@ export const ElicitationSchema = S.Struct({
       "Type-safe elicitation schema for requesting structured user input.\n\nThis represents a JSON Schema object with primitive-typed properties,\nas required by the elicitation specification.",
     identifier: "ElicitationSchema",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -7952,7 +7827,6 @@ export const RequestPermissionRequest = S.Struct({
       "Request for user permission to execute a tool call.\n\nSent when the agent needs authorization before performing a sensitive operation.\n\nSee protocol docs: [Requesting Permission](https://agentclientprotocol.com/protocol/tool-calls#requesting-permission)",
     identifier: "RequestPermissionRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8365,7 +8239,6 @@ export const SessionUpdate = S.Union(
       "Different types of updates that can be sent during session processing.\n\nThese updates provide real-time feedback about the agent's progress.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
     identifier: "SessionUpdate",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8443,7 +8316,6 @@ export const NewSessionResponse = S.Struct({
       "Response from creating a new session.\n\nSee protocol docs: [Creating a Session](https://agentclientprotocol.com/protocol/session-setup#creating-a-session)",
     identifier: "NewSessionResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8516,7 +8388,6 @@ export const LoadSessionResponse = S.Struct({
     documentation: "Response from loading an existing session.",
     identifier: "LoadSessionResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8593,7 +8464,6 @@ export const ForkSessionResponse = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from forking an existing session.",
     identifier: "ForkSessionResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8667,7 +8537,6 @@ export const ResumeSessionResponse = S.Struct({
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nResponse from resuming an existing session.",
     identifier: "ResumeSessionResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8723,7 +8592,6 @@ export const SetSessionConfigOptionResponse = S.Struct({
     documentation: "Response to `session/set_config_option` method.",
     identifier: "SetSessionConfigOptionResponse",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8833,7 +8701,6 @@ export const ElicitationRequest = S.Union(
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nRequest from the agent to elicit structured user input.\n\nThe agent sends this to the client to request information from the user,\neither via a form or by directing them to a URL.",
     identifier: "ElicitationRequest",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8892,7 +8759,6 @@ export const SessionNotification = S.Struct({
       "Notification containing a session update from the agent.\n\nUsed to stream real-time progress and results during prompt processing.\n\nSee protocol docs: [Agent Reports Output](https://agentclientprotocol.com/protocol/prompt-turn#3-agent-reports-output)",
     identifier: "SessionNotification",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -8961,7 +8827,6 @@ export const AgentNotification = S.Struct({
   $I.annoteSchema("AgentNotification", {
     description: "Generated ACP schema for AgentNotification.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9079,7 +8944,6 @@ export const AgentRequest = S.Struct({
   $I.annoteSchema("AgentRequest", {
     description: "Generated ACP schema for AgentRequest.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9169,7 +9033,6 @@ export const AgentResponse = S.Union([
   $I.annoteSchema("AgentResponse", {
     description: "Generated ACP schema for AgentResponse.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9223,7 +9086,6 @@ export const AudioContent = S.Struct({
     description: "Generated ACP schema for AudioContent.",
     documentation: "Audio provided to or from an LLM.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9302,7 +9164,6 @@ export const AuthMethodEnvVar = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nEnvironment variable authentication method.\n\nThe user provides credentials that the client passes to the agent as environment variables.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9381,7 +9242,6 @@ export const AuthMethodTerminal = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nTerminal-based authentication method.\n\nThe client runs an interactive terminal for the user to authenticate via a TUI.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9435,7 +9295,6 @@ export const AvailableCommandsUpdate = S.Struct({
     description: "Generated ACP schema for AvailableCommandsUpdate.",
     documentation: "Available commands are ready or have changed",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9489,7 +9348,6 @@ export const BooleanPropertySchema = S.Struct({
     description: "Generated ACP schema for BooleanPropertySchema.",
     documentation: "Schema for boolean properties in an elicitation form.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9544,7 +9402,6 @@ export const CancelRequestNotification = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nNotification to cancel an ongoing request.\n\nSee protocol docs: [Cancellation](https://agentclientprotocol.com/protocol/cancellation)",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9605,7 +9462,6 @@ export const ClientNotification = S.Struct({
   $I.annoteSchema("ClientNotification", {
     description: "Generated ACP schema for ClientNotification.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9748,7 +9604,6 @@ export const ClientRequest = S.Struct({
   $I.annoteSchema("ClientRequest", {
     description: "Generated ACP schema for ClientRequest.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9825,7 +9680,6 @@ export const ClientResponse = S.Union([
   $I.annoteSchema("ClientResponse", {
     description: "Generated ACP schema for ClientResponse.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9880,7 +9734,6 @@ export const ConfigOptionUpdate = S.Struct({
     description: "Generated ACP schema for ConfigOptionUpdate.",
     documentation: "Session configuration options have been updated.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9934,7 +9787,6 @@ export const Content = S.Struct({
     description: "Generated ACP schema for Content.",
     documentation: "Standard content block (text, images, resources).",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -9997,7 +9849,6 @@ export const ContentChunk = S.Struct({
     description: "Generated ACP schema for ContentChunk.",
     documentation: "A streamed item of content",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10052,7 +9903,6 @@ export const CurrentModeUpdate = S.Struct({
     documentation:
       "The current mode of the session has changed\n\nSee protocol docs: [Session Modes](https://agentclientprotocol.com/protocol/session-modes)",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10116,7 +9966,6 @@ export const Diff = S.Struct({
     documentation:
       "A diff representing file modifications.\n\nShows changes to files in a format suitable for display in the client UI.\n\nSee protocol docs: [Content](https://agentclientprotocol.com/protocol/tool-calls#content)",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10165,7 +10014,6 @@ export const ElicitationAcceptAction = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nThe user accepted the elicitation and provided content.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10211,7 +10059,6 @@ export const ElicitationFormMode = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nForm-based elicitation mode where the client renders a form from the provided schema.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10258,7 +10105,6 @@ export const ElicitationUrlMode = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nURL-based elicitation mode where the client directs the user to a URL.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10312,7 +10158,6 @@ export const EmbeddedResource = S.Struct({
     documentation:
       "The contents of a resource, embedded into a prompt or tool call result.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10367,7 +10212,6 @@ export const ImageContent = S.Struct({
     description: "Generated ACP schema for ImageContent.",
     documentation: "An image provided to or from an LLM.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10442,7 +10286,6 @@ export const IntegerPropertySchema = S.Struct({
     description: "Generated ACP schema for IntegerPropertySchema.",
     documentation: "Schema for integer properties in an elicitation form.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10500,7 +10343,6 @@ export const McpServerHttp = S.Struct({
     description: "Generated ACP schema for McpServerHttp.",
     documentation: "HTTP transport configuration for MCP.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10558,7 +10400,6 @@ export const McpServerSse = S.Struct({
     description: "Generated ACP schema for McpServerSse.",
     documentation: "SSE transport configuration for MCP.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10649,7 +10490,6 @@ export const MultiSelectPropertySchema = S.Struct({
     documentation:
       "Schema for multi-select (array) properties in an elicitation form.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10728,7 +10568,6 @@ export const NumberPropertySchema = S.Struct({
     documentation:
       "Schema for number (floating-point) properties in an elicitation form.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10784,7 +10623,6 @@ export const Plan = S.Struct({
     documentation:
       "An execution plan for accomplishing complex tasks.\n\nPlans consist of multiple entries representing individual tasks or goals.\nAgents report plans to clients to provide visibility into their execution strategy.\nPlans can evolve during execution as the agent discovers new requirements or completes tasks.\n\nSee protocol docs: [Agent Plan](https://agentclientprotocol.com/protocol/agent-plan)",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10845,7 +10683,6 @@ export const ResourceLink = S.Struct({
     documentation:
       "A resource that the server is capable of reading, included in a prompt or tool call result.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10899,7 +10736,6 @@ export const SelectedPermissionOutcome = S.Struct({
     description: "Generated ACP schema for SelectedPermissionOutcome.",
     documentation: "The user selected one of the provided options.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10942,7 +10778,6 @@ export const SessionConfigBoolean = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nA boolean on/off toggle session configuration option payload.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -10988,7 +10823,6 @@ export const SessionConfigSelect = S.Struct({
     documentation:
       "A single-value selector (dropdown) session configuration option payload.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -11058,7 +10892,6 @@ export const SessionInfoUpdate = S.Struct({
     documentation:
       "Update to session metadata. All fields are optional to support partial updates.\n\nAgents send this notification to update session information like title or custom metadata.\nThis allows clients to display dynamic session names and track session state changes.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -11166,7 +10999,6 @@ export const StringPropertySchema = S.Struct({
     documentation:
       'Schema for string properties in an elicitation form.\n\nWhen `enum` or `oneOf` is set, this represents a single-select enum\nwith `"type": "string"`.',
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -11219,7 +11051,6 @@ export const Terminal = S.Struct({
     documentation:
       "Embed a terminal created with `terminal/create` by its id.\n\nThe terminal must be added before calling `terminal/release`.\n\nSee protocol docs: [Terminal](https://agentclientprotocol.com/protocol/terminals)",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -11272,7 +11103,6 @@ export const TextContent = S.Struct({
     description: "Generated ACP schema for TextContent.",
     documentation: "Text provided to or from an LLM.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -11364,7 +11194,6 @@ export const ToolCall = S.Struct({
     documentation:
       "Represents a tool call that the language model has requested.\n\nTool calls are actions that the agent executes on behalf of the language model,\nsuch as reading files, executing code, or fetching data from external sources.\n\nSee protocol docs: [Tool Calls](https://agentclientprotocol.com/protocol/tool-calls)",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -11437,7 +11266,6 @@ export const UsageUpdate = S.Struct({
     documentation:
       "**UNSTABLE**\n\nThis capability is not part of the spec yet, and may be removed or changed at any point.\n\nContext window and cost update for a session.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**

@@ -14,7 +14,7 @@ import {
   VersionSyncReport,
   VersionSyncResolution,
 } from "@beep/repo-cli/test/VersionSync";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
@@ -22,7 +22,7 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 import { FastCheck as fc } from "effect/testing";
 import { FetchHttpClient } from "effect/unstable/http";
@@ -129,7 +129,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
           versionSpecifier: "^4.0.0-beta.28",
         });
         const updated = yield* fs.readFileString(packageJsonPath);
-        const decodedUpdated = (yield* Unknown.decodeEffectFromJsonString(updated)) as {
+        const decodedUpdated = (yield* UnknownFromJsonString.decodeEffect(updated)) as {
           readonly catalog: Record<string, string>;
         };
 

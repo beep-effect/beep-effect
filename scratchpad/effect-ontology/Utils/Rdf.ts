@@ -18,7 +18,7 @@ import { dual2 } from "./Dual.ts";
  *
  * **Gotchas**
  *
- * {@link IRI.fromUnknown} throws if the concatenated string is not a valid IRI.
+ * {@link IRI.decodeUnknownSync} throws if the concatenated string is not a valid IRI.
  *
  * **Example** (Build a person IRI)
  *
@@ -32,7 +32,7 @@ import { dual2 } from "./Dual.ts";
  * @since 0.0.0
  */
 export const buildIri = dual2(
-  (baseNamespace: string, localName: string): IriValue => IRI.fromUnknown(`${baseNamespace}${localName}`)
+  (baseNamespace: string, localName: string): IriValue => IRI.decodeUnknownSync(`${baseNamespace}${localName}`)
 );
 
 /**
@@ -44,7 +44,7 @@ export const buildIri = dual2(
  * import { IRI } from "@beep/rdf"
  * import { canonicalNamedNode } from "@effect-ontology/Utils/Rdf"
  *
- * const node = canonicalNamedNode(IRI.fromUnknown("https://example.com/person"))
+ * const node = canonicalNamedNode(IRI.decodeUnknownSync("https://example.com/person"))
  * console.log(node.value) // "https://example.com/person"
  * ```
  *
@@ -92,9 +92,9 @@ export const canonicalLiteral = (input: {
  * import * as O from "effect/Option"
  *
  * const quad = canonicalQuad({
- *   subject: IRI.fromUnknown("https://example.com/ada"),
- *   predicate: IRI.fromUnknown("https://example.com/name"),
- *   object: IRI.fromUnknown("https://example.com/Ada"),
+ *   subject: IRI.decodeUnknownSync("https://example.com/ada"),
+ *   predicate: IRI.decodeUnknownSync("https://example.com/name"),
+ *   object: IRI.decodeUnknownSync("https://example.com/Ada"),
  *   graph: O.none()
  * })
  * console.log(quad.subject.value) // "https://example.com/ada"

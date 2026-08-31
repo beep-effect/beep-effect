@@ -225,8 +225,8 @@ export const ColorSupportLevel = S.Literals(colorSupportLevelValues).pipe(
     description:
       "Supported terminal color support levels: 0 disables colors, 1 enables ANSI colors, 2 enables ANSI256, and 3 enables truecolor.",
   }),
-  withLiteralKitHelpers(ColorSupportLevelKit),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
+  withLiteralKitHelpers(ColorSupportLevelKit)
 );
 
 /**
@@ -292,8 +292,7 @@ export class ColorSupport extends S.Class<ColorSupport>($I`ColorSupport`)(
 export const ColorInfo = S.Union([ColorSupport, S.Literal(false)]).pipe(
   $I.annoteSchema("ColorInfo", {
     description: "Detected terminal color support information, or `false` when color output is disabled.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -359,8 +358,8 @@ export const ModifierName = S.Literals(modifierNameValues).pipe(
   $I.annoteSchema("ModifierName", {
     description: "Supported Chalk modifier names.",
   }),
-  withLiteralKitHelpers(ModifierNameKit),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  withLiteralKitHelpers(ModifierNameKit)
 );
 
 /**
@@ -402,8 +401,8 @@ export const ForegroundColorName = S.Literals(foregroundColorNameValues).pipe(
   $I.annoteSchema("ForegroundColorName", {
     description: "Supported Chalk foreground color names.",
   }),
-  withLiteralKitHelpers(ForegroundColorNameKit),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  withLiteralKitHelpers(ForegroundColorNameKit)
 );
 
 /**
@@ -445,8 +444,7 @@ export const BackgroundColorName = S.Literals(backgroundColorNameValues).pipe(
   $I.annoteSchema("BackgroundColorName", {
     description: "Supported Chalk background color names.",
   }),
-  withLiteralKitHelpers(BackgroundColorNameKit),
-  SchemaUtils.withCodecStatics
+  withLiteralKitHelpers(BackgroundColorNameKit)
 );
 
 /**
@@ -488,8 +486,7 @@ export const ColorName = S.Literals(colorNameValues).pipe(
   $I.annoteSchema("ColorName", {
     description: "Supported Chalk foreground and background color names.",
   }),
-  withLiteralKitHelpers(ColorNameKit),
-  SchemaUtils.withCodecStatics
+  withLiteralKitHelpers(ColorNameKit)
 );
 
 /**
@@ -521,8 +518,7 @@ export const StyleName = S.Literals(styleNameValues).pipe(
   $I.annoteSchema("StyleName", {
     description: "Supported Chalk modifier, foreground color, and background color style names.",
   }),
-  withLiteralKitHelpers(StyleNameKit),
-  SchemaUtils.withCodecStatics
+  withLiteralKitHelpers(StyleNameKit)
 );
 
 /**
@@ -545,8 +541,7 @@ export const ColorModelName = S.Literals(colorModelNameValues).pipe(
   $I.annoteSchema("ColorModelName", {
     description: "ANSI color model names accepted by Chalk dynamic color builders.",
   }),
-  withLiteralKitHelpers(ColorModelNameKit),
-  SchemaUtils.withCodecStatics
+  withLiteralKitHelpers(ColorModelNameKit)
 );
 
 /**
@@ -569,8 +564,7 @@ export const AnsiRenderLevel = S.Literals(ansiRenderLevelValues).pipe(
   $I.annoteSchema("AnsiRenderLevel", {
     description: "ANSI rendering level used by Chalk color model builders.",
   }),
-  withLiteralKitHelpers(AnsiRenderLevelKit),
-  SchemaUtils.withCodecStatics
+  withLiteralKitHelpers(AnsiRenderLevelKit)
 );
 
 /**
@@ -593,8 +587,7 @@ export const StyleChannel = S.Literals(styleChannelValues).pipe(
   $I.annoteSchema("StyleChannel", {
     description: "Foreground or background ANSI style channel.",
   }),
-  withLiteralKitHelpers(StyleChannelKit),
-  SchemaUtils.withCodecStatics
+  withLiteralKitHelpers(StyleChannelKit)
 );
 
 /**

@@ -129,7 +129,7 @@ export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolea
   $I.annoteSchema("AiMetricsOtlpAttributeValue", {
     description: "Low-cardinality or hashed attribute value emitted on AI metrics OTLP spans.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

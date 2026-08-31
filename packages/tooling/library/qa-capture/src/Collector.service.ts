@@ -105,8 +105,7 @@ export const CollectorBindPort = S.Int.check(
 ).pipe(
   $I.annoteSchema("CollectorBindPort", {
     description: "TCP port a collector may bind, including 0 for an ephemeral port.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

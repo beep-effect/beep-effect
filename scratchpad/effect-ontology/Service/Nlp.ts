@@ -237,7 +237,7 @@ export const ChunkOptions = ChunkOptionsInput.pipe(
     decode: SchemaGetter.transform(resolveChunkOptions),
     encode: SchemaGetter.transform(encodeChunkOptions),
   }),
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("ChunkOptions", {
     description: "Optional chunk overrides decoded to one complete canonical strategy parameter set.",
     toArbitrary: () => (fc) => S.toArbitrary(ResolvedChunkOptions)(fc),
@@ -900,7 +900,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             const iri = result.id;
             const domainModel = MutableHashMap.get(domainModelMap, iri);
             if (O.isSome(domainModel)) {
-              const iriValue = IRI.fromUnknown(iri);
+              const iriValue = IRI.decodeUnknownSync(iri);
               results.push(makeOntologySearchResult(iriValue, result.score, domainModel.value));
             }
           }
@@ -1009,7 +1009,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           if (score > 0) {
             const domainModel = MutableHashMap.get(domainModelMap, iri);
             if (O.isSome(domainModel)) {
-              const iriValue = IRI.fromUnknown(iri);
+              const iriValue = IRI.decodeUnknownSync(iri);
               results.push(makeOntologySearchResult(iriValue, score, domainModel.value));
             }
           }

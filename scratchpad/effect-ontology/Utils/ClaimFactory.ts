@@ -314,7 +314,7 @@ export class ClaimExtractionArtifact extends S.Class<ClaimExtractionArtifact>($I
 ) {}
 
 const ClaimExtractionArtifactJson = S.fromJsonString(ClaimExtractionArtifact).pipe(
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect", "encodeEffect"]),
   $I.annoteSchema("ClaimExtractionArtifactJson", {
     description: "JSON-string wire codec for the exact durable extraction artifact embedded in RDF.",
   })
@@ -824,8 +824,8 @@ export const knowledgeGraphToClaims = dual3(
 export const claimDataToQuads = dual3(
   (claim: ClaimData, graphUri: string | undefined, extractedAt: string | undefined): ReadonlyArray<Quad> => {
     const quads: Array<Quad> = [];
-    const claimIri = IRI.fromUnknown(`${CLAIMS.namespace}${claim.claimId}`);
-    const graph = P.isUndefined(graphUri) ? undefined : IRI.fromUnknown(graphUri);
+    const claimIri = IRI.decodeUnknownSync(`${CLAIMS.namespace}${claim.claimId}`);
+    const graph = P.isUndefined(graphUri) ? undefined : IRI.decodeUnknownSync(graphUri);
 
     // Type assertion: claim:id a claims:Claim
     quads.push(
@@ -842,7 +842,7 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: RDF_SUBJECT,
-        object: IRI.fromUnknown(claim.subjectIri),
+        object: IRI.decodeUnknownSync(claim.subjectIri),
         graph,
       })
     );
@@ -852,14 +852,14 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: RDF_PREDICATE,
-        object: IRI.fromUnknown(claim.predicateIri),
+        object: IRI.decodeUnknownSync(claim.predicateIri),
         graph,
       })
     );
 
     // RDF reification: rdf:object (IRI or Literal)
     const objectTerm =
-      claim.objectType === "iri" ? IRI.fromUnknown(claim.objectValue) : claimLiteral({ value: claim.objectValue });
+      claim.objectType === "iri" ? IRI.decodeUnknownSync(claim.objectValue) : claimLiteral({ value: claim.objectValue });
 
     quads.push(
       claimQuad({
@@ -913,14 +913,14 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: CLAIMS.statedIn,
-        object: IRI.fromUnknown(`${CLAIMS.namespace}article/${claim.articleId}`),
+        object: IRI.decodeUnknownSync(`${CLAIMS.namespace}article/${claim.articleId}`),
         graph,
       })
     );
 
     // Evidence
     if (P.isNotUndefined(claim.evidence)) {
-      const evidenceIri = IRI.fromUnknown(`${claimIri}/evidence`);
+      const evidenceIri = IRI.decodeUnknownSync(`${claimIri}/evidence`);
 
       quads.push(
         claimQuad({
@@ -1042,8 +1042,8 @@ export const claimExtractionArtifactToQuads = dual2(
     graphUri: string
   ) {
     const payload = yield* ClaimExtractionArtifactJson.encodeEffect(artifact);
-    const graph = IRI.fromUnknown(graphUri);
-    const artifactIri = IRI.fromUnknown(`${graphUri}:extraction-artifact`);
+    const graph = IRI.decodeUnknownSync(graphUri);
+    const artifactIri = IRI.decodeUnknownSync(`${graphUri}:extraction-artifact`);
     return [
       claimQuad({
         subject: artifactIri,

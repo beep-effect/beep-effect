@@ -54,7 +54,7 @@ export const OnePasswordReference = S.String.check(OnePasswordReferenceChecks).p
     title: "1Password reference",
     description: "A typed reference to a 1Password item field, never the plaintext secret value.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

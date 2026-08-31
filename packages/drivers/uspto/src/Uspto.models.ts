@@ -43,7 +43,7 @@ export const UsptoApplicationNumber = S.String.check(
   $I.annoteSchema("UsptoApplicationNumber", {
     description: "Normalized eight-digit USPTO application number (series code plus serial number).",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -105,7 +105,7 @@ export const UsptoApplicationNumberFromText = S.String.pipe(
   $I.annoteSchema("UsptoApplicationNumberFromText", {
     description: "Codec that normalizes free-text USPTO application numbers into the eight-digit domain form.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -151,8 +151,7 @@ export const UsptoPatentNumber = S.String.check(
   S.brand("UsptoPatentNumber"),
   $I.annoteSchema("UsptoPatentNumber", {
     description: "Normalized USPTO patent number without commas or kind codes.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -217,7 +216,7 @@ export const UsptoPatentNumberFromText = S.String.pipe(
   $I.annoteSchema("UsptoPatentNumberFromText", {
     description: "Codec that normalizes free-text USPTO patent numbers into the domain form.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -263,7 +262,7 @@ export type UsptoPatentNumberFromText = typeof UsptoPatentNumberFromText.Type;
  */
 export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> =>
   pipe(
-    UsptoApplicationNumberFromText.decodeOption(text),
+    UsptoApplicationNumberFromText.decodeUnknownOption(text),
     O.map((value): string => value)
   );
 
@@ -290,7 +289,7 @@ export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> 
  * @since 0.0.0
  */
 export const normalizeUsptoPatentNumber: (text: string) => O.Option<string> = flow(
-  UsptoPatentNumberFromText.decodeOption,
+  UsptoPatentNumberFromText.decodeUnknownOption,
   O.map((value): string => value)
 );
 

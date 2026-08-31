@@ -83,7 +83,7 @@ const pendingEdgeVersionId = decodeEdgeVersionId(1);
  * would drag into the layer.
  */
 const publicIdFor = (logicalKey: LogicalEdgeKey, version: PosInt) =>
-  edgeVersionPublicId.fromUnknown(`${Epistemic.EdgeVersionId.tableName}_a${logicalKey}v${version}`);
+  edgeVersionPublicId.decodeUnknownSync(`${Epistemic.EdgeVersionId.tableName}_a${logicalKey}v${version}`);
 
 type EdgeFactCommand = RecordEdgeFact | SupersedeEdgeFact;
 

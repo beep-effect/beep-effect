@@ -1,0 +1,2684 @@
+{
+  "schemaVersion": "codec-static-migration-inventory/v1",
+  "generatedAt": "2026-08-31T03:38:54.829Z",
+  "sourceFileCount": 562,
+  "attachmentCount": 82,
+  "unresolvedOwnerCount": 0,
+  "jsonBoundaryCount": 0,
+  "attachments": [
+    {
+      "file": "scratchpad/beep-docs/api-reference/CodeSnippet.ts",
+      "helper": "withCodecStatics",
+      "line": 178,
+      "start": 5889,
+      "owner": "CodeSnippetLanguageFromInfoString",
+      "ownerPosition": 5677,
+      "pipelineSource": "S.String",
+      "precedingOperations": [
+        "S.decodeTo(CodeSnippetLanguage, {\n    decode: SchemaGetter.transformOrFail(decodeInfoString),\n    encode: SchemaGetter.passthrough({ strict: false }),\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeOption"],
+      "selectedKeys": ["decodeOption"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/test/beep-docs/ApiReference.test.ts",
+          "start": 7549,
+          "property": "decodeOption"
+        },
+        {
+          "file": "scratchpad/test/beep-docs/ApiReference.test.ts",
+          "start": 7674,
+          "property": "decodeOption"
+        },
+        {
+          "file": "scratchpad/test/beep-docs/ApiReference.test.ts",
+          "start": 7812,
+          "property": "decodeOption"
+        },
+        {
+          "file": "scratchpad/test/beep-docs/ApiReference.test.ts",
+          "start": 7917,
+          "property": "decodeOption"
+        }
+      ],
+      "referenceCount": 4
+    },
+    {
+      "file": "scratchpad/beep-docs/domain/ApiReference.ts",
+      "helper": "withCodecStatics",
+      "line": 457,
+      "start": 13490,
+      "owner": "TypeDocProjectReflectionFromBytes",
+      "ownerPosition": 13374,
+      "pipelineSource": "Utf8TextFromBytes",
+      "precedingOperations": [
+        "S.decodeTo(TypeDocProjectReflectionFromJsonString)"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "Utf8TextFromBytes",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/beep-docs/api-reference/Reflection.ts",
+          "start": 8413,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/codemode/Codemode.tool-schema.ts",
+      "helper": "withCodecStatics",
+      "line": 50,
+      "start": 1579,
+      "owner": "IdentifierSegment",
+      "ownerPosition": 1492,
+      "pipelineSource": "S.String.check(S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*$/u))",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/Codemode.tool-schema.ts",
+          "start": 2505,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/codemode/Codemode.values.ts",
+      "helper": "withCodecStatics",
+      "line": 394,
+      "start": 11937,
+      "owner": "CodeModeValue",
+      "ownerPosition": 11648,
+      "pipelineSource": "S.Union([\n  CodeModeDate,\n  CodeModeRegExp,\n  CodeModeMap,\n  CodeModeSet,\n  CodeModeURL,\n  CodeModeURLSearchParams,\n])",
+      "precedingOperations": [
+        "S.toTaggedUnion(\"_tag\")",
+        "$I.annoteSchema(\"CodeModeValue\", {\n    description: \"Mutable guest values backed by native JavaScript state.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Union([\n  CodeModeDate,\n  CodeModeRegExp,\n  CodeModeMap,\n  CodeModeSet,\n  CodeModeURL,\n  CodeModeURLSearchParams,\n])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/Codemode.values.ts",
+          "start": 12875,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/codemode/interpreter/Interpreter.model.ts",
+      "helper": "withCodecStatics",
+      "line": 175,
+      "start": 4845,
+      "owner": "AstNode",
+      "ownerPosition": 4549,
+      "pipelineSource": "S.StructWithRest(\n  S.Struct({\n    type: AstNodeType,\n    loc: S.optionalKey(SourceLocation),\n  }),\n  [S.Record(S.String, AstValue)]\n)",
+      "precedingOperations": [
+        "$I.annoteSchema(\"AstNode\", {\n    description: \"An Acorn syntax node with a required type discriminator and optional source location.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.StructWithRest(\n  S.Struct({\n    type: AstNodeType,\n    loc: S.optionalKey(SourceLocation),\n  }),\n  [S.Record(S.String, AstValue)]\n)",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.model.ts",
+          "start": 60519,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.runtime.ts",
+          "start": 8920,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.runtime.ts",
+          "start": 28011,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.runtime.ts",
+          "start": 29936,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 4
+    },
+    {
+      "file": "scratchpad/codemode/interpreter/Interpreter.model.ts",
+      "helper": "withCodecStatics",
+      "line": 1687,
+      "start": 49215,
+      "owner": "RuntimeReference",
+      "ownerPosition": 48600,
+      "pipelineSource": "S.Union([\n  CodeModeFunction,\n  CodeModeGenerator,\n  GeneratorMethodReference,\n  IntrinsicReference,\n  ComputedValue,\n  PromiseNamespace,\n  SymbolNamespace,\n  PromiseMethodReference,\n  PromiseInstanceMethodReference,\n  PromiseCapabilityFunction,\n  GlobalNamespace,\n  GlobalMethodReference,\n  JsonMethodReference,\n  CoercionFunction,\n  UriFunction,\n  SearchFunction,\n  ProgramThrow,\n  GeneratorReturn,\n  ErrorConstructorReference,\n])",
+      "precedingOperations": [
+        "S.toTaggedUnion(\"_tag\")",
+        "$I.annoteSchema(\"RuntimeReference\", {\n    description: \"All schema-owned interpreter references and control wrappers.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Union([\n  CodeModeFunction,\n  CodeModeGenerator,\n  GeneratorMethodReference,\n  IntrinsicReference,\n  ComputedValue,\n  PromiseNamespace,\n  SymbolNamespace,\n  PromiseMethodReference,\n  PromiseInstanceMethodReference,\n  PromiseCapabilityFunction,\n  GlobalNamespace,\n  GlobalMethodReference,\n  JsonMethodReference,\n  CoercionFunction,\n  UriFunction,\n  SearchFunction,\n  ProgramThrow,\n  GeneratorReturn,\n  ErrorConstructorReference,\n])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.methods.ts",
+          "start": 5594,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.references.ts",
+          "start": 10679,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 2
+    },
+    {
+      "file": "scratchpad/codemode/interpreter/Interpreter.model.ts",
+      "helper": "withCodecStatics",
+      "line": 1896,
+      "start": 56439,
+      "owner": "InterpreterFailure",
+      "ownerPosition": 56130,
+      "pipelineSource": "S.Union([\n  InterpreterRuntimeError,\n  ProgramThrow,\n  GeneratorReturn,\n  ToolRuntimeError,\n  ToolError,\n])",
+      "precedingOperations": [
+        "S.toTaggedUnion(\"_tag\")",
+        "$I.annoteSchema(\"InterpreterFailure\", {\n    description: \"Closed recoverable failure channel for guest evaluation and host tool calls.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Union([\n  InterpreterRuntimeError,\n  ProgramThrow,\n  GeneratorReturn,\n  ToolRuntimeError,\n  ToolError,\n])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.model.ts",
+          "start": 58066,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.promises.ts",
+          "start": 1729,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/stdlib/StdLib.url.ts",
+          "start": 4779,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 3
+    },
+    {
+      "file": "scratchpad/codemode/interpreter/Interpreter.references.ts",
+      "helper": "withCodecStatics",
+      "line": 52,
+      "start": 1996,
+      "owner": "RuntimeReferenceValue",
+      "ownerPosition": 1756,
+      "pipelineSource": "S.Union([RuntimeReference, ToolReference, CodeModePromise, CodeModeValue])",
+      "precedingOperations": [
+        "$I.annoteSchema(\"RuntimeReferenceValue\", {\n    description: \"Every schema-owned runtime reference and mutable guest value.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Union([RuntimeReference, ToolReference, CodeModePromise, CodeModeValue])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.references.ts",
+          "start": 2981,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/codemode/interpreter/Interpreter.runtime.ts",
+      "helper": "withCodecStatics",
+      "line": 365,
+      "start": 10504,
+      "owner": "OpaqueMemberReference",
+      "ownerPosition": 10262,
+      "pipelineSource": "S.Union([\n  ToolReference,\n  PromiseMethodReference,\n  PromiseInstanceMethodReference,\n  IntrinsicReference,\n  GlobalMethodReference,\n  JsonMethodReference,\n  GeneratorMethodReference,\n])",
+      "precedingOperations": ["S.toTaggedUnion(\"_tag\")"],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Union([\n  ToolReference,\n  PromiseMethodReference,\n  PromiseInstanceMethodReference,\n  IntrinsicReference,\n  GlobalMethodReference,\n  JsonMethodReference,\n  GeneratorMethodReference,\n])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.runtime.ts",
+          "start": 174005,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.runtime.ts",
+          "start": 176822,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/codemode/interpreter/Interpreter.runtime.ts",
+          "start": 178464,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 3
+    },
+    {
+      "file": "scratchpad/codemode/openapi/OpenAPI.specification.ts",
+      "helper": "withCodecStatics",
+      "line": 37,
+      "start": 1081,
+      "owner": "UnknownRecord",
+      "ownerPosition": 1030,
+      "pipelineSource": "S.Record(S.String, S.Unknown)",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Record(S.String, S.Unknown)",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/openapi/OpenAPI.specification.ts",
+          "start": 4665,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/codemode/openapi/OpenAPI.specification.ts",
+      "helper": "withCodecStatics",
+      "line": 38,
+      "start": 1165,
+      "owner": "NonEmptyString",
+      "ownerPosition": 1126,
+      "pipelineSource": "S.NonEmptyString",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.NonEmptyString",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeOption"],
+      "selectedKeys": ["decodeUnknownOption"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/openapi/OpenAPI.specification.ts",
+          "start": 5222,
+          "property": "decodeUnknownOption"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/codemode/openapi/OpenAPI.types.ts",
+      "helper": "withCodecStatics",
+      "line": 110,
+      "start": 3347,
+      "owner": "OperationId",
+      "ownerPosition": 3273,
+      "pipelineSource": "NonEmptyTrimmedStr",
+      "precedingOperations": ["S.brand(\"OpenApiOperationId\")"],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "NonEmptyTrimmedStr",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeOption"],
+      "selectedKeys": ["decodeUnknownOption"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/openapi/index.ts",
+          "start": 5718,
+          "property": "decodeUnknownOption"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/codemode/openapi/OpenAPI.types.ts",
+      "helper": "withCodecStatics",
+      "line": 194,
+      "start": 5652,
+      "owner": "ApiPath",
+      "ownerPosition": 5595,
+      "pipelineSource": "S.String.check(S.isPattern(/^\\/.*$/u))",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeOption"],
+      "selectedKeys": ["decodeUnknownOption"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/codemode/openapi/index.ts",
+          "start": 5564,
+          "property": "decodeUnknownOption"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Contract/ProgressStreaming.ts",
+      "helper": "withCodecStatics",
+      "line": 1822,
+      "start": 64114,
+      "owner": "ProgressEvent",
+      "ownerPosition": 63443,
+      "pipelineSource": "S.Union([\n  ExtractionStartedEvent,\n  ChunkingStartedEvent,\n  ChunkingProgressEvent,\n  ChunkingCompleteEvent,\n  ChunkProcessingStartedEvent,\n  MentionExtractionProgressEvent,\n  EntityExtractionProgressEvent,\n  EntityFoundEvent,\n  RelationExtractionProgressEvent,\n  RelationFoundEvent,\n  GroundingProgressEvent,\n  ChunkProcessingCompleteEvent,\n  ExtractionCompleteEvent,\n  ExtractionFailedEvent,\n  ExtractionCancelledEvent,\n  BackpressureWarningEvent,\n  RecoverableErrorEvent,\n  FatalErrorEvent,\n  // Generic stage lifecycle events\n  StageStartedEvent,\n  StageProgressEvent,\n  StageCompletedEvent,\n  RateLimitedEvent,\n])",
+      "precedingOperations": ["S.toTaggedUnion(\"_tag\")"],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Union([\n  ExtractionStartedEvent,\n  ChunkingStartedEvent,\n  ChunkingProgressEvent,\n  ChunkingCompleteEvent,\n  ChunkProcessingStartedEvent,\n  MentionExtractionProgressEvent,\n  EntityExtractionProgressEvent,\n  EntityFoundEvent,\n  RelationExtractionProgressEvent,\n  RelationFoundEvent,\n  GroundingProgressEvent,\n  ChunkProcessingCompleteEvent,\n  ExtractionCompleteEvent,\n  ExtractionFailedEvent,\n  ExtractionCancelledEvent,\n  BackpressureWarningEvent,\n  RecoverableErrorEvent,\n  FatalErrorEvent,\n  // Generic stage lifecycle events\n  StageStartedEvent,\n  StageProgressEvent,\n  StageCompletedEvent,\n  RateLimitedEvent,\n])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Cluster/ExtractionEntityHandler.ts",
+          "start": 4553,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Error/Base.ts",
+      "helper": "withCodecStatics",
+      "line": 42,
+      "start": 1356,
+      "owner": "ErrorMessage",
+      "ownerPosition": 1103,
+      "pipelineSource": "S.NonEmptyString",
+      "precedingOperations": [
+        "$I.annoteSchema(\"ErrorMessage\", {\n    toArbitrary: () => (fc) => fc.string({ minLength: 1, maxLength: 1_024 }),\n    description: \"Non-empty human-readable diagn"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.NonEmptyString",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Domain/Error/Activity.ts",
+          "start": 10236,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 149,
+      "start": 6500,
+      "owner": "LegacyContentHashPrefix",
+      "ownerPosition": 5664,
+      "pipelineSource": "S.String.check(\n  S.isPattern(legacyContentHashPrefixPattern, {\n    identifier: $I`LegacyContentHashPrefixPatternCheck`,\n    title: \"Legacy Content Hash Prefix\",\n    description: \"A legacy 16-character lowercase hexadecimal prefix of a SHA-256 digest.\",\n    message: \"Legacy content hash prefix must contain exactly 16 lowercase hexadecimal characters.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(legacyContentHashPrefixPattern),\n  })",
+      "precedingOperations": [
+        "S.brand(\"LegacyContentHashPrefix\")",
+        "$I.annoteSchema(\"LegacyContentHashPrefix\", {\n      description:\n        \"Ingress-only legacy fingerprint containing the first 16 lowercase hexadecimal character"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Identity.test.ts",
+          "start": 1764,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 203,
+      "start": 8083,
+      "owner": "ContentHash",
+      "ownerPosition": 7824,
+      "pipelineSource": "Sha256Hex.annotate({\n  toArbitrary: () => S.toArbitrary(Sha256Hex),\n})",
+      "precedingOperations": [
+        "S.brand(\"ContentHash\")",
+        "$I.annoteSchema(\"ContentHash\", {\n    description: \"Canonical content identity represented by a complete lowercase SHA-256 digest.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "Sha256Hex",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect", "decodeUnknownSync", "is"],
+      "selectedKeys": ["decodeEffect", "decodeUnknownSync", "is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Cluster/ExtractionEntityHandler.ts",
+          "start": 9981,
+          "property": "decodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 7261,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/ImageBlobStore.ts",
+          "start": 4203,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/StreamingExtractionActivity.ts",
+          "start": 6868,
+          "property": "decodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Identity.test.ts",
+          "start": 1640,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Identity.test.ts",
+          "start": 1692,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 6
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 291,
+      "start": 11114,
+      "owner": "IdempotencyKey",
+      "ownerPosition": 10668,
+      "pipelineSource": "Sha256Hex.annotate({\n  toArbitrary: () => S.toArbitrary(Sha256Hex),\n})",
+      "precedingOperations": [
+        "S.brand(\"IdempotencyKey\")",
+        "$I.annoteSchema(\"IdempotencyKey\", {\n    description:\n      \"Canonical full-length SHA-256 digest used as an idempotency key after hashing a stable operation des"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "Sha256Hex",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect", "is"],
+      "selectedKeys": ["decodeUnknownEffect", "is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Utils/IdempotencyKey.ts",
+          "start": 8674,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Utils/IdempotencyKey.ts",
+          "start": 9398,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 2
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 341,
+      "start": 12962,
+      "owner": "GcsBucketEncoded",
+      "ownerPosition": 12884,
+      "pipelineSource": "S.String.check(GcsBucketChecks)",
+      "precedingOperations": ["S.brand(\"GcsBucket\")"],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+          "start": 13093,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 379,
+      "start": 14422,
+      "owner": "GcsBucket",
+      "ownerPosition": 14007,
+      "pipelineSource": "GcsBucketEncoded",
+      "precedingOperations": [
+        "S.decodeTo(GcsBucketFromSelf)",
+        "$I.annoteSchema(\"GcsBucket\", {\n    description:\n      \"Portable 3-63 character Google Cloud Storage bucket name excluding IPv4 addresses and explicitly document"
+      ],
+      "sourceCodecStatics": ["is"],
+      "sourceHasCases": false,
+      "rootSource": "GcsBucketEncoded",
+      "rootSourceCodecStatics": ["is"],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect", "decodeUnknownSync"],
+      "selectedKeys": ["decodeUnknownEffect", "decodeUnknownSync"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 6857,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 6979,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 7119,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 7360,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Cli/Commands/Ingest.ts",
+          "start": 3686,
+          "property": "decodeUnknownEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Cli/Commands/Ingest.ts",
+          "start": 3740,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 6
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 429,
+      "start": 16180,
+      "owner": "GcsUriEncoded",
+      "ownerPosition": 16075,
+      "pipelineSource": "S.TemplateLiteral([\"gs://\", GcsBucket, \"/\", GcsObjectName])",
+      "precedingOperations": ["S.brand(\"GcsUri\")"],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.TemplateLiteral([\"gs://\", GcsBucket, \"/\", GcsObjectName])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+          "start": 16303,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 472,
+      "start": 17624,
+      "owner": "GcsUri",
+      "ownerPosition": 17236,
+      "pipelineSource": "GcsUriEncoded",
+      "precedingOperations": [
+        "S.decodeTo(GcsUriFromSelf)",
+        "$I.annoteSchema(\"GcsUri\", {\n    description:\n      \"Google Cloud Storage URI composed from a validated bucket name and a non-empty flat-namespace object name.\","
+      ],
+      "sourceCodecStatics": ["is"],
+      "sourceHasCases": false,
+      "rootSource": "GcsUriEncoded",
+      "rootSourceCodecStatics": ["is"],
+      "rootSourceHasCases": false,
+      "declaredKeys": [
+        "decodeEffect",
+        "decodeUnknownEffect",
+        "decodeUnknownSync"
+      ],
+      "selectedKeys": [
+        "decodeEffect",
+        "decodeUnknownEffect",
+        "decodeUnknownSync"
+      ],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/HttpServer.ts",
+          "start": 6338,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 8126,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
+          "start": 16210,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
+          "start": 17775,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
+          "start": 24708,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 26163,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 32624,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 32986,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 42204,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 62324,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 66913,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 74704,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 75767,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 107761,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Workflow/StreamingExtractionActivity.ts",
+          "start": 22488,
+          "property": "decodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Cli/Commands/Ingest.ts",
+          "start": 5197,
+          "property": "decodeUnknownEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Cli/Commands/Ingest.ts",
+          "start": 6117,
+          "property": "decodeUnknownEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Domain/Model/OntologyEmbeddings.ts",
+          "start": 7683,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/DurableActivities.test.ts",
+          "start": 4066,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/DurableActivities.test.ts",
+          "start": 4291,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/DurableActivities.test.ts",
+          "start": 5109,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/DurableActivities.test.ts",
+          "start": 5721,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/DurableActivities.test.ts",
+          "start": 10860,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/DurableActivities.test.ts",
+          "start": 11577,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/StreamingExtractionActivity.test.ts",
+          "start": 2280,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Workflow/StreamingExtractionActivity.test.ts",
+          "start": 2361,
+          "property": "decodeUnknownSync"
+        }
+      ],
+      "referenceCount": 26
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 563,
+      "start": 21133,
+      "owner": "GcsObjectEncoded",
+      "ownerPosition": 21050,
+      "pipelineSource": "GcsObjectName.check(GcsObjectChecks)",
+      "precedingOperations": ["S.brand(\"GcsObject\")"],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "GcsObjectName",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+          "start": 21264,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 655,
+      "start": 24177,
+      "owner": "Namespace",
+      "ownerPosition": 23463,
+      "pipelineSource": "S.String.check(\n  S.isPattern(namespacePattern, {\n    identifier: $I`NamespacePatternCheck`,\n    title: \"Ontology Namespace\",\n    description:\n      \"A lowercase ontology namespace beginning with a letter and continuing with letters, digits, or hyphens.\",\n    message:\n      \"Ontology namespace must begin with a lowercase letter and contain only lowercase letters, digits, or hyphens.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(namespacePattern),\n  })",
+      "precedingOperations": [
+        "S.brand(\"Namespace\")",
+        "$I.annoteSchema(\"Namespace\", {\n      description:\n        \"Lowercase ontology namespace identifier beginning with a letter and containing letters, digits, or hy"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect", "decodeUnknownSync"],
+      "selectedKeys": ["decodeEffect", "decodeUnknownSync"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Cluster/ExtractionEntityHandler.ts",
+          "start": 9740,
+          "property": "decodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 6700,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Cli/Commands/Ingest.ts",
+          "start": 5639,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 3
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 709,
+      "start": 25882,
+      "owner": "OntologyName",
+      "ownerPosition": 25142,
+      "pipelineSource": "S.String.check(\n  S.isPattern(ontologyNamePattern, {\n    identifier: $I`OntologyNamePatternCheck`,\n    title: \"Ontology Name\",\n    description:\n      \"A lowercase ontology name beginning with a letter and continuing with letters, digits, hyphens, or underscores.\",\n    message:\n      \"Ontology name must begin with a lowercase letter and contain only lowercase letters, digits, hyphens, or underscores.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(ontologyNamePattern),\n  })",
+      "precedingOperations": [
+        "S.brand(\"OntologyName\")",
+        "$I.annoteSchema(\"OntologyName\", {\n      description:\n        \"Lowercase ontology name beginning with a letter and containing letters, digits, hyphens, or unders"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Cluster/ExtractionEntityHandler.ts",
+          "start": 9811,
+          "property": "decodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/BatchStateBridge.ts",
+          "start": 3303,
+          "property": "decodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Cli/Commands/Ingest.ts",
+          "start": 5570,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 3
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 765,
+      "start": 27820,
+      "owner": "OntologyVersion",
+      "ownerPosition": 27237,
+      "pipelineSource": "S.TemplateLiteral([Namespace, \"/\", OntologyName, \"@\", ContentHash])",
+      "precedingOperations": [
+        "S.annotate({\n    toArbitrary: () => (fc) =>\n      fc\n        .tuple(S.toArbitrary(Namespace)(fc), S.toArbitrary(OntologyName)(fc), S.toArbitrary(ContentHash)(fc",
+        "S.brand(\"OntologyVersion\")",
+        "$I.annoteSchema(\"OntologyVersion\", {\n    description:\n      \"Ontology version identifier composed from a namespace, ontology name, and complete SHA-256 content "
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.TemplateLiteral([Namespace, \"/\", OntologyName, \"@\", ContentHash])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownSync"],
+      "selectedKeys": ["decodeUnknownSync"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/ExtractionRun.ts",
+          "start": 12968,
+          "property": "decodeUnknownSync"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 830,
+      "start": 30085,
+      "owner": "DocumentId",
+      "ownerPosition": 29288,
+      "pipelineSource": "S.String.check(\n  S.isPattern(documentIdPattern, {\n    identifier: $I`DocumentIdPatternCheck`,\n    title: \"Document Identifier\",\n    description: \"A deterministic document identifier with a doc- prefix and 12 lowercase hexadecimal characters.\",\n    message: \"Document ID must use the doc- prefix followed by exactly 12 lowercase hexadecimal characters.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(documentIdPattern),\n  })",
+      "precedingOperations": [
+        "S.brand(\"DocumentId\")",
+        "$I.annoteSchema(\"DocumentId\", {\n      description: \"Deterministic document identifier derived from the first 12 characters of a content hash.\",\n      documentat"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownSync", "is"],
+      "selectedKeys": ["decodeUnknownSync", "is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/AssetRouter.ts",
+          "start": 2072,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/AssetRouter.ts",
+          "start": 3648,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/ExtractionRun.ts",
+          "start": 16926,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
+          "start": 20101,
+          "property": "decodeUnknownSync"
+        }
+      ],
+      "referenceCount": 4
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 931,
+      "start": 33136,
+      "owner": "ExtractionRunId",
+      "ownerPosition": 32891,
+      "pipelineSource": "DocumentId.annotate({\n  toArbitrary: () => S.toArbitrary(DocumentId),\n})",
+      "precedingOperations": [
+        "$I.annoteSchema(\"ExtractionRunId\", {\n    description: \"Document identifier reused as the correlation identifier for its extraction run.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "DocumentId",
+      "rootSourceCodecStatics": ["decodeUnknownSync", "is"],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/test/Service/Round5Boundaries.test.ts",
+          "start": 1703,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Identity.ts",
+      "helper": "withCodecStatics",
+      "line": 984,
+      "start": 34870,
+      "owner": "BatchId",
+      "ownerPosition": 34094,
+      "pipelineSource": "S.String.check(\n  S.isPattern(batchIdPattern, {\n    identifier: $I`BatchIdPatternCheck`,\n    title: \"Batch Identifier\",\n    description: \"A deterministic batch identifier with a batch- prefix and 12 lowercase hexadecimal characters.\",\n    message: \"Batch ID must use the batch- prefix followed by exactly 12 lowercase hexadecimal characters.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(batchIdPattern),\n  })",
+      "precedingOperations": [
+        "S.brand(\"BatchId\")",
+        "$I.annoteSchema(\"BatchId\", {\n      description: \"Deterministic batch identifier represented by a batch- prefix and 12-character fingerprint.\",\n      documentati"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": [
+        "decodeEffect",
+        "decodeOption",
+        "decodeUnknownEffect",
+        "decodeUnknownSync"
+      ],
+      "selectedKeys": [
+        "decodeEffect",
+        "decodeOption",
+        "decodeUnknownEffect",
+        "decodeUnknownSync"
+      ],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/AssetRouter.ts",
+          "start": 7352,
+          "property": "decodeOption"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/AssetRouter.ts",
+          "start": 9428,
+          "property": "decodeOption"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 6611,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts",
+          "start": 11308,
+          "property": "decodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Cli/Commands/Ingest.ts",
+          "start": 3574,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 5
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Model/Agent.ts",
+      "helper": "withCodecStatics",
+      "line": 54,
+      "start": 1757,
+      "owner": "AgentId",
+      "ownerPosition": 1132,
+      "pipelineSource": "S.String.check(\n  S.isPattern(agentIdPattern, {\n    identifier: $I`AgentIdPatternCheck`,\n    title: \"Agent Identifier\",\n    description: \"A lowercase agent identifier with optional digits, dashes, and underscores.\",\n    message:\n      \"Agent identifier must start with a lowercase letter and contain only lowercase letters, digits, dashes, or underscores.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(agentIdPattern),\n  })",
+      "precedingOperations": [
+        "S.brand(\"AgentId\")",
+        "$I.annoteSchema(\"AgentId\", {\n      description: \"Stable lowercase identifier assigned to an agent implementation.\",\n    })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Domain/Model/Agent.ts",
+          "start": 16603,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Model/Ontology.ts",
+      "helper": "withCodecStatics",
+      "line": 390,
+      "start": 12342,
+      "owner": "ClassDefinition",
+      "ownerPosition": 12010,
+      "pipelineSource": "ClassDefinitionModel.annotate({\n  toArbitrary: () => (fc) =>\n    S.toArbitrary(S.Struct(ClassDefinitionFields))(fc).map((fields) => ClassDefinitionModel.make(fields)),\n})",
+      "precedingOperations": [
+        "$I.annoteSchema(\"ClassDefinition\", {\n    description: \"OWL or RDFS class metadata normalized for lookup and semantic search.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "ClassDefinitionModel",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Workflow/StreamingExtraction.ts",
+          "start": 13482,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Model/OntologyEmbeddings.ts",
+      "helper": "withCodecStatics",
+      "line": 260,
+      "start": 9167,
+      "owner": "OntologyEmbeddings",
+      "ownerPosition": 8896,
+      "pipelineSource": "OntologyEmbeddingsDefinition.annotate({\n  toArbitrary: () => makeOntologyEmbeddingsArbitrary,\n})",
+      "precedingOperations": [
+        "$I.annoteSchema(\"OntologyEmbeddings\", {\n    description: \"Versioned ontology embedding artifact with uniform finite vector dimensions.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "OntologyEmbeddingsDefinition",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 74797,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Model/OntologyEmbeddings.ts",
+      "helper": "withCodecStatics",
+      "line": 308,
+      "start": 10806,
+      "owner": "OntologyEmbeddingsJson",
+      "ownerPosition": 10740,
+      "pipelineSource": "OntologyEmbeddingsJsonDefinition",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "OntologyEmbeddingsJsonDefinition",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["encodeEffect"],
+      "selectedKeys": ["encodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 75210,
+          "property": "encodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Model/shared.ts",
+      "helper": "withCodecStatics",
+      "line": 51,
+      "start": 1703,
+      "owner": "AttributeValue",
+      "ownerPosition": 1324,
+      "pipelineSource": "S.Union([S.String, S.Finite, S.Boolean])\n  .annotate({\n    toArbitrary: () => (fc) =>\n      fc.oneof(S.toArbitrary(S.String)(fc), S.toArbitrary(S.Finite)(fc), S.toArbitrary(S.Boolean)(fc)),\n  })",
+      "precedingOperations": [
+        "$I.annoteSchema(\"AttributeValue\", {\n      description: \"JSON-safe scalar attribute value consisting of a string, boolean, or finite number.\",\n    })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Union([S.String, S.Finite, S.Boolean])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Model/shared.test.ts",
+          "start": 1088,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Model/shared.test.ts",
+          "start": 1143,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 2
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Model/shared.ts",
+      "helper": "withCodecStatics",
+      "line": 102,
+      "start": 3119,
+      "owner": "Attributes",
+      "ownerPosition": 2808,
+      "pipelineSource": "S.Record(S.String, AttributeValue)\n  .annotate({\n    toArbitrary: () => (fc) => fc.dictionary(fc.string(), S.toArbitrary(AttributeValue)(fc)),\n  })",
+      "precedingOperations": [
+        "$I.annoteSchema(\"Attributes\", {\n      description: \"Open string-keyed attribute record whose values are JSON-safe scalars.\",\n    })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Record(S.String, AttributeValue)",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Model/shared.test.ts",
+          "start": 991,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Model/shared.ts",
+      "helper": "withCodecStatics",
+      "line": 233,
+      "start": 7373,
+      "owner": "EntityId",
+      "ownerPosition": 6689,
+      "pipelineSource": "S.String.check(\n  S.isPattern(ENTITY_ID_PATTERN, {\n    identifier: $I`EntityIdPatternCheck`,\n    title: \"Entity Identifier\",\n    description:\n      \"A local entity identifier beginning with a lowercase ASCII letter and continuing with lowercase letters, digits, or underscores.\",\n    message: \"Entity ID must begin with a lowercase letter and contain only lowercase letters, digits, or underscores.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(ENTITY_ID_PATTERN),\n  })",
+      "precedingOperations": [
+        "S.brand(\"EntityId\")",
+        "$I.annoteSchema(\"EntityId\", {\n      description: \"Validated snake-case local identifier for an extracted or resolved entity.\",\n    })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownSync", "equivalence", "is"],
+      "selectedKeys": ["decodeUnknownSync", "equivalence", "is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/EntityLinker.ts",
+          "start": 3899,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/GraphRAG.ts",
+          "start": 32027,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/GraphRAG.ts",
+          "start": 32498,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/GraphRAG.ts",
+          "start": 32986,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/GraphRAG.ts",
+          "start": 33251,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/RelationLinker.ts",
+          "start": 4688,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/RelationLinker.ts",
+          "start": 5449,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Domain/Model/Entity.ts",
+          "start": 26699,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Domain/Model/Entity.ts",
+          "start": 27558,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Domain/Model/Entity.ts",
+          "start": 28514,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Model/shared.test.ts",
+          "start": 1925,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Model/shared.test.ts",
+          "start": 1983,
+          "property": "equivalence"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Model/shared.test.ts",
+          "start": 2043,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Model/shared.test.ts",
+          "start": 2092,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 14
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/PathLayout.ts",
+      "helper": "withCodecStatics",
+      "line": 148,
+      "start": 5047,
+      "owner": "StoragePathSegment",
+      "ownerPosition": 4290,
+      "pipelineSource": "S.String.check(\n  S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/, {\n    identifier: $I`StoragePathSegmentPatternCheck`,\n    title: \"Storage Path Segment\",\n    description: \"A non-empty storage-key segment without path separators, traversal syntax, or control characters.\",\n    message:\n      \"Storage path segment must begin with a letter or digit and contain at most 128 letters, digits, dots, underscores, colons, at-signs, or dashes.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._:@-]{0,63}$/),\n  })",
+      "precedingOperations": [
+        "S.brand(\"StoragePathSegment\")",
+        "$I.annoteSchema(\"StoragePathSegment\", {\n      description: \"Traversal-safe single segment for a storage object key.\",\n    })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/PathLayout.test.ts",
+          "start": 3503,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Schema/EventSchema.ts",
+      "helper": "withCodecStatics",
+      "line": 333,
+      "start": 11378,
+      "owner": "OntologyEventEntry",
+      "ownerPosition": 11320,
+      "pipelineSource": "OntologyEventEntryDefinition",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": true,
+      "rootSource": "OntologyEventEntryDefinition",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": true,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/test/Runtime/RuntimeEventServices.test.ts",
+          "start": 3546,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Schema/KnowledgeModel.ts",
+      "helper": "withCodecStatics",
+      "line": 114,
+      "start": 3741,
+      "owner": "AssertionId",
+      "ownerPosition": 3119,
+      "pipelineSource": "S.String.check(\n  S.isPattern(assertionIdPattern, {\n    identifier: $I`AssertionIdPatternCheck`,\n    title: \"Assertion Identifier\",\n    description: \"An assertion- prefix followed by exactly twelve lowercase hexadecimal characters.\",\n    message: \"Assertion ID must use assertion- followed by exactly twelve lowercase hexadecimal characters.\",\n  })\n)\n  .annotate({\n    toArbitrary: () => (fc) => fc.stringMatching(assertionIdPattern),\n  })",
+      "precedingOperations": [
+        "S.brand(\"AssertionId\")",
+        "$I.annoteSchema(\"AssertionId\", {\n      description: \"Deterministic compact identifier for one curated assertion.\",\n    })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownSync", "is"],
+      "selectedKeys": ["decodeUnknownSync", "is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/Assertion.ts",
+          "start": 15598,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/Assertion.ts",
+          "start": 17548,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/Assertion.ts",
+          "start": 18320,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/Assertion.ts",
+          "start": 18819,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/test/Domain/Schema/DomainBehavior.test.ts",
+          "start": 4271,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 5
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Schema/KnowledgeModel.ts",
+      "helper": "withCodecStatics",
+      "line": 284,
+      "start": 8880,
+      "owner": "TextSpan",
+      "ownerPosition": 8245,
+      "pipelineSource": "LegacyTextSpan",
+      "precedingOperations": [
+        "S.decodeTo(TextAnchor, {\n    decode: SchemaGetter.transform((span: LegacyTextSpanValue): typeof TextAnchor.Encoded => ({\n      startChar: span.start,\n      endC",
+        "$I.annoteSchema(\"TextSpan\", {\n    description: \"Legacy text-span ingress decoding to the canonical provenance TextAnchor.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "LegacyTextSpan",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/HttpServer.ts",
+          "start": 9407,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Schema/OntologyRegistry.ts",
+      "helper": "withCodecStatics",
+      "line": 217,
+      "start": 7383,
+      "owner": "OntologyRegistryJson",
+      "ownerPosition": 7124,
+      "pipelineSource": "OntologyRegistryJsonDefinition",
+      "precedingOperations": [
+        "$I.annoteSchema(\"OntologyRegistryJson\", {\n    toArbitrary: () => S.toArbitrary(OntologyRegistry),\n    description: \"JSON-string codec for a complete validated o"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "OntologyRegistryJsonDefinition",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/OntologyRegistry.ts",
+          "start": 6119,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Schema/Shacl.ts",
+      "helper": "withCodecStatics",
+      "line": 135,
+      "start": 5005,
+      "owner": "ShaclValidationReport",
+      "ownerPosition": 4668,
+      "pipelineSource": "ShaclValidationReportFields.annotate({\n  toArbitrary: () => makeShaclValidationReportArbitrary,\n})",
+      "precedingOperations": [
+        "$I.annoteSchema(\"ShaclValidationReport\", {\n    description:\n      \"Complete normalized SHACL validation report with spec-consistent conformance, graph sizes, co"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "ShaclValidationReportFields",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/TestRuntime.ts",
+          "start": 5932,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Schema/Shacl.ts",
+      "helper": "withCodecStatics",
+      "line": 224,
+      "start": 8054,
+      "owner": "ValidationPolicy",
+      "ownerPosition": 7596,
+      "pipelineSource": "ValidationPolicyFields.annotate({\n  toArbitrary: () => (fc) =>\n    fc\n      .record({\n        failOnViolation: fc.boolean(),\n        failOnWarning: fc.boolean(),\n        logOnly: fc.boolean(),\n      })\n      .map((input) => ValidationPolicyFields.make(input)),\n})",
+      "precedingOperations": [
+        "$I.annoteSchema(\"ValidationPolicy\", {\n    description: \"Workflow policy for failing on SHACL Violation or Warning results, with an overriding log-only mode.\",\n "
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "ValidationPolicyFields",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownSync"],
+      "selectedKeys": ["decodeUnknownSync"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Domain/Model/OntologyAgent.ts",
+          "start": 2134,
+          "property": "decodeUnknownSync"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Domain/Schema/Batch.ts",
+          "start": 988,
+          "property": "decodeUnknownSync"
+        }
+      ],
+      "referenceCount": 2
+    },
+    {
+      "file": "scratchpad/effect-ontology/Domain/Schema/Timeline.ts",
+      "helper": "withCodecStatics",
+      "line": 142,
+      "start": 4323,
+      "owner": "OrderedUtcRangeDefinition",
+      "ownerPosition": 3548,
+      "pipelineSource": "S.Struct({\n  from: S.DateTimeUtcFromString.annotateKey({\n    description: \"Inclusive UTC range start.\",\n  }),\n  to: S.DateTimeUtcFromString.annotateKey({\n    description: \"Inclusive UTC range end.\",\n  }),\n})\n  .check(\n    S.makeFilter(\n      (range) =>\n        DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)\n          ? undefined\n          : {\n              path: [\"to\"],\n              issue: \"Timeline range end must not precede its start.\",\n            },\n      {\n        identifier: $I`OrderedUtcRangeCheck`,\n        title: \"Ordered UTC Range\",\n        description: \"A UTC range whose end is not before its start.\",\n        message: \"UTC range end must be greater than or equal to its start.\",\n      }\n    )\n  )",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Struct({\n  from: S.DateTimeUtcFromString.annotateKey({\n    description: \"Inclusive UTC range start.\",\n  }),\n  to: S.DateTimeUtcFromString.annotateKey({\n    description: \"Inclusive UTC range end.\",\n  }),\n})",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Domain/Schema/Timeline.ts",
+          "start": 4501,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
+      "helper": "withCodecStatics",
+      "line": 237,
+      "start": 8603,
+      "owner": "NegativeExampleOutput",
+      "ownerPosition": 7943,
+      "pipelineSource": "S.Struct({\n  /** Optional machine-readable category for the demonstrated mistake. */\n  errorCategory: S.String.pipe(\n    S.OptionFromOptionalKey,\n    SchemaUtils.withNoneDefault,\n    $I.annoteKey(\"NegativeExampleOutput.errorCategory\", {\n      description: \"Optional machine-readable category for the demonstrated mistake.\",\n    })\n  ),\n  /** Optional textual pattern that must not be extracted. */\n  pattern: S.String.pipe(\n    S.OptionFromOptionalKey,\n    SchemaUtils.withNoneDefault,\n    $I.annoteKey(\"NegativeExampleOutput.pattern\", {\n      description: \"Optional textual pattern that must not be extracted.\",\n    })\n  ),\n})",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Struct({\n  /** Optional machine-readable category for the demonstrated mistake. */\n  errorCategory: S.String.pipe(\n    S.OptionFromOptionalKey,\n    SchemaUtils.withNoneDefault,\n    $I.annoteKey(\"NegativeExampleOutput.errorCategory\", {\n      description: \"Optional machine-readable category for the demonstrated mistake.\",\n    })\n  ),\n  /** Optional textual pattern that must not be extracted. */\n  pattern: S.String.pipe(\n    S.OptionFromOptionalKey,\n    SchemaUtils.withNoneDefault,\n    $I.annoteKey(\"NegativeExampleOutput.pattern\", {\n      description: \"Optional textual pattern that must not be extracted.\",\n    })\n  ),\n})",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownOption"],
+      "selectedKeys": ["decodeUnknownOption"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
+          "start": 28888,
+          "property": "decodeUnknownOption"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Article.ts",
+      "helper": "withCodecStatics",
+      "line": 46,
+      "start": 1664,
+      "owner": "ArticleCountRows",
+      "ownerPosition": 1605,
+      "pipelineSource": "S.Tuple([ArticleCountDatabaseRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([ArticleCountDatabaseRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Article.ts",
+          "start": 1811,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Claim.ts",
+      "helper": "withCodecStatics",
+      "line": 49,
+      "start": 1895,
+      "owner": "ClaimCountRows",
+      "ownerPosition": 1840,
+      "pipelineSource": "S.Tuple([ClaimCountDatabaseRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([ClaimCountDatabaseRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Claim.ts",
+          "start": 2038,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Conflict.ts",
+      "helper": "withCodecStatics",
+      "line": 175,
+      "start": 5661,
+      "owner": "CountRows",
+      "ownerPosition": 5624,
+      "pipelineSource": "S.Tuple([CountRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([CountRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Conflict.ts",
+          "start": 5791,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Embedding.ts",
+      "helper": "withCodecStatics",
+      "line": 285,
+      "start": 8931,
+      "owner": "OneEmbeddingSqlRow",
+      "ownerPosition": 8878,
+      "pipelineSource": "S.Tuple([EmbeddingSqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([EmbeddingSqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Embedding.ts",
+          "start": 9552,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Embedding.ts",
+      "helper": "withCodecStatics",
+      "line": 286,
+      "start": 9038,
+      "owner": "OneCountSqlRow",
+      "ownerPosition": 8993,
+      "pipelineSource": "S.Tuple([CountSqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([CountSqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Embedding.ts",
+          "start": 10202,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Embedding.ts",
+      "helper": "withCodecStatics",
+      "line": 287,
+      "start": 9147,
+      "owner": "OneExistsSqlRow",
+      "ownerPosition": 9100,
+      "pipelineSource": "S.Tuple([ExistsSqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([ExistsSqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Embedding.ts",
+          "start": 10594,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+      "helper": "withCodecStatics",
+      "line": 65,
+      "start": 2247,
+      "owner": "CanonicalEntityId",
+      "ownerPosition": 2168,
+      "pipelineSource": "UUID",
+      "precedingOperations": ["S.brand(\"EntityRegistryCanonicalEntityId\")"],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "UUID",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/Curation.ts",
+          "start": 12047,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+      "helper": "withCodecStatics",
+      "line": 271,
+      "start": 8357,
+      "owner": "OneCanonicalEntitySqlRow",
+      "ownerPosition": 8292,
+      "pipelineSource": "S.Tuple([CanonicalEntitySqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([CanonicalEntitySqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+          "start": 8935,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+      "helper": "withCodecStatics",
+      "line": 272,
+      "start": 8476,
+      "owner": "OneEntityAliasSqlRow",
+      "ownerPosition": 8419,
+      "pipelineSource": "S.Tuple([EntityAliasSqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([EntityAliasSqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+          "start": 9061,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+      "helper": "withCodecStatics",
+      "line": 273,
+      "start": 8583,
+      "owner": "OneCountSqlRow",
+      "ownerPosition": 8538,
+      "pipelineSource": "S.Tuple([CountSqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([CountSqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+          "start": 9654,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+      "helper": "withCodecStatics",
+      "line": 274,
+      "start": 8706,
+      "owner": "OneRegistryStatsSqlRow",
+      "ownerPosition": 8645,
+      "pipelineSource": "S.Tuple([RegistryStatsSqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([RegistryStatsSqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/EntityRegistry.ts",
+          "start": 9784,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Examples.ts",
+      "helper": "withCodecStatics",
+      "line": 331,
+      "start": 10264,
+      "owner": "LlmExampleRows",
+      "ownerPosition": 10212,
+      "pipelineSource": "S.Tuple([LlmExamples.select])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([LlmExamples.select])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Examples.ts",
+          "start": 10523,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Repository/Examples.ts",
+      "helper": "withCodecStatics",
+      "line": 332,
+      "start": 10380,
+      "owner": "ExampleStatsRows",
+      "ownerPosition": 10326,
+      "pipelineSource": "S.Tuple([ExampleStatsSqlRow])",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Tuple([ExampleStatsSqlRow])",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Repository/Examples.ts",
+          "start": 10937,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Runtime/ActivityRunner.ts",
+      "helper": "withCodecStatics",
+      "line": 41,
+      "start": 1561,
+      "owner": "ActivityName",
+      "ownerPosition": 1470,
+      "pipelineSource": "LiteralKit([\"extraction\", \"resolution\", \"validation\", \"ingestion\"])",
+      "precedingOperations": [],
+      "sourceCodecStatics": ["is"],
+      "sourceHasCases": false,
+      "rootSource": "LiteralKit([\"extraction\", \"resolution\", \"validation\", \"ingestion\"])",
+      "rootSourceCodecStatics": ["is"],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/ActivityRunner.ts",
+          "start": 4483,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Runtime/JobPushHandler.ts",
+      "helper": "withCodecStatics",
+      "line": 23,
+      "start": 842,
+      "owner": "BackgroundJobFromJsonString",
+      "ownerPosition": 772,
+      "pipelineSource": "S.fromJsonString(BackgroundJob)",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.fromJsonString(BackgroundJob)",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/JobPushHandler.ts",
+          "start": 7926,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+      "helper": "withCodecStatics",
+      "line": 36,
+      "start": 1539,
+      "owner": "CreateBatchFromLinksBody",
+      "ownerPosition": 1419,
+      "pipelineSource": "S.Struct({\n  linkIds: S.Array(S.String),\n  targetNamespace: S.optionalKey(S.String),\n})",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Struct({\n  linkIds: S.Array(S.String),\n  targetNamespace: S.optionalKey(S.String),\n})",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownOption"],
+      "selectedKeys": ["decodeUnknownOption"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/LinkIngestionRouter.ts",
+          "start": 4841,
+          "property": "decodeUnknownOption"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+      "helper": "withCodecStatics",
+      "line": 77,
+      "start": 2431,
+      "owner": "PostgresConfig",
+      "ownerPosition": 2066,
+      "pipelineSource": "S.Struct({\n  host: S.String,\n  port: Port,\n  database: S.String,\n  username: S.String,\n  password: S.Redacted(S.NonEmptyString),\n  ssl: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),\n})",
+      "precedingOperations": [
+        "$I.annoteSchema(\"PostgresConfig\", {\n    description: \"PostgreSQL host, port, database, username, redacted password, and optional TLS flag.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Struct({\n  host: S.String,\n  port: Port,\n  database: S.String,\n  username: S.String,\n  password: S.Redacted(S.NonEmptyString),\n  ssl: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),\n})",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Runtime/Persistence/PostgresLayer.ts",
+          "start": 4828,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Service/EventBus.ts",
+      "helper": "withCodecStatics",
+      "line": 116,
+      "start": 4200,
+      "owner": "EventEntry",
+      "ownerPosition": 4024,
+      "pipelineSource": "S.toType(OntologyEventEntry)",
+      "precedingOperations": [
+        "$I.annoteSchema(\"EventEntry\", {\n    description: \"Canonical journal event payload consumed by EventBus subscribers.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.toType(OntologyEventEntry)",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/EventBus.ts",
+          "start": 11906,
+          "property": "decodeUnknownEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/EventBus.ts",
+          "start": 22459,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 2
+    },
+    {
+      "file": "scratchpad/effect-ontology/Service/ExtractionRun.ts",
+      "helper": "withCodecStatics",
+      "line": 306,
+      "start": 9373,
+      "owner": "KeyIndex",
+      "ownerPosition": 9321,
+      "pipelineSource": "S.Record(S.String, DocumentId)",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Record(S.String, DocumentId)",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/ExtractionRun.ts",
+          "start": 10937,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Service/JinaReaderClient.ts",
+      "helper": "withCodecStatics",
+      "line": 133,
+      "start": 4613,
+      "owner": "JinaApiResponse",
+      "ownerPosition": 4010,
+      "pipelineSource": "S.Struct({\n  code: S.Finite,\n  status: S.Finite,\n  data: S.Struct({\n    title: S.String,\n    url: S.String,\n    content: S.String,\n    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    publishedTime: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    siteName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    image: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    links: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n  }),\n})",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Struct({\n  code: S.Finite,\n  status: S.Finite,\n  data: S.Struct({\n    title: S.String,\n    url: S.String,\n    content: S.String,\n    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    publishedTime: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    siteName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    image: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n    links: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n  }),\n})",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/JinaReaderClient.ts",
+          "start": 10631,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Service/Nlp.ts",
+      "helper": "withCodecStatics",
+      "line": 240,
+      "start": 7829,
+      "owner": "ChunkOptions",
+      "ownerPosition": 7622,
+      "pipelineSource": "ChunkOptionsInput",
+      "precedingOperations": [
+        "S.decodeTo(S.toType(ResolvedChunkOptions), {\n    decode: SchemaGetter.transform(resolveChunkOptions),\n    encode: SchemaGetter.transform(encodeChunkOptions),\n  "
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "ChunkOptionsInput",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect"],
+      "selectedKeys": ["decodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/Nlp.ts",
+          "start": 25361,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Service/VoyageEmbeddingProvider.ts",
+      "helper": "withCodecStatics",
+      "line": 75,
+      "start": 2536,
+      "owner": "VoyageModel",
+      "ownerPosition": 2377,
+      "pipelineSource": "LiteralKit([\n  \"voyage-3\",\n  \"voyage-3.5-lite\",\n  \"voyage-code-3\",\n  \"voyage-finance-2\",\n  \"voyage-multilingual-2\",\n  \"voyage-law-2\",\n])",
+      "precedingOperations": [],
+      "sourceCodecStatics": ["is"],
+      "sourceHasCases": false,
+      "rootSource": "LiteralKit([\n  \"voyage-3\",\n  \"voyage-3.5-lite\",\n  \"voyage-code-3\",\n  \"voyage-finance-2\",\n  \"voyage-multilingual-2\",\n  \"voyage-law-2\",\n])",
+      "rootSourceCodecStatics": ["is"],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/EmbeddingFallback.ts",
+          "start": 6493,
+          "property": "decodeUnknownEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Service/VoyageEmbeddingProvider.ts",
+          "start": 18571,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 2
+    },
+    {
+      "file": "scratchpad/effect-ontology/Service/WikidataClient.ts",
+      "helper": "withCodecStatics",
+      "line": 312,
+      "start": 9318,
+      "owner": "WikidataSearchResponse",
+      "ownerPosition": 8936,
+      "pipelineSource": "S.Struct({\n  searchinfo: S.Struct({\n    search: S.String,\n  }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n  search: S.Array(WikidataSearchResult),\n  success: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n  \"search-continue\": NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n})",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Struct({\n  searchinfo: S.Struct({\n    search: S.String,\n  }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n  search: S.Array(WikidataSearchResult),\n  success: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n  \"search-continue\": NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),\n})",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/WikidataClient.ts",
+          "start": 14933,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Service/WikidataClient.ts",
+      "helper": "withCodecStatics",
+      "line": 327,
+      "start": 9697,
+      "owner": "WikidataEntityResponse",
+      "ownerPosition": 9605,
+      "pipelineSource": "S.Struct({\n  entities: S.Record(S.String, WikidataEntity),\n})",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Struct({\n  entities: S.Record(S.String, WikidataEntity),\n})",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeUnknownEffect"],
+      "selectedKeys": ["decodeUnknownEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Service/WikidataClient.ts",
+          "start": 17045,
+          "property": "decodeUnknownEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/effect-ontology/Utils/ClaimFactory.ts",
+      "helper": "withCodecStatics",
+      "line": 317,
+      "start": 11287,
+      "owner": "ClaimExtractionArtifactJson",
+      "ownerPosition": 11207,
+      "pipelineSource": "S.fromJsonString(ClaimExtractionArtifact)",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.fromJsonString(ClaimExtractionArtifact)",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["decodeEffect", "encodeEffect"],
+      "selectedKeys": ["decodeEffect", "encodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Utils/ClaimFactory.ts",
+          "start": 32864,
+          "property": "encodeEffect"
+        },
+        {
+          "file": "scratchpad/effect-ontology/Utils/ClaimFactory.ts",
+          "start": 35028,
+          "property": "decodeEffect"
+        }
+      ],
+      "referenceCount": 2
+    },
+    {
+      "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+      "helper": "withCodecStatics",
+      "line": 101,
+      "start": 4728,
+      "owner": "PrettyShaclValidationReportFromJsonString",
+      "ownerPosition": 4622,
+      "pipelineSource": "S.fromJsonString(ShaclValidationReport, { space: 2 })",
+      "precedingOperations": [],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.fromJsonString(ShaclValidationReport, { space: 2 })",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["encodeEffect"],
+      "selectedKeys": ["encodeEffect"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/effect-ontology/Workflow/DurableActivities.ts",
+          "start": 32137,
+          "property": "encodeEffect"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/glob/internal/limits.ts",
+      "helper": "withCodecStatics",
+      "line": 302,
+      "start": 9141,
+      "owner": "PositiveSafeInteger",
+      "ownerPosition": 8937,
+      "pipelineSource": "S.Int.check(S.isGreaterThan(0))",
+      "precedingOperations": [
+        "$I.annoteSchema(\"PositiveSafeInteger\", {\n\t\tdescription: \"Positive safe integer accepted by internal glob recursion and expansion caps.\",\n\t})"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.Int",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/glob/internal/limits.ts",
+          "start": 10250,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 510,
+      "start": 16440,
+      "owner": "HtmlLocalDateTimeString",
+      "ownerPosition": 16115,
+      "pipelineSource": "S.String.check(\n  makeStringCheck($I`HtmlLocalDateTimeStringCheck`, \"a valid HTML local date and time string\", isHtmlLocalDateTime)\n)",
+      "precedingOperations": [
+        "S.brand(\"HtmlLocalDateTimeString\")",
+        "$I.annoteSchema(\"HtmlLocalDateTimeString\", { description: \"Local date and time in the WHATWG HTML lexical form.\" })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 54612,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 585,
+      "start": 18941,
+      "owner": "HtmlGlobalDateTimeString",
+      "ownerPosition": 18590,
+      "pipelineSource": "S.String.check(\n  makeStringCheck($I`HtmlGlobalDateTimeStringCheck`, \"a valid HTML global date and time string\", isHtmlGlobalDateTime)\n)",
+      "precedingOperations": [
+        "S.brand(\"HtmlGlobalDateTimeString\")",
+        "$I.annoteSchema(\"HtmlGlobalDateTimeString\", {\n    description: \"Globally qualified date and time in the WHATWG HTML lexical form.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 54650,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 693,
+      "start": 22116,
+      "owner": "HtmlIsoDurationString",
+      "ownerPosition": 21788,
+      "pipelineSource": "S.String.check(\n  makePatternCheck($I`HtmlIsoDurationStringCheck`, \"a valid HTML ISO duration string\", htmlIsoDurationPattern)\n)",
+      "precedingOperations": [
+        "S.brand(\"HtmlIsoDurationString\")",
+        "$I.annoteSchema(\"HtmlIsoDurationString\", {\n    description: \"Restricted ISO 8601 duration lexical form admitted by HTML.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 33993,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 805,
+      "start": 25666,
+      "owner": "HtmlUrlTokenString",
+      "ownerPosition": 25236,
+      "pipelineSource": "S.String",
+      "precedingOperations": [
+        "S.check(\n    makeStringCheck(\n      $I`HtmlUrlTokenStringCheck`,\n      \"a URL parser token without surrounding ASCII whitespace\",\n      (value) => stripAsciiWhi",
+        "S.brand(\"HtmlUrlTokenString\")",
+        "$I.annoteSchema(\"HtmlUrlTokenString\", {\n    description: \"URL parser input after HTML ASCII-whitespace preprocessing, including an empty relative URL.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 29574,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 1255,
+      "start": 41111,
+      "owner": "XsdIntegerString",
+      "ownerPosition": 40793,
+      "pipelineSource": "S.String.check(\n  makePatternCheck($I`XsdIntegerStringCheck`, \"an xsd:integer lexical value\", xsdIntegerPattern)\n)",
+      "precedingOperations": [
+        "S.brand(\"XsdIntegerString\")",
+        "$I.annoteSchema(\"XsdIntegerString\", {\n    description: \"XML Schema integer lexical value recognized by the Microdata-to-RDF algorithm.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 48162,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 1386,
+      "start": 45065,
+      "owner": "XsdDoubleString",
+      "ownerPosition": 44754,
+      "pipelineSource": "S.String.check(\n  makePatternCheck($I`XsdDoubleStringCheck`, \"an xsd:double lexical value\", xsdDoublePattern)\n)",
+      "precedingOperations": [
+        "S.brand(\"XsdDoubleString\")",
+        "$I.annoteSchema(\"XsdDoubleString\", {\n    description: \"XML Schema double lexical value recognized by the Microdata-to-RDF algorithm.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 48192,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 2229,
+      "start": 71386,
+      "owner": "VCardDateString",
+      "ownerPosition": 71096,
+      "pipelineSource": "S.String.check(\n  makeStringCheck($I`VCardDateStringCheck`, \"an RFC 6350 date value\", isVCardDate)\n)",
+      "precedingOperations": [
+        "S.brand(\"VCardDateString\")",
+        "$I.annoteSchema(\"VCardDateString\", {\n    description: \"RFC 6350 DATE lexical value, including reduced and truncated forms.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 73835,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 2267,
+      "start": 72497,
+      "owner": "VCardTimeString",
+      "ownerPosition": 72193,
+      "pipelineSource": "S.String.check(\n  makePatternCheck($I`VCardTimeStringCheck`, \"an RFC 6350 time value\", vCardTimePattern)\n)",
+      "precedingOperations": [
+        "S.brand(\"VCardTimeString\")",
+        "$I.annoteSchema(\"VCardTimeString\", {\n    description: \"RFC 6350 TIME lexical value, including reduced, truncated, and zoned forms.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 73897,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/microdata/Microdata.model.ts",
+      "helper": "withCodecStatics",
+      "line": 2301,
+      "start": 73433,
+      "owner": "VCardDateTimeString",
+      "ownerPosition": 73159,
+      "pipelineSource": "S.String.check(\n  makeStringCheck($I`VCardDateTimeStringCheck`, \"an RFC 6350 date-time value\", isVCardDateTime)\n)",
+      "precedingOperations": [
+        "S.brand(\"VCardDateTimeString\")",
+        "$I.annoteSchema(\"VCardDateTimeString\", { description: \"RFC 6350 DATE-TIME lexical value.\" })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/microdata/Microdata.model.ts",
+          "start": 73804,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 1
+    },
+    {
+      "file": "scratchpad/ontoskills/OntoSkills.models.ts",
+      "helper": "withCodecStatics",
+      "line": 929,
+      "start": 28114,
+      "owner": "RelationPart",
+      "ownerPosition": 27669,
+      "pipelineSource": "S.String.check(\n  S.isPattern(SLUG_PATTERN, {\n    identifier: $I`RelationPartPatternCheck`,\n    title: \"Relation path segment\",\n    description: \"Checks one canonical lowercase kebab-case segment in a qualified skill relation.\",\n    message: \"Expected a lowercase kebab-case relation segment\",\n  })\n)",
+      "precedingOperations": [
+        "$I.annoteSchema(\"RelationPart\", {\n    description: \"One validated segment in a slash-qualified skill relation.\",\n  })"
+      ],
+      "sourceCodecStatics": [],
+      "sourceHasCases": false,
+      "rootSource": "S.String",
+      "rootSourceCodecStatics": [],
+      "rootSourceHasCases": false,
+      "declaredKeys": ["is"],
+      "selectedKeys": ["is"],
+      "jsonKeys": [],
+      "propertyReads": [
+        {
+          "file": "scratchpad/ontoskills/OntoSkills.models.ts",
+          "start": 28325,
+          "property": "is"
+        },
+        {
+          "file": "scratchpad/ontoskills/OntoSkills.models.ts",
+          "start": 28883,
+          "property": "is"
+        }
+      ],
+      "referenceCount": 2
+    }
+  ]
+}

@@ -52,7 +52,7 @@ const SemverNumberSegmentString = S.String.check(
   $I.annoteSchema("SemverNumberSegmentString", {
     description: "A SemVer numeric identifier string.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const SemverNumberSegment = S.Int.check(
@@ -66,7 +66,7 @@ const SemverNumberSegment = S.Int.check(
   $I.annoteSchema("SemverNumberSegment", {
     description: "A safe non-negative integer segment in a semantic version.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const SemverPrereleaseIdentifier = S.String.check(
@@ -81,7 +81,7 @@ const SemverPrereleaseIdentifier = S.String.check(
   $I.annoteSchema("SemverPrereleaseIdentifier", {
     description: "A SemVer prerelease identifier.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const SemverBuildIdentifier = S.String.check(
@@ -95,14 +95,14 @@ const SemverBuildIdentifier = S.String.check(
   $I.annoteSchema("SemverBuildIdentifier", {
     description: "A SemVer build metadata identifier.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const RangeComparatorOperator = S.Literals(["^", ">=", ">", "<=", "<", "="]).pipe(
   $I.annoteSchema("RangeComparatorOperator", {
     description: "Comparator operator supported by the lightweight SemVer range checker.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 type RangeComparatorOperator = typeof RangeComparatorOperator.Type;
@@ -116,7 +116,7 @@ const isSemverNumberSegmentString = SemverNumberSegmentString.is;
 const isSemverNumberSegment = SemverNumberSegment.is;
 const isSemverPrereleaseIdentifier = SemverPrereleaseIdentifier.is;
 const isSemverBuildIdentifier = SemverBuildIdentifier.is;
-const decodeRangeComparatorOperator = RangeComparatorOperator.decodeOption;
+const decodeRangeComparatorOperator = RangeComparatorOperator.decodeUnknownOption;
 
 const equalOrdering: Ordering.Ordering = 0;
 const greaterThanOrdering: Ordering.Ordering = 1;

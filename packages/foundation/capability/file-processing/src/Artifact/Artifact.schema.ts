@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { FileExtension } from "@beep/schema/FileExtension";
 import { FileName } from "@beep/schema/FileName";
 import { MimeType } from "@beep/schema/MimeType";
@@ -86,8 +86,7 @@ export const ArtifactId = S.TemplateLiteral(["artifact:", Sha256Hex]).pipe(
   S.brand("FileProcessingArtifactId"),
   $I.annoteSchema("ArtifactId", {
     description: "A stable file-processing artifact identifier derived from a SHA-256 content digest.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -136,8 +135,7 @@ export const OperationId = S.TemplateLiteral(["operation:", Sha256Hex]).pipe(
   S.brand("FileProcessingOperationId"),
   $I.annoteSchema("OperationId", {
     description: "A stable file-processing operation identifier derived from operation inputs.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -186,8 +184,7 @@ export const ContentDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
   S.brand("FileProcessingContentDigest"),
   $I.annoteSchema("ContentDigest", {
     description: "A SHA-256 content digest using the sha256:<hex> representation.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

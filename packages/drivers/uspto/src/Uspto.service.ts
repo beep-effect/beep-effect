@@ -181,7 +181,7 @@ const continuityNumbers = (records: ReadonlyArray<Readonly<Record<string, unknow
       stringField(record, "applicationNumberText").pipe(
         O.orElse(() => stringField(record, "parentApplicationNumberText")),
         O.orElse(() => stringField(record, "childApplicationNumberText")),
-        O.flatMap(UsptoApplicationNumber.decodeOption)
+        O.flatMap(UsptoApplicationNumber.decodeUnknownOption)
       )
     )
   );

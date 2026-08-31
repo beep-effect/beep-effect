@@ -6,7 +6,7 @@ import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Order, Path } from "effect";
+import { Effect, FileSystem, Layer, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -58,6 +58,7 @@ const proposer = ModelIdentity.make({
   revision: "stub-gold-20260826",
   taskType: "gold-proposal",
 });
+const encodedProposer = Result.getOrThrow(S.encodeResult(ModelIdentity)(proposer));
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -172,7 +173,7 @@ describe("C0 gold source", () => {
                 },
               ],
               paperId,
-              proposer,
+              proposer: encodedProposer,
               subset: "structure",
               version: "gold/v1",
             });
@@ -214,7 +215,7 @@ describe("C0 gold source", () => {
                 },
               ],
               paperId,
-              proposer,
+              proposer: encodedProposer,
               subset: "structure",
               version: "gold/v1",
             });

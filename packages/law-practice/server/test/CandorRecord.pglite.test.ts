@@ -26,7 +26,7 @@ import { CandorRecordRepositoryLive } from "@beep/law-practice-server/CandorReco
 import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
 import { CandorRecordRepository } from "@beep/law-practice-use-cases/CandorRecord";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import {
   fcRuns,
@@ -75,7 +75,7 @@ const migrateCandorTables = Effect.fnUntraced(function* () {
 // Two representations rather than two numbers: scoping a read to one of them
 // also holds the port's rule that nothing matches across representations.
 const FILING_A: CitingApplicationIdentity.Encoded = { applicationNumber: "16138242", kind: "UsptoNormalized" };
-const FILING_A_JSON = Unknown.encodeUnknownSyncFromJsonString(FILING_A);
+const FILING_A_JSON = UnknownFromJsonString.encodeUnknownSync(FILING_A);
 const FILING_B: CitingApplicationIdentity.Encoded = {
   applicationNumber: "102014000345678",
   kind: "WipoSt13",

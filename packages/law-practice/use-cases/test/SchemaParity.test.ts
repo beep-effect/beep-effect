@@ -145,7 +145,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     const encoded = S.encodeSync(OfficeActionReviewError)(error);
 
     expect(OfficeActionReviewError.is(error)).toBe(true);
-    expect(O.isSome(OfficeActionReviewError.decodeOption(encoded))).toBe(true);
+    expect(O.isSome(OfficeActionReviewError.decodeUnknownOption(encoded))).toBe(true);
   });
 
   // `toLaw` is a declared schema whose guard is the only thing standing between

@@ -35,7 +35,7 @@ const utf8Encoder = new TextEncoder();
  * @category constants
  * @since 0.0.0
  */
-export const CORE_NAMESPACE: IRI = IRI.fromUnknown("https://effect-ontology.dev/core#");
+export const CORE_NAMESPACE: IRI = IRI.decodeUnknownSync("https://effect-ontology.dev/core#");
 
 /**
  * Core ontology class IRIs used by tracked objects.
@@ -233,7 +233,7 @@ export const MentionId = S.String.check(
     $I.annoteSchema("MentionId", {
       description: "Deterministic short identifier for one document character span.",
     }),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromCoordinates: Effect.fn("MentionId.fromCoordinates")(function* (
         documentId: string,
@@ -307,8 +307,7 @@ export const MentionEvidence = LegacyMentionEvidence.pipe(
   }),
   $I.annoteSchema("MentionEvidence", {
     description: "Legacy mention-evidence ingress decoding to the canonical provenance TextAnchor.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -388,7 +387,7 @@ export const CanonicalEntityId = S.String.check(
     $I.annoteSchema("CanonicalEntityId", {
       description: "Stable canonical identifier for a persistent resolved entity.",
     }),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["is"]),
     withSeedDerivedIdStatics("CanonicalEntityId.fromSeed", "entity")
   );
 
@@ -505,7 +504,7 @@ export const EventId = S.String.check(
     $I.annoteSchema("EventId", {
       description: "Stable deterministic short identifier for a tracked event.",
     }),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
     })),
@@ -630,8 +629,7 @@ export const EventInterval = EventIntervalDefinition.annotate({
 }).pipe(
   $I.annoteSchema("EventInterval", {
     description: "Ordered event start and optional end instants.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

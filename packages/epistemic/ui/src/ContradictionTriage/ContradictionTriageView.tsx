@@ -10,7 +10,7 @@ import { CONTRADICTION_REVIEW_REASON_MAX_LENGTH } from "@beep/epistemic-domain/v
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
 import { $EpistemicUiId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@beep/ui/components/alert";
 import {
   AlertDialog,
@@ -204,7 +204,7 @@ interface BeliefCardProps {
   readonly side: "left" | "right";
 }
 
-const encodeFact = Unknown.encodeUnknownResultFromJsonString;
+const encodeFact = UnknownFromJsonString.encodeUnknownResult;
 
 const shortDigest = (digest: string): string => `${Str.takeLeft(12)(digest)}…`;
 

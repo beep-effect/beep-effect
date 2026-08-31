@@ -7,7 +7,7 @@
 
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { Unknown } from "./Unknown.ts";
+import { UnknownFromJsonString } from "./Unknown.ts";
 import type * as Effect from "effect/Effect";
 
 const $I = $SchemaId.create("Json");
@@ -112,9 +112,10 @@ export type JsonArray = typeof JsonArray.Type;
 // Unary by contract: the underlying codec also accepts `ParseOptions`, but a
 // dual is undecidable here — `input` is `unknown` and the options are optional,
 // so a one-argument call and a data-last call are indistinguishable. Callers
-// that need parse options can use `Unknown.decodeUnknownEffectFromJsonString`.
+// that need parse options can compile a runner from an explicitly configured
+// `S.fromJsonString(Unknown, options)` schema.
 export const decodeJsonString: (input: unknown) => Effect.Effect<unknown, S.SchemaError> =
-  Unknown.decodeUnknownEffectFromJsonString;
+  UnknownFromJsonString.decodeUnknownEffect;
 
 /**
  * Encodes an unknown JSON-compatible value into a compact JSON string.
@@ -136,4 +137,4 @@ export const decodeJsonString: (input: unknown) => Effect.Effect<unknown, S.Sche
 // Unary by contract: see {@link decodeJsonString}. `input` is `unknown`, so no
 // predicate can separate a data-first call from a data-last one.
 export const encodeJsonString: (input: unknown) => Effect.Effect<string, S.SchemaError> =
-  Unknown.encodeUnknownEffectFromJsonString;
+  UnknownFromJsonString.encodeUnknownEffect;

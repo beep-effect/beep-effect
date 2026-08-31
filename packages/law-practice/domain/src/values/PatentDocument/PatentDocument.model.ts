@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
 import { Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -174,8 +174,7 @@ export const PatentClaim = PatentClaimType.toTaggedUnion("claimType")({
   $I.annoteSchema("PatentClaim", {
     description:
       "Patent claim preserving ClaimNumber, ClaimText, preamble, transition, body, and dependency relations.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

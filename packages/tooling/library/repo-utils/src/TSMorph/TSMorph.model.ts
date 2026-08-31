@@ -201,14 +201,16 @@ export type WorkspaceDirectoryPath = typeof WorkspaceDirectoryPath.Type;
  * @category models
  * @since 0.0.0
  */
-export const TsConfigFilePath = FilePath.check(tsConfigFilePathChecks).pipe(
-  S.brand("TsConfigFilePath"),
-  $I.annoteSchema("TsConfigFilePath", {
-    description: "A tsconfig*.json file path that is safe to embed in TSMorph scope identities.",
-  }),
-  SchemaUtils.withCodecStatics,
-  withDecodeEffectStatic
-);
+export const TsConfigFilePath = S.make<(typeof FilePath)["Rebuild"]>(FilePath.ast)
+  .check(tsConfigFilePathChecks)
+  .pipe(
+    S.brand("TsConfigFilePath"),
+    $I.annoteSchema("TsConfigFilePath", {
+      description: "A tsconfig*.json file path that is safe to embed in TSMorph scope identities.",
+    }),
+    SchemaUtils.withCodecStatics(["is"]),
+    withDecodeEffectStatic
+  );
 
 /**
  * Branded `tsconfig*.json` file path.
@@ -239,14 +241,16 @@ export type TsConfigFilePath = typeof TsConfigFilePath.Type;
  * @category models
  * @since 0.0.0
  */
-export const TypeScriptImplementationFilePath = FilePath.check(typeScriptImplementationFilePathChecks).pipe(
-  S.brand("TypeScriptImplementationFilePath"),
-  $I.annoteSchema("TypeScriptImplementationFilePath", {
-    description: "A TypeScript implementation file path for .ts, .tsx, .mts, or .cts files.",
-  }),
-  SchemaUtils.withCodecStatics,
-  withDecodeEffectStatic
-);
+export const TypeScriptImplementationFilePath = S.make<(typeof FilePath)["Rebuild"]>(FilePath.ast)
+  .check(typeScriptImplementationFilePathChecks)
+  .pipe(
+    S.brand("TypeScriptImplementationFilePath"),
+    $I.annoteSchema("TypeScriptImplementationFilePath", {
+      description: "A TypeScript implementation file path for .ts, .tsx, .mts, or .cts files.",
+    }),
+    SchemaUtils.withCodecStatics(["decodeUnknownOption"]),
+    withDecodeEffectStatic
+  );
 
 /**
  * Branded TypeScript implementation file path.
@@ -317,7 +321,7 @@ export const TypeScriptFilePath = S.Union([TypeScriptImplementationFilePath, Typ
   $I.annoteSchema("TypeScriptFilePath", {
     description: "A TypeScript source file path covering implementation and declaration files.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "is"]),
   withDecodeEffectStatic
 );
 
@@ -392,7 +396,7 @@ export const SymbolNameSegment = S.String.check(S.isPattern(SYMBOL_NAME_SEGMENT_
   $I.annoteSchema("SymbolNameSegment", {
     description: "A single identifier-like segment in a TypeScript symbol path.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["is"]),
   withDecodeEffectStatic
 );
 
@@ -430,7 +434,7 @@ export const SymbolQualifiedName = S.String.check(S.isPattern(SYMBOL_QUALIFIED_N
   $I.annoteSchema("SymbolQualifiedName", {
     description: "Dot-delimited symbol path such as UserService.login.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["is"]),
   withDecodeEffectStatic
 );
 
@@ -1741,8 +1745,7 @@ export const TsMorphScopeEntrypoint = S.Union([TsMorphScopeEntrypointTsConfig, T
     return {
       make,
     };
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

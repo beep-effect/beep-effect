@@ -43,7 +43,7 @@ export const AllowedDevOrigin = S.Trim.check(
     documentation:
       "Next.js allowedDevOrigins entries are additional development hostnames, such as local-origin.dev or *.local-origin.dev.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
 );
 
 /**

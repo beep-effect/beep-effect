@@ -23,7 +23,7 @@ const normalizeConfigUrl = Str.replace(/\/+$/, "");
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
  *
- * const url = RunpodConfigUrl.fromUnknown("https://rest.runpod.io/v1/")
+ * const url = RunpodConfigUrl.decodeUnknownSync("https://rest.runpod.io/v1/")
  * console.log(url)
  * ```
  *
@@ -39,7 +39,7 @@ export const RunpodConfigUrl = S.String.pipe(
     description: "Validated Runpod configuration URL with trailing slash separators removed.",
     toArbitrary: () => (fc) => fc.webUrl().map(normalizeConfigUrl),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -50,7 +50,7 @@ export const RunpodConfigUrl = S.String.pipe(
  * ```ts
  * import { RunpodConfigUrl } from "@beep/runpod"
  *
- * const url: RunpodConfigUrl = RunpodConfigUrl.fromUnknown("https://rest.runpod.io/v1/")
+ * const url: RunpodConfigUrl = RunpodConfigUrl.decodeUnknownSync("https://rest.runpod.io/v1/")
  * console.log(url)
  * ```
  *

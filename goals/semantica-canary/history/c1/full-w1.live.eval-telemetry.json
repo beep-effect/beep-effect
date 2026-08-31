@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "c1-eval-telemetry/v1",
+  "embeddingMs": 24806,
+  "mode": "live",
+  "rdfRebuildMs": 4745,
+  "reportDigest": "90bf21c551bb764c2e07a1985929a54c7e185ce01e7933436cc2b65c63551510",
+  "runId": "7785c664f99aec5a5244f21f5413b1a355567637d266254ecb713208b3e672c6",
+  "startedAt": "2026-08-31T06:37:20.675Z",
+  "vectorRebuildMs": 10696,
+  "wallClockMs": 726392
+}

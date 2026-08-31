@@ -1,28 +1,17 @@
 /**
- * Pure, escaping-free node behavior for the Markdown AST.
+ * Shared list-item segmentation and compatibility aliases for Markdown AST behavior.
  *
- * This module owns the plain-text projection of a document (the "signal" read
- * off a node, distinct from the escaping render adapters) plus the shared
- * inline/block run segmentation used by every list-item renderer.
+ * The schema unions own their plain-text projections; this module retains the
+ * established function exports and the renderer-facing run segmentation.
  *
  * @packageDocumentation \@beep/md/Md.behavior
  * @since 0.0.0
  */
 
-import { A } from "@beep/utils";
-import { Match } from "effect";
-import { dual, flow, pipe } from "effect/Function";
-import * as O from "effect/Option";
-import { Inline as InlineSchema } from "./Md.model.ts";
-import type { Block, Inline, Li, ListItemChild, Table, TaskItem } from "./Md.model.ts";
-
-const joinEmpty = A.join("");
-const youtubeWatchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;
-const embedTitle = (embed: { readonly src: string; readonly title: O.Option<string> }): string =>
-  pipe(
-    embed.title,
-    O.getOrElse(() => embed.src)
-  );
+import * as Arr from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import { dual, flow } from "effect/Function";
+import { Block, Inline } from "./Md.model.ts";
 
 /**
  * The strategy consumed by {@link segmentInlineRuns}: the inline guard plus the
@@ -74,7 +63,7 @@ export interface SegmentStrategy<I, B> {
  *
  * **Details**
  *
- * The runs are grouped with {@link A.groupWith} keyed by the inline guard, then
+ * The runs are grouped with {@link Arr.groupWith} keyed by the inline guard, then
  * each run is rendered by the matching handler — inline runs through
  * `renderInlineRun`, block children individually through `renderBlock`.
  *
@@ -110,68 +99,19 @@ export const segmentInlineRuns: {
 } = dual(
   2,
   <I, B>(items: ReadonlyArray<I | B>, render: SegmentStrategy<I, B>): ReadonlyArray<string> =>
-    A.match(items, {
-      onEmpty: A.empty<string>,
+    Arr.match(items, {
+      onEmpty: Arr.empty<string>,
       onNonEmpty: flow(
-        A.groupWith((left, right) => render.isInline(left) === render.isInline(right)),
-        A.flatMap((run) =>
-          render.isInline(A.headNonEmpty(run))
-            ? [render.renderInlineRun(A.filter(run, render.isInline))]
-            : A.getSomes(
-                A.map(run, (item) => (render.isInline(item) ? O.none<string>() : O.some(render.renderBlock(item))))
+        Arr.groupWith((left, right) => render.isInline(left) === render.isInline(right)),
+        Arr.flatMap((run) =>
+          render.isInline(Arr.headNonEmpty(run))
+            ? [render.renderInlineRun(Arr.filter(run, render.isInline))]
+            : Arr.getSomes(
+                Arr.map(run, (item) => (render.isInline(item) ? O.none<string>() : O.some(render.renderBlock(item))))
               )
         )
       ),
     })
-);
-
-const renderPlainTextInlines: (children: ReadonlyArray<Inline>) => string = flow(
-  A.map(renderPlainTextInline),
-  joinEmpty
-);
-
-const renderPlainTextListItemChildren = (children: ReadonlyArray<ListItemChild>): string =>
-  pipe(
-    segmentInlineRuns(children, {
-      isInline: InlineSchema.is,
-      renderInlineRun: renderPlainTextInlines,
-      renderBlock: renderPlainTextBlock,
-    }),
-    A.join("\n")
-  );
-
-const renderPlainTextListItem = (item: Li): string => renderPlainTextListItemChildren(item.children);
-
-const renderPlainTextTaskItem = (item: TaskItem): string => renderPlainTextListItemChildren(item.children);
-
-const renderPlainTextTable = (block: Table): string =>
-  pipe(
-    block.children,
-    A.map((row) =>
-      pipe(
-        row.children,
-        A.map((cell) => renderPlainTextInlines(cell.children)),
-        A.join("\t")
-      )
-    ),
-    A.join("\n")
-  );
-
-const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
-  Match.tagsExhaustive({
-    text: ({ value }) => value,
-    rawMarkdown: ({ value }) => value,
-    rawHtml: ({ value }) => value,
-    strong: ({ children }) => renderPlainTextInlines(children),
-    em: ({ children }) => renderPlainTextInlines(children),
-    del: ({ children }) => renderPlainTextInlines(children),
-    code: ({ value }) => value,
-    a: ({ children }) => renderPlainTextInlines(children),
-    img: ({ alt }) => alt,
-    br: () => "\n",
-    inlineMath: ({ value }) => value,
-    footnoteReference: ({ identifier }) => identifier,
-  })
 );
 
 /**
@@ -189,9 +129,7 @@ const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
  * @category utilities
  * @since 0.0.0
  */
-export function renderPlainTextInline(inline: Inline): string {
-  return renderPlainTextInlineMatcher(inline);
-}
+export const renderPlainTextInline: (inline: Inline) => string = Inline.toPlainText;
 
 /**
  * Projects a block node to its escaping-free plain-text content.
@@ -208,24 +146,7 @@ export function renderPlainTextInline(inline: Inline): string {
  * @category utilities
  * @since 0.0.0
  */
-export const renderPlainTextBlock: (block: Block) => string = Match.type<Block>().pipe(
-  Match.tagsExhaustive({
-    heading: (block) => renderPlainTextInlines(block.children),
-    p: (block) => renderPlainTextInlines(block.children),
-    blockquote: (block) => renderPlainTextBlocks(block.children),
-    pre: (block) => block.value,
-    ul: (block) => pipe(block.children, A.map(renderPlainTextListItem), A.join("\n")),
-    ol: (block) => pipe(block.children, A.map(renderPlainTextListItem), A.join("\n")),
-    taskList: (block) => pipe(block.children, A.map(renderPlainTextTaskItem), A.join("\n")),
-    table: renderPlainTextTable,
-    youtube: (block) => youtubeWatchUrl(block.videoId),
-    mathBlock: (block) => block.value,
-    footnoteDefinition: (block) => renderPlainTextBlocks(block.children),
-    admonition: (block) => renderPlainTextBlocks(block.children),
-    embed: embedTitle,
-    hr: () => "",
-  })
-);
+export const renderPlainTextBlock: (block: Block) => string = Block.toPlainText;
 
 /**
  * Projects block nodes to plain text, one block per line.
@@ -242,7 +163,4 @@ export const renderPlainTextBlock: (block: Block) => string = Match.type<Block>(
  * @category utilities
  * @since 0.0.0
  */
-export const renderPlainTextBlocks: (blocks: ReadonlyArray<Block>) => string = flow(
-  A.map(renderPlainTextBlock),
-  A.join("\n")
-);
+export const renderPlainTextBlocks: (blocks: ReadonlyArray<Block>) => string = Block.toPlainTextAll;

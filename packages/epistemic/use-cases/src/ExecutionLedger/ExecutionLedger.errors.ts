@@ -206,7 +206,7 @@ export const ExecutionLedgerError = S.Union([ExecutionLedgerConstraintViolation,
   $I.annoteSchema("ExecutionLedgerError", {
     description: "Every failure an execution ledger write can produce.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

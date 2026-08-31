@@ -152,6 +152,17 @@
       <excludeFolder url="file://$MODULE_DIR$/explorations/oppold-corpus-overhaul" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/typed-agent-skill-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/tools/skillopt/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/ci-fleet-residue" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-08-10" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-08-13" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-08-24" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/honest-repo-signal" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/identity-iri-fibered" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/lab-apps-lifecycle" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/one-round-loop" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/packet-control-plane-core" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/semantic-foundation" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/skill-contract-kernel" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

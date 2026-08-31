@@ -6,7 +6,7 @@ import {
   PacketEventStoreLive,
 } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, Layer, Runtime } from "effect";
@@ -16,7 +16,7 @@ import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTes
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,

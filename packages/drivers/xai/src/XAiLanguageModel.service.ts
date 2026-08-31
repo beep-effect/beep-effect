@@ -53,8 +53,7 @@ const $I = $XaiId.create("XAiLanguageModel.service");
 export const XAiModelName = S.NonEmptyString.pipe(
   $I.annoteSchema("XAiModelName", {
     description: "Non-empty xAI model identifier accepted by the language-model adapter.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

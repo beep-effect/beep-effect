@@ -193,12 +193,17 @@ export const WorkItemActionError = S.Union([
   WorkItemActionRejected,
   WorkItemActionFailed,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
+  // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("WorkItemActionError", {
     title: "WorkItem action error",
     description: "Tagged union of public WorkItem use-case failures.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**

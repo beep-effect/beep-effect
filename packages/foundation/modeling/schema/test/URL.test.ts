@@ -16,7 +16,7 @@ describe("URL", () => {
   it("publishes codec statics and a canonical arbitrary for HTTPS URLs", () => {
     expect(SchemaAST.resolve(HttpsUrl.ast)?.toArbitrary).toBeDefined();
     expect(fc.sample(S.toArbitrary(HttpsUrl)(fc), { numRuns: 20, seed: 0x5eed }).every(HttpsUrl.is)).toBe(true);
-    expect(HttpsUrl.fromUnknown("https://example.com/resource")).toBe("https://example.com/resource");
+    expect(HttpsUrl.decodeUnknownSync("https://example.com/resource")).toBe("https://example.com/resource");
   });
 
   it.effect(

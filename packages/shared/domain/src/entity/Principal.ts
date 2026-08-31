@@ -239,8 +239,7 @@ const PrincipalBase = S.Union([
   $I.annoteSchema("Principal", {
     description: "Principal actor reference used by shared-kernel persisted entity fields.",
   }),
-  S.toTaggedUnion("kind"),
-  SchemaUtils.withCodecStatics
+  S.toTaggedUnion("kind")
 );
 
 type PrincipalSchemaBase = typeof PrincipalBase;

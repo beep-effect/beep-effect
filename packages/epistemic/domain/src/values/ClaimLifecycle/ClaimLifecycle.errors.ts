@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ClaimLifecycle } from "./ClaimLifecycle.model.ts";
 
@@ -81,8 +80,7 @@ export class ClaimInvalidTransition extends S.TaggedError<ClaimInvalidTransition
 export const ClaimLifecycleError = S.Union([ClaimInvalidTransition]).pipe(
   $I.annoteSchema("ClaimLifecycleError", {
     description: "Union of every claim lifecycle error.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

@@ -6,7 +6,7 @@
  */
 "use client";
 
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { TooltipProvider } from "@beep/ui/components/ui/tooltip";
 import * as O from "@beep/utils/Option";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
@@ -63,7 +63,7 @@ export function Editor({
           // TODO(effect-native-migration): model schema
           ...O.getSomesStruct({
             editorState: O.map(O.fromUndefinedOr(editorSerializedState), (editorSerializedState) =>
-              Unknown.encodeUnknownSyncFromJsonString(editorSerializedState)
+              UnknownFromJsonString.encodeUnknownSync(editorSerializedState)
             ),
           }),
         }}

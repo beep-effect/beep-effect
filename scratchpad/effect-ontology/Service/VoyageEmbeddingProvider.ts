@@ -72,7 +72,7 @@ export const VoyageModel = LiteralKit([
   "voyage-multilingual-2",
   "voyage-law-2",
 ]).pipe(
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   $I.annoteSchema("VoyageModel", {
     description: "Voyage embedding models with known output dimensions.",
   })
