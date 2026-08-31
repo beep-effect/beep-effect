@@ -21,8 +21,6 @@ import {
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
-const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;
-
 const expectedCanonicalDocgenPath = (
   path: Path.Path,
   sourceRoot: string,
@@ -198,7 +196,8 @@ export const aggregateGeneratedDocs: (options?: {
   return yield* Effect.forEach(
     sortedPackages,
     Effect.fnUntraced(function* (pkg, index) {
-      const sourceDir = path.join(pkg.absolutePath, ...DOCS_MODULES_SEGMENTS);
+      const generatedDocsModulesSegments = Str.split("/")(pkg.generatedDocsModulesPath);
+      const sourceDir = path.join(pkg.absolutePath, ...generatedDocsModulesSegments);
       const destinationDir = path.join(docsRoot, pkg.docsOutputPath);
       const hasDocs = yield* fs.exists(sourceDir).pipe(Effect.orElseSucceed(thunkFalse));
 
@@ -214,11 +213,11 @@ export const aggregateGeneratedDocs: (options?: {
       const canonicalSourceDir = yield* fs
         .realPath(sourceDir)
         .pipe(Effect.mapError(DomainError.newCause(`Failed to resolve "${sourceDir}"`)));
-      const expectedCanonicalSourceDir = path.join(canonicalPackageDir, ...DOCS_MODULES_SEGMENTS);
+      const expectedCanonicalSourceDir = path.join(canonicalPackageDir, ...generatedDocsModulesSegments);
 
       if (canonicalSourceDir !== expectedCanonicalSourceDir) {
         return yield* DomainError.make({
-          message: `Refusing to aggregate docs for package "${pkg.name}" because "${sourceDir}" resolves outside the package docs/modules tree.`,
+          message: `Refusing to aggregate docs for package "${pkg.name}" because "${sourceDir}" resolves outside its generated modules tree.`,
         });
       }
 

@@ -1,3 +1,4 @@
+import { SchemaUtils } from "@beep/schema";
 import {
   Clock,
   Crypto,
@@ -23,8 +24,16 @@ import { ProviderCacheCorrupt } from "@/schema/Errors";
 import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
 import { ProviderCache } from "@/services/ProviderCache";
 
-const ProviderCacheEntryJson = S.fromJsonString(ProviderCacheEntry);
-const ProviderCacheEntryPrettyJson = S.fromJsonString(ProviderCacheEntry, { space: 2 });
+const ProviderCacheEntryJson = S.fromJsonString(ProviderCacheEntry).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeEffect(schema),
+  }))
+);
+const ProviderCacheEntryPrettyJson = S.fromJsonString(ProviderCacheEntry, { space: 2 }).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    encodeEffect: S.encodeEffect(schema),
+  }))
+);
 const providerKeyEquivalence = S.toEquivalence(ProviderCacheKey);
 const providerEntryEquivalence = S.toEquivalence(ProviderCacheEntry);
 const lockOwnerEquivalence = O.makeEquivalence(Str.Equivalence);
@@ -64,7 +73,7 @@ const makeProviderCache = Effect.gen(function* () {
     const json = yield* fs
       .readFileString(entryPath)
       .pipe(Effect.mapError(() => corrupt("A provider cache entry could not be read.")));
-    const entry = yield* S.decodeEffect(ProviderCacheEntryJson)(json).pipe(
+    const entry = yield* ProviderCacheEntryJson.decodeEffect(json).pipe(
       Effect.mapError(() => corrupt("A provider cache entry failed schema or digest validation."))
     );
     if (!providerKeyEquivalence(entry.key, key)) {
@@ -263,7 +272,7 @@ const makeProviderCache = Effect.gen(function* () {
       return yield* corrupt("A conflicting response already exists for this provider cache key.");
     }
 
-    const json = yield* S.encodeEffect(ProviderCacheEntryPrettyJson)(entry).pipe(
+    const json = yield* ProviderCacheEntryPrettyJson.encodeEffect(entry).pipe(
       Effect.mapError(() => corrupt("The provider cache entry could not be encoded."))
     );
     yield* fs

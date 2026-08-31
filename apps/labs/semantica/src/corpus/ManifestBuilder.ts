@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { Context, Crypto, Effect, Equal, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -22,7 +22,11 @@ import type { CorpusPaperId } from "@/corpus/Manifest";
 
 const $I = $SemanticaId.create("corpus/ManifestBuilder");
 
-const ManifestFromJsonString = S.fromJsonString(CorpusManifest);
+const ManifestFromJsonString = S.fromJsonString(CorpusManifest).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeEffect(schema),
+  }))
+);
 
 /**
  * Operations that build W1 from the configured corpus root or check a committed manifest.
@@ -62,16 +66,35 @@ const makeCorpusRootUnavailable = (
   corpusRoot: O.Option<string>,
   reason: CorpusRootUnavailable["reason"],
   message: string
-): CorpusRootUnavailable => CorpusRootUnavailable.make({ corpusRoot, message, reason });
+): CorpusRootUnavailable =>
+  CorpusRootUnavailable.make({
+    corpusRoot,
+    message,
+    reason,
+  });
 
 const toManifestDiff = (row: CorpusManifestRow, drift: ByteDrift): ManifestDiff => {
   const id = row.id;
   return ByteDrift.match({
-    "missing-file": ({ relativePath }) => ManifestDiff.cases["missing-file"].make({ id, relativePath }),
+    "missing-file": ({ relativePath }) =>
+      ManifestDiff.cases["missing-file"].make({
+        id,
+        relativePath,
+      }),
     "sha256-mismatch": ({ relativePath, expectedSha256, actualSha256 }) =>
-      ManifestDiff.cases["sha256-mismatch"].make({ id, relativePath, expectedSha256, actualSha256 }),
+      ManifestDiff.cases["sha256-mismatch"].make({
+        id,
+        relativePath,
+        expectedSha256,
+        actualSha256,
+      }),
     "bytes-mismatch": ({ relativePath, expectedBytes, actualBytes }) =>
-      ManifestDiff.cases["bytes-mismatch"].make({ id, relativePath, expectedBytes, actualBytes }),
+      ManifestDiff.cases["bytes-mismatch"].make({
+        id,
+        relativePath,
+        expectedBytes,
+        actualBytes,
+      }),
   })(drift);
 };
 
@@ -228,7 +251,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
         })
       )
     );
-    return yield* S.decodeEffect(ManifestFromJsonString)(source).pipe(
+    return yield* ManifestFromJsonString.decodeEffect(source).pipe(
       Effect.mapError(() =>
         ManifestDecodeFailed.make({
           message: "The W1 manifest is not valid w1-manifest/v1 JSON.",
@@ -242,7 +265,11 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
     const manifest = yield* load(manifestPath);
     const corpusRoot = yield* resolveCorpusRoot();
     const expectations = A.map(manifest.rows, (row) =>
-      ByteExpectation.make({ relativePath: row.relativePath, sha256: row.sha256, bytes: row.bytes })
+      ByteExpectation.make({
+        relativePath: row.relativePath,
+        sha256: row.sha256,
+        bytes: row.bytes,
+      })
     );
     const byteDrifts = yield* verifyByteExpectations(corpusRoot, expectations).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),

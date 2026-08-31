@@ -28,6 +28,7 @@ from pyoxigraph import RdfFormat, Store
 PACKET = Path(__file__).resolve().parents[2]
 TESTS = PACKET / "ontology/tests"
 FIX = TESTS / "fixtures"
+S6 = PACKET / "ontology/extraction/s6"
 
 UNBOUND_ALLOWED = {"cq-013": {"lane", "p50"}}
 
@@ -114,6 +115,31 @@ def expected_of(name):
     return header.split("Expected: ")[1].split(" |")[0]
 
 
+def predicate_coverage():
+    """Read the generated coverage table without adding PyYAML to this runner."""
+
+    text = (S6 / "PREDICATES.yaml").read_text()
+    marker = "\ncoverage:\n"
+    if marker not in text:
+        raise ValueError("PREDICATES.yaml has no coverage table")
+    section = text.split(marker, 1)[1]
+    rows = {}
+    for match in re.finditer(r"(?ms)^- cq: (CQ-\d+)\n(?P<body>.*?)(?=^- cq: |\Z)", section):
+        cid = match.group(1)
+        body = match.group("body")
+        count = re.search(r"(?m)^  predicate_count: (\d+)$", body)
+        ratified = re.search(r"(?m)^  ratified_count: (\d+)$", body)
+        full = re.search(r"(?m)^  full_predicate_set_ratified: (true|false)$", body)
+        if not count or not ratified or not full:
+            raise ValueError(f"incomplete PREDICATES coverage row for {cid}")
+        rows[cid.lower()] = {
+            "predicate_count": int(count.group(1)),
+            "ratified_count": int(ratified.group(1)),
+            "full": full.group(1) == "true",
+        }
+    return rows
+
+
 # --- seed pass -------------------------------------------------------------------
 seed = load_store(FIX / "seed.ttl")
 names = sorted(p.stem for p in TESTS.glob("cq-*.sparql"))
@@ -159,6 +185,109 @@ for name in names:
             fail(f"cq-012: seed counts mismatch decomposed={dec} window={win}")
             continue
     print(f"PASS: {name} seed {len(rows)} row(s), all bound")
+
+# --- S6 golden pass -------------------------------------------------------------
+# Selection is data, not a hand-maintained CQ allowlist: the generated predicate
+# coverage row must be fully ratified and the existing non-vacuity ASK must hold
+# in the golden store.  Census and seed are deliberately absent.
+try:
+    coverage = predicate_coverage()
+except (OSError, ValueError) as exc:
+    fail(f"golden coverage table unreadable: {exc}")
+    coverage = {}
+if set(coverage) != set(names):
+    fail(
+        f"golden coverage keys differ from CQ files: "
+        f"missing={sorted(set(names) - set(coverage))}, extra={sorted(set(coverage) - set(names))}"
+    )
+
+snapshot_paths = sorted((S6 / "graphs").glob("snapshot-*.ttl"))
+if len(snapshot_paths) != 1:
+    fail(f"golden store expected one snapshot graph, found {[p.name for p in snapshot_paths]}")
+    golden = None
+else:
+    try:
+        golden = load_store(S6 / "graphs/abox.ttl", snapshot_paths[0])
+    except Exception as exc:  # noqa: BLE001
+        fail(f"golden store failed to load: {exc}")
+        golden = None
+
+fully_ratified = 0
+golden_executed = 0
+golden_antecedent_true = 0
+for name in names:
+    row = coverage.get(name)
+    if row is None:
+        continue
+    print(
+        f"COVERAGE: {name} {row['ratified_count']}/{row['predicate_count']} ratified"
+        + (" (full)" if row["full"] else "")
+    )
+    if not row["full"]:
+        continue
+    fully_ratified += 1
+    antecedent = ANTECEDENTS.get(name)
+    if antecedent is None:
+        print(f"SKIP: {name} golden antecedent undefined")
+        continue
+    if golden is None or not bool(golden.query(antecedent)):
+        print(f"SKIP: {name} golden antecedent absent")
+        continue
+    golden_antecedent_true += 1
+    golden_executed += 1
+    exp = expected_of(name)
+    result = query_file(golden, name)
+    if exp == "boolean":
+        value = bool(result)
+        if value is not True:
+            fail(f"{name}: golden ASK expected true, got {value}")
+        else:
+            print(f"PASS: {name} golden ask=true")
+        continue
+    golden_rows = rows_of(result)
+    if exp == "zero_rows":
+        if golden_rows:
+            fail(f"{name}: golden expected zero rows, got {len(golden_rows)}")
+        else:
+            print(f"PASS: {name} golden zero rows (antecedent populated)")
+        continue
+    if not golden_rows:
+        fail(f"{name}: golden expected non-empty, got 0 rows")
+    else:
+        print(f"PASS: {name} golden {len(golden_rows)} row(s)")
+
+if golden is not None:
+    probes = [
+        (
+            "SeatRequest population has enqueuedAt",
+            """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+               ASK { ?request a ciops:SeatRequest ; ciops:enqueuedAt ?instant . }""",
+            True,
+        ),
+        (
+            "every observedQueueWaitMs is numeric and non-negative",
+            """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+               ASK { ?request ciops:observedQueueWaitMs ?wait .
+                     FILTER(!isNumeric(?wait) || ?wait < 0) }""",
+            False,
+        ),
+        (
+            "hasOriginKey has a non-empty value",
+            """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+               ASK { ?subject ciops:hasOriginKey ?origin . FILTER(?origin != \"\") }""",
+            True,
+        ),
+    ]
+    for label, ask, expected in probes:
+        actual = bool(golden.query(ask))
+        if actual != expected:
+            fail(f"golden probe {label!r}: expected {expected}, got {actual}")
+        else:
+            print(f"PASS: golden probe {label}")
+print(
+    f"GOLDEN: {fully_ratified}/{len(names)} status-covered; "
+    f"{golden_antecedent_true} antecedent-populated; {golden_executed} executed"
+)
 
 # --- binding-contract carrier (round-3 seat H-08) --------------------------------
 # The `# harness binds` convention is EXECUTABLE, not prose: bind_params() is the
