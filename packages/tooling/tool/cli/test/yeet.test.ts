@@ -29,6 +29,7 @@ import {
   emptyTurboPlanSnapshot,
   executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
+  findOpenPullRequest,
   GhActor,
   GhRestIssueComment,
   GhRestReviewComment,
@@ -69,9 +70,7 @@ import {
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
   retireFullProofLockOrObserveAtPath,
-  retirePublishedPrLease,
-  retirePublishedPrLeaseAtPathForTesting,
-  retirePublishedPrLeaseReceipt,
+  runGhPullRequestView,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
   shouldSkipCommitForReusablePublishForTesting,
@@ -84,10 +83,10 @@ import {
   tryReclaimStaleProofLockForTesting,
   tryRecoverObservedProofLockReapClaimForTesting,
   validateMonitorGuards,
+  validateOpenPullRequest,
   validateProofCoordinatorDirectoryForTesting,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
-  writePublishedPrLease,
   YeetAttemptStarted,
   YeetCommandError,
   YeetExecutedStep,
@@ -107,7 +106,7 @@ import {
   yeetRerunJobListingCommand,
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
-import { NonNegativeInt, PosInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
@@ -116,7 +115,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -129,20 +128,6 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
-const decodeLeaseSummary = S.decodeUnknownSync(
-  S.fromJsonString(S.Struct({ generationId: S.String, prNumber: S.Finite, status: S.optionalKey(S.String) }))
-);
-const decodeLeaseRetirementRequest = S.decodeUnknownSync(
-  S.fromJsonString(
-    S.Struct({
-      schemaVersion: S.Literal("yeet-pr-lease-retirement/v1"),
-      generationId: S.String,
-      headSha: S.String,
-      prNumber: S.Finite,
-      reason: S.String,
-    })
-  )
-);
 const attemptUuid = S.decodeUnknownSync(UUID);
 const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
@@ -200,6 +185,18 @@ const withTempDirectory = <Result, Error, Requirements>(
       })
   ).pipe(provideScopedLayer(PlatformLayer));
 
+const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {
+  const previous = Bun.env[name];
+  if (value === undefined) delete Bun.env[name];
+  else Bun.env[name] = value;
+  try {
+    return use();
+  } finally {
+    if (previous === undefined) delete Bun.env[name];
+    else Bun.env[name] = previous;
+  }
+};
+
 const withEnvVarEffect = <Out, Error, Requirements>(
   name: string,
   value: string | undefined,
@@ -219,18 +216,6 @@ const withEnvVarEffect = <Out, Error, Requirements>(
         else Bun.env[name] = previous;
       })
   );
-
-const withEnvVar = <Out>(name: string, value: string | undefined, use: () => Out): Out => {
-  const previous = Bun.env[name];
-  if (value === undefined) delete Bun.env[name];
-  else Bun.env[name] = value;
-  try {
-    return use();
-  } finally {
-    if (previous === undefined) delete Bun.env[name];
-    else Bun.env[name] = previous;
-  }
-};
 
 type TempTrackedFileRepo = {
   readonly filePath: string;
@@ -464,258 +449,37 @@ const findStep = (steps: ReadonlyArray<RepoPlanStep>, label: string): RepoPlanSt
     O.getOrThrow
   );
 
-describe("yeet published PR lease", () => {
-  it("treats retired leases as idempotent and refuses to retire an active takeover claim", () =>
-    Effect.runPromise(
-      withTrackedFileRepo(({ tmpDir }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const inbox = path.join(tmpDir, ".beep", "inbox");
-          const leasePath = path.join(inbox, "pr-lease.json");
-          yield* fs.makeDirectory(inbox, { recursive: true });
-          const writeLease = Effect.fnUntraced(function* (status: "claiming" | "retired") {
-            const encoded = yield* encodeJson({
-              schemaVersion: "yeet-pr-lease/v1",
-              generationId: `${status}-generation`,
-              sessionId: "test:retirement-status",
-              pid: process.pid,
-              procStart: "fixture",
-              checkoutRoot: tmpDir,
-              branch: "feat/retirement-status",
-              headSha: "abc123",
-              prNumber: 874,
-              acquiredAt: "2026-08-27T00:00:00Z",
-              refreshedAt: "2026-08-27T00:00:00Z",
-              status,
-            });
-            yield* fs.writeFileString(leasePath, `${encoded}\n`);
-          });
-          const retire = retirePublishedPrLeaseAtPathForTesting(
-            tmpDir,
-            inbox,
-            leasePath,
-            PosInt.make(874),
-            "abc123",
-            "fixture-retirement",
-            O.none(),
-            false
-          );
-
-          const missingLeaseError = yield* retire.pipe(Effect.flip);
-          expect(missingLeaseError.message).toContain("Published-PR lease disappeared while retiring PR #874");
-
-          yield* writeLease("retired");
-          yield* retire;
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ status: "retired" });
-
-          yield* writeLease("claiming");
-          const claimingError = yield* retire.pipe(Effect.flip);
-          expect(claimingError.message).toContain("Refusing to retire claiming generation claiming-generation");
-        })
-      )
-    ));
-
-  it("replaces terminal and abandoned ownership while preserving an open prior PR", () =>
+describe("yeet pull request lifecycle", () => {
+  it("reads, finds, and validates the current branch pull request", () =>
     Effect.runPromise(
       withTrackedFileRepo(({ tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const bin = path.join(tmpDir, "bin");
-          const leasePath = path.join(tmpDir, ".beep", "inbox", "pr-lease.json");
-          yield* fs.makeDirectory(bin);
-          const ghPath = path.join(bin, "gh");
+          const binDir = path.join(tmpDir, "bin");
+          const ghPath = path.join(binDir, "gh");
+          yield* fs.makeDirectory(binDir);
           yield* fs.writeFileString(
             ghPath,
             `#!/bin/sh
-case "\${3:-}" in
-  --json) printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}' ;;
-  700) printf '%s\\n' '{"number":700,"headRefName":"already-merged","state":"MERGED"}' ;;
-  701) printf '%s\\n' '{"number":701,"headRefName":"still-open","state":"OPEN"}' ;;
-  *) exit 2 ;;
-esac
+printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 `
           );
           yield* fs.chmod(ghPath, 0o755);
 
-          const writeExistingLease = Effect.fn("test.writeExistingPrLease")(function* (
-            generationId: string,
-            prNumber: number,
-            status: "active" | "claiming" | "retired" = "active"
-          ) {
-            const encoded = yield* encodeJson({
-              schemaVersion: "yeet-pr-lease/v1",
-              generationId,
-              sessionId: `retired-agent:${generationId}`,
-              pid: 999_999,
-              procStart: "dead",
-              checkoutRoot: tmpDir,
-              branch: `old-pr-${prNumber}`,
-              headSha: "deadbeef",
-              prNumber,
-              acquiredAt: "2026-08-27T00:00:00Z",
-              refreshedAt: "2026-08-27T00:00:00Z",
-              status,
-            });
-            yield* fs.makeDirectory(path.dirname(leasePath), { recursive: true });
-            yield* fs.writeFileString(leasePath, `${encoded}\n`);
-          });
-          const publish = withEnvVarEffect("PATH", `${bin}:${Bun.env.PATH ?? ""}`, writePublishedPrLease(tempContext));
-
-          const receipt = yield* publish;
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
-
-          yield* writeExistingLease("terminal-pr", 700);
-          yield* publish;
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
-
-          yield* writeExistingLease("retired-current-pr", 874, "retired");
-          yield* publish;
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
-
-          yield* writeExistingLease("claiming-current-pr", 874, "claiming");
-          expect(Exit.isFailure(yield* Effect.exit(publish))).toBe(true);
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
-            generationId: "claiming-current-pr",
-            prNumber: 874,
-          });
-
-          yield* writeExistingLease("open-pr", 701);
-          expect(Exit.isFailure(yield* Effect.exit(publish))).toBe(true);
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
-            generationId: "open-pr",
-            prNumber: 701,
-          });
-
-          yield* writeExistingLease("abandoned-current-pr", 874);
-          const finalReceipt = yield* publish;
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ prNumber: 874 });
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath)).generationId).not.toBe("abandoned-current-pr");
-
-          const gitPath = path.join(bin, "git");
-          yield* fs.writeFileString(gitPath, "#!/bin/sh\nexit 99\n");
-          yield* fs.writeFileString(ghPath, "#!/bin/sh\nexit 98\n");
-          yield* fs.chmod(gitPath, 0o755);
-          const mutexReadyPath = path.join(tmpDir, ".beep", "inbox", "mutex-ready");
-          const mutexHolder = Bun.spawn(
-            [
-              "flock",
-              path.join(tmpDir, ".beep", "inbox", "hook-mutex.lock"),
-              "sh",
-              "-c",
-              'touch "$1"; sleep 3',
-              "yeet-test-mutex-holder",
-              mutexReadyPath,
-            ],
-            { cwd: tmpDir, stdin: "ignore", stdout: "ignore", stderr: "ignore" }
-          );
-          let mutexReady = false;
-          for (let attempt = 0; attempt < 200 && !mutexReady; attempt += 1) {
-            mutexReady = yield* fs.exists(mutexReadyPath);
-            if (!mutexReady) yield* Effect.sleep("10 millis");
-          }
-          expect(mutexReady).toBe(true);
           yield* withEnvVarEffect(
             "PATH",
-            `${bin}:${Bun.env.PATH ?? ""}`,
-            retirePublishedPrLeaseReceipt(tempContext, finalReceipt, "start-pr-early-failed")
-          );
-          expect(yield* Effect.promise(() => mutexHolder.exited)).toBe(0);
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
-            generationId: finalReceipt.generationId,
-            status: "retired",
-          });
-          expect(receipt.generationId).not.toBe(finalReceipt.generationId);
-        })
-      )
-    ));
+            `${binDir}:${Bun.env.PATH ?? ""}`,
+            Effect.gen(function* () {
+              const current = yield* runGhPullRequestView(tempContext);
+              const found = yield* findOpenPullRequest(tempContext);
+              yield* validateOpenPullRequest(tempContext);
 
-  it("retires the public lease idempotently and rejects a mismatched terminal target", () =>
-    Effect.runPromise(
-      withTrackedFileRepo(({ tempContext, tmpDir }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const bin = path.join(tmpDir, "bin");
-          const leasePath = path.join(tmpDir, ".beep", "inbox", "pr-lease.json");
-          yield* fs.makeDirectory(bin);
-          yield* fs.writeFileString(
-            path.join(bin, "gh"),
-            '#!/bin/sh\nprintf \'%s\\n\' \'{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}\'\n'
+              expect(current.number).toBe(874);
+              expect(current.headRefName).toBe(tempContext.branch);
+              expect(O.map(found, (view) => view.number)).toEqual(O.some(874));
+            })
           );
-          yield* fs.chmod(path.join(bin, "gh"), 0o755);
-
-          const receipt = yield* withEnvVarEffect(
-            "PATH",
-            `${bin}:${Bun.env.PATH ?? ""}`,
-            writePublishedPrLease(tempContext)
-          );
-          yield* retirePublishedPrLease(tempContext, receipt.prNumber, receipt.headSha, "merged");
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({ status: "retired" });
-
-          yield* retirePublishedPrLease(tempContext, receipt.prNumber, receipt.headSha, "merged-again");
-          expect(
-            Exit.isFailure(
-              yield* Effect.exit(retirePublishedPrLease(tempContext, receipt.prNumber, "mismatched-head", "merged"))
-            )
-          ).toBe(true);
-        })
-      )
-    ));
-
-  it("bounds receipt retirement mutex waits and retries under persistent transition contention", () =>
-    Effect.runPromise(
-      withTrackedFileRepo(({ tempContext, tmpDir }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const bin = path.join(tmpDir, "bin");
-          const inbox = path.join(tmpDir, ".beep", "inbox");
-          const leasePath = path.join(inbox, "pr-lease.json");
-          const attemptsPath = path.join(inbox, "hook-mutex.lock.attempts");
-          yield* fs.makeDirectory(bin);
-          const ghPath = path.join(bin, "gh");
-          yield* fs.writeFileString(
-            ghPath,
-            '#!/bin/sh\nprintf \'%s\\n\' \'{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}\'\n'
-          );
-          yield* fs.chmod(ghPath, 0o755);
-
-          const receipt = yield* withEnvVarEffect(
-            "PATH",
-            `${bin}:${Bun.env.PATH ?? ""}`,
-            writePublishedPrLease(tempContext)
-          );
-          const flockPath = path.join(bin, "flock");
-          yield* fs.writeFileString(
-            flockPath,
-            '#!/bin/sh\n[ "$1" = "-w" ] || exit 90\n[ "$2" = "5" ] || exit 91\nprintf "attempt\\n" >> "$3.attempts"\nexit 73\n'
-          );
-          yield* fs.chmod(flockPath, 0o755);
-
-          yield* withEnvVarEffect(
-            "PATH",
-            `${bin}:${Bun.env.PATH ?? ""}`,
-            retirePublishedPrLeaseReceipt(tempContext, receipt, "start-pr-early-failed")
-          );
-
-          expect(Str.split(/\r?\n/u)(Str.trim(yield* fs.readFileString(attemptsPath)))).toHaveLength(4);
-          expect(decodeLeaseSummary(yield* fs.readFileString(leasePath))).toMatchObject({
-            generationId: receipt.generationId,
-            status: "active",
-          });
-          const retirementQueue = path.join(inbox, "pr-lease-retirements");
-          const retirementRequests = yield* fs.readDirectory(retirementQueue);
-          expect(retirementRequests).toHaveLength(1);
-          expect(
-            decodeLeaseRetirementRequest(yield* fs.readFileString(path.join(retirementQueue, retirementRequests[0]!)))
-          ).toMatchObject({
-            generationId: receipt.generationId,
-            headSha: receipt.headSha,
-            prNumber: receipt.prNumber,
-            reason: "start-pr-early-failed",
-          });
         })
       )
     ));

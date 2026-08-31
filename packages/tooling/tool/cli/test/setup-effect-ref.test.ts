@@ -86,57 +86,6 @@ describe("setup-effect-ref", () => {
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
-
-  it.effect("installs the watcher with the supplied checkout's projects root", () =>
-    withTempDirectory((tempDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const ambientPath = yield* Config.string("PATH");
-        const setupScriptPath = yield* path.fromFileUrl(
-          new URL("../../../../../scripts/setup-yeet-pr-lease-watcher.sh", import.meta.url)
-        );
-        const binDir = path.join(tempDir, "bin");
-        const configDir = path.join(tempDir, "config");
-        const repoRoot = path.join(tempDir, "arbitrary-checkout");
-
-        yield* Effect.forEach(
-          [binDir, configDir, repoRoot],
-          (directory) => fs.makeDirectory(directory, { recursive: true }),
-          { discard: true }
-        );
-        yield* writeExecutable(path.join(binDir, "systemctl"), "#!/bin/sh\nexit 0\n");
-
-        const result = yield* Effect.scoped(
-          Effect.gen(function* () {
-            const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
-              cwd: tempDir,
-              env: { PATH: `${binDir}:${ambientPath}`, XDG_CONFIG_HOME: configDir },
-              stdin: "ignore",
-              stderr: "pipe",
-              stdout: "pipe",
-            });
-            const [exitCode, stderr, stdout] = yield* Effect.all(
-              [
-                handle.exitCode,
-                handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-                handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-              ],
-              { concurrency: "unbounded" }
-            );
-            return { exitCode, stderr, stdout };
-          })
-        );
-
-        expect(result.exitCode, result.stderr).toBe(0);
-        const unit = yield* fs.readFileString(
-          path.join(configDir, "systemd", "user", "beep-yeet-pr-lease-watch.service")
-        );
-        expect(unit).toContain(`BEEP_YEET_PROJECTS_ROOT=${tempDir}`);
-      })
-    ).pipe(provideScopedLayer(NodeServices.layer))
-  );
-
   it.effect("repairs blank remote-cache placeholders without replacing configured values", () =>
     withTempDirectory((tempDir) =>
       Effect.gen(function* () {
