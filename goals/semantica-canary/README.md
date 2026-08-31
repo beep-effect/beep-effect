@@ -50,17 +50,18 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-Active in P2 on the single evidence-quote re-entry candidate. Its zero-spend
-preview grounded 10 cached relations on two papers, and the gold-v1 annotation
-pass repaired the known relation and abstract-label defects. The candidate's
-live probe and retry budgets remain unspent. C1, C2, and the full-W1 R2 gate
-have not run.
+Active in P2 on the single evidence-quote re-entry candidate. The first
+vertical slice and all three G-relation papers passed live and replay with
+byte-identical reports, non-zero hosted relation claims, zero failed anchors,
+and zero unexpected degradation. The retry remains unspent. C1, C2, and the
+full-W1 R2 gate have not run.
 
 ## Latest evidence
 
+[`history/p2-c0-relation-slate.md`](./history/p2-c0-relation-slate.md) records
+the passing live/replay slice and relation-paper extension. The preceding
 [`history/p2-c0-evidence-quote-reentry.md`](./history/p2-c0-evidence-quote-reentry.md)
-records the candidate contract, zero-spend preview, gold annotation repairs,
-refrozen digests, and local proof that reopened P2.
+records the candidate contract, zero-spend preview, and gold repair.
 
 ## Notes
 

@@ -4,9 +4,9 @@
 
 Status: `active`
 
-P1 is complete. P2 resumed after the evidence-quote candidate passed its E5
-zero-spend preview and E6 gold annotation-and-repair gate. Its single live
-probe and retry budget remain unspent. P3-P5 do not proceed until C0 passes.
+P1 is complete. P2's evidence-quote candidate passed its first vertical slice
+and all three G-relation papers with replay-identical reports. Its retry remains
+unspent; the full-W1 R2 gate is next. P3-P5 do not proceed until C0 passes.
 
 ## Phases
 

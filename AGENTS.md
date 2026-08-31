@@ -21,6 +21,10 @@ workflows in skills.
   already-running session will not hot-load the new tool. Do not respond to a
   missing MCP tool by repeatedly asking the operator to unlock 1Password or run
   `op signin`.
+- For a pre-existing `op://`-backed env file, test the exact operation with
+  output suppressed: `op run --env-file=<path> -- true >/dev/null`. That wrapper
+  can obtain desktop authorization and succeed even when agent-side
+  `op whoami` fails; do not use `op whoami` as a gate for the wrapper.
 - Never copy, print, or inject `OP_SESSION_*` values to bridge the process gap.
   Once exposed, use the 1Password MCP tools and keep secret values inside
   1Password.

@@ -384,6 +384,9 @@ ratifies.
   Codex had no registered `1password` MCP server even though the desktop server was enabled and
   `1password-mcp` was installed. Fix: register the user-level server with
   `codex mcp add 1password -- 1password-mcp`, then start a fresh agent session so its fixed MCP
-  tool surface includes the server. Prevention: agent diagnostics must distinguish operator CLI
-  auth, agent process inheritance, client MCP registration, and current-session tool exposure;
-  never infer the first from failure of another or ask the operator to repeat sign-in blindly.
+  tool surface includes the server. For existing `op://` env files, the exact output-suppressed
+  `op run --env-file=<path> -- true` preflight succeeded despite both `whoami` failures, proving
+  that the wrapper can obtain desktop authorization directly. Prevention: agent diagnostics must
+  distinguish operator CLI auth, operation-scoped desktop authorization, agent process
+  inheritance, client MCP registration, and current-session tool exposure; never infer the first
+  from failure of another or ask the operator to repeat sign-in blindly.

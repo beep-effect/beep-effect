@@ -226,7 +226,7 @@ the mechanism behind "every span slices back" is `verifyTextAnchor` (M1,
 [`MAP.md` §Capability Check](../../explorations/semantica-lab/MAP.md#capability-check-goal-1--semantica-canary),
 Canonicalizer row).
 
-- [ ] **First vertical slice**
+- [x] **First vertical slice**
       ([`MAP.md` §First Vertical Slice](../../explorations/semantica-lab/MAP.md#first-vertical-slice)):
       C0 on F1 + one G-relation W1 paper, run live and then with the network
       off; the two `EvalReport`s have equal `reportDigest`s (telemetry sidecars excluded,
