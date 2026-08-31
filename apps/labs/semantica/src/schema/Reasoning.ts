@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, PosInt, Sha256Hex } from "@beep/schema";
 import { Equal, identity, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -33,29 +33,8 @@ export const reasoningVocabulary = {
   skosBroaderTransitive: "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
 };
 
-/**
- * Rule identifiers for the six rho-df rules and explicit SKOS transitivity.
- *
- * **Example** (Recognize a rule id)
- *
- * ```ts
- * import { RdfsRuleId } from "@/schema/Reasoning"
- *
- * console.log(RdfsRuleId.is.rdfs9("rdfs9")) // true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const RdfsRuleId = LiteralKit([
-  "rdfs2",
-  "rdfs3",
-  "rdfs5",
-  "rdfs7",
-  "rdfs9",
-  "rdfs11",
-  "skos-broader-transitive",
-]).pipe(
+/** Rule identifiers for the six rho-df rules and explicit SKOS transitivity. */
+const RdfsRuleId = LiteralKit(["rdfs2", "rdfs3", "rdfs5", "rdfs7", "rdfs9", "rdfs11", "skos-broader-transitive"]).pipe(
   $I.annoteSchema("RdfsRuleId", {
     description: "Stable identifiers for the complete C2 rule program.",
   })
@@ -699,26 +678,5 @@ export class C2EvalReport extends S.Class<C2EvalReport>($I`C2EvalReport`)(
   C2EvalReportFields.mapFields(identity).check(C2EvalReportChecks),
   $I.annote("C2EvalReport", {
     description: "Replay-stable C2 evaluation report with C1 evidence and validated inference proof events.",
-  })
-) {}
-
-/**
- * Measured Tier-L bars read from the live C2 telemetry sidecar.
- *
- * **Example** (Inspect the cold-start field)
- *
- * ```ts
- * import { TierLWitness } from "@/schema/Reasoning"
- *
- * console.log(TierLWitness.fields.coldStartMs !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class TierLWitness extends S.Class<TierLWitness>($I`TierLWitness`)(
-  { coldStartMs: NonNegativeInt, p95Ms: NonNegativeInt },
-  $I.annote("TierLWitness", {
-    description: "C2 reasoner startup and interactive-query p95 measurements subject to Tier-L gates.",
   })
 ) {}

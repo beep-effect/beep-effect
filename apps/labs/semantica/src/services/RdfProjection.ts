@@ -14,7 +14,7 @@ const $I = $SemanticaId.create("services/RdfProjection");
  * @category models
  * @since 0.0.0
  */
-export interface RdfProjectionTriple {
+interface RdfProjectionTriple {
   readonly object: string;
   readonly predicate: string;
   readonly subject: string;
