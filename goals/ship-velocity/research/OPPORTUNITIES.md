@@ -4,17 +4,28 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
-## 2026-08-31 — a zero-finding goals baseline cannot clear staleness
+## 2026-08-31 — post-merge review forced a successor final-evidence PR
+
+- **Doing:** cleaning up PR #937 after its merge and preserving the initiative completion gate.
+- **Evidence:** PR #937 merged at `2026-08-31T11:11:45Z` without the cache receipt, lifecycle and
+  P5 status flip, or updated reflection. Two actionable Codex review threads posted eight minutes
+  later. One identified that the merged PR could no longer receive its declared closeout artifacts;
+  the other corrected this ledger's description of goals-doctor staleness.
+- **Would have prevented it:** keep an evidence PR unmerged while it names future same-PR
+  artifacts, and wait for every enabled review channel to reach a terminal state before the merge.
+
+## 2026-08-31 — a zero-finding goals baseline clears only local mtime staleness
 
 - **Doing:** clearing Yeet's stale goals-doctor gate after updating the observation receipt.
 - **Evidence:** `yeet status --remote` reported that `goals/goals-doctor.baseline.jsonc` was older
   than the observation file and instructed `bun run beep goals doctor --write-baseline`. The
-  command reported that it wrote a baseline with zero finding keys, but produced no file diff. A
-  commit therefore cannot advance the baseline path, and repeating the prescribed command cannot
-  clear a commit-age staleness check.
-- **Would have prevented it:** store a source fingerprint in the baseline or compare the current
-  finding-key set with the committed set. Do not use path commit age when a valid zero-finding
-  rewrite is content-identical.
+  command rewrote the zero-finding baseline without a content diff, advancing its filesystem mtime.
+  The next Yeet closeout reported no staleness. This clears the current checkout, but Git does not
+  record the refreshed witness, so a later checkout can reconstruct unrelated mtimes and repeat the
+  verdict.
+- **Would have prevented it:** store a source fingerprint or tracked witness in the baseline. If
+  the local mtime check remains, its repair message should say that an identical rewrite refreshes
+  only the current checkout and may not survive a checkout.
 
 ## 2026-08-31 — a zsh loop variable erased command lookup
 
