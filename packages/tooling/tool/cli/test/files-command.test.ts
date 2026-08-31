@@ -1759,13 +1759,16 @@ describe("files command", { concurrent: false }, () => {
           const worker = yield* decodePersonMatchWorkerSuccess(
             makeAdaFaceRocmWorkerReportFixture(path, cacheDir, candidateDir, referencePath)
           ).pipe(Effect.mapError(filesTestError));
+          const devices = yield* S.decodeEffect(PersonMatchDeviceIndexesFromCsv)("0").pipe(
+            Effect.mapError(filesTestError)
+          );
           const options = MatchPersonOptions.make({
             acceptModelLicense: true,
             backend: "adaface-kprpe",
             cacheDir: O.some(cacheDir),
             compute: "rocm",
             detectionThreshold: 0.6,
-            devices: O.some(S.decodeUnknownSync(PersonMatchDeviceIndexesFromCsv)("0")),
+            devices: O.some(devices),
             dir: candidateDir,
             manifest: manifestPath,
             matchThreshold: 0.5,
