@@ -420,7 +420,6 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
   $I.annoteSchema("BatchIngestResponse", {
     description: "Batch-ingestion response whose non-negative summary is consistent with its tagged results.",
   }),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromResults: (results: ReadonlyArray<BatchIngestResult>): typeof schema.Type =>
       schema.make({

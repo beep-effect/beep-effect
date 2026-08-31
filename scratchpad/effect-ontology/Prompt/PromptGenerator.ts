@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -33,7 +33,7 @@ const $I = $ScratchpadId.create("effect-ontology/Prompt/PromptGenerator");
 const optionText = (fallback: string): ((value: O.Option<string>) => string) => O.getOrElse(() => fallback);
 
 const renderUnknownJson: (value: unknown) => string = flow(
-  Unknown.encodeUnknownResultFromJsonString,
+  UnknownFromJsonString.encodeUnknownResult,
   Result.getOrElse(() => "null")
 );
 
@@ -234,7 +234,7 @@ const NegativeExampleOutput = S.Struct({
     })
   ),
 }).pipe(
-  SchemaUtils.withOptionCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"]),
   $I.annoteSchema("NegativeExampleOutput", {
     description: "Optional structured metadata carried by a negative extraction example.",
   })

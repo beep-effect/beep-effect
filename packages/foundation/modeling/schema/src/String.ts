@@ -108,7 +108,8 @@ export const UUID = NonEmptyTrimmedStr.check(S.isUUID()).pipe(
   $I.annoteSchema("UUID", {
     description: "Universally Unique Identifier",
     documentation: "A 128-bit number used to identify information in computer systems.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 /**

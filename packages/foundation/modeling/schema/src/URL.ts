@@ -40,6 +40,7 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  */
 export const URLStr = NonEmptyTrimmedStr.pipe(
   S.fromBrand("URLStr", urlStr),
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
   SchemaUtils.withStatics(() => ({
     filter: filterURLStr,
     is: isURLStr,

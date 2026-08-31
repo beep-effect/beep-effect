@@ -294,17 +294,17 @@ export class AssertionError extends S.TaggedError<AssertionError>($I`AssertionEr
  */
 const ASSERTIONS = {
   namespace: "https://effect-ontology.dev/assertions#",
-  Assertion: IRI.fromUnknown("https://effect-ontology.dev/assertions#Assertion"),
-  assertedAt: IRI.fromUnknown("https://effect-ontology.dev/assertions#assertedAt"),
-  curatedBy: IRI.fromUnknown("https://effect-ontology.dev/assertions#curatedBy"),
-  derivedFromClaim: IRI.fromUnknown("https://effect-ontology.dev/assertions#derivedFromClaim"),
-  decision: IRI.fromUnknown("https://effect-ontology.dev/assertions#decision"),
-  Status: IRI.fromUnknown("https://effect-ontology.dev/assertions#Status"),
-  Accepted: IRI.fromUnknown("https://effect-ontology.dev/assertions#Accepted"),
-  Rejected: IRI.fromUnknown("https://effect-ontology.dev/assertions#Rejected"),
-  Pending: IRI.fromUnknown("https://effect-ontology.dev/assertions#Pending"),
-  rejectedAt: IRI.fromUnknown("https://effect-ontology.dev/assertions#rejectedAt"),
-  rejectionReason: IRI.fromUnknown("https://effect-ontology.dev/assertions#rejectionReason"),
+  Assertion: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Assertion"),
+  assertedAt: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#assertedAt"),
+  curatedBy: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#curatedBy"),
+  derivedFromClaim: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#derivedFromClaim"),
+  decision: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#decision"),
+  Status: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Status"),
+  Accepted: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Accepted"),
+  Rejected: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Rejected"),
+  Pending: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#Pending"),
+  rejectedAt: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#rejectedAt"),
+  rejectionReason: IRI.decodeUnknownSync("https://effect-ontology.dev/assertions#rejectionReason"),
 };
 
 // =============================================================================
@@ -521,7 +521,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         rejectedAt: DateTime.toDate(now),
         rejectionReason: reason,
       });
-      yield* Ref.update(assertionsRef, HashMap.set(AssertionId.fromUnknown(assertion.value.id), updated));
+      yield* Ref.update(assertionsRef, HashMap.set(AssertionId.decodeUnknownSync(assertion.value.id), updated));
     });
 
     // -------------------------------------------------------------------------
@@ -539,8 +539,8 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     const toTriples = (assertion: AssertionRow, graphUri?: string) =>
       Effect.sync(() => {
         const quads: Array<Quad> = [];
-        const assertionIri = IRI.fromUnknown(`${ASSERTIONS.namespace}${assertion.id}`);
-        const graph = P.isUndefined(graphUri) ? undefined : IRI.fromUnknown(graphUri);
+        const assertionIri = IRI.decodeUnknownSync(`${ASSERTIONS.namespace}${assertion.id}`);
+        const graph = P.isUndefined(graphUri) ? undefined : IRI.decodeUnknownSync(graphUri);
 
         // Type assertion
         quads.push(
@@ -557,7 +557,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           canonicalQuad({
             subject: assertionIri,
             predicate: RDF_SUBJECT,
-            object: IRI.fromUnknown(assertion.subjectIri),
+            object: IRI.decodeUnknownSync(assertion.subjectIri),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -566,14 +566,14 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           canonicalQuad({
             subject: assertionIri,
             predicate: RDF_PREDICATE,
-            object: IRI.fromUnknown(assertion.predicateIri),
+            object: IRI.decodeUnknownSync(assertion.predicateIri),
             graph: O.fromNullishOr(graph),
           })
         );
 
         const objectTerm =
           assertion.objectType === "iri"
-            ? IRI.fromUnknown(assertion.objectValue)
+            ? IRI.decodeUnknownSync(assertion.objectValue)
             : canonicalLiteral({ value: assertion.objectValue });
 
         quads.push(
@@ -646,7 +646,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
             canonicalQuad({
               subject: assertionIri,
               predicate: ASSERTIONS.derivedFromClaim,
-              object: IRI.fromUnknown(`${CLAIMS.namespace}${claimId}`),
+              object: IRI.decodeUnknownSync(`${CLAIMS.namespace}${claimId}`),
               graph: O.fromNullishOr(graph),
             })
           );

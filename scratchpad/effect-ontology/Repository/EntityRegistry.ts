@@ -62,7 +62,7 @@ import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, ent
  */
 export const CanonicalEntityId = UUID.pipe(
   S.brand("EntityRegistryCanonicalEntityId"),
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("CanonicalEntityId", {
     description: "Database identity of a canonical entity in the persistent registry.",
   })
@@ -268,10 +268,10 @@ const RegistryStatsSqlRow = S.Struct({
   })
 );
 
-const OneCanonicalEntitySqlRow = S.Tuple([CanonicalEntitySqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
-const OneEntityAliasSqlRow = S.Tuple([EntityAliasSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
-const OneCountSqlRow = S.Tuple([CountSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
-const OneRegistryStatsSqlRow = S.Tuple([RegistryStatsSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
+const OneCanonicalEntitySqlRow = S.Tuple([CanonicalEntitySqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const OneEntityAliasSqlRow = S.Tuple([EntityAliasSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const OneCountSqlRow = S.Tuple([CountSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const OneRegistryStatsSqlRow = S.Tuple([RegistryStatsSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const decodeOneCanonicalEntitySqlRow = (rows: unknown) =>

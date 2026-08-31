@@ -12,7 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Chunk, Context, Effect, Inspectable, Layer, Match, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
@@ -127,7 +127,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* Unknown.encodeUnknownEffectFromJsonString(jsonSchema);
+        const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
         const schemaHash = sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Entity extraction schema", {
           stage: "entity-extraction",
@@ -180,7 +180,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
             })
           )
         );
-        const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => IRI.fromUnknown(p.id));
+        const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => IRI.decodeUnknownSync(p.id));
         const propertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const propertyLocalNameToIriMap = propertyMapResult.map;
         if (propertyMapResult.hasCollisions) {
@@ -288,7 +288,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
               mention: "Test Entity",
               types: [
                 O.match(A.head(candidates), {
-                  onNone: () => IRI.fromUnknown("https://example.org/TestEntity"),
+                  onNone: () => IRI.decodeUnknownSync("https://example.org/TestEntity"),
                   onSome: (candidate) => candidate.id,
                 }),
               ],
@@ -486,7 +486,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* Unknown.encodeUnknownEffectFromJsonString(jsonSchema);
+        const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
         const schemaHash = sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Relation extraction schema", {
           stage: "relation-extraction",
@@ -526,7 +526,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             })
           )
         );
-        const propertyIris: ReadonlyArray<IRI> = properties.map((p) => IRI.fromUnknown(p.id));
+        const propertyIris: ReadonlyArray<IRI> = properties.map((p) => IRI.decodeUnknownSync(p.id));
         const relationPropertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const localNameToIriMap = relationPropertyMapResult.map;
         if (relationPropertyMapResult.hasCollisions) {
@@ -691,7 +691,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           Chunk.fromIterable([
             Relation.make({
               subjectId: entityArray[0].id,
-              predicate: IRI.fromUnknown(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo"),
+              predicate: IRI.decodeUnknownSync(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo"),
               object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id }),
             }),
           ])

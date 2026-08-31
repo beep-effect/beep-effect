@@ -1083,7 +1083,13 @@ export const IRI = S.String.pipe(
   $I.annoteSchema("IRI", {
     description: "RFC 3987 IRI syntax.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownResult", "decodeUnknownSync", "is"])
+  SchemaUtils.withCodecStatics([
+    "decodeEffect",
+    "decodeUnknownOption",
+    "decodeUnknownResult",
+    "decodeUnknownSync",
+    "is",
+  ])
 );
 
 /**

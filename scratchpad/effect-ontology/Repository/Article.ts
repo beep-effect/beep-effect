@@ -43,7 +43,7 @@ const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const decodeArticleRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(Articles.select.pipe(S.Array, S.mutable))(rows));
 
-const ArticleCountRows = S.Tuple([ArticleCountDatabaseRow]).pipe(SchemaUtils.withEffectCodecStatics);
+const ArticleCountRows = S.Tuple([ArticleCountDatabaseRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const decodeArticleCountRows = (rows: unknown) =>
   normalizeDecodedRows(ArticleCountRows.decodeUnknownEffect(rows));

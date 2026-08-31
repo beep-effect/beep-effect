@@ -3,7 +3,7 @@
  *
  * @since 0.1.0
  */
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -15,7 +15,7 @@ import * as PermissionRequest from "../../../../claudecode/Hook/Events/Permissio
 import * as PreToolUse from "../../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
 
-const encodeJson = Unknown.encodeSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const notificationJson = (notificationType: string) =>
   encodeJson({

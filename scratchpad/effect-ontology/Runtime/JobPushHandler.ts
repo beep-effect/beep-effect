@@ -19,6 +19,9 @@ import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/JobPushHandler");
+const BackgroundJobFromJsonString = S.fromJsonString(BackgroundJob).pipe(
+  SchemaUtils.withCodecStatics(["decodeEffect"])
+);
 
 // =============================================================================
 // Pub/Sub Push Message Schema
@@ -229,7 +232,7 @@ export const JobPushRouter = HttpRouter.addAll([
             const jobDataString = jobDataBuffer.toString("utf-8");
 
             // Parse the job schema
-            const jobParseResult = yield* BackgroundJob.decodeEffectFromJsonString(jobDataString).pipe(
+            const jobParseResult = yield* BackgroundJobFromJsonString.decodeEffect(jobDataString).pipe(
               Effect.mapError((cause) =>
                 JobParseError.make({
                   message: "Failed to decode the pushed background-job payload.",

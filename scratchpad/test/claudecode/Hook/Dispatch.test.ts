@@ -3,7 +3,7 @@
  *
  * @since 0.1.0
  */
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -25,8 +25,8 @@ interface DispatchResult {
   readonly succeeded: boolean;
 }
 
-const decodeJson = Unknown.decodeUnknownEffectFromJsonString;
-const encodeJson = Unknown.encodeSyncFromJsonString;
+const decodeJson = UnknownFromJsonString.decodeUnknownEffect;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const runDispatchWithMockStdin = (
   hooks: DispatchMap<never, never>,

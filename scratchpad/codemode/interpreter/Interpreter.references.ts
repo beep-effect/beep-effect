@@ -49,7 +49,7 @@ export const RuntimeReferenceValue = S.Union([RuntimeReference, ToolReference, C
   $I.annoteSchema("RuntimeReferenceValue", {
     description: "Every schema-owned runtime reference and mutable guest value.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

@@ -48,7 +48,7 @@ export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean])
     $I.annoteSchema("AttributeValue", {
       description: "JSON-safe scalar attribute value consisting of a string, boolean, or finite number.",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 /**
@@ -99,7 +99,7 @@ export const Attributes = S.Record(S.String, AttributeValue)
     $I.annoteSchema("Attributes", {
       description: "Open string-keyed attribute record whose values are JSON-safe scalars.",
     }),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics(() => ({
       empty: (): Attributes => ({}),
     }))
@@ -153,8 +153,7 @@ export const OptionalConfidence = S.OptionFromNullishOr(Confidence)
     SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalConfidence", {
       description: "Optional confidence normalized from nullish input to an Effect Option.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**
@@ -231,7 +230,7 @@ export const EntityId = S.String.check(
     $I.annoteSchema("EntityId", {
       description: "Validated snake-case local identifier for an extracted or resolved entity.",
     }),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
     SchemaUtils.withStatics((schema) => ({
       equivalence: SchemaUtils.toEquivalence(schema),
     }))

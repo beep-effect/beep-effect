@@ -14,7 +14,7 @@ import {
   SafeObject as SafeObjectSchema,
   SchemaUtils,
 } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str, Struct, thunkNull } from "@beep/utils";
 import { Cause, Clock, DateTime, Effect, Exit, flow, HashMap, HashSet, Order, Ref, Result, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -300,8 +300,7 @@ export const ToolCallEnded = S.Union([ToolCallSucceeded, ToolCallInterrupted, To
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -1019,7 +1018,7 @@ export const toolExpression = (path: string): string =>
   `tools${pipe(
     Str.split(path, "."),
     A.map((segment) =>
-      identifierSegment(segment) ? `.${segment}` : `[${Unknown.encodeUnknownSyncFromJsonString(segment)}]`
+      identifierSegment(segment) ? `.${segment}` : `[${UnknownFromJsonString.encodeUnknownSync(segment)}]`
     ),
     A.join("")
   )}`;

@@ -101,7 +101,6 @@ const GcsObjectName = S.String.check(
     toArbitrary: () => (fc) => fc.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._/-]{0,63}$/),
   })
   .pipe(
-    SchemaUtils.withCodecStatics,
     $I.annoteSchema("GcsObjectName", {
       description:
         "Google Cloud Storage flat-namespace object name constrained to the provider's general syntax and 1,024-byte UTF-8 limit.",
@@ -147,7 +146,7 @@ export const LegacyContentHashPrefix = S.String.check(
         "Ingress-only legacy fingerprint containing the first 16 lowercase hexadecimal characters of a SHA-256 digest.",
       documentation: "This value is collision-sensitive and is not canonical content identity.",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 /**
@@ -201,8 +200,7 @@ export const ContentHash = Sha256Hex.annotate({
   $I.annoteSchema("ContentHash", {
     description: "Canonical content identity represented by a complete lowercase SHA-256 digest.",
   }),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownSync", "is"]),
   SchemaUtils.withStatics((schema) => ({
     prefix: (hash: typeof schema.Type): LegacyContentHashPrefix => LegacyContentHashPrefix.make(Str.takeLeft(16)(hash)),
     idFragment: (hash: typeof schema.Type): string => Str.takeLeft(12)(hash),
@@ -290,7 +288,7 @@ export const IdempotencyKey = Sha256Hex.annotate({
     documentation:
       "The schema validates digest shape only; uniqueness depends on the canonical operation data supplied to the hash.",
   }),
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
 );
 
 /**
@@ -340,7 +338,7 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * @category validation
  * @since 0.0.0
  */
-const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"), SchemaUtils.withCodecStatics);
+const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"), SchemaUtils.withCodecStatics(["is"]));
 
 const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBucketEncoded.is(input)).annotate({
   toArbitrary: () => (fc) =>
@@ -378,8 +376,7 @@ export const GcsBucket = GcsBucketEncoded.pipe(
     documentation:
       "Provider-side availability and Google's broader close-misspelling policy must still be checked when creating the bucket.",
   }),
-  SchemaUtils.withEffectCodecStatics,
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownSync"])
 );
 
 /**
@@ -429,7 +426,7 @@ export type GcsBucket = typeof GcsBucket.Type;
  */
 const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]).pipe(
   S.brand("GcsUri"),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => GcsUriEncoded.is(input)).annotate({
@@ -472,11 +469,10 @@ export const GcsUri = GcsUriEncoded.pipe(
     documentation:
       "The schema validates URI components locally; bucket existence, permissions, and hierarchical-namespace configuration require GCS.",
   }),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownEffect", "decodeUnknownSync", "is"]),
   SchemaUtils.withStatics((schema) => {
     const fromParts = dual(2, (bucket: GcsBucket, objectPath: GcsObject) =>
-      schema.fromUnknown(`gs://${bucket}/${objectPath}`)
+      schema.decodeUnknownSync(`gs://${bucket}/${objectPath}`)
     );
     const resolveStoragePath = Match.type<typeof schema.Type | GcsObject>().pipe(
       Match.when(schema.is, (value) => (_bucket: GcsBucket) => value),
@@ -564,7 +560,7 @@ const GcsObjectChecks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"), SchemaUtils.withCodecStatics);
+const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"), SchemaUtils.withCodecStatics(["is"]));
 
 const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => GcsObjectEncoded.is(input)).annotate({
   toArbitrary: () => (fc) => fc.stringMatching(gcsObjectArbitraryPattern).map(GcsObjectEncoded.make),
@@ -598,8 +594,7 @@ export const GcsObject = GcsObjectEncoded.pipe(
     description: "Canonical slash-separated GCS object path derived from the provider-valid object-name schema.",
     documentation:
       "Leading, trailing, and consecutive slashes are rejected to prevent multiple textual forms of one application path.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -657,8 +652,7 @@ export const Namespace = S.String.check(
       description:
         "Lowercase ontology namespace identifier beginning with a letter and containing letters, digits, or hyphens.",
     }),
-    SchemaUtils.withEffectCodecStatics,
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownSync"])
   );
 
 /**
@@ -712,8 +706,7 @@ export const OntologyName = S.String.check(
       description:
         "Lowercase ontology name beginning with a letter and containing letters, digits, hyphens, or underscores.",
     }),
-    SchemaUtils.withEffectCodecStatics,
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["decodeEffect"])
   );
 
 /**
@@ -769,7 +762,7 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
     description:
       "Ontology version identifier composed from a namespace, ontology name, and complete SHA-256 content identity.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   SchemaUtils.withStatics((schema) => ({
     fromParts: (namespace: Namespace, name: OntologyName, hash: ContentHash): typeof schema.Type =>
       schema.make(`${namespace}/${name}@${hash}`),
@@ -794,6 +787,26 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
  */
 export type OntologyVersion = typeof OntologyVersion.Type;
 
+const DocumentIdSchema = S.String.check(
+  S.isPattern(documentIdPattern, {
+    identifier: $I`DocumentIdPatternCheck`,
+    title: "Document Identifier",
+    description: "A deterministic document identifier with a doc- prefix and 12 lowercase hexadecimal characters.",
+    message: "Document ID must use the doc- prefix followed by exactly 12 lowercase hexadecimal characters.",
+  })
+)
+  .annotate({
+    toArbitrary: () => (fc) => fc.stringMatching(documentIdPattern),
+  })
+  .pipe(
+    S.brand("DocumentId"),
+    $I.annoteSchema("DocumentId", {
+      description: "Deterministic document identifier derived from the first 12 characters of a content hash.",
+      documentation:
+        "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
+    })
+  );
+
 /**
  * Branded deterministic document identifier in `doc-<12-hex>` form.
  *
@@ -816,27 +829,10 @@ export type OntologyVersion = typeof OntologyVersion.Type;
  * @category validation
  * @since 0.0.0
  */
-export const DocumentId = S.String.check(
-  S.isPattern(documentIdPattern, {
-    identifier: $I`DocumentIdPatternCheck`,
-    title: "Document Identifier",
-    description: "A deterministic document identifier with a doc- prefix and 12 lowercase hexadecimal characters.",
-    message: "Document ID must use the doc- prefix followed by exactly 12 lowercase hexadecimal characters.",
-  })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(documentIdPattern),
-  })
-  .pipe(
-    S.brand("DocumentId"),
-    $I.annoteSchema("DocumentId", {
-      description: "Deterministic document identifier derived from the first 12 characters of a content hash.",
-      documentation:
-        "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
-    }),
-    SchemaUtils.withCodecStatics,
-    withContentHashIdStatics("doc")
-  );
+export const DocumentId = DocumentIdSchema.pipe(
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
+  withContentHashIdStatics("doc")
+);
 
 /**
  * Runtime value type decoded by {@link DocumentId}. {@inheritDoc DocumentId}
@@ -887,7 +883,6 @@ export const ChunkId = S.String.check(
       description:
         "Deterministic chunk identifier combining a 12-character document fingerprint and canonical chunk index.",
     }),
-    SchemaUtils.withCodecStatics,
     SchemaUtils.withStatics((schema) => ({
       fromDocument: dual(2, (documentId: DocumentId, index: NonNegativeInt): typeof schema.Type =>
         schema.make(`${documentId}-chunk-${index}`)
@@ -930,13 +925,13 @@ export type ChunkId = typeof ChunkId.Type;
  * @category validation
  * @since 0.0.0
  */
-export const ExtractionRunId = DocumentId.annotate({
+export const ExtractionRunId = DocumentIdSchema.annotate({
   toArbitrary: () => S.toArbitrary(DocumentId),
 }).pipe(
   $I.annoteSchema("ExtractionRunId", {
     description: "Document identifier reused as the correlation identifier for its extraction run.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -989,9 +984,7 @@ export const BatchId = S.String.check(
       documentation:
         "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
     }),
-    SchemaUtils.withCodecStatics,
-    SchemaUtils.withEffectCodecStatics,
-    SchemaUtils.withOptionCodecStatics,
+    SchemaUtils.withCodecStatics(["decodeEffect", "decodeOption", "decodeUnknownEffect", "decodeUnknownSync"]),
     withContentHashIdStatics("batch")
   );
 

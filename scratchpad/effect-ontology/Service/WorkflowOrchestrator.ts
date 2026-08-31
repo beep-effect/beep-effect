@@ -477,7 +477,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               preprocessing: payload.preprocessing,
             }).execute
           : Effect.succeed({
-              enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
+              enrichedManifestUri: GcsUri.decodeUnknownSync(manifestUri),
               totalDocuments: NonNegativeInt.make(manifest.documents.length),
               classifiedCount: NonNegativeInt.make(0),
               failedCount: NonNegativeInt.make(0),
@@ -511,7 +511,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               error: Inspectable.toStringUnknown(error),
             });
             return {
-              enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
+              enrichedManifestUri: GcsUri.decodeUnknownSync(manifestUri),
               totalDocuments: NonNegativeInt.make(manifest.documents.length),
               classifiedCount: NonNegativeInt.make(0),
               failedCount: NonNegativeInt.make(0),
@@ -568,7 +568,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       // Initialize document status tracking for partial failure visibility
       const documentStatusesRef = yield* Ref.make<Array<DocumentStatus>>(
         A.map(manifest.documents, (doc) => ({
-          documentId: DocumentId.fromUnknown(doc.documentId),
+          documentId: DocumentId.decodeUnknownSync(doc.documentId),
           status: "pending",
         }))
       );
@@ -682,7 +682,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
                       status: "success",
                       startedAt,
                       completedAt,
-                      graphUri: GcsUri.fromUnknown(result.output.graphUri),
+                      graphUri: GcsUri.decodeUnknownSync(result.output.graphUri),
                       entityCount: NonNegativeInt.make(result.output.entityCount),
                       relationCount: NonNegativeInt.make(result.output.relationCount),
                       claimCount: NonNegativeInt.make(result.output.claimCount),

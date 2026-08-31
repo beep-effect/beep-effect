@@ -219,8 +219,7 @@ export const ResultModel = S.Union([SuccessModel, FailureModel]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("ResultModel", {
     description: "Schema-owned success or failure model.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

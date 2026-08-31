@@ -51,7 +51,6 @@ export const BackgroundJobId = S.String.check(
     $I.annoteSchema("BackgroundJobId", {
       description: "Compact content-derived identifier for a persisted background job.",
     }),
-    SchemaUtils.withCodecStatics,
     withContentHashIdStatics("job")
   );
 
@@ -235,7 +234,6 @@ export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
  * @since 0.0.0
  */
 export const BackgroundJob = BackgroundJobDefinition.pipe(
-  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("BackgroundJob", {
     description: "Tagged persisted background-job union for embedding, caching, similarity, blocking, and webhooks.",
     toArbitrary: () => S.toArbitrary(BackgroundJobDefinition),
@@ -297,8 +295,7 @@ export const JobMetadata = JobMetadataDefinition.annotate({
 }).pipe(
   $I.annoteSchema("JobMetadata", {
     description: "Retry metadata with a schema-owned zero-attempt default and Option-normalized failure details.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

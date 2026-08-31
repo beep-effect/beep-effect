@@ -8,6 +8,7 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { SchemaTransformation as ST } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Port");
 
@@ -71,7 +72,8 @@ export const Port = S.Int.check(PortRange).pipe(
   S.brand("Port"),
   $I.annoteSchema("Port", {
     description: "A branded transport-layer port number in the inclusive range 1 through 65535.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeEffect"])
 );
 
 /**

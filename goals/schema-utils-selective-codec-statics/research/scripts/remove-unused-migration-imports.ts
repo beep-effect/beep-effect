@@ -1,13 +1,16 @@
 import { resolve } from "node:path";
 import { Glob } from "bun";
-import { Project } from "ts-morph";
+import { Project, SyntaxKind } from "ts-morph";
+import type { Identifier, SourceFile } from "ts-morph";
 
 const repoRoot = resolve(import.meta.dir, "../../../..");
 const migrationNames = new Set(["SchemaUtils", "Unknown"]);
+const scratchpadOnly = Bun.argv.includes("--scratchpad-only");
 
 const project = new Project({ skipAddingFilesFromTsConfig: true });
 const paths: Array<string> = [];
-for await (const path of new Glob("{packages,apps}/**/*.{ts,tsx}").scan(repoRoot)) {
+const sourceGlob = scratchpadOnly ? "scratchpad/**/*.{ts,tsx}" : "{packages,apps}/**/*.{ts,tsx}";
+for await (const path of new Glob(sourceGlob).scan(repoRoot)) {
   const absolutePath = resolve(repoRoot, path);
   const source = await Bun.file(absolutePath).text();
   if (source.includes("Unknown") || source.includes("SchemaUtils")) {
@@ -15,6 +18,16 @@ for await (const path of new Glob("{packages,apps}/**/*.{ts,tsx}").scan(repoRoot
   }
 }
 project.addSourceFilesAtPaths(paths);
+
+const hasLocalReferences = (sourceFile: SourceFile, identifier: Identifier): boolean => {
+  const symbol = identifier.getSymbol();
+  return (
+    symbol === undefined ||
+    sourceFile
+      .getDescendantsOfKind(SyntaxKind.Identifier)
+      .some((candidate) => candidate !== identifier && candidate.getSymbol() === symbol)
+  );
+};
 
 let removedImports = 0;
 let changedFiles = 0;
@@ -27,7 +40,7 @@ for (const sourceFile of project.getSourceFiles()) {
     if (
       namespaceImport !== undefined &&
       migrationNames.has(namespaceImport.getText()) &&
-      namespaceImport.findReferencesAsNodes().length === 0
+      !hasLocalReferences(sourceFile, namespaceImport)
     ) {
       declaration.remove();
       removedImports += 1;
@@ -38,7 +51,7 @@ for (const sourceFile of project.getSourceFiles()) {
     for (const namedImport of declaration.getNamedImports()) {
       const localName = namedImport.getAliasNode()?.getText() ?? namedImport.getName();
       const localIdentifier = namedImport.getAliasNode() ?? namedImport.getNameNode();
-      if (migrationNames.has(localName) && localIdentifier.findReferencesAsNodes().length === 0) {
+      if (migrationNames.has(localName) && !hasLocalReferences(sourceFile, localIdentifier)) {
         namedImport.remove();
         removedImports += 1;
         changed = true;

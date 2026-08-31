@@ -5,7 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, R } from "@beep/utils";
 import { MutableHashSet, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -31,7 +31,7 @@ import { boundedData, coerceToString } from "./StdLib.value.ts";
 export { ConsoleMethod } from "../Codemode.method-names.ts";
 
 const MAX_CONSOLE_DEPTH = 32;
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 /**
  * Renders one guest `console` call as a single host-visible log line.

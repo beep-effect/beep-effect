@@ -41,7 +41,8 @@ export const WinkStringArray = S.Array(S.String).pipe(
   $I.annoteSchema("WinkStringArray", {
     description: "Array of strings returned by Wink NLP accessors.",
     toArbitrary: () => makeWinkStringArrayArbitrary,
-  })
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 /**

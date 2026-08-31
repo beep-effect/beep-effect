@@ -83,6 +83,7 @@ export const UnknownFromJsonString = S.fromJsonString(Unknown).pipe(
     "encodeEffect",
     "encodeResult",
     "encodeUnknownEffect",
+    "encodeUnknownOption",
     "encodeUnknownResult",
     "encodeUnknownSync",
   ]),

@@ -107,7 +107,7 @@ export type JsonSchema = typeof JsonSchema.Type;
  */
 export const OperationId = NonEmptyTrimmedStr.pipe(
   S.brand("OpenApiOperationId"),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"]),
   $I.annoteSchema("OperationId", {
     description: "A non-empty OpenAPI operationId.",
   })
@@ -191,7 +191,7 @@ export type HttpMethod = typeof HttpMethod.Type;
  * @since 0.0.0
  */
 export const ApiPath = S.String.check(S.isPattern(/^\/.*$/u)).pipe(
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"]),
   $I.annoteSchema("ApiPath", {
     description: "An absolute OpenAPI path template.",
   })

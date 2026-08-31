@@ -49,8 +49,8 @@ describe("streaming extraction activity boundaries", () => {
         const fiber = yield* makeStreamingExtractionActivity({
           batchId: BatchId.make("batch-00000000000a"),
           documentId: DocumentId.make("doc-00000000000a"),
-          sourceUri: GcsUri.fromUnknown("gs://test-bucket/missing.txt"),
-          ontologyUri: GcsUri.fromUnknown("gs://test-bucket/ontology.ttl"),
+          sourceUri: GcsUri.decodeUnknownSync("gs://test-bucket/missing.txt"),
+          ontologyUri: GcsUri.decodeUnknownSync("gs://test-bucket/ontology.ttl"),
           ontologyId: OntologyName.make("test_ontology"),
           targetNamespace: Namespace.make("test-ontology"),
           ontologyEmbeddingsUri: O.none(),

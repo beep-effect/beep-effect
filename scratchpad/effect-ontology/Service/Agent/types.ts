@@ -60,15 +60,14 @@ type AgentGraphCodec = S.Codec<KnowledgeGraph | RdfStore, typeof KnowledgeGraph.
  * @category schemas
  * @since 0.0.0
  */
-export const AgentGraph: ReturnType<typeof SchemaUtils.withEffectCodecStatics<AgentGraphCodec>> = S.Union([
+export const AgentGraph: AgentGraphCodec = S.Union([
   KnowledgeGraph,
   RdfStoreFromSelf,
 ]).pipe(
   $I.annoteSchema("AgentGraph", {
     description: "Agent graph boundary accepting a knowledge graph or opaque RDF store.",
     toArbitrary: () => S.toArbitrary(KnowledgeGraph),
-  }),
-  SchemaUtils.withEffectCodecStatics
+  })
 );
 
 /**
@@ -349,7 +348,7 @@ export type AgentTask = typeof AgentTask.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AgentTask = AgentTaskModel.pipe(SchemaUtils.withEffectCodecStatics);
+export const AgentTask = AgentTaskModel;
 
 // =============================================================================
 // Pipeline Configuration

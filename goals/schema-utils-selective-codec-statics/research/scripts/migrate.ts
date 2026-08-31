@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { Node, Project } from "ts-morph";
 
 const repoRoot = resolve(import.meta.dir, "../../../..");
-const inventoryPath = resolve(import.meta.dir, "../migration-inventory.json");
+const inventoryPath = resolve(import.meta.dir, Bun.argv[2] ?? "../migration-inventory.json");
 
 type PropertyRead = {
   readonly file: string;

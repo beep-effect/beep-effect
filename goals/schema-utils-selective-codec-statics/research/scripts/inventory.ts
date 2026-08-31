@@ -5,6 +5,8 @@ import type { Symbol as MorphSymbol, SourceFile, VariableDeclaration } from "ts-
 
 const repoRoot = resolve(import.meta.dir, "../../../..");
 const outputPath = resolve(import.meta.dir, Bun.argv[2] ?? "../migration-inventory.json");
+const scratchpadOnly = Bun.argv.includes("--scratchpad-only");
+const includeScratchpad = Bun.argv.includes("--include-scratchpad");
 
 const helperNames = new Set([
   "withCodecStatics",
@@ -88,13 +90,18 @@ const project = new Project({
   skipAddingFilesFromTsConfig: true,
 });
 
-project.addSourceFilesAtPaths([
-  resolve(repoRoot, "apps/**/src/**/*.{ts,tsx}"),
-  resolve(repoRoot, "apps/**/test/**/*.{ts,tsx}"),
-  resolve(repoRoot, "packages/**/src/**/*.{ts,tsx}"),
-  resolve(repoRoot, "packages/**/test/**/*.{ts,tsx}"),
-  resolve(repoRoot, "scripts/**/*.{ts,tsx}"),
-]);
+project.addSourceFilesAtPaths(
+  scratchpadOnly
+    ? [resolve(repoRoot, "scratchpad/**/*.{ts,tsx}")]
+    : [
+        resolve(repoRoot, "apps/**/src/**/*.{ts,tsx}"),
+        resolve(repoRoot, "apps/**/test/**/*.{ts,tsx}"),
+        resolve(repoRoot, "packages/**/src/**/*.{ts,tsx}"),
+        resolve(repoRoot, "packages/**/test/**/*.{ts,tsx}"),
+        resolve(repoRoot, "scripts/**/*.{ts,tsx}"),
+        ...(includeScratchpad ? [resolve(repoRoot, "scratchpad/**/*.{ts,tsx}")] : []),
+      ]
+);
 
 const helperName = (node: Node): string | undefined => {
   if (Node.isIdentifier(node) && helperNames.has(node.getText())) {
@@ -149,7 +156,10 @@ const attachmentsByOwner = new Map<object, Array<PendingAttachment>>();
 const isAttachmentReference = (node: Node, helper: string): boolean => {
   const parent = node.getParent();
   if (helper === "withCodecStatics") {
-    return Node.isCallExpression(parent) && parent.getExpression() === node;
+    return (
+      Node.isCallExpression(parent) &&
+      (parent.getExpression() === node || (scratchpadOnly && parent.getArguments().includes(node)))
+    );
   }
   return Node.isCallExpression(parent) && (parent.getExpression() === node || parent.getArguments().includes(node));
 };

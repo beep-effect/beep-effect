@@ -4,10 +4,12 @@ import { Project, SyntaxKind } from "ts-morph";
 
 const repoRoot = resolve(import.meta.dir, "../../../..");
 const unsupportedTestContract = "packages/foundation/modeling/schema/test/Unknown.test.ts";
+const scratchpadOnly = Bun.argv.includes("--scratchpad-only");
 
 const project = new Project({ skipAddingFilesFromTsConfig: true });
 const paths: Array<string> = [];
-for await (const path of new Glob("{packages,apps}/**/*.{ts,tsx}").scan(repoRoot)) {
+const sourceGlob = scratchpadOnly ? "scratchpad/**/*.{ts,tsx}" : "{packages,apps}/**/*.{ts,tsx}";
+for await (const path of new Glob(sourceGlob).scan(repoRoot)) {
   paths.push(resolve(repoRoot, path));
 }
 project.addSourceFilesAtPaths(paths);

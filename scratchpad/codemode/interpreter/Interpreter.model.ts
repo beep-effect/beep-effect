@@ -153,7 +153,7 @@ const AstValue: S.Codec<unknown, unknown> = S.suspend(() =>
  * ```ts
  * import { AstNode } from "../../../codemode/interpreter/Interpreter.model.ts"
  *
- * const node = AstNode.fromUnknown({ type: "Identifier", name: "count" })
+ * const node = AstNode.decodeUnknownSync({ type: "Identifier", name: "count" })
  * console.log(node.type, node.name)
  * // Identifier count
  * ```
@@ -172,7 +172,7 @@ export const AstNode = S.StructWithRest(
   $I.annoteSchema("AstNode", {
     description: "An Acorn syntax node with a required type discriminator and optional source location.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -802,8 +802,7 @@ export const IntrinsicMethod = S.Union([
   S.toTaggedUnion("receiverKind"),
   $I.annoteSchema("IntrinsicMethod", {
     description: "Every legal receiver and intrinsic method-name combination.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -1259,8 +1258,7 @@ export const GlobalMethod = S.Union([
   S.toTaggedUnion("namespace"),
   $I.annoteSchema("GlobalMethod", {
     description: "Every legal global namespace and static method-name combination.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -1686,7 +1684,7 @@ export const RuntimeReference = S.Union([
   $I.annoteSchema("RuntimeReference", {
     description: "All schema-owned interpreter references and control wrappers.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -1895,7 +1893,7 @@ export const InterpreterFailure = S.Union([
   $I.annoteSchema("InterpreterFailure", {
     description: "Closed recoverable failure channel for guest evaluation and host tool calls.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
