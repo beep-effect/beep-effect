@@ -12,7 +12,7 @@ describe("person-match backend portability", () => {
     expect(defaultPersonMatchBackendForPlatform("linux", "x64")).toBe("adaface-kprpe");
   });
 
-  it("selects portable Buffalo defaults on unsupported hosts", () => {
+  it("selects Buffalo when AdaFace is unsupported", () => {
     expect(defaultPersonMatchBackendForPlatform("darwin", "arm64")).toBe("buffalo-l");
     expect(defaultPersonMatchBackendForPlatform("darwin", "x64")).toBe("buffalo-l");
     expect(defaultPersonMatchBackendForPlatform("win32", "x64")).toBe("buffalo-l");

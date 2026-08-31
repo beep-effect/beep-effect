@@ -73,7 +73,7 @@ const buffaloRuntimeSupportsPlatform = (platform: string, architecture: string):
   );
 
 /**
- * Select the strongest person-match backend whose pinned runtime supports the host.
+ * Select the person-match backend default for a host.
  *
  * **Example** (Select a portable backend)
  *
@@ -86,8 +86,7 @@ const buffaloRuntimeSupportsPlatform = (platform: string, architecture: string):
  *
  * @param platform - Node.js host platform identifier.
  * @param architecture - Node.js host architecture identifier.
- * @returns AdaFace on Linux x64 and the portable Buffalo CPU backend elsewhere.
- * @internal
+ * @returns AdaFace on Linux x64 and Buffalo elsewhere; runtime validation rejects unsupported Buffalo hosts.
  * @category utilities
  * @since 0.0.0
  */
@@ -117,7 +116,6 @@ export const defaultPersonMatchBackendForPlatform: {
  *
  * @param platform - Node.js host platform identifier.
  * @returns The platform-specific uv executable filename.
- * @internal
  * @category utilities
  * @since 0.0.0
  */
@@ -141,7 +139,6 @@ export const trustedUvExecutableNameForPlatform = (platform: string): string =>
  *
  * @param platform - Node.js host platform identifier.
  * @returns POSIX trusted roots on non-Windows hosts and no fixed roots on Windows.
- * @internal
  * @category utilities
  * @since 0.0.0
  */
@@ -168,7 +165,6 @@ export const trustedUvRootDirectoriesForPlatform = (platform: string): ReadonlyA
  * @param platform - Node.js host platform identifier.
  * @param architecture - Node.js host architecture identifier.
  * @returns An Effect that fails before artifact acquisition when the backend is unavailable.
- * @internal
  * @category validation
  * @since 0.0.0
  */
