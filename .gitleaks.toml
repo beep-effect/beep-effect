@@ -15,13 +15,6 @@ regexes = [
 ]
 
 [[allowlists]]
-description = "Semantica C1 model identity is a public deterministic SHA-256 digest, not a provider credential"
-targetRules = ["generic-api-key"]
-regexes = [
-  '''^7bdf768ab154ab6decb1509845e8380771295dd6e865d677ec298b69b02bb3cf$''',
-]
-
-[[allowlists]]
 description = "CauseRedaction is a secret-redaction helper; its JSDoc @example blocks and tests intentionally contain placeholder secret-shaped strings (sk-/token=/API_KEY=) to demonstrate redaction. These are not real secrets. Anchored at the repo root (with an optional /repo/ CI-mount prefix) so a nested attacker-controlled path like evil/packages/.../CauseRedaction.ts cannot inherit the allowlist."
 paths = [
   '''^(?:/repo/)?packages/foundation/capability/observability/src/CauseRedaction\.ts$''',
