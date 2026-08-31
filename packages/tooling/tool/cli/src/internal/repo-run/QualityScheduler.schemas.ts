@@ -166,9 +166,10 @@ const admissionOwnerFields = {
 /**
  * One active admission lease: heavy work currently charged against capacity.
  *
- * `pid` plus `procStart` (the `/proc/<pid>/stat` start time) identify the
- * owner across pid reuse; leases are reaped only when the pid is dead or the
- * recorded start time no longer matches. The lease retains the originating
+ * `pid` plus `procStart` (procfs on Linux, otherwise a prefixed platform
+ * process-start representation) identify the owner across pid reuse; leases
+ * are reaped only when the pid is dead or the recorded identity no longer
+ * matches. The lease retains the originating
  * ticket identity (`nonce`) and queue instant (`enqueuedAtMillis`); legacy
  * lease files decode those fields with `""` and `0` sentinels.
  *

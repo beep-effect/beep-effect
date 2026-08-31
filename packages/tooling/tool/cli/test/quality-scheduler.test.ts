@@ -16,7 +16,9 @@ import {
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
+  processIdentityStatus,
   processIdentityStatusWithStartForTesting,
+  processStartIdentityForPid,
   provideRuntimeRootForTesting,
   RunScopeRecord,
   RuntimeRootChoice,
@@ -46,6 +48,30 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 const DEAD_PID = 2_147_483_647;
 
 describe("process identity liveness", () => {
+  it.effect("uses a portable process identity when procfs is unavailable", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const withoutProcfs = FileSystem.FileSystem.of({
+        ...fs,
+        readFileString: (target, encoding) =>
+          Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding),
+      });
+      const identity = yield* processStartIdentityForPid(process.pid).pipe(
+        Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+      );
+
+      expect(O.isSome(identity)).toBe(true);
+      if (O.isSome(identity)) {
+        expect(Str.startsWith(process.platform === "win32" ? "win:" : "ps:")(identity.value)).toBe(true);
+        expect(
+          yield* processIdentityStatus({ pid: process.pid, procStart: identity.value }).pipe(
+            Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+          )
+        ).toBe("alive");
+      }
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   it.effect("classifies a recorded identity as unknown when the current process start is unreadable", () =>
     Effect.gen(function* () {
       expect(

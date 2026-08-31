@@ -1112,3 +1112,14 @@ worktree provisioner should install the complete workspace instead of linking on
 - **Would have prevented it:** require every newly written process-owned coordination record to
   carry `/proc/<pid>/stat` start time and reuse the scheduler's PID-plus-start-time liveness helper
   before broadening a lock from per-origin to machine-wide scope.
+
+## 2026-08-31 — The PID-reuse repair assumed readable Linux procfs
+
+- **Doing:** closing the next exact-head Greptile review after adding process-start fencing to the
+  machine-wide fallback lock.
+- **Evidence:** the lock refused every new owner when `/proc/<pid>/stat` was unavailable. That was
+  safe against PID reuse but disabled below-envelope full proofs on macOS, Windows, and Linux
+  environments without readable procfs.
+- **Would have prevented it:** model process identity as a platform capability from the first
+  repair—procfs on Linux, a stable `ps` start representation on Unix, and process start ticks on
+  Windows—and test the non-procfs acquisition path before publishing the review fix.

@@ -3109,6 +3109,30 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
+  it("accepts a portable process start identity for the scheduler fallback lock", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+
+          const acquired = yield* acquireFullProofFallbackLockOrObserveAtPathForTesting(
+            lockPath,
+            tempContext,
+            "bun run beep yeet verify",
+            O.some("ps:Sun Aug 31 00:00:00 2026")
+          );
+
+          expect(O.isSome(acquired)).toBe(true);
+          expect(yield* fs.readFileString(fallbackPath)).toContain('"procStart":"ps:Sun Aug 31 00:00:00 2026"');
+          if (O.isSome(acquired)) {
+            yield* releaseProofLock(acquired.value);
+          }
+        })
+      )
+    ));
+
   it("refuses an active proof coordinator and preserves its owner metadata", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ lockPath, tempContext }) =>

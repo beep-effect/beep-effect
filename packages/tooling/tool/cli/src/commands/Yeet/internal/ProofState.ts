@@ -21,7 +21,7 @@ import {
   isProcessPidAlive,
   ProcessIdentityStatus,
   processIdentityStatus,
-  processStartTimeForPid,
+  processStartIdentityForPid,
   validatePrivateCoordinationDirectory,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -861,6 +861,49 @@ interface FullProofLockContention {
   readonly observed: ObservedProofLockState;
 }
 
+const noFullProofLockLease = (observed: ObservedProofLockState): FullProofLockContention => ({
+  lease: O.none(),
+  observed,
+});
+
+const refuseLegacyProofLockContention = Effect.fn("Yeet.refuseLegacyProofLockContention")(function* (
+  lockPath: string,
+  observed: ObservedProofLockState
+): Effect.fn.Return<FullProofLockContention, YeetCommandError> {
+  if (O.isSome(observed.legacyState)) {
+    return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
+  }
+  return noFullProofLockLease(observed);
+});
+
+const refuseUnverifiableProofLockContention = Effect.fn("Yeet.refuseUnverifiableProofLockContention")(function* (
+  lockPath: string,
+  observed: ObservedProofLockState
+): Effect.fn.Return<FullProofLockContention, YeetCommandError> {
+  if (O.isSome(observed.state)) {
+    return yield* unverifiableProofLockRefusal(lockPath, observed.state.value);
+  }
+  return noFullProofLockLease(observed);
+});
+
+const replaceStaleProofLockContention = Effect.fn("Yeet.replaceStaleProofLockContention")(function* (
+  lockPath: string,
+  lockText: string,
+  lease: YeetProofLockLease,
+  observed: ObservedProofLockState
+): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  if (O.isNone(observed.state)) {
+    return noFullProofLockLease(observed);
+  }
+  yield* Console.error(
+    `[yeet] reaping stale full-proof lock (pid ${observed.state.value.pid}, started ${observed.state.value.startedAt}, is no longer the recorded process identity)`
+  );
+  if (yield* tryReplaceStaleProofLock(lockPath, observed.text, lockText)) {
+    return { lease: O.some(lease), observed };
+  }
+  return yield* refuseLegacyProofLockContention(lockPath, yield* observeProofLockState(lockPath));
+});
+
 // The single contention ladder shared by the fail-fast and queue-style
 // acquisition paths: refuse legacy, reap a decodable-dead owner, and report
 // the final observation when the lock stays held.
@@ -869,29 +912,15 @@ const contendForFullProofLockCore = Effect.fn("Yeet.contendForFullProofLockCore"
   lockText: string,
   lease: YeetProofLockLease
 ): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
-  let observed = yield* observeProofLockState(lockPath);
+  const observed = yield* observeProofLockState(lockPath);
   const disposition = proofLockDisposition(observed.state, observed.ownerStatus, O.isSome(observed.legacyState));
-  if (ProofLockDisposition.is["refuse-legacy"](disposition) && O.isSome(observed.legacyState)) {
-    return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
-  }
-  if (ProofLockDisposition.is["refuse-unverifiable"](disposition) && O.isSome(observed.state)) {
-    return yield* unverifiableProofLockRefusal(lockPath, observed.state.value);
-  }
-
-  if (ProofLockDisposition.is["replace-stale"](disposition) && O.isSome(observed.state)) {
-    yield* Console.error(
-      `[yeet] reaping stale full-proof lock (pid ${observed.state.value.pid}, started ${observed.state.value.startedAt}, is no longer the recorded process identity)`
-    );
-    if (yield* tryReplaceStaleProofLock(lockPath, observed.text, lockText)) {
-      return { lease: O.some(lease), observed };
-    }
-    observed = yield* observeProofLockState(lockPath);
-  }
-
-  if (O.isSome(observed.legacyState)) {
-    return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
-  }
-  return { lease: O.none(), observed };
+  return yield* ProofLockDisposition.$match(disposition, {
+    "refuse-active": () => Effect.succeed(noFullProofLockLease(observed)),
+    "refuse-legacy": () => refuseLegacyProofLockContention(lockPath, observed),
+    "refuse-unreadable": () => Effect.succeed(noFullProofLockLease(observed)),
+    "refuse-unverifiable": () => refuseUnverifiableProofLockContention(lockPath, observed),
+    "replace-stale": () => replaceStaleProofLockContention(lockPath, lockText, lease, observed),
+  });
 });
 
 const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(function* (
@@ -1006,7 +1035,7 @@ const prepareFullProofLockLeaseAt = Effect.fn("Yeet.prepareFullProofLockLeaseAt"
     lockPath,
     context,
     proofCommandForSteps(proofSteps),
-    O.getOrElse(yield* processStartTimeForPid(process.pid), () => "")
+    O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "")
   );
 });
 
@@ -1354,7 +1383,7 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
     lockPath,
     context,
     command,
-    yield* processStartTimeForPid(process.pid)
+    yield* processStartIdentityForPid(process.pid)
   );
 });
 

@@ -277,6 +277,60 @@ export const processStartTimeForPid = Effect.fnUntraced(function* (
     .pipe(Effect.map(parseAdmissionProcStatStartTime), Effect.orElseSucceed(O.none<string>));
 });
 
+const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Option<string>> =>
+  Effect.try(() => {
+    const windows = process.platform === "win32";
+    const command = windows
+      ? [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToUniversalTime().Ticks`,
+        ]
+      : ["ps", "-o", "lstart=", "-p", `${pid}`];
+    const result = Bun.spawnSync({
+      cmd: command,
+      env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
+      stderr: "ignore",
+      stdout: "pipe",
+    });
+    const output = Str.trim(result.stdout.toString());
+    return result.success && Str.isNonEmpty(output) ? O.some(`${windows ? "win" : "ps"}:${output}`) : O.none<string>();
+  }).pipe(Effect.orElseSucceed(O.none<string>));
+
+/**
+ * Read a portable process-start identity used to fence PID reuse.
+ *
+ * **Details**
+ *
+ * Linux procfs remains the fast path. When procfs is unavailable, the probe
+ * uses the platform process inspector (`ps` on Unix, PowerShell on Windows)
+ * and prefixes that representation so observers use the same source.
+ *
+ * **Example** (Read the current portable identity)
+ *
+ * ```ts
+ * import { processStartIdentityForPid } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const available = processStartIdentityForPid(process.pid).pipe(Effect.map(O.isSome))
+ * console.log(Effect.isEffect(available)) // true
+ * ```
+ *
+ * @param pid - Process whose start identity is requested.
+ * @returns A procfs or platform-inspector identity when available.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const processStartIdentityForPid = Effect.fnUntraced(function* (
+  pid: number
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+  const procStart = yield* processStartTimeForPid(pid);
+  return O.isSome(procStart) ? procStart : yield* processStartIdentityFromSystemCommand(pid);
+});
+
 /**
  * Result of inspecting a PID plus its recorded Linux process start time.
  *
@@ -347,7 +401,11 @@ export const processIdentityStatus = Effect.fnUntraced(function* (owner: {
   readonly pid: number;
   readonly procStart: string;
 }): Effect.fn.Return<ProcessIdentityStatus, never, FileSystem.FileSystem> {
-  return yield* processIdentityStatusWithStart(owner, processStartTimeForPid(owner.pid));
+  const currentStart =
+    Str.startsWith("ps:")(owner.procStart) || Str.startsWith("win:")(owner.procStart)
+      ? processStartIdentityFromSystemCommand(owner.pid)
+      : processStartTimeForPid(owner.pid);
+  return yield* processIdentityStatusWithStart(owner, currentStart);
 });
 
 /**
@@ -1442,7 +1500,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const admittedRequest = AdmissionRequest.make({ ...request, weightTokens });
   const directories = yield* ensureAdmissionDirectories();
   const nowMillis = yield* Clock.currentTimeMillis;
-  const procStart = O.getOrElse(yield* processStartTimeForPid(process.pid), () => "");
+  const procStart = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
