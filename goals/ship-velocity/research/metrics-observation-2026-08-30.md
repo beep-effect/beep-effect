@@ -281,7 +281,7 @@ at least one first-touch `source: REMOTE` result from each frozen root before th
 ### Closeout state after the terminal trial
 
 The evidence-volume ruling closes the calendar-duration question, and the terminal dual proof
-closes the concurrency condition. The packet remains active only because an authorized
-1Password session must produce a fresh remote-read observation from every active root and the
-final closeout PR must reach Yeet `merge-ready: yes`. Lifecycle and P5 status remain unchanged
-until both gates are satisfied.
+closes the concurrency condition. PR #929 reached Yeet `merge-ready: yes` and merged on
+2026-08-31. The packet remains active only because an authorized 1Password session must produce a
+fresh remote-read observation from every active root. Lifecycle and P5 status remain unchanged
+until that gate is satisfied.

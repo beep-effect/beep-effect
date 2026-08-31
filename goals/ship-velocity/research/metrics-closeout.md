@@ -23,7 +23,7 @@ takeover path as a current success.
 | Every sibling checkout reads the remote cache | The original repair covered 11 roots, but that set was historical by closeout. A fleet scan at `2026-08-31T02:45:59Z` classified 16 roots as live; four overlapped the historical set and nine of the current roots lacked one or more cache fields. The sanctioned helper provisioned only missing fields from an existing reference-only source, after which all 16 had a git-ignored `https`/`op://`/nonblank-team/read-only quad. No reference or secret value was printed. The 1Password MCP remained unavailable and the last `op whoami` check was signed out. | Open: after the operator authorizes `op signin`, rescan liveness and produce a fresh authenticated remote-hit observation from every root in that frozen snapshot. No new references are required. |
 | Two concurrent verifies under admission without OOM | Two independent same-origin full proofs overlapped for 48 minutes 49.201 seconds under `scheduler-origin-concurrency/v1`. Both terminal verdicts passed every lane at exit 0; their pre-push peaks were 17,966,264 and 18,001,708 KiB. Capacity contracted during pressure and recovered without hard-floor, dead-lease, quarantine, or OOM state. | Satisfied by terminal live receipts. |
 | Hot-file conflicts no longer force PR rework | Across the 17 merged pull requests from #874 through the snapshot, only #874 touched `goals/INDEX.md` or `explorations/ATLAS.md`; the next 16 touched neither, and no sampled publish failure named a projection or contention-family path. | Satisfied for the sampled event volume. |
-| Final PR mergeable | PR #874 reached zero unresolved threads, Greptile `5/5`, and green required contexts before merge. The parity repair also passed every required context and merged as #892. | Open for the concurrency repair and final closeout branch: publish through Yeet and reach `merge-ready: yes`. |
+| Final PR mergeable | PR #929 reached Yeet `merge-ready: yes` at head `019be8a8c21cbdde0dac7d5263f7dd6252f26e9a`, with zero unresolved review threads and Greptile `5/5`. It merged on 2026-08-31 as `e76c4db079e62155b1c03e8b77a8b210cac6e1d2`. | Satisfied. |
 
 ## Evidence-volume protocol
 
@@ -48,6 +48,6 @@ For the Atlas family, a retry counts only when the source change is a tracked
 manifest/event/README-prose edit. The ignored `explorations/ATLAS.md` itself is never a GitHub
 artifact or authoritative conflict target.
 
-P5, lifecycle, and initiative status remain active until the authenticated remote-read sample and
-the final closeout PR gate are both satisfied. The status flip and closeout reflection must land
-in the same PR as the last remaining evidence.
+PR #929 satisfied the final closeout PR gate. P5, lifecycle, and initiative status remain active
+until the authenticated remote-read sample is complete. The status flip and closeout reflection
+must land in the same PR as that last remaining evidence.

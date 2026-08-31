@@ -42,6 +42,7 @@ Closeout status (2026-08-30): the operator accepted the concentrated 24-hour pro
 instead of the original seven-day duration proxy. Continue from
 `research/metrics-closeout.md`; do not reopen satisfied evidence families. The terminal
 same-origin dual proof is green. PR #921 is the recorded operator supersession of A4, not an A4
-success receipt. The remaining gates are an authenticated cross-checkout remote-cache read sample
-after `op signin` (the reference set already exists) and Yeet `merge-ready: yes` for the final
-closeout PR. Keep lifecycle active until both are true.
+success receipt. PR #929 reached Yeet `merge-ready: yes` and merged on 2026-08-31, satisfying the
+final closeout PR gate. The remaining gate is an authenticated cross-checkout remote-cache read
+sample after `op signin`; the reference set already exists. Keep lifecycle active until that sample
+is complete.

@@ -147,6 +147,6 @@ the C5 metric correction and the new C7 item below.
   superseded A4; it is recorded as an operator scope replacement rather than counted as takeover
   success. Current backpressure, parity, and hot-file receipts satisfy the authorized sample. Two
   independent same-origin full proofs overlapped for 48 minutes 49.201 seconds and both completed
-  every lane at exit 0. An authorized 1Password session is required for the cross-checkout
-  remote-read observation, and the final closeout PR must reach Yeet `merge-ready: yes`; see
-  `research/metrics-closeout.md`.
+  every lane at exit 0. PR #929 reached Yeet `merge-ready: yes` and merged on 2026-08-31. An
+  authorized 1Password session is still required for the cross-checkout remote-read observation;
+  see `research/metrics-closeout.md`.
