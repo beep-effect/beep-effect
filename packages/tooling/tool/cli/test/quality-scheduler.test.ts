@@ -12,6 +12,7 @@ import {
   appendAdmissionJournalEvent,
   decodeAdmissionJournalEvent,
   isOvershootLoserForTesting,
+  isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
@@ -42,6 +43,24 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 );
 
 const DEAD_PID = 2_147_483_647;
+
+describe("process identity liveness", () => {
+  it.effect("rejects a recorded identity when the current process start is unreadable", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
+      ).toBe(false);
+    })
+  );
+
+  it.effect("retains PID-only liveness for legacy identities", () =>
+    Effect.gen(function* () {
+      expect(yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "" }, O.none())).toBe(
+        true
+      );
+    })
+  );
+});
 
 // Millisecond-scale intervals so queue loops resolve fast under the real clock.
 const fastConfig = AdmissionConfig.make({
