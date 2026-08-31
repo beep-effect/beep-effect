@@ -4,6 +4,15 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-30 — scoped goal doctor invocation no longer matches the CLI
+
+- **Doing:** validating the packet after merging current `origin/main` into PR #929.
+- **Evidence:** `bun run beep goals doctor goals/ship-velocity` exited with `Unexpected positional
+  argument: "goals/ship-velocity"`; the supported repo-wide `bun run beep goals doctor` then
+  checked 168 packets with zero blocking or advisory findings.
+- **Would have prevented it:** document the repo-wide-only command contract, or accept an optional
+  packet path when operators need scoped validation.
+
 ## 2026-08-30 — same-checkout proofs could race shared verdict artifacts
 
 - **Doing:** closing PR #929 after current-version same-origin proofs became weighted-capacity
