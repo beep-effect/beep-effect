@@ -7,15 +7,18 @@
 
 import { $PandocAstId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { A, O } from "@beep/utils";
 import * as S from "effect/Schema";
 import {
   isPandocKnownConstructorName,
+  PandocCitationMode,
   PandocListNumberDelimiter,
   PandocListNumberStyle,
   PandocMathType,
+  PandocQuoteType,
   PandocTableAlignmentConstructorName,
 } from "./internal/Pandoc.registry.ts";
+import { makeTableCaptionPlainTextFromPayload } from "./internal/Pandoc.table-caption.ts";
+import type { O } from "@beep/utils";
 
 const $I = $PandocAstId.create("Pandoc.model");
 type ArbitraryFastCheck = Parameters<S.Annotations.ToArbitrary.Candidate["make"]>[0];
@@ -411,6 +414,92 @@ export { PandocListNumberDelimiter };
  * @since 0.0.0
  */
 export type PandocListNumberDelimiter = typeof PandocListNumberDelimiter.Type;
+
+/**
+ * Pandoc quotation style carried by a `Quoted` inline.
+ *
+ * **Example** (Check double quotation style)
+ *
+ * ```ts import.meta.vitest name="Check double quotation style"
+ * import { PandocQuoteType } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * PandocQuoteType.is.DoubleQuote("DoubleQuote") // => true
+ * ```
+ *
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L286-L287} for the pinned pandoc-types definition.
+ * @category models
+ * @since 0.0.0
+ */
+export { PandocQuoteType };
+
+/**
+ * Runtime type for {@link PandocQuoteType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PandocQuoteType = typeof PandocQuoteType.Type;
+
+/**
+ * Pandoc citation mode carried by each citation record.
+ *
+ * **Example** (Check normal citation mode)
+ *
+ * ```ts import.meta.vitest name="Check normal citation mode"
+ * import { PandocCitationMode } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * PandocCitationMode.is.NormalCitation("NormalCitation") // => true
+ * ```
+ *
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L343-L355} for the pinned pandoc-types definition.
+ * @category models
+ * @since 0.0.0
+ */
+export { PandocCitationMode };
+
+/**
+ * Runtime type for {@link PandocCitationMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PandocCitationMode = typeof PandocCitationMode.Type;
+
+/**
+ * Format identifier carried by Pandoc raw inline and block nodes.
+ *
+ * **Details**
+ *
+ * The semantic model retains the exact JSON text. Pandoc compares `Format`
+ * values case-insensitively, but rewriting the input here would break exact
+ * strict encode/decode round trips.
+ *
+ * **Example** (Make a raw format identifier)
+ *
+ * ```ts import.meta.vitest name="Make a raw format identifier"
+ * import { PandocFormat } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * PandocFormat.make("html") // => "html"
+ * ```
+ *
+ * @invariant The exact wire spelling is retained by strict codec round trips.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L189-L199} for `Format` semantics.
+ * @category models
+ * @since 0.0.0
+ */
+export const PandocFormat = S.String.pipe(
+  $I.annoteSchema("PandocFormat", {
+    description: "Exact format identifier carried by Pandoc raw content nodes.",
+  })
+);
+
+/**
+ * Runtime type for {@link PandocFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PandocFormat = typeof PandocFormat.Type;
 
 /**
  * Recursive Pandoc inline child list.
@@ -1022,6 +1111,426 @@ export declare namespace Strikeout {
 }
 
 /**
+ * Pandoc underlined inline content.
+ *
+ * **Example** (Make underlined content)
+ *
+ * ```ts import.meta.vitest name="Make underlined content"
+ * import { Str, Underline } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Underline.make({ children: [Str.make({ text: "important" })] })
+ * node._tag // => "underline"
+ * ```
+ *
+ * @invariant Children remain ordered Pandoc inline nodes.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L321-L342} for the pinned inline definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class Underline extends S.TaggedClass<Underline>($I`Underline`)(
+  "underline",
+  {
+    children: PandocInlineChildren.annotateKey({
+      description: "Underlined inline children.",
+    }),
+  },
+  $I.annote("Underline", {
+    description: "Pandoc underlined inline content.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link Underline}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Underline {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "underline";
+    readonly children: PandocInlineChildren.Type;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "underline";
+    readonly children: PandocInlineChildren.Encoded;
+  }
+}
+
+/**
+ * Pandoc superscript inline content.
+ *
+ * **Example** (Make superscript content)
+ *
+ * ```ts import.meta.vitest name="Make superscript content"
+ * import { Str, Superscript } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Superscript.make({ children: [Str.make({ text: "2" })] })
+ * node._tag // => "superscript"
+ * ```
+ *
+ * @invariant Children remain ordered Pandoc inline nodes.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L321-L342} for the pinned inline definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class Superscript extends S.TaggedClass<Superscript>($I`Superscript`)(
+  "superscript",
+  {
+    children: PandocInlineChildren.annotateKey({
+      description: "Superscript inline children.",
+    }),
+  },
+  $I.annote("Superscript", {
+    description: "Pandoc superscript inline content.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link Superscript}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Superscript {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "superscript";
+    readonly children: PandocInlineChildren.Type;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "superscript";
+    readonly children: PandocInlineChildren.Encoded;
+  }
+}
+
+/**
+ * Pandoc subscript inline content.
+ *
+ * **Example** (Make subscript content)
+ *
+ * ```ts import.meta.vitest name="Make subscript content"
+ * import { Str, Subscript } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Subscript.make({ children: [Str.make({ text: "2" })] })
+ * node._tag // => "subscript"
+ * ```
+ *
+ * @invariant Children remain ordered Pandoc inline nodes.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L321-L342} for the pinned inline definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class Subscript extends S.TaggedClass<Subscript>($I`Subscript`)(
+  "subscript",
+  {
+    children: PandocInlineChildren.annotateKey({
+      description: "Subscript inline children.",
+    }),
+  },
+  $I.annote("Subscript", {
+    description: "Pandoc subscript inline content.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link Subscript}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Subscript {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "subscript";
+    readonly children: PandocInlineChildren.Type;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "subscript";
+    readonly children: PandocInlineChildren.Encoded;
+  }
+}
+
+/**
+ * Pandoc small-capital inline content.
+ *
+ * **Example** (Make small-capital content)
+ *
+ * ```ts import.meta.vitest name="Make small-capital content"
+ * import { SmallCaps, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = SmallCaps.make({ children: [Str.make({ text: "NASA" })] })
+ * node._tag // => "smallCaps"
+ * ```
+ *
+ * @invariant Children remain ordered Pandoc inline nodes.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L321-L342} for the pinned inline definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class SmallCaps extends S.TaggedClass<SmallCaps>($I`SmallCaps`)(
+  "smallCaps",
+  {
+    children: PandocInlineChildren.annotateKey({
+      description: "Small-capital inline children.",
+    }),
+  },
+  $I.annote("SmallCaps", {
+    description: "Pandoc small-capital inline content.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link SmallCaps}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SmallCaps {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "smallCaps";
+    readonly children: PandocInlineChildren.Type;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "smallCaps";
+    readonly children: PandocInlineChildren.Encoded;
+  }
+}
+
+/**
+ * Pandoc quoted inline content with an explicit quotation style.
+ *
+ * **Example** (Make double-quoted content)
+ *
+ * ```ts import.meta.vitest name="Make double-quoted content"
+ * import { Quoted, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Quoted.make({ children: [Str.make({ text: "hello" })], quoteType: "DoubleQuote" })
+ * node.quoteType // => "DoubleQuote"
+ * ```
+ *
+ * @invariant `quoteType` is exhaustive over the pandoc-types 1.23.1 quotation constructors.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L286-L287} for the pinned quotation definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class Quoted extends S.TaggedClass<Quoted>($I`Quoted`)(
+  "quoted",
+  {
+    children: PandocInlineChildren.annotateKey({
+      description: "Quoted inline children.",
+    }),
+    quoteType: PandocQuoteType.annotateKey({
+      description: "Quotation style constructor.",
+    }),
+  },
+  $I.annote("Quoted", {
+    description: "Pandoc quoted inline content with an explicit quotation style.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link Quoted}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Quoted {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "quoted";
+    readonly children: PandocInlineChildren.Type;
+    readonly quoteType: PandocQuoteType;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "quoted";
+    readonly children: PandocInlineChildren.Encoded;
+    readonly quoteType: PandocQuoteType;
+  }
+}
+
+/**
+ * Structured Pandoc citation record embedded in a `Cite` inline.
+ *
+ * **Example** (Make a citation record)
+ *
+ * ```ts import.meta.vitest name="Make a citation record"
+ * import { Citation } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const citation = Citation.make({
+ *   hash: 0,
+ *   id: "doe-2024",
+ *   mode: "NormalCitation",
+ *   noteNumber: 0,
+ *   prefix: [],
+ *   suffix: [],
+ * })
+ * citation.id // => "doe-2024"
+ * ```
+ *
+ * @invariant Citation mode is exhaustive and numeric fields are integers.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L343-L355} for the pinned citation definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class Citation extends S.Class<Citation>($I`Citation`)(
+  {
+    hash: S.Int.annotateKey({ description: "Pandoc citation hash." }),
+    id: S.String.annotateKey({ description: "Pandoc citation identifier." }),
+    mode: PandocCitationMode.annotateKey({ description: "Pandoc citation mode." }),
+    noteNumber: S.Int.annotateKey({ description: "Pandoc citation note number." }),
+    prefix: PandocInlineChildren.annotateKey({ description: "Citation prefix inlines." }),
+    suffix: PandocInlineChildren.annotateKey({ description: "Citation suffix inlines." }),
+  },
+  $I.annote("Citation", {
+    description: "Structured Pandoc citation record embedded in a Cite inline.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link Citation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Citation {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly hash: number;
+    readonly id: string;
+    readonly mode: PandocCitationMode;
+    readonly noteNumber: number;
+    readonly prefix: PandocInlineChildren.Type;
+    readonly suffix: PandocInlineChildren.Type;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly hash: number;
+    readonly id: string;
+    readonly mode: PandocCitationMode;
+    readonly noteNumber: number;
+    readonly prefix: PandocInlineChildren.Encoded;
+    readonly suffix: PandocInlineChildren.Encoded;
+  }
+}
+
+/**
+ * Pandoc citation inline with structured citations and rendered fallback content.
+ *
+ * **Example** (Make cited content)
+ *
+ * ```ts import.meta.vitest name="Make cited content"
+ * import { Cite, Citation, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const citation = Citation.make({
+ *   hash: 0,
+ *   id: "doe-2024",
+ *   mode: "NormalCitation",
+ *   noteNumber: 0,
+ *   prefix: [],
+ *   suffix: [],
+ * })
+ * const node = Cite.make({ children: [Str.make({ text: "Doe" })], citations: [citation] })
+ * node.citations.length // => 1
+ * ```
+ *
+ * @invariant Citation records and fallback children retain source order.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L321-L355} for the pinned cite and citation definitions.
+ * @category models
+ * @since 0.0.0
+ */
+export class Cite extends S.TaggedClass<Cite>($I`Cite`)(
+  "cite",
+  {
+    children: PandocInlineChildren.annotateKey({ description: "Rendered citation fallback inlines." }),
+    citations: S.Array(Citation).annotateKey({ description: "Structured Pandoc citations." }),
+  },
+  $I.annote("Cite", {
+    description: "Pandoc citation inline with structured citations and rendered fallback content.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link Cite}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Cite {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "cite";
+    readonly children: PandocInlineChildren.Type;
+    readonly citations: ReadonlyArray<Citation.Type>;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "cite";
+    readonly children: PandocInlineChildren.Encoded;
+    readonly citations: ReadonlyArray<Citation.Encoded>;
+  }
+}
+
+/**
+ * Pandoc raw inline content with an explicit source format.
+ *
+ * **Example** (Make raw HTML inline)
+ *
+ * ```ts import.meta.vitest name="Make raw HTML inline"
+ * import { RawInline } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = RawInline.make({ format: "html", text: "<mark>hi</mark>" })
+ * node.format // => "html"
+ * ```
+ *
+ * @invariant Format and text retain their exact JSON wire values.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L321-L342} for the pinned inline definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class RawInline extends S.TaggedClass<RawInline>($I`RawInline`)(
+  "rawInline",
+  {
+    format: PandocFormat.annotateKey({ description: "Raw inline source format." }),
+    text: S.String.annotateKey({ description: "Raw inline source text." }),
+  },
+  $I.annote("RawInline", {
+    description: "Pandoc raw inline content with an explicit source format.",
+  })
+) {}
+
+/**
+ * Companion representations for {@link RawInline}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RawInline {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "rawInline";
+    readonly format: PandocFormat;
+    readonly text: string;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded extends Type {}
+}
+
+/**
  * Pandoc code inline.
  *
  * **Example** (Making code inline)
@@ -1531,14 +2040,21 @@ export const PandocInline = S.Union([
   SoftBreak,
   LineBreak,
   Emph,
+  Underline,
   Strong,
   Strikeout,
+  Superscript,
+  Subscript,
+  SmallCaps,
+  Quoted,
+  Cite,
   Code,
   Link,
   Image,
   Span,
   Note,
   Math,
+  RawInline,
   UnknownInline,
 ]).pipe(
   // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
@@ -1595,14 +2111,21 @@ export declare namespace PandocInline {
     | SoftBreak.Type
     | LineBreak.Type
     | Emph.Type
+    | Underline.Type
     | Strong.Type
     | Strikeout.Type
+    | Superscript.Type
+    | Subscript.Type
+    | SmallCaps.Type
+    | Quoted.Type
+    | Cite.Type
     | Code.Type
     | Link.Type
     | Image.Type
     | Span.Type
     | Note.Type
     | Math.Type
+    | RawInline.Type
     | UnknownInline.Type;
 
   /**
@@ -1614,14 +2137,21 @@ export declare namespace PandocInline {
     | SoftBreak.Encoded
     | LineBreak.Encoded
     | Emph.Encoded
+    | Underline.Encoded
     | Strong.Encoded
     | Strikeout.Encoded
+    | Superscript.Encoded
+    | Subscript.Encoded
+    | SmallCaps.Encoded
+    | Quoted.Encoded
+    | Cite.Encoded
     | Code.Encoded
     | Link.Encoded
     | Image.Encoded
     | Span.Encoded
     | Note.Encoded
     | Math.Encoded
+    | RawInline.Encoded
     | UnknownInline.Encoded;
 }
 
@@ -2208,8 +2738,296 @@ export declare namespace Div {
   }
 }
 
+/**
+ * Pandoc line block containing ordered non-breaking inline lines.
+ *
+ * **Example** (Make a line block)
+ *
+ * ```ts import.meta.vitest name="Make a line block"
+ * import { LineBlock, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const block = LineBlock.make({ lines: [[Str.make({ text: "first" })], [Str.make({ text: "second" })]] })
+ * block.lines.length // => 2
+ * ```
+ *
+ * @invariant Line and inline ordering is preserved exactly.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L250-L285} for the pinned block definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class LineBlock extends S.TaggedClass<LineBlock>($I`LineBlock`)(
+  "lineBlock",
+  {
+    lines: S.Array(PandocInlineChildren).annotateKey({
+      description: "Ordered non-breaking lines of Pandoc inline content.",
+    }),
+  },
+  $I.annote("LineBlock", {
+    description: "Pandoc line block containing multiple non-breaking inline lines.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link LineBlock}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LineBlock {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "lineBlock";
+    readonly lines: ReadonlyArray<PandocInlineChildren.Type>;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "lineBlock";
+    readonly lines: ReadonlyArray<PandocInlineChildren.Encoded>;
+  }
+}
+
+/**
+ * Pandoc raw block content with an explicit source format.
+ *
+ * **Example** (Make a raw HTML block)
+ *
+ * ```ts import.meta.vitest name="Make a raw HTML block"
+ * import { RawBlock } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const block = RawBlock.make({ format: "html", text: "<aside>note</aside>" })
+ * block.format // => "html"
+ * ```
+ *
+ * @invariant Format and text retain their exact JSON wire values.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L250-L285} for the pinned block definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class RawBlock extends S.TaggedClass<RawBlock>($I`RawBlock`)(
+  "rawBlock",
+  {
+    format: PandocFormat.annotateKey({ description: "Raw block source format." }),
+    text: S.String.annotateKey({ description: "Raw block source text." }),
+  },
+  $I.annote("RawBlock", {
+    description: "Pandoc raw block content with an explicit source format.",
+  })
+) {}
+
+/**
+ * Companion representations for {@link RawBlock}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RawBlock {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "rawBlock";
+    readonly format: PandocFormat;
+    readonly text: string;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded extends Type {}
+}
+
+/**
+ * One Pandoc definition-list item: an inline term and zero or more block-list definitions.
+ *
+ * **Example** (Make a definition item)
+ *
+ * ```ts import.meta.vitest name="Make a definition item"
+ * import { PandocDefinitionListItem, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const item = PandocDefinitionListItem.make([
+ *   [Str.make({ text: "term" })],
+ *   [[Para.make({ children: [Str.make({ text: "definition" })] })]],
+ * ])
+ * item[1].length // => 1
+ * ```
+ *
+ * @invariant The tuple always contains a term followed by an array of definitions.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L269-L272} for the pinned definition-list shape.
+ * @category models
+ * @since 0.0.0
+ */
+export const PandocDefinitionListItem = S.Tuple([PandocInlineChildren, S.Array(PandocBlockChildren)]).pipe(
+  $I.annoteSchema("PandocDefinitionListItem", {
+    description: "Pandoc definition-list term and its ordered block-list definitions.",
+  })
+);
+
+/**
+ * Runtime type for {@link PandocDefinitionListItem}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PandocDefinitionListItem = typeof PandocDefinitionListItem.Type;
+
+/**
+ * Pandoc definition list with structurally typed term/definition pairs.
+ *
+ * **Example** (Make a definition list)
+ *
+ * ```ts import.meta.vitest name="Make a definition list"
+ * import { DefinitionList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const block = DefinitionList.make({
+ *   items: [[[Str.make({ text: "term" })], [[Para.make({ children: [Str.make({ text: "definition" })] })]]]],
+ * })
+ * block.items.length // => 1
+ * ```
+ *
+ * @invariant Every item is a two-slot term/definitions tuple.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L269-L272} for the pinned definition-list shape.
+ * @category models
+ * @since 0.0.0
+ */
+export class DefinitionList extends S.TaggedClass<DefinitionList>($I`DefinitionList`)(
+  "definitionList",
+  {
+    items: S.Array(PandocDefinitionListItem).annotateKey({
+      description: "Ordered Pandoc definition-list items.",
+    }),
+  },
+  $I.annote("DefinitionList", {
+    description: "Pandoc definition list with structurally typed term/definition pairs.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link DefinitionList}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DefinitionList {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "definitionList";
+    readonly items: ReadonlyArray<PandocDefinitionListItem>;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "definitionList";
+    readonly items: ReadonlyArray<readonly [PandocInlineChildren.Encoded, ReadonlyArray<PandocBlockChildren.Encoded>]>;
+  }
+}
+
+/**
+ * Pandoc table or figure caption with an optional short caption and long block content.
+ *
+ * **Example** (Make a long-only caption)
+ *
+ * ```ts import.meta.vitest name="Make a long-only caption"
+ * import * as O from "effect/Option"
+ * import { PandocCaption, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const caption = PandocCaption.make({
+ *   blocks: [Para.make({ children: [Str.make({ text: "Caption" })] })],
+ *   short: O.none(),
+ * })
+ * O.isNone(caption.short) // => true
+ * ```
+ *
+ * @invariant Absence of a short caption is represented as `Option.none()` internally and `null` on the Pandoc wire.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L234-L238} for the pinned caption definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class PandocCaption extends S.Class<PandocCaption>($I`PandocCaption`)(
+  {
+    blocks: PandocBlockChildren.annotateKey({ description: "Long caption block content." }),
+    short: S.OptionFromNullOr(PandocInlineChildren).annotateKey({ description: "Optional short caption inlines." }),
+  },
+  $I.annote("PandocCaption", {
+    description: "Pandoc table or figure caption with optional short and required long forms.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link PandocCaption}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PandocCaption {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly blocks: PandocBlockChildren.Type;
+    readonly short: O.Option<PandocInlineChildren.Type>;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly blocks: PandocBlockChildren.Encoded;
+    readonly short: PandocInlineChildren.Encoded | null;
+  }
+}
+
+/**
+ * Pandoc figure block with attributes, caption, and block content.
+ *
+ * **Example** (Make a figure)
+ *
+ * ```ts import.meta.vitest name="Make a figure"
+ * import * as O from "effect/Option"
+ * import { Figure, PandocAttr, PandocCaption } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const figure = Figure.make({
+ *   attr: PandocAttr.empty,
+ *   caption: PandocCaption.make({ blocks: [], short: O.none() }),
+ *   children: [],
+ * })
+ * figure._tag // => "figure"
+ * ```
+ *
+ * @invariant The figure payload always has exactly attributes, caption, and ordered block content.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L277-L284} for the pinned figure definition.
+ * @category models
+ * @since 0.0.0
+ */
+export class Figure extends S.TaggedClass<Figure>($I`Figure`)(
+  "figure",
+  {
+    attr: PandocAttr.annotateKey({ description: "Figure attributes." }),
+    caption: PandocCaption.annotateKey({ description: "Figure caption." }),
+    children: PandocBlockChildren.annotateKey({ description: "Figure block content." }),
+  },
+  $I.annote("Figure", {
+    description: "Pandoc figure block with attributes, caption, and block content.",
+  })
+) {}
+
+/**
+ * Companion recursive representations for {@link Figure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Figure {
+  /** @since 0.0.0 */
+  export interface Type {
+    readonly _tag: "figure";
+    readonly attr: PandocAttr.Type;
+    readonly caption: PandocCaption.Type;
+    readonly children: PandocBlockChildren.Type;
+  }
+
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "figure";
+    readonly attr: PandocAttr.Encoded;
+    readonly caption: PandocCaption.Encoded;
+    readonly children: PandocBlockChildren.Encoded;
+  }
+}
+
 const PandocAttrPayload = S.Tuple([S.String, S.Array(S.String), S.Array(PandocKeyValue)]);
-const PandocTablePayloadShape = S.Tuple([PandocAttrPayload, S.Json, S.Array(S.Json), S.Json, S.Array(S.Json), S.Json]);
 const PandocTargetPayload = S.Tuple([S.String, S.String]);
 const pandocConstructorWithPayload = <const Name extends string, Payload extends S.Top>(t: Name, c: Payload) =>
   S.Struct({ c, t: S.Literal(t) });
@@ -2218,6 +3036,14 @@ const pandocNullaryConstructor = <const Name extends string>(t: Name) =>
 const PandocMathTypeWire = S.Struct({
   c: S.optionalKey(S.Undefined),
   t: PandocMathType,
+});
+const PandocQuoteTypeWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocQuoteType,
+});
+const PandocCitationModeWire = S.Struct({
+  c: S.optionalKey(S.Undefined),
+  t: PandocCitationMode,
 });
 const PandocListNumberStyleWire = S.Struct({
   c: S.optionalKey(S.Undefined),
@@ -2234,13 +3060,55 @@ const PandocTableAlignmentWire = S.Union([
   }),
   PandocFutureConstructorWire,
 ]);
-const PandocTableColumnWidthWire = S.Union([
+
+/**
+ * Current pandoc-types column-width constructors in their exact JSON shape.
+ *
+ * **Example** (Make an explicit column width)
+ *
+ * ```ts import.meta.vitest name="Make an explicit column width"
+ * import { PandocColumnWidth } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const width = PandocColumnWidth.cases.ColWidth.make({ c: 0.5, t: "ColWidth" })
+ * width.t // => "ColWidth"
+ * ```
+ *
+ * @invariant `ColWidth` always carries a finite number and `ColWidthDefault` carries no payload.
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L205-L215} for the pinned table-column definition.
+ * @category tables
+ * @since 0.0.0
+ */
+export const PandocColumnWidth = S.Union([
   pandocConstructorWithPayload("ColWidth", S.Finite),
   pandocNullaryConstructor("ColWidthDefault"),
-  PandocFutureConstructorWire,
-]);
+]).pipe(
+  S.toTaggedUnion("t"),
+  $I.annoteSchema("PandocColumnWidth", {
+    description: "Discriminated Pandoc column-width constructors in exact JSON wire form.",
+  })
+);
+
+/**
+ * Runtime type for {@link PandocColumnWidth}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PandocColumnWidth = typeof PandocColumnWidth.Type;
+
+const PandocTableColumnWidthWire = S.Union([PandocColumnWidth, PandocFutureConstructorWire]);
 const DeferredPandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() => PandocBlockWire);
 const DeferredPandocTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() => PandocSemanticTablePayloadWire);
+const PandocCitationWire: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Struct({
+    citationHash: S.Int,
+    citationId: S.String,
+    citationMode: PandocCitationModeWire,
+    citationNoteNum: S.Int,
+    citationPrefix: S.Array(PandocInlineWire),
+    citationSuffix: S.Array(PandocInlineWire),
+  })
+);
 
 const PandocInlineWire: S.Codec<unknown, unknown> = S.suspend(() =>
   S.Union([
@@ -2249,14 +3117,21 @@ const PandocInlineWire: S.Codec<unknown, unknown> = S.suspend(() =>
     pandocNullaryConstructor("SoftBreak"),
     pandocNullaryConstructor("LineBreak"),
     pandocConstructorWithPayload("Emph", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Underline", S.Array(PandocInlineWire)),
     pandocConstructorWithPayload("Strong", S.Array(PandocInlineWire)),
     pandocConstructorWithPayload("Strikeout", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Superscript", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Subscript", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("SmallCaps", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("Quoted", S.Tuple([PandocQuoteTypeWire, S.Array(PandocInlineWire)])),
+    pandocConstructorWithPayload("Cite", S.Tuple([S.Array(PandocCitationWire), S.Array(PandocInlineWire)])),
     pandocConstructorWithPayload("Code", S.Tuple([PandocAttrPayload, S.String])),
     pandocConstructorWithPayload("Link", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
     pandocConstructorWithPayload("Image", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire), PandocTargetPayload])),
     pandocConstructorWithPayload("Span", S.Tuple([PandocAttrPayload, S.Array(PandocInlineWire)])),
     pandocConstructorWithPayload("Note", S.Array(DeferredPandocBlockWire)),
     pandocConstructorWithPayload("Math", S.Tuple([PandocMathTypeWire, S.String])),
+    pandocConstructorWithPayload("RawInline", S.Tuple([S.String, S.String])),
     PandocFutureConstructorWire,
   ])
 );
@@ -2297,13 +3172,48 @@ const PandocSemanticTablePayloadWire: S.Codec<unknown, unknown> = S.suspend(() =
   ])
 );
 
+const PandocTableCaptionPayload = S.Union([
+  S.Tuple([S.Json.pipe(S.Array, S.NullOr), S.Array(S.Json)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableColumnSpecPayload = S.Union([
+  S.Tuple([PandocTableAlignmentWire, PandocTableColumnWidthWire]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableCellPayload = S.Union([
+  S.Tuple([PandocAttrPayload, PandocTableAlignmentWire, S.Int, S.Int, S.Array(S.Json)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableRowPayload = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableCellPayload)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableHeadOrFootPayload = S.Union([
+  S.Tuple([PandocAttrPayload, S.Array(PandocTableRowPayload)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTableBodyPayload = S.Union([
+  S.Tuple([PandocAttrPayload, S.Int, S.Array(PandocTableRowPayload), S.Array(PandocTableRowPayload)]),
+  PandocFutureConstructorWire,
+]);
+const PandocTablePayloadShape = S.Tuple([
+  PandocAttrPayload,
+  PandocTableCaptionPayload,
+  S.Array(PandocTableColumnSpecPayload),
+  PandocTableHeadOrFootPayload,
+  S.Array(PandocTableBodyPayload),
+  PandocTableHeadOrFootPayload,
+]);
+
 const PandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() =>
   S.Union([
     pandocConstructorWithPayload("Plain", S.Array(PandocInlineWire)),
     pandocConstructorWithPayload("Para", S.Array(PandocInlineWire)),
+    pandocConstructorWithPayload("LineBlock", PandocInlineWire.pipe(S.Array, S.Array)),
     pandocConstructorWithPayload("Header", S.Tuple([S.Int, PandocAttrPayload, S.Array(PandocInlineWire)])),
     pandocConstructorWithPayload("BlockQuote", S.Array(PandocBlockWire)),
     pandocConstructorWithPayload("CodeBlock", S.Tuple([PandocAttrPayload, S.String])),
+    pandocConstructorWithPayload("RawBlock", S.Tuple([S.String, S.String])),
     pandocConstructorWithPayload("BulletList", PandocBlockWire.pipe(S.Array, S.Array)),
     pandocConstructorWithPayload(
       "OrderedList",
@@ -2312,47 +3222,30 @@ const PandocBlockWire: S.Codec<unknown, unknown> = S.suspend(() =>
         PandocBlockWire.pipe(S.Array, S.Array),
       ])
     ),
+    pandocConstructorWithPayload(
+      "DefinitionList",
+      S.Array(S.Tuple([S.Array(PandocInlineWire), PandocBlockWire.pipe(S.Array, S.Array)]))
+    ),
     pandocNullaryConstructor("HorizontalRule"),
     pandocConstructorWithPayload("Div", S.Tuple([PandocAttrPayload, S.Array(PandocBlockWire)])),
     pandocConstructorWithPayload("Table", DeferredPandocTablePayloadWire),
+    pandocConstructorWithPayload(
+      "Figure",
+      S.Tuple([PandocAttrPayload, PandocTableCaptionWire, S.Array(PandocBlockWire)])
+    ),
     PandocFutureConstructorWire,
   ])
 );
 const isPandocSemanticTablePayload = S.is(PandocSemanticTablePayloadWire);
-const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => {
-  const futureConstructor = makePandocFutureConstructorArbitrary(fc);
-  const attr = fc.tuple(fc.string(), fc.array(fc.string()), fc.array(fc.tuple(fc.string(), fc.string())));
-  const inline = fc.oneof(
-    fc.string().map((c) => S.Json.make({ c, t: "Str" })),
-    fc.constant(S.Json.make({ t: "Space" })),
-    futureConstructor
-  );
-  const block = fc.oneof(
-    fc.array(inline).map((c) => S.Json.make({ c, t: "Para" })),
-    fc.constant(S.Json.make({ t: "HorizontalRule" })),
-    futureConstructor
-  );
-  const captionPair = fc.tuple(fc.option(fc.array(inline), { nil: null }), fc.array(block));
-  const caption = fc.oneof(captionPair, futureConstructor);
-  const alignment = fc.oneof(
-    fc.constantFrom("AlignLeft", "AlignRight", "AlignCenter", "AlignDefault").map((t) => S.Json.make({ t })),
-    futureConstructor
-  );
-  const columnWidth = fc.oneof(
-    fc.integer().map((c) => S.Json.make({ c, t: "ColWidth" })),
-    fc.constant(S.Json.make({ t: "ColWidthDefault" })),
-    futureConstructor
-  );
-  const columnSpec = fc.oneof(fc.tuple(alignment, columnWidth), futureConstructor);
-  const cell = fc.oneof(fc.tuple(attr, alignment, fc.integer(), fc.integer(), fc.array(block)), futureConstructor);
-  const row = fc.oneof(fc.tuple(attr, fc.array(cell)), futureConstructor);
-  const headOrFoot = fc.oneof(fc.tuple(attr, fc.array(row)), futureConstructor);
-  const body = fc.oneof(fc.tuple(attr, fc.integer(), fc.array(row), fc.array(row)), futureConstructor);
-
-  return fc
-    .tuple(attr, caption, fc.array(columnSpec), headOrFoot, fc.array(body), headOrFoot)
-    .map(PandocTablePayloadShape.make);
-};
+const EmptyPandocTablePayload = PandocTablePayloadShape.make([
+  ["", [], []],
+  [null, []],
+  [],
+  [["", [], []], []],
+  [],
+  [["", [], []], []],
+]);
+const makePandocTablePayloadArbitrary = (fc: ArbitraryFastCheck) => fc.constant(EmptyPandocTablePayload);
 class PandocConstructorJson extends S.Class<PandocConstructorJson>($I`PandocConstructorJson`)(
   {
     c: S.optionalKey(S.Json),
@@ -2447,43 +3340,12 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
  */
 export type PandocTablePayload = typeof PandocTablePayload.Type;
 
-const tableCaptionInlineFromWire = (input: S.Json): O.Option<PandocInline.Type> =>
-  O.flatMap(decodePandocConstructorOption(input), (wire) => {
-    if (wire.t === "Str") {
-      return O.map(decodePandocStringOption(wire.c), (text) => Str.make({ text }));
-    }
-    if (wire.t === "Space") {
-      return O.some(Space.make());
-    }
-    if (wire.t === "SoftBreak") {
-      return O.some(SoftBreak.make());
-    }
-    if (wire.t === "LineBreak") {
-      return O.some(LineBreak.make());
-    }
-    return O.none();
-  });
-
-const tableCaptionInlinesFromBlockWire = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
-  O.getOrElse(
-    O.map(
-      O.flatMap(
-        O.filter(decodePandocConstructorOption(input), (wire) => wire.t === "Plain" || wire.t === "Para"),
-        (wire) => decodePandocJsonArrayOption(wire.c)
-      ),
-      (values) => A.getSomes(A.map(values, tableCaptionInlineFromWire))
-    ),
-    A.emptyReadonly
-  );
-
-const tableCaptionFromPayload = (input: S.Json): ReadonlyArray<PandocInline.Type> =>
-  O.match(decodePandocTableCaptionPairOption(input), {
-    onNone: A.emptyReadonly,
-    onSome: ([shortCaption, longCaption]) => {
-      const short = shortCaption === null ? [] : A.getSomes(A.map(shortCaption, tableCaptionInlineFromWire));
-      return A.isReadonlyArrayNonEmpty(short) ? short : A.flatMap(longCaption, tableCaptionInlinesFromBlockWire);
-    },
-  });
+const tableCaptionPlainTextFromPayload = makeTableCaptionPlainTextFromPayload({
+  decodeConstructorOption: decodePandocConstructorOption,
+  decodeJsonArrayOption: decodePandocJsonArrayOption,
+  decodeStringOption: decodePandocStringOption,
+  decodeTableCaptionPairOption: decodePandocTableCaptionPairOption,
+});
 
 /**
  * Pandoc table block captured as an explicit gap node.
@@ -2525,13 +3387,22 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
   }
 
   /**
-   * Best-effort caption derived from the canonical payload.
+   * Best-effort caption plaintext derived from the canonical payload.
    *
+   * **Details**
+   *
+   * The complete structured caption remains in {@link payload}. This preview
+   * deliberately prefers a non-empty short caption and otherwise falls back
+   * to the long block caption. It recursively retains text from current inline
+   * formatting constructors without claiming that a gap-node getter is a
+   * lossless inline projection.
+   *
+   * @invariant A non-empty short-caption projection takes precedence over the long-caption projection.
    * @category getters
    * @since 0.0.0
    */
-  get caption(): ReadonlyArray<PandocInline.Type> {
-    return tableCaptionFromPayload(this.payload[1]);
+  get captionPlainText(): string {
+    return tableCaptionPlainTextFromPayload(this.payload[1]);
   }
 }
 
@@ -2559,7 +3430,7 @@ export declare namespace Table {
   export interface Type {
     readonly _tag: "table";
     readonly attr: PandocAttr.Type;
-    readonly caption: PandocInlineChildren.Type;
+    readonly captionPlainText: string;
     readonly payload: PandocTablePayload;
   }
 
@@ -2672,14 +3543,18 @@ export declare namespace UnknownBlock {
 export const PandocBlock = S.Union([
   Plain,
   Para,
+  LineBlock,
   Header,
   BlockQuote,
   CodeBlock,
+  RawBlock,
   BulletList,
   OrderedList,
+  DefinitionList,
   HorizontalRule,
   Div,
   Table,
+  Figure,
   UnknownBlock,
 ]).pipe(
   // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
@@ -2733,14 +3608,18 @@ export declare namespace PandocBlock {
   export type Type =
     | Plain.Type
     | Para.Type
+    | LineBlock.Type
     | Header.Type
     | BlockQuote.Type
     | CodeBlock.Type
+    | RawBlock.Type
     | BulletList.Type
     | OrderedList.Type
+    | DefinitionList.Type
     | HorizontalRule.Type
     | Div.Type
     | Table.Type
+    | Figure.Type
     | UnknownBlock.Type;
 
   /**
@@ -2749,14 +3628,18 @@ export declare namespace PandocBlock {
   export type Encoded =
     | Plain.Encoded
     | Para.Encoded
+    | LineBlock.Encoded
     | Header.Encoded
     | BlockQuote.Encoded
     | CodeBlock.Encoded
+    | RawBlock.Encoded
     | BulletList.Encoded
     | OrderedList.Encoded
+    | DefinitionList.Encoded
     | HorizontalRule.Encoded
     | Div.Encoded
     | Table.Encoded
+    | Figure.Encoded
     | UnknownBlock.Encoded;
 }
 

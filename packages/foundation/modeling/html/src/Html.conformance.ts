@@ -10,7 +10,8 @@
 /// <reference path="./whatwg-url.d.ts" />
 
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
+import * as Conformance from "@beep/schema/Conformance";
 import { A, Eq, Struct } from "@beep/utils";
 import { color as parseCssColor } from "@csstools/css-color-parser";
 import { isWhiteSpaceOrCommentNode, parseListOfComponentValues } from "@csstools/css-parser-algorithms";
@@ -36,6 +37,12 @@ import {
   toAsciiLowerCase,
 } from "./Html.foreign.ts";
 import {
+  ButtonState,
+  inputStateAllowedAttributes,
+  resolveButtonState,
+  resolveInputState,
+} from "./Html.form-control.ts";
+import {
   ELEMENT_META,
   HTML_ATTRIBUTE_SYNTAXES,
   HTML_AUTOCOMPLETE_CONTACT_FIELDS,
@@ -45,140 +52,42 @@ import {
   HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES,
   HTML_CONTENT_TOKEN_EXPANSIONS,
   HTML_ICON_LINK_RELATIONS,
-  HTML_INPUT_ATTRIBUTE_APPLICABILITY,
   HtmlTag,
 } from "./Html.meta.ts";
-import { HtmlRoot } from "./Html.model.ts";
-import { Doctype } from "./Html.nodes.ts";
+import { Button, HtmlRoot, Input } from "./Html.model.ts";
+import { HtmlMimeType } from "./Html.script.ts";
 import { inspectSourceSizeList } from "./Html.source-size.ts";
 import { inspectSrcset } from "./Html.srcset.ts";
+import {
+  htmlAttributeValue as attributeValue,
+  htmlChildPath as childPath,
+  htmlChildrenOf as childrenOf,
+  HtmlChildView,
+  HtmlConformanceIssue,
+  hasHtmlAttribute as hasAttribute,
+  makeHtmlConformanceIssue as makeIssue,
+} from "./internal/conformance/Html.conformance-contracts.ts";
+import { HtmlWhatwgConformanceAnnotation } from "./internal/conformance/Html.conformance-registry.ts";
+import { inspectHeadingOutline } from "./internal/conformance/Html.heading-conformance.ts";
+import { inspectScriptConformance } from "./internal/conformance/Html.script-conformance.ts";
 import { isValidBcp47LanguageTag } from "./internal/Html.language-tag.ts";
 import type { HtmlAttributeRequirement } from "./Html.meta.ts";
+import type { HtmlRootView } from "./internal/conformance/Html.conformance-contracts.ts";
 
 const $I = $HtmlId.create("Html.conformance");
-const isHtmlTag = S.is(HtmlTag);
-const isFiniteNumber = S.is(S.Finite);
-const isString = S.is(S.String);
-const readProperty = (value: unknown, key: PropertyKey): unknown => Reflect.get(Object(value), key);
-const HTML_URL_VALIDATION_BASE = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
-const ICON_SIZE_TOKEN_PATTERN = /^[1-9][0-9]*[xX][1-9][0-9]*$/u;
-const INTEGER_LIST_PATTERN = /^[\t\n\f\r ]*[+-]?[0-9]+(?:[\t\n\f\r ]*,[\t\n\f\r ]*[+-]?[0-9]+)*[\t\n\f\r ]*$/u;
-const MIME_TYPE_PATTERN =
-  /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+\/[!#$%&'*+\-.^_`|~0-9A-Za-z]+(?:[\t ]*;[\t ]*[!#$%&'*+\-.^_`|~0-9A-Za-z]+=(?:[!#$%&'*+\-.^_`|~0-9A-Za-z]+|"(?:[\t\u0020-\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\t\u0020-\u007e\u0080-\u00ff])*"))*$/u;
 
-class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
-  {
-    _tag: S.String,
-    attributes: S.Unknown.pipe(S.optionalKey),
-    children: S.Array(S.suspend((): S.Codec<HtmlChildView> => HtmlChildView)).pipe(S.optionalKey),
-    content: S.Unknown.pipe(S.optionalKey),
-    name: S.Unknown.pipe(S.optionalKey),
-    namespace: S.String.pipe(S.optionalKey),
-    value: S.Unknown.pipe(S.optionalKey),
-    alt: S.Unknown.pipe(S.optionalKey),
-    href: S.Unknown.pipe(S.optionalKey),
-    id: S.Unknown.pipe(S.optionalKey),
-    src: S.Unknown.pipe(S.optionalKey),
-    srcset: S.Unknown.pipe(S.optionalKey),
-    tabindex: S.Unknown.pipe(S.optionalKey),
-    target: S.Unknown.pipe(S.optionalKey),
-    type: S.Unknown.pipe(S.optionalKey),
-  },
-  $I.annote("HtmlChildView", {
-    description: "Internal recursive structural view used by HTML conformance inspection.",
-  })
-) {}
-
-class HtmlRootView extends HtmlChildView.extend<HtmlRootView>($I`HtmlRootView`)(
-  {
-    doctype: Doctype.pipe(S.Option, S.optionalKey),
-  },
-  $I.annote("HtmlRootview", {
-    description: "",
-  })
-) {}
-
-/**
- * Rules reported by the HTML conformance validator.
- *
- * **Example** (Validate with `HtmlConformanceRule`)
- *
- * ```ts import.meta.vitest name="Validate with HtmlConformanceRule"
- * import { HtmlConformanceRule } from "@beep/html/Html.conformance"
- *
- * HtmlConformanceRule.is.obsoleteElement("obsoleteElement") // => true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const HtmlConformanceRule = LiteralKit([
-  "encodingFailure",
-  "obsoleteElement",
-  "documentDoctype",
-  "documentRoot",
-  "documentCardinality",
-  "contentModel",
-  "elementOrder",
-  "foreignIntegration",
-  "forbiddenDescendant",
-  "attributeRelationship",
-  "duplicateAttribute",
-  "duplicateId",
-  "obsoleteAttribute",
-  "misplacedAttribute",
-]).pipe(
-  $I.annoteSchema("HtmlConformanceRule", {
-    description: "Rule identifier emitted by HTML AST conformance validation.",
-  })
-);
-
-/**
- * Decoded type of {@link HtmlConformanceRule}.
- *
- * **Example** (Annotate a `HtmlConformanceRule` value)
- *
- * ```ts import.meta.vitest name="Annotate a HtmlConformanceRule value"
- * import type { HtmlConformanceRule } from "@beep/html/Html.conformance"
- *
- * const rule: HtmlConformanceRule = "contentModel"
- * rule // => "contentModel"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type HtmlConformanceRule = typeof HtmlConformanceRule.Type;
-
-/**
- * One path-addressed HTML conformance violation.
- *
- * **Example** (Construct `HtmlConformanceIssue`)
- *
- * ```ts import.meta.vitest name="Construct HtmlConformanceIssue"
- * import { HtmlConformanceIssue } from "@beep/html/Html.conformance"
- *
- * const issue = HtmlConformanceIssue.make({
- *   path: ["children", "0"],
- *   rule: "contentModel",
- *   message: "Invalid child"
- * })
- * issue.rule // => "contentModel"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class HtmlConformanceIssue extends S.Class<HtmlConformanceIssue>($I`HtmlConformanceIssue`)(
-  {
-    path: S.Array(S.String),
-    rule: HtmlConformanceRule,
-    message: S.String,
-  },
-  $I.annote("HtmlConformanceIssue", {
-    description: "One path-addressed violation of the modeled HTML content rules.",
-  })
-) {}
+export {
+  HtmlConformanceIssue,
+  HtmlConformanceRule,
+} from "./internal/conformance/Html.conformance-contracts.ts";
+export {
+  computeHeadingOutline,
+  HtmlBestPracticeIssue,
+  HtmlBestPracticeRule,
+  HtmlComputedHeadingLevel,
+  HtmlHeadingOutlineEntry,
+  inspectBestPractices,
+} from "./internal/conformance/Html.heading-conformance.ts";
 
 /**
  * Failure returned when an AST cannot be proven conformant.
@@ -242,10 +151,13 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
  * conformantRoot(proof)._tag // => "#fragment"
  * ```
  *
+ * @invariant Values are opaque proofs issued only after the modeled WHATWG author-conformance checks succeed.
+ * @see {@link https://html.spec.whatwg.org/multipage/introduction.html#conformance-requirements-for-authors | WHATWG HTML conformance requirements for authors} for the normative authoring requirements.
  * @category schemas
  * @since 0.0.0
  */
 export const ConformantHtml = S.declare(ConformantHtmlValue.is).pipe(
+  Conformance.annotateConformance(HtmlWhatwgConformanceAnnotation),
   SchemaUtils.withStatics(() => ({ is: ConformantHtmlValue.is })),
   $I.annoteSchema("ConformantHtml", {
     description: "Runtime-issued proof of HTML AST conformance.",
@@ -306,9 +218,6 @@ export const ConformantHtmlNode = ConformantHtml;
  */
 export type ConformantHtmlNode = ConformantHtml;
 
-const makeIssue = (path: ReadonlyArray<string>, rule: HtmlConformanceRule, message: string): HtmlConformanceIssue =>
-  HtmlConformanceIssue.make({ path, rule, message });
-
 const makeConformanceError = (message: string): HtmlConformanceError =>
   HtmlConformanceError.make({
     issues: [makeIssue([], "encodingFailure", message)],
@@ -341,12 +250,16 @@ const snapshotRoot = (root: HtmlRoot.Type): Effect.Effect<HtmlRoot.Type, HtmlCon
       }),
   });
 
-const childPath = (path: ReadonlyArray<string>, index: number): ReadonlyArray<string> =>
-  A.append(path, `children.${index}`);
-
-const attributeValue = (value: unknown): O.Option<unknown> => (O.isOption(value) ? value : O.fromUndefinedOr(value));
-
-const hasAttribute = (value: unknown): boolean => O.isSome(attributeValue(value));
+const isHtmlTag = S.is(HtmlTag);
+const isButton = S.is(Button);
+const isInput = S.is(Input);
+const isHtmlChildView = S.is(HtmlChildView);
+const isFiniteNumber = S.is(S.Finite);
+const isString = S.is(S.String);
+const readProperty = (value: unknown, key: PropertyKey): unknown => Reflect.get(Object(value), key);
+const HTML_URL_VALIDATION_BASE = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
+const ICON_SIZE_TOKEN_PATTERN = /^[1-9][0-9]*[xX][1-9][0-9]*$/u;
+const INTEGER_LIST_PATTERN = /^[\t\n\f\r ]*[+-]?[0-9]+(?:[\t\n\f\r ]*,[\t\n\f\r ]*[+-]?[0-9]+)*[\t\n\f\r ]*$/u;
 
 const attributeEquals = (value: unknown, expected: string): boolean =>
   pipe(
@@ -470,7 +383,7 @@ const isDifferentiatingMediaQueryList = (value: string): boolean => {
   return Str.isNonEmpty(input) && input !== "all" && isValidMediaQueryList(input);
 };
 
-const isValidMimeType = (value: string): boolean => MIME_TYPE_PATTERN.test(value);
+const isValidMimeType = S.is(HtmlMimeType);
 
 const isValidCssColor = (value: string): boolean => {
   let hasParseError = false;
@@ -513,9 +426,6 @@ const exactIntegerIsLessThan = (left: ExactInteger, right: ExactInteger): boolea
   const comparison = compareIntegerMagnitude(left, right);
   return left.negative ? N.isGreaterThan(comparison, 0) : N.isLessThan(comparison, 0);
 };
-
-const childrenOf = (node: HtmlChildView): ReadonlyArray<HtmlChildView> =>
-  pipe(node.children, O.fromUndefinedOr, O.getOrElse(A.empty));
 
 type ElementOccurrence = {
   readonly node: HtmlChildView;
@@ -728,11 +638,9 @@ const inspectSpecialAttributeSyntaxes = (
   );
 
 const inputTypeState = (node: HtmlChildView): string =>
-  pipe(
-    attributeValue(node.type),
-    O.filter(isString),
-    O.getOrElse(() => "text")
-  );
+  isInput(node)
+    ? resolveInputState(node).state
+    : /* istanbul ignore next -- called only after the input tag has passed the root schema */ "text";
 
 const generatedInputStateEntry = (
   registry: Readonly<Record<string, ReadonlyArray<string>>>,
@@ -748,16 +656,16 @@ const inspectInputAttributeApplicability = (
   tag: HtmlTag,
   path: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  if (tag !== "input") return A.emptyReadonly();
-  const state = inputTypeState(node);
-  const allowed = generatedInputStateEntry(HTML_INPUT_ATTRIBUTE_APPLICABILITY, state);
+  if (tag !== "input" || !isInput(node)) return A.emptyReadonly();
+  const state = resolveInputState(node);
+  const allowed = inputStateAllowedAttributes(state);
   return A.flatMap(HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES, (attribute) =>
     hasAttribute(readProperty(node, attribute)) && !A.contains(allowed, attribute)
       ? [
           makeIssue(
             A.append(path, `attributes.${attribute}`),
             "attributeRelationship",
-            `<input type="${state}"> does not permit ${attribute}`
+            `<input type="${state.state}"> does not permit ${attribute}`
           ),
         ]
       : A.emptyReadonly()
@@ -928,21 +836,12 @@ const inspectButtonSubmitAttributes = (
   path: ReadonlyArray<string>,
   ancestors: ReadonlyArray<string>
 ): ReadonlyArray<HtmlConformanceIssue> => {
-  if (tag !== "button") return A.emptyReadonly();
-  const explicitType = stringAttributeValue(node.type);
-  const effectiveSubmit = pipe(
-    explicitType,
-    O.match({
-      onNone: () =>
-        !hasAttribute(readProperty(node, "command")) &&
-        !hasAttribute(readProperty(node, "commandfor")) &&
-        !O.contains(A.last(ancestors), "select"),
-      onSome: (type) => type === "submit",
-    })
-  );
-  return effectiveSubmit
-    ? A.emptyReadonly()
-    : A.flatMap(HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES, (attribute) =>
+  if (tag !== "button" || !isButton(node)) return A.emptyReadonly();
+  const state = resolveButtonState(node, pipe(A.last(ancestors), O.filter(isHtmlTag)));
+  return ButtonState.match(state, {
+    submit: (): ReadonlyArray<HtmlConformanceIssue> => A.emptyReadonly(),
+    nonSubmit: (): ReadonlyArray<HtmlConformanceIssue> =>
+      A.flatMap(HTML_BUTTON_SUBMIT_ONLY_ATTRIBUTES, (attribute) =>
         hasAttribute(readProperty(node, attribute))
           ? [
               makeIssue(
@@ -952,7 +851,8 @@ const inspectButtonSubmitAttributes = (
               ),
             ]
           : A.emptyReadonly()
-      );
+      ),
+  });
 };
 
 const inspectAreaCoordinates = (
@@ -1477,7 +1377,7 @@ const inspectAttributeRelationships = (
   return [...requiredIssues, ...equalityIssues, ...numericIssues];
 };
 
-const inspectDocumentVisibilityLimits = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> => {
+const inspectDocumentVisibilityLimits = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> => {
   const occurrences = elementOccurrences(root, []);
   return A.flatMap(R.toEntries(ELEMENT_META), ([tag, meta]) =>
     pipe(
@@ -1529,7 +1429,7 @@ const idOccurrences = (node: HtmlChildView, path: ReadonlyArray<string>): Readon
   return [...own, ...A.flatMap(childrenOf(node), (child, index) => idOccurrences(child, childPath(path, index)))];
 };
 
-const inspectDuplicateIds = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> =>
+const inspectDuplicateIds = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> =>
   pipe(
     idOccurrences(root, []),
     A.groupBy((occurrence) => occurrence.value),
@@ -1558,7 +1458,7 @@ const nearestTablePath = (
 const samePath = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   left.length === right.length && A.every(left, (segment, index) => right[index] === segment);
 
-const inspectIdReferences = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> => {
+const inspectIdReferences = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> => {
   const ids = idOccurrences(root, []);
   const elements = elementOccurrences(root, []);
   const tables = A.filter(elements, (occurrence) => occurrence.tag === "table");
@@ -1665,7 +1565,7 @@ const uniqueAttributeOccurrences = (
   ];
 };
 
-const inspectDuplicateUniqueAttributes = (root: HtmlRootView): ReadonlyArray<HtmlConformanceIssue> =>
+const inspectDuplicateUniqueAttributes = (root: HtmlChildView): ReadonlyArray<HtmlConformanceIssue> =>
   pipe(
     uniqueAttributeOccurrences(root, []),
     A.groupBy((occurrence) => `${occurrence.tag}/${occurrence.attribute}`),
@@ -1741,17 +1641,11 @@ const tableChildSequencePattern = new RegExp(
 
 const allowsText = (tokens: ReadonlyArray<string>, value: string): boolean =>
   Str.isEmpty(stripHtmlAsciiWhitespace(value)) ||
-  A.some(
-    tokens,
-    (token) =>
-      token === "text" || token === "flow" || token === "phrasing" || token === "transparent" || token === "varies"
-  );
+  A.some(tokens, (token) => token === "text" || token === "flow" || token === "phrasing");
 
 const allowedElementTokens = (node: HtmlChildView, tag: HtmlTag): ReadonlyArray<string> => {
   const categories = effectiveCategories(node, tag);
   return [
-    "transparent",
-    "varies",
     tag,
     ...categories,
     ...(tag === "img" ? ["one img"] : []),
@@ -1952,8 +1846,7 @@ const inspectElementOrder = (
       );
       const valid = A.every(orderedChildren, (child) => {
         if (child._tag === "source") {
-          if (hasSrc || phase !== "source") return false;
-          return true;
+          return !(hasSrc || phase !== "source");
         }
         if (child._tag === "track") {
           if (phase === "content") return false;
@@ -2255,6 +2148,7 @@ const inspectChild = (
         ...inspectAutocompleteCompatibility(node, tag, path),
         ...inspectButtonSubmitAttributes(node, tag, path, ancestors),
         ...inspectAreaCoordinates(node, tag, path),
+        ...inspectScriptConformance(node, tag, path),
         ...inspectMediaTypeAndColor(node, tag, path),
         ...inspectAttributeRelationships(node, tag, path, ancestors),
         ...inspectResponsiveImageRelationships(node, tag, path),
@@ -2286,10 +2180,14 @@ const inspectChild = (
  * @since 0.0.0
  */
 export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConformanceIssue> => {
-  const view: HtmlRootView = root;
+  if (!isHtmlChildView(root)) {
+    return [makeIssue([], "encodingFailure", "The HTML root did not satisfy the recursive conformance-view schema")];
+  }
+
+  const view: HtmlChildView = root;
+  const doctype: HtmlRootView["doctype"] = root._tag === "#document" ? root.doctype : O.none();
   const structuralIssues = Match.value(view._tag).pipe(
     Match.when("#document", (): ReadonlyArray<HtmlConformanceIssue> => {
-      const doctype = pipe(view.doctype, O.fromUndefinedOr, O.getOrElse(O.none));
       const children = childrenOf(view);
       const doctypeIssues = O.match(doctype, {
         onNone: () => [makeIssue(["doctype"], "documentDoctype", "A conformant document requires <!doctype html>")],
@@ -2318,6 +2216,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
   );
   return [
     ...structuralIssues,
+    ...inspectHeadingOutline(root),
     ...inspectDuplicateIds(view),
     ...inspectIdReferences(view),
     ...inspectDuplicateUniqueAttributes(view),

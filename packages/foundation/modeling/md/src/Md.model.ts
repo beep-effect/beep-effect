@@ -13,7 +13,7 @@ import { JsonObject } from "@beep/schema/Json";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Arr from "@beep/utils/Array";
-import { Match, SchemaGetter } from "effect";
+import { SchemaGetter, Tuple } from "effect";
 import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -1672,15 +1672,98 @@ export const HeadingLevel = S.Literals([1, 2, 3, 4, 5, 6]).pipe(
  */
 export type HeadingLevel = typeof HeadingLevel.Type;
 
+const makeHeadingValueMember = <Level extends HeadingLevel>({ literal }: S.Literal<Level>) =>
+  S.Struct({
+    level: S.tag(literal),
+    children: InlineChildren.annotateKey({
+      description: "Inline children rendered as heading content.",
+    }),
+  });
+
+/**
+ * Flat discriminated union of heading payloads keyed by their semantic level.
+ *
+ * **Details**
+ *
+ * The union retains the public `{ level, children }` shape while exposing
+ * schema-derived `cases`, `guards`, `isAnyOf`, and exhaustive `match` helpers.
+ * Heading content remains inline-only for every level.
+ *
+ * **Example** (Match a heading payload exhaustively)
+ *
+ * ```ts import.meta.vitest name="Match a heading payload exhaustively"
+ * import { HeadingValue, Text } from "@beep/md/Md.model"
+ *
+ * const value = HeadingValue.cases[2].make({ children: [Text.make({ value: "Overview" })] })
+ * const label = HeadingValue.match(value, {
+ *   1: () => "h1",
+ *   2: () => "h2",
+ *   3: () => "h3",
+ *   4: () => "h4",
+ *   5: () => "h5",
+ *   6: () => "h6",
+ * })
+ *
+ * label // => "h2"
+ * ```
+ *
+ * @invariant `level` is exactly one of the six CommonMark heading levels and `children` contains only inline nodes.
+ * @see {@link https://spec.commonmark.org/0.31.2/#atx-headings} for the normative ATX heading level rules.
+ * @see {@link https://spec.commonmark.org/0.31.2/#setext-headings} for the normative setext heading level rules.
+ * @category models
+ * @since 0.0.0
+ */
+export const HeadingValue = HeadingLevel.mapMembers(
+  Tuple.evolve([
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+    makeHeadingValueMember,
+  ])
+).pipe(
+  S.toTaggedUnion("level"),
+  $I.annoteSchema("HeadingValue", {
+    description: "Flat discriminated union of Markdown heading payloads keyed by semantic level.",
+  })
+);
+
+/**
+ * Runtime heading payload represented by {@link HeadingValue}.
+ *
+ * @see {@link HeadingValue} for case constructors, guards, and exhaustive matching.
+ * @category models
+ * @since 0.0.0
+ */
+export type HeadingValue = typeof HeadingValue.Type;
+
+/**
+ * Encoded heading payload variants accepted by {@link HeadingValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace HeadingValue {
+  /**
+   * Encoded flat heading payload, discriminated by `level`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = S.Codec.Encoded<typeof HeadingValue>;
+}
+
 /**
  * Heading block carrying its level alongside inline content.
  *
  * **Example** (Make heading node)
  *
  * ```ts import.meta.vitest name="Make heading node"
- * import { Heading, Text } from "@beep/md/Md.model"
+ * import { Heading, HeadingValue, Text } from "@beep/md/Md.model"
  *
- * const node = Heading.make({ level: 1, children: [Text.make({ value: "Title" })] })
+ * const payload = HeadingValue.cases[1].make({ children: [Text.make({ value: "Title" })] })
+ * const node = Heading.make(payload)
  * node._tag // => "heading"
  * node.level // => 1
  * ```
@@ -1711,15 +1794,14 @@ export class Heading extends S.TaggedClass<Heading>($I`Heading`)(
   ): HtmlModel.H1 | HtmlModel.H2 | HtmlModel.H3 | HtmlModel.H4 | HtmlModel.H5 | HtmlModel.H6 => {
     const children = Inline.toHtmlAll(block.children);
 
-    return Match.value(block.level).pipe(
-      Match.when(1, () => HtmlModel.H1.make({ children })),
-      Match.when(2, () => HtmlModel.H2.make({ children })),
-      Match.when(3, () => HtmlModel.H3.make({ children })),
-      Match.when(4, () => HtmlModel.H4.make({ children })),
-      Match.when(5, () => HtmlModel.H5.make({ children })),
-      Match.when(6, () => HtmlModel.H6.make({ children })),
-      Match.exhaustive
-    );
+    return HeadingValue.match(block, {
+      1: () => HtmlModel.H1.make({ children }),
+      2: () => HtmlModel.H2.make({ children }),
+      3: () => HtmlModel.H3.make({ children }),
+      4: () => HtmlModel.H4.make({ children }),
+      5: () => HtmlModel.H5.make({ children }),
+      6: () => HtmlModel.H6.make({ children }),
+    });
   };
 }
 
@@ -1754,7 +1836,7 @@ export declare namespace Heading {
   export interface Encoded {
     readonly _tag: "heading";
     readonly children: InlineChildren.Encoded;
-    readonly level: number;
+    readonly level: HeadingLevel;
   }
 }
 
@@ -1964,6 +2046,48 @@ export declare namespace Ul {
 }
 
 /**
+ * Ordered-list start value retained by the broad Markdown AST.
+ *
+ * **Details**
+ *
+ * Zero is representable because CommonMark ordered-list markers may begin at
+ * zero. Positive values retain the existing {@link PosInt} representation;
+ * profile validation applies CommonMark's nine-digit upper bound without
+ * narrowing the lossless AST.
+ *
+ * **Example** (Decode a zero start)
+ *
+ * ```ts import.meta.vitest name="Decode a zero start"
+ * import { OrderedListStart } from "@beep/md/Md.model"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const result = S.decodeUnknownResult(OrderedListStart)(0)
+ * Result.isSuccess(result) && result.success === 0 // => true
+ * ```
+ *
+ * @invariant Values are non-negative integers; strict CommonMark and GFM validation additionally caps them at 999999999.
+ * @see {@link https://spec.commonmark.org/0.31.2/#list-items} for the normative ordered-list marker range.
+ * @category models
+ * @since 0.0.0
+ */
+export const OrderedListStart = S.Union([S.Literal(0), PosInt]).pipe(
+  $I.annoteSchema("OrderedListStart", {
+    description: "Non-negative ordered-list start retained by the broad Markdown AST.",
+  }),
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
+);
+
+/**
+ * Runtime ordered-list start represented by {@link OrderedListStart}.
+ *
+ * @see {@link OrderedListStart} for decoding and validation helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type OrderedListStart = typeof OrderedListStart.Type;
+
+/**
  * Ordered list block.
  *
  * **Example** (Make ordered list)
@@ -1984,7 +2108,7 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
     }),
-    start: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
+    start: OrderedListStart.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
       description: "First ordinal used by the ordered list. Defaults to one.",
     }),
   },
@@ -2020,7 +2144,7 @@ export declare namespace Ol {
   export interface Type {
     readonly _tag: "ol";
     readonly children: ListChildren.Type;
-    readonly start: PosInt;
+    readonly start: OrderedListStart;
   }
 
   /**

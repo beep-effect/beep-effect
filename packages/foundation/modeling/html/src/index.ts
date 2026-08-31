@@ -140,11 +140,17 @@ export * as HtmlConformance from "./Html.conformance.ts";
 export {
   ConformantHtml,
   ConformantHtmlNode,
+  computeHeadingOutline,
   conform,
   conformantRoot,
+  HtmlBestPracticeIssue,
+  HtmlBestPracticeRule,
+  HtmlComputedHeadingLevel,
   HtmlConformanceError,
   HtmlConformanceIssue,
   HtmlConformanceRule,
+  HtmlHeadingOutlineEntry,
+  inspectBestPractices,
   inspectConformance,
 } from "./Html.conformance.ts";
 /**
@@ -166,6 +172,26 @@ export {
   HtmlDocumentChild,
   HtmlFragment,
 } from "./Html.contract.ts";
+/**
+ * Effective semantic states for context-sensitive HTML form controls.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * as HtmlFormControl from "./Html.form-control.ts";
+/**
+ * Stable form-control semantic-state contracts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  ButtonState,
+  InputState,
+  inputStateAllowedAttributes,
+  resolveButtonState,
+  resolveInputState,
+} from "./Html.form-control.ts";
 /**
  * Generated HTML element metadata.
  *
@@ -263,6 +289,27 @@ export {
   safeHtmlAstConformant,
   safeHtmlAstRoot,
 } from "./Html.policy.ts";
+/**
+ * Semantic states and author-conformance schemas for HTML scripts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * as HtmlScript from "./Html.script.ts";
+/**
+ * Stable HTML script semantic-state contracts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  HtmlMimeType,
+  InvalidScriptType,
+  JavaScriptMimeTypeEssence,
+  resolveScriptState,
+  ScriptDataBlockMimeType,
+  ScriptState,
+} from "./Html.script.ts";
 /**
  * Deterministic HTML serialization.
  *

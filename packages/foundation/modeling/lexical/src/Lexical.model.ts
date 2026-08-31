@@ -20,9 +20,10 @@ import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
 import { Defect, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, pipe, Result, SchemaGetter } from "effect";
+import { Effect, pipe, Result, SchemaGetter, Struct } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conformance/Lexical.strict-invariants.ts";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
 import type { CodeFenceLanguage as MdCodeFenceLanguage } from "@beep/md/Md.model";
 import type * as R from "effect/Record";
@@ -1110,7 +1111,8 @@ export declare namespace BaseNode {
  */
 const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode.Encoded> => RawLexicalNode)).pipe(
   $I.annoteSchema("NodeChildren", {
-    description: "Ordered recursive child node list decoded structurally before the public tree grammar is checked.",
+    description:
+      "Ordered recursive child list decoded through the structural RawLexicalNode union; the public LexicalNode schema applies the parent-child grammar.",
   })
 );
 
@@ -1136,7 +1138,8 @@ const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode
 export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
   {
     children: NodeChildren.annotateKey({
-      description: "Child nodes in document order, recursively decoded through the LexicalNode tagged union.",
+      description:
+        "Child nodes in document order, structurally decoded without applying the public LexicalNode parent-child grammar.",
     }),
     direction: S.OptionFromNullOr(Direction).pipe(
       SchemaUtils.withNoneDefault,
@@ -1382,19 +1385,26 @@ export declare namespace TextNode {
  * import { TabNode } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(TabNode)({
- *   type: "tab", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "\t"
+ *   type: "tab", version: 1, detail: 2, format: 0, mode: "normal", style: "", text: "\t"
  * })
  * Result.isSuccess(result) && result.success.type === "tab" // => true
  * ```
  *
+ * @invariant Strict tab nodes store exactly `"\t"`, use normal mode, and carry Lexical's unmergeable detail bit.
+ * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical/src/nodes/LexicalTabNode.ts | Pinned Lexical TabNode source} for the upstream serialized shape.
  * @category models
  * @since 0.0.0
  */
 export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
   {
     type: S.tag("tab"),
+    detail: S.Literal(2).pipe(S.brand("TextDetailMask")),
+    mode: S.Literal("normal"),
+    text: S.Literal("\t"),
   },
-  $I.annote("TabNode", { description: "A serialized Lexical tab leaf node." })
+  $I.annote("TabNode", {
+    description: "A serialized Lexical tab leaf node with canonical tab text, mode, and unmergeable detail.",
+  })
 ) {}
 
 /**
@@ -1408,7 +1418,7 @@ export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
  * import { TabNode } from "@beep/lexical-schema/Lexical.model"
  *
  * const result: Result.Result<TabNode.Type, S.SchemaError> = S.decodeUnknownResult(TabNode)({
- *   type: "tab", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "\t"
+ *   type: "tab", version: 1, detail: 2, format: 0, mode: "normal", style: "", text: "\t"
  * })
  * console.log(Result.isSuccess(result) && result.success.type === "tab") // true
  * ```
@@ -1424,6 +1434,9 @@ export declare namespace TabNode {
    * @since 0.0.0
    */
   export interface Type extends TextBase.Type {
+    readonly detail: TextDetailMask & 2;
+    readonly mode: "normal";
+    readonly text: "\t";
     readonly type: "tab";
   }
 
@@ -1434,6 +1447,9 @@ export declare namespace TabNode {
    * @since 0.0.0
    */
   export interface Encoded extends TextBase.Encoded {
+    readonly detail: 2;
+    readonly mode: "normal";
+    readonly text: "\t";
     readonly type: "tab";
   }
 }
@@ -1700,14 +1716,23 @@ export declare namespace HeadingNode {
  * QuoteNode.name // => "QuoteNode"
  * ```
  *
+ * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical-rich-text/src/index.ts | Pinned Lexical QuoteNode source} for the upstream serialized shape.
  * @category models
  * @since 0.0.0
  */
 export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
   {
     type: S.tag("quote"),
+    shadowRoot: S.OptionFromOptional(S.Boolean).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Whether this quote is a multi-block shadow-root region rather than a legacy inline quote.",
+      })
+    ),
   },
-  $I.annote("QuoteNode", { description: "A serialized Lexical block-quote element node." })
+  $I.annote("QuoteNode", {
+    description: "A serialized Lexical quote whose optional shadow-root mode controls its child grammar.",
+  })
 ) {}
 
 /**
@@ -1736,6 +1761,7 @@ export declare namespace QuoteNode {
    * @since 0.0.0
    */
   export interface Type extends ElementNode.Type {
+    readonly shadowRoot: O.Option<boolean>;
     readonly type: "quote";
   }
 
@@ -1746,6 +1772,7 @@ export declare namespace QuoteNode {
    * @since 0.0.0
    */
   export interface Encoded extends ElementNode.Encoded {
+    readonly shadowRoot?: boolean | undefined;
     readonly type: "quote";
   }
 }
@@ -1851,6 +1878,64 @@ export declare namespace ListNode {
     readonly type: "list";
   }
 }
+
+const ListNodeValueFields = ListNode.mapFields(Struct.omit(["type", "listType", "tag"])).fields;
+
+/**
+ * Flat list-node payload variants keyed by their semantic list type.
+ *
+ * **Details**
+ *
+ * This additive payload view keeps the existing flat `ListNode` wire and
+ * constructor shape. Its case constructors derive the canonical HTML tag for
+ * each list type, and the resulting payload is passed to {@link ListNode} to
+ * retain the class schema's nominal identity and recursive checks.
+ *
+ * **Example** (Construct a canonical numbered list)
+ *
+ * ```ts import.meta.vitest name="Construct a canonical numbered list"
+ * import { ListNode, ListNodeValue } from "@beep/lexical-schema/Lexical.model"
+ * import { PosInt } from "@beep/schema"
+ *
+ * const payload = ListNodeValue.cases.number.make({ children: [], start: PosInt.make(1) })
+ * const node = ListNode.make(payload)
+ *
+ * node.listType // => "number"
+ * node.tag // => "ol"
+ * ```
+ *
+ * @invariant Numbered lists use `ol`; bullet and check lists use `ul`.
+ * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical-list/src/LexicalListNode.ts | Pinned Lexical ListNode source} for the upstream list-type-to-tag derivation.
+ * @category models
+ * @since 0.0.0
+ */
+export const ListNodeValue = ListType.toTaggedUnion("listType")({
+  number: {
+    ...ListNodeValueFields,
+    tag: S.tag("ol"),
+  },
+  bullet: {
+    ...ListNodeValueFields,
+    tag: S.tag("ul"),
+  },
+  check: {
+    ...ListNodeValueFields,
+    tag: S.tag("ul"),
+  },
+}).pipe(
+  $I.annoteSchema("ListNodeValue", {
+    description: "Flat Lexical list-node payload variants whose HTML tag is determined by their semantic list type.",
+  })
+);
+
+/**
+ * Runtime payload represented by {@link ListNodeValue}.
+ *
+ * @see {@link ListNodeValue} for case constructors, guards, and exhaustive matching.
+ * @category models
+ * @since 0.0.0
+ */
+export type ListNodeValue = typeof ListNodeValue.Type;
 
 /**
  * Mirrors `SerializedListItemNode` from `@lexical/list` — `checked` is
@@ -2577,6 +2662,7 @@ const RawLexicalNode = S.Union([
  * Result.isSuccess(result) && result.success.type === "linebreak" // => true
  * ```
  *
+ * @invariant Quote children are block-compatible only in shadow-root mode; legacy quote children are inline-only.
  * @category models
  * @since 0.0.0
  */
@@ -2690,59 +2776,6 @@ export declare namespace LexicalNode {
     | TableRowNode.Encoded
     | TableCellNode.Encoded;
 }
-
-const StrictRootChildType = LiteralKit([
-  "paragraph",
-  "heading",
-  "quote",
-  "list",
-  "code",
-  "table",
-  "artifact-ref",
-  "youtube",
-]);
-const StrictInlineChildType = LiteralKit(["text", "tab", "linebreak", "link"]);
-const StrictLeafInlineChildType = LiteralKit(StrictInlineChildType.omitOptions(["link"]));
-const StrictListItemChildType = LiteralKit(["text", "tab", "linebreak", "link", "list"]);
-
-const isStrictRootChildType = S.is(StrictRootChildType);
-const isStrictInlineChildType = S.is(StrictInlineChildType);
-const isStrictLeafInlineChildType = S.is(StrictLeafInlineChildType);
-const isStrictListItemChildType = S.is(StrictListItemChildType);
-
-function hasStrictNodeChildren(node: LexicalNode.Type): boolean {
-  return strictNodeChildren(node);
-}
-
-function isStrictLexicalNode(node: LexicalNode.Type): boolean {
-  return (node.type !== "root" || A.isReadonlyArrayNonEmpty(node.children)) && hasStrictNodeChildren(node);
-}
-
-const strictNodeChildren: (node: LexicalNode.Type) => boolean = LexicalNode.match({
-  text: () => true,
-  tab: () => true,
-  linebreak: () => true,
-  "artifact-ref": () => true,
-  youtube: () => true,
-  root: (node) => A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child)),
-  paragraph: (node) =>
-    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
-  heading: (node) =>
-    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
-  quote: (node) =>
-    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
-  link: (node) =>
-    A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child)),
-  code: (node) =>
-    A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child)),
-  list: (node) => A.every(node.children, (child) => child.type === "listitem" && hasStrictNodeChildren(child)),
-  listitem: (node) =>
-    A.every(node.children, (child) => isStrictListItemChildType(child.type) && hasStrictNodeChildren(child)),
-  table: (node) => A.every(node.children, (child) => child.type === "tablerow" && hasStrictNodeChildren(child)),
-  tablerow: (node) => A.every(node.children, (child) => child.type === "tablecell" && hasStrictNodeChildren(child)),
-  tablecell: (node) =>
-    A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child)),
-});
 
 const StrictRootNode = RootNode.check(
   S.makeFilter((node) => A.isReadonlyArrayNonEmpty(node.children) && hasStrictNodeChildren(node), {

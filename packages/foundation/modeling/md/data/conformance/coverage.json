@@ -1,0 +1,867 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/md",
+  "profileIds": [
+    "commonmark-0.31.2",
+    "gfm-0.29.0.gfm.13",
+    "beep-md-extensions-v1"
+  ],
+  "coverage": [
+    {
+      "invariantId": "md.profile.explicit-boundaries",
+      "profileIds": ["gfm-0.29.0.gfm.13", "beep-md-extensions-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.profile.explicit-boundaries"
+        },
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.profile.explicit-boundaries"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.profile.explicit-boundaries"
+        },
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions",
+        "test/Md.conformance.test.ts#issues-distinct-strict-brands-for-documents-accepted-by-each-profile",
+        "test/Md.conformance.test.ts#projects-implemented-checks-into-shared-specification-reports"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.profile.gfm-commonmark-version-divergence",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "No published GFM authority defines a composite GFM profile based on CommonMark 0.31.2; the package can only keep the two approved targets explicitly distinct."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "No official composite GFM revision exists for the package's separate authority versions."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "md.corpus.commonmark-exhaustive",
+      "profileIds": ["commonmark-0.31.2"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "runCommonMarkConformanceCorpus"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "md.corpus.gfm-exhaustive",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "runGfmConformanceCorpus"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "md.ast.literal-tag-discrimination",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Inline"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Block"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.ast.literal-tag-discrimination"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Inline"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Block"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#round-trips-schema-derived-Markdown-AST-nodes"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-unknown-Markdown-variant-tags"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.heading.level-domain",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.heading.level-domain"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HeadingLevel"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.heading.level-domain"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.heading.level-domain"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HeadingLevel"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-every-block-variant-to-Markdown-and-HTML",
+        "test/Md.conformance.test.ts#exposes-six-flat-heading-payload-cases-with-exhaustive-helpers"
+      ],
+      "negativeTestIds": [
+        "test/Md.test.ts#falls-back-to-a-closed-heading-tag-for-forged-heading-levels"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.heading.inline-children",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.heading.inline-children"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Heading"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.heading.inline-children"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.heading.inline-children"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Heading"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#round-trips-schema-derived-Markdown-AST-nodes"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-block-children-at-the-heading-schema-boundary"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.heading.source-syntax",
+      "profileIds": ["commonmark-0.31.2"],
+      "currentEnforcement": [
+        {
+          "kind": "documented",
+          "rationale": "The rule is intentionally outside this semantic profile boundary."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "documented",
+          "rationale": "The rule is intentionally outside this semantic profile boundary."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "notApplicable"
+    },
+    {
+      "invariantId": "md.link.nested-links",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.link.nested-links"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#normalizes-nested-Markdown-links-into-conformant-non-interactive-descendants"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-nested-links-strictly-while-retaining-the-exact-lossless-tree"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.list.nonempty",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.list.nonempty"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#reports-empty-lists-without-narrowing-the-broad-document-schema"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.list.ordered-start-range",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.list.ordered-start-range"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.conformance.test.ts#models-zero-ordered-list-starts-losslessly-and-enforces-CommonMark-s-upper-bound-strictly"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#models-zero-ordered-list-starts-losslessly-and-enforces-CommonMark-s-upper-bound-strictly"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.list.item-content",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.list.item-content"
+        },
+        {
+          "kind": "runtime",
+          "validator": "ListItemChild"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.list.item-content"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.list.item-content"
+        },
+        {
+          "kind": "runtime",
+          "validator": "ListItemChild"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#supports-template-interpolation-for-inline-and-block-containers"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-values-outside-the-list-item-content-grammar"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.gfm.task-lists",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.task-lists"
+        },
+        {
+          "kind": "runtime",
+          "validator": "TaskItem"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.task-lists"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.task-lists"
+        },
+        {
+          "kind": "runtime",
+          "validator": "TaskItem"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-non-boolean-GFM-task-item-state"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.gfm.strikethrough",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.strikethrough"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Del"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.strikethrough"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.strikethrough"
+        },
+        {
+          "kind": "runtime",
+          "validator": "Del"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-inline-Markdown-and-HTML-variants-with-escaped-text-by-default"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-block-children-inside-GFM-strikethrough"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.gfm.table-structure",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.table-structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "TableCell"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts, test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-structure"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.table-structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "TableCell"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-later-table-rows-when-the-first-row-has-no-cells"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#rejects-block-children-inside-GFM-table-cells"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.gfm.table-rectangularity",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-rectangularity"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.gfm.table-alignment-width",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-alignment-width"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.gfm.disallowed-raw-html",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.disallowed-raw-html"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.conformance.test.ts#applies-the-GFM-raw-HTML-filter-without-attributing-it-to-CommonMark-or-Beep"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#applies-the-GFM-raw-HTML-filter-without-attributing-it-to-CommonMark-or-Beep"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.gfm.table-header",
+      "profileIds": ["gfm-0.29.0.gfm.13"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-header"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.safe.raw-content",
+      "profileIds": ["beep-md-extensions-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.safe.raw-content"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#refines-user-authored-documents-without-changing-their-encoded-wire"
+      ],
+      "negativeTestIds": [
+        "test/Md.test.ts#keeps-active-HTML-constructs-outside-the-SafeDocument-to-SafeHtml-path"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.safe.urls-and-scalars",
+      "profileIds": ["beep-md-extensions-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.safe.urls-and-scalars"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#keeps-canonical-URL-policy-sanitization-at-a-fixed-point",
+        "test/Md.test.ts#applies-a-custom-URL-policy-across-every-recursive-render-fold",
+        "test/Md.test.ts#refines-user-authored-documents-without-changing-their-encoded-wire"
+      ],
+      "negativeTestIds": [
+        "test/Md.test.ts#renders-policy-denied-top-level-and-nested-YouTube-blocks-as-inert-text",
+        "test/Md.test.ts#keeps-active-HTML-constructs-outside-the-SafeDocument-to-SafeHtml-path",
+        "test/Md.test.ts#rejects-values-that-cannot-complete-the-total-SafeDocument-to-SafeHtml-projection"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.safe.html-projection-conformance",
+      "profileIds": ["beep-md-extensions-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md SafeDocument brand for md.safe.html-projection-conformance"
+        },
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.safe.html-projection-conformance"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md SafeDocument brand for md.safe.html-projection-conformance"
+        },
+        {
+          "kind": "runtime",
+          "validator": "documentSafetyIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-every-schema-derived-SafeDocument-without-failing"
+      ],
+      "negativeTestIds": [
+        "test/Md.test.ts#rejects-a-heading-outline-that-the-safe-HTML-projection-cannot-render"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.footnote.unique-definitions",
+      "profileIds": ["beep-md-extensions-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.footnote.unique-definitions"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Md.test.ts#rejects-duplicate-footnote-definitions-recursively-at-their-exact-paths",
+        "test/Md.test.ts#rejects-every-schema-derived-duplicate-footnote-identifier",
+        "test/Md.conformance.test.ts#checks-Beep-footnote-definition-uniqueness-and-reference-resolution-recursively"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.footnote.defined-references",
+      "profileIds": ["beep-md-extensions-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.footnote.defined-references"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#checks-Beep-footnote-definition-uniqueness-and-reference-resolution-recursively"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.render.escaping",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "renderMarkdownInline"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.render.escaping"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "renderMarkdownInline"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-inline-Markdown-and-HTML-variants-with-escaped-text-by-default"
+      ],
+      "negativeTestIds": [
+        "test/Md.test.ts#renders-inline-Markdown-and-HTML-variants-with-escaped-text-by-default"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "md.soft-break-representation",
+      "profileIds": ["commonmark-0.31.2"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "A dedicated semantic soft-break member in the Markdown inline union"
+        },
+        {
+          "kind": "runtime",
+          "validator": "SoftBreak"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "unsupportedProfile"
+    },
+    {
+      "invariantId": "md.source-parser",
+      "profileIds": ["commonmark-0.31.2"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "unsupportedProfile"
+    },
+    {
+      "invariantId": "md.extensions.nonstandard-members",
+      "profileIds": [
+        "commonmark-0.31.2",
+        "gfm-0.29.0.gfm.13",
+        "beep-md-extensions-v1"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.extensions.nonstandard-members"
+        },
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.extensions.nonstandard-members"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.extensions.nonstandard-members"
+        },
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions",
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions"
+      ],
+      "negativeTestIds": [
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions"
+      ],
+      "status": "covered"
+    }
+  ]
+}

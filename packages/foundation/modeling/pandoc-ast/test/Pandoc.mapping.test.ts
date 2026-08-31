@@ -10,7 +10,6 @@ import {
   PandocMappingIssue,
   profileFromIssues,
 } from "@beep/pandoc-ast/Pandoc.report";
-import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -178,6 +177,155 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
+  it("exhaustively distinguishes inline and display Pandoc math projections", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const pandoc = Pandoc.PandocDocument.make({
+          blocks: [
+            Pandoc.Para.make({
+              children: [
+                Pandoc.Math.make({ mathType: "InlineMath", text: "x" }),
+                Pandoc.Math.make({ mathType: "DisplayMath", text: "y" }),
+              ],
+            }),
+          ],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+        const paragraph = result.document.children[0];
+
+        expect(result.report.profile).toBe("gap");
+        expect(A.map(result.report.issues, (entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+          ["Math", "lossy", "/blocks/0/children/1"],
+        ]);
+        expect(paragraph?._tag).toBe("p");
+        if (paragraph?._tag === "p") {
+          expect(paragraph.children).toEqual([
+            expect.objectContaining({ _tag: "inlineMath", value: "x" }),
+            expect.objectContaining({ _tag: "inlineMath", value: "y" }),
+          ]);
+        }
+      })
+    ));
+
+  it("projects current inline and block constructors through definition-list plaintext", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const attr = ["", [], []];
+        const str = (value: string) => ({ c: value, t: "Str" });
+        const plain = (value: string) => ({ c: [str(value)], t: "Plain" });
+        const paragraph = (value: string) => ({ c: [str(value)], t: "Para" });
+        const richTerm = [
+          str("text"),
+          { t: "Space" },
+          { t: "SoftBreak" },
+          { t: "LineBreak" },
+          { c: [str("emphasis")], t: "Emph" },
+          { c: [str("underline")], t: "Underline" },
+          { c: [str("strong")], t: "Strong" },
+          { c: [str("strikeout")], t: "Strikeout" },
+          { c: [str("superscript")], t: "Superscript" },
+          { c: [str("subscript")], t: "Subscript" },
+          { c: [str("small-caps")], t: "SmallCaps" },
+          { c: [{ t: "SingleQuote" }, [str("quoted")]], t: "Quoted" },
+          { c: [[], [str("cited")]], t: "Cite" },
+          { c: [attr, "code"], t: "Code" },
+          { c: [attr, [str("link")], ["https://example.com", ""]], t: "Link" },
+          { c: [attr, [str("image")], ["image.png", ""]], t: "Image" },
+          { c: [attr, [str("span")]], t: "Span" },
+          { c: [paragraph("note")], t: "Note" },
+          { c: [{ t: "InlineMath" }, "math"], t: "Math" },
+          { c: ["html", "raw-inline"], t: "RawInline" },
+          { c: { retained: true }, t: "FutureInline" },
+        ];
+        const table = {
+          c: [
+            attr,
+            [null, [paragraph("table caption")]],
+            [[{ t: "AlignDefault" }, { t: "ColWidthDefault" }]],
+            [attr, []],
+            [[attr, 0, [], [[attr, [[attr, { t: "AlignDefault" }, 1, 1, [paragraph("cell")]]]]]]],
+            [attr, []],
+          ],
+          t: "Table",
+        };
+        const definitions = [
+          [plain("plain")],
+          [paragraph("paragraph")],
+          [{ c: [[str("first")], [str("second")]], t: "LineBlock" }],
+          [{ c: [2, attr, [str("heading")]], t: "Header" }],
+          [{ c: [paragraph("quote")], t: "BlockQuote" }],
+          [{ c: [attr, "code-block"], t: "CodeBlock" }],
+          [{ c: ["html", "raw-block"], t: "RawBlock" }],
+          [{ c: [[plain("bullet")]], t: "BulletList" }],
+          [
+            {
+              c: [[1, { t: "DefaultStyle" }, { t: "DefaultDelim" }], [[plain("ordered")]]],
+              t: "OrderedList",
+            },
+          ],
+          [{ c: [[[str("nested term")], [[paragraph("nested definition")]]]], t: "DefinitionList" }],
+          [{ t: "HorizontalRule" }],
+          [{ c: [attr, [paragraph("div")]], t: "Div" }],
+          [table],
+          [{ c: [attr, [null, [paragraph("figure caption")]], [paragraph("figure body")]], t: "Figure" }],
+          [{ c: { retained: true }, t: "FutureBlock" }],
+        ];
+        const pandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [{ c: [[richTerm, definitions]], t: "DefinitionList" }],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+        const block = result.document.children[0];
+
+        expect(block?._tag).toBe("p");
+        if (block?._tag !== "p" || block.children[0]?._tag !== "text") {
+          throw new Error("expected a flattened definition-list paragraph");
+        }
+
+        expect(block.children[0].value).toContain("underlinestrongstrikeoutsuperscriptsubscriptsmall-capsquotedcited");
+        expect(block.children[0].value).toContain("first\nsecond");
+        expect(block.children[0].value).toContain("raw-block");
+        expect(block.children[0].value).toContain("figure body");
+        expect(block.children[0].value).toContain("table caption");
+        expect(A.map(result.report.issues, ({ construct }) => construct)).toEqual(
+          expect.arrayContaining([
+            "Underline",
+            "Superscript",
+            "Subscript",
+            "SmallCaps",
+            "Quoted",
+            "Cite",
+            "Note",
+            "RawInline",
+            "LineBlock",
+            "RawBlock",
+            "DefinitionList",
+            "Table",
+            "Figure",
+            "FutureInline",
+            "FutureBlock",
+          ])
+        );
+      })
+    ));
+
+  it("round-trips an Md math block through a Pandoc display-math paragraph", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const source = Md.Document.make({
+          children: [Md.MathBlock.make({ value: "a^2 + b^2 = c^2" })],
+        });
+        const encoded = yield* documentToPandoc(source);
+        const decoded = yield* pandocToDocument(encoded.pandoc);
+
+        expect(encoded.report.issues).toEqual([]);
+        expect(decoded.report.issues).toEqual([]);
+        expect(decoded.document).toEqual(source);
+      })
+    ));
+
   it("records DOCX-origin compatibility gaps while producing partial Md output", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -332,8 +480,8 @@ describe("Pandoc.mapping", () => {
               ],
             }),
             Md.Ol.make({
-              children: [Md.Li.make({ children: [text("third")] })],
-              start: PosInt.make(3),
+              children: [Md.Li.make({ children: [text("zero")] })],
+              start: Md.OrderedListStart.make(0),
             }),
             Md.MathBlock.make({ value: "a^2 + b^2 = c^2" }),
           ],
@@ -363,13 +511,22 @@ describe("Pandoc.mapping", () => {
         const list = result.pandoc.blocks[1];
         expect(list?._tag).toBe("orderedlist");
         if (list?._tag === "orderedlist") {
-          expect(list.start).toBe(3);
+          expect(list.start).toBe(0);
         }
 
         const displayMath = expectPara(result.pandoc.blocks[2]).children[0];
         expect(displayMath?._tag).toBe("math");
         if (displayMath?._tag === "math") {
           expect(displayMath.mathType).toBe("DisplayMath");
+        }
+
+        const roundTrip = yield* pandocToDocument(result.pandoc);
+        const orderedList = roundTrip.document.children[1];
+
+        expect(roundTrip.report.issues).toEqual([]);
+        expect(orderedList?._tag).toBe("ol");
+        if (orderedList?._tag === "ol") {
+          expect(orderedList.start).toBe(0);
         }
       })
     ));
@@ -393,6 +550,33 @@ describe("Pandoc.mapping", () => {
         expect(expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url).toBe(
           "https://www.youtube.com/watch?v=ab-CD_12xyz"
         );
+      })
+    ));
+
+  it("retains structured table-caption text in the explicit gap projection", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const pandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                ["", [], []],
+                [null, [{ c: [{ c: [{ c: "Evidence", t: "Str" }], t: "Emph" }], t: "Plain" }]],
+                [],
+                [["", [], []], []],
+                [],
+                [["", [], []], []],
+              ],
+              t: "Table",
+            },
+          ],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+
+        expect(result.report.profile).toBe("gap");
+        expectParagraphText(result.document.children[0], "Evidence");
       })
     ));
 

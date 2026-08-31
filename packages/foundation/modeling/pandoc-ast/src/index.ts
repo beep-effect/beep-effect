@@ -38,6 +38,27 @@ export const VERSION = "0.0.0";
  */
 export * from "./Pandoc.codec.ts";
 /**
+ * Exhaustive compatible, unsupported, or invalid Pandoc JSON classification.
+ *
+ * **Example** (Inspect an empty Pandoc document)
+ *
+ * ```ts import.meta.vitest name="Inspect an empty Pandoc document"
+ * import { Effect } from "effect"
+ * import { inspectPandocConformance } from "@beep/pandoc-ast"
+ *
+ * const result = Effect.runSync(inspectPandocConformance({
+ *   "pandoc-api-version": [1, 23, 1],
+ *   blocks: [],
+ *   meta: {},
+ * }))
+ * result._tag // => "compatible"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export * from "./Pandoc.conformance.ts";
+/**
  * Pandoc and Md compatibility mapping.
  *
  * **Example** (Import pandocToDocument mapper)

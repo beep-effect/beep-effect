@@ -1937,6 +1937,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@lexical/list": "catalog:",
+        "@lexical/rich-text": "catalog:",
         "@lexical/table": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",

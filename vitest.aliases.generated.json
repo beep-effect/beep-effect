@@ -1812,6 +1812,33 @@
     "./packages/foundation/modeling/schema/src/FileTypeChecker/index.ts"
   ],
   "@beep/openai": ["./packages/drivers/openai/src/index.ts"],
+  "@beep/html/Html.form-control": [
+    "./packages/foundation/modeling/html/src/Html.form-control.ts"
+  ],
+  "@beep/html/Html.script": [
+    "./packages/foundation/modeling/html/src/Html.script.ts"
+  ],
+  "@beep/lexical-schema/Lexical.conformance": [
+    "./packages/foundation/modeling/lexical/src/Lexical.conformance.ts"
+  ],
+  "@beep/md/Md.conformance": [
+    "./packages/foundation/modeling/md/src/Md.conformance.ts"
+  ],
+  "@beep/pandoc-ast/Pandoc.conformance": [
+    "./packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts"
+  ],
+  "@beep/rdf/SemanticSchemaConformance": [
+    "./packages/foundation/modeling/rdf/src/SemanticSchemaConformance.ts"
+  ],
+  "@beep/rdf/SemanticSchemaMetadata": [
+    "./packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/index.ts"
+  ],
+  "@beep/schema/Conformance": [
+    "./packages/foundation/modeling/schema/src/Conformance/index.ts"
+  ],
+  "@beep/test-utils/ConformanceLedger": [
+    "./packages/tooling/test-kit/test-utils/src/ConformanceLedger/index.ts"
+  ],
   "@beep/box-provisioning": [
     "./packages/drivers/box-provisioning/src/index.ts"
   ],

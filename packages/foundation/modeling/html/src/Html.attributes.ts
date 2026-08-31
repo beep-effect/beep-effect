@@ -19,10 +19,11 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Eq from "@beep/utils/Equal";
 import * as Struct from "@beep/utils/Struct";
-import { Effect, flow, pipe, SchemaIssue, SchemaTransformation, Tuple } from "effect";
+import { Effect, SchemaIssue, SchemaTransformation, Tuple } from "effect";
 import * as A from "effect/Array";
-import { identity } from "effect/Function";
+import { flow, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -80,7 +81,7 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
   assertAsciiFoldUnique(values, "ASCII-case-insensitive enumerated attribute", true);
   const Canonical = LiteralKit(values);
   const findCanonical = (value: string) =>
-    A.findFirst(values, (candidate) => toAsciiLowerCase(candidate) === toAsciiLowerCase(value));
+    A.findFirst(values, flow(toAsciiLowerCase, Eq.equals(toAsciiLowerCase(value))));
   const Input = S.String.check(
     S.makeFilter(flow(findCanonical, O.isSome), {
       identifier: $I`AsciiCaseInsensitiveEnumeratedCheck`,
@@ -921,6 +922,8 @@ export type ButtonCommand = typeof ButtonCommand.Type;
  * S.is(HeadingOffset)(9) // => false
  * ```
  *
+ * @invariant Values are integers from zero through eight, inclusive.
+ * @see {@link https://html.spec.whatwg.org/multipage/sections.html#heading-levels-and-offsets | WHATWG HTML heading levels and offsets} for the normative heading-level definition.
  * @category schemas
  * @since 0.0.0
  */
