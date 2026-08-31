@@ -1,0 +1,65 @@
+# S6 closure-declaration SHACL.
+#
+# etl_snapshot.py encodes each MANIFEST.yaml completeForPredicate row as one
+# manifest:ClosureDeclaration node.  A manifest:SnapshotManifest points to those
+# nodes through manifest:hasClosureDeclaration.  This shape validates the five
+# closure-contract fields before any consumer may trust negation.  run_shacl.py
+# separately proves that the YAML and companion graph encode the same predicate
+# set with one declaration node per predicate.
+
+@prefix manifest: <https://oip.law/ontology/ci-ops-s6-manifest#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+manifest:SnapshotManifestShape
+    a sh:NodeShape ;
+    sh:targetClass manifest:SnapshotManifest ;
+    sh:property [
+        sh:path manifest:hasClosureDeclaration ;
+        sh:minCount 1 ;
+        sh:node manifest:ClosureDeclarationShape ;
+        sh:message "a snapshot manifest must point to structurally complete closure declarations"
+    ] .
+
+manifest:ClosureDeclarationShape
+    a sh:NodeShape ;
+    sh:targetClass manifest:ClosureDeclaration ;
+    sh:property [
+        sh:path manifest:completeForPredicate ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "completeForPredicate must name exactly one predicate IRI"
+    ] ;
+    sh:property [
+        sh:path manifest:world ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "closed" "open" ) ;
+        sh:message "world must be exactly closed or open"
+    ] ;
+    sh:property [
+        sh:path manifest:completeWithin ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "complete_within must carry a non-empty boundary"
+    ] ;
+    sh:property [
+        sh:path manifest:source ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "source must name the ingested snapshot vein"
+    ] ;
+    sh:property [
+        sh:path manifest:freshness ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:message "freshness must name the closure instant convention"
+    ] .

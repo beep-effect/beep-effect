@@ -6,7 +6,7 @@ import {
   AgentEffectivenessPromptBundle,
 } from "@beep/repo-ai-metrics";
 import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness";
-import { fcRuns } from "@beep/test-utils";
+import { fcRuns, privacySafeSystemTempRoot } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -76,7 +76,10 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
   Effect.acquireUseRelease(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory({ directory: "/tmp", prefix: "beep-agent-effectiveness-" });
+      return yield* fs.makeTempDirectory({
+        directory: privacySafeSystemTempRoot(),
+        prefix: "beep-agent-effectiveness-",
+      });
     }),
     use,
     (tmpDir) =>
