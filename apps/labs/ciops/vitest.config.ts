@@ -8,10 +8,12 @@ export default mergeConfig(
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
+        "@beep/ciops": fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
     test: {
       include: ["test/**/*.test.ts"],
+      pool: "threads",
     },
   })
 );

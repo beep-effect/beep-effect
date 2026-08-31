@@ -1,9 +1,31 @@
+/**
+ * Health contract for the CI-operations projection lab.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $CiopsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const $I = $CiopsId.create("Api");
 
+/**
+ * Schema-backed response returned by the CI-operations health endpoint.
+ *
+ * **Example** (Create a healthy response)
+ *
+ * ```ts
+ * import { Health } from "@beep/ciops/Api"
+ *
+ * const health = Health.make({ status: "ok" })
+ * console.log(health.status) // "ok"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export class Health extends S.Class<Health>($I`Health`)(
   {
     status: S.tag("ok"),
@@ -17,4 +39,18 @@ export class Health extends S.Class<Health>($I`Health`)(
 // importer trips fallow's unused-export gate the first time the lab lands.
 const ApiGroup = HttpApiGroup.make("ciops").add(HttpApiEndpoint.get("health", "/health", { success: Health }));
 
+/**
+ * Top-level `HttpApi` contract for the CI-operations lab health endpoint.
+ *
+ * **Example** (Inspect the API identifier)
+ *
+ * ```ts
+ * import { Api } from "@beep/ciops/Api"
+ *
+ * console.log(Api.identifier) // "ciops-api"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
 export const Api = HttpApi.make("ciops-api").add(ApiGroup);

@@ -1,7 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../tsconfig.base.json",
-  "include": ["src", "test", "vitest.config.ts", "../../../vitest.shared.ts"],
+  "include": [
+    "src",
+    "scripts",
+    "test",
+    "vitest.config.ts",
+    "../../../vitest.shared.ts"
+  ],
   "compilerOptions": {
     "lib": ["esnext"],
     "types": ["node"],
@@ -14,7 +20,8 @@
     "isolatedModules": true,
     "incremental": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@beep/ciops/*": ["./src/*"]
     },
     "outDir": "dist",
     "rootDir": "../../.."

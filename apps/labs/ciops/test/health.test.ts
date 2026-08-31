@@ -1,36 +1,24 @@
-import { provideScopedLayer } from "@beep/test-utils";
-import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
+import { Health } from "@beep/ciops/Api";
+import { ApiLive } from "@beep/ciops/runtime/Layer";
 import { describe, expect, it } from "@effect/vitest";
-import { Context, Effect, Layer, Match } from "effect";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { FetchHttpClient, HttpClient, HttpRouter, HttpServer } from "effect/unstable/http";
-import { Health } from "@/Api";
-import { ApiLive } from "@/runtime/Layer";
+import { HttpRouter } from "effect/unstable/http";
 
 const decodeHealth = S.decodeUnknownEffect(S.fromJsonString(Health));
 
-const portOfServer = (server: HttpServer.HttpServer["Service"]): number =>
-  Match.value(server.address).pipe(
-    Match.tag("TcpAddress", (address) => address.port),
-    Match.orElse(() => 0)
+const verifyHealth = Effect.fn("CiOps.test.verifyHealth")(function* () {
+  const webHandler = yield* Effect.acquireRelease(
+    Effect.sync(() => HttpRouter.toWebHandler(ApiLive, { disableLogger: true })),
+    ({ dispose }) => Effect.promise(dispose)
   );
+  const response = yield* Effect.tryPromise(() => webHandler.handler(new Request("http://ciops.test/health")));
+  const health = yield* Effect.tryPromise(() => response.text()).pipe(Effect.flatMap(decodeHealth));
+
+  expect(response.status).toBe(200);
+  expect(health.status).toBe("ok");
+});
 
 describe("@beep/ciops", () => {
-  it.effect("serves GET /health", () =>
-    Effect.gen(function* () {
-      const built = yield* Layer.build(
-        HttpRouter.serve(ApiLive, { disableListenLog: true, disableLogger: true }).pipe(
-          Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }))
-        )
-      );
-      const server = Context.get(built, HttpServer.HttpServer);
-      const response = yield* HttpClient.get(`http://127.0.0.1:${portOfServer(server)}/health`);
-      const health = yield* Effect.flatMap(response.text, decodeHealth);
-
-      expect(health.status).toBe("ok");
-      // `provideScopedLayer` builds the layer inside a scope and provides the
-      // resulting Context; a bare `Effect.provide(<Layer>)` mid-pipeline trips
-      // the effect-LSP's strictEffectProvide rule.
-    }).pipe(Effect.scoped, provideScopedLayer(FetchHttpClient.layer))
-  );
+  it.effect("serves GET /health", () => verifyHealth().pipe(Effect.scoped));
 });
