@@ -10,7 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
-import { Clock, Console, Crypto, DateTime, Duration, Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
+import { Clock, Console, Crypto, DateTime, Duration, Effect, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -84,7 +84,6 @@ import {
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
-import { retirePublishedPrLease, retirePublishedPrLeaseReceipt, writePublishedPrLease } from "./PrLease.ts";
 import {
   acquireFullProofLock,
   acquireFullProofLockOrObserveAtPath,
@@ -578,9 +577,6 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
     recorder,
     A.findFirst(steps, (step) => step.id === "publish:02-pr-create")
   );
-  return yield* writePublishedPrLease(context).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to persist the published-PR ownership lease."))
-  );
 });
 
 const reusablePublishMaySkipCommit = (options: YeetRunOptions): boolean =>
@@ -777,30 +773,22 @@ const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhase
       "yeet start-pr-early push phase failed."
     );
   }
-  const publishedLease = yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
-  return yield* Effect.gen(function* () {
-    yield* runWithFullProofCoordinator(
-      plan.context,
-      fullSteps,
-      Effect.gen(function* () {
-        yield* runRequiredProofPhase(
-          plan.context,
-          fullSteps,
-          recorder,
-          "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
-        );
-        yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
-      }),
-      { priority: "publish" }
-    );
-    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
-  }).pipe(
-    Effect.onExit((exit) =>
-      Exit.isFailure(exit)
-        ? retirePublishedPrLeaseReceipt(plan.context, publishedLease, "start-pr-early-failed")
-        : Effect.void
-    )
+  yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
+  yield* runWithFullProofCoordinator(
+    plan.context,
+    fullSteps,
+    Effect.gen(function* () {
+      yield* runRequiredProofPhase(
+        plan.context,
+        fullSteps,
+        recorder,
+        "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
+      );
+      yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
+    }),
+    { priority: "publish" }
   );
+  return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
 });
 
 const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(function* (
@@ -948,25 +936,6 @@ const runPrePushHookMode = Effect.fn("Yeet.runPrePushHookMode")(function* (
   return yield* emptyPlanResult(context);
 });
 
-const retireTerminalPrLease = Effect.fn("Yeet.retireTerminalPrLease")(function* (
-  context: RepoRunContext,
-  snapshot: YeetStatusSnapshot
-) {
-  const remoteState = Str.toUpperCase(snapshot.remote.state ?? "");
-  if (A.contains(["MERGED", "CLOSED"], remoteState)) {
-    const target = O.all({
-      headSha: snapshot.remote.headSha,
-      prNumber: O.fromUndefinedOr(snapshot.remote.number),
-    });
-    if (O.isNone(target)) {
-      return yield* YeetCommandError.make({
-        message: `Cannot retire the ${Str.toLowerCase(remoteState)} PR lease without its exact PR number and head SHA.`,
-      });
-    }
-    yield* retirePublishedPrLease(context, target.value.prNumber, target.value.headSha, Str.toLowerCase(remoteState));
-  }
-});
-
 const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
   context: RepoRunContext,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
@@ -981,7 +950,6 @@ const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
     Effect.catch((error) => failWithRerunGuidance(context, error))
   );
   const snapshot = yield* printOperatorStatusSummary(context, true);
-  yield* retireTerminalPrLease(context, snapshot);
   yield* Ref.update(extras, (state) => ({ ...state, mergeReady: snapshot.mergeReady }));
   yield* assertNoUnresolvedReviewThreads(snapshot);
   return yield* emptyPlanResult(context);
@@ -1143,7 +1111,6 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
   );
   if (!A.isReadonlyArrayEmpty(monitorSteps)) {
     const snapshot = yield* printOperatorStatusSummary(context, true);
-    yield* retireTerminalPrLease(context, snapshot);
     yield* Ref.update(extras, (state) => ({ ...state, mergeReady: snapshot.mergeReady }));
     yield* assertNoUnresolvedReviewThreads(snapshot);
   }

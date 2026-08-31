@@ -25416,18 +25416,6 @@
             "functions": 1
           }
         },
-        "packages/tooling/tool/cli/src/commands/Yeet/internal/PrLease.ts": {
-          "lines": 92.3,
-          "statements": 89.34,
-          "branches": 76.92,
-          "functions": 87.5,
-          "uncovered": {
-            "lines": 12,
-            "statements": 18,
-            "branches": 18,
-            "functions": 4
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
           "lines": 83.54,
           "statements": 83.18,
