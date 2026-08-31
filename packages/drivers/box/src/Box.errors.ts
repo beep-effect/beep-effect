@@ -134,7 +134,7 @@ const BoxHttpStatusCode = S.Int.check(
   $I.annoteSchema("BoxHttpStatusCode", {
     description: "Numeric HTTP status code accepted by the Box driver.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const BoxErrorContextFields = {

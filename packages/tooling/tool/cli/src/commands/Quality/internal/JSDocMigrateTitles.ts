@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Config, Console, Effect, MutableHashMap, Order, pipe, Redacted, Semaphore } from "effect";
 import * as P from "effect/Predicate";
@@ -456,7 +456,7 @@ const chatCompletionContent = (
             const snippet = Str.slice(0, 240)(bodyText);
             return Effect.fail(migrateTitlesError(`Proxy returned HTTP ${candidate.status}: ${snippet}`));
           }
-          return Unknown.decodeEffectFromJsonString(bodyText).pipe(
+          return UnknownFromJsonString.decodeEffect(bodyText).pipe(
             Effect.mapError((cause) => QualityScriptCommandError.new(cause, "Proxy response body is not JSON.")),
             Effect.flatMap((body) =>
               decodeChatCompletion(body).pipe(

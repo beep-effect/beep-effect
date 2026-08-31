@@ -9,6 +9,7 @@ import { FastCheck as fc } from "effect/testing";
 
 type FakeWatcherEventName = "document" | "done" | "error" | "snapshot";
 type FakeWatcherListener = (payload: unknown) => void;
+const decodeWatcherEventOption = S.decodeUnknownOption(F.FirecrawlWatcherEvent);
 type FakeWatcherEmission = {
   readonly eventName: FakeWatcherEventName;
   readonly payload: unknown;
@@ -229,7 +230,7 @@ describe("@beep/firecrawl", () => {
         success: false,
       });
       expect(F.FirecrawlError.fromReason("transport", { status: -1 }).status).toEqual(O.none());
-      expect(O.isSome(F.FirecrawlWatcherEvent.decodeOption({ error: "watcher error", type: "error" }))).toBe(true);
+      expect(O.isSome(decodeWatcherEventOption({ error: "watcher error", type: "error" }))).toBe(true);
     })
   );
 

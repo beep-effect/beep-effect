@@ -35,7 +35,7 @@ import {
   runQaJudgePack,
   runQaReport,
 } from "@beep/repo-cli/commands/Qa";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, thunk } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -98,7 +98,7 @@ const prepareRound = Effect.fnUntraced(function* (cwd: string, round: number) {
   return { layout, qaRoot };
 });
 
-const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 const fence = "`".repeat(3);
 
 const inventoryText = Effect.fnUntraced(function* (round: number) {

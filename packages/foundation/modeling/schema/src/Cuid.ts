@@ -70,7 +70,7 @@ export const Cuid = S.String.pipe(
     toArbitrary: () => (fc) =>
       fc.stringMatching(/^[a-z][0-9a-z]+$/).map((value) => value as Brand.Branded<string, "@typed/id/CUID">),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
 );
 
 /**

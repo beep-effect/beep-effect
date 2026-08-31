@@ -30,6 +30,14 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+      "kind": "object-method",
+      "reason": "classStatics returns an intentionally frozen public utility bag so an S.Class declaration can safely share destructurable precompiled codec helpers without consumers replacing the selected functions after initialization.",
+      "owner": "@beep/schema",
+      "issue": "SCHEMA-CLASS-STATICS-IMMUTABLE-UTILITY-BAG"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
       "kind": "new-map-set",
       "reason": "Conformance proofs need weak identity semantics in two places: private issuer membership and proof-to-detached-root storage must not retain validated trees, while recursive snapshot traversal needs cycle detection without retaining previously inspected ASTs. Effect collections provide neither weak keys nor weak membership.",

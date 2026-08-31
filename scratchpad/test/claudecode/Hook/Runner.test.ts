@@ -10,7 +10,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -54,7 +54,7 @@ const makeTestHook = <E>(
 });
 
 const encodeTestInput = S.encodeSync(S.fromJsonString(TestInput));
-const encodeJson = Unknown.encodeSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const validInput = encodeTestInput(
   TestInput.make({

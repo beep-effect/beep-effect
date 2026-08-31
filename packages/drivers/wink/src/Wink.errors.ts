@@ -193,11 +193,10 @@ export class WinkEntityError extends S.TaggedError<WinkEntityError>($I`WinkEntit
  * @since 0.0.0
  */
 export const WinkError = S.Union([WinkEngineError, WinkEntityError, WinkTokenizationError]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("WinkError", {
     description: "Union of wink runtime errors.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

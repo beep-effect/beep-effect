@@ -36,7 +36,7 @@ export const FileSizeSuffix = S.TemplateLiteral([FileSizeScale, FileSizeByte]).p
     description: "File-size suffix accepted by Next.js size limit strings.",
     documentation: "Matches Next.js FileSizeSuffix: one of k/K/m/M/g/G/t/T/p/P followed by b or B.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
 );
 
 /**
@@ -92,7 +92,7 @@ export const SizeLimit = S.Union([NonNegativeSizeLimitNumber, SizeLimitText]).pi
     documentation:
       "Matches Next.js SizeLimit shape while rejecting negative values that are not meaningful size limits.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
 );
 
 /**

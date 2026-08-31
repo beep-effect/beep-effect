@@ -299,7 +299,7 @@ const PositiveSafeInteger = S.Int.check(S.isGreaterThan(0)).pipe(
 	$I.annoteSchema("PositiveSafeInteger", {
 		description: "Positive safe integer accepted by internal glob recursion and expansion caps.",
 	}),
-	SchemaUtils.withCodecStatics,
+	SchemaUtils.withCodecStatics(["is"]),
 );
 
 /**

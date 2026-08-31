@@ -99,7 +99,7 @@ export const JsoncTextToUnknown = S.String.pipe(
       encode: encodeUnsupported,
     })
   ),
-  SchemaUtils.withExitCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownExit"]),
   $I.annoteSchema("JsoncTextToUnknown", {
     description: "Schema transformation that parses JSONC text into unknown values.",
   })

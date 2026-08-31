@@ -25,7 +25,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { A, thunk0 } from "@beep/utils";
 import { Clock, Effect, Graph, HashMap, MutableHashMap, MutableHashSet, Random } from "effect";
 import { dual } from "effect/Function";
@@ -58,8 +58,7 @@ export const NodeId = S.String.pipe(
   S.brand("NodeId"),
   $I.annoteSchema("NodeId", {
     description: "Unique identifier for graph nodes.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

@@ -15,7 +15,7 @@
 
 import { isPathWithinRoot, writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -36,7 +36,7 @@ import type { CodexDisposition } from "./Findings.triage.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.refresh");
 const encoder = new TextEncoder();
-const parseJsonText = Unknown.decodeUnknownEffectFromJsonString;
+const parseJsonText = UnknownFromJsonString.decodeUnknownEffect;
 const encodeTriageFinding = S.encodeUnknownEffect(CodexTriageFinding);
 
 const RefreshManifestInitiative = S.Struct({ id: S.String, status: S.String }).pipe(

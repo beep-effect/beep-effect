@@ -178,7 +178,7 @@ const ChunkIdPreimage = S.Struct({
   textDigest: SourceTextDigest,
   startChar: NonNegativeInt,
   endChar: NonNegativeInt,
-}).pipe(SchemaUtils.withResultCodecStatics);
+}).pipe(SchemaUtils.withCodecStatics(["encodeResult"]));
 
 type ChunkIdSource = Pick<typeof ChunkFields.Type, "anchor" | "document" | "receipt">;
 

@@ -8,7 +8,6 @@
 
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Match, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -67,8 +66,7 @@ export const InputState = HtmlInputStateName.toTaggedUnion("state")({
 }).pipe(
   $I.annoteSchema("InputState", {
     description: "Tagged semantic projection of an input element's effective type state.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -244,8 +242,7 @@ export const ButtonState = ButtonStateName.toTaggedUnion("state")({
 }).pipe(
   $I.annoteSchema("ButtonState", {
     description: "Tagged semantic projection of an HTML button's effective submit state.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

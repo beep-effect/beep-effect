@@ -16,14 +16,12 @@ import {
   isStringArray,
   joinBlocks,
   maxBackticks,
-  normalizeUrlPolicy,
   prefixLines,
   renderFencedCode,
   renderInlineCode,
   StrictWebUrlPolicySpec,
   sanitizeUrlDestination,
   sanitizeUrlDestinationWithPolicy,
-  UrlPolicy,
   UrlPolicySpec,
 } from "@beep/md/Md.escape";
 import { renderSafeHtml, safeHtmlValue } from "@beep/md/Md.html";
@@ -36,6 +34,7 @@ import {
   Inline,
   InlineChildren,
   ListChildren,
+  ListItemChild,
   ListItemChildren,
   Pre,
   Table,
@@ -45,9 +44,6 @@ import {
   Text,
 } from "@beep/md/Md.model";
 import {
-  DocumentToHtmlFragment,
-  DocumentToMarkdown,
-  DocumentToPlainText,
   HtmlFragmentAdapter,
   MarkdownAdapter,
   makeHtmlFragmentAdapter,
@@ -76,8 +72,7 @@ import {
   refineSafeDocument,
   SafeDocument,
 } from "@beep/md/Md.safe";
-import { HtmlFragment, Markdown } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
@@ -94,15 +89,8 @@ const DocumentArbitrary = S.toArbitrary(Document)(fc);
 const FootnoteIdentifierArbitrary = S.toArbitrary(FootnoteIdentifier)(fc);
 const SafeDocumentArbitrary = S.toArbitrary(SafeDocument)(fc);
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform behavior remains covered until removal.
-const documentToMarkdownCompatibility = DocumentToMarkdown;
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform behavior remains covered until removal.
-const documentToHtmlFragmentCompatibility = DocumentToHtmlFragment;
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- Compatibility transform behavior remains covered until removal.
-const documentToPlainTextCompatibility = DocumentToPlainText;
-
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
-const encodeJsonResult = Unknown.encodeUnknownResultFromJsonString;
+const encodeJsonResult = UnknownFromJsonString.encodeUnknownResult;
 const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
 
 const isJsonObject = (value: S.Json): value is JsonObject =>
@@ -228,6 +216,18 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
         "<tbody><tr><td>Safety</td><td><code>schema-first</code></td></tr></tbody></table>" +
         '<p><a href="https://www.youtube.com/watch?v=M7lc1UVf-VE">Watch on YouTube</a></p>'
     );
+  });
+
+  it("projects Markdown nodes through schema-owned HTML statics", () => {
+    const inline = Inline.toHtml(Md.strong("world"));
+    const block = Block.toHtml(Md.p("Hello"));
+    const document = Document.toHtml(Md.make([Md.p("Hello")]));
+
+    expect(inline._tag).toBe("strong");
+    expect(Inline.toHtmlAll([Md.text("Hello"), Md.br])).toHaveLength(2);
+    expect(block._tag).toBe("p");
+    expect(Block.toHtmlAll([Md.h1("Title"), Md.p("Body")])).toHaveLength(2);
+    expect(document._tag).toBe("#fragment");
   });
 
   it("normalizes nested Markdown links into conformant non-interactive descendants", () => {
@@ -605,19 +605,18 @@ ${Md.h3("Inside")}
     expect(renderMarkdownBlock(Md.ul([Md.li("One"), ["Two", Md.code("2")]]))).toBe("- One\n- Two`2`");
     expect(renderMarkdownBlock(Md.ul([Md.li([Md.p("Parent"), Md.ul(["Child"])])]))).toBe("- Parent\n  - Child");
     expect(renderMarkdownBlock(Md.ol(["One", "Two"]))).toBe("1. One\n2. Two");
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Exercises the retained ambiguous-input compatibility adapter.
-    expect(renderMarkdownBlock(Md.taskList(["Todo", { text: "Done", checked: true }, { text: "Maybe" }]))).toBe(
-      "- [ ] Todo\n- [x] Done\n- [ ] Maybe"
-    );
     expect(
-      // eslint-disable-next-line @typescript-eslint/no-deprecated -- Exercises the retained block-child compatibility adapter.
-      renderMarkdownBlock(Md.taskList([{ children: [Md.p("Parent"), Md.ul(["Child"])], checked: true }]))
+      renderMarkdownBlock(
+        Md.taskListFromItems([Md.taskItem("Todo"), Md.taskItem("Done", { checked: true }), Md.taskItem("Maybe")])
+      )
+    ).toBe("- [ ] Todo\n- [x] Done\n- [ ] Maybe");
+    expect(
+      renderMarkdownBlock(Md.taskListFromItems([Md.taskItem([Md.p("Parent"), Md.ul(["Child"])], { checked: true })]))
     ).toBe("- [x] Parent\n      - Child");
     expect(renderMarkdownBlock(Md.ul(["one\n\ntwo"]))).toBe("- one\n  \n  two");
     expect(renderMarkdownBlock(Md.ul(["one\r\rtwo"]))).toBe("- one\n  \n  two");
     expect(renderMarkdownBlock(Md.ol(["one\ntwo"]))).toBe("1. one\n   two");
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Exercises multiline shorthand compatibility rendering.
-    expect(renderMarkdownBlock(Md.taskList(["one\ntwo"]))).toBe("- [ ] one\n      two");
+    expect(renderMarkdownBlock(Md.taskListFromItems([Md.taskItem("one\ntwo")]))).toBe("- [ ] one\n      two");
     expect(renderMarkdownBlock(Md.blockquote`one\rtwo`)).toBe("> one\n> two");
     expect(renderMarkdownBlock(Md.pre("plain"))).toBe("```\nplain\n```");
     expect(renderMarkdownBlock(Md.pre("plain", { language: "ts bad" }))).toBe("```\nplain\n```");
@@ -637,8 +636,7 @@ ${Md.h3("Inside")}
       "<ul><li><p>Parent</p><ul><li>Child</li></ul></li></ul>"
     );
     expect(renderHtmlBlock(Md.ol(["One", "Two"]))).toBe("<ol><li>One</li><li>Two</li></ol>");
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Exercises mixed canonical/shorthand compatibility rendering.
-    expect(renderHtmlBlock(Md.taskList([Md.taskItem("Done", { checked: true }), "Todo"]))).toBe(
+    expect(renderHtmlBlock(Md.taskListFromItems([Md.taskItem("Done", { checked: true }), Md.taskItem("Todo")]))).toBe(
       '<ul class="contains-task-list"><li><input type="checkbox" disabled checked /> Done</li><li><input type="checkbox" disabled /> Todo</li></ul>'
     );
     expect(renderHtmlBlock(Md.pre("<x>", { language: "ts" }))).toBe(
@@ -650,6 +648,10 @@ ${Md.h3("Inside")}
   });
 
   it("projects inline and block nodes to escaping-free plain text", () => {
+    expect(Inline.toPlainText(Md.strong([Md.text("Strong"), Md.em("Em")]))).toBe("StrongEm");
+    expect(Inline.toPlainTextAll([Md.text("One"), Md.code("Two")])).toBe("OneTwo");
+    expect(ListItemChild.toPlainText(Md.text("Inline"))).toBe("Inline");
+    expect(ListItemChild.toPlainText(Md.p("Block"))).toBe("Block");
     expect(renderPlainTextInline(Md.text("Text"))).toBe("Text");
     expect(renderPlainTextInline(Md.rawMarkdown("**Raw**"))).toBe("**Raw**");
     expect(renderPlainTextInline(Md.rawHtml("<b>Raw</b>"))).toBe("<b>Raw</b>");
@@ -692,8 +694,7 @@ ${Md.h3("Inside")}
       Md.pre("const x = 1"),
       Md.ul([Md.li([Md.text("Inline"), Md.p("Block")])]),
       Md.ol(["First", "Second"]),
-      // eslint-disable-next-line @typescript-eslint/no-deprecated -- Exercises compatibility plain-text projection.
-      Md.taskList([{ text: "Done", checked: true }, "Todo"]),
+      Md.taskListFromItems([Md.taskItem("Done", { checked: true }), Md.taskItem("Todo")]),
       table,
       Md.youtubeUnsafe("M7lc1UVf-VE"),
       Md.mathBlock("a=b"),
@@ -724,6 +725,9 @@ ${Md.h3("Inside")}
   });
 
   it("renders core parity, rich extension, frontmatter, and URL policy additions", () => {
+    expect(renderUnsafe(Md.make([], { frontmatter: { control: "\u0001" } }))).toBe(`---json
+{"control":"\\u0001"}
+---`);
     const richDocument = Md.make(
       [
         Md.h1("Rich"),
@@ -824,6 +828,9 @@ Demo video`);
     expect(Result.getOrThrow(renderWith(htmlAdapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))).toBe(
       '<p><a href="#">Artifact</a></p>'
     );
+    const rawMarkdownDocument = Md.make([Md.p(Md.rawMarkdown("<trusted>"))]);
+    expect(renderWithUnsafe(markdownAdapter, rawMarkdownDocument)).toBe("<trusted>");
+    expect(renderWithUnsafe(htmlAdapter, rawMarkdownDocument)).toBe("<p>&lt;trusted&gt;</p>");
 
     const telOnly = AllowListUrlPolicySpec.make({
       schemes: ["tel:"],
@@ -854,20 +861,6 @@ Demo video`);
     if (normalizedPolicy._tag === "AllowList") {
       expect(normalizedPolicy.schemes).toEqual(["https:"]);
     }
-
-    const normalizedLegacyPolicy = normalizeUrlPolicy(
-      // eslint-disable-next-line @typescript-eslint/no-deprecated -- Proves the compatibility adapter until its documented removal.
-      UrlPolicy.make({
-        allowedProtocols: [" HTTPS ", "MAILTO:"],
-        allowRelative: false,
-        allowProtocolRelative: false,
-        allowBackslashRelative: false,
-      })
-    );
-    expect(normalizedLegacyPolicy).toMatchObject({
-      _tag: "AllowList",
-      schemes: ["https:", "mailto:"],
-    });
 
     const markedInspiredEvasions = [
       "java\u0000script:alert(1)",
@@ -1086,61 +1079,6 @@ Demo video`);
     })
   );
 
-  it.effect(
-    "exposes schema transformations for Markdown and HTML",
-    Effect.fnUntraced(function* () {
-      const doc = markdownHtmlDoc();
-
-      expect(yield* S.decodeUnknownEffect(documentToMarkdownCompatibility)(doc)).toBe(
-        Markdown.make("# Hello\n\nWorld")
-      );
-      expect(yield* S.decodeUnknownEffect(documentToHtmlFragmentCompatibility)(doc)).toBe(
-        HtmlFragment.make("<h1>Hello</h1>\n<p>World</p>")
-      );
-      expect(yield* S.decodeUnknownEffect(documentToPlainTextCompatibility)(doc)).toBe("Hello\nWorld");
-
-      const markdownEncode = yield* Effect.exit(
-        S.encodeEffect(documentToMarkdownCompatibility)(Markdown.make("# Hello"))
-      );
-      const htmlEncode = yield* Effect.exit(
-        S.encodeEffect(documentToHtmlFragmentCompatibility)(HtmlFragment.make("<h1>Hello</h1>"))
-      );
-      const plainTextEncode = yield* Effect.exit(S.encodeEffect(documentToPlainTextCompatibility)("Hello"));
-
-      expectExitCause(markdownEncode, "Encoding Markdown output back into a Markdown document AST is not supported.");
-      expectExitCause(htmlEncode, "Encoding HTML fragment output back into a Markdown document AST is not supported.");
-      expectExitCause(
-        plainTextEncode,
-        "Encoding plain text output back into a Markdown document AST is not supported."
-      );
-
-      const markdownDecode = yield* Effect.acquireUseRelease(
-        Effect.sync(() => {
-          const originalMarkdownRender = MarkdownAdapter.render;
-          Object.defineProperty(MarkdownAdapter, "render", {
-            value: () => Result.getOrThrow(Result.fail(new globalThis.Error("schema boom"))),
-            configurable: true,
-          });
-
-          return originalMarkdownRender;
-        }),
-        () => Effect.exit(S.decodeUnknownEffect(documentToMarkdownCompatibility)(doc)),
-        (originalMarkdownRender) =>
-          Effect.sync(() => {
-            Object.defineProperty(MarkdownAdapter, "render", {
-              value: originalMarkdownRender,
-              configurable: true,
-            });
-          })
-      );
-
-      expect(Exit.isSuccess(markdownDecode)).toBe(true);
-      if (Exit.isSuccess(markdownDecode)) {
-        expect(markdownDecode.value).toBe(Markdown.make("# Hello\n\nWorld"));
-      }
-    })
-  );
-
   it("reports pure adapter failures safely", () => {
     const doc = markdownHtmlDoc();
 
@@ -1243,6 +1181,8 @@ Demo video`);
     expect(joinBlocks(["\nOne\n", "", "\nTwo\n"])).toBe("One\n\nTwo");
     expect(renderMarkdownBlocks([Md.h1("One"), Md.p("Two")])).toBe("# One\n\nTwo");
     expect(renderHtmlBlocks([Md.h1("One"), Md.p("Two")])).toBe("<h1>One</h1>\n<p>Two</p>");
+    expect(Block.toPlainTextAll([Md.h1("One"), Md.p("Two")])).toBe("One\nTwo");
+    expect(Document.toPlainText(Md.make([Md.h1("One"), Md.p("Two")]))).toBe("One\nTwo");
     expect(renderPlainTextBlocks([Md.h1("One"), Md.p("Two")])).toBe("One\nTwo");
     expect(prefixLines("alpha\nbeta", "> ")).toBe("> alpha\n> beta");
     expect(prefixLines("alpha\rbeta", "> ")).toBe("> alpha\n> beta");

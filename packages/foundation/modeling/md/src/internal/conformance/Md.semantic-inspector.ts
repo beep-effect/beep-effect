@@ -8,7 +8,6 @@
 
 import { $MdId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { HashSet, Number as N } from "effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
@@ -283,8 +282,7 @@ export const MarkdownConformanceIssue = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("MarkdownConformanceIssue", {
     description: "Exhaustive path-located semantic Markdown conformance issue.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

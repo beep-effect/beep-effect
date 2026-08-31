@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-31T08:58:46.849Z
+Generated: 2026-08-31T09:31:22.627Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 75 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 58 |
-| publicModules | 2985 |
-| publicExports | 21158 |
+| publicModules | 2986 |
+| publicExports | 21138 |
 | openModules | 347 |
 | openExports | 99 |
 | missingExportExamples | 4 |
@@ -112,7 +112,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 125 | 0 | 0 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | clean | 469 | 4233 | 0 | 0 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 9 | 275 | 4 | 0 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 9 | 259 | 4 | 0 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 7 | 14 | 0 | 0 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 113 | 4 | 0 |
@@ -120,7 +120,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 63 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 64 | `@beep/todox` | `apps/todox` | clean | 2 | 3 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
-| 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 27 | 212 | 4 | 1 |
+| 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 28 | 214 | 5 | 1 |
 | 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 22 | 377 | 0 | 0 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 3 |
@@ -151,7 +151,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 94 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 95 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
 | 96 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 82 | 0 | 0 |
-| 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 262 | 1610 | 24 | 1 |
+| 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 262 | 1604 | 23 | 1 |
 | 98 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 23 | 51 | 8 | 4 |
 | 99 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | clean | 11 | 80 | 0 | 0 |
 | 100 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 28 | 265 | 1 | 1 |
@@ -279,7 +279,7 @@ Module findings:
 - `src/values/LocalDate/LocalDate.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/entity/Principal.ts:257` `PrincipalSchema` (interface) - 1 documentation section/link violation(s)
+- `src/entity/Principal.ts:256` `PrincipalSchema` (interface) - 1 documentation section/link violation(s)
 - `src/entity/SourceKind.ts:37` `SourceKindSchema` (interface) - 1 documentation section/link violation(s)
 
 ### @beep/gov-legal-mcp
@@ -302,9 +302,9 @@ Module findings:
 - `src/aggregates/Session/worker.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/aggregates/Session/Session.worker-protocol.ts:288` `encodeWorkerCommand` (const) - 1 documentation section/link violation(s)
-- `src/aggregates/Session/Session.worker-protocol.ts:328` `encodeWorkerResult` (const) - 1 documentation section/link violation(s)
-- `src/aggregates/Session/Session.worker-protocol.ts:368` `OntologyWorkerUndecodableCommand` (class) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:285` `encodeWorkerCommand` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:325` `encodeWorkerResult` (const) - 1 documentation section/link violation(s)
+- `src/aggregates/Session/Session.worker-protocol.ts:365` `OntologyWorkerUndecodableCommand` (class) - 1 documentation section/link violation(s)
 
 ### @beep/repo-cli
 
@@ -497,21 +497,21 @@ Module findings:
 - `src/OpenclawSystemd.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Openclaw.models.ts:123` `OpenclawDiagnosticText` (const) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:176` `OpenclawProcessRequest` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:342` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:415` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:450` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:515` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1179` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1267` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1354` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1425` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:122` `OpenclawDiagnosticText` (const) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:175` `OpenclawProcessRequest` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:341` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:414` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:449` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:514` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1178` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1266` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1353` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1424` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
 - `src/OpenclawCli.service.ts:404` `OpenclawCliRunner` (type) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:52` `OpenclawSecretReference` (const) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:100` `OpenclawTargetVersion` (const) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:1058` `OpenclawSkillPin` (class) - 1 documentation section/link violation(s)
-- `src/OpenclawIntent.models.ts:1158` `OpenclawDeploymentIntent` (class) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:1056` `OpenclawSkillPin` (class) - 1 documentation section/link violation(s)
+- `src/OpenclawIntent.models.ts:1156` `OpenclawDeploymentIntent` (class) - 1 documentation section/link violation(s)
 
 ### @beep/law-practice-tables
 
@@ -546,9 +546,9 @@ Module findings:
 
 Export findings:
 - `src/Lexical.model.ts:1138` `ElementNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:2284` `YouTubeNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3235` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3318` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:2283` `YouTubeNode` (class) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3240` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3323` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
 
 ### @beep/md
 
@@ -575,6 +575,7 @@ Module findings:
 Path: `packages/foundation/modeling/utils`
 
 Module findings:
+- `src/Data.ts:1` (jsdoc) - 1 documentation section/link violation(s)
 - `src/FileSystem.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/GlobalValue.ts:1` (jsdoc) - 1 documentation section/link violation(s)
 - `src/NodeUrl.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
@@ -699,8 +700,8 @@ Module findings:
 - `src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/values/GrantSet/GrantSet.model.ts:281` `addGrant` (const) - 1 documentation section/link violation(s)
-- `src/values/GrantSet/GrantSet.model.ts:495` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:279` `addGrant` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:493` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
 
 ### @beep/ecfr
 
@@ -816,7 +817,6 @@ Module findings:
 - `src/PromiseSchema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/pluck.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/split.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/SchemaUtils/withCodecStatics.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/SchemaUtils/withConstructorDefaults.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 

@@ -106,8 +106,7 @@ export const PandocUnknownConstructorWire = S.StructWithRest(
 ).pipe(
   $I.annoteSchema("PandocUnknownConstructorWire", {
     description: "Exact opaque JSON object for an unknown future Pandoc constructor.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -2058,11 +2057,16 @@ export const PandocInline = S.Union([
   RawInline,
   UnknownInline,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
+  // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("PandocInline", {
     description: "Pandoc inline union for the v1 compatibility slice.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**
@@ -3553,11 +3557,16 @@ export const PandocBlock = S.Union([
   Figure,
   UnknownBlock,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
+  // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("PandocBlock", {
     description: "Pandoc block union for the v1 compatibility slice.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**
@@ -3962,11 +3971,16 @@ export const PandocMetaValue = S.Union([
   MetaMap,
   UnknownMeta,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
+  // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("PandocMetaValue", {
     description: "Recursive semantic Pandoc metadata-value union.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**
@@ -4213,8 +4227,7 @@ export type PandocMetaValueEncoded = typeof PandocMetaValue.Encoded;
 export const PandocMeta = S.Record(S.String, DeferredPandocMetaValue).pipe(
   $I.annoteSchema("PandocMeta", {
     description: "Recursive semantic Pandoc document metadata map.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

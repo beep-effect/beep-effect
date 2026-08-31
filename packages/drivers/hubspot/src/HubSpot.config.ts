@@ -41,8 +41,7 @@ export const HubSpotUrl = S.NonEmptyString.check(
   $I.annoteSchema("HubSpotUrl", {
     description: "Absolute URL string accepted by the HubSpot driver.",
     toArbitrary: () => (fc) => fc.webUrl(),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -72,8 +71,7 @@ export const HubSpotBaseUrl = S.String.pipe(
   $I.annoteSchema("HubSpotBaseUrl", {
     description: "HubSpot API base URL normalized without trailing slashes.",
     toArbitrary: () => (fc) => fc.webUrl().map(normalizeHubSpotBaseUrl),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -113,8 +111,7 @@ export type HubSpotBaseUrl = typeof HubSpotBaseUrl.Type;
 export const HubSpotAccountId = S.NonEmptyString.pipe(
   $I.annoteSchema("HubSpotAccountId", {
     description: "Non-empty HubSpot account identifier.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

@@ -6,7 +6,6 @@
  */
 
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -86,8 +85,7 @@ export const DocumentIntakeError = S.Union([FilingDecisionUnavailable, DocumentM
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("DocumentIntakeError", {
     description: "Internal typed failure raised by document intake.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

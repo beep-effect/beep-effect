@@ -6,14 +6,16 @@
  */
 
 import { $MdId } from "@beep/identity";
-import { Defect, HtmlFragment, Markdown } from "@beep/schema";
-import { A, Html, R, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, flow, identity, Match, Number as N, Order, Result, SchemaGetter, SchemaIssue, Tuple } from "effect";
+import { Defect, HtmlFragment } from "@beep/schema";
+import { A, Html, R, thunkEmptyStr } from "@beep/utils";
+import { replaceAllWith } from "@beep/utils/Str";
+import { Effect, flow, identity, Match, Number as N, Order, Result, Tuple } from "effect";
 import { cast, dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { renderPlainTextBlocks, segmentInlineRuns } from "./Md.behavior.ts";
+import * as Str from "effect/String";
+import { segmentInlineRuns } from "./Md.behavior.ts";
 import {
   BrowserSafeUrlPolicySpec,
   CompatibilityUrlPolicySpec,
@@ -23,21 +25,20 @@ import {
   escapeMarkdownText,
   isUrlDestinationAllowedWithPolicy,
   joinBlocks,
-  normalizeUrlPolicy,
   prefixLines,
   renderFencedCode,
   renderInlineCode,
-  UrlPolicyInput,
+  UrlPolicySpec,
 } from "./Md.escape.ts";
 import {
-  Document as DocumentSchema,
+  Block as BlockSchema,
   HeadingValue,
   Inline as InlineSchema,
   TableAlignment,
   TableCell,
   TableRow,
 } from "./Md.model.ts";
-import type { UrlPolicySpec } from "./Md.escape.ts";
+import type { Markdown } from "@beep/schema";
 import type { Block, Document, Heading, Inline, Li, ListItemChild, Table, TaskItem } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.render");
@@ -54,10 +55,17 @@ type JsonRecord = Readonly<Record<string, S.Json>>;
 const byRecordEntryKeyAscending = <Value>(): Order.Order<readonly [string, Value]> =>
   Order.mapInput(Order.String, Tuple.get(0));
 
-const jsonControlEscape = (value: string): string => {
-  const hex = value.charCodeAt(0).toString(16).padStart(4, "0");
-  return `\\u${hex}`;
-};
+const jsonControlEscape: (value: string) => string = flow(
+  Str.charCodeAt(0),
+  O.map(
+    flow(
+      (code) => code.toString(16),
+      Str.padStart(4, "0"),
+      (hex) => `\\u${hex}`
+    )
+  ),
+  O.getOrElse(thunkEmptyStr)
+);
 
 const escapeJsonCharacter = Match.type<string>().pipe(
   Match.withReturnType<string>(),
@@ -72,7 +80,7 @@ const escapeJsonCharacter = Match.type<string>().pipe(
 );
 
 const renderJsonString = (value: string): string =>
-  `"${pipe(value, Str.replaceAllWith(jsonStringEscapePattern, escapeJsonCharacter))}"`;
+  `"${pipe(value, replaceAllWith(jsonStringEscapePattern, escapeJsonCharacter))}"`;
 
 const isJsonArray = (value: S.Json): value is ReadonlyArray<S.Json> => A.isArray(value);
 
@@ -247,7 +255,7 @@ const renderMarkdownTitle: (title: O.Option<string>) => string = flow(
 const renderMarkdownDestinationWithTitle = (
   destination: string,
   title: O.Option<string>,
-  policy: UrlPolicyInput
+  policy: UrlPolicySpec
 ): string => `${escapeMarkdownDestinationWithPolicy(destination, policy)}${renderMarkdownTitle(title)}`;
 
 const tableAlignmentAt = (align: ReadonlyArray<TableAlignment>, index: number): TableAlignment =>
@@ -526,18 +534,13 @@ const adapterName = (adapter: { readonly name: string }): string =>
     () => "unknown"
   );
 
-const renderMarkdownDocumentUnsafe = (document: Document): Markdown =>
-  joinBlocks([renderJsonFrontmatter(document.frontmatter), renderMarkdownBlocks(document.children)]);
-
-const renderHtmlDocumentUnsafe = (document: Document): HtmlFragment => renderHtmlBlocks(document.children);
-
 // The standalone and link-label Markdown inline matchers differ only in how
 // nested inlines recurse and how a trusted `rawMarkdown` leaf is emitted, so a
 // single factory parameterizes both.
 const makeMarkdownInlineMatcher = (
   renderInlines: (children: ReadonlyArray<Inline>) => string,
   renderRawMarkdown: (node: { readonly value: string }) => string,
-  urlPolicy: UrlPolicyInput
+  urlPolicy: UrlPolicySpec
 ) =>
   Match.type<Inline>().pipe(
     Match.tagsExhaustive({
@@ -1000,10 +1003,10 @@ export const renderEffectWith: {
  * **Example** (Creating URL render options)
  *
  * ```ts import.meta.vitest name="Creating URL render options"
- * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
+ * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
  * import { UrlRenderOptions } from "@beep/md/Md.render"
  *
- * const options = UrlRenderOptions.make({ urlPolicy: BrowserSafeUrlPolicy })
+ * const options = UrlRenderOptions.make({ urlPolicy: BrowserSafeUrlPolicySpec })
  * options.urlPolicy !== undefined // => true
  * ```
  *
@@ -1012,8 +1015,8 @@ export const renderEffectWith: {
  */
 export class UrlRenderOptions extends S.Class<UrlRenderOptions>($I`UrlRenderOptions`)(
   {
-    urlPolicy: S.optionalKey(UrlPolicyInput).annotateKey({
-      description: "Canonical URL policy, or a deprecated legacy policy adapter, applied during recursive rendering.",
+    urlPolicy: S.optionalKey(UrlPolicySpec).annotateKey({
+      description: "Canonical URL policy applied during recursive rendering.",
     }),
   },
   $I.annote("UrlRenderOptions", {
@@ -1021,11 +1024,10 @@ export class UrlRenderOptions extends S.Class<UrlRenderOptions>($I`UrlRenderOpti
   })
 ) {}
 
-const renderPolicy = (options: UrlRenderOptions, fallback: UrlPolicyInput): UrlPolicySpec =>
+const renderPolicy = (options: UrlRenderOptions, fallback: UrlPolicySpec): UrlPolicySpec =>
   pipe(
     O.fromUndefinedOr(options.urlPolicy),
-    O.getOrElse(() => fallback),
-    normalizeUrlPolicy
+    O.getOrElse(() => fallback)
   );
 
 const renderMarkdownInlinesWithPolicy = (
@@ -1092,7 +1094,7 @@ const renderMarkdownListItemChildrenWithPolicy = (
   children: ReadonlyArray<ListItemChild>
 ): string =>
   pipe(
-    segmentInlineRuns(children, {
+    segmentInlineRuns<Inline, Block>(children, {
       isInline: InlineSchema.is,
       renderInlineRun: (inlines) => renderMarkdownInlinesWithPolicy(policy, inlines),
       renderBlock: (block: Block) => renderMarkdownBlockWithPolicy(policy, block),
@@ -1102,7 +1104,7 @@ const renderMarkdownListItemChildrenWithPolicy = (
 
 const renderHtmlListItemChildrenWithPolicy = (policy: UrlPolicySpec, children: ReadonlyArray<ListItemChild>): string =>
   pipe(
-    segmentInlineRuns(children, {
+    segmentInlineRuns<Inline, Block>(children, {
       isInline: InlineSchema.is,
       renderInlineRun: (inlines) => renderHtmlInlinesWithPolicy(policy, inlines),
       renderBlock: (block: Block) => renderHtmlBlockWithPolicy(policy, block),
@@ -1330,10 +1332,10 @@ const renderHtmlDocumentWithPolicy = (policy: UrlPolicySpec, document: Document)
  *
  * ```ts import.meta.vitest name="Markdown adapter with URL policy"
  * import { Md } from "@beep/md"
- * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
+ * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
  * import { makeMarkdownAdapter, renderWithUnsafe } from "@beep/md/Md.render"
  *
- * const adapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy })
+ * const adapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec })
  * renderWithUnsafe(adapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))])) // => "[File](#)"
  * ```
  *
@@ -1356,10 +1358,10 @@ export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderA
  *
  * ```ts
  * import { Md } from "@beep/md"
- * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
+ * import { StrictWebUrlPolicySpec } from "@beep/md/Md.escape"
  * import { makeHtmlFragmentAdapter, renderWithUnsafe } from "@beep/md/Md.render"
  *
- * const adapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicy })
+ * const adapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicySpec })
  * console.log(renderWithUnsafe(adapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))
  * ```
  *
@@ -1435,7 +1437,7 @@ export const HtmlFragmentAdapter: PureRenderAdapter<HtmlFragment> = {
  */
 export const PlainTextAdapter: PureRenderAdapter<string> = {
   name: "plain-text",
-  render: (document) => renderPlainTextBlocks(document.children),
+  render: (document) => BlockSchema.toPlainTextAll(document.children),
 };
 
 /**
@@ -1546,153 +1548,3 @@ export const renderHtml = (document: Document): Result.Result<HtmlFragment, Rend
  */
 export const renderPlainText = (document: Document): Result.Result<string, RenderError> =>
   renderWith(PlainTextAdapter, document);
-
-const encodeUnsupported =
-  <Output>(name: string) =>
-  (): Effect.Effect<Output, SchemaIssue.Issue> =>
-    Effect.fail(
-      new SchemaIssue.InvalidValue({
-        message: `Encoding ${name} output back into a Markdown document AST is not supported.`,
-      })
-    );
-
-/**
- * Schema transformation from a document AST to branded Markdown text.
- *
- * **Example** (Decoding document to Markdown)
- *
- * ```ts import.meta.vitest name="Decoding document to Markdown"
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { Md } from "@beep/md"
- * import { DocumentToMarkdown } from "@beep/md/Md.render"
- *
- * const program = S.decodeUnknownEffect(DocumentToMarkdown)(Md.make([Md.h1("Hello")]))
- * Effect.runSync(program) // => "# Hello"
- * ```
- *
- * @deprecated Prefer {@link render} or {@link renderUnsafe}. The schema is
- * intentionally one-way and cannot encode rendered output back into an AST.
- * @category validation
- * @since 0.0.0
- */
-export const DocumentToMarkdown = DocumentSchema.pipe(
-  S.decodeTo(Markdown, {
-    decode: SchemaGetter.transform(renderMarkdownDocumentUnsafe),
-    encode: SchemaGetter.transformOrFail(encodeUnsupported<Document>("Markdown")),
-  }),
-  $I.annoteSchema("DocumentToMarkdown", {
-    description: "Schema transformation from a document AST to branded Markdown text.",
-  })
-);
-
-/**
- * Type for {@link DocumentToMarkdown}.
- *
- * **Example** (Accepting DocumentToMarkdown type)
- *
- * ```ts
- * import type { DocumentToMarkdown } from "@beep/md/Md.render"
- *
- * const acceptMarkdown = (value: DocumentToMarkdown) => value
- * console.log(acceptMarkdown)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type DocumentToMarkdown = Markdown;
-
-/**
- * Schema transformation from a document AST to a branded HTML fragment.
- *
- * **Example** (Decoding document to HTML)
- *
- * ```ts
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { Md } from "@beep/md"
- * import { DocumentToHtmlFragment } from "@beep/md/Md.render"
- *
- * const program = S.decodeUnknownEffect(DocumentToHtmlFragment)(Md.make([Md.p("Hello")]))
- * console.log(Effect.runSync(program)) // "<p>Hello</p>"
- * ```
- *
- * @deprecated Prefer {@link renderHtml} or {@link renderHtmlUnsafe}. The schema
- * is intentionally one-way and cannot encode rendered output back into an AST.
- * @category validation
- * @since 0.0.0
- */
-export const DocumentToHtmlFragment = DocumentSchema.pipe(
-  S.decodeTo(HtmlFragment, {
-    decode: SchemaGetter.transform(renderHtmlDocumentUnsafe),
-    encode: SchemaGetter.transformOrFail(encodeUnsupported<Document>("HTML fragment")),
-  }),
-  $I.annoteSchema("DocumentToHtmlFragment", {
-    description: "Schema transformation from a document AST to a branded HTML fragment.",
-  })
-);
-
-/**
- * Schema transformation from a document AST to plain text.
- *
- * **Example** (Decoding document to plain text)
- *
- * ```ts import.meta.vitest name="Decoding document to plain text"
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { Md } from "@beep/md"
- * import { DocumentToPlainText } from "@beep/md/Md.render"
- *
- * const program = S.decodeUnknownEffect(DocumentToPlainText)(Md.make([Md.h1("Hello")]))
- * Effect.runSync(program) // => "Hello"
- * ```
- *
- * @deprecated Prefer {@link renderPlainText} or {@link renderPlainTextUnsafe}.
- * The schema is intentionally one-way and cannot encode text back into an AST.
- * @category validation
- * @since 0.0.0
- */
-export const DocumentToPlainText = DocumentSchema.pipe(
-  S.decodeTo(S.String, {
-    decode: SchemaGetter.transform((document: Document) => renderPlainTextBlocks(document.children)),
-    encode: SchemaGetter.transformOrFail(encodeUnsupported<Document>("plain text")),
-  }),
-  $I.annoteSchema("DocumentToPlainText", {
-    description: "Schema transformation from a document AST to plain text.",
-  })
-);
-
-/**
- * Type for {@link DocumentToPlainText}.
- *
- * **Example** (Accepting DocumentToPlainText type)
- *
- * ```ts
- * import type { DocumentToPlainText } from "@beep/md/Md.render"
- *
- * const acceptPlainText = (value: DocumentToPlainText) => value
- * console.log(acceptPlainText)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type DocumentToPlainText = string;
-
-/**
- * Type for {@link DocumentToHtmlFragment}.
- *
- * **Example** (Accepting DocumentToHtmlFragment type)
- *
- * ```ts
- * import type { DocumentToHtmlFragment } from "@beep/md/Md.render"
- *
- * const acceptHtml = (value: DocumentToHtmlFragment) => value
- * console.log(acceptHtml)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type DocumentToHtmlFragment = HtmlFragment;

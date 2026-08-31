@@ -141,7 +141,7 @@ describe("Markdown semantic conformance", () => {
   });
 
   it("formats every conformance issue variant as a stable diagnostic", () => {
-    const identifier = FootnoteIdentifier.fromUnknown("note");
+    const identifier = FootnoteIdentifier.decodeUnknownSync("note");
     const issues: ReadonlyArray<MarkdownConformanceIssue> = [
       MarkdownConformanceIssue.cases.NestedLink.make({ path: [] }),
       MarkdownConformanceIssue.cases.UnsupportedNode.make({

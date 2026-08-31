@@ -23,7 +23,7 @@
 export const VERSION = "0.0.2" as const;
 
 /**
- * Pure, escaping-free node behavior (plain-text projection and run segmentation).
+ * Shared list-item run segmentation and compatibility aliases for schema-owned plain-text projections.
  *
  * **Example** (Render plain-text heading)
  *
@@ -70,7 +70,7 @@ export * from "./Md.conformance.ts";
  */
 export * from "./Md.escape.ts";
 /**
- * Direct safe-HTML AST projection and opaque safe-output rendering.
+ * Opaque safe-output rendering over the schema-owned HTML AST projection.
  *
  * **Example** (Render safe HTML paragraph)
  *

@@ -8,7 +8,6 @@
 
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { flow, Match, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -51,8 +50,7 @@ export const HtmlMimeType = S.String.check(
   S.brand("HtmlMimeType"),
   $I.annoteSchema("HtmlMimeType", {
     description: "Author-valid MIME type string used by HTML attribute conformance checks.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -146,8 +144,7 @@ export const ScriptDataBlockMimeType = HtmlMimeType.check(
   S.brand("ScriptDataBlockMimeType"),
   $I.annoteSchema("ScriptDataBlockMimeType", {
     description: "Author-valid MIME string that is not a JavaScript essence match, carried by a script data block.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -202,8 +199,7 @@ export const ScriptState = ScriptStateName.toTaggedUnion("state")({
 }).pipe(
   $I.annoteSchema("ScriptState", {
     description: "Tagged semantic projection of the author-conforming HTML script type algorithm.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

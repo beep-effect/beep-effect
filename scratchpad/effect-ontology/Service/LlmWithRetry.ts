@@ -15,7 +15,7 @@
  * @since 0.0.0
  */
 
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Cause, Effect, Ref } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -122,7 +122,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   const retryPolicy = yield* RetryPolicy.decodeEffect({ ...retryPolicyInput, serviceName });
 
   const attemptCount = yield* Ref.make(0);
-  const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, Unknown.encodeUnknownEffectFromJsonString);
+  const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, UnknownFromJsonString.encodeUnknownEffect);
   const schemaHash = sha256Sync(schemaJson);
 
   const attempt = recordProviderAttempt.pipe(

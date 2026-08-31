@@ -24,7 +24,7 @@ import {
   StopPodRequest,
 } from "@beep/runpod";
 import { LiteralKit } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
 import * as A from "effect/Array";
@@ -320,7 +320,7 @@ const hashPublicIdentifier = (value: string): Effect.Effect<string, DomainError>
 
 const ollamaBootstrapCommand = (model: string): ReadonlyArray<string> => {
   // TODO(effect-native-migration): model schema
-  const pullPayload = shellQuote(Unknown.encodeUnknownSyncFromJsonString({ name: model }));
+  const pullPayload = shellQuote(UnknownFromJsonString.encodeUnknownSync({ name: model }));
 
   // cspell:ignore resolv
   return [

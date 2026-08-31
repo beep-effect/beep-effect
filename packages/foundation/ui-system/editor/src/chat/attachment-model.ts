@@ -69,7 +69,7 @@ export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
   $I.annoteSchema("ImageAttachmentMimeType", {
     description: "The vision-eligible image MIME subset captured as thumbnailed attachments.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -274,8 +274,7 @@ export const AttachmentRejection = S.Union([AttachmentTooLarge, AttachmentInvali
   $I.annoteSchema("AttachmentRejection", {
     description:
       "Why {@link ComposerAttachment.fromFile} declined to capture a file. A tagged\nunion so the capture pipeline can distinguish — and surface — an over-budget\nfile from one with an unrecognized MIME type, rather than collapsing both into\nan opaque `O.none()`.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -321,8 +320,7 @@ export const AttachmentFailure = S.Union([AttachmentTooLarge, AttachmentInvalidM
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("AttachmentFailure", {
     description: "A capture-validation failure or rejected consumer attachment port.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

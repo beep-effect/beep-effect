@@ -108,7 +108,7 @@ const HttpUrlDefinition = S.String.check(
  * @since 0.0.0
  */
 export const HttpUrl = HttpUrlDefinition.pipe(
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   $I.annoteSchema("HttpUrl", {
     description: "HTTP URL of the ontology source when the source type is http.",
     format: "uri",

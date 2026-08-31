@@ -387,7 +387,7 @@ export const ClassDefinition = ClassDefinitionModel.annotate({
   $I.annoteSchema("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
   }),
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
 );
 
 /**
@@ -560,8 +560,7 @@ export const PropertyDefinition = PropertyDefinitionModel.annotate({
 }).pipe(
   $I.annoteSchema("PropertyDefinition", {
     description: "RDF or OWL property metadata normalized for validation and semantic search.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -636,7 +635,7 @@ const childrenFor: {
     pipe(
       R.toEntries(hierarchy),
       A.filter(([, parents]) => A.contains(parents, parent)),
-      A.map(([child]) => IRI.fromUnknown(child))
+      A.map(([child]) => IRI.decodeUnknownSync(child))
     )
 );
 
@@ -649,13 +648,13 @@ const IriRecordKey = S.String.check(
     arbitrary: {
       candidate: {
         weight: 10,
-        make: (fc) => fc.webUrl().map(IRI.fromUnknown),
+        make: (fc) => fc.webUrl().map(IRI.decodeUnknownSync),
       },
     },
   })
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.webUrl().map(IRI.fromUnknown),
+    toArbitrary: () => (fc) => fc.webUrl().map(IRI.decodeUnknownSync),
   })
   .pipe(
     $I.annoteSchema("IriRecordKey", {
@@ -987,7 +986,7 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * @returns Applicable property definitions in ontology order.
    */
   getPropertiesForClass(classIri: string): ReadonlyArray<PropertyDefinition> {
-    const canonicalIri = O.filter(IRI.decodeOption(classIri), IRI.is);
+    const canonicalIri = O.filter(IRI.decodeUnknownOption(classIri), IRI.is);
     const superClasses = pipe(
       canonicalIri,
       O.map((iri) => this.getAllSuperClasses(iri)),

@@ -7,7 +7,6 @@
 
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Conformance from "@beep/schema/Conformance";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import { constant } from "effect/Function";
@@ -111,8 +110,7 @@ export const LexicalConformanceResult = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("LexicalConformanceResult", {
     description: "Exhaustive strict, normalizable, unsupported, or invalid Lexical editor-state classification.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

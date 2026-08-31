@@ -18,7 +18,7 @@ const systemPrincipal: Principal = {
   kind: "System",
 };
 
-const publicIdFor = (id: WorkerId) => WorkerPublicId.fromUnknown(`${WorkerId.tableName}_a${id}`);
+const publicIdFor = (id: WorkerId) => WorkerPublicId.decodeUnknownSync(`${WorkerId.tableName}_a${id}`);
 
 /**
  * Creates a new active Worker entity.

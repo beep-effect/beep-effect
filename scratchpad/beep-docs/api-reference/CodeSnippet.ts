@@ -175,7 +175,7 @@ export const CodeSnippetLanguageFromInfoString = S.String.pipe(
     decode: SchemaGetter.transformOrFail(decodeInfoString),
     encode: SchemaGetter.passthrough({ strict: false }),
   }),
-  SchemaUtils.withOptionCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeOption"]),
   $I.annoteSchema("CodeSnippetLanguageFromInfoString", {
     description: "Normalizes a fenced-code info string into a canonical snippet language name.",
   })

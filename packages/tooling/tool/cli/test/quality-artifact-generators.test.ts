@@ -3,7 +3,7 @@ import {
   summarizeTurboQueryAffectedOutput,
   writeJSDocDocumentationInventory,
 } from "@beep/repo-cli/test/Quality";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -17,7 +17,7 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const fixedGeneratedAt = "2026-01-01T00:00:00.000Z";
 
 const tsdocPolicy = {

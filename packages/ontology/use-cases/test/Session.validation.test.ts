@@ -98,7 +98,7 @@ describe("Ontology validation and provenance", () => {
   const writes = new Map<string, string>();
   const turtle = TurtleCodec.of({
     parse: Effect.fn("TurtleCodec.parse")(() =>
-      Effect.succeed(ParseTurtleResult.make({ dataset: makeDataset([]), prefixes: PrefixMap.fromUnknown({}) }))
+      Effect.succeed(ParseTurtleResult.make({ dataset: makeDataset([]), prefixes: PrefixMap.decodeUnknownSync({}) }))
     ),
     serialize: Effect.fn("TurtleCodec.serialize")((request) =>
       Effect.succeed(SerializeTurtleResult.make({ source: request.dataset.quads.map(serializeQuad).join("\n") }))
@@ -419,8 +419,8 @@ describe("Ontology validation and provenance", () => {
           const exported = yield* runner.exportProvenance(
             ExportOntologyProvenanceCommand.make({
               session: repaired,
-              provPath: OntologyFilePath.fromUnknown("tmp/session-validation.prov.ttl"),
-              datasetPath: OntologyFilePath.fromUnknown("tmp/session-validation.dataset.ttl"),
+              provPath: OntologyFilePath.decodeUnknownSync("tmp/session-validation.prov.ttl"),
+              datasetPath: OntologyFilePath.decodeUnknownSync("tmp/session-validation.dataset.ttl"),
             })
           );
 

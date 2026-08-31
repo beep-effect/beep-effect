@@ -19,8 +19,7 @@ const withProbeStatusDecodeOption = SchemaUtils.withStatics((schema: typeof OneP
 const OnePasswordCliAccountName = S.Trim.pipe(
   $I.annoteSchema("OnePasswordCliAccountName", {
     description: "Trimmed 1Password account name reported by `op whoami`.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -81,8 +80,7 @@ export type OnePasswordReferenceProbeStatus = typeof OnePasswordReferenceProbeSt
 export const OnePasswordCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })).pipe(
   $I.annoteSchema("OnePasswordCliExitCode", {
     description: "Integer process exit status in the conventional 0-255 CLI range.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -127,7 +125,7 @@ export const OnePasswordCliDiagnosticText = S.Trim.pipe(
   $I.annoteSchema("OnePasswordCliDiagnosticText", {
     description: "Trim-normalized redacted stdout or stderr text used for diagnostics.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
 );
 
 /**

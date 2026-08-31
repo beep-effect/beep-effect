@@ -59,8 +59,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
 export const DocumentSafetyPathSegment = S.Union([S.String, S.Int.check(S.isGreaterThanOrEqualTo(0))]).pipe(
   $I.annoteSchema("DocumentSafetyPathSegment", {
     description: "String property name or numeric array index in a Markdown AST path.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -653,8 +652,7 @@ export const SafeInline = Inline.pipe(
   S.brand("SafeInline"),
   $I.annoteSchema("SafeInline", {
     description: "User-authored inline content approved for editor and RPC boundaries.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -701,8 +699,7 @@ export const SafeDocument = Document.pipe(
   S.brand("SafeDocument"),
   $I.annoteSchema("SafeDocument", {
     description: "User-authored Markdown document approved for editor and RPC boundaries.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

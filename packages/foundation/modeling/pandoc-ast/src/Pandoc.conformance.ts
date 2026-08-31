@@ -149,8 +149,7 @@ export const PandocConformanceIssue = S.Union([FuturePandocConstructorIssue, Non
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("PandocConformanceIssue", {
     description: "Exhaustive unsupported-but-lossless Pandoc conformance reason.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -246,8 +245,7 @@ export const PandocConformanceResult = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("PandocConformanceResult", {
     description: "Exhaustive compatible, unsupported, or invalid Pandoc JSON classification.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

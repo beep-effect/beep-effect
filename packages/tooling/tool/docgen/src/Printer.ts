@@ -7,7 +7,6 @@
 
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { Md, renderMarkdownBlocks } from "@beep/md";
-import { SchemaUtils } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, Layer, Match, Order, pipe } from "effect";
 import { dual, flow } from "effect/Function";
@@ -48,8 +47,7 @@ export const Printable = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("Printable", {
     description: "Union of documented entities that the markdown printer can render.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

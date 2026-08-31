@@ -61,9 +61,9 @@ const makeBatchPathSchema = <const Name extends string, const Suffix extends str
   S.TemplateLiteral(["batches/", BatchId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
-      fromBatch: (batchId: BatchId): typeof schema.Type => schema.fromUnknown(`batches/${batchId}/${suffix}`),
+      fromBatch: (batchId: BatchId): typeof schema.Type => schema.decodeUnknownSync(`batches/${batchId}/${suffix}`),
     }))
   );
 
@@ -75,10 +75,10 @@ const makeDocumentPathSchema = <const Name extends string, const Suffix extends 
   S.TemplateLiteral(["documents/", DocumentId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
       fromDocument: (documentId: DocumentId): typeof schema.Type =>
-        schema.fromUnknown(`documents/${documentId}/${suffix}`),
+        schema.decodeUnknownSync(`documents/${documentId}/${suffix}`),
     }))
   );
 
@@ -90,9 +90,9 @@ const makeImageHashPathSchema = <const Name extends string, const Suffix extends
   S.TemplateLiteral(["assets/images/", ContentHash, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
-      fromHash: (hash: ContentHash): typeof schema.Type => schema.fromUnknown(`assets/images/${hash}/${suffix}`),
+      fromHash: (hash: ContentHash): typeof schema.Type => schema.decodeUnknownSync(`assets/images/${hash}/${suffix}`),
     }))
   );
 
@@ -104,10 +104,10 @@ const makeImageOwnerPathSchema = <const Name extends string, const Suffix extend
   S.TemplateLiteral(["assets/owners/", ImageOwnerType, "/", StoragePathSegment, `/images${suffix}`]).pipe(
     annotateStoragePath(name, description),
     S.brand(name),
-    SchemaUtils.withCodecStatics,
+    SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
     SchemaUtils.withStatics((schema) => ({
       fromParts: (ownerType: ImageOwnerType, ownerId: StoragePathSegment): typeof schema.Type =>
-        schema.fromUnknown(`assets/owners/${ownerType}/${ownerId}/images${suffix}`),
+        schema.decodeUnknownSync(`assets/owners/${ownerType}/${ownerId}/images${suffix}`),
     }))
   );
 
@@ -149,7 +149,7 @@ export const StoragePathSegment = S.String.check(
     $I.annoteSchema("StoragePathSegment", {
       description: "Traversal-safe single segment for a storage object key.",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 /**
@@ -220,7 +220,6 @@ export const OntologyFilePath = S.TemplateLiteral([
     description: "Versioned Turtle ontology path keyed by namespace, ontology name, and complete content hash.",
   }),
   S.brand("OntologyFilePath"),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromParts: (namespace: Namespace, name: OntologyName, hash: ContentHash): typeof schema.Type =>
       schema.make(`ontologies/${namespace}/${name}/${hash}/ontology.ttl`),
@@ -288,7 +287,6 @@ export const OntologyManifestPath = S.TemplateLiteral([
     description: "Ontology manifest path used for latest-version resolution.",
   }),
   S.brand("OntologyManifestPath"),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromParts: (namespace: Namespace, name: OntologyName): typeof schema.Type =>
       schema.make(`ontologies/${namespace}/${name}/manifest.json`),
@@ -690,7 +688,6 @@ export const RunMetadataPath = S.TemplateLiteral(["runs/", DocumentId, "/metadat
   annotateStoragePath("RunMetadataPath", "Extraction-run metadata path."),
   $I.annoteSchema("RunMetadataPath", { description: "Extraction-run metadata path." }),
   S.brand("RunMetadataPath"),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromDocument: (documentId: DocumentId): typeof schema.Type => schema.make(`runs/${documentId}/metadata.json`),
     parts: (path: unknown) =>
@@ -728,7 +725,6 @@ export const RunInputPath = S.TemplateLiteral(["runs/", DocumentId, "/input/docu
   annotateStoragePath("RunInputPath", "Extraction-run normalized input path."),
   $I.annoteSchema("RunInputPath", { description: "Extraction-run normalized input path." }),
   S.brand("RunInputPath"),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromDocument: (documentId: DocumentId): typeof schema.Type => schema.make(`runs/${documentId}/input/document.txt`),
   }))
@@ -797,7 +793,6 @@ export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chun
       description: "Extraction-run chunk path with a canonical non-negative decimal index.",
     }),
     S.brand("RunChunkPath"),
-    SchemaUtils.withCodecStatics,
     SchemaUtils.withStatics((schema) => ({
       fromParts: (documentId: DocumentId, index: NonNegativeInt): typeof schema.Type =>
         schema.make(`runs/${documentId}/input/chunks/chunk-${index}.txt`),
@@ -854,7 +849,6 @@ export const RunOutputPath = S.TemplateLiteral(["runs/", DocumentId, "/outputs/"
     description: "Extraction-run output path constrained to the registered artifact filenames.",
   }),
   S.brand("RunOutputPath"),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromParts: (documentId: DocumentId, type: OutputType): typeof schema.Type =>
       schema.make(`runs/${documentId}/outputs/${OutputType.filename(type)}`),
@@ -1063,7 +1057,6 @@ export const ImageVariantPath = S.TemplateLiteral([
     description: "Content-addressed derived JPEG image variant path.",
   }),
   S.brand("ImageVariantPath"),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromParts: (hash: ContentHash, size: ImageVariantSize): typeof schema.Type =>
       schema.make(`assets/images/${hash}/variants/${size}.jpg`),
@@ -1158,7 +1151,6 @@ export const CanonicalNamespacePath = S.TemplateLiteral(["canonical/", Namespace
     description: "Namespace-level canonical entities graph path.",
   }),
   S.brand("CanonicalNamespacePath"),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     fromNamespace: (namespace: Namespace): typeof schema.Type => schema.make(`canonical/${namespace}/entities.ttl`),
   }))

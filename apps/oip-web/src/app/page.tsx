@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Clock, Effect } from "effect";
 import { headers } from "next/headers";
@@ -21,7 +21,7 @@ type HomeProps = {
 
 // TODO(effect-native-migration): model schema
 const safeJsonScript = (value: unknown) =>
-  Str.replaceAll("<", "\\u003c")(Unknown.encodeUnknownSyncFromJsonString(value));
+  Str.replaceAll("<", "\\u003c")(UnknownFromJsonString.encodeUnknownSync(value));
 
 /**
  * Allows the search-param aware home route to block during the first render.

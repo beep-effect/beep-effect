@@ -683,11 +683,15 @@ export const ObsIncomingMessage = S.Union([
   ObsEventMessage,
   ObsRequestResponseMessage,
 ]).pipe(
-  S.toTaggedUnion("op"),
   $I.annoteSchema("ObsIncomingMessage", {
     description: "obs-websocket messages sent from the server to this client.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("op"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**
@@ -707,6 +711,13 @@ export const ObsIncomingMessage = S.Union([
  */
 export type ObsIncomingMessage = typeof ObsIncomingMessage.Type;
 
+const ObsOutgoingMessageWithCodecStatics = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
+  $I.annoteSchema("ObsOutgoingMessage", {
+    description: "obs-websocket messages sent from this client to the server.",
+  }),
+  SchemaUtils.withCodecStatics(["is"])
+);
+
 /**
  * Messages this client sends to the obs-websocket server, discriminated by
  * the envelope `op` code.
@@ -722,12 +733,9 @@ export type ObsIncomingMessage = typeof ObsIncomingMessage.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ObsOutgoingMessage = S.Union([ObsIdentifyMessage, ObsRequestMessage]).pipe(
+export const ObsOutgoingMessage = ObsOutgoingMessageWithCodecStatics.pipe(
   S.toTaggedUnion("op"),
-  $I.annoteSchema("ObsOutgoingMessage", {
-    description: "obs-websocket messages sent from this client to the server.",
-  }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withStatics(() => ({ is: ObsOutgoingMessageWithCodecStatics.is }))
 );
 
 /**
@@ -1007,8 +1015,7 @@ export class ObsUnknownEvent extends S.Class<ObsUnknownEvent>($I`ObsUnknownEvent
 export const ObsEvent = S.Union([ObsRecordStateChangedEvent, ObsUnknownEvent]).pipe(
   $I.annoteSchema("ObsEvent", {
     description: "Driver events published on the obs-websocket protocol event stream.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

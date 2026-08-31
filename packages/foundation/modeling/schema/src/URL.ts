@@ -40,7 +40,7 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  */
 export const URLStr = NonEmptyTrimmedStr.pipe(
   S.fromBrand("URLStr", urlStr),
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
   SchemaUtils.withStatics(() => ({
     filter: filterURLStr,
     is: isURLStr,
@@ -104,7 +104,7 @@ const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("Https
  * @since 0.0.0
  */
 export const HttpsUrl = HttpsUrlDefinition.pipe(
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
   $I.annoteSchema("HttpsUrl", {
     description: "An absolute URL string constrained to the https protocol.",
     toArbitrary: () => (fc) =>

@@ -6,7 +6,7 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { Defect, SchemaUtils } from "@beep/schema";
+import { Defect } from "@beep/schema";
 import { A, dual, flow, O, P, R, Struct } from "@beep/utils";
 import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
@@ -100,8 +100,7 @@ type PandocConstructorContext = "block" | "inline" | "meta";
 export const PandocConstructorWire = PandocUnknownConstructorWire.pipe(
   $I.annoteSchema("PandocConstructorWire", {
     description: "Generic exact Pandoc constructor wire shape.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

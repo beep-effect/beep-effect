@@ -443,8 +443,7 @@ export const SelectedStrategy = S.Union([
   S.toTaggedUnion("disposition"),
   $I.annoteSchema("SelectedStrategy", {
     description: "Resolved engine and support strategy for a source artifact operation.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

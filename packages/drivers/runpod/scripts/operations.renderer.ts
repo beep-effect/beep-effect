@@ -12,6 +12,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import openApiPatchInput from "../openapi.patch.json" with { type: "json" };
 import type { ExtraRenderer, GenerateConfig } from "@beep/codegen-kit";
+import type { CodecStaticKeys } from "@beep/schema/SchemaUtils/withCodecStatics";
 
 const $I = $RunpodId.create("scripts/operations.renderer");
 
@@ -531,32 +532,57 @@ const $I = $RunpodId.create("Runpod.generated");
 
 const isLiteralKitExpression: (expression: string) => boolean = Str.startsWith("LiteralKit(");
 
+const generatedCodecStaticOverrides: Readonly<Record<string, CodecStaticKeys | undefined>> = {};
+
+const generatedCodecStaticOperation = (name: string): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(generatedCodecStaticOverrides[name]),
+    O.map(
+      (keys) =>
+        `SchemaUtils.withCodecStatics([${pipe(
+          keys,
+          A.map((key) => `"${key}"`),
+          A.join(", ")
+        )}])`
+    )
+  );
+
 const isMultilineArrayPipeExpression = (expression: string): boolean =>
   pipe(expression, Str.endsWith(".pipe(S.Array)")) && pipe(expression, Str.includes("\n"));
 
-const renderLiteralKitAliasExpression = (name: string, annotation: string): string => `${name}Base.pipe(
+const renderLiteralKitAliasExpression = (name: string, annotation: string): string =>
+  pipe(
+    generatedCodecStaticOperation(name),
+    O.match({
+      onNone: () => `${name}Base.pipe(
   ${annotation},
-  SchemaUtils.withLiteralKitStatics(${name}Base),
-  SchemaUtils.withStatics((schema) => ({
-    decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
-  }))
-)`;
+  SchemaUtils.withLiteralKitStatics(${name}Base)
+)`,
+      onSome: (operation) => `${name}Base.pipe(
+  ${annotation},
+  ${operation},
+  SchemaUtils.withLiteralKitStatics(${name}Base)
+)`,
+    })
+  );
 
-const renderArrayAliasExpression = (expression: string, annotation: string): string => `${Str.slice(
-  0,
-  -".pipe(S.Array)".length
-)(expression)}.pipe(
-  S.Array,
-  ${annotation},
-  SchemaUtils.withCodecStatics,
-)`;
+const renderAnnotatedExpression = (name: string, expression: string, annotation: string): string =>
+  pipe(
+    generatedCodecStaticOperation(name),
+    O.match({
+      onNone: () => pipeExpression(expression, annotation),
+      onSome: (operation) => pipeExpression(pipeExpression(expression, annotation), operation),
+    })
+  );
+
+const renderArrayAliasExpression = (name: string, expression: string, annotation: string): string =>
+  renderAnnotatedExpression(name, `${Str.slice(0, -".pipe(S.Array)".length)(expression)}.pipe(S.Array)`, annotation);
 
 const renderAliasExpressionWithAnnotation = (name: string, expression: string, annotation: string): string =>
   Match.value(expression).pipe(
     Match.when(isLiteralKitExpression, () => renderLiteralKitAliasExpression(name, annotation)),
-    Match.when(isMultilineArrayPipeExpression, (value) => renderArrayAliasExpression(value, annotation)),
-    Match.orElse((value) => pipeExpression(pipeExpression(value, annotation), "SchemaUtils.withCodecStatics"))
+    Match.when(isMultilineArrayPipeExpression, (value) => renderArrayAliasExpression(name, value, annotation)),
+    Match.orElse((value) => renderAnnotatedExpression(name, value, annotation))
   );
 
 const renderLiteralKitBaseExpression = (name: string, expression: string): string =>

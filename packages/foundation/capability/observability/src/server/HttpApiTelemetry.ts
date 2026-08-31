@@ -157,11 +157,11 @@ export const httpApiSuccessStatus: {
 } = dual(
   isHttpApiSuccessStatusDataFirst,
   (schema: S.Top, fallback = 200): NonNegativeInt =>
-    HttpStatusCode.fromUnknown(resolveHttpApiStatus(schema.ast) ?? fallback)
+    HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback)
 );
 
 const httpApiErrorStatus = (schema: S.Top, fallback = 500): NonNegativeInt =>
-  HttpStatusCode.fromUnknown(resolveHttpApiStatus(schema.ast) ?? fallback);
+  HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback);
 
 const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<S.Top> => {
   const schemas = A.fromIterable(endpoint.success);
@@ -338,7 +338,7 @@ export const httpApiFailureStatus: {
   (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<NonNegativeInt> =>
     HttpApiStatusField.decodeOption(error).pipe(
       O.map(({ status }) => status),
-      O.orElse(() => (S.isSchemaError(error) ? O.some(HttpStatusCode.fromUnknown(400)) : O.none())),
+      O.orElse(() => (S.isSchemaError(error) ? O.some(HttpStatusCode.decodeUnknownSync(400)) : O.none())),
       O.orElse(() => {
         for (const schema of endpointErrorSchemas(endpoint)) {
           if (S.is(schema)(error)) {
@@ -390,7 +390,7 @@ const observeHttpApiEffectImpl = <E, R>(
       Effect.fnUntraced(function* (startedAt) {
         return yield* Effect.annotateCurrentSpan({
           ...descriptorAnnotations(options.descriptor),
-          http_success_status: HttpStatusCode.fromUnknown(options.descriptor.successStatus),
+          http_success_status: HttpStatusCode.decodeUnknownSync(options.descriptor.successStatus),
         }).pipe(
           Effect.andThen(effect.pipe(Effect.annotateLogs(descriptorAnnotations(options.descriptor)))),
           Effect.exit,
@@ -645,7 +645,7 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
       http_endpoint: options.descriptor.endpointName,
       http_method: options.descriptor.method,
       http_route: options.descriptor.route,
-      http_success_status: HttpStatusCode.fromUnknown(options.descriptor.successStatus),
+      http_success_status: HttpStatusCode.decodeUnknownSync(options.descriptor.successStatus),
     }).pipe(
       Effect.andThen(
         effect.pipe(

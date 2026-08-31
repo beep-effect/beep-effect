@@ -452,8 +452,7 @@ const BoxDesiredStateFields = S.Struct({
 export const BoxDesiredState = BoxDesiredStateFields.pipe(
   $I.annoteSchema("BoxDesiredState", {
     description: "Validated versioned intent for one anchored Box tenant reconciliation.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

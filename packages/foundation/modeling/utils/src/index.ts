@@ -44,6 +44,24 @@ export * as A from "./Array.ts";
  */
 export * as Bool from "./Bool.ts";
 /**
+ * Struct utilities extending `effect/Struct` with dot-path access.
+ *
+ * **Example** (List struct object keys)
+ *
+ * ```ts
+ * import { Data } from "@beep/utils"
+ *
+ * class MyClass extends Data.TaggedClass("MyClass")<{ readonly id: number }> {}
+ *
+ *
+ * console.log(new MyClass({ id: 1 }))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * as Data from "./Data.ts";
+/**
  * DateTime utilities extending `effect/DateTime`.
  *
  * **Example** (Import DateTime utilities)

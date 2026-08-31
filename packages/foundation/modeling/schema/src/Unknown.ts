@@ -1,5 +1,5 @@
 /**
- * Unknown-value schema with schema-bound decode and encode runners.
+ * Unknown-value and JSON-string boundary schemas.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -11,19 +11,13 @@ import * as SchemaUtils from "./SchemaUtils/index.ts";
 const $I = $SchemaId.create("Unknown");
 
 /**
- * Accepts any value while exposing every supported schema codec runner as a
- * static method.
+ * Accepts any value without attaching codec runners.
  *
  * **When to use**
  *
- * Use when an intentionally untyped boundary still needs consistent Effect,
- * Promise, Sync, Exit, Result, Option, or JSON-string codec entry points.
- *
- * **Details**
- *
- * Direct codecs preserve the unknown value. Methods ending in
- * `FromJsonString` parse or serialize JSON and accept per-call JSON and schema
- * parse options.
+ * Use as the top schema for an intentionally untyped boundary. Compile a
+ * runner at module scope or use {@link UnknownFromJsonString} at a JSON-text
+ * boundary.
  *
  * **Gotchas**
  *
@@ -31,35 +25,70 @@ const $I = $SchemaId.create("Unknown");
  * schema as soon as the boundary contract is known, and prefer Effect-returning
  * codecs over throwing Sync codecs in library code.
  *
- * **Example** (Encode unknown data as formatted JSON)
+ * **Example** (Accept an unknown value)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Unknown } from "@beep/schema"
- * import { Effect } from "effect"
  *
  * const input = { name: "Ada", active: true }
+ * console.log(S.decodeUnknownSync(Unknown)(input))
+ * ```
+ *
+ * @see {@link S.Unknown} for the underlying top schema.
+ * @see {@link UnknownFromJsonString} for the explicit compact JSON boundary.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Unknown = S.Unknown.pipe(
+  $I.annoteSchema("Unknown", {
+    description: "An unknown-value schema without an implicit serialization boundary.",
+  })
+);
+
+/**
+ * Compact JSON-string boundary for unknown values.
+ *
+ * **Details**
+ *
+ * The JSON codec is constructed once at module scope. Its static surface is
+ * limited to runners used by repository consumers; JSON formatting or
+ * reviver/replacer policy belongs in a separately named local
+ * `S.fromJsonString(...)` schema.
+ *
+ * **Example** (Encode unknown data as compact JSON)
+ *
+ * ```ts
+ * import { UnknownFromJsonString } from "@beep/schema"
+ * import { Effect } from "effect"
+ *
  * const encoded = await Effect.runPromise(
- *   Unknown.encodeUnknownEffectFromJsonString(input, { space: 2 })
+ *   UnknownFromJsonString.encodeUnknownEffect({ name: "Ada", active: true })
  * )
  *
  * console.log(encoded)
  * ```
  *
- * @see {@link S.Unknown} for the underlying top schema.
- * @see {@link SchemaUtils.withEffectCodecStatics} for the preferred Effect codec group.
  * @category schemas
  * @since 0.0.0
  */
-export const Unknown = S.Unknown.pipe(
-  SchemaUtils.withEffectCodecStatics,
-  SchemaUtils.withPromiseCodecStatics,
-  SchemaUtils.withSyncCodecStatics,
-  SchemaUtils.withExitCodecStatics,
-  SchemaUtils.withResultCodecStatics,
-  SchemaUtils.withOptionCodecStatics,
-  $I.annoteSchema("Unknown", {
-    description:
-      "An unknown-value schema with Effect, Promise, Sync, Exit, Result, Option, and JSON-string codec statics.",
+export const UnknownFromJsonString = S.fromJsonString(Unknown).pipe(
+  SchemaUtils.withCodecStatics([
+    "decodeEffect",
+    "decodeResult",
+    "decodeUnknownEffect",
+    "decodeUnknownOption",
+    "decodeUnknownResult",
+    "decodeUnknownSync",
+    "encodeEffect",
+    "encodeResult",
+    "encodeUnknownEffect",
+    "encodeUnknownOption",
+    "encodeUnknownResult",
+    "encodeUnknownSync",
+  ]),
+  $I.annoteSchema("UnknownFromJsonString", {
+    description: "A compact JSON-string codec for intentionally unknown values.",
   })
 );
 
@@ -71,3 +100,11 @@ export const Unknown = S.Unknown.pipe(
  * @since 0.0.0
  */
 export type Unknown = typeof Unknown.Type;
+
+/**
+ * Decoded value accepted by {@link UnknownFromJsonString}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type UnknownFromJsonString = typeof UnknownFromJsonString.Type;

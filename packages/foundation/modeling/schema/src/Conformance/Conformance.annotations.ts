@@ -9,7 +9,6 @@ import { MutableHashSet, pipe, Result, SchemaParser } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { InvariantDescriptor } from "./Conformance.invariant.schema.ts";
 import { ConformanceProfile } from "./Conformance.profile.schema.ts";
 import { SpecificationSource } from "./Conformance.source.schema.ts";
@@ -138,13 +137,6 @@ const AnnotationConsistency = S.makeFilter(isConsistentAnnotation, {
  */
 export const Annotation = AnnotationFields.check(AnnotationConsistency).pipe(
   S.brand("@beep/schema/Conformance/Annotation"),
-  SchemaUtils.withResultCodecStatics,
-  SchemaUtils.withStatics((schema) => {
-    const toType = S.toType(schema);
-    return {
-      decodeUnknownEffectToType: S.decodeUnknownEffect(toType),
-    };
-  }),
   $I.annoteSchema("Annotation", {
     description: "Self-contained, referentially consistent specification registry attached to an Effect schema.",
   })

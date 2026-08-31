@@ -73,8 +73,7 @@ const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
 export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, DependencyNode, RelationNode]).pipe(
   $I.annoteSchema("AnnotatedNode", {
     description: "Union of structural text nodes and linguistic annotation nodes.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

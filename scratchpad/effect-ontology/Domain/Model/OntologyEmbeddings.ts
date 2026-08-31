@@ -218,7 +218,7 @@ const computeOntologyVersion = flow(
 );
 
 const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
-  GcsUri.fromUnknown(
+  GcsUri.decodeUnknownSync(
     Bool.match(Str.endsWith(".ttl")(ontologyUri), {
       onFalse: () => `${ontologyUri}-embeddings.json`,
       onTrue: () => Str.replace(/\.ttl$/, "-embeddings.json")(ontologyUri),
@@ -257,7 +257,7 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
   $I.annoteSchema("OntologyEmbeddings", {
     description: "Versioned ontology embedding artifact with uniform finite vector dimensions.",
   }),
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   SchemaUtils.withStatics(() => ({
     computeVersion: computeOntologyVersion,
     storagePathFor: embeddingsPathFromOntology,
@@ -305,7 +305,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
  * @since 0.0.0
  */
 export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["encodeEffect"]),
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
     toArbitrary: () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),

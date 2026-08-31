@@ -33,7 +33,7 @@ import {
   UnknownInline,
   UnknownMeta,
 } from "@beep/pandoc-ast/Pandoc.model";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { R } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -79,7 +79,7 @@ const SemanticClosureDocumentArbitrary = fc
     })
   );
 const JsonArbitrary = S.toArbitrary(S.Json)(fc);
-const decodeUnknownJsonString = Unknown.decodeUnknownEffectFromJsonString;
+const decodeUnknownJsonString = UnknownFromJsonString.decodeUnknownEffect;
 const emptyAttr = ["", [], []];
 const pinnedPandocConstructorNames = [
   "Pandoc",
@@ -181,12 +181,14 @@ const fixture = Effect.fn("PandocCodecTest.fixture")((name: string) =>
 const tableWire = ({
   caption = [null, []],
   cellAlignment = { t: "AlignDefault" },
+  cellBlocks = [{ c: [{ c: "ok", t: "Str" }], t: "Para" }],
   columnAlignment = { t: "AlignDefault" },
   columnWidth = { t: "ColWidthDefault" },
   headRows = [],
 }: {
   readonly caption?: unknown;
   readonly cellAlignment?: unknown;
+  readonly cellBlocks?: ReadonlyArray<unknown>;
   readonly columnAlignment?: unknown;
   readonly columnWidth?: unknown;
   readonly headRows?: ReadonlyArray<unknown>;
@@ -199,14 +201,7 @@ const tableWire = ({
         caption,
         [[columnAlignment, columnWidth]],
         [["", [], []], headRows],
-        [
-          [
-            ["", [], []],
-            0,
-            [],
-            [[["", [], []], [[["", [], []], cellAlignment, 1, 1, [{ c: [{ c: "ok", t: "Str" }], t: "Para" }]]]]],
-          ],
-        ],
+        [[["", [], []], 0, [], [[["", [], []], [[["", [], []], cellAlignment, 1, 1, cellBlocks]]]]]],
         [["", [], []], []],
       ],
       t: "Table",
@@ -359,6 +354,15 @@ describe("Pandoc.codec", () => {
       }),
       fcRuns(50)
     ));
+
+  it("round-trips a recursively nested table inside table-cell block content", () => {
+    const nestedTable = tableWire().blocks[0];
+    const wire = tableWire({ cellBlocks: [nestedTable] });
+    const document = Effect.runSync(decodePandocJsonStrict(wire));
+
+    expect(document.blocks[0]?._tag).toBe("table");
+    expect(Effect.runSync(encodePandocJson(document))).toEqual(wire);
+  });
 
   it("retains valid future constructors in every semantic table component slot", () => {
     const document = PandocDocument.make({

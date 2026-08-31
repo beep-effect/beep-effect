@@ -261,7 +261,7 @@ export const PracticeKgCandidateClaimsResult = S.Union([
   $I.annoteSchema("PracticeKgCandidateClaimsResult", {
     description: "Loaded candidate-claim rows or a typed not-loaded bundle state.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

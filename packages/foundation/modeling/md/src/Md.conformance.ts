@@ -14,7 +14,6 @@
 
 import { $MdId } from "@beep/identity/packages";
 import * as Conformance from "@beep/schema/Conformance";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -233,8 +232,7 @@ export const CommonMarkDocument = Document.pipe(
   Conformance.annotateConformance(CommonMarkConformanceAnnotation),
   $I.annoteSchema("CommonMarkDocument", {
     description: "Markdown AST satisfying every implemented CommonMark 0.31.2 semantic-tree check.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -284,8 +282,7 @@ export const GfmDocument = Document.pipe(
   Conformance.annotateConformance(GfmConformanceAnnotation),
   $I.annoteSchema("GfmDocument", {
     description: "Markdown AST satisfying every implemented pinned-GFM semantic-tree check.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -331,8 +328,7 @@ export const BeepMarkdownDocument = Document.pipe(
   Conformance.annotateConformance(BeepMarkdownConformanceAnnotation),
   $I.annoteSchema("BeepMarkdownDocument", {
     description: "Markdown AST satisfying every implemented Beep extension semantic-tree check.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

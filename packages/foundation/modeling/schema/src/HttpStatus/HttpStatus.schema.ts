@@ -41,12 +41,14 @@ import { HttpStatusUnofficial } from "./HttpStatus.unofficial.aggregate.ts";
  * @category validation
  * @since 0.0.0
  */
-export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
-  $I.annoteSchema("HttpStatusCode", {
-    description: "HTTP response status code in the standard three-digit range from 100 through 599.",
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const HttpStatusCode = S.make<(typeof NonNegativeInt)["Rebuild"]>(NonNegativeInt.ast)
+  .check(S.isBetween({ minimum: 100, maximum: 599 }))
+  .pipe(
+    $I.annoteSchema("HttpStatusCode", {
+      description: "HTTP response status code in the standard three-digit range from 100 through 599.",
+    }),
+    SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
+  );
 
 /**
  * Runtime value accepted by {@link HttpStatusCode}.

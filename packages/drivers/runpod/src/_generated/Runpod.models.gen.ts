@@ -8,7 +8,6 @@
 // This file is generated. Do not edit manually.
 
 import { $RunpodId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RunpodId.create("Runpod.generated");
@@ -914,7 +913,6 @@ export const BillingRecords = S.Array(
   $I.annoteSchema("BillingRecords", {
     description: "Generated RUNPOD schema for BillingRecords.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -988,7 +986,6 @@ export const ContainerRegistryAuths = S.Array(ContainerRegistryAuth).pipe(
   $I.annoteSchema("ContainerRegistryAuths", {
     description: "Generated RUNPOD schema for ContainerRegistryAuths.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1025,7 +1022,6 @@ export const CudaVersions = S.String.pipe(
   $I.annoteSchema("CudaVersions", {
     description: "Generated RUNPOD schema for CudaVersions.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1585,7 +1581,6 @@ export const Endpoints = S.Array(Endpoint).pipe(
   $I.annoteSchema("Endpoints", {
     description: "Generated RUNPOD schema for Endpoints.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1622,7 +1617,6 @@ export const GPUTypeId = S.String.pipe(
   $I.annoteSchema("GPUTypeId", {
     description: "Generated RUNPOD schema for GPUTypeId.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -1912,7 +1906,6 @@ export const NetworkVolumeBillingRecords = S.Array(
   $I.annoteSchema("NetworkVolumeBillingRecords", {
     description: "Generated RUNPOD schema for NetworkVolumeBillingRecords.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2072,7 +2065,6 @@ export const NetworkVolumes = S.Array(
   $I.annoteSchema("NetworkVolumes", {
     description: "Generated RUNPOD schema for NetworkVolumes.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2524,7 +2516,6 @@ export const Pods = S.Array(Pod).pipe(
   $I.annoteSchema("Pods", {
     description: "Generated RUNPOD schema for Pods.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2819,7 +2810,6 @@ export const Templates = S.Array(Template).pipe(
   $I.annoteSchema("Templates", {
     description: "Generated RUNPOD schema for Templates.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -2881,7 +2871,6 @@ export const User = S.String.pipe(
   $I.annoteSchema("User", {
     description: "Generated RUNPOD schema for User.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**

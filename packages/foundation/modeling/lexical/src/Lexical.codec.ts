@@ -93,7 +93,7 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
   $I.annoteSchema("ArtifactUri", {
     description: "artifact:// URI carrying a package-owned artifact reference id through the Md link projection.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
 );
 
 /**
@@ -114,7 +114,7 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
 export type ArtifactUri = typeof ArtifactUri.Type;
 
 const ArtifactUriParts = S.TemplateLiteralParser([ARTIFACT_URI_PREFIX, ArtifactRefId]).pipe(
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 const emptyTextFormat = TextFormatMask.make(0);
@@ -350,7 +350,7 @@ const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
     O.filter(({ value }) => Str.isNonEmpty(value) && O.isNone(child.title)),
     O.flatMap(({ value: label }) =>
       pipe(
-        ArtifactUriParts.decodeOption(child.href),
+        ArtifactUriParts.decodeUnknownOption(child.href),
         O.map(([, artifactId]) => ({
           artifactId,
           label: label === artifactId ? O.none<string>() : O.some(label),
@@ -535,7 +535,7 @@ const inlineNodeToMd: (node: LexicalNode) => Md.Inline = LexicalNode.match({
   link: (node) => Md.A.make({ href: node.url, children: textRunToInlines(node.children), title: node.title }),
   "artifact-ref": (node) =>
     Md.A.make({
-      href: ArtifactUri.fromUnknown(`${ARTIFACT_URI_PREFIX}${node.artifactId}`),
+      href: ArtifactUri.decodeUnknownSync(`${ARTIFACT_URI_PREFIX}${node.artifactId}`),
       children: [Md.Text.make({ value: O.getOrElse(node.label, () => node.artifactId) })],
     }),
   // Element nodes have no inline Md equivalent; they degrade to their plain text

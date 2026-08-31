@@ -139,7 +139,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
     Effect.gen(function* (): Effect.fn.Return<ImageBlobStoreService, never, StorageService> {
       const storage = yield* StorageService;
 
-      const imagePathHash = (hash: string): ContentHash => ContentHash.fromUnknown(hash);
+      const imagePathHash = (hash: string): ContentHash => ContentHash.decodeUnknownSync(hash);
 
       return {
         putBytes: (hash: string, bytes: Uint8Array) =>

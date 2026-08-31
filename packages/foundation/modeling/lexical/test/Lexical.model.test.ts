@@ -24,7 +24,7 @@ import {
 } from "@beep/lexical-schema";
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { PosInt } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
@@ -310,7 +310,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     fc.assert(
       fc.property(NodeArbitrary, (node) => {
         expect(matchedNodeType(node)).toBe(node.type);
-        expect(LexicalNode.fromUnknown(encodeLexicalNode(node))).toEqual(node);
+        expect(LexicalNode.decodeUnknownSync(encodeLexicalNode(node))).toEqual(node);
       }),
       fcRuns(50)
     );
@@ -476,9 +476,9 @@ describe("Lexical.model", { concurrent: false }, () => {
     ] as const;
 
     expect(S.decodeResult(LexicalNode)(nodeWithExtension)._tag).toBe("Failure");
-    expect(O.isNone(LexicalNode.decodeOption(nodeWithExtension))).toBe(true);
+    expect(O.isNone(LexicalNode.decodeUnknownOption(nodeWithExtension))).toBe(true);
     expect(S.decodeResult(LexicalNode)(rootWithNestedExtension)._tag).toBe("Failure");
-    expect(O.isNone(LexicalNode.decodeOption(rootWithNestedExtension))).toBe(true);
+    expect(O.isNone(LexicalNode.decodeUnknownOption(rootWithNestedExtension))).toBe(true);
     A.forEach(cases, ([stateWithExtension, jsonWithExtension]) => {
       expect(S.decodeResult(SerializedEditorState)(stateWithExtension)._tag).toBe("Failure");
       expect(O.isNone(SerializedEditorState.decodeOption(stateWithExtension))).toBe(true);
@@ -575,7 +575,7 @@ describe("Lexical.model", { concurrent: false }, () => {
           children: [node],
         },
       };
-      const source = Effect.runSync(Unknown.encodeEffectFromJsonString(state));
+      const source = Effect.runSync(UnknownFromJsonString.encodeEffect(state));
       const canonicalTag = ListType.$match(listType, {
         number: ListTag.thunk.ol,
         bullet: ListTag.thunk.ul,

@@ -4,7 +4,7 @@ import {
   FleetScanOptions,
   parseProcStatStartTime,
 } from "@beep/repo-cli/commands/Worktree";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -13,7 +13,7 @@ import { ChildProcess } from "effect/unstable/process";
 import type { FleetCheckout, FleetSnapshot } from "@beep/repo-cli/commands/Worktree";
 
 const SCAN_TIMEOUT_MILLIS = 60_000;
-const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const README_BASE = "# fleet fixture\n\nshared line\n";
 const README_BETA = "# fleet fixture\n\nshared line (beta)\n";
