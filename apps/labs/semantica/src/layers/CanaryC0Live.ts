@@ -7,6 +7,7 @@ import { Clock, Console, Crypto, DateTime, Effect, FileSystem, Layer, Number as 
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { writeJsonArtifact } from "@/canary/Artifact";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import { F1Catalog, F1Index } from "@/fixtures/F1";
@@ -153,20 +154,6 @@ const p95 = (timings: ReadonlyArray<number>): number =>
       return A.get(ordered, rank).pipe(O.getOrElse(() => A.lastNonEmpty(ordered)));
     },
   });
-
-const writeJson = Effect.fn("CanaryC0.writeJson")(function* <Type, Encoded>(
-  fs: FileSystem.FileSystem,
-  schema: S.Codec<Type, Encoded>,
-  outputPath: string,
-  value: Type
-) {
-  const json = yield* S.encodeEffect(schema)(value).pipe(
-    Effect.mapError(() => executionFailed("A C0 output artifact did not encode."))
-  );
-  yield* fs
-    .writeFileString(outputPath, `${json}\n`)
-    .pipe(Effect.mapError(() => executionFailed("A C0 output artifact could not be written.")));
-});
 
 const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
   hostedProvider: Layer.Layer<LanguageModel.LanguageModel, Config.ConfigError>,
@@ -371,8 +358,24 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       startedAt,
       wallClockMs: NonNegativeInt.make(N.max(0, endedMillis - startedMillis)),
     });
-    yield* writeJson(fs, EvalReportJson, path.join(outputDirectory, "eval-report.json"), execution.report);
-    yield* writeJson(fs, EvalTelemetryJson, path.join(outputDirectory, "eval-telemetry.json"), telemetry);
+    const artifactFailure = {
+      encode: executionFailed("A C0 output artifact did not encode."),
+      write: executionFailed("A C0 output artifact could not be written."),
+    };
+    yield* writeJsonArtifact(
+      fs,
+      EvalReportJson,
+      path.join(outputDirectory, "eval-report.json"),
+      execution.report,
+      artifactFailure
+    );
+    yield* writeJsonArtifact(
+      fs,
+      EvalTelemetryJson,
+      path.join(outputDirectory, "eval-telemetry.json"),
+      telemetry,
+      artifactFailure
+    );
     yield* Console.log(execution.report.reportDigest);
     if (execution.report.unexpectedDegraded > 0) {
       return yield* ReportInvalid.make({ message: "C0 completed with unexpected degraded documents." });

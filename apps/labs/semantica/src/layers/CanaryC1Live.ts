@@ -4,6 +4,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { writeJsonArtifact } from "@/canary/Artifact";
 import { CanaryOptions } from "@/canary/Command";
 import { EmbedderRuntimeLive } from "@/layers/EmbedderLive";
 import { LabConfig } from "@/runtime/Config";
@@ -208,20 +209,6 @@ const quadDelta = (before: ReadonlyArray<string>, after: ReadonlyArray<string>):
   });
 };
 
-const writeJson = Effect.fn("CanaryC1.writeJson")(function* <Type, Encoded>(
-  fs: FileSystem.FileSystem,
-  schema: S.Codec<Type, Encoded>,
-  outputPath: string,
-  value: Type
-) {
-  const json = yield* S.encodeEffect(schema)(value).pipe(
-    Effect.mapError(() => failed("report-invalid", "A C1 output artifact did not encode."))
-  );
-  yield* fs
-    .writeFileString(outputPath, `${json}\n`)
-    .pipe(Effect.mapError(() => failed("report-invalid", "A C1 output artifact could not be written.")));
-});
-
 const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
   embeddingProvider: Layer.Layer<EmbeddingModel.EmbeddingModel | EmbeddingModel.Dimensions, E, never>
 ) {
@@ -407,8 +394,24 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
         ),
         wallClockMs: NonNegativeInt.make(N.max(0, endedAt - startedAt)),
       });
-      yield* writeJson(fs, C1EvalReportJson, path.join(outputDirectory, "eval-report.json"), report);
-      yield* writeJson(fs, C1EvalTelemetryJson, path.join(outputDirectory, "eval-telemetry.json"), telemetry);
+      const artifactFailure = {
+        encode: failed("report-invalid", "A C1 output artifact did not encode."),
+        write: failed("report-invalid", "A C1 output artifact could not be written."),
+      };
+      yield* writeJsonArtifact(
+        fs,
+        C1EvalReportJson,
+        path.join(outputDirectory, "eval-report.json"),
+        report,
+        artifactFailure
+      );
+      yield* writeJsonArtifact(
+        fs,
+        C1EvalTelemetryJson,
+        path.join(outputDirectory, "eval-telemetry.json"),
+        telemetry,
+        artifactFailure
+      );
       yield* Console.log(report.reportDigest);
       return report;
     }),
