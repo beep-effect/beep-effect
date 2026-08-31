@@ -4,6 +4,19 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-30 — the first repair attempt left no terminal command receipt
+
+- **Doing:** running the canonical `beep yeet repair` before publishing the replacement closeout
+  branch.
+- **Evidence:** the observation handle disappeared while the first attempt was running the 952-file
+  test-source typecheck. A process-table audit found no surviving process rooted in this checkout;
+  the two live typechecks belonged to other checkouts. Yeet had no verdict or closeout artifact,
+  and the worktree remained unchanged, so that attempt ended without a durable exit record. A
+  fresh retry later recorded terminal success; it does not supply the missing first-attempt receipt.
+- **Would have prevented it:** persist a phase-level terminal attempt row independently of the
+  calling transport, or attach repair to a run scope whose finalizer records interruption after
+  the client handle disappears.
+
 ## 2026-08-30 — post-merge closeout work outlived its published branch
 
 - **Doing:** resuming the final ship-velocity closeout and checking whether its accumulated local
