@@ -1,6 +1,7 @@
 # Ship velocity representative observation
 
-Status: fresh repair observation active; first current-main validation green.
+Status: operator-authorized evidence volume accepted; concurrency green; authenticated cache
+observation and final closeout PR remain open.
 
 ## Window
 
@@ -154,3 +155,133 @@ The intervals did not overlap. Scheduler status reported capacity 9, three activ
 58.87 GiB available, and no queued, dead, or quarantined row. This is valid single-lease memory
 evidence, but it does not prove the two-concurrent-verify gate or a terminal no-OOM result for the
 active lease.
+
+## Operator-authorized evidence-volume closeout
+
+On 2026-08-30 the operator accepted a closeout judgment from the observed production volume
+instead of requiring the original duration proxy to elapse. This does not relabel the sample as a
+seven-day interval. It records the operator's judgment that the concentrated merge and proof
+traffic is representative enough for this closeout and keeps every outcome condition mandatory.
+
+Snapshot time: `2026-08-30T16:50:03Z`.
+
+- 24 PRs merged in the rolling 24 hours;
+- 16 PRs merged after #874, including eight that were both opened and merged after the anchor;
+- median open-to-merge time for those eight PRs: 50.95 minutes (mean 85.31, range 21.82–192.18);
+- eight main-push Check runs after #892: seven successful and one failed;
+- the failure was #869's isolated T7 capacity-preflight fixture I/O mismatch on run
+  `33303853318`; its PR-head coverage run was green and the next six main-push Check runs were
+  green, so `parity-ledger.md` classifies it as nonrecurring rather than erasing it;
+- eight main-push Storybook runs after #892: six successful, two cancelled, and zero failed.
+
+### Backpressure and takeover refresh
+
+The corrected user service is enabled and active with a 30-second poll, 240-second stale lease,
+and therefore a 270-second worst-case takeover-detection bound. The installer now targets the
+shared projects root, while the watcher enumerates only sanctioned top-level checkouts and
+`*-worktrees/*` roots. After restart it completed multiple polls with zero restarts, no journal
+diagnostics, 13.4 MiB peak memory, and 0.161 seconds of CPU in its first minute. The prior generic
+recursive scan had peaked at 548.6 MiB and was rejected before closeout. A final full dry scan
+completed in 0.21 seconds at 3.7 MiB after fresh leases were filtered before mutex acquisition;
+stale-looking candidates still receive the full locked recheck.
+
+The focused watcher suite exercises stale P0 detection, CAS transfer, resume, retired-owner
+refusal, abandoned-claim recovery, and blank cache-placeholder repair; all seven focused tests
+pass. Two live optional
+Vercel P1 rows for #897 reached the inbox on their observing timestamp. No required P0 hosted red
+or dead-owner incident occurred, so there is no fabricated production takeover latency. The
+configured bound plus the executable takeover tests are the acceptance evidence for the absent
+incident class.
+
+This paragraph records the architecture that existed during the sample. Operator PR #921 merged
+at `2026-08-31T00:53:53Z` as `5a4fc2707a792c510f98b6c14b8cae1851e3118b` and intentionally
+removed the published-PR lease, user watcher, automatic takeover, and mutation fence. It retained
+P0 inbox delivery and the hard Stop/SubagentStop gate. Closeout therefore treats A4 as superseded,
+not satisfied: the historical 270-second bound remains evidence of the retired implementation,
+current main has no ownership lease that can strand a dead harness, and no automatic takeover
+latency is claimed.
+
+### Cache provisioning refresh
+
+A post-repair activity scan found 11 checkout roots. All 11 now carry a git-ignored, reference-only
+remote-read quad. Five `.env` files were created from the sanctioned template; six older roots had
+blank `TURBO_TEAM` placeholders repaired. No secret value was read, printed, or written. The
+1Password MCP was unavailable and the local `op` CLI was signed out, so a dry plan correctly
+degraded to `--cache=local:rw`. Configuration coverage is complete, but a fresh remote-read probe
+remains required after the operator authorizes a 1Password CLI session.
+
+### Admission and hot-file refresh
+
+The live dual-verify trial was submitted from clean current-main `beep-effect6` and `beep-effect7`
+checkouts. After 58 minutes behind a valid merged-preview lease, `beep-effect7` was admitted at
+three tokens with seven tokens free. `beep-effect6` nevertheless remained queued because
+`QualityScheduler.ts` skips every same-origin ticket while a lease exists and `Handler.ts` retains
+the same exclusive per-origin proof lock. All sibling checkouts share that origin key, making the
+manifest's required overlap unreachable by construction. The redundant queued waiter was
+interrupted cleanly. The admitted `beep-effect7` proof then passed every cheap-gate and pre-push
+lane and released normally at `2026-08-30T18:03:41Z`. Its scheduler journal recorded a
+32,089,321,472-byte peak with no OOM, dead lease, or quarantine. The next same-origin waiter was
+admitted immediately after release despite seven capacity tokens having been free throughout,
+which separates the origin guard from machine-capacity pressure.
+
+The closeout repair retains the original concurrency outcome instead of weakening the gate. New
+tickets and leases identify the scheduler-origin-concurrency protocol; older entries decode as
+legacy, and same-origin legacy state drains before migration. The first current contender then
+installs a persistent v4
+origin-lock retirement marker that older clients fail closed against. Current siblings may overlap
+under weighted admission, while below-envelope hosts serialize through a separate fallback lock.
+After the first closeout review repaired both mixed-version ticket orders and typed filesystem
+failures, the focused scheduler/coordinator suites pass 56 tests and the full Yeet unit file passes
+all 132 tests. An untouched pre-change decoder accepts and discards the additive protocol field. A
+live dual-full-proof run on the repaired implementation remains required for the terminal no-OOM
+receipt.
+
+Across the 17 merged PRs from the #874 anchor through this snapshot, only #874 itself touched
+`goals/INDEX.md` or `explorations/ATLAS.md`. The 16 subsequent merges touched neither projection,
+and no sampled publish failure named either path as its retry cause.
+
+### Terminal dual-full-proof receipt
+
+Two independent frozen-install clones at commit `70883b352406f78789acb9c88012c2fa4fd43e4c`
+ran full Yeet verification under `scheduler-origin-concurrency/v1`. Both used origin key
+`4cc31eeb4dec`, held three admission tokens, and completed every preflight, build, lint,
+typecheck, coverage, Desktop IPC, unit, integration, JSDoc, and full docgen lane at exit 0.
+
+- proof C admitted at `2026-08-30T21:04:51.871Z` and released at
+  `2026-08-30T21:58:52.316Z`; its verdict elapsed 3,240,467 ms and recorded 10,878,916 KiB for
+  cheap gates and 17,966,264 KiB for pre-push;
+- proof D admitted at `2026-08-30T21:10:03.115Z` and released at
+  `2026-08-30T22:03:21.782Z`; its verdict elapsed 3,203,699 ms and recorded 11,005,400 KiB for
+  cheap gates and 18,001,708 KiB for pre-push;
+- the admission intervals overlapped for 2,929,201 ms, or 48 minutes 49.201 seconds;
+- capacity contracted below the six already-admitted full-proof tokens during pressure and later
+  recovered to ten without engaging the hard floor, killing a lease, or quarantining state;
+- both terminal verdicts report `outcome: success`; no OOM or interrupted proof occurred.
+
+The durable journal retains both admitted and released timestamps, but its event schema does not
+carry the coordination protocol and both release rows omitted the verdict's available peak RSS.
+`OPPORTUNITIES.md` records that evidence-join gap rather than overstating the journal.
+
+### Final remote-read preparation
+
+The original reference repair covered 11 roots, but checkout liveness moved before the terminal
+sample. A fleet scan at `2026-08-31T02:45:59Z` classified 16 roots as live. Four intersected the
+historical set, and nine of the current roots lacked one or more members of the remote-read quad.
+The sanctioned provisioning helper copied only the missing fields from an existing
+reference-only source. A sanitized follow-up found all 16 roots with a git-ignored `https`
+endpoint, `op://` token reference, nonblank team, and `local:rw,remote:r` posture; it did not
+render any field value. Alternate nonblank references were preserved for authenticated proof
+rather than overwritten by assumption.
+
+This is configuration readiness, not a cache outcome. The 1Password MCP remained unavailable,
+and the last safe CLI identity check was signed out. The final sample must rescan liveness after
+the operator authorizes `op signin`, use an isolated local cache directory per root, and observe
+at least one first-touch `source: REMOTE` result from each frozen root before this gate closes.
+
+### Closeout state after the terminal trial
+
+The evidence-volume ruling closes the calendar-duration question, and the terminal dual proof
+closes the concurrency condition. The packet remains active only because an authorized
+1Password session must produce a fresh remote-read observation from every active root and the
+final closeout PR must reach Yeet `merge-ready: yes`. Lifecycle and P5 status remain unchanged
+until both gates are satisfied.

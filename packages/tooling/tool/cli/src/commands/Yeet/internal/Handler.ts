@@ -10,7 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { UUID } from "@beep/schema/String";
 import * as O from "@beep/utils/Option";
-import { Clock, Console, Crypto, DateTime, Duration, Effect, FileSystem, Path, pipe, Ref } from "effect";
+import { Clock, Console, Crypto, DateTime, Duration, Effect, FileSystem, flow, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -85,11 +85,11 @@ import {
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import {
-  acquireFullProofLock,
-  acquireFullProofLockOrObserveAtPath,
+  acquireFullProofFallbackLockOrObserveAtPath,
   assertReusableVerifiedState,
   proofLockPathForContext,
   releaseProofLock,
+  retireFullProofLockOrObserveAtPath,
   writeVerifiedState,
 } from "./ProofState.ts";
 import {
@@ -384,10 +384,41 @@ const schedulerErrorToYeetError = <Success, Error, Requirements>(
       : error
   );
 
-// Machine-wide weighted admission (ship-velocity D1) wraps the retained
-// per-origin coordinator: the contender queues with visible progress while a
-// sibling checkout proves, and its token weight is charged against live
-// memory capacity while the proof runs.
+type FullProofAdmissionOriginLease = O.Option<Parameters<typeof releaseProofLock>[0]>;
+
+const retiredProofLockLease = O.none<Parameters<typeof releaseProofLock>[0]>();
+
+const fullProofAdmissionOriginGate = (
+  lockPath: string,
+  context: RepoRunContext,
+  command: string
+): AdmissionOriginGate<
+  FullProofAdmissionOriginLease,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> => ({
+  tryAcquire: retireFullProofLockOrObserveAtPath(lockPath).pipe(Effect.map(O.as(retiredProofLockLease))),
+  tryAcquireFallback: retireFullProofLockOrObserveAtPath(lockPath).pipe(
+    Effect.flatMap(
+      O.match({
+        onNone: () => Effect.succeed(O.none<FullProofAdmissionOriginLease>()),
+        onSome: () =>
+          acquireFullProofFallbackLockOrObserveAtPath(lockPath, context, command).pipe(Effect.map(O.map(O.some))),
+      })
+    )
+  ),
+  release: flow(
+    O.match({
+      onNone: () => Effect.void,
+      onSome: releaseProofLock,
+    })
+  ),
+});
+
+// Machine-wide weighted admission (ship-velocity D1) becomes the sole
+// current-version concurrency authority after the fail-closed legacy origin
+// lock is retired. Hosts below the scheduler envelope retain an exclusive
+// fallback lock through the gate's fallback acquisition.
 const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator")(function* <
   Success,
   Error,
@@ -411,27 +442,8 @@ const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator"
     branch: context.branch,
     command: A.join(A.map(proofSteps, commandTextForStep), " && "),
   });
-  const originGate: AdmissionOriginGate<
-    Parameters<typeof releaseProofLock>[0],
-    YeetCommandError,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path
-  > = {
-    tryAcquire: acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps),
-    release: releaseProofLock,
-  };
+  const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
   return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
-});
-
-// Merged previews keep the origin lock inside the preview proof (the preview
-// worktree shares the checkout's origin) while the 5-token machine-wide
-// admission wraps the WHOLE flow — worktree materialization and monorepo
-// install included — so several previews cannot install concurrently.
-const runWithOriginLockOnly = Effect.fn("Yeet.runWithOriginLockOnly")(function* <Success, Error, Requirements>(
-  context: RepoRunContext,
-  proofSteps: ReadonlyArray<RepoPlanStep>,
-  use: Effect.Effect<Success, Error, Requirements>
-) {
-  return yield* Effect.acquireUseRelease(acquireFullProofLock(context, proofSteps), () => use, releaseProofLock);
 });
 
 const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmission")(function* <
@@ -450,7 +462,8 @@ const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmiss
     branch: context.branch,
     command: "bun run beep yeet verify --merged",
   });
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, noAdmissionOriginGate, use));
+  const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
+  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
 });
 
 // Review-fix loops take one admission token (class-capped at three concurrent
@@ -1473,7 +1486,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const coordinatedExecution =
     options.mode === "verify" && options.tier === "full"
       ? options.merged
-        ? runWithOriginLockOnly(plan.context, fullSteps, execution)
+        ? execution
         : runWithFullProofCoordinator(plan.context, fullSteps, execution, { priority: "verify" })
       : options.mode === "verify" && options.tier === "review-fix"
         ? runWithReviewFixAdmission(plan.context, execution)
