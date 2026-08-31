@@ -1,0 +1,72 @@
+# Running opportunities ledger: practice-box-provisioning
+
+Friction receipts captured while shipping, per the repository friction law.
+
+## P1 implementation
+
+1. **Package verification did not build a changed project reference.** `unowned`
+
+   The first
+   `bun run beep quality package-verify @beep/box-provisioning` run failed in
+   `tsc -p tsconfig.json` because the new `$BoxProvisioningId` existed in
+   `@beep/identity` source but not in its previously built declarations. The
+   missing export caused a cascade of `never` errors in every annotated schema.
+   `bun run beep quality package-verify @beep/identity`, followed by the same
+   reconciler verification command, passed.
+
+   **What would have prevented it:** package verification could build changed
+   TypeScript project references before auditing the target package, or
+   `create-package` could print the required dependency verification order when
+   it registers a new package identity.
+
+## P2 verification
+
+1. **The full unit sweep observed transient repo-cli state.** `unowned`
+
+   `bun run beep yeet repair` completed cheap gates, docgen, build, check,
+   lint, and both touched-package test suites, then reported two failures in
+   untouched `@beep/repo-cli` tests: one goals-index projection mismatch and
+   one root-concurrency assertion. The implicated source and tests were
+   byte-identical to `origin/main`; an immediate isolated Vitest rerun passed
+   both files and all 195 tests.
+
+   **What would have prevented it:** state-sensitive repo-cli tests could use
+   immutable fixtures for goal projections and scheduler defaults, or the
+   quality receipt could distinguish a failure that disappears on an isolated
+   exact-tree rerun from a deterministic source failure.
+
+2. **The default Box current-user response omitted the tenant guard.** `owned`
+
+   The private read-only identity bootstrap authenticated successfully but
+   failed closed at `extract-identity-guards`: `users.getUserMe` returned the
+   service subject while omitting the optional enterprise object. Requesting
+   the exact `id` and `enterprise` fields made the same live bootstrap pass,
+   without logging either identifier.
+
+   **What would have prevented it:** the inventory boundary should have carried
+   an explicit current-user field projection from the start, with a regression
+   test asserting the SDK query required by both identity guards.
+
+3. **Package verification missed a touched-file Effect law.** `unowned`
+
+   Canonical `package-verify` passed audit and docgen, but the root
+   `laws effect-fn --check` still found four unnamed reusable Effect generators
+   in the same new package. Naming the two inventory helpers, the no-op applier,
+   and the sequential per-action callback cleared the root law without changing
+   behavior.
+
+   **What would have prevented it:** package verification could run the
+   touched-file Effect governance checks scoped to the target package, so a
+   green package handoff implies the root policy lanes will accept that package.
+
+4. **Planner digests preserved incidental provider ordering.** `owned`
+
+   PR review found that reordering equal-depth desired resources, observed
+   resources, or webhook trigger sets could change state and plan digests even
+   when their semantics were unchanged. The planner now canonicalizes logical
+   resources, provider resources, and trigger sets before producing actions or
+   digests; regression proof covers both desired and observed reorderings.
+
+   **What would have prevented it:** the planner's initial determinism tests
+   should have included permutation invariance, not only repeated execution of
+   one fixed input ordering.

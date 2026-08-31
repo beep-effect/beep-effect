@@ -1985,7 +1985,11 @@
       "@beep/schema/FileTypeChecker": [
         "./packages/foundation/modeling/schema/src/FileTypeChecker/index.ts"
       ],
-      "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
+      "@beep/openai": ["./packages/drivers/openai/src/index.ts"],
+      "@beep/box-provisioning": [
+        "./packages/drivers/box-provisioning/src/index.ts"
+      ],
+      "@beep/box-provisioning/*": ["./packages/drivers/box-provisioning/src/*"]
     }
   }
 }

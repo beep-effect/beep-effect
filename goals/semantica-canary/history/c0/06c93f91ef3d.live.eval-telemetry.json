@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "eval-telemetry/v1",
+  "reportDigest": "1bde32bf7b58aeb3dd568995f680e08115be407a08789ecfe9e14ae264110bf4",
+  "runId": "fc7da72e44cc08a46524019f4915c7e42d05a98d559d09978302675899fe4ee5",
+  "mode": "live",
+  "startedAt": "2026-08-31T03:40:04.330Z",
+  "wallClockMs": 90508,
+  "coldStartMs": 1574,
+  "p95Ms": 88660,
+  "rssBytes": 1306636288,
+  "diskGrowthBytes": 42631208,
+  "dependencyBytes": null,
+  "modelBytes": null
+}

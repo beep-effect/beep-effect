@@ -12,7 +12,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";
-import { GENERATED_MANAGERS } from "./box.surface.ts";
+import { GENERATED_MANAGERS, GENERATED_OPERATIONS } from "./box.surface.ts";
 import type { PlatformError } from "effect";
 
 const $I = $BoxId.create("scripts/generate");
@@ -1714,22 +1714,46 @@ const generate = Effect.gen(function* () {
   const declarations = yield* collectDeclarations(sourceFiles, state);
   const allManagerProperties = yield* collectManagerProperties(paths.clientPath);
 
-  // Demand-scoped surface: only the managers named in `box.surface.ts` are
-  // wrapped. See goals/box-typecheck-cost/SPEC.md.
+  // Demand-scoped surface: whole managers and individual `manager.method`
+  // operations are admitted from `box.surface.ts`. See
+  // goals/box-typecheck-cost/SPEC.md.
   const allowedManagers = MutableHashSet.fromIterable(GENERATED_MANAGERS);
-  const managerProperties = A.filter(allManagerProperties, (property) =>
-    MutableHashSet.has(allowedManagers, property.managerName)
+  const allowedOperations = MutableHashSet.fromIterable(GENERATED_OPERATIONS);
+  const managerProperties = A.filter(
+    allManagerProperties,
+    (property) =>
+      MutableHashSet.has(allowedManagers, property.managerName) ||
+      A.some(GENERATED_OPERATIONS, Str.startsWith(`${property.managerName}.`))
   );
   const droppedManagers = A.filter(
     A.map(allManagerProperties, (property) => property.managerName),
-    (managerName) => !MutableHashSet.has(allowedManagers, managerName)
+    (managerName) =>
+      !MutableHashSet.has(allowedManagers, managerName) &&
+      !A.some(GENERATED_OPERATIONS, Str.startsWith(`${managerName}.`))
   );
   const unknownManagers = A.filter(
     GENERATED_MANAGERS,
     (managerName) => !A.some(allManagerProperties, (property) => property.managerName === managerName)
   );
 
-  const methods = yield* collectManagerMethods(managerProperties, state, paths.sdkRoot);
+  const discoveredMethods = yield* collectManagerMethods(managerProperties, state, paths.sdkRoot);
+  const isRequestedOperation = (operationName: string): boolean =>
+    MutableHashSet.has(allowedOperations, operationName) ||
+    A.some(GENERATED_MANAGERS, (managerName) => Str.startsWith(`${managerName}.`)(operationName));
+  const methods = {
+    deprecated: A.filter(discoveredMethods.deprecated, isRequestedOperation),
+    generated: A.filter(discoveredMethods.generated, (method) => isRequestedOperation(method.fullMethodName)),
+    skipped: A.filter(discoveredMethods.skipped, isRequestedOperation),
+    wrapped: A.filter(discoveredMethods.wrapped, isRequestedOperation),
+  };
+  const discoveredOperationNames = A.appendAll(
+    A.map(discoveredMethods.generated, (method) => method.fullMethodName),
+    A.appendAll(discoveredMethods.deprecated, discoveredMethods.skipped)
+  );
+  const unknownOperations = A.filter(
+    GENERATED_OPERATIONS,
+    (operationName) => !A.some(discoveredOperationNames, (candidate) => candidate === operationName)
+  );
 
   // Model roots come from the kept operations plus the driver's own hand-written
   // sources; everything else is pruned by reachability.
@@ -1770,6 +1794,13 @@ const generate = Effect.gen(function* () {
     onNonEmpty: (values) =>
       Effect.logWarning(
         `box.surface.ts names ${A.length(values)} manager(s) absent from BoxClient: ${A.join(values, ", ")}.`
+      ),
+  });
+  yield* A.match(unknownOperations, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: (values) =>
+      Effect.logWarning(
+        `box.surface.ts names ${A.length(values)} operation(s) absent from their SDK managers: ${A.join(values, ", ")}.`
       ),
   });
   yield* Effect.log(

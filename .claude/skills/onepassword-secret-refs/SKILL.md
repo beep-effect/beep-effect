@@ -36,18 +36,25 @@ unless 1Password or `op://` references are part of the request.
 ## Minimal Diagnosis
 
 Before retrying a failed MCP auth loop, check only the narrow state needed for
-the current operation. Suppress successful command output so account metadata
-does not enter the transcript:
+the current operation. For an existing `op://`-backed env file, test the exact
+wrapper operation first and suppress successful output:
 
 ```bash
 op --version
-op whoami >/dev/null
+op run --env-file=<path> -- true >/dev/null
 ```
 
 Interpretation:
 
-- If `op whoami >/dev/null` fails, ask the user to unlock/sign in through
-  1Password desktop, then retry the narrow operation.
+- If the wrapper succeeds, use that same `op run --env-file=<path> --
+  <command>` path. It can obtain operation-scoped desktop authorization even
+  when `op whoami >/dev/null` fails; do not use `op whoami` as its gate.
+- Use `op whoami >/dev/null` only to diagnose whether the current agent process
+  has its own CLI session. Its failure does not establish that the operator or
+  the exact wrapper is unauthenticated.
+- If the exact wrapper fails, inspect only its sanitized error. Ask the user to
+  unlock or sign in through 1Password desktop only when that error identifies
+  desktop authorization as the missing step.
 - If MCP auth reports caller approval or desktop-app problems, stop repeating
   the same MCP auth call. Use the sanitized CLI fallback only when it satisfies
   the requested task without exposing raw values or broad metadata.
@@ -56,8 +63,9 @@ Interpretation:
 
 For Developer Environment tasks, authenticate once with the 1Password MCP server
 and then use its environment tools. If auth fails, do not loop. Record the
-sanitized failure and use the CLI fallback only when the task can be completed
-without raw secret values.
+sanitized failure and test the exact output-suppressed `op run` fallback when
+the task names an existing secret-reference-backed env file. Use other CLI
+fallbacks only when the task can be completed without raw secret values.
 
 The current agent 1Password MCP tools may not expose general vault item/field
 inspection. For vault item secret references, use the `op` fallback below only

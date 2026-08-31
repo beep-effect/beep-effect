@@ -377,3 +377,25 @@ ratifies.
   only `undefined`/`null` or `APPROVED`. Fix: normalize the empty string as absence in both paths
   and cover the CLI encoding with regressions. Prevention: boundary fixtures for optional GitHub
   fields must exercise every representation emitted by both GraphQL and `gh` JSON.
+
+- **2026-08-30 — Agent shells misreported 1Password as signed out while the operator shell was
+  authenticated.** The operator's `op whoami` succeeded, but both direct and interactive agent
+  subprocesses returned `account is not signed in`. The agent inherited no `OP_SESSION_*`, and
+  Codex had no registered `1password` MCP server even though the desktop server was enabled and
+  `1password-mcp` was installed. Fix: register the user-level server with
+  `codex mcp add 1password -- 1password-mcp`, then start a fresh agent session so its fixed MCP
+  tool surface includes the server. For existing `op://` env files, the exact output-suppressed
+  `op run --env-file=<path> -- true` preflight succeeded despite both `whoami` failures, proving
+  that the wrapper can obtain desktop authorization directly. Prevention: agent diagnostics must
+  distinguish operator CLI auth, operation-scoped desktop authorization, agent process
+  inheritance, client MCP registration, and current-session tool exposure; never infer the first
+  from failure of another or ask the operator to repeat sign-in blindly.
+
+- **2026-08-30 — Full-W1 C0 replay spent nearly ten minutes in opaque local grounding.** The
+  network-off R2 replay kept the provider cache fixed and one Bun core busy for 580,206 ms before
+  emitting its report; its p95 document duration was 148,696 ms. The live run took 1,906,490 ms
+  with a 227,190 ms p95. During both runs the CLI emitted no per-document stage progress, so the
+  only safe liveness evidence was process CPU/RSS and aggregate cache-file growth. Prevention:
+  emit non-digest per-document stage telemetry or progress events around parse, provider wait,
+  grounding, ledger, and evaluation so operators can attribute latency without inspecting
+  provider text or interrupting an authoritative gate.
