@@ -1,27 +1,21 @@
 /**
- * Semantic schema metadata helpers for public `@beep/rdf` families.
+ * Semantic schema metadata models for public `@beep/rdf` families.
  *
  * @packageDocumentation
  * @since 0.0.0
- * @packageDocumentation
  */
 
 import { $RdfId } from "@beep/identity/packages";
+import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { A, O } from "@beep/utils";
-import { pipe, Result } from "effect";
-import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
+import * as Sha256 from "@beep/schema/Sha256";
+import { URLStr } from "@beep/schema/URL";
 import * as S from "effect/Schema";
+import type { Result } from "effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RdfId.create("semantic-schema-metadata");
-/* istanbul ignore next -- public callers receive schema issues through Result decoding */
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
-
 /**
  * Closed v1 metadata kind domain for semantic-web schemas.
  *
@@ -219,12 +213,19 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
     name: S.NonEmptyString,
     version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     section: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-    url: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    url: S.OptionFromOptionalKey(URLStr).pipe(SchemaUtils.withNoneDefault),
     localRef: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     disposition: SemanticSchemaSpecificationDisposition,
+    sourceId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    sourceRole: S.OptionFromOptionalKey(Conformance.SpecificationSourceRole).pipe(SchemaUtils.withNoneDefault),
+    revision: S.OptionFromOptionalKey(Conformance.Revision).pipe(SchemaUtils.withNoneDefault),
+    contentSha256: S.OptionFromOptionalKey(Sha256.Sha256Hex).pipe(SchemaUtils.withNoneDefault),
+    license: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    scope: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SemanticSchemaSpecification", {
-    description: "Single specification reference attached to public semantic-web schemas.",
+    description:
+      "Single specification reference with optional lossless provenance attached to public semantic-web schemas.",
   })
 ) {}
 
@@ -322,176 +323,3 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
     options?: AST.ParseOptions
   ) => Result.Result<SemanticSchemaMetadata, S.SchemaError> = S.decodeUnknownResult(this);
 }
-
-/**
- * Payload stored in the `semanticSchemaMetadata` annotation key.
- *
- * **Example** (Type-check annotation payload)
- *
- * ```ts
- * import type { SemanticSchemaMetadataAnnotationPayload } from "@beep/rdf/SemanticSchemaMetadata"
- *
- * const acceptSemanticSchemaMetadataAnnotationPayload = (value: SemanticSchemaMetadataAnnotationPayload) => value
- * console.log(acceptSemanticSchemaMetadataAnnotationPayload)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SemanticSchemaMetadataAnnotationPayload = SemanticSchemaMetadata;
-
-declare module "effect/Schema" {
-  namespace Annotations {
-    interface Annotations {
-      readonly semanticSchemaMetadata?: SemanticSchemaMetadataAnnotationPayload | undefined;
-    }
-  }
-}
-
-/**
- * Validate a metadata payload before attaching it to a public schema.
- *
- * **Example** (Build validated metadata)
- *
- * ```ts import.meta.vitest name="Build validated metadata"
- * import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
- *
- * const metadata = makeSemanticSchemaMetadata({
- *   kind: "identifier",
- *   canonicalName: "ExampleIdentifier",
- *   overview: "Example semantic schema metadata.",
- *   status: "stable",
- *   specifications: [{ name: "Example Profile", disposition: "informative" }],
- *   equivalenceBasis: "String equality.",
- * })
- * metadata.kind // => "identifier"
- * ```
- *
- * @param metadata - Encoded metadata payload.
- * @returns Validated metadata payload.
- * @category utilities
- * @since 0.0.0
- */
-export const makeSemanticSchemaMetadata = (
-  metadata: typeof SemanticSchemaMetadata.Encoded
-): SemanticSchemaMetadataAnnotationPayload =>
-  pipe(SemanticSchemaMetadata.decodeUnknownResult(metadata), Result.getOrThrowWith(schemaIssueToError));
-
-type Rebuilt<Schema extends S.Top> = Schema["Rebuild"];
-
-/**
- * Attach validated semantic metadata to any Effect schema.
- *
- * **Example** (Attach metadata to schema)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { annotateSemanticSchema } from "@beep/rdf/SemanticSchemaMetadata"
- *
- * const MySchema = annotateSemanticSchema(S.String, {
- *   kind: "identifier",
- *   canonicalName: "ExampleIdentifier",
- *   overview: "Example semantic schema metadata.",
- *   status: "stable",
- *   specifications: [{ name: "Example Profile", disposition: "informative" }],
- *   equivalenceBasis: "String equality.",
- * })
- * console.log(MySchema)
- * ```
- *
- * @param schema - Target schema.
- * @param metadata - Encoded metadata payload.
- * @returns Annotated schema.
- * @category utilities
- * @since 0.0.0
- */
-export const annotateSemanticSchema: {
-  <Schema extends S.Top>(metadata: typeof SemanticSchemaMetadata.Encoded): (schema: Schema) => Rebuilt<Schema>;
-  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Rebuilt<Schema>;
-} = dual(
-  2,
-  <Schema extends S.Top>(schema: Schema, metadata: typeof SemanticSchemaMetadata.Encoded): Rebuilt<Schema> =>
-    schema.annotate({ semanticSchemaMetadata: makeSemanticSchemaMetadata(metadata) })
-);
-
-const hasAnnotationsRecord = (
-  value: unknown
-): value is Readonly<Record<string, unknown>> & {
-  annotations?:
-    | {
-        semanticSchemaMetadata?: SemanticSchemaMetadataAnnotationPayload | undefined;
-      }
-    | undefined;
-} => P.isObject(value);
-
-const findSemanticSchemaMetadata = (
-  value: unknown,
-  visited: WeakSet<object>
-): SemanticSchemaMetadataAnnotationPayload | undefined => {
-  if (A.isArray(value)) {
-    /* istanbul ignore next -- Effect Schema AST arrays are acyclic through public schema constructors */
-    if (visited.has(value)) {
-      return;
-    }
-
-    visited.add(value);
-
-    for (const nested of value) {
-      const metadata = findSemanticSchemaMetadata(nested, visited);
-      if (metadata !== undefined) {
-        return metadata;
-      }
-    }
-
-    return;
-  }
-
-  if (!P.isObject(value)) {
-    return;
-  }
-
-  /* istanbul ignore next -- Effect Schema AST objects are acyclic through public schema constructors */
-  if (visited.has(value)) {
-    return;
-  }
-
-  visited.add(value);
-
-  if (hasAnnotationsRecord(value) && value.annotations?.semanticSchemaMetadata !== undefined) {
-    return value.annotations.semanticSchemaMetadata;
-  }
-
-  for (const nested of R.values(value)) {
-    const metadata = findSemanticSchemaMetadata(nested, visited);
-    if (metadata !== undefined) {
-      return metadata;
-    }
-  }
-
-  return;
-};
-
-/**
- * Read semantic metadata from any Effect schema, if present.
- *
- * **Example** (Read missing metadata option)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
- * import * as O from "effect/Option"
- *
- * const metadata = getSemanticSchemaMetadata(S.String)
- * console.log(O.isNone(metadata)) // true (no metadata attached)
- * ```
- *
- * @param schema - Target schema.
- * @returns Metadata payload as an Option.
- * @category utilities
- * @since 0.0.0
- */
-export const getSemanticSchemaMetadata = (schema: S.Top): O.Option<SemanticSchemaMetadataAnnotationPayload> =>
-  pipe(
-    O.fromNullishOr(S.resolveAnnotations(schema)?.semanticSchemaMetadata),
-    O.orElse(() => O.fromNullishOr(findSemanticSchemaMetadata(schema.ast, new WeakSet())))
-  );

@@ -1,0 +1,808 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/pandoc-ast",
+  "profileIds": [
+    "pandoc-json-1.23.1",
+    "pandoc-cli-3.10.2",
+    "beep-pandoc-md-v1"
+  ],
+  "coverage": [
+    {
+      "invariantId": "pandoc.registry.upstream-generation",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "generatePandocConstructorRegistry"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "pandoc.registry.known-name-exhaustiveness",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.registry.known-name-exhaustiveness"
+        },
+        {
+          "kind": "runtime",
+          "validator": "UnknownBlock"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.registry.known-name-exhaustiveness"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.registry.known-name-exhaustiveness"
+        },
+        {
+          "kind": "runtime",
+          "validator": "UnknownBlock"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-known-names-from-semantic-unknown-constructors-and-retains-valid-future-constructors"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-known-names-from-semantic-unknown-constructors-and-retains-valid-future-constructors"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.ast.internal-tag-discrimination",
+      "profileIds": ["beep-pandoc-md-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.ast.internal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.ast.internal-tag-discrimination"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.ast.internal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocDocument"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#keeps-schema-derived-semantic-documents-closed-under-encode-and-strict-decode"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-malformed-supported-top-level-block-payloads"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.codec.strict-lossless-separation",
+      "profileIds": ["beep-pandoc-md-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectPandocConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.codec.strict-lossless-separation"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.semantic-conformance.test.ts",
+          "oracle": "Exhaustive compatible, unsupported, and invalid facade classification"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectPandocConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#issues-lossless-views-from-one-immutable-canonical-wire",
+        "test/Pandoc.codec.test.ts#preserves-arbitrary-future-JSON-through-the-public-lossless-profile",
+        "test/Pandoc.semantic-conformance.test.ts#classifies-an-exact-current-document-as-compatible-with-stable-invariant-IDs",
+        "test/Pandoc.semantic-conformance.test.ts#classifies-retained-future-constructors-as-unsupported-through-exhaustive-helpers"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-malformed-standard-table-constructors-and-retains-their-exact-wire-losslessly",
+        "test/Pandoc.semantic-conformance.test.ts#classifies-malformed-current-constructors-as-invalid-with-lossless-diagnostics",
+        "test/Pandoc.semantic-conformance.test.ts#does-not-call-lossy-strict-rewrites-normalizable"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.codec.future-constructors",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "UnknownBlock"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.codec.future-constructors"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "UnknownBlock"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#retains-exact-future-constructors-including-absent-payloads-and-extension-fields",
+        "test/Pandoc.codec.test.ts#preserves-arbitrary-future-JSON-through-the-public-lossless-profile"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-known-names-from-semantic-unknown-constructors-and-retains-valid-future-constructors"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.codec.known-unsupported",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "Context-specific PandocInline, PandocBlock, metadata, and structural wire schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned constructor context grammar"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "Context-specific PandocInline, PandocBlock, metadata, and structural wire schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-known-constructors-in-the-wrong-context-and-reports-their-exact-paths-losslessly",
+        "test/Pandoc.codec.test.ts#rejects-pinned-structural-and-newtype-constructors-nested-in-opaque-table-slots"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.codec.constructor-context",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.codec.constructor-context"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-known-constructors-in-the-wrong-context-and-reports-their-exact-paths-losslessly",
+        "test/Pandoc.codec.test.ts#rejects-known-constructors-in-table-structural-slots-and-reports-their-exact-paths"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.codec.nullary-payloads",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.codec.nullary-payloads"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-payloads-on-known-nullary-constructors-and-reports-them-losslessly"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.table.recursive-payload",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.table.recursive-payload"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocTablePayload"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.table.recursive-payload"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.table.recursive-payload"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocTablePayload"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#uses-the-semantic-table-schema-at-the-strict-decoder-boundary",
+        "test/Pandoc.codec.test.ts#decodes-authentic-Pandoc-1-23-1-table-attributes-captions-heads-and-feet"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-shallow-only-semantic-table-payloads-while-preserving-their-lossless-wire",
+        "test/Pandoc.codec.test.ts#rejects-malformed-caption-head-and-foot-slots-with-exact-lossless-diagnostics"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.table.column-width-payload",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "PandocColumnWidth S.toTaggedUnion(\"t\")"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocColumnWidth"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.semantic-conformance.test.ts",
+          "oracle": "Pinned ColWidth and ColWidthDefault payload grammar"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "PandocColumnWidth S.toTaggedUnion(\"t\")"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocColumnWidth"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.semantic-conformance.test.ts#discriminates-finite-ColWidth-from-nullary-ColWidthDefault",
+        "test/Pandoc.semantic-conformance.test.ts#accepts-every-finite-generated-ColWidth-payload"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.semantic-conformance.test.ts#discriminates-finite-ColWidth-from-nullary-ColWidthDefault"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.meta.recursive-values",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.meta.recursive-values"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocMetaValue"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.meta.recursive-values"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.meta.recursive-values"
+        },
+        {
+          "kind": "runtime",
+          "validator": "PandocMetaValue"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#round-trips-recursive-semantic-metadata-and-preserves-unknown-metadata-constructors"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#reports-malformed-metadata-in-lossless-mode-and-preserves-it-exactly"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.api-version.exact-profile",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.api-version.exact-profile"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectPandocApiVersion"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#preserves-representative-encoded-wire-shapes-for-attrs-targets-and-API-versions"
+      ],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "pandoc.header.level-adaptation",
+      "profileIds": ["beep-pandoc-md-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.mapping.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.header.level-adaptation"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.mapping.test.ts#preserves-beep-md-titles-ordered-starts-and-math-in-Pandoc-projection"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.mapping.test.ts#reports-out-of-range-Pandoc-header-levels-as-lossy-heading-clamping"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.list.constructor-domains",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.list.constructor-domains"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.mapping.test.ts, test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.list.constructor-domains"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.list.constructor-domains"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.mapping.test.ts#preserves-Pandoc-list-item-block-structure"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-malformed-known-list-constructors-through-the-typed-strict-API"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.math.constructor-domain",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.math.constructor-domain"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.mapping.test.ts, test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.math.constructor-domain"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/pandoc-ast exported schema type for pandoc.math.constructor-domain"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.mapping.test.ts#preserves-beep-md-titles-ordered-starts-and-math-in-Pandoc-projection",
+        "test/Pandoc.mapping.test.ts#round-trips-an-Md-math-block-through-a-Pandoc-display-math-paragraph"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.codec.test.ts#rejects-unsupported-Math-subtypes-strictly-retains-them-losslessly-and-preserves-ordered-list-semantics",
+        "test/Pandoc.codec.test.ts#rejects-known-or-malformed-nullary-constructors-in-a-Math-type-slot"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.mapping.supported-report",
+      "profileIds": ["beep-pandoc-md-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.mapping.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.mapping.supported-report"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.mapping.test.ts#maps-md-core-Pandoc-JSON-to-beep-md-with-a-supported-report"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.mapping.test.ts#records-DOCX-origin-compatibility-gaps-while-producing-partial-Md-output"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.mapping.lossiness-reporting",
+      "profileIds": ["beep-pandoc-md-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        },
+        {
+          "kind": "runtime",
+          "validator": "documentToPandoc"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.mapping.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.mapping.lossiness-reporting"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.semantic-conformance.test.ts",
+          "oracle": "Every newly modeled Pandoc constructor has an explicit Markdown degradation classification"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        },
+        {
+          "kind": "runtime",
+          "validator": "documentToPandoc"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.mapping.test.ts#preserves-mapping-report-invariants-for-schema-derived-documents",
+        "test/Pandoc.semantic-conformance.test.ts#classifies-every-newly-modeled-Markdown-projection-as-lossy-or-unsupported"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.mapping.test.ts#records-DOCX-origin-compatibility-gaps-while-producing-partial-Md-output",
+        "test/Pandoc.mapping.test.ts#maps-beep-md-documents-to-Pandoc-with-explicit-lossiness-for-raw-content-and-task-lists",
+        "test/Pandoc.mapping.test.ts#retains-structured-table-caption-text-in-the-explicit-gap-projection"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.image-description.profile",
+      "profileIds": ["beep-pandoc-md-v1"],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.mapping.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.image-description.profile"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "pandocToDocument"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.mapping.test.ts#keeps-a-single-Str-image-description-in-the-supported-profile"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.mapping.test.ts#reports-segmented-and-empty-image-descriptions-at-their-first-affected-paths",
+        "test/Pandoc.mapping.test.ts#reports-structured-image-descriptions-at-the-degraded-child-and-proves-the-flattened-round-trip"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.fixture.command-provenance",
+      "profileIds": ["pandoc-cli-3.10.2"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for pandoc.fixture.command-provenance"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "verifyPandocFixtureProvenance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.codec.test.ts#decodes-committed-Pandoc-JSON-fixtures-without-a-pandoc-executable"
+      ],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "pandoc.filters.execution",
+      "profileIds": ["pandoc-cli-3.10.2"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "unsupportedProfile"
+    },
+    {
+      "invariantId": "pandoc.cli.reader-writer-behavior",
+      "profileIds": ["pandoc-cli-3.10.2"],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "unsupportedProfile"
+    },
+    {
+      "invariantId": "pandoc.semantic-subset",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "PandocInline and PandocBlock exhaustive S.toTaggedUnion schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectPandocConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.semantic-conformance.test.ts",
+          "oracle": "Pinned pandoc-types constructor and payload grammar"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "PandocInline and PandocBlock exhaustive S.toTaggedUnion schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonLossless"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectPandocConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.semantic-conformance.test.ts#strictly-round-trips-all-eleven-newly-modeled-pandoc-types-constructors",
+        "test/Pandoc.semantic-conformance.test.ts#classifies-an-exact-current-document-as-compatible-with-stable-invariant-IDs",
+        "test/Pandoc.semantic-conformance.test.ts#classifies-retained-future-constructors-as-unsupported-through-exhaustive-helpers"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.semantic-conformance.test.ts#reports-malformed-Quoted-Cite-LineBlock-DefinitionList-and-Figure-payloads-losslessly",
+        "test/Pandoc.semantic-conformance.test.ts#classifies-malformed-current-constructors-as-invalid-with-lossless-diagnostics"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "pandoc.raw.exact-retention",
+      "profileIds": ["pandoc-json-1.23.1"],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "PandocFormat, RawInline, and RawBlock schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "encodePandocJson"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Pandoc.semantic-conformance.test.ts",
+          "oracle": "Exact raw format and text wire round trip"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "PandocFormat, RawInline, and RawBlock schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "decodePandocJsonStrict"
+        },
+        {
+          "kind": "runtime",
+          "validator": "encodePandocJson"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Pandoc.semantic-conformance.test.ts#retains-RawInline-and-RawBlock-format-and-text-exactly"
+      ],
+      "negativeTestIds": [
+        "test/Pandoc.semantic-conformance.test.ts#rejects-malformed-raw-format-and-text-payloads"
+      ],
+      "status": "covered"
+    }
+  ]
+}

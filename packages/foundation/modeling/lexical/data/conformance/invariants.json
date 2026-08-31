@@ -1,0 +1,670 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/lexical-schema",
+  "profileIds": ["lexical-serialized-state-0.49.0", "beep-lexical-v1"],
+  "invariants": [
+    {
+      "id": "lexical.source.upstream-parity",
+      "title": "Every supported serialized node must be compared with the pinned upstream source",
+      "statement": "The approved v0.49.0 source pin is recorded, but it is not vendored or mechanically compared with every schema; current source and tests still contain prose tied to Lexical 0.45.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical/src"
+        },
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical-list/src"
+        },
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical-table/src"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "lexical.ast.type-discrimination",
+      "title": "Supported semantic nodes must be exhaustively discriminated by type",
+      "statement": "The strict v1 node union has 16 literal type members and exposes exhaustive matching helpers.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/lexical-schema exported schema type for lexical.ast.type-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "LexicalNode"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.ast.type-discrimination"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical/src"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#round-trips-schema-derived-arbitrary-nodes-through-encode-decode",
+        "test/Lexical.model.test.ts#rejects-nodes-outside-the-v1-union"
+      ]
+    },
+    {
+      "id": "lexical.node.version-one",
+      "title": "Supported built-in nodes must use serialized node version one",
+      "statement": "LexicalNodeVersion is the literal wire value 1 for every supported strict node; this is distinct from npm package version 0.49.0.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/lexical-schema exported schema type for lexical.node.version-one"
+        },
+        {
+          "kind": "runtime",
+          "validator": "SerializedEditorState"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.node.version-one"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "node-serialization"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#decodes-the-fixture-editor-state-and-captures-nullish-wire-values-as-Options",
+        "test/Lexical.model.test.ts#rejects-impossible-serialized-formatting-and-structural-values"
+      ]
+    },
+    {
+      "id": "lexical.strict.closed-objects",
+      "title": "Strict semantic decoding must reject excess fields",
+      "statement": "Every strict surface rejects excess properties rather than silently discarding them.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "SerializedEditorState"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.strict.closed-objects"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "SerializedEditorState"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#rejects-excess-fields-through-every-strict-surface-while-retaining-their-lossless-wire"
+      ]
+    },
+    {
+      "id": "lexical.lossless.open-wire",
+      "title": "Lossless decoding must preserve future fields and nodes exactly",
+      "statement": "Open StructWithRest wire schemas retain envelope, root, node, version, NodeState, and future child fields without imposing the strict semantic grammar.",
+      "strength": "must",
+      "scope": "serialization",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "SerializedEditorStateWire"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.lossless.open-wire"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-nodes-docs-2026-08-30",
+          "section": "node-properties-and-serialization"
+        },
+        {
+          "sourceId": "lexical-nodes-docs-2026-08-30",
+          "section": "node-state"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "SerializedEditorStateWire"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#round-trips-arbitrary-open-wire-states-without-losing-extension-fields",
+        "test/Lexical.model.test.ts#preserves-opaque-future-children-fields-without-imposing-semantic-child-grammar",
+        "test/Lexical.model.test.ts#requires-strict-NodeState-values-to-be-lossless-JSON"
+      ]
+    },
+    {
+      "id": "lexical.strict.future-node-reporting",
+      "title": "Future nodes must remain lossless and be reported as strict incompatibilities",
+      "statement": "Unknown future type strings remain in the lossless wire while compatibility analysis reports that strict semantic decoding cannot admit them.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "decodeEditorStateLossless"
+        },
+        {
+          "kind": "runtime",
+          "validator": "analyzeEditorStateCompatibility"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.strict.future-node-reporting"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical/src"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "SerializedEditorStateWire"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#preserves-future-JSON-wire-extensions-and-reports-strict-incompatibility",
+        "test/Lexical.model.test.ts#rejects-nodes-outside-the-v1-union"
+      ]
+    },
+    {
+      "id": "lexical.tree.parent-child-grammar",
+      "title": "Nodes must occur only beneath compatible parents",
+      "statement": "The public LexicalNode schema applies a recursive grammar after structural union decoding and rejects invalid root, table, list, link, code, and leaf placement.",
+      "strength": "must",
+      "scope": "subtree",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "LexicalNode"
+        },
+        {
+          "kind": "runtime",
+          "validator": "analyzeEditorStateCompatibility"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.tree.parent-child-grammar"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#enforces-the-strict-v1-child-grammar-on-the-established-semantic-schema",
+        "test/Lexical.model.test.ts#enforces-recursive-child-placement-and-non-empty-roots-on-the-public-node-schema"
+      ]
+    },
+    {
+      "id": "lexical.root.nonempty",
+      "title": "Strict editor roots must contain at least one editable child",
+      "statement": "Strict decoding rejects empty roots; lossless decoding preserves them and reports incompatibility, while Md projection canonicalizes an empty document to one paragraph.",
+      "strength": "must",
+      "scope": "subtree",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "SerializedEditorState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "analyzeEditorStateCompatibility"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.codec.test.ts, test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.root.nonempty"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical/src"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "SerializedEditorState"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.codec.test.ts#canonicalizes-an-empty-Md-document-to-one-runtime-editable-paragraph",
+        "test/Lexical.model.test.ts#preserves-an-empty-root-losslessly-while-reporting-strict-incompatibility"
+      ]
+    },
+    {
+      "id": "lexical.heading.tag-domain",
+      "title": "Heading tags must be h1 through h6",
+      "statement": "HeadingTag is a six-member literal domain and the Markdown adapter maps it to HeadingLevel without an open string escape hatch.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/lexical-schema exported schema type for lexical.heading.tag-domain"
+        },
+        {
+          "kind": "runtime",
+          "validator": "SerializedEditorState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "documentToEditorState"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.codec.test.ts, test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.heading.tag-domain"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "heading-node"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.codec.test.ts#round-trips-an-md-core-assistant-turn-Md-Lexical-Md-identity",
+        "test/Lexical.model.test.ts#rejects-impossible-serialized-formatting-and-structural-values"
+      ]
+    },
+    {
+      "id": "lexical.list.metadata-consistency",
+      "title": "List type, tag, start, and checked metadata must be mutually consistent",
+      "statement": "Strict schemas reject contradictory list metadata, normalize approved legacy starts, and test canonical metadata against the real @lexical/list runtime.",
+      "strength": "must",
+      "scope": "subtree",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "ListNode"
+        },
+        {
+          "kind": "runtime",
+          "validator": "analyzeEditorStateCompatibility"
+        },
+        {
+          "kind": "runtime",
+          "validator": "blockToLexical"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.list.metadata-consistency"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical-list/src"
+        },
+        {
+          "sourceId": "lexical-list-npm-0.49.0",
+          "section": "package"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.codec.test.ts#constructs-every-Markdown-list-projection-through-the-canonical-ListNode-payload-cases",
+        "test/Lexical.model.test.ts#generates-only-runtime-canonical-list-metadata",
+        "test/Lexical.model.test.ts#keeps-canonical-list-metadata-fixed-through-the-real-Lexical-runtime",
+        "test/Lexical.model.test.ts#rejects-contradictory-list-metadata-strictly-while-retaining-the-exact-lossless-wire",
+        "test/Lexical.model.test.ts#normalizes-legacy-serialized-list-starts-and-rejects-corrupt-item-zeros"
+      ]
+    },
+    {
+      "id": "lexical.table.structure",
+      "title": "Tables must contain rows and rows must contain cells with valid spans and dimensions",
+      "statement": "The strict grammar enforces the table-to-row-to-cell hierarchy and schema domains constrain header state, spans, and dimensions.",
+      "strength": "must",
+      "scope": "subtree",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/lexical-schema exported schema type for lexical.table.structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "LexicalNode"
+        },
+        {
+          "kind": "runtime",
+          "validator": "analyzeEditorStateCompatibility"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.table.structure"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages/lexical-table/src"
+        },
+        {
+          "sourceId": "lexical-table-npm-0.49.0",
+          "section": "package"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#round-trips-schema-derived-arbitrary-editor-states-through-encode-decode",
+        "test/Lexical.model.test.ts#enforces-the-strict-v1-child-grammar-on-the-established-semantic-schema"
+      ]
+    },
+    {
+      "id": "lexical.text.format-bitmasks",
+      "title": "Text format and detail masks must contain only supported bits",
+      "statement": "Named bit domains and aggregate masks reject unsupported or impossible formatting values while preserving valid combinations.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/lexical-schema exported schema type for lexical.text.format-bitmasks"
+        },
+        {
+          "kind": "runtime",
+          "validator": "TextFormatMask"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.text.format-bitmasks"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "text-node"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#rejects-impossible-serialized-formatting-and-structural-values"
+      ]
+    },
+    {
+      "id": "lexical.node-state.json-only",
+      "title": "Strict NodeState must be JSON-valued",
+      "statement": "Strict semantic admission rejects functions, symbols, bigint values, and other non-JSON data while the open JSON wire remains lossless.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "SerializedEditorState"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.node-state.json-only"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-nodes-docs-2026-08-30",
+          "section": "node-state"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#round-trips-through-the-JSON-string-codec",
+        "test/Lexical.model.test.ts#requires-strict-NodeState-values-to-be-lossless-JSON"
+      ]
+    },
+    {
+      "id": "lexical.safe.urls-and-styles",
+      "title": "Semantic links and inline styles must be normalized to safe fixed points",
+      "statement": "Schema boundaries sanitize untrusted URLs and restrict inline style values; semantic constructors reject values that bypass normalization.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "SafeUrl"
+        },
+        {
+          "kind": "runtime",
+          "validator": "sanitizeUrl"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.safe.urls-and-styles"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#sanitizes-link-URLs-at-the-schema-boundary-and-keeps-safe-URLs-fixed",
+        "test/Lexical.model.test.ts#rejects-unsafe-values-passed-directly-to-semantic-node-constructors"
+      ]
+    },
+    {
+      "id": "lexical.nullish.option-boundary",
+      "title": "Nullish serialized fields must decode to explicit Options without wire drift",
+      "statement": "Nullable or absent Lexical wire fields decode to Option and encode back without changing the supported fixture wire.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "SerializedEditorState"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.nullish.option-boundary"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "node-serialization"
+        },
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "SerializedEditorState"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#decodes-the-fixture-editor-state-and-captures-nullish-wire-values-as-Options",
+        "test/Lexical.model.test.ts#round-trips-the-fixture-through-decode-encode-without-wire-drift",
+        "test/Lexical.model.test.ts#rejects-values-outside-nullish-optional-field-domains"
+      ]
+    },
+    {
+      "id": "lexical.adapter.md-core-identity",
+      "title": "The supported Md-core slice should round-trip through Lexical",
+      "statement": "The supported assistant-turn slice preserves semantic Markdown identity, while out-of-profile constructs use explicit deterministic degradation.",
+      "strength": "should",
+      "scope": "conversion",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "documentToEditorState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "editorStateToDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.adapter.md-core-identity"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.codec.test.ts#round-trips-an-md-core-assistant-turn-Md-Lexical-Md-identity",
+        "test/Lexical.codec.test.ts#degrades-out-of-profile-Md-nodes-deterministically"
+      ]
+    },
+    {
+      "id": "lexical.adapter.lossiness-reporting",
+      "title": "Every lossy or normalized Markdown conversion must be explicit",
+      "statement": "Table alignment, unsupported text bits, code metadata, Markdown-origin multi-block quotes, and out-of-profile nodes are normalized or degraded through tested policy rather than silently reinterpreted, while shadow-root Lexical quotes preserve their block structure.",
+      "strength": "must",
+      "scope": "conversion",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "documentToEditorState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "editorStateToDocument"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.codec.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.adapter.lossiness-reporting"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-beep-v1-baseline",
+          "section": "LexicalNode"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.codec.test.ts#stabilizes-after-one-Md-Lexical-Md-pass-lossy-codec-idempotent-on-its-stable-image",
+        "test/Lexical.codec.test.ts#drops-Lexical-only-text-format-bits-underline-per-the-lossiness-profile",
+        "test/Lexical.codec.test.ts#normalizes-multi-block-quotes-into-a-single-linebreak-separated-paragraph",
+        "test/Lexical.codec.test.ts#preserves-block-structure-for-shadow-root-quotes"
+      ]
+    },
+    {
+      "id": "lexical.transforms.runtime-semantics",
+      "title": "Transform ordering and dirty-node lifecycle are outside serialized-state validation",
+      "statement": "The package validates persisted state and does not execute Lexical transforms or claim equivalence with editor dirty-node scheduling.",
+      "strength": "may",
+      "scope": "value",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-transforms-docs-2026-08-30",
+          "section": "lifecycle"
+        },
+        {
+          "sourceId": "lexical-transforms-docs-2026-08-30",
+          "section": "preconditions"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "lexical.full-node-ecosystem",
+      "title": "Nodes outside the supported v1 union remain outside the strict profile",
+      "statement": "The strict profile intentionally supports 16 node types; other upstream, plugin, and application nodes are preserved only by the open lossless wire until explicitly modeled.",
+      "strength": "may",
+      "scope": "node",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        },
+        {
+          "kind": "test",
+          "suite": "test/Lexical.model.test.ts",
+          "oracle": "Pinned source rule and package expectation for lexical.full-node-ecosystem"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "lexical-source-0.49.0",
+          "section": "packages"
+        }
+      ],
+      "testIds": [
+        "test/Lexical.model.test.ts#rejects-nodes-outside-the-v1-union"
+      ]
+    }
+  ]
+}

@@ -36,6 +36,9 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./SemanticSchemaConformance": "./src/SemanticSchemaConformance.ts",
+    "./SemanticSchemaMetadata": "./src/SemanticSchemaMetadata/index.ts",
+    "./SemanticSchemaMetadata/*": null,
     "./*": "./src/*.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -53,6 +56,9 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./SemanticSchemaConformance": "./dist/SemanticSchemaConformance.js",
+      "./SemanticSchemaMetadata": "./dist/SemanticSchemaMetadata/index.js",
+      "./SemanticSchemaMetadata/*": null,
       "./*": "./dist/*.js",
       "./internal/*": null,
       "./package.json": "./package.json"

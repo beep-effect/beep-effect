@@ -18,13 +18,18 @@ import {
 import {
   BlockQuote,
   BulletList,
+  Citation,
+  Cite,
   Code,
   CodeBlock,
+  DefinitionList,
   Div,
   Emph,
+  Figure,
   Header,
   HorizontalRule,
   Image,
+  LineBlock,
   LineBreak,
   Link,
   Math,
@@ -38,23 +43,34 @@ import {
   OrderedList,
   PandocApiVersion,
   PandocAttr,
+  PandocCaption,
+  PandocCitationMode,
+  PandocDefinitionListItem,
   PandocDocument,
   PandocKeyValue,
   PandocListNumberDelimiter,
   PandocListNumberStyle,
   PandocMathType,
+  PandocQuoteType,
   PandocTablePayload,
   PandocTarget,
   PandocUnknownConstructorWire,
   Para,
   Plain,
+  Quoted,
+  RawBlock,
+  RawInline,
+  SmallCaps,
   SoftBreak,
   Space,
   Span,
   Str,
   Strikeout,
   Strong,
+  Subscript,
+  Superscript,
   Table,
+  Underline,
   UnknownBlock,
   UnknownInline,
   UnknownMeta,
@@ -489,9 +505,24 @@ const DivPayloadWire = S.Tuple([AttrWire, S.Array(S.Unknown)]);
 const LinkPayloadWire = S.Tuple([AttrWire, S.Array(S.Unknown), TargetWire]);
 const NotePayloadWire = S.Array(S.Unknown);
 const MathPayloadWire = S.Tuple([PandocConstructorWire, S.String]);
+const QuotePayloadWire = S.Tuple([PandocConstructorWire, S.Array(S.Unknown)]);
+const CitationWire = S.Struct({
+  citationHash: S.Int,
+  citationId: S.String,
+  citationMode: PandocConstructorWire,
+  citationNoteNum: S.Int,
+  citationPrefix: S.Array(S.Unknown),
+  citationSuffix: S.Array(S.Unknown),
+});
+const CitePayloadWire = S.Tuple([S.Array(CitationWire), S.Array(S.Unknown)]);
+const RawPayloadWire = S.Tuple([S.String, S.String]);
+const LineBlockPayloadWire = S.Unknown.pipe(S.Array, S.Array);
+const DefinitionListItemWire = S.Tuple([S.Array(S.Unknown), S.Unknown.pipe(S.Array, S.Array)]);
+const DefinitionListPayloadWire = S.Array(DefinitionListItemWire);
 const OrderedListPayloadWire = S.Tuple([S.Tuple([S.Int, S.Unknown, S.Unknown]), S.Unknown]);
 const BlockItemsWire = S.Unknown.pipe(S.Array, S.Array);
 const TableCaptionPairWire = S.Tuple([S.Unknown.pipe(S.Array, S.NullOr), S.Array(S.Unknown)]);
+const FigurePayloadWire = S.Tuple([AttrWire, TableCaptionPairWire, S.Array(S.Unknown)]);
 const TableColumnSpecWire = S.Tuple([S.Unknown, S.Unknown]);
 const TableCellWire = S.Tuple([AttrWire, S.Unknown, S.Int, S.Int, S.Array(S.Unknown)]);
 const TableRowWire = S.Tuple([AttrWire, S.Array(S.Unknown)]);
@@ -548,6 +579,12 @@ const decodeDivPayloadWire = S.decodeUnknownEffect(DivPayloadWire);
 const decodeLinkPayloadWire = S.decodeUnknownEffect(LinkPayloadWire);
 const decodeNotePayloadWire = S.decodeUnknownEffect(NotePayloadWire);
 const decodeMathPayloadWire = S.decodeUnknownEffect(MathPayloadWire);
+const decodeQuotePayloadWire = S.decodeUnknownEffect(QuotePayloadWire);
+const decodeCitePayloadWire = S.decodeUnknownEffect(CitePayloadWire);
+const decodeRawPayloadWire = S.decodeUnknownEffect(RawPayloadWire);
+const decodeLineBlockPayloadWire = S.decodeUnknownEffect(LineBlockPayloadWire);
+const decodeDefinitionListPayloadWire = S.decodeUnknownEffect(DefinitionListPayloadWire);
+const decodeFigurePayloadWire = S.decodeUnknownEffect(FigurePayloadWire);
 const decodeOrderedListPayloadWire = S.decodeUnknownEffect(OrderedListPayloadWire);
 const decodeBlockItemsWire = S.decodeUnknownEffect(BlockItemsWire);
 const decodeTablePayloadWire = S.decodeUnknownEffect(PandocTablePayload);
@@ -562,15 +599,26 @@ const decodeConstructorOption = S.decodeUnknownOption(PandocConstructorWire);
 const decodeListNumberStyle = S.decodeUnknownEffect(PandocListNumberStyle);
 const decodeListNumberDelimiter = S.decodeUnknownEffect(PandocListNumberDelimiter);
 const decodeMathType = S.decodeUnknownOption(PandocMathType);
+const decodeQuoteType = S.decodeUnknownOption(PandocQuoteType);
+const decodeCitationMode = S.decodeUnknownOption(PandocCitationMode);
 const decodeBoolean = S.decodeUnknownEffect(S.Boolean);
 const decodeJsonArray = S.decodeUnknownEffect(S.Array(S.Json));
 const decodeJsonRecord = S.decodeUnknownEffect(S.Record(S.String, S.Json));
 const decodeAbsentPayload = S.decodeUnknownEffect(S.Undefined);
 
-const decodeAndTakeT = flow(decodeConstructor, Effect.map(Struct.get("t")));
+const listNumberStyleFromWire = Effect.fn("Pandoc.listNumberStyleFromWire")(function* (input: unknown) {
+  const wire = yield* decodeConstructor(input);
+  const style = yield* decodeListNumberStyle(wire.t);
+  yield* decodeAbsentPayload(wire.c);
+  return style;
+});
 
-const listNumberStyleFromWire = flow(decodeAndTakeT, Effect.flatMap(decodeListNumberStyle));
-const listNumberDelimiterFromWire = flow(decodeAndTakeT, Effect.flatMap(decodeListNumberDelimiter));
+const listNumberDelimiterFromWire = Effect.fn("Pandoc.listNumberDelimiterFromWire")(function* (input: unknown) {
+  const wire = yield* decodeConstructor(input);
+  const delimiter = yield* decodeListNumberDelimiter(wire.t);
+  yield* decodeAbsentPayload(wire.c);
+  return delimiter;
+});
 
 const attrFromWire: (input: unknown) => Effect.Effect<PandocAttr, S.SchemaError> = decodeAttrWire;
 
@@ -722,6 +770,50 @@ const decodeMathInline = (wire: PandocConstructorWire): Effect.Effect<PandocInli
     );
   });
 
+const decodeCitation = Effect.fn("Pandoc.decodeCitation")(function* (wire: typeof CitationWire.Type) {
+  const mode = decodeCitationMode(wire.citationMode.t);
+  if (O.isNone(mode)) {
+    return yield* rejectUnsupportedConstructorInSlot(wire.citationMode, "a Citation mode slot");
+  }
+  yield* decodeAbsentPayload(wire.citationMode.c);
+  const [prefix, suffix] = yield* Effect.all([decodeInlines(wire.citationPrefix), decodeInlines(wire.citationSuffix)]);
+  return Citation.make({
+    hash: wire.citationHash,
+    id: wire.citationId,
+    mode: mode.value,
+    noteNumber: wire.citationNoteNum,
+    prefix,
+    suffix,
+  });
+});
+
+const decodeQuotedInline = Effect.fn("Pandoc.decodeQuotedInline")(function* (payload: unknown) {
+  const [quoteTypeWire, childrenWire] = yield* decodeQuotePayloadWire(payload);
+  const quoteType = decodeQuoteType(quoteTypeWire.t);
+  if (O.isNone(quoteType)) {
+    return yield* rejectUnsupportedConstructorInSlot(quoteTypeWire, "a Quoted type slot");
+  }
+  yield* decodeAbsentPayload(quoteTypeWire.c);
+  const children = yield* decodeInlines(childrenWire);
+  return Quoted.make({ children, quoteType: quoteType.value });
+});
+
+const decodeCiteInline = Effect.fn("Pandoc.decodeCiteInline")(function* (payload: unknown) {
+  const [citationWires, childrenWire] = yield* decodeCitePayloadWire(payload);
+  const [citations, children] = yield* Effect.all([
+    Effect.forEach(citationWires, decodeCitation),
+    decodeInlines(childrenWire),
+  ]);
+  return Cite.make({ children, citations });
+});
+
+const decodeCaption = Effect.fn("Pandoc.decodeCaption")(function* (payload: unknown) {
+  const [shortWire, blocksWire] = yield* decodeTableCaptionPairWire(payload);
+  const short = shortWire === null ? O.none() : O.some(yield* decodeInlines(shortWire));
+  const blocks = yield* decodeBlockList(blocksWire);
+  return PandocCaption.make({ blocks, short });
+});
+
 const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.SchemaError> =>
   Effect.flatMap(decodeConstructor(input), (wire) =>
     Match.value(wire.t).pipe(
@@ -729,9 +821,22 @@ const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.Schema
       Match.when("Space", () => Effect.as(decodeAbsentPayload(wire.c), Space.make())),
       Match.when("SoftBreak", () => Effect.as(decodeAbsentPayload(wire.c), SoftBreak.make())),
       Match.when("LineBreak", () => Effect.as(decodeAbsentPayload(wire.c), LineBreak.make())),
-      Match.when("Emph", () => decodeChildInline(wire.c, (children) => Emph.make({ children }))),
-      Match.when("Strong", () => decodeChildInline(wire.c, (children) => Strong.make({ children }))),
-      Match.when("Strikeout", () => decodeChildInline(wire.c, (children) => Strikeout.make({ children }))),
+      Match.whenOr("Emph", "Underline", "Strong", "Strikeout", "Superscript", "Subscript", "SmallCaps", (constructor) =>
+        decodeChildInline(wire.c, (children) =>
+          Match.value(constructor).pipe(
+            Match.when("Emph", () => Emph.make({ children })),
+            Match.when("Underline", () => Underline.make({ children })),
+            Match.when("Strong", () => Strong.make({ children })),
+            Match.when("Strikeout", () => Strikeout.make({ children })),
+            Match.when("Superscript", () => Superscript.make({ children })),
+            Match.when("Subscript", () => Subscript.make({ children })),
+            Match.when("SmallCaps", () => SmallCaps.make({ children })),
+            Match.exhaustive
+          )
+        )
+      ),
+      Match.when("Quoted", () => decodeQuotedInline(wire.c)),
+      Match.when("Cite", () => decodeCiteInline(wire.c)),
       Match.when("Code", () =>
         decodeAttributedTextInline(wire.c, (attr, text) =>
           Code.make({
@@ -770,6 +875,9 @@ const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.Schema
         Effect.map(Effect.flatMap(decodeNotePayloadWire(wire.c), decodeBlockList), (blocks) => Note.make({ blocks }))
       ),
       Match.when("Math", () => decodeMathInline(wire)),
+      Match.when("RawInline", () =>
+        Effect.map(decodeRawPayloadWire(wire.c), ([format, text]) => RawInline.make({ format, text }))
+      ),
       Match.orElse(() =>
         isPandocKnownConstructorName(wire.t)
           ? rejectKnownConstructor(wire, "inline")
@@ -819,11 +927,36 @@ const decodeTableBlock = (payload: unknown): Effect.Effect<PandocBlock.Type, S.S
     )
   );
 
+const decodeLineBlock = Effect.fn("Pandoc.decodeLineBlock")(function* (payload: unknown) {
+  const lineWires = yield* decodeLineBlockPayloadWire(payload);
+  const lines = yield* Effect.forEach(lineWires, (line) => decodeInlines(line));
+  return LineBlock.make({ lines });
+});
+
+const decodeDefinitionList = Effect.fn("Pandoc.decodeDefinitionList")(function* (payload: unknown) {
+  const itemWires = yield* decodeDefinitionListPayloadWire(payload);
+  const items = yield* Effect.forEach(itemWires, ([termWire, definitionWires]) =>
+    Effect.map(Effect.all([decodeInlines(termWire), decodeBlockItems(definitionWires)]), PandocDefinitionListItem.make)
+  );
+  return DefinitionList.make({ items });
+});
+
+const decodeFigure = Effect.fn("Pandoc.decodeFigure")(function* (payload: unknown) {
+  const [attrWire, captionWire, childrenWire] = yield* decodeFigurePayloadWire(payload);
+  const [attr, caption, children] = yield* Effect.all([
+    attrFromWire(attrWire),
+    decodeCaption(captionWire),
+    decodeBlockList(childrenWire),
+  ]);
+  return Figure.make({ attr, caption, children });
+});
+
 const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
   Effect.flatMap(decodeConstructor(input), (wire) =>
     Match.value(wire.t).pipe(
       Match.when("Plain", () => Effect.map(decodeInlines(wire.c), (children) => Plain.make({ children }))),
       Match.when("Para", () => Effect.map(decodeInlines(wire.c), (children) => Para.make({ children }))),
+      Match.when("LineBlock", () => decodeLineBlock(wire.c)),
       Match.when("Header", () =>
         Effect.flatMap(decodeHeaderPayloadWire(wire.c), ([level, attrWire, childrenWire]) =>
           Effect.flatMap(attrFromWire(attrWire), (attr) =>
@@ -848,8 +981,12 @@ const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaEr
           )
         )
       ),
+      Match.when("RawBlock", () =>
+        Effect.map(decodeRawPayloadWire(wire.c), ([format, text]) => RawBlock.make({ format, text }))
+      ),
       Match.when("BulletList", () => Effect.map(decodeBlockItems(wire.c), (items) => BulletList.make({ items }))),
       Match.when("OrderedList", () => decodeOrderedListBlock(wire.c)),
+      Match.when("DefinitionList", () => decodeDefinitionList(wire.c)),
       Match.when("HorizontalRule", () => Effect.as(decodeAbsentPayload(wire.c), HorizontalRule.make({}))),
       Match.when("Div", () =>
         decodeAttributedBlockChildren(wire.c, (attr, children) =>
@@ -860,6 +997,7 @@ const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaEr
         )
       ),
       Match.when("Table", () => decodeTableBlock(wire.c)),
+      Match.when("Figure", () => decodeFigure(wire.c)),
       Match.orElse(() =>
         isPandocKnownConstructorName(wire.t)
           ? rejectKnownConstructor(wire, "block")
@@ -922,6 +1060,23 @@ const encodeBlockItems = (
   items: ReadonlyArray<ReadonlyArray<PandocBlock.Type>>
 ): ReadonlyArray<ReadonlyArray<S.Json>> => A.map(items, encodeBlocks);
 
+const encodeCitation = (citation: Citation.Type): S.Json => ({
+  citationHash: citation.hash,
+  citationId: citation.id,
+  citationMode: { t: citation.mode },
+  citationNoteNum: citation.noteNumber,
+  citationPrefix: encodeInlines(citation.prefix),
+  citationSuffix: encodeInlines(citation.suffix),
+});
+
+const encodeCaption = (caption: PandocCaption.Type): S.Json => [
+  O.match(caption.short, {
+    onNone: () => null,
+    onSome: encodeInlines,
+  }),
+  encodeBlocks(caption.blocks),
+];
+
 const encodeInline: (inline: PandocInline.Type) => S.Json = Match.type<PandocInline.Type>().pipe(
   Match.tagsExhaustive({
     str: (inline) => ({
@@ -935,6 +1090,10 @@ const encodeInline: (inline: PandocInline.Type) => S.Json = Match.type<PandocInl
       c: encodeInlines(inline.children),
       t: "Emph",
     }),
+    underline: (inline) => ({
+      c: encodeInlines(inline.children),
+      t: "Underline",
+    }),
     strong: (inline) => ({
       c: encodeInlines(inline.children),
       t: "Strong",
@@ -942,6 +1101,26 @@ const encodeInline: (inline: PandocInline.Type) => S.Json = Match.type<PandocInl
     strikeout: (inline) => ({
       c: encodeInlines(inline.children),
       t: "Strikeout",
+    }),
+    superscript: (inline) => ({
+      c: encodeInlines(inline.children),
+      t: "Superscript",
+    }),
+    subscript: (inline) => ({
+      c: encodeInlines(inline.children),
+      t: "Subscript",
+    }),
+    smallCaps: (inline) => ({
+      c: encodeInlines(inline.children),
+      t: "SmallCaps",
+    }),
+    quoted: (inline) => ({
+      c: [{ t: inline.quoteType }, encodeInlines(inline.children)],
+      t: "Quoted",
+    }),
+    cite: (inline) => ({
+      c: [A.map(inline.citations, encodeCitation), encodeInlines(inline.children)],
+      t: "Cite",
     }),
     code: (inline) => ({
       c: [encodeAttr(inline.attr), inline.text],
@@ -967,6 +1146,10 @@ const encodeInline: (inline: PandocInline.Type) => S.Json = Match.type<PandocInl
       c: [{ t: inline.mathType }, inline.text],
       t: "Math",
     }),
+    rawInline: (inline) => ({
+      c: [inline.format, inline.text],
+      t: "RawInline",
+    }),
     unknownInline: (inline) => inline.wire,
   })
 );
@@ -981,6 +1164,10 @@ const encodeBlock: (block: PandocBlock.Type) => S.Json = Match.type<PandocBlock.
       c: encodeInlines(block.children),
       t: "Para",
     }),
+    lineBlock: (block) => ({
+      c: A.map(block.lines, encodeInlines),
+      t: "LineBlock",
+    }),
     header: (block) => ({
       c: [block.level, encodeAttr(block.attr), encodeInlines(block.children)],
       t: "Header",
@@ -993,6 +1180,10 @@ const encodeBlock: (block: PandocBlock.Type) => S.Json = Match.type<PandocBlock.
       c: [encodeAttr(block.attr), block.text],
       t: "CodeBlock",
     }),
+    rawBlock: (block) => ({
+      c: [block.format, block.text],
+      t: "RawBlock",
+    }),
     bulletlist: (block) => ({
       c: encodeBlockItems(block.items),
       t: "BulletList",
@@ -1001,14 +1192,22 @@ const encodeBlock: (block: PandocBlock.Type) => S.Json = Match.type<PandocBlock.
       c: [[block.start, { t: block.style }, { t: block.delimiter }], encodeBlockItems(block.items)],
       t: "OrderedList",
     }),
+    definitionList: (block) => ({
+      c: A.map(block.items, ([term, definitions]) => [encodeInlines(term), A.map(definitions, encodeBlocks)]),
+      t: "DefinitionList",
+    }),
     horizontalrule: () => ({ t: "HorizontalRule" }),
     div: (block) => ({
       c: [encodeAttr(block.attr), encodeBlocks(block.children)],
       t: "Div",
     }),
     table: (block) => ({
-      c: block.payload,
+      c: S.Json.make(block.payload),
       t: "Table",
+    }),
+    figure: (block) => ({
+      c: [encodeAttr(block.attr), encodeCaption(block.caption), encodeBlocks(block.children)],
+      t: "Figure",
     }),
     unknownBlock: (block) => block.wire,
   })
@@ -1280,6 +1479,48 @@ const inspectMath = (payload: unknown, path: JsonPathType): LosslessInspection =
     });
   });
 
+const inspectQuoted = (payload: unknown, path: JsonPathType): LosslessInspection =>
+  inspectDecoded(decodeQuotePayloadWire(payload), "inline", "Quoted", path, ([quoteTypeWire, children]) => {
+    const quoteTypePath = appendPath(path, "c", 0);
+    const quoteType = decodeQuoteType(quoteTypeWire.t);
+    return Effect.zipWith(
+      O.isNone(quoteType)
+        ? inspectUnsupportedConstructorInSlot(quoteTypeWire, "inline", quoteTypePath, "a Quoted type slot")
+        : inspectDecoded(decodeAbsentPayload(quoteTypeWire.c), "inline", quoteTypeWire.t, quoteTypePath),
+      inspectChildren(children, appendPath(path, "c", 1), inspectInline),
+      (quoteIssues, childIssues) => [...quoteIssues, ...childIssues]
+    );
+  });
+
+const inspectCitation = (wire: typeof CitationWire.Type, path: JsonPathType): LosslessInspection => {
+  const modePath = appendPath(path, "citationMode");
+  const mode = decodeCitationMode(wire.citationMode.t);
+  return Effect.map(
+    Effect.all([
+      O.isNone(mode)
+        ? inspectUnsupportedConstructorInSlot(wire.citationMode, "inline", modePath, "a Citation mode slot")
+        : inspectDecoded(decodeAbsentPayload(wire.citationMode.c), "inline", wire.citationMode.t, modePath),
+      inspectChildren(wire.citationPrefix, appendPath(path, "citationPrefix"), inspectInline),
+      inspectChildren(wire.citationSuffix, appendPath(path, "citationSuffix"), inspectInline),
+    ]),
+    A.flatten
+  );
+};
+
+const inspectCite = (payload: unknown, path: JsonPathType): LosslessInspection =>
+  inspectDecoded(decodeCitePayloadWire(payload), "inline", "Cite", path, ([citations, children]) =>
+    Effect.map(
+      Effect.all([
+        Effect.map(
+          Effect.forEach(citations, (citation, index) => inspectCitation(citation, appendPath(path, "c", 0, index))),
+          A.flatten
+        ),
+        inspectChildren(children, appendPath(path, "c", 1), inspectInline),
+      ]),
+      A.flatten
+    )
+  );
+
 function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
   return decodeConstructor(input).pipe(
     Effect.matchEffect({
@@ -1290,9 +1531,11 @@ function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
           Match.when("Space", () => inspectDecoded(decodeAbsentPayload(wire.c), "inline", wire.t, path)),
           Match.when("SoftBreak", () => inspectDecoded(decodeAbsentPayload(wire.c), "inline", wire.t, path)),
           Match.when("LineBreak", () => inspectDecoded(decodeAbsentPayload(wire.c), "inline", wire.t, path)),
-          Match.when("Emph", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path)),
-          Match.when("Strong", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path)),
-          Match.when("Strikeout", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path)),
+          Match.whenOr("Emph", "Underline", "Strong", "Strikeout", "Superscript", "Subscript", "SmallCaps", () =>
+            inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path)
+          ),
+          Match.when("Quoted", () => inspectQuoted(wire.c, path)),
+          Match.when("Cite", () => inspectCite(wire.c, path)),
           Match.when("Code", () => inspectDecoded(decodeCodePayloadWire(wire.c), "inline", wire.t, path)),
           Match.when("Link", () =>
             inspectDecoded(decodeLinkPayloadWire(wire.c), "inline", wire.t, path, ([, children]) =>
@@ -1311,6 +1554,7 @@ function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
           ),
           Match.when("Note", () => inspectBlockArray(wire.c, appendPath(path, "c"), "inline", wire.t, path)),
           Match.when("Math", () => inspectMath(wire.c, path)),
+          Match.when("RawInline", () => inspectDecoded(decodeRawPayloadWire(wire.c), "inline", wire.t, path)),
           Match.orElse(() => inspectUnmatchedConstructor(wire, "inline", path))
         ),
     })
@@ -1319,10 +1563,48 @@ function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
 
 const inspectOrderedList = (payload: unknown, path: JsonPathType): LosslessInspection =>
   inspectDecoded(decodeOrderedListPayloadWire(payload), "block", "OrderedList", path, ([[, style, delimiter], items]) =>
-    inspectDecoded(listNumberStyleFromWire(style), "block", "OrderedList", path, () =>
-      inspectDecoded(listNumberDelimiterFromWire(delimiter), "block", "OrderedList", path, () =>
-        inspectBlockItems(items, appendPath(path, "c", 1), "OrderedList", path)
-      )
+    inspectDecoded(
+      listNumberStyleFromWire(style),
+      "block",
+      O.getOrElse(O.map(decodeConstructorOption(style), Struct.get("t")), () => "OrderedList"),
+      appendPath(path, "c", 0, 1),
+      () =>
+        inspectDecoded(
+          listNumberDelimiterFromWire(delimiter),
+          "block",
+          O.getOrElse(O.map(decodeConstructorOption(delimiter), Struct.get("t")), () => "OrderedList"),
+          appendPath(path, "c", 0, 2),
+          () => inspectBlockItems(items, appendPath(path, "c", 1), "OrderedList", path)
+        )
+    )
+  );
+
+const inspectLineBlock = (payload: unknown, path: JsonPathType): LosslessInspection =>
+  inspectDecoded(decodeLineBlockPayloadWire(payload), "block", "LineBlock", path, (lines) =>
+    Effect.map(
+      Effect.forEach(lines, (line, index) => inspectChildren(line, appendPath(path, "c", index), inspectInline)),
+      A.flatten
+    )
+  );
+
+const inspectDefinitionList = (payload: unknown, path: JsonPathType): LosslessInspection =>
+  inspectDecoded(decodeDefinitionListPayloadWire(payload), "block", "DefinitionList", path, (items) =>
+    Effect.map(
+      Effect.forEach(items, ([term, definitions], itemIndex) =>
+        Effect.map(
+          Effect.all([
+            inspectChildren(term, appendPath(path, "c", itemIndex, 0), inspectInline),
+            Effect.map(
+              Effect.forEach(definitions, (blocks, definitionIndex) =>
+                inspectChildren(blocks, appendPath(path, "c", itemIndex, 1, definitionIndex), inspectBlock)
+              ),
+              A.flatten
+            ),
+          ]),
+          A.flatten
+        )
+      ),
+      A.flatten
     )
   );
 
@@ -1430,7 +1712,10 @@ const inspectTableBody = (input: unknown, path: JsonPathType): LosslessInspectio
     )
   );
 
-function inspectTablePayload(payload: PandocTablePayload, path: JsonPathType): LosslessInspection {
+function inspectTablePayload(
+  payload: typeof LosslessTablePayloadWire.Type | PandocTablePayload,
+  path: JsonPathType
+): LosslessInspection {
   return Effect.map(
     Effect.all([
       inspectTableCaption(payload[1], appendPath(path, 1)),
@@ -1451,6 +1736,7 @@ function inspectBlock(input: unknown, path: JsonPathType): LosslessInspection {
         Match.value(wire.t).pipe(
           Match.when("Plain", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path, "block")),
           Match.when("Para", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path, "block")),
+          Match.when("LineBlock", () => inspectLineBlock(wire.c, path)),
           Match.when("Header", () =>
             inspectDecoded(decodeHeaderPayloadWire(wire.c), "block", wire.t, path, ([, , children]) =>
               inspectChildren(children, appendPath(path, "c", 2), inspectInline)
@@ -1458,8 +1744,10 @@ function inspectBlock(input: unknown, path: JsonPathType): LosslessInspection {
           ),
           Match.when("BlockQuote", () => inspectBlockArray(wire.c, appendPath(path, "c"), "block", wire.t, path)),
           Match.when("CodeBlock", () => inspectDecoded(decodeCodePayloadWire(wire.c), "block", wire.t, path)),
+          Match.when("RawBlock", () => inspectDecoded(decodeRawPayloadWire(wire.c), "block", wire.t, path)),
           Match.when("BulletList", () => inspectBlockItems(wire.c, appendPath(path, "c"), wire.t, path)),
           Match.when("OrderedList", () => inspectOrderedList(wire.c, path)),
+          Match.when("DefinitionList", () => inspectDefinitionList(wire.c, path)),
           Match.when("HorizontalRule", () => inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)),
           Match.when("Div", () =>
             inspectDecoded(decodeDivPayloadWire(wire.c), "block", wire.t, path, ([, children]) =>
@@ -1469,6 +1757,15 @@ function inspectBlock(input: unknown, path: JsonPathType): LosslessInspection {
           Match.when("Table", () =>
             inspectDecoded(decodeLosslessTablePayloadWire(wire.c), "block", wire.t, path, (payload) =>
               inspectTablePayload(payload, appendPath(path, "c"))
+            )
+          ),
+          Match.when("Figure", () =>
+            inspectDecoded(decodeFigurePayloadWire(wire.c), "block", wire.t, path, ([, caption, children]) =>
+              Effect.zipWith(
+                inspectTableCaption(caption, appendPath(path, "c", 1)),
+                inspectChildren(children, appendPath(path, "c", 2), inspectBlock),
+                (captionIssues, childIssues) => [...captionIssues, ...childIssues]
+              )
             )
           ),
           Match.orElse(() => inspectUnmatchedConstructor(wire, "block", path))

@@ -38,9 +38,9 @@ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
 
 /**
  * Classifies a persisted general document before it is projected into Lexical.
- * Any safety violation — trusted raw nodes, an unsafe URL, invalid scalar
- * text, duplicate footnote definitions — yields a refusal that gates sending
- * until the draft is edited into safe content.
+ * Trusted raw nodes, unsafe URLs, invalid scalar text, duplicate footnote
+ * definitions, and non-conformant document structures each yield a refusal
+ * that gates sending until the draft is edited into safe content.
  *
  * **Example** (Classify legacy RawNormalization gate)
  *

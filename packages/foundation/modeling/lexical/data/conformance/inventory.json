@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/lexical-schema",
+  "profileIds": ["lexical-serialized-state-0.49.0", "beep-lexical-v1"],
+  "items": [
+    {
+      "id": "lexical.member.text",
+      "symbol": "TextNode",
+      "tag": "text",
+      "kind": "leaf-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.tab",
+      "symbol": "TabNode",
+      "tag": "tab",
+      "kind": "leaf-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.linebreak",
+      "symbol": "LineBreakNode",
+      "tag": "linebreak",
+      "kind": "leaf-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.artifact-ref",
+      "symbol": "ArtifactRefNode",
+      "tag": "artifact-ref",
+      "kind": "leaf-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": ["lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.youtube",
+      "symbol": "YouTubeNode",
+      "tag": "youtube",
+      "kind": "leaf-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": ["lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.root",
+      "symbol": "RootNode",
+      "tag": "root",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.paragraph",
+      "symbol": "ParagraphNode",
+      "tag": "paragraph",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.heading",
+      "symbol": "HeadingNode",
+      "tag": "heading",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.quote",
+      "symbol": "QuoteNode",
+      "tag": "quote",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.list",
+      "symbol": "ListNode",
+      "tag": "list",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-list-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.listitem",
+      "symbol": "ListItemNode",
+      "tag": "listitem",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-list-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.link",
+      "symbol": "LinkNode",
+      "tag": "link",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.code",
+      "symbol": "CodeNode",
+      "tag": "code",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.table",
+      "symbol": "TableNode",
+      "tag": "table",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-table-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.tablerow",
+      "symbol": "TableRowNode",
+      "tag": "tablerow",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-table-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.member.tablecell",
+      "symbol": "TableCellNode",
+      "tag": "tablecell",
+      "kind": "element-ast-member",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-table-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This supported v1 node already has a literal type field and participates in the strict exhaustive node union."
+    },
+    {
+      "id": "lexical.union.raw-node",
+      "symbol": "RawLexicalNode",
+      "tag": "16 supported node types",
+      "kind": "internal-tagged-union",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": ["lexical-source-0.49.0", "lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "The structural recursive union already uses S.toTaggedUnion before the public tree grammar is checked."
+    },
+    {
+      "id": "lexical.union.node",
+      "symbol": "LexicalNode",
+      "tag": "16 supported node types",
+      "kind": "tagged-union",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": ["lexical-source-0.49.0", "lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "The public strict node union already exposes exhaustive type matching and a recursive parent-child grammar check."
+    },
+    {
+      "id": "lexical.root.editor-state",
+      "symbol": "SerializedEditorState",
+      "tag": "root envelope",
+      "kind": "root-ast-envelope",
+      "existingDiscriminator": "none",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": ["lexical-source-0.49.0", "lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-structured-envelope",
+      "candidateReason": "The editor-state envelope has one root shape and no variant discriminator; its semantic invariant is the root-node grammar."
+    },
+    {
+      "id": "lexical.wire.node",
+      "symbol": "LexicalNodeWire",
+      "tag": "open type string",
+      "kind": "lossless-wire-union",
+      "existingDiscriminator": "type",
+      "currentEnforcementLayers": ["decode"],
+      "sources": ["lexical-source-0.49.0", "lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-open-wire",
+      "candidateReason": "Lossless persistence intentionally admits future type strings and excess JSON fields; closing it into the strict tagged union would destroy forward-compatible wire identity."
+    },
+    {
+      "id": "lexical.union.conformance-result",
+      "symbol": "LexicalConformanceResult",
+      "tag": "compatible | normalizable | unsupported | invalid",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": ["type", "decode", "tree"],
+      "sources": ["lexical-source-0.49.0", "lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "The public boundary result exhaustively separates strict fixed points, declared normalization, losslessly retained unsupported wire, and invalid input."
+    },
+    {
+      "id": "lexical.candidate.heading-tag",
+      "symbol": "HeadingTag",
+      "tag": "h1 | h2 | h3 | h4 | h5 | h6",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "tag",
+      "currentEnforcementLayers": ["type", "decode", "tree", "adapter"],
+      "sources": ["lexical-source-0.49.0", "lexical-beep-v1-baseline"],
+      "candidateDisposition": "retain-literal-domain",
+      "candidateReason": "HeadingTag is a MappedLiteralKit that already closes h1 through h6 and provides the reversible mapping to Markdown levels. Every heading tag has the same serialized payload, so a duplicated object union would enforce no additional invariant."
+    },
+    {
+      "id": "lexical.candidate.list-type",
+      "symbol": "ListNodeValue",
+      "tag": "number | bullet | check",
+      "kind": "inner-tagged-union",
+      "existingDiscriminator": "listType",
+      "currentEnforcementLayers": ["type", "decode", "tree", "adapter"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-list-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "ListNodeValue now encodes number-to-ol and bullet-or-check-to-ul at the type and runtime levels while preserving ListNode's flat class wire. Check-list-only item state remains a contextual strict-tree invariant."
+    },
+    {
+      "id": "lexical.candidate.text-mode",
+      "symbol": "TextMode",
+      "tag": "normal | token | segmented",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "mode",
+      "currentEnforcementLayers": ["type", "decode"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-nodes-docs-2026-08-30",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-literal-domain",
+      "candidateReason": "TextMode already closes normal, token, and segmented. The pinned serialized profile gives all three modes the same fields; their editor behaviors do not create a mode-specific wire invariant for a duplicated TextNode union to enforce."
+    },
+    {
+      "id": "lexical.candidate.table-cell-header",
+      "symbol": "TableCellHeaderState",
+      "tag": "0 | row | column | row-and-column",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "headerState",
+      "currentEnforcementLayers": ["type", "decode", "adapter"],
+      "sources": [
+        "lexical-source-0.49.0",
+        "lexical-table-npm-0.49.0",
+        "lexical-beep-v1-baseline"
+      ],
+      "candidateDisposition": "retain-bit-state",
+      "candidateReason": "Header state is an intentional two-bit composition; a union would obscure valid row-and-column composition rather than clarify variant-specific payloads."
+    }
+  ]
+}
