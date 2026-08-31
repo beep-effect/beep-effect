@@ -49,14 +49,8 @@ const generate = Effect.gen(function* () {
   yield* requireReplayMatch(report);
 }).pipe(Effect.withSpan("S7Evidence.generate"));
 
-const program = Effect.scoped(
-  Layer.build(BunFileSystem.layer).pipe(
-    Effect.flatMap(
-      Effect.fnUntraced(function* (context) {
-        return yield* generate.pipe(Effect.provide(context));
-      })
-    )
-  )
+// strictEffectProvide bans Layer-provide outside composed entry layers, so the
+// scoped context build below provides the file system as a Context instead.
+BunRuntime.runMain(
+  Effect.scoped(Effect.flatMap(Layer.build(BunFileSystem.layer), (context) => Effect.provide(generate, context)))
 );
-
-BunRuntime.runMain(program);

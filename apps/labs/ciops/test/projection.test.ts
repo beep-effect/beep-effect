@@ -1,7 +1,16 @@
 import { decodeAdmissionPolicyParams } from "@beep/ciops/projection/AboxPolicy";
 import { CiOpsProjection, CiOpsProjectionLive } from "@beep/ciops/projection/CiOpsProjection";
 import { admissionWeightFor, projectSchedule } from "@beep/ciops/projection/Engine";
-import { decodeAdmissionJournal, replayAdmissionJournal, requireReplayMatch } from "@beep/ciops/projection/Replay";
+import {
+  decodeAdmissionJournal,
+  InferredLeaseEviction,
+  ReplayEventOutcome,
+  ReplayEventVerdict,
+  ReplayReport,
+  renderReplayEvidence,
+  replayAdmissionJournal,
+  requireReplayMatch,
+} from "@beep/ciops/projection/Replay";
 import {
   emptyTokenLedger,
   PendingRequest,
@@ -9,6 +18,7 @@ import {
   PolicyDecodeError,
   ProjectionInput,
   ScheduleProposal,
+  ScheduleScope,
   TokenLedgerState,
 } from "@beep/ciops/projection/Schemas";
 import { emitScheduleAbox } from "@beep/ciops/projection/Turtle";
@@ -25,6 +35,7 @@ import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { CiOpsProjectionShape } from "@beep/ciops/projection/CiOpsProjection";
 import type { AdmissionPolicyParams } from "@beep/ciops/projection/Schemas";
 
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
@@ -134,6 +145,8 @@ describe("@beep/ciops S7 projection", () => {
           const proposal = runSync(projectSchedule(inputFor(policy, pending)));
           let active = 0;
           for (const step of proposal.steps) {
+            const scope: ScheduleScope = step.scope;
+            expect(ScheduleScope.is.admission(scope)).toBe(true);
             active += step.request.weightTokens;
             expect(step.activeTokenTotalAfter).toBe(active);
             expect(active).toBeLessThanOrEqual(policy.capacityMaxTokens);
@@ -256,6 +269,8 @@ describe("@beep/ciops S7 projection", () => {
       expect(report.admittedCount).toBe(41);
       expect(report.releasedCount).toBe(38);
       expect(report.passed).toBe(true);
+      expect(report.verdicts).toHaveLength(41);
+      expect(A.every(report.verdicts, (verdict) => ReplayEventOutcome.is.pass(verdict.outcome))).toBe(true);
       expect(report.mismatches).toHaveLength(0);
       expect(report.evictions).toHaveLength(1);
       expect(report.evictions[0]?.evictedNonce.startsWith("1813f29f")).toBe(true);
@@ -264,10 +279,50 @@ describe("@beep/ciops S7 projection", () => {
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 
+  it.effect("renders byte-identical evidence from a typed replay report", () =>
+    Effect.gen(function* () {
+      const outcome: ReplayEventOutcome = "pass";
+      const report = ReplayReport.make({
+        eventCount: NonNegativeInt.make(1),
+        admittedCount: NonNegativeInt.make(1),
+        releasedCount: NonNegativeInt.make(0),
+        verdicts: [
+          ReplayEventVerdict.make({
+            eventIndex: NonNegativeInt.make(0),
+            admittedAtMillis: NonNegativeInt.make(1_000),
+            expectedNonce: "request-1",
+            projectedNonce: "request-1",
+            pendingCount: NonNegativeInt.make(1),
+            activeTokenTotal: NonNegativeInt.make(0),
+            outcome,
+          }),
+        ],
+        mismatches: [],
+        evictions: [
+          InferredLeaseEviction.make({
+            eventIndex: NonNegativeInt.make(66),
+            evictedNonce: "1813f29f",
+            weightTokens: PosInt.make(5),
+            activeTokenTotalBefore: NonNegativeInt.make(8),
+            activeTokenTotalAfter: NonNegativeInt.make(3),
+          }),
+        ],
+        passed: true,
+      });
+      const rendered = renderReplayEvidence(report, "digest-1");
+
+      expect(rendered).toContain("PASS — all 1 admitted events matched");
+      expect(rendered).toContain("## Inferred dead-lease evictions");
+      expect(rendered).toContain("`1813f29f`");
+      expect(rendered).toBe(renderReplayEvidence(report, "digest-1"));
+      return yield* Effect.void;
+    })
+  );
+
   it.effect("keeps current proposal state transactionally and leaves the planner seam typed", () =>
     Effect.gen(function* () {
       const policy = yield* readPolicy().pipe(provideScopedLayer(BunFileSystem.layer));
-      const service = yield* CiOpsProjection;
+      const service: CiOpsProjectionShape = yield* CiOpsProjection;
       expect(O.isNone(yield* service.currentProposal)).toBe(true);
 
       const waiting = yield* Effect.forkChild(service.awaitCurrentProposal);

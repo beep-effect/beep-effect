@@ -7,12 +7,10 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
-import { Effect, Order, pipe } from "effect";
+import { Effect, HashMap, HashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
-import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -254,7 +252,7 @@ const phantomGrantNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashS
               )
                 ? O.none<string>()
                 : O.some(admitted.nonce),
-            "admission-released": () => O.none<string>(),
+            "admission-released": O.none<string>,
           })
       )
     )
@@ -348,7 +346,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
       (event): O.Option<AdmissionJournalAdmitted> =>
         AdmissionJournalEvent.match(event, {
           "admission-admitted": (admitted) => O.some(admitted),
-          "admission-released": () => O.none<AdmissionJournalAdmitted>(),
+          "admission-released": O.none<AdmissionJournalAdmitted>,
         })
     )
   );

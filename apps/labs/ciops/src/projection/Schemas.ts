@@ -7,9 +7,7 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
-import { Effect } from "effect";
-import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
+import { Effect, HashMap, HashSet } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $CiopsId.create("projection/Schemas");
@@ -481,7 +479,7 @@ export class ProjectionMismatch extends S.Class<ProjectionMismatch>($I`Projectio
 export class PolicyDecodeError extends S.TaggedError<PolicyDecodeError>($I`PolicyDecodeError`)(
   "PolicyDecodeError",
   { message: S.String },
-  $I.annote("PolicyDecodeError", {
+  $I.annoteError<PolicyDecodeError>("PolicyDecodeError", {
     description: "Strict policy A-Box decoding or projection-input validation failed.",
   })
 ) {}
@@ -501,10 +499,11 @@ export class PolicyDecodeError extends S.TaggedError<PolicyDecodeError>($I`Polic
  * @category errors
  * @since 0.0.0
  */
+// fallow-ignore-next-line unused-export -- reserved by the S7 projection contract §3.1 for the v2 lane-DAG planner seam; the v1 seam fails with PlannerNotImplementedError before any plan is built
 export class CyclicPlanError extends S.TaggedError<CyclicPlanError>($I`CyclicPlanError`)(
   "CyclicPlanError",
   { cycleNodes: S.Array(S.NonEmptyString) },
-  $I.annote("CyclicPlanError", {
+  $I.annoteError<CyclicPlanError>("CyclicPlanError", {
     description: "Future lane-DAG planning failed because the episode graph contains a cycle.",
   })
 ) {}
@@ -529,7 +528,7 @@ export class PlannerNotImplementedError extends S.TaggedError<PlannerNotImplemen
 )(
   "PlannerNotImplementedError",
   { message: S.String },
-  $I.annote("PlannerNotImplementedError", {
+  $I.annoteError<PlannerNotImplementedError>("PlannerNotImplementedError", {
     description: "The explicit v2 lane-DAG planning seam was invoked by a v1 implementation.",
   })
 ) {}
@@ -552,7 +551,7 @@ export class PlannerNotImplementedError extends S.TaggedError<PlannerNotImplemen
 export class ReplayMismatchError extends S.TaggedError<ReplayMismatchError>($I`ReplayMismatchError`)(
   "ReplayMismatchError",
   { message: S.String, mismatches: S.Array(ProjectionMismatch) },
-  $I.annote("ReplayMismatchError", {
+  $I.annoteError<ReplayMismatchError>("ReplayMismatchError", {
     description: "Differential replay found one or more deployed-versus-projected admission mismatches.",
   })
 ) {}

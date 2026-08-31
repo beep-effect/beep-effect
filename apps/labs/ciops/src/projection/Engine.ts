@@ -6,11 +6,9 @@
  */
 
 import { NonNegativeInt } from "@beep/schema";
-import { Effect, Order, pipe } from "effect";
+import { Effect, HashMap, HashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { AdmissionPriority, AdmissionWorkKind, PolicyDecodeError, ScheduleProposal, ScheduleStep } from "./Schemas.ts";
 import type { AdmissionPolicyParams, PendingRequest, ProjectionInput } from "./Schemas.ts";
@@ -122,6 +120,44 @@ const validateInput = Effect.fnUntraced(function* (input: ProjectionInput): Effe
   yield* validateRequests(input);
 });
 
+interface AdmissionFold {
+  readonly activeReviewFixCount: number;
+  readonly activeTokenTotal: number;
+  readonly capacityBlocked: boolean;
+  readonly deferredTail: ReadonlyArray<PendingRequest>;
+  readonly steps: ReadonlyArray<ScheduleStep>;
+}
+
+const admitInto =
+  (policy: AdmissionPolicyParams) =>
+  (state: AdmissionFold, request: PendingRequest): AdmissionFold => {
+    const reviewFix = AdmissionWorkKind.is["review-fix"](request.kind);
+    // Class-cap deferral is skippable: it never arms head-of-line blocking.
+    if (reviewFix && state.activeReviewFixCount >= policy.reviewFixClassCap) {
+      return { ...state, deferredTail: A.append(state.deferredTail, request) };
+    }
+    const nextTotal = state.activeTokenTotal + request.weightTokens;
+    if (state.capacityBlocked || nextTotal > policy.capacityMaxTokens) {
+      return { ...state, capacityBlocked: true, deferredTail: A.append(state.deferredTail, request) };
+    }
+    return {
+      activeTokenTotal: nextTotal,
+      activeReviewFixCount: reviewFix ? state.activeReviewFixCount + 1 : state.activeReviewFixCount,
+      capacityBlocked: false,
+      steps: A.append(
+        state.steps,
+        ScheduleStep.make({
+          stepIndex: NonNegativeInt.make(A.length(state.steps)),
+          scheduledUnitRef: request.nonce,
+          scope: "admission",
+          request,
+          activeTokenTotalAfter: NonNegativeInt.make(nextTotal),
+        })
+      ),
+      deferredTail: state.deferredTail,
+    };
+  };
+
 /**
  * Projects pending requests into capacity-safe admissions and a deferred tail.
  *
@@ -181,48 +217,23 @@ export const projectSchedule = Effect.fn("CiOpsProjection.project")(function* (
   yield* validateInput(input);
 
   const ordered = A.sort(input.pending, requestOrder(input));
-  let activeTokenTotal: number = input.ledger.activeTokenTotal;
-  let activeReviewFixCount = HashSet.size(input.ledger.activeReviewFixNonces);
-  let capacityBlocked = false;
-  let steps = A.empty<ScheduleStep>();
-  let deferredTail = A.empty<PendingRequest>();
-
-  for (const request of ordered) {
-    const reviewFixCapReached =
-      AdmissionWorkKind.is["review-fix"](request.kind) && activeReviewFixCount >= input.policy.reviewFixClassCap;
-    if (reviewFixCapReached) {
-      deferredTail = A.append(deferredTail, request);
-      continue;
-    }
-
-    const nextTotal = activeTokenTotal + request.weightTokens;
-    if (capacityBlocked || nextTotal > input.policy.capacityMaxTokens) {
-      capacityBlocked = true;
-      deferredTail = A.append(deferredTail, request);
-      continue;
-    }
-
-    activeTokenTotal = nextTotal;
-    if (AdmissionWorkKind.is["review-fix"](request.kind)) {
-      activeReviewFixCount += 1;
-    }
-    steps = A.append(
-      steps,
-      ScheduleStep.make({
-        stepIndex: NonNegativeInt.make(A.length(steps)),
-        scheduledUnitRef: request.nonce,
-        scope: "admission",
-        request,
-        activeTokenTotalAfter: NonNegativeInt.make(activeTokenTotal),
-      })
-    );
-  }
+  const folded = A.reduce(
+    ordered,
+    {
+      activeTokenTotal: input.ledger.activeTokenTotal as number,
+      activeReviewFixCount: HashSet.size(input.ledger.activeReviewFixNonces),
+      capacityBlocked: false,
+      steps: A.empty<ScheduleStep>(),
+      deferredTail: A.empty<PendingRequest>(),
+    },
+    admitInto(input.policy)
+  );
 
   return ScheduleProposal.make({
     proposalId: `schedule-${input.policyDigest}-${input.journalPrefixDigest}-${input.projectionInstantMillis}`,
     projectionInstantMillis: input.projectionInstantMillis,
-    steps,
-    deferredTail,
+    steps: folded.steps,
+    deferredTail: folded.deferredTail,
     policyDigest: input.policyDigest,
     journalPrefixDigest: input.journalPrefixDigest,
   });
