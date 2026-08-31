@@ -14,7 +14,7 @@
       "startChar": 209,
       "endChar": 413,
       "quoteSha256": "dc6f1cfb0368164b7eeba846b7954b1b0a851cf0cae593c179a911ed6d63f987",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "affiliated with",
@@ -27,7 +27,7 @@
       "startChar": 334,
       "endChar": 449,
       "quoteSha256": "81f825c610aa2ece6d96a099c2398ca4401251b1e8450820473dc0489b4ff3ba",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "located in",
@@ -40,7 +40,7 @@
       "startChar": 414,
       "endChar": 449,
       "quoteSha256": "0f09509d91df6919c451372c4716e2e3a275567d775a9c26e57a57f496cb1fed",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "re-evaluates claim due to",
@@ -53,20 +53,7 @@
       "startChar": 714,
       "endChar": 781,
       "quoteSha256": "5bb957c71a676bf7d6a29c8f75d2466c1b6dfc022a8e7b55350a9dba7e6063b1",
-      "verified": false
-    },
-    {
-      "predicate": "published in proceedings of",
-      "subjectStartChar": 19,
-      "subjectEndChar": 79,
-      "subjectSha256": "50b2166abade50b925968f6b877bd51431f22af358a0415ca53ad09a9d7d7636",
-      "objectStartChar": 107,
-      "objectEndChar": 124,
-      "objectSha256": "ccd2892c54be2baf29c21b47c884ceff61ff8665a4849aa2cbe46a109d8cccdd",
-      "startChar": 0,
-      "endChar": 174,
-      "quoteSha256": "d4f65547bc7d33d1021e81ea8af00983e55a139672578cc26610b1803a7bbc3d",
-      "verified": false
+      "verified": true
     }
   ],
   "proposer": {

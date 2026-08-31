@@ -90,6 +90,78 @@ export const ExtractionMethod = LiteralKit(["hosted-langextract", "pattern-wink"
 export type ExtractionMethod = typeof ExtractionMethod.Type;
 
 /**
+ * Predicate strings frozen by the gold-v1 relation task.
+ *
+ * **Details**
+ *
+ * This vocabulary constrains the hosted extraction target. The relation
+ * candidate contract intentionally accepts any non-empty predicate so the E5
+ * preview can replay responses produced before the vocabulary was frozen.
+ *
+ * **Example** (Check a frozen predicate)
+ *
+ * ```ts
+ * import { FrozenRelationPredicate } from "@/schema/Evidence"
+ *
+ * console.log(FrozenRelationPredicate.is["affiliated with"]("affiliated with")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FrozenRelationPredicate = LiteralKit([
+  "affiliated with",
+  "authored by",
+  "located in",
+  "re-evaluates claim due to",
+  "selected",
+  "shows",
+]).pipe(
+  $I.annoteSchema("FrozenRelationPredicate", {
+    description: "Exact predicate strings represented by the frozen gold-v1 relation labels.",
+  })
+);
+
+/**
+ * Lab-local relation candidate decoded before relation evidence alignment.
+ *
+ * **Details**
+ *
+ * `evidenceQuote` is the only text allowed to anchor the relation. Subject and
+ * object are surface strings that must each align uniquely inside that quote.
+ * The predicate remains non-empty rather than vocabulary-refined so cached
+ * pre-candidate responses remain measurable by the zero-spend preview.
+ *
+ * **Example** (Create an evidence-quote candidate)
+ *
+ * ```ts
+ * import { RelationExtractionCandidate } from "@/schema/Evidence"
+ *
+ * const candidate = RelationExtractionCandidate.make({
+ *   evidenceQuote: "Ada Lovelace is affiliated with Acme Research.",
+ *   object: "Acme Research",
+ *   predicate: "affiliated with",
+ *   subject: "Ada Lovelace"
+ * })
+ * console.log(candidate.subject) // "Ada Lovelace"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RelationExtractionCandidate extends S.Class<RelationExtractionCandidate>($I`RelationExtractionCandidate`)(
+  {
+    evidenceQuote: S.NonEmptyString,
+    object: S.NonEmptyString,
+    predicate: S.NonEmptyString,
+    subject: S.NonEmptyString,
+  },
+  $I.annote("RelationExtractionCandidate", {
+    description: "Relation predicate and endpoint surfaces carried by one source evidence quote.",
+  })
+) {}
+
+/**
  * Structural roles extracted from canonical paper text.
  *
  * **Example** (Check an abstract role)
