@@ -956,10 +956,15 @@ const materializeInitialWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.m
 export const PersonMatchWorkerPolicyForTest = {
   decodeWorkerExecution,
   initialEnvironment: initialWorkerEnvironment,
+  resolveWorkerLibraryPath,
   shouldRetryAdaFaceOnCpu,
   shouldRetryAdaFaceSetupOnCpu,
+  validateRuntimeRequest,
+  validateWorkerEnvelope,
   writeAdaFaceSetupFallbackDiagnostic,
+  workerArguments,
   workerLibraryEnvironment,
+  workerSyncArguments,
 };
 
 const runWorker = Effect.fn("Files.PersonMatchWorker.run")(function* (

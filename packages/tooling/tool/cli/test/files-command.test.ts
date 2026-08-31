@@ -12,6 +12,7 @@ import { filesCommand } from "@beep/repo-cli";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import {
   ArchivePoorCandidatesManifest,
+  CanonicalMatchPersonInputs,
   DetectBordersReport,
   DetectFacesReport,
   FilesCommandServiceLive,
@@ -26,9 +27,11 @@ import {
   PersonMatchModel,
   PersonMatchModelArtifactVerifier,
   PersonMatchReport,
+  PersonMatchWorkerPolicyForTest,
   PersonMatchWorkerReport,
   PersonMatchWorkerService,
   PersonMatchWorkerSuccess,
+  PreparedAdaFaceArtifacts,
   ProcessFilesOptions,
   processFiles,
   renderFilesProgressBar,
@@ -1756,9 +1759,8 @@ describe("files command", { concurrent: false }, () => {
           yield* fs.writeFileString(referencePath, "reference");
           yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${liveWorkerMarkerPath}"\nexit 99\n`, uvPath);
 
-          const worker = yield* decodePersonMatchWorkerSuccess(
-            makeAdaFaceRocmWorkerReportFixture(path, cacheDir, candidateDir, referencePath)
-          ).pipe(Effect.mapError(filesTestError));
+          const rocmWorkerReport = makeAdaFaceRocmWorkerReportFixture(path, cacheDir, candidateDir, referencePath);
+          const worker = yield* decodePersonMatchWorkerSuccess(rocmWorkerReport).pipe(Effect.mapError(filesTestError));
           const devices = yield* S.decodeEffect(PersonMatchDeviceIndexesFromCsv)("0").pipe(
             Effect.mapError(filesTestError)
           );
@@ -1776,6 +1778,224 @@ describe("files command", { concurrent: false }, () => {
             references: referenceDir,
             reviewThreshold: 0.35,
           });
+          const modelRoot = path.join(cacheDir, "adaface-kprpe");
+          const inputs = CanonicalMatchPersonInputs.make({
+            cacheRoot: cacheDir,
+            candidateDirectory: candidateDir,
+            manifestPath,
+            modelRoot,
+            outputDirectory: O.none(),
+            referenceDirectory: referenceDir,
+            uvCacheRoot: path.join(cacheDir, "uv-cache"),
+            uvCpuEnvironment: path.join(cacheDir, "venv-adaface-cpu-py312-v1"),
+            uvEnvironment: path.join(cacheDir, "venv-adaface-rocm72-py312-v1"),
+            uvPath,
+          });
+          const artifacts = PreparedAdaFaceArtifacts.make({
+            alignerPath: path.join(modelRoot, "pinned", "aligner", "model.safetensors"),
+            recognizerPath: path.join(modelRoot, "pinned", "recognizer", "model.safetensors"),
+          });
+          const rocmLibraryDirectory = path.join(tmpDir, "rocm-library");
+          const rocmVersionedLibrary = path.join(rocmLibraryDirectory, "libhipsparselt.so.0.2");
+          yield* fs.makeDirectory(rocmLibraryDirectory, { recursive: true });
+          yield* fs.writeFileString(rocmVersionedLibrary, "fixture");
+          yield* fs.symlink(rocmVersionedLibrary, path.join(rocmLibraryDirectory, "libhipsparselt.so.0"));
+
+          yield* PersonMatchWorkerPolicyForTest.validateRuntimeRequest(options);
+          yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(worker, options, inputs);
+          const configuredLibraryPath = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
+            options,
+            inputs,
+            "primary"
+          ).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({
+                BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: rocmLibraryDirectory,
+                LD_LIBRARY_PATH: "/system/lib",
+              })
+            )
+          );
+          expect(configuredLibraryPath).toEqual(O.some(`${rocmLibraryDirectory}:/system/lib`));
+
+          const configuredLibraryPathWithoutInherited = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
+            options,
+            inputs,
+            "primary"
+          ).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: rocmLibraryDirectory })
+            )
+          );
+          expect(configuredLibraryPathWithoutInherited).toEqual(O.some(rocmLibraryDirectory));
+
+          const missingDirectoryError = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
+            options,
+            inputs,
+            "primary"
+          ).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({
+                BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: path.join(tmpDir, "missing-rocm-library"),
+              })
+            ),
+            Effect.flip
+          );
+          expect(missingDirectoryError._tag).toBe("MatchPersonPathError");
+
+          const incompleteLibraryDirectory = path.join(tmpDir, "incomplete-rocm-library");
+          yield* fs.makeDirectory(incompleteLibraryDirectory, { recursive: true });
+          const incompleteLibraryError = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
+            options,
+            inputs,
+            "primary"
+          ).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({
+                BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: incompleteLibraryDirectory,
+              })
+            ),
+            Effect.flip
+          );
+          expect(incompleteLibraryError._tag).toBe("MatchPersonPathError");
+
+          const missingSonameDirectory = path.join(tmpDir, "missing-soname-rocm-library");
+          yield* fs.makeDirectory(missingSonameDirectory, { recursive: true });
+          yield* fs.writeFileString(path.join(missingSonameDirectory, "libhipsparselt.so.0.2"), "fixture");
+          const missingSonameError = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
+            options,
+            inputs,
+            "primary"
+          ).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: missingSonameDirectory })
+            ),
+            Effect.flip
+          );
+          expect(missingSonameError._tag).toBe("MatchPersonPathError");
+
+          const automaticOptions = MatchPersonOptions.make({
+            ...options,
+            compute: "auto",
+            devices: O.none(),
+          });
+          const cpuWorkerReport = {
+            ...rocmWorkerReport,
+            model: {
+              ...worker.model,
+              runtime: {
+                framework: "pytorch",
+                distribution: "cpu",
+                packageVersion: "2.9.1+cpu",
+                actualCompute: "cpu",
+                precision: "fp32",
+                devices: [],
+                warnings: [
+                  {
+                    code: "rocm-fallback-to-cpu",
+                    message: "ROCm was unavailable, so automatic compute selected the pinned CPU runtime.",
+                  },
+                ],
+              },
+            },
+            parameters: {
+              ...worker.parameters,
+              compute: "auto",
+              actualCompute: "cpu",
+              devices: [],
+            },
+          };
+          const cpuWorker = yield* decodePersonMatchWorkerSuccess(cpuWorkerReport).pipe(
+            Effect.mapError(filesTestError)
+          );
+          yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(cpuWorker, automaticOptions, inputs);
+
+          const mismatchedParametersWorker = yield* decodePersonMatchWorkerSuccess({
+            ...rocmWorkerReport,
+            parameters: { ...rocmWorkerReport.parameters, batchSize: 64 },
+          }).pipe(Effect.mapError(filesTestError));
+          const mismatchedParametersError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
+            mismatchedParametersWorker,
+            options,
+            inputs
+          ).pipe(Effect.flip);
+          expect(mismatchedParametersError.message).toContain("parameters that do not match");
+
+          const invalidHipWorker = yield* decodePersonMatchWorkerSuccess({
+            ...rocmWorkerReport,
+            model: {
+              ...rocmWorkerReport.model,
+              runtime: { ...rocmWorkerReport.model.runtime, hipVersion: "7.1.0" },
+            },
+          }).pipe(Effect.mapError(filesTestError));
+          const invalidHipError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
+            invalidHipWorker,
+            options,
+            inputs
+          ).pipe(Effect.flip);
+          expect(invalidHipError.message).toContain("pinned HIP 7.2 family");
+
+          const unexpectedWarningWorker = yield* decodePersonMatchWorkerSuccess({
+            ...rocmWorkerReport,
+            model: {
+              ...rocmWorkerReport.model,
+              runtime: {
+                ...rocmWorkerReport.model.runtime,
+                warnings: [
+                  {
+                    code: "rocm-fallback-to-cpu",
+                    message: "A ROCm execution cannot also claim a CPU fallback.",
+                  },
+                ],
+              },
+            },
+            parameters: { ...rocmWorkerReport.parameters, compute: "auto" },
+          }).pipe(Effect.mapError(filesTestError));
+          const unexpectedWarningError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
+            unexpectedWarningWorker,
+            automaticOptions,
+            inputs
+          ).pipe(Effect.flip);
+          expect(unexpectedWarningError.message).toContain("incoherent compute-fallback provenance");
+
+          const wrongCpuPackageWorker = yield* decodePersonMatchWorkerSuccess({
+            ...cpuWorkerReport,
+            model: {
+              ...cpuWorkerReport.model,
+              runtime: { ...cpuWorkerReport.model.runtime, packageVersion: "2.9.0+cpu" },
+            },
+          }).pipe(Effect.mapError(filesTestError));
+          const wrongCpuPackageError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
+            wrongCpuPackageWorker,
+            automaticOptions,
+            inputs
+          ).pipe(Effect.flip);
+          expect(wrongCpuPackageError.message).toContain("pinned cpu PyTorch runtime 2.9.1+cpu");
+
+          expect(PersonMatchWorkerPolicyForTest.workerSyncArguments(options, "primary")).toEqual(
+            expect.arrayContaining(["--extra", "adaface"])
+          );
+          expect(PersonMatchWorkerPolicyForTest.workerSyncArguments(options, "cpu")).toEqual(
+            expect.arrayContaining(["--extra", "adaface-cpu"])
+          );
+          expect(PersonMatchWorkerPolicyForTest.workerArguments(options, inputs, O.some(artifacts))).toEqual(
+            expect.arrayContaining([
+              "--backend",
+              "adaface-kprpe",
+              "--compute",
+              "rocm",
+              "--devices",
+              "0",
+              "--aligner-path",
+              artifacts.alignerPath,
+              "--recognizer-path",
+              artifacts.recognizerPath,
+            ])
+          );
           let workerCallCount = 0;
           const workerService = PersonMatchWorkerService.of({
             run: Effect.fn("PersonMatchWorkerService.run")(() =>

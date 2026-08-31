@@ -1,6 +1,7 @@
 import {
   defaultPersonMatchBackendForPlatform,
   MatchPersonOptions,
+  PersonMatchModelArtifactVerifier,
   PersonMatchWorkerPolicyForTest,
   trustedUvExecutableNameForPlatform,
   trustedUvRootDirectoriesForPlatform,
@@ -12,6 +13,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as TestConsole from "effect/testing/TestConsole";
+import type { PersonMatchWorkerErrorCode } from "@beep/repo-cli/test/Files";
 
 const makePersonMatchOptions = (
   backend: "buffalo-l" | "adaface-kprpe",
@@ -29,8 +31,20 @@ const makePersonMatchOptions = (
     reviewThreshold: 0.35,
   });
 
-const workerFailureJson = (code: "pytorch-runtime-load-failed" | "worker-failed"): string =>
+const workerFailureJson = (code: PersonMatchWorkerErrorCode): string =>
   `{"schemaVersion":"beep.files.match-person.worker.v2","ok":false,"error":{"code":"${code}","message":"simulated worker failure"},"elapsedSeconds":0}`;
+
+const modelFailureCases = [
+  { code: "model-acquisition-incomplete", tag: "MatchPersonModelAcquisitionError" },
+  { code: "model-acquisition-failed", tag: "MatchPersonModelAcquisitionError" },
+  { code: "model-integrity-failed", tag: "MatchPersonModelIntegrityError" },
+  { code: "model-module-missing", tag: "MatchPersonModelIntegrityError" },
+  { code: "model-state-mismatch", tag: "MatchPersonModelIntegrityError" },
+  { code: "unexpected-model-artifact", tag: "MatchPersonModelIntegrityError" },
+] satisfies ReadonlyArray<{
+  readonly code: PersonMatchWorkerErrorCode;
+  readonly tag: "MatchPersonModelAcquisitionError" | "MatchPersonModelIntegrityError";
+}>;
 
 describe("person-match backend portability", () => {
   it("keeps AdaFace as the Linux x64 default", () => {
@@ -58,6 +72,14 @@ describe("person-match backend portability", () => {
       "cpu"
     );
   });
+
+  it.effect("keeps physical model verification fail-closed by default", () =>
+    Effect.gen(function* () {
+      const verifier = yield* PersonMatchModelArtifactVerifier;
+
+      expect(typeof verifier).toBe("function");
+    })
+  );
 
   it("retries only automatic AdaFace compute failures that can be served by the CPU distribution", () => {
     const automatic = makePersonMatchOptions("adaface-kprpe", "auto");
@@ -108,6 +130,39 @@ describe("person-match backend portability", () => {
       expect(error).toMatchObject({
         _tag: "MatchPersonRuntimeError",
         workerCode: "pytorch-runtime-load-failed",
+      });
+    })
+  );
+
+  it.effect("maps model worker failures into the matching typed acquisition or integrity channel", () =>
+    Effect.forEach(
+      modelFailureCases,
+      ({ code, tag }) =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(
+            PersonMatchWorkerPolicyForTest.decodeWorkerExecution(workerFailureJson(code), "", 2, false)
+          );
+
+          expect(error._tag).toBe(tag);
+        }),
+      { concurrency: 1, discard: true }
+    )
+  );
+
+  it.effect("rejects bounded-output truncation and malformed worker JSON with diagnostics", () =>
+    Effect.gen(function* () {
+      const truncated = yield* Effect.flip(PersonMatchWorkerPolicyForTest.decodeWorkerExecution("", "", 2, true));
+      const malformed = yield* Effect.flip(
+        PersonMatchWorkerPolicyForTest.decodeWorkerExecution("not-json", "python traceback", 2, false)
+      );
+
+      expect(truncated).toMatchObject({
+        _tag: "MatchPersonProtocolError",
+        message: expect.stringContaining("exceeded the 256 MiB safety bound"),
+      });
+      expect(malformed).toMatchObject({
+        _tag: "MatchPersonProtocolError",
+        message: expect.stringContaining("python traceback"),
       });
     })
   );

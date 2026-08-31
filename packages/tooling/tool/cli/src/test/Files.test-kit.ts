@@ -6,7 +6,10 @@
  */
 
 export * from "../commands/Files/index.ts";
-export { acquirePinnedPersonMatchArtifactForTest } from "../commands/Files/internal/MatchPerson.model-store.ts";
+export {
+  acquirePinnedPersonMatchArtifactForTest,
+  PreparedAdaFaceArtifacts,
+} from "../commands/Files/internal/MatchPerson.model-store.ts";
 export {
   defaultPersonMatchBackendForPlatform,
   runMatchPerson,
@@ -15,6 +18,7 @@ export {
   validatePersonMatchBackendPlatform,
 } from "../commands/Files/internal/MatchPerson.ts";
 export {
+  CanonicalMatchPersonInputs,
   PersonMatchModelArtifactVerifier,
   PersonMatchWorkerPolicyForTest,
   PersonMatchWorkerService,
