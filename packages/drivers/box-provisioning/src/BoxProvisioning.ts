@@ -16,6 +16,7 @@ import type * as B from "@beep/box";
 import type {
   BoxProvisioningInvariantError,
   BoxProvisioningSchemaError,
+  BoxProvisioningSubjectMismatchError,
   BoxProvisioningTenantMismatchError,
 } from "./BoxProvisioningErrors.ts";
 import type { BoxProvisioningPlan } from "./BoxProvisioningPlan.ts";
@@ -27,6 +28,7 @@ type ReadError =
   | B.BoxError
   | BoxProvisioningInvariantError
   | BoxProvisioningSchemaError
+  | BoxProvisioningSubjectMismatchError
   | BoxProvisioningTenantMismatchError;
 
 type ApplyError = ReadError | BoxProvisioningDriftError;

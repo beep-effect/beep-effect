@@ -17,6 +17,10 @@ roles are separate:
 
 - `BoxProvisioningInventory` has read verbs only and follows marker pagination
   for folders, collaborations, webhooks, retention, and Box Sign listings.
+- Inventory records the authenticated `users.getUserMe` subject. The desired
+  state pins the dedicated service-account id, and the planner returns a typed
+  `BoxProvisioningSubjectMismatchError` before producing a plan when a
+  same-enterprise credential authenticates as the wrong user.
 - `BoxProvisioningPlanner` is pure and deterministic. It rejects a tenant
   mismatch, blocks ambiguous matches, reports foreign folders without their
   names, and emits explicit entitlement blockers for metadata and retention.
@@ -68,6 +72,34 @@ declaration for the newly registered package identity. The dependency package
 verification rebuilt it, and the unchanged canonical reconciler command then
 passed. The friction and proposed prevention are recorded in
 `research/OPPORTUNITIES.md`.
+
+## P2 identity-preflight hardening
+
+The final live-runner preflight checked the installed Box SDK rather than
+assuming CCG subject semantics. The SDK authenticates `userId` when it is
+present and otherwise authenticates the platform application's enterprise
+service account. `BoxCcgConfig` now requires exactly one of those subjects so a
+dual-subject configuration cannot silently select a user. The reconciler then
+checks the authenticated user id independently of the enterprise id. Focused
+tests prove both ambiguous-config rejection and typed wrong-subject rejection.
+
+Canonical handoff after the identity guard:
+
+```text
+bun run beep quality package-verify @beep/box
+ok audit 11.5s; ok docgen 4.6s
+
+bun run beep quality package-verify @beep/box-provisioning
+ok audit 10.6s; ok docgen 3.8s
+```
+
+An ignored private runner and starter-intent template now exist under
+`.beep/box-provisioning/`. They contain no credentials or real practice names.
+Dry-run inventories twice and writes the plan only when both runs are
+identical. Apply additionally requires the reviewed plan digest, re-inventories
+before mutation, writes a mode-0600 receipt, and immediately verifies that all
+actionable resources re-plan as `Noop`. These private operator artifacts are
+not Git inputs and must never be copied into tracked history.
 
 ## Live boundary
 

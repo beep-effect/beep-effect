@@ -21,6 +21,7 @@ const childKey = BoxLogicalKey.make("folder.child");
 export const desiredFixture = BoxDesiredState.make({
   sourceRevision: "intent-1",
   expectedEnterpriseId: "enterprise-id",
+  expectedSubjectId: "service-account-id",
   rootFolderId: "0",
   entitlements: BoxEntitlements.make({
     externalCollaboratorsRequirePaidSeats: true,
@@ -72,6 +73,7 @@ const available = (kind: "metadata" | "retention" | "signRequests" | "signTempla
 
 export const observedFixture = BoxObservedState.make({
   enterpriseId: BoxProviderId.make("enterprise-id"),
+  subjectId: BoxProviderId.make("service-account-id"),
   rootFolderId: BoxProviderId.make("0"),
   folders: [
     BoxObservedFolder.make({

@@ -83,6 +83,42 @@ export class BoxProvisioningTenantMismatchError extends S.TaggedError<BoxProvisi
 }
 
 /**
+ * Authenticated Box subject did not match the service identity pinned by intent.
+ *
+ * **Example** (Create a subject mismatch error)
+ *
+ * ```ts
+ * import { BoxProvisioningSubjectMismatchError } from "@beep/box-provisioning/BoxProvisioningErrors"
+ * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
+ *
+ * const error = BoxProvisioningSubjectMismatchError.make({
+ *   actualSubjectId: BoxProviderId.make("actual"),
+ *   expectedSubjectId: BoxProviderId.make("expected")
+ * })
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class BoxProvisioningSubjectMismatchError extends S.TaggedError<BoxProvisioningSubjectMismatchError>(
+  $I`BoxProvisioningSubjectMismatchError`
+)(
+  "BoxProvisioningSubjectMismatchError",
+  {
+    expectedSubjectId: BoxProviderId,
+    actualSubjectId: BoxProviderId,
+  },
+  $I.annoteError<BoxProvisioningSubjectMismatchError>("BoxProvisioningSubjectMismatchError", {
+    description: "Authenticated Box subject differs from the desired service-identity fingerprint.",
+  })
+) {
+  override get message(): string {
+    return "Authenticated Box subject does not match the desired service identity.";
+  }
+}
+
+/**
  * Apply rejected a plan because fresh inventory produced a different digest.
  *
  * **Example** (Create a stale-plan error)
@@ -162,5 +198,6 @@ export class BoxProvisioningInvariantError extends S.TaggedError<BoxProvisioning
 export type BoxProvisioningError =
   | BoxProvisioningSchemaError
   | BoxProvisioningTenantMismatchError
+  | BoxProvisioningSubjectMismatchError
   | BoxProvisioningDriftError
   | BoxProvisioningInvariantError;

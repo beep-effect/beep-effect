@@ -11,7 +11,7 @@ import { Context, Effect, Equal, Layer, MutableHashMap, MutableHashSet, Order, p
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { BoxProvisioningTenantMismatchError } from "./BoxProvisioningErrors.ts";
+import { BoxProvisioningSubjectMismatchError, BoxProvisioningTenantMismatchError } from "./BoxProvisioningErrors.ts";
 import {
   BoxCollaborationIntent,
   BoxDesiredState,
@@ -391,6 +391,13 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
       actualEnterpriseId: observed.enterpriseId,
     });
   }
+  const expectedSubjectId = BoxProviderId.make(desired.expectedSubjectId);
+  if (!Equal.equals(expectedSubjectId, observed.subjectId)) {
+    return yield* BoxProvisioningSubjectMismatchError.make({
+      expectedSubjectId,
+      actualSubjectId: observed.subjectId,
+    });
+  }
 
   const orderedFolders = A.sortWith(desired.folders, (folder) => folderDepth(desired.folders, folder), Order.Number);
   const resolutions = MutableHashMap.empty<BoxLogicalKey, FolderResolution>();
@@ -515,6 +522,7 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
   const draft = BoxProvisioningPlan.make({
     sourceRevision: desired.sourceRevision,
     expectedEnterpriseId,
+    subjectId: observed.subjectId,
     rootFolderId: observed.rootFolderId,
     desiredStateDigest: encodedDigest(BoxDesiredState, desired),
     liveStateDigest: encodedDigest(BoxObservedState, observed),
@@ -543,7 +551,7 @@ export interface BoxProvisioningPlannerShape {
   readonly plan: (
     desired: BoxDesiredState,
     observed: BoxObservedState
-  ) => Effect.Effect<BoxProvisioningPlan, BoxProvisioningTenantMismatchError>;
+  ) => Effect.Effect<BoxProvisioningPlan, BoxProvisioningTenantMismatchError | BoxProvisioningSubjectMismatchError>;
 }
 
 /**

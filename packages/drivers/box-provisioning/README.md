@@ -34,6 +34,11 @@ const dryRun = (desiredInput: unknown) =>
   )
 ```
 
+Configure exactly one CCG subject. `enterpriseId` uses the application's
+service account; `userId` uses that explicit Box user. Pin the resulting
+`users.getUserMe` id as `expectedSubjectId` in the secure desired state so a
+same-enterprise credential for the wrong user fails before planning or apply.
+
 Keep the desired-state document and CCG credentials in the secure runner. The
 desired document can contain folder names, collaborator principals, and webhook
 addresses. Plans and receipts replace those values with digests before they

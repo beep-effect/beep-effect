@@ -277,6 +277,7 @@ export class BoxObservedWebhook extends S.Class<BoxObservedWebhook>($I`BoxObserv
  *   rootFolderId: BoxProviderId.make("0"),
  *   signRequests: BoxDiscoveryAvailable.make({ count: 0, kind: "signRequests" }),
  *   signTemplates: BoxDiscoveryAvailable.make({ count: 0, kind: "signTemplates" }),
+ *   subjectId: BoxProviderId.make("service-account-id"),
  *   webhooks: []
  * })
  * console.log(observed.folders.length)
@@ -288,6 +289,7 @@ export class BoxObservedWebhook extends S.Class<BoxObservedWebhook>($I`BoxObserv
 export class BoxObservedState extends S.Class<BoxObservedState>($I`BoxObservedState`)(
   {
     enterpriseId: BoxProviderId,
+    subjectId: BoxProviderId,
     rootFolderId: BoxProviderId,
     folders: S.Array(BoxObservedFolder),
     collaborations: S.Array(BoxObservedCollaboration),

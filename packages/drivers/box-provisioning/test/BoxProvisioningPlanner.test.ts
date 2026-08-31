@@ -1,4 +1,10 @@
-import { BoxDesiredState, BoxProvisioningPlan, planBoxProvisioning } from "@beep/box-provisioning";
+import {
+  BoxDesiredState,
+  BoxObservedState,
+  BoxProviderId,
+  BoxProvisioningPlan,
+  planBoxProvisioning,
+} from "@beep/box-provisioning";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
@@ -40,6 +46,7 @@ describe("@beep/box-provisioning planner", () => {
       version: "box-provisioning/v1",
       sourceRevision: "intent-cycle",
       expectedEnterpriseId: "enterprise-id",
+      expectedSubjectId: "service-account-id",
       rootFolderId: "0",
       entitlements: {
         externalCollaboratorsRequirePaidSeats: true,
@@ -59,4 +66,19 @@ describe("@beep/box-provisioning planner", () => {
 
     expect(O.isNone(decoded)).toBe(true);
   });
+
+  it.effect(
+    "rejects an authenticated subject other than the pinned service identity",
+    Effect.fnUntraced(function* () {
+      const error = yield* planBoxProvisioning(
+        desiredFixture,
+        BoxObservedState.make({
+          ...observedFixture,
+          subjectId: BoxProviderId.make("wrong-user-id"),
+        })
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("BoxProvisioningSubjectMismatchError");
+    })
+  );
 });

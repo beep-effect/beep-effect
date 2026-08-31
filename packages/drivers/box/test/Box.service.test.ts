@@ -382,6 +382,22 @@ describe("@beep/box", () => {
     })
   );
 
+  it.effect(
+    "rejects ambiguous CCG config with both enterprise and user subjects",
+    Effect.fnUntraced(function* () {
+      const exit = yield* Effect.exit(
+        S.decodeEffect(B.BoxCcgConfig)({
+          clientId: "client-id",
+          clientSecret: Redacted.make("client-secret"),
+          enterpriseId: "enterprise-id",
+          userId: "user-id",
+        })
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
+
   // The SDK deserializers materialize absent response fields as present-but-
   // undefined keys. Exact-optional schema keys reject those, which silently
   // broke every real Box call whose response omitted an optional field (the

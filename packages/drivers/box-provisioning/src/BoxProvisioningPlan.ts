@@ -418,6 +418,7 @@ export class BoxProvisioningPlan extends S.Class<BoxProvisioningPlan>($I`BoxProv
     version: S.Literal("box-provisioning-plan/v1").pipe(SchemaUtils.withConstantDefault("box-provisioning-plan/v1")),
     sourceRevision: S.NonEmptyString,
     expectedEnterpriseId: BoxProviderId,
+    subjectId: BoxProviderId,
     rootFolderId: BoxProviderId,
     desiredStateDigest: Sha256Hex,
     liveStateDigest: Sha256Hex,

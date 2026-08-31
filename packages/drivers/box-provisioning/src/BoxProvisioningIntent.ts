@@ -362,6 +362,7 @@ const BoxDesiredStateFields = S.Struct({
   version: S.Literal("box-provisioning/v1").pipe(SchemaUtils.withConstantDefault("box-provisioning/v1")),
   sourceRevision: S.NonEmptyString,
   expectedEnterpriseId: S.NonEmptyString,
+  expectedSubjectId: S.NonEmptyString,
   rootFolderId: S.NonEmptyString,
   entitlements: BoxEntitlements,
   folders: S.Array(BoxFolderIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxFolderIntent>()),
@@ -396,6 +397,7 @@ const BoxDesiredStateFields = S.Struct({
  *     signCustomIntegrationAnnualAllowance: O.none()
  *   }),
  *   expectedEnterpriseId: "enterprise-id",
+ *   expectedSubjectId: "service-account-id",
  *   folders: [],
  *   metadata: [],
  *   retention: [],

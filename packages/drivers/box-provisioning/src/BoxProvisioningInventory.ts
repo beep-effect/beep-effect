@@ -334,6 +334,7 @@ const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
     );
     return BoxObservedState.make({
       enterpriseId,
+      subjectId: BoxProviderId.make(user.id),
       rootFolderId,
       folders,
       collaborations,
