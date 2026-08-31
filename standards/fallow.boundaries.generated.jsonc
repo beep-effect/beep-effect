@@ -126,6 +126,12 @@
         ]
       },
       {
+        "name": "@beep/box-provisioning",
+        "patterns": [
+          "packages/drivers/box-provisioning/src/**"
+        ]
+      },
+      {
         "name": "@beep/brand",
         "patterns": [
           "packages/foundation/ui-system/brand/src/**"
@@ -1246,6 +1252,23 @@
         ],
         "allowTypeOnly": [
           "@beep/box",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/box-provisioning",
+        "allow": [
+          "@beep/box",
+          "@beep/box-provisioning",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/box",
+          "@beep/box-provisioning",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils"

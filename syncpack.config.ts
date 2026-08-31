@@ -108,6 +108,7 @@ const config = {
     "packages/drivers/gov-legal-mcp/package.json",
     "packages/drivers/openai/package.json",
     "apps/todox/package.json",
+    "packages/drivers/box-provisioning/package.json",
   ],
   customTypes: {
     catalog: {
