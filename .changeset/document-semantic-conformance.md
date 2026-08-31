@@ -5,6 +5,7 @@
 "@beep/md": minor
 "@beep/lexical-schema": minor
 "@beep/pandoc-ast": minor
+"@beep/professional-desktop": patch
 "@beep/repo-configs": patch
 "@beep/test-utils": minor
 ---
@@ -19,3 +20,7 @@ annotations, ledgers, and named test evidence stay aligned.
 The new APIs preserve broad lossless ASTs where the specifications permit
 nonconforming input, then expose profile-specific reports and strict branded
 results for callers that require proven conformance.
+
+The professional desktop composer now preserves exhaustive, user-facing
+refusal handling when a persisted Markdown document cannot project to
+conformant HTML.
