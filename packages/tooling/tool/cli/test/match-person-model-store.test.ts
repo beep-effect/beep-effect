@@ -23,9 +23,7 @@ const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 
 const sha256Hex = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(Encoding.encodeHex(sha256(bytes)));
 
-const withTempModelRoot = <A, E, R>(
-  use: (modelRoot: string, targetPath: string) => Effect.Effect<A, E, R>
-): Effect.Effect<A, E, Exclude<R, FileSystem.FileSystem | Path.Path>> =>
+const withTempModelRoot = <A, E, R>(use: (modelRoot: string, targetPath: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
