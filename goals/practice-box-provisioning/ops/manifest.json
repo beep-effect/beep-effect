@@ -12,9 +12,9 @@
   "packetPath": "goals/practice-box-provisioning",
   "lifecycle": "active",
   "mission": "Expand @beep/box with the provisioning manager surface and ship the Effect-native desired-state reconciler for the service-identity-owned client/matter tree",
-  "statusNote": "P0 and P1 are complete. The budgeted @beep/box surface and @beep/box-provisioning reconciler pass canonical package verification. P2 is at the operator-attended live credential and private-intent gate.",
+  "statusNote": "P0 and P1 are complete. The budgeted driver and reconciler pass canonical package verification. P2 private CCG injection and read-only identity bootstrap pass; private practice inputs, live dry-run, and attended apply remain.",
   "blockedBy": [
-    "P2 live dry-run and apply require 1Password-backed CCG environment injection, the private starter intent, and the operator present."
+    "P2 live dry-run and apply require the three private practice inputs and the operator present; CCG injection and identity guards are established."
   ],
   "executionCapable": true,
   "reflectionRequired": true,

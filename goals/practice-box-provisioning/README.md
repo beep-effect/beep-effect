@@ -37,8 +37,9 @@ Use this command for execution-capable sessions:
 ## Current phase
 
 P2 Verify. The driver expansion and product-neutral reconciler package are
-locally complete. Live dry-run and apply now require 1Password-backed CCG
-environment injection, a private starter intent, and the operator present.
+locally complete. Private 1Password-backed CCG injection and the read-only
+tenant/subject identity bootstrap now pass. Live dry-run and apply still
+require the three private practice inputs and the operator present.
 
 ## Latest evidence
 

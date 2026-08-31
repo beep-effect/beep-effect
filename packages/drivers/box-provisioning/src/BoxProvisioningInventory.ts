@@ -33,25 +33,24 @@ type MarkerPage<A> = {
   readonly nextMarker?: string | null;
 };
 
-const collectMarkerPages = <A, E>(
+const collectMarkerPages = Effect.fn("BoxProvisioningInventory.collectMarkerPages")(function* <A, E>(
   load: (marker: O.Option<string>) => Effect.Effect<MarkerPage<A>, E>
-): Effect.Effect<ReadonlyArray<A>, E> =>
-  Effect.gen(function* () {
-    let marker = O.none<string>();
-    let entries = A.empty<A>();
-    const seen = MutableHashSet.empty<string>();
+): Effect.fn.Return<ReadonlyArray<A>, E> {
+  let marker = O.none<string>();
+  let entries = A.empty<A>();
+  const seen = MutableHashSet.empty<string>();
 
-    while (true) {
-      const page = yield* load(marker);
-      entries = A.appendAll(entries, O.getOrElse(O.fromNullishOr(page.entries), A.empty<A>));
-      const next = O.fromNullishOr(page.nextMarker);
-      if (O.isNone(next) || MutableHashSet.has(seen, next.value)) {
-        return entries;
-      }
-      MutableHashSet.add(seen, next.value);
-      marker = next;
+  while (true) {
+    const page = yield* load(marker);
+    entries = A.appendAll(entries, O.getOrElse(O.fromNullishOr(page.entries), A.empty<A>));
+    const next = O.fromNullishOr(page.nextMarker);
+    if (O.isNone(next) || MutableHashSet.has(seen, next.value)) {
+      return entries;
     }
-  });
+    MutableHashSet.add(seen, next.value);
+    marker = next;
+  }
+});
 
 const markerQuery = (marker: O.Option<string>) =>
   O.match(marker, {
@@ -88,22 +87,21 @@ const toObservedFolder = (
       ),
   });
 
-const scanFolderTree = (
+const scanFolderTree = Effect.fn("BoxProvisioningInventory.scanFolderTree")(function* (
   box: B.Box["Service"],
   parentProviderId: BoxProviderId
-): Effect.Effect<ReadonlyArray<BoxObservedFolder>, B.BoxError | BoxProvisioningInvariantError> =>
-  Effect.gen(function* () {
-    const items = yield* listFolderItems(box, parentProviderId);
-    const children = yield* Effect.forEach(
-      A.filter(items, S.is(B.FolderMini)),
-      (item) => toObservedFolder(item, parentProviderId),
-      { concurrency: 1 }
-    );
-    const descendants = yield* Effect.forEach(children, (child) => scanFolderTree(box, child.providerId), {
-      concurrency: 1,
-    });
-    return A.appendAll(children, A.flatten(descendants));
+): Effect.fn.Return<ReadonlyArray<BoxObservedFolder>, B.BoxError | BoxProvisioningInvariantError> {
+  const items = yield* listFolderItems(box, parentProviderId);
+  const children = yield* Effect.forEach(
+    A.filter(items, S.is(B.FolderMini)),
+    (item) => toObservedFolder(item, parentProviderId),
+    { concurrency: 1 }
+  );
+  const descendants = yield* Effect.forEach(children, (child) => scanFolderTree(box, child.providerId), {
+    concurrency: 1,
   });
+  return A.appendAll(children, A.flatten(descendants));
+});
 
 const listFolderCollaborations = (box: B.Box["Service"], folderId: BoxProviderId) =>
   collectMarkerPages<B.Collaboration, B.BoxError>((marker) =>
@@ -318,7 +316,11 @@ const enterpriseIdFromUser = (user: B.UserFull): Effect.Effect<BoxProviderId, Bo
 const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
   observe: Effect.fn("BoxProvisioningInventory.observe")(function* (desired) {
     const rootFolderId = BoxProviderId.make(desired.rootFolderId);
-    const user = yield* box.users.getUserMe(B.UsersGetUserMePayload.make({}));
+    const user = yield* box.users.getUserMe(
+      B.UsersGetUserMePayload.make({
+        queryParams: B.GetUserMeQueryParams.make({ fields: ["id", "enterprise"] }),
+      })
+    );
     const enterpriseId = yield* enterpriseIdFromUser(user);
     const folders = yield* scanFolderTree(box, rootFolderId);
     const [collaborations, webhooks, metadata, retention, signRequests, signTemplates] = yield* Effect.all(

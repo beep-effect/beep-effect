@@ -107,3 +107,32 @@ No tenant mutation occurred during P1. Live dry-run and apply remain P2 work.
 The session did not have an available 1Password MCP client, and the sanitized
 `op whoami` preflight reported no signed-in CLI account. Credentials were not
 requested, printed, copied, or stored.
+
+## P2 read-only identity bootstrap
+
+After draft PR #928 opened, the desktop-backed 1Password CLI fallback provided
+the three CCG variables through private `op://` references. No credential value
+was requested, printed, copied, hashed, or stored in the repository.
+
+The first authenticated `users.getUserMe` read reached Box but the default
+response omitted the optional enterprise object, so identity extraction failed
+closed before planning. `BoxProvisioningInventory` now requests the exact
+`id` and `enterprise` fields. A regression test captures the SDK query without
+network access, and the canonical package handoff is green:
+
+```text
+bun run beep quality package-verify @beep/box-provisioning
+ok audit 10.4s; ok docgen 3.7s
+```
+
+The corrected private read-only bootstrap then reported only:
+
+```text
+mode: bootstrap-identity
+identityGuardsUpdated: true
+```
+
+The enterprise and service-subject ids were written directly into the ignored
+mode-0600 desired-state file. They did not enter logs or tracked artifacts. No
+Box mutation occurred. Only the private client name, matter name, and attorney
+login remain before live dry-run.

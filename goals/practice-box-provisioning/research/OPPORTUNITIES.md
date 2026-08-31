@@ -34,3 +34,27 @@ Friction receipts captured while shipping, per the repository friction law.
    immutable fixtures for goal projections and scheduler defaults, or the
    quality receipt could distinguish a failure that disappears on an isolated
    exact-tree rerun from a deterministic source failure.
+
+2. **The default Box current-user response omitted the tenant guard.** `owned`
+
+   The private read-only identity bootstrap authenticated successfully but
+   failed closed at `extract-identity-guards`: `users.getUserMe` returned the
+   service subject while omitting the optional enterprise object. Requesting
+   the exact `id` and `enterprise` fields made the same live bootstrap pass,
+   without logging either identifier.
+
+   **What would have prevented it:** the inventory boundary should have carried
+   an explicit current-user field projection from the start, with a regression
+   test asserting the SDK query required by both identity guards.
+
+3. **Package verification missed a touched-file Effect law.** `unowned`
+
+   Canonical `package-verify` passed audit and docgen, but the root
+   `laws effect-fn --check` still found four unnamed reusable Effect generators
+   in the same new package. Naming the two inventory helpers, the no-op applier,
+   and the sequential per-action callback cleared the root law without changing
+   behavior.
+
+   **What would have prevented it:** package verification could run the
+   touched-file Effect governance checks scoped to the target package, so a
+   green package handoff implies the root policy lanes will accept that package.

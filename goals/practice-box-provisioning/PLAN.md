@@ -2,8 +2,9 @@
 
 ## Status
 
-Status: `active` — P0 and P1 complete. P2 is at the operator-attended live
-credential and private-intent gate.
+Status: `active` — P0 and P1 complete. P2 has passed private CCG injection and
+the read-only tenant/subject identity bootstrap; the private practice inputs,
+live dry-run, and operator-attended apply remain.
 
 ## Phases
 

@@ -215,21 +215,20 @@ const applyUpdate = (
     Match.orElse(() => Effect.fail(invariant("unsupported-action")))
   );
 
-const applyNoop = (
+const applyNoop = Effect.fn("BoxProvisioningApplier.applyNoop")(function* (
   action: BoxNoopAction,
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>
-): Effect.Effect<BoxApplyOutcome, BoxProvisioningInvariantError> =>
-  Effect.gen(function* () {
-    if (action.resourceKind === "folder") {
-      MutableHashMap.set(folderProviderIds, action.logicalKeyDigest, yield* requiredProviderId(action));
-    }
-    return BoxActionSkipped.make({
-      actionKey: action.actionKey,
-      logicalKeyDigest: action.logicalKeyDigest,
-      reason: "noop",
-      resourceKind: action.resourceKind,
-    });
+): Effect.fn.Return<BoxApplyOutcome, BoxProvisioningInvariantError> {
+  if (action.resourceKind === "folder") {
+    MutableHashMap.set(folderProviderIds, action.logicalKeyDigest, yield* requiredProviderId(action));
+  }
+  return BoxActionSkipped.make({
+    actionKey: action.actionKey,
+    logicalKeyDigest: action.logicalKeyDigest,
+    reason: "noop",
+    resourceKind: action.resourceKind,
   });
+});
 
 const applyBlocked = (action: BoxBlockedAction): BoxApplyOutcome =>
   BoxActionBlocked.make({
@@ -260,19 +259,15 @@ const makeService = (box: B.Box["Service"]): BoxProvisioningApplierShape => ({
         Update: (action) => applyUpdate(box, desiredState, action),
       })
     );
-    const outcomes = yield* Effect.forEach(
-      plan.actions,
-      (action) =>
-        Effect.gen(function* () {
-          if (A.some(action.dependencies, (dependency) => !MutableHashSet.has(completed, dependency))) {
-            return yield* invariant("unresolved-dependency");
-          }
-          const outcome = yield* applyAction(action);
-          MutableHashSet.add(completed, action.actionKey);
-          return outcome;
-        }),
-      { concurrency: 1 }
-    );
+    const applyOne = Effect.fn("BoxProvisioningApplier.applyOne")(function* (action: BoxPlanAction) {
+      if (A.some(action.dependencies, (dependency) => !MutableHashSet.has(completed, dependency))) {
+        return yield* invariant("unresolved-dependency");
+      }
+      const outcome = yield* applyAction(action);
+      MutableHashSet.add(completed, action.actionKey);
+      return outcome;
+    });
+    const outcomes = yield* Effect.forEach(plan.actions, applyOne, { concurrency: 1 });
     return BoxApplyReceipt.make({
       appliedAt: yield* DateTime.now,
       outcomes,
