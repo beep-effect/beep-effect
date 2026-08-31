@@ -1778,11 +1778,12 @@ describe("files command", { concurrent: false }, () => {
           });
           let workerCallCount = 0;
           const workerService = PersonMatchWorkerService.of({
-            run: () =>
+            run: Effect.fn("PersonMatchWorkerService.run")(() =>
               Effect.sync(() => {
                 workerCallCount += 1;
                 return worker;
-              }),
+              })
+            ),
           });
 
           yield* withEnvVar(
