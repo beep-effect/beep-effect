@@ -58,40 +58,41 @@ const extractedClaims = (snapshot: LedgerSnapshot) =>
 const claimedChunkIds = (snapshot: LedgerSnapshot): HashSet.HashSet<ChunkId> =>
   HashSet.fromIterable(A.map(extractedClaims(snapshot), (claim) => claim.chunk));
 
-const embeddingInputs = (snapshot: LedgerSnapshot): Effect.Effect<ReadonlyArray<EmbeddingInput>, ProjectionFailed> =>
-  Effect.gen(function* () {
-    const claimed = claimedChunkIds(snapshot);
-    const inputs = A.sort(
-      A.flatMap(snapshot.documents, (document) =>
-        O.match(document.canonical, {
-          onNone: () => [],
-          onSome: (canonical) =>
-            A.getSomes(
-              A.map(document.chunks, (chunk) => {
-                if (!HashSet.has(claimed, chunk.id)) {
-                  return O.none<EmbeddingInput>();
-                }
-                const text = Str.slice(chunk.anchor.startChar, chunk.anchor.endChar)(canonical.text);
-                return Str.isNonEmpty(text)
-                  ? O.some(EmbeddingInput.make({ chunk: chunk.id, text }))
-                  : O.none<EmbeddingInput>();
-              })
-            ),
-        })
-      ),
-      Order.mapInput(stringOrder, (input: EmbeddingInput) => input.chunk)
+const embeddingInputs = Effect.fn("CanaryC1.embeddingInputs")(function* (
+  snapshot: LedgerSnapshot
+): Effect.fn.Return<ReadonlyArray<EmbeddingInput>, ProjectionFailed> {
+  const claimed = claimedChunkIds(snapshot);
+  const inputs = A.sort(
+    A.flatMap(snapshot.documents, (document) =>
+      O.match(document.canonical, {
+        onNone: () => [],
+        onSome: (canonical) =>
+          A.getSomes(
+            A.map(document.chunks, (chunk) => {
+              if (!HashSet.has(claimed, chunk.id)) {
+                return O.none<EmbeddingInput>();
+              }
+              const text = Str.slice(chunk.anchor.startChar, chunk.anchor.endChar)(canonical.text);
+              return Str.isNonEmpty(text)
+                ? O.some(EmbeddingInput.make({ chunk: chunk.id, text }))
+                : O.none<EmbeddingInput>();
+            })
+          ),
+      })
+    ),
+    Order.mapInput(stringOrder, (input: EmbeddingInput) => input.chunk)
+  );
+  if (HashSet.size(claimed) === 0 || A.isReadonlyArrayEmpty(inputs)) {
+    return yield* failed("no-embedding-inputs", "The C1 ledger has no claim-bearing canonical chunks to embed.");
+  }
+  if (!Equal.equals(HashSet.size(claimed), A.length(inputs))) {
+    return yield* failed(
+      "no-embedding-inputs",
+      "The C1 ledger does not retain exactly one canonical text slice for every claim-bearing chunk."
     );
-    if (HashSet.size(claimed) === 0 || A.isReadonlyArrayEmpty(inputs)) {
-      return yield* failed("no-embedding-inputs", "The C1 ledger has no claim-bearing canonical chunks to embed.");
-    }
-    if (!Equal.equals(HashSet.size(claimed), A.length(inputs))) {
-      return yield* failed(
-        "no-embedding-inputs",
-        "The C1 ledger does not retain exactly one canonical text slice for every claim-bearing chunk."
-      );
-    }
-    return inputs;
-  });
+  }
+  return inputs;
+});
 
 const isGDocument = (expectation: GProjectionExpectation) => (snapshot: LedgerSnapshot["documents"][number]) =>
   Origin.match(snapshot.document.origin, {

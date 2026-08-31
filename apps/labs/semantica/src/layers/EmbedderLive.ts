@@ -196,9 +196,9 @@ const makeEmbedder = Effect.fn("Embedder.make")(function* (provider: O.Option<Em
         A.map(resolutions, (resolution) =>
           Match.value(resolution).pipe(
             Match.tagsExhaustive({
-              Degraded: () => O.none<EmbeddingVector>(),
+              Degraded: O.none<EmbeddingVector>,
               Hit: ({ vector }) => O.some(vector),
-              Miss: () => O.none<EmbeddingVector>(),
+              Miss: O.none<EmbeddingVector>,
             })
           )
         )
@@ -208,8 +208,8 @@ const makeEmbedder = Effect.fn("Embedder.make")(function* (provider: O.Option<Em
           Match.value(resolution).pipe(
             Match.tagsExhaustive({
               Degraded: ({ degraded: value }) => O.some(value),
-              Hit: () => O.none<DegradedEmbedding>(),
-              Miss: () => O.none<DegradedEmbedding>(),
+              Hit: O.none<DegradedEmbedding>,
+              Miss: O.none<DegradedEmbedding>,
             })
           )
         )
