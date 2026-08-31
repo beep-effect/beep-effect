@@ -3,12 +3,12 @@
   "reportDigest": "2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1",
   "runId": "7785c664f99aec5a5244f21f5413b1a355567637d266254ecb713208b3e672c6",
   "mode": "replay",
-  "startedAt": "2026-08-31T14:56:56.246Z",
-  "wallClockMs": 599118,
-  "coldStartMs": 1189,
+  "startedAt": "2026-08-31T15:32:13.778Z",
+  "wallClockMs": 617561,
+  "coldStartMs": 1201,
   "p95Ms": 6,
-  "rssBytes": 3477360640,
-  "diskGrowthBytes": 173932584,
+  "rssBytes": 5159620608,
+  "diskGrowthBytes": 173957160,
   "dependencyBytes": null,
   "modelBytes": null
 }
