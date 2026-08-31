@@ -11,6 +11,7 @@ import { FastCheck as fc } from "effect/testing";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand } from "@/canary/Command";
+import { RelationPreviewManifest } from "@/canary/RelationPreview";
 import { canonicalJson } from "@/corpus/Canonical";
 import { CorpusManifest, CorpusPaperId, ManifestDrift } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
@@ -32,6 +33,7 @@ import { generateF1Pdfs } from "../scripts/generate-f1-pdfs";
 const ManifestFromJsonString = S.fromJsonString(CorpusManifest);
 const ManifestToJsonString = S.fromJsonString(CorpusManifest, { space: 2 });
 const F1IndexFromJsonString = S.fromJsonString(F1Index);
+const RelationPreviewManifestJson = S.fromJsonString(RelationPreviewManifest);
 
 const runtimeFromEnv = (env: Record<string, string>) =>
   RuntimeLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
@@ -48,6 +50,23 @@ const rejectsManifest = (input: unknown) =>
   S.decodeUnknownEffect(CorpusManifest)(input).pipe(Effect.exit, Effect.map(Exit.isFailure));
 
 describe("W1 corpus manifest", () => {
+  it("decodes the committed E5 cache-preview manifest", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const manifest = yield* fs
+            .readFileString("fixtures/relation-preview.json")
+            .pipe(Effect.flatMap(S.decodeEffect(RelationPreviewManifestJson)));
+
+          expect(manifest.schemaVersion).toBe("semantica-relation-preview/v1");
+          expect(manifest.cases).toHaveLength(3);
+          expect(HashSet.size(HashSet.fromIterable(A.map(manifest.cases, (item) => item.cacheDigest)))).toBe(3);
+          expect(HashSet.size(HashSet.fromIterable(A.map(manifest.cases, (item) => item.paperId)))).toBe(2);
+        })
+      )
+    ));
+
   it("canonicalizes recursively without depending on object key insertion order", () => {
     const left = canonicalJson({ z: [{ b: 2, a: 1 }], a: { d: 4, c: 3 } });
     const right = canonicalJson({ a: { c: 3, d: 4 }, z: [{ a: 1, b: 2 }] });
