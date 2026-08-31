@@ -111,20 +111,28 @@ Source: [Use network upload to import PST files](https://learn.microsoft.com/en-
 ### 1.3 Step 2 — AzCopy upload
 
 ```text
-azcopy.exe copy "<Source directory of PST files>" "<SAS URL>"
+# Directory form: blobs land under a "<directory name>/" prefix —
+# every CSV row must then carry FilePath=<directory name>.
+azcopy.exe copy "<Source directory of PST files>" "<SAS URL>" --recursive=true
+
+# Flat form: uploads the directory's TOP-LEVEL files to the container
+# root — FilePath stays blank in the CSV. Preferred for this runbook,
+# which is why the staging directory must be flat: move any PSTs out of
+# subdirectories first, or they are silently omitted (use the recursive
+# form with FilePath prefixes if nesting must be preserved).
+azcopy.exe copy "<Source directory of PST files>/*" "<SAS URL>"
 ```
 
 Rules:
 
-- The source argument is a **directory**, not a single file.
-- *Correction 2026-08-30 (review finding):* with a directory source, AzCopy
-  requires `--recursive=true` to upload the directory's contents — the
-  installed AzCopy 10.32.4 `azcopy copy --help` documents directory upload
-  under that flag, and without it the job can reach mapping validation with
-  no PST blobs present. Recursion also changes the resulting Azure
-  pathnames; whatever pathnames AzCopy produces must match `FilePath` in
-  the mapping CSV **exactly, case-sensitive** — list the uploaded blobs
-  (step 3) before authoring the CSV.
+- *Correction 2026-08-30 (review findings):* a bare directory source needs
+  `--recursive=true` to upload anything at all (AzCopy 10.32.4
+  `azcopy copy --help`), **and** that form preserves the source directory
+  name as a blob-path prefix — pairing it with blank-`FilePath` CSV rows
+  fails mapping validation. Pick one consistent pair: directory form +
+  `FilePath=<directory name>`, or the flat `/*` form + blank `FilePath`.
+  Either way, list the uploaded blobs (step 3) before authoring the CSV
+  and copy the exact pathnames — matching is **case-sensitive**.
 - Optional subfolder after `ingestiondata` in the SAS URL; that subfolder
   name becomes `FilePath`.
 - Each PST must have a unique name.
@@ -625,7 +633,10 @@ this runbook until R5 has recorded the assigned SKU.
    ```
 
    Unique `Name` per row. ≤500 rows. Header unchanged. Leave SP columns
-   blank. `FilePath` blank if AzCopy targeted the container root.
+   blank. Blank `FilePath` is correct only with the flat `/*` upload form
+   (blobs at the container root); the `--recursive` directory form puts
+   blobs under the source directory's name, and each row's `FilePath` must
+   carry that exact prefix — list the blobs and copy it verbatim.
 7. **Validate → Analysis completed → import everything**, unless the
    analysis graph is junk-heavy (then age/type/user filters).
 8. **Verify.**

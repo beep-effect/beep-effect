@@ -7,22 +7,22 @@
  */
 
 import {
+  TANSTACK_MARKER_OPEN,
   applyTanStackLiveAdapter,
   detectTanStackStartProject,
   removeTanStackLiveAdapter,
-  TANSTACK_MARKER_OPEN,
   unpatchTanStackRoot,
-} from "../tanstack-adapter.mjs";
+} from '../tanstack-adapter.mjs';
 
 export const tanstackStart = {
-  name: "tanstack-start",
+  name: 'tanstack-start',
 
   detect(cwd) {
     return detectTanStackStartProject(cwd);
   },
 
   inject: {
-    kind: "adapter",
+    kind: 'adapter',
 
     apply({ cwd, port, token, project }) {
       return applyTanStackLiveAdapter({ cwd, port, token, project });
@@ -42,29 +42,29 @@ export const tanstackStart = {
       if (!project) return [];
       return [
         {
-          kind: "created",
+          kind: 'created',
           path: project.componentFile,
-          marker: "impeccable-live-tanstack",
-          pruneTo: "src",
+          marker: 'impeccable-live-tanstack',
+          pruneTo: 'src',
         },
         {
-          kind: "patched",
+          kind: 'patched',
           path: project.rootRoute,
-          patch: "tanstack-root",
+          patch: 'tanstack-root',
           markers: [TANSTACK_MARKER_OPEN],
         },
       ];
     },
 
     unpatch: {
-      "tanstack-root": unpatchTanStackRoot,
+      'tanstack-root': unpatchTanStackRoot,
     },
   },
 
   source: {
-    extensions: [".tsx", ".jsx"],
-    preview: "source",
-    styleMode: "scoped",
-    commentSyntax: "jsx",
+    extensions: ['.tsx', '.jsx'],
+    preview: 'source',
+    styleMode: 'scoped',
+    commentSyntax: 'jsx',
   },
 };

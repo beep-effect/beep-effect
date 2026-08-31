@@ -33,6 +33,7 @@ import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { hashFileSha256 as hashFileSha256Hex } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
 import { isSupportedMetadataImageExtension, normalizeBareExtension } from "../Files.media.ts";
+import { backupStagedFileTarget, canonicalizeFileTargetPath, commitStagedFileByRename } from "./FileTransaction.ts";
 import {
   encodeImageAuditManifest,
   ImageAuditCluster,
@@ -56,6 +57,7 @@ import { FileSha256Hash } from "./Media.schemas.ts";
 import type { LoadedFaceDetector } from "@beep/face-detection";
 import type { Terminal } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { StagedFileCommitRecord } from "./FileTransaction.ts";
 import type { ImageAuditOptions } from "./ImageAudit.schemas.ts";
 import type {
   ImageCurationCrop,
@@ -149,14 +151,7 @@ interface StagedCurationEntry {
   readonly stagedPath: string;
 }
 
-interface CurationCommitRecord {
-  backedUp: boolean;
-  readonly backupPath: string;
-  committed: boolean;
-  readonly description: string;
-  readonly stagedPath: string;
-  readonly targetPath: string;
-}
+type CurationCommitRecord = StagedFileCommitRecord;
 
 interface OptionalManifestDecisionFields {
   crop?: ImageCurationCrop;
@@ -218,39 +213,6 @@ const pathsOverlap = (
   const relative = path.relative(left, right);
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 };
-
-const canonicalizeImageTargetPath = Effect.fn("Files.canonicalizeImageTargetPath")(function* (
-  targetPath: string,
-  description: string
-): Effect.fn.Return<string, FilesCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const resolvedTarget = path.resolve(targetPath);
-  let candidate = resolvedTarget;
-
-  while (true) {
-    const exists = yield* fs
-      .exists(candidate)
-      .pipe(Effect.mapError((cause) => formatPlatformError(`Failed to inspect ${description}`, candidate, { cause })));
-    if (exists) {
-      const canonicalCandidate = yield* fs
-        .realPath(candidate)
-        .pipe(
-          Effect.mapError((cause) => formatPlatformError(`Failed to resolve ${description}`, candidate, { cause }))
-        );
-      const relativeSuffix = path.relative(candidate, resolvedTarget);
-      return relativeSuffix === "" ? canonicalCandidate : path.resolve(canonicalCandidate, relativeSuffix);
-    }
-
-    const parent = path.dirname(candidate);
-    if (parent === candidate) {
-      return yield* FilesCommandError.make({
-        message: `Failed to find an existing ancestor for ${description} "${resolvedTarget}".`,
-      });
-    }
-    candidate = parent;
-  }
-});
 
 const skippedAuditSource = (sourceName: string, sourcePath: string, message: string): AuditSourceResult => [
   O.none(),
@@ -848,8 +810,8 @@ export const auditImagesImpl = Effect.fn("FilesCommandService.auditImages")(func
       message: `Image audit accepts at most ${maxAuditSourceCount} supported source files per run.`,
     });
   }
-  const manifestPath = yield* canonicalizeImageTargetPath(options.manifest, "image audit manifest path");
-  const modelPath = yield* canonicalizeImageTargetPath(options.modelPath, "image audit face model path");
+  const manifestPath = yield* canonicalizeFileTargetPath(options.manifest, "image audit manifest path");
+  const modelPath = yield* canonicalizeFileTargetPath(options.modelPath, "image audit face model path");
   if (pathsOverlap(path, sources.canonicalDirectory, manifestPath)) {
     return yield* FilesCommandError.make({
       message: `Image audit manifest must not be written inside source directory "${sources.canonicalDirectory}".`,
@@ -1013,7 +975,7 @@ const validateCurationRoots = Effect.fn("Files.validateImageCurationRoots")(func
   FileSystem.FileSystem | Path.Path
 > {
   const path = yield* Path.Path;
-  const recordedSourceDirectory = yield* canonicalizeImageTargetPath(
+  const recordedSourceDirectory = yield* canonicalizeFileTargetPath(
     decisions.sourceDirectory,
     "decision ledger source directory"
   );
@@ -1023,7 +985,7 @@ const validateCurationRoots = Effect.fn("Files.validateImageCurationRoots")(func
     });
   }
 
-  const outputDirectory = yield* canonicalizeImageTargetPath(options.outDir, "image curation output directory");
+  const outputDirectory = yield* canonicalizeFileTargetPath(options.outDir, "image curation output directory");
   const outputOverlapsSource =
     pathsOverlap(path, sources.canonicalDirectory, outputDirectory) ||
     pathsOverlap(path, outputDirectory, sources.canonicalDirectory);
@@ -1034,7 +996,7 @@ const validateCurationRoots = Effect.fn("Files.validateImageCurationRoots")(func
   }
 
   const defaultManifestPath = path.join(outputDirectory, "manifests", "image-curation-manifest.json");
-  const manifestPath = yield* canonicalizeImageTargetPath(
+  const manifestPath = yield* canonicalizeFileTargetPath(
     pipe(
       options.manifest,
       O.getOrElse(() => defaultManifestPath)
@@ -1186,7 +1148,7 @@ const canonicalizePreparedCurationEntries = Effect.fn("Files.canonicalizePrepare
 ): Effect.fn.Return<ReadonlyArray<PreparedCurationEntry>, FilesCommandError, FileSystem.FileSystem | Path.Path> {
   let canonicalEntries = A.empty<PreparedCurationEntry>();
   for (const entry of entries) {
-    const outputPath = yield* canonicalizeImageTargetPath(
+    const outputPath = yield* canonicalizeFileTargetPath(
       entry.outputPath,
       `image curation derivative path for "${entry.source.name}"`
     );
@@ -1257,7 +1219,7 @@ const validateDecisionLedger = Effect.fn("Files.validateImageCurationDecisionLed
   const path = yield* Path.Path;
   const sources = yield* collectAuditSources(options.dir);
   yield* requireCleanCurationSources(sources);
-  const decisionDocumentPath = yield* canonicalizeImageTargetPath(
+  const decisionDocumentPath = yield* canonicalizeFileTargetPath(
     options.decisionsPath,
     "image curation decision ledger path"
   );
@@ -1488,25 +1450,11 @@ const commitCurationFiles = Effect.fn("Files.commitImageCurationFiles")(function
       for (const record of records) {
         const exists = yield* inspectCurationDestination(record.targetPath, overwrite, record.description);
         if (!exists) continue;
-        yield* fs
-          .rename(record.targetPath, record.backupPath)
-          .pipe(
-            Effect.mapError((cause) =>
-              formatPlatformError(`Failed to back up existing ${record.description}`, record.targetPath, { cause })
-            )
-          );
-        record.backedUp = true;
+        yield* backupStagedFileTarget(record);
       }
 
       for (const record of records) {
-        yield* fs
-          .rename(record.stagedPath, record.targetPath)
-          .pipe(
-            Effect.mapError((cause) =>
-              formatPlatformError(`Failed to commit ${record.description}`, record.targetPath, { cause })
-            )
-          );
-        record.committed = true;
+        yield* commitStagedFileByRename(record, "Failed to commit");
       }
     }),
     () => rollbackCurationCommit(records)

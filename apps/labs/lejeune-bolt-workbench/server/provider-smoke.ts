@@ -7,6 +7,7 @@
 
 import { ANTHROPIC_DEFAULT_MODEL, AnthropicLanguageModelLive } from "@beep/anthropic";
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
+import { AlignedStatus } from "@beep/langextract/Alignment";
 import { GroundedExtraction, LangExtractRequest } from "@beep/langextract/Extraction";
 import {
   allowRemoteExtractionPolicyLayer,
@@ -280,10 +281,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
         providerSmokeErrorWithCause("provider-extraction", "The selected provider extraction failed.", cause)
       )
     );
-  const groundedExtractions = pipe(
-    result.extractions,
-    A.filter(GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_fuzzy"]))
-  );
+  const groundedExtractions = pipe(result.extractions, A.filter(GroundedExtraction.isAnyOf(AlignedStatus.Options)));
   const candidates = yield* Effect.forEach(
     groundedExtractions,
     (extraction) =>

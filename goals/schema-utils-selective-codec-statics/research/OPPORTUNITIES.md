@@ -79,3 +79,26 @@
   selected statics carried through legacy wrappers and annotations, and avoid
   generic `S.make(ast)` rebuilds when a schema combinator requires specialized
   runtime structure such as union `members`.
+
+## 2026-08-30 — Coverage comparison resurrected deleted source identities
+
+- **What I was doing:** Running the full coverage ratchet after deleting the
+  superseded broad codec-static helper modules.
+- **Evidence:** The comparison reader merged every committed file row back into
+  the current package snapshot, so deleted helper paths were reported as
+  missing coverage even though they no longer existed in the workspace.
+- **What would have prevented it:** Retain committed metrics only for file paths
+  that still exist in the current package snapshot. The reader now filters the
+  committed rows by current ownership, with a regression test for a deleted
+  base-only path.
+
+## 2026-08-30 — Detached coverage parent discarded a completed shard run
+
+- **What I was doing:** Regenerating the repository coverage baseline after
+  merging the latest main branch.
+- **Evidence:** All spawned coverage shards completed, but the parent process
+  detached before aggregating and writing the baseline; the baseline timestamp
+  remained unchanged and the full run had to be repeated while attached.
+- **What would have prevented it:** Coverage baseline generation should persist
+  aggregate state independently of its terminal parent, or support resuming
+  from successful shard receipts without rerunning the entire repository.

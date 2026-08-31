@@ -24,8 +24,9 @@ Live-first and bounded: provision the go-forward structure now, in a
 handful of goal-sized packets; historical population is explicitly out of
 this appetite (it fires after `goals/oppold-corpus-salvage-restoration` G1
 and the `oppold-corpus-pipeline-v2` re-entry deliver the extracted estate).
-The one historical exception inside the appetite: the raw-PST mail import,
-because it needs no corpus output — only a license seat and a runbook.
+Two historical carve-outs sit inside the appetite because they need no
+corpus output: the raw-PST mail import (a license seat and a runbook) and
+the contact seeding from the already-salvaged contact-export CSVs.
 
 ## Solution sketch (fat marker)
 
@@ -37,15 +38,18 @@ because it needs no corpus output — only a license seat and a runbook.
    `BlockedByEntitlement` plan entries, never silent skips. The canonical
    matter tree is owned by a dedicated Box service identity; the attorney
    collaborates at client-folder level. Requires NET-NEW Box driver
-   managers (metadata, retention, collaborations, Sign, webhooks) under the
-   package's type-instantiation budget.
-2. **`@beep/m365` auth + write verbs**, shrunk to mail/contacts: a second
-   MSAL confidential-client token provider beside PKCE (certificate-first
-   credential union; secret as limited dev fallback), RBAC-for-Applications
-   mailbox scoping, contacts import into a dedicated folder in the
-   attorney's mailbox (dedup by normalized email, seeded from the salvaged
-   contact CSVs), and replacement of the read-only scope blacklist with
-   per-lane decoded configs. No driveItem upload, no `Sites.Selected`.
+   managers scoped to the stay-on-Business posture — collaborations, Sign,
+   and webhooks now; metadata and retention managers join only when a plan
+   upgrade is ratified — all under the package's type-instantiation budget.
+2. **`@beep/m365` auth + write verbs**, shrunk to contacts: a second MSAL
+   confidential-client token provider beside PKCE (certificate-first
+   credential union; secret as limited dev fallback),
+   RBAC-for-Applications scoping, contacts import into a dedicated folder
+   in the attorney's mailbox (dedup by normalized email, seeded from the
+   salvaged contact CSVs), and replacement of the read-only scope blacklist
+   with per-lane decoded configs. No driveItem upload, no `Sites.Selected`,
+   and no Graph mail-write lane — historical mail arrives only via the
+   Purview import; no decision approves Graph message creation.
 3. **Mail backfill runbook** (operational, thin on code): one EOP2 seat on
    the attorney → enable archive + auto-expansion → Purview network-upload
    import per the r2 runbook (with the AzCopy `--recursive` correction),
@@ -53,8 +57,11 @@ because it needs no corpus output — only a license seat and a runbook.
    before releasing retention hold.
 4. **Signature + invoice flow**: Box Sign engagement-letter requests driven
    off an idempotent workflow ledger (operational transactions, not
-   desired-state); `@beep/freshbooks` driver (hubspot-pattern) retrieving
-   invoice PDFs for delivery into client Box folders.
+   desired-state); `@beep/freshbooks` driver (hubspot-pattern) whose
+   invoice-to-Box delivery starts with an endpoint-validation spike — if a
+   supported invoice-PDF endpoint exists, the driver retrieves and files
+   PDFs into client Box folders; if not, delivery falls back to
+   operator-exported PDFs dropped into a reconciler-watched intake folder.
 5. **Walkthroughs**: eight Claude Artifacts pages per the R5 outline,
    teaching the attorney the system the reconciler provisioned.
 
@@ -83,5 +90,6 @@ because it needs no corpus output — only a license seat and a runbook.
 - No retention automation that deletes anything without the attorney's
   explicit sign-off.
 - No GAL/org-contact provisioning.
-- No historical population before salvage-restoration G1 passes, and no
-  multi-firm productization of any of this.
+- No historical population before salvage-restoration G1 passes — except
+  the two appetite carve-outs (raw-PST mail import; contact-CSV seeding) —
+  and no multi-firm productization of any of this.

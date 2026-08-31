@@ -17,9 +17,15 @@ import type { AnnotatedDocumentInput } from "./Handoff.model.ts";
 type AlignedGroundedExtraction =
   | typeof GroundedExtraction.cases.match_exact.Type
   | typeof GroundedExtraction.cases.match_lesser.Type
+  | typeof GroundedExtraction.cases.match_minimal_fold.Type
   | typeof GroundedExtraction.cases.match_fuzzy.Type;
 
-const alignedExtraction = GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_fuzzy"]);
+const alignedExtraction = GroundedExtraction.isAnyOf([
+  "match_exact",
+  "match_lesser",
+  "match_minimal_fold",
+  "match_fuzzy",
+]);
 
 const makeAnnotation =
   (documentId: DocumentId, chunkId: Contract.ChunkId, provenance: Contract.Provenance) =>

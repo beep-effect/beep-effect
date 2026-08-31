@@ -2434,15 +2434,15 @@
     },
     "@beep/box": {
       "path": "packages/drivers/box",
-      "lines": 50.57,
-      "statements": 49.33,
+      "lines": 50.96,
+      "statements": 49.69,
       "branches": 74.15,
-      "functions": 26.27,
+      "functions": 26.82,
       "uncovered": {
-        "lines": 384,
-        "statements": 422,
+        "lines": 381,
+        "statements": 419,
         "branches": 23,
-        "functions": 404
+        "functions": 401
       },
       "files": {
         "packages/drivers/box/src/Box.errors.ts": {
@@ -2494,15 +2494,15 @@
           }
         },
         "packages/drivers/box/src/_generated/Box.models.gen.ts": {
-          "lines": 37.31,
-          "statements": 34.39,
+          "lines": 38.05,
+          "statements": 35.07,
           "branches": 100,
-          "functions": 10.28,
+          "functions": 11.21,
           "uncovered": {
-            "lines": 252,
-            "statements": 288,
+            "lines": 249,
+            "statements": 285,
             "branches": 0,
-            "functions": 288
+            "functions": 285
           }
         },
         "packages/drivers/box/src/_generated/Box.operations.gen.ts": {
@@ -9859,8 +9859,8 @@
     },
     "@beep/identity": {
       "path": "packages/foundation/modeling/identity",
-      "lines": 96.58,
-      "statements": 96.42,
+      "lines": 96.59,
+      "statements": 96.43,
       "branches": 89.93,
       "functions": 91.41,
       "uncovered": {
@@ -10177,27 +10177,27 @@
     },
     "@beep/langextract": {
       "path": "packages/foundation/capability/langextract",
-      "lines": 97.84,
-      "statements": 97.26,
-      "branches": 96.46,
-      "functions": 95.38,
+      "lines": 98.53,
+      "statements": 97.98,
+      "branches": 97.52,
+      "functions": 96.21,
       "uncovered": {
-        "lines": 12,
-        "statements": 16,
-        "branches": 4,
-        "functions": 12
+        "lines": 9,
+        "statements": 13,
+        "branches": 3,
+        "functions": 11
       },
       "files": {
         "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts": {
-          "lines": 96.96,
-          "statements": 94.59,
-          "branches": 89.47,
-          "functions": 92.85,
+          "lines": 100,
+          "statements": 98.24,
+          "branches": 96.29,
+          "functions": 96.55,
           "uncovered": {
-            "lines": 3,
-            "statements": 6,
-            "branches": 2,
-            "functions": 4
+            "lines": 0,
+            "statements": 3,
+            "branches": 1,
+            "functions": 3
           }
         },
         "packages/foundation/capability/langextract/src/Alignment/Alignment.model.ts": {
@@ -14866,15 +14866,15 @@
     },
     "@beep/md": {
       "path": "packages/foundation/modeling/md",
-      "lines": 95.78,
-      "statements": 95.82,
-      "branches": 88.47,
-      "functions": 93.5,
+      "lines": 96.33,
+      "statements": 96.31,
+      "branches": 89.86,
+      "functions": 94.38,
       "uncovered": {
-        "lines": 38,
-        "statements": 42,
-        "branches": 25,
-        "functions": 37
+        "lines": 33,
+        "statements": 37,
+        "branches": 22,
+        "functions": 32
       },
       "files": {
         "packages/foundation/modeling/md/src/Md.behavior.ts": {
@@ -14914,27 +14914,27 @@
           }
         },
         "packages/foundation/modeling/md/src/Md.model.ts": {
-          "lines": 99.38,
-          "statements": 99.52,
-          "branches": 92.3,
-          "functions": 99.15,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 2,
-            "functions": 1
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/md/src/Md.render.ts": {
-          "lines": 93.14,
-          "statements": 93.17,
-          "branches": 86.88,
-          "functions": 90.43,
+          "lines": 94.16,
+          "statements": 94.14,
+          "branches": 88.52,
+          "functions": 92.03,
           "uncovered": {
-            "lines": 27,
-            "statements": 28,
-            "branches": 8,
-            "functions": 24
+            "lines": 23,
+            "statements": 24,
+            "branches": 7,
+            "functions": 20
           }
         },
         "packages/foundation/modeling/md/src/Md.safe.ts": {
@@ -20641,15 +20641,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 78.81,
-      "statements": 78.61,
-      "branches": 67.98,
-      "functions": 72.63,
+      "lines": 78.9,
+      "statements": 78.7,
+      "branches": 68.14,
+      "functions": 72.62,
       "uncovered": {
-        "lines": 8297,
-        "statements": 8770,
-        "branches": 4738,
-        "functions": 3202
+        "lines": 8370,
+        "statements": 8851,
+        "branches": 4789,
+        "functions": 3239
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -22009,15 +22009,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Aggregate.ts": {
-          "lines": 83.09,
-          "statements": 83.33,
-          "branches": 59.37,
-          "functions": 85.71,
+          "lines": 85.91,
+          "statements": 86.11,
+          "branches": 71.87,
+          "functions": 100,
           "uncovered": {
-            "lines": 12,
-            "statements": 12,
-            "branches": 13,
-            "functions": 1
+            "lines": 10,
+            "statements": 10,
+            "branches": 9,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts": {
@@ -22045,15 +22045,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts": {
-          "lines": 68.36,
-          "statements": 69.13,
-          "branches": 51.35,
-          "functions": 65.59,
+          "lines": 70.62,
+          "statements": 71.25,
+          "branches": 53.04,
+          "functions": 67.02,
           "uncovered": {
-            "lines": 93,
-            "statements": 96,
+            "lines": 89,
+            "statements": 92,
             "branches": 54,
-            "functions": 32
+            "functions": 31
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts": {
@@ -22131,12 +22131,12 @@
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts": {
           "lines": 98.79,
           "statements": 98.79,
-          "branches": 84,
+          "branches": 88,
           "functions": 93.75,
           "uncovered": {
             "lines": 1,
             "statements": 1,
-            "branches": 4,
+            "branches": 3,
             "functions": 1
           }
         },
@@ -22322,9 +22322,9 @@
         },
         "packages/tooling/tool/cli/src/commands/Files/Files.command.ts": {
           "lines": 100,
-          "statements": 98.97,
+          "statements": 99.1,
           "branches": 100,
-          "functions": 92.85,
+          "functions": 93.33,
           "uncovered": {
             "lines": 0,
             "statements": 1,
@@ -22405,10 +22405,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/Files.service.ts": {
-          "lines": 88.48,
-          "statements": 88.12,
+          "lines": 88.55,
+          "statements": 88.19,
           "branches": 81,
-          "functions": 79.54,
+          "functions": 79.85,
           "uncovered": {
             "lines": 73,
             "statements": 78,
@@ -22512,6 +22512,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Files/internal/FileTransaction.ts": {
+          "lines": 91.66,
+          "statements": 91.89,
+          "branches": 87.5,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 1,
+            "functions": 2
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Files/internal/FlattenMedia.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -22561,15 +22573,39 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.ts": {
-          "lines": 52.81,
-          "statements": 50.39,
-          "branches": 40.29,
-          "functions": 39.18,
+          "lines": 52.82,
+          "statements": 50.48,
+          "branches": 42,
+          "functions": 40.55,
           "uncovered": {
-            "lines": 277,
-            "statements": 317,
-            "branches": 123,
-            "functions": 90
+            "lines": 267,
+            "statements": 306,
+            "branches": 116,
+            "functions": 85
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts": {
+          "lines": 80.46,
+          "statements": 79.35,
+          "branches": 71.49,
+          "functions": 63.77,
+          "uncovered": {
+            "lines": 92,
+            "statements": 102,
+            "branches": 65,
+            "functions": 46
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts": {
@@ -23917,10 +23953,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts": {
-          "lines": 86.19,
-          "statements": 86.62,
+          "lines": 86.23,
+          "statements": 86.65,
           "branches": 77.57,
-          "functions": 81.62,
+          "functions": 81.72,
           "uncovered": {
             "lines": 61,
             "statements": 61,
@@ -25525,15 +25561,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PrLease.ts": {
-          "lines": 92.3,
-          "statements": 89.34,
-          "branches": 76.92,
-          "functions": 87.5,
+          "lines": 92.94,
+          "statements": 90.53,
+          "branches": 79.48,
+          "functions": 90.62,
           "uncovered": {
-            "lines": 12,
-            "statements": 18,
-            "branches": 18,
-            "functions": 4
+            "lines": 11,
+            "statements": 16,
+            "branches": 16,
+            "functions": 3
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
@@ -25635,7 +25671,7 @@
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": {
           "lines": 63.6,
           "statements": 63.6,
-          "branches": 58.51,
+          "branches": 59.37,
           "functions": 55.1,
           "uncovered": {
             "lines": 91,
@@ -26413,15 +26449,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 90.07,
-          "statements": 90.12,
-          "branches": 85.71,
-          "functions": 84.17,
+          "lines": 89.82,
+          "statements": 89.63,
+          "branches": 84.96,
+          "functions": 83.45,
           "uncovered": {
-            "lines": 40,
-            "statements": 41,
-            "branches": 19,
-            "functions": 22
+            "lines": 41,
+            "statements": 43,
+            "branches": 20,
+            "functions": 23
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {
@@ -26521,15 +26557,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
-          "lines": 94.94,
-          "statements": 94.06,
-          "branches": 88.46,
-          "functions": 93.2,
+          "lines": 96.16,
+          "statements": 95.4,
+          "branches": 89.42,
+          "functions": 95.67,
           "uncovered": {
-            "lines": 25,
-            "statements": 31,
-            "branches": 24,
-            "functions": 11
+            "lines": 19,
+            "statements": 24,
+            "branches": 22,
+            "functions": 7
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {
@@ -28339,15 +28375,15 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 94.22,
-      "statements": 93.34,
-      "branches": 88.69,
-      "functions": 88.39,
+      "lines": 94.33,
+      "statements": 93.47,
+      "branches": 89.15,
+      "functions": 88.69,
       "uncovered": {
-        "lines": 212,
-        "statements": 257,
-        "branches": 132,
-        "functions": 147
+        "lines": 208,
+        "statements": 252,
+        "branches": 126,
+        "functions": 143
       },
       "files": {
         "packages/foundation/modeling/schema/src/AbortSignal.ts": {
@@ -30859,15 +30895,15 @@
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts": {
-          "lines": 92.45,
-          "statements": 90.74,
-          "branches": 66.66,
-          "functions": 71.42,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 4,
-            "statements": 5,
-            "branches": 6,
-            "functions": 4
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts": {
@@ -33307,15 +33343,15 @@
     },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 68.13,
-      "statements": 67.65,
-      "branches": 59.64,
-      "functions": 49.63,
+      "lines": 68.75,
+      "statements": 68.26,
+      "branches": 63.49,
+      "functions": 49.64,
       "uncovered": {
-        "lines": 94,
-        "statements": 98,
+        "lines": 95,
+        "statements": 99,
         "branches": 23,
-        "functions": 69
+        "functions": 70
       },
       "files": {
         "packages/tooling/test-kit/test-utils/src/Entity.ts": {
@@ -33376,6 +33412,18 @@
             "statements": 98,
             "branches": 22,
             "functions": 69
+          }
+        },
+        "packages/tooling/test-kit/test-utils/src/SystemTemp.ts": {
+          "lines": 88.88,
+          "statements": 88.88,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         },
         "packages/tooling/test-kit/test-utils/src/index.ts": {
@@ -33478,6 +33526,45 @@
           }
         },
         "packages/drivers/tika/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/todox": {
+      "path": "apps/todox",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "apps/todox/src/app/layout.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/todox/src/app/page.tsx": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

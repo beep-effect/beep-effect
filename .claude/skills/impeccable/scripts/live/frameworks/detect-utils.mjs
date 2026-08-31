@@ -6,14 +6,14 @@
  * malformed file means "not this framework", never a throw.
  */
 
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs';
+import path from 'node:path';
 
 /** Merged dependency names from package.json, or an empty object. */
 export function readPackageDeps(cwd) {
-  const file = path.join(cwd, "package.json");
+  const file = path.join(cwd, 'package.json');
   try {
-    const pkg = JSON.parse(fs.readFileSync(file, "utf-8"));
+    const pkg = JSON.parse(fs.readFileSync(file, 'utf-8'));
     return {
       ...(pkg.dependencies || {}),
       ...(pkg.devDependencies || {}),
@@ -32,9 +32,9 @@ export function hasAnyDependency(cwd, names) {
 /** First top-level file name matching `re`, or null. */
 export function findConfigFile(cwd, re) {
   try {
-    return (
-      fs.readdirSync(cwd, { withFileTypes: true }).find((entry) => entry.isFile() && re.test(entry.name))?.name ?? null
-    );
+    return fs.readdirSync(cwd, { withFileTypes: true })
+      .find((entry) => entry.isFile() && re.test(entry.name))
+      ?.name ?? null;
   } catch {
     return null;
   }
@@ -65,8 +65,8 @@ export function literalConfigFiles(cwd, config) {
   const files = Array.isArray(config?.files) ? config.files : [];
   const out = [];
   for (const rel of files) {
-    if (typeof rel !== "string" || rel.includes("*") || rel.includes("?")) continue;
-    const normalized = rel.split(path.sep).join("/");
+    if (typeof rel !== 'string' || rel.includes('*') || rel.includes('?')) continue;
+    const normalized = rel.split(path.sep).join('/');
     if (fileExists(cwd, normalized)) out.push(normalized);
   }
   return out;

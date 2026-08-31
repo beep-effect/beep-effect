@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-m365-contacts",
+    "packetId": "goal-packet/v1:1b1de9f7d27be1108a8aee793d571f6130298f41784b813a88cccc2f03be1d76",
+    "title": "Practice M365 Contacts",
+    "status": "active",
+    "created": "2026-08-30",
+    "updated": "2026-08-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-m365-contacts",
+  "lifecycle": "active",
+  "mission": "Add the confidential-client auth lane and contacts write verbs to @beep/m365, then seed the attorney's contact folder from the salvaged CSVs with dedup and rollback tags",
+  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First actions: operator-attended Entra registration with RBAC-for-Applications scoping; CSV header census.",
+  "blockedBy": [],
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/practice-office-provisioning",
+    "graduated": "2026-08-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-m365-contacts/README.md",
+    "goals/practice-m365-contacts/SPEC.md",
+    "goals/practice-m365-contacts/PLAN.md",
+    "goals/practice-m365-contacts/GOAL.md",
+    "goals/practice-m365-contacts/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-m365-contacts/GOAL.md"
+    }
+  ],
+  "provides": ["practice/contacts-seeded", "drivers/m365-app-only-lane"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-m365-contacts/GOAL.md)\" -le 4000",
+    "jq . goals/practice-m365-contacts/ops/manifest.json",
+    "rg -n \"practice-m365-contacts|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-m365-contacts",
+    "git diff --check -- goals/practice-m365-contacts",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "RBAC-for-Applications scoping cannot be established for the app registration.",
+    "Required source files are missing or materially contradictory.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

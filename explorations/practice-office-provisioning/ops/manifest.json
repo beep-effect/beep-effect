@@ -3,19 +3,22 @@
   "exploration": {
     "slug": "practice-office-provisioning",
     "title": "Practice Office Provisioning",
-    "status": "active",
-    "stage": "shape",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [
-      "BRIEF review: does BRIEF.md match the operator's picture? (shape exit gate)",
-      "VERIFY: CSP/New Commerce quote for the EOP2 seat (term length, cancellation) and a dry-run license assignment beside Business Premium before import day (DECISIONS: PST-import rights path; r7 A).",
-      "VERIFY: Box quote items — Governance-add-on eligibility and price on the existing Business plan, Enterprise Plus bundling, Shield pricing — to arm the upgrade-trigger table (DECISIONS: Box plan posture; r7 B; r1).",
-      "VERIFY: Box platform-app Client Credentials Grant approval flow on the Business plan for the provisioning service identity (DECISIONS: matter-tree ownership; r7 F).",
-      "VERIFY: FreshBooks live request-limit numbers, webhook retry/disable schedule, and the invoice-PDF endpoint against the existing dev app (DECISIONS: FreshBooks driver goal; CAPTURE FreshBooks addenda; r7 D).",
-      "VERIFY: Microsoft support case adjudicating the >100 GB auto-expanding-archive contradiction before import tranche 2/3 (DECISIONS: PST-import rights path; r2 §2.5; r7 A)."
+      "DEFERRED to practice-mail-backfill P0: CSP/New Commerce quote for the EOP2 seat + dry-run license assignment; Microsoft support case adjudicating the >100 GB auto-expanding-archive contradiction before tranche 2/3.",
+      "DEFERRED to practice-box-provisioning P0: Box quote items (Governance-on-Business, Business Plus, Enterprise Plus bundling, Shield, collaborator-seat pricing) and the CCG platform-app approval flow on the Business plan.",
+      "DEFERRED to freshbooks-driver P0: live request-limit numbers, webhook retry/disable schedule, and the invoice-PDF endpoint verdict against the existing dev app.",
+      "Gated re-entries (reopen at decompose when a gate fires — see MAP.md): practice-sign-invoice-flow; practice-walkthroughs."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/practice-box-provisioning",
+        "goals/practice-m365-contacts",
+        "goals/practice-mail-backfill",
+        "goals/freshbooks-driver"
+      ],
       "docs": [],
       "supersededBy": null
     },

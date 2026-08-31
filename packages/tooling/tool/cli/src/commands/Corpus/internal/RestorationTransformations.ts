@@ -16,11 +16,11 @@ import { ExportArchiveOperation, FileProcessingOperationError } from "@beep/file
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
 import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { DateTime, Effect, Equal, FileSystem, MutableHashMap, MutableHashSet, Order, Path } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OutputBound, runCaptured } from "../../../internal/process/StepExec.ts";
@@ -1428,10 +1428,7 @@ const processPstCandidate = Effect.fn("CorpusRestoration.processPstCandidate")(f
 });
 
 const optionalMailScopeFields = (context: TransformationRunContext): { readonly mailScope?: MailRestorationScope } =>
-  O.match(context.mailScope, {
-    onNone: () => ({}),
-    onSome: (mailScope) => ({ mailScope }),
-  });
+  O.getSomesStruct({ mailScope: context.mailScope });
 
 const currentLedgerDigest = Effect.fn("CorpusRestoration.currentLedgerDigest")(function* (
   ledgerPath: string

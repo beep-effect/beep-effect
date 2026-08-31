@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,12 +19,12 @@ The corpus chain restores the past; this packet gives the practice a present.
 
 ## Next Open Question
 
-Review [`BRIEF.md`](./BRIEF.md) with the operator until it matches the
-picture in his head, then decompose. The align frontier is fully resolved
-(see the align entries in `DECISIONS.md`); what remains open are
-verification tasks carried in `ops/manifest.json` `openQuestions` (CSP
-quote + license dry-run, Box quote items, CCG platform-app approval on
-Business, FreshBooks live limits, the Purview >100 GB support case).
+None — the packet graduated 2026-08-30. Four promised-now goals own the
+work (`goals/practice-box-provisioning`, `goals/practice-m365-contacts`,
+`goals/practice-mail-backfill`, `goals/freshbooks-driver`); the five VERIFY
+items carry into their P0 phases. Two gated candidates remain as re-entry
+points in [`MAP.md`](./MAP.md) (`practice-sign-invoice-flow`,
+`practice-walkthroughs`) — a fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -37,8 +37,9 @@ Business, FreshBooks live limits, the Purview >100 GB support case).
    service-account tree ownership, Box-only documents, Effect-native
    reconciler, …). The log itself is the count of record.
 4. [`RESEARCH.md`](./RESEARCH.md) - prior art + capability inventory (stage 1, if present).
-5. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3, if present).
-6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
+5. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3).
+6. [`MAP.md`](./MAP.md) - decomposition: promised-now goals, gated
+   re-entries, sequencing, first vertical slice, inherited risks (stage 4).
 
 ## Trail
 
@@ -73,3 +74,22 @@ Business, FreshBooks live limits, the Purview >100 GB support case).
   reference cleanup, @beep/box brick honesty); the "r7 missing" finding was
   invalid. HubSpot portal facts captured. Stage advanced to `shape`;
   BRIEF.md drafted for operator review.
+- 2026-08-30 (PR #909 closeout): #909 merged with all required checks green;
+  its ten review threads triaged and fixed — appetite carve-outs named in
+  the no-gos (PST import + contact-CSV seeding), Box driver managers scoped
+  to the stay-on-Business posture, the write-verbs goal cut to
+  contacts-only (no approved Graph mail-write lane), Box Sign
+  attorney-context and external-collaborator economics added to decisions,
+  FreshBooks invoice-endpoint validation gate + single-use refresh-token
+  rotation added, r2 AzCopy command carries `--recursive=true`, citation
+  registry count clarified. The yeet-inbox hook fences were narrowed on
+  main mid-session (PR #912) after three regression classes hit this
+  session.
+- 2026-08-30 (graduation): operator confirmed the BRIEF and green-lit
+  execution; `MAP.md` landed (four promised-now goals, two gated
+  re-entries, sequencing, first vertical slice). Scaffolded
+  `goals/practice-box-provisioning`, `goals/practice-m365-contacts`,
+  `goals/practice-mail-backfill`, and `goals/freshbooks-driver`, each
+  carrying the exploration's source ledger and back-linked decisions.
+  Status flipped to `graduated`; the five VERIFY items moved into the
+  owning goals' P0 phases.

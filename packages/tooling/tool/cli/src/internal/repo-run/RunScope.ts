@@ -235,7 +235,7 @@ const RUN_SCOPE_DESCRIPTION_PREFIX = "beep-yeet-lease";
 const runScopeDescription = (ticketId: string, ownerRoot: string): string =>
   `${RUN_SCOPE_DESCRIPTION_PREFIX} nonce=${ticketId} root=${ownerRoot}`;
 
-const ownerRootFromDescription = flow(
+const ownerRootFromDescription: (description: string) => O.Option<string> = flow(
   Str.match(/^beep-yeet-lease nonce=.* root=(.+)$/u),
   O.flatMap((matched) => O.fromUndefinedOr(matched[1])),
   O.map(Str.trim),
@@ -279,7 +279,7 @@ export const readRunScopeOwnerRoot = Effect.fn("RunScope.readRunScopeOwnerRoot")
   );
 });
 
-const parseTelemetryValue = flow(
+const parseTelemetryValue: (value: O.Option<string>) => O.Option<number> = flow(
   O.map(Str.trim),
   O.filter((text) => Str.isNonEmpty(text) && text !== "[not set]"),
   O.flatMap(N.parse)

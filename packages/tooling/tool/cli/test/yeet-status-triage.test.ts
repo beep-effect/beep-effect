@@ -322,6 +322,22 @@ describe("yeet merge readiness", () => {
     expect(O.flatMap(mergeReady, (value) => value.criteria.greptileScore)).toStrictEqual(O.some("4/5"));
   });
 
+  it("treats gh's empty review decision as absent", () => {
+    const mergeReady = deriveYeetMergeReady(
+      closeoutArtifact(0, O.some("5/5")),
+      openRemote({
+        checkCount: 17,
+        failingCheckCount: 0,
+        pendingCheckCount: 0,
+        reviewDecision: "",
+        unresolvedReviewThreadCount: 0,
+      })
+    );
+
+    expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.none());
+  });
+
   it("does not let an optional red block required-check readiness", () => {
     const remote = YeetStatusRemote.make({
       ...openRemote({ checkCount: 17, failingCheckCount: 0, pendingCheckCount: 0 }),

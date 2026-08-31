@@ -9,6 +9,7 @@ import {
   SourceProcessingRecord,
 } from "@beep/file-processing/Extraction";
 import { filesCommand } from "@beep/repo-cli";
+import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import {
   ArchivePoorCandidatesManifest,
   DetectBordersReport,
@@ -20,6 +21,7 @@ import {
   ImageCurationDecisionDocument,
   ImageCurationManifest,
   NormalizeManifest,
+  PersonMatchReport,
   ProcessFilesOptions,
   processFiles,
   renderFilesProgressBar,
@@ -54,6 +56,7 @@ const decodeChildArtifactRecord = S.decodeUnknownEffect(S.fromJsonString(ChildAr
 const decodeFileProcessingCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary));
 const decodeFileProcessingFailureRecord = S.decodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord));
 const decodeNormalizeManifest = S.decodeUnknownSync(S.fromJsonString(NormalizeManifest));
+const decodePersonMatchReport = S.decodeUnknownEffect(S.fromJsonString(PersonMatchReport));
 const decodeProcessRunManifest = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
 const decodeSourceProcessingRecord = S.decodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
 const encodeDetectBordersReport = S.encodeUnknownEffect(S.fromJsonString(DetectBordersReport));
@@ -66,6 +69,7 @@ const encodeFileProcessingFailureRecord = S.encodeUnknownEffect(S.fromJsonString
 const encodeNormalizeManifest = S.encodeUnknownEffect(S.fromJsonString(NormalizeManifest));
 const encodeProcessRunManifest = S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
 const encodeSourceProcessingRecord = S.encodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const DetectBordersReportArbitrary = S.toArbitrary(DetectBordersReport)(fc);
 const ChildArtifactRecordArbitrary = S.toArbitrary(ChildArtifactRecord)(fc);
 const FileProcessingCoverageSummaryArbitrary = S.toArbitrary(FileProcessingCoverageSummary)(fc);
@@ -269,6 +273,12 @@ const readDetectFacesManifest = Effect.fn("FilesTest.readDetectFacesManifest")(f
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(filePath);
   return yield* decodeDetectFacesReport(content).pipe(Effect.mapError(filesTestError));
+});
+
+const readPersonMatchManifest = Effect.fn("FilesTest.readPersonMatchManifest")(function* (filePath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const content = yield* fs.readFileString(filePath);
+  return yield* decodePersonMatchReport(content).pipe(Effect.mapError(filesTestError));
 });
 
 const writeInsetCanvasImage = Effect.fn("FilesTest.writeInsetCanvasImage")(function* (
@@ -1352,6 +1362,588 @@ describe("files command", { concurrent: false }, () => {
           expect(report.manifestWritten).toBe(true);
           expect(manifest.schemaVersion).toBe("beep.files.detect-faces.v1");
           expect(manifest.manifestWritten).toBe(true);
+        })
+      )
+    ));
+
+  it("matches a person through the local worker boundary and copies only accepted review lanes", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const cacheDir = path.join(tmpDir, "cache");
+          const manifestPath = path.join(tmpDir, "person-match.json");
+          const outDir = path.join(tmpDir, "matched");
+          const uvPath = path.join(tmpDir, "uv");
+          const soloPath = path.join(candidateDir, "solo.jpg");
+          const groupPath = path.join(candidateDir, "group.jpg");
+          const otherPath = path.join(candidateDir, "other.jpg");
+          const unreadablePath = path.join(candidateDir, "unreadable.jpg");
+          const referencePath = path.join(referenceDir, "reference.jpg");
+
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* fs.writeFileString(soloPath, "solo source");
+          yield* fs.writeFileString(groupPath, "group source");
+          yield* fs.writeFileString(otherPath, "other source");
+          yield* fs.writeFileString(unreadablePath, "unreadable source");
+          yield* fs.writeFileString(referencePath, "reference source");
+
+          const face = (matchScore: number) => ({
+            box: { x1: 10, y1: 20, x2: 110, y2: 140 },
+            detectionScore: 0.99,
+            faceAreaPct: 15,
+            matchScore,
+            centroidScore: matchScore,
+            top3MedianScore: matchScore,
+            bestReferenceScore: matchScore,
+            bestReferenceName: "reference.jpg",
+            qualityFlags: [],
+          });
+          const workerReport = {
+            schemaVersion: "beep.files.match-person.worker.v1",
+            ok: true,
+            model: {
+              name: "buffalo_l",
+              packageVersion: "1.0.1",
+              providers: ["CPUExecutionProvider"],
+              allowedModules: ["detection", "recognition"],
+              root: path.join(cacheDir, "insightface"),
+              artifacts: [
+                {
+                  name: "det_10g.onnx",
+                  path: path.join(cacheDir, "insightface", "models", "beep_buffalo_l_v1", "det_10g.onnx"),
+                  sha256: "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+                },
+                {
+                  name: "w600k_r50.onnx",
+                  path: path.join(cacheDir, "insightface", "models", "beep_buffalo_l_v1", "w600k_r50.onnx"),
+                  sha256: "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
+                },
+              ],
+            },
+            parameters: {
+              detectionThreshold: 0.6,
+              matchThreshold: 0.5,
+              reviewThreshold: 0.35,
+              minFaceAreaPct: 1,
+              recursive: false,
+            },
+            references: [
+              {
+                sourceName: "reference.jpg",
+                sourcePath: referencePath,
+                accepted: true,
+                faceCount: 1,
+                detectionScore: 0.99,
+              },
+            ],
+            entries: [
+              {
+                sourceName: "group.jpg",
+                sourcePath: groupPath,
+                relativePath: "group.jpg",
+                disposition: "group-match",
+                faceCount: 2,
+                bestScore: 0.72,
+                faces: [face(0.72), face(0.1)],
+              },
+              {
+                sourceName: "other.jpg",
+                sourcePath: otherPath,
+                relativePath: "other.jpg",
+                disposition: "no-match",
+                faceCount: 1,
+                bestScore: 0.1,
+                faces: [face(0.1)],
+              },
+              {
+                sourceName: "solo.jpg",
+                sourcePath: soloPath,
+                relativePath: "solo.jpg",
+                disposition: "solo-match",
+                faceCount: 1,
+                bestScore: 0.81,
+                faces: [face(0.81)],
+              },
+              {
+                sourceName: "unreadable.jpg",
+                sourcePath: unreadablePath,
+                relativePath: "unreadable.jpg",
+                disposition: "unreadable",
+                faceCount: 0,
+                faces: [],
+                reason: "image-decode-failed",
+              },
+            ],
+            summary: {
+              totalCount: 4,
+              soloMatchCount: 1,
+              groupMatchCount: 1,
+              lowQualityMatchCount: 0,
+              reviewCount: 0,
+              noMatchCount: 1,
+              noFaceCount: 0,
+              unreadableCount: 1,
+              acceptedReferenceCount: 1,
+              rejectedReferenceCount: 0,
+            },
+            elapsedSeconds: 0.25,
+          };
+          const workerReportJson = yield* encodeUnknownJson(workerReport);
+
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${workerReportJson}'\n`);
+          yield* fs.chmod(uvPath, 0o755);
+          const jsonChunks: Array<string> = [];
+          let hardLinkCallCount = 0;
+          const noHardLinkFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            link: () =>
+              Effect.suspend(() => {
+                hardLinkCallCount += 1;
+                return Effect.fail(
+                  PlatformError.badArgument({
+                    description: "hard links unavailable",
+                    method: "link",
+                    module: "FileSystem",
+                  })
+                );
+              }),
+          };
+          yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runFilesCommand([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              manifestPath,
+              "--out-dir",
+              outDir,
+              "--accept-model-license",
+              "--json",
+            ]).pipe(
+              Effect.provideService(CommandJsonOutput, (text) =>
+                Effect.sync(() => {
+                  jsonChunks.push(text);
+                })
+              ),
+              Effect.provideService(FileSystem.FileSystem, noHardLinkFileSystem)
+            )
+          );
+
+          const report = yield* readPersonMatchManifest(manifestPath);
+          expect(A.join(jsonChunks, "")).toBe(yield* fs.readFileString(manifestPath));
+          expect(report.schemaVersion).toBe("beep.files.match-person.v1");
+          expect(report.summary).toMatchObject({
+            groupMatchCount: 1,
+            noMatchCount: 1,
+            soloMatchCount: 1,
+            unreadableCount: 1,
+          });
+          expect(report.model.providers).toEqual(["CPUExecutionProvider"]);
+          expect(report.outputDirectory).toBe(outDir);
+          expect(yield* fs.readFileString(path.join(outDir, "accepted", "solo.jpg"))).toBe("solo source");
+          expect(yield* fs.readFileString(path.join(outDir, "group-review", "group.jpg"))).toBe("group source");
+          expect(yield* fs.exists(path.join(outDir, "accepted", "other.jpg"))).toBe(false);
+          expect(yield* fs.exists(path.join(outDir, "accepted", "unreadable.jpg"))).toBe(false);
+          expect(yield* fs.readFileString(soloPath)).toBe("solo source");
+          expect(yield* fs.readFileString(groupPath)).toBe("group source");
+          expect(yield* fs.readFileString(otherPath)).toBe("other source");
+          expect(yield* fs.readFileString(unreadablePath)).toBe("unreadable source");
+          expect(hardLinkCallCount).toBe(0);
+
+          const backupNamedManifestPath = path.join(tmpDir, ".previous-manifest");
+          yield* fs.writeFileString(backupNamedManifestPath, "previous manifest");
+          yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runFilesCommand([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              backupNamedManifestPath,
+              "--accept-model-license",
+              "--overwrite",
+            ])
+          );
+          expect((yield* readPersonMatchManifest(backupNamedManifestPath)).summary.totalCount).toBe(4);
+
+          const invalidManifestPath = path.join(tmpDir, "invalid-person-match.json");
+          const invalidOutDir = path.join(tmpDir, "invalid-matched");
+          const invalidWorkerReport = {
+            ...workerReport,
+            entries: workerReport.entries.map((entry, entryIndex) =>
+              entryIndex === 0
+                ? {
+                    ...entry,
+                    faces: entry.faces.map((entryFace, faceIndex) =>
+                      faceIndex === 0 ? { ...entryFace, embedding: [0.1, 0.2, 0.3] } : entryFace
+                    ),
+                  }
+                : entry
+            ),
+          };
+          const invalidWorkerReportJson = yield* encodeUnknownJson(invalidWorkerReport);
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${invalidWorkerReportJson}'\n`);
+          const invalidMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              invalidManifestPath,
+              "--out-dir",
+              invalidOutDir,
+              "--accept-model-license",
+            ])
+          );
+
+          expect(invalidMessage).toContain("Person-match worker returned invalid");
+          expect(yield* fs.exists(invalidManifestPath)).toBe(false);
+          expect(yield* fs.exists(invalidOutDir)).toBe(false);
+
+          const unpinnedManifestPath = path.join(tmpDir, "unpinned-model-person-match.json");
+          const unpinnedWorkerReport = {
+            ...workerReport,
+            model: {
+              ...workerReport.model,
+              artifacts: workerReport.model.artifacts.map((artifact, index) =>
+                index === 0 ? { ...artifact, sha256: "0".repeat(64) } : artifact
+              ),
+            },
+          };
+          const unpinnedWorkerReportJson = yield* encodeUnknownJson(unpinnedWorkerReport);
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${unpinnedWorkerReportJson}'\n`);
+          const unpinnedMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              unpinnedManifestPath,
+              "--accept-model-license",
+            ])
+          );
+          expect(unpinnedMessage).toContain("unexpected model artifact provenance");
+          expect(yield* fs.exists(unpinnedManifestPath)).toBe(false);
+
+          const misclassifiedManifestPath = path.join(tmpDir, "misclassified-person-match.json");
+          const misclassifiedOutDir = path.join(tmpDir, "misclassified-matched");
+          const misclassifiedWorkerReport = {
+            ...workerReport,
+            entries: workerReport.entries.map((entry) =>
+              entry.disposition === "solo-match"
+                ? {
+                    ...entry,
+                    bestScore: 0.1,
+                    faces: entry.faces.map((entryFace) => ({
+                      ...entryFace,
+                      bestReferenceScore: 0.1,
+                      centroidScore: 0.1,
+                      matchScore: 0.1,
+                      top3MedianScore: 0.1,
+                    })),
+                  }
+                : entry
+            ),
+          };
+          const misclassifiedWorkerReportJson = yield* encodeUnknownJson(misclassifiedWorkerReport);
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${misclassifiedWorkerReportJson}'\n`);
+          const misclassifiedMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              misclassifiedManifestPath,
+              "--out-dir",
+              misclassifiedOutDir,
+              "--accept-model-license",
+            ])
+          );
+          expect(misclassifiedMessage).toContain("inconsistent with its thresholds or quality evidence");
+          expect(yield* fs.exists(misclassifiedManifestPath)).toBe(false);
+          expect(yield* fs.exists(misclassifiedOutDir)).toBe(false);
+
+          const inconsistentManifestPath = path.join(tmpDir, "inconsistent-person-match.json");
+          const inconsistentOutDir = path.join(tmpDir, "inconsistent-matched");
+          const inconsistentWorkerReport = {
+            ...workerReport,
+            entries: workerReport.entries.map((entry, index) =>
+              index === 0 ? { ...entry, sourcePath: otherPath } : entry
+            ),
+          };
+          const inconsistentWorkerReportJson = yield* encodeUnknownJson(inconsistentWorkerReport);
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${inconsistentWorkerReportJson}'\n`);
+          const inconsistentMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              inconsistentManifestPath,
+              "--out-dir",
+              inconsistentOutDir,
+              "--accept-model-license",
+            ])
+          );
+          expect(inconsistentMessage).toContain("mismatched source and relative paths");
+          expect(yield* fs.exists(inconsistentManifestPath)).toBe(false);
+          expect(yield* fs.exists(inconsistentOutDir)).toBe(false);
+
+          const duplicateManifestPath = path.join(tmpDir, "duplicate-reference-person-match.json");
+          const duplicateWorkerReport = {
+            ...workerReport,
+            parameters: { ...workerReport.parameters, recursive: true },
+            references: [
+              ...workerReport.references,
+              {
+                ...workerReport.references[0],
+                sourcePath: path.join(referenceDir, "nested", "reference.jpg"),
+              },
+            ],
+            summary: { ...workerReport.summary, acceptedReferenceCount: 2 },
+          };
+          const duplicateWorkerReportJson = yield* encodeUnknownJson(duplicateWorkerReport);
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${duplicateWorkerReportJson}'\n`);
+          const duplicateMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              duplicateManifestPath,
+              "--recursive",
+              "--accept-model-license",
+            ])
+          );
+
+          expect(duplicateMessage).toContain("duplicate accepted file names");
+          expect(yield* fs.exists(duplicateManifestPath)).toBe(false);
+
+          const acceptedTarget = path.join(outDir, "accepted", "solo.jpg");
+          const groupTarget = path.join(outDir, "group-review", "group.jpg");
+          yield* fs.writeFileString(acceptedTarget, "previous solo");
+          yield* fs.writeFileString(groupTarget, "previous group");
+          yield* fs.writeFileString(manifestPath, "previous manifest");
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${workerReportJson}'\n`);
+          let stagedRenameCount = 0;
+          let linkCallCount = 0;
+          const failingFileSystem: FileSystem.FileSystem = {
+            ...fs,
+            link: () =>
+              Effect.suspend(() => {
+                linkCallCount += 1;
+                return Effect.fail(
+                  PlatformError.badArgument({
+                    description: "unexpected hard-link materialization",
+                    method: "link",
+                    module: "FileSystem",
+                  })
+                );
+              }),
+            rename: (fromPath, toPath) =>
+              Effect.suspend(() => {
+                if (!Str.startsWith(".staged-")(path.basename(fromPath))) {
+                  return fs.rename(fromPath, toPath);
+                }
+                stagedRenameCount += 1;
+                return stagedRenameCount === 2
+                  ? Effect.fail(
+                      PlatformError.badArgument({
+                        description: "simulated second person-match commit failure",
+                        method: "rename",
+                        module: "FileSystem",
+                      })
+                    )
+                  : fs.rename(fromPath, toPath);
+              }),
+          };
+          const rollbackExit = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runFilesCommand([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              manifestPath,
+              "--out-dir",
+              outDir,
+              "--accept-model-license",
+              "--overwrite",
+            ]).pipe(Effect.provideService(FileSystem.FileSystem, failingFileSystem), Effect.exit)
+          );
+
+          expect(Exit.isFailure(rollbackExit)).toBe(true);
+          expect(stagedRenameCount).toBe(2);
+          expect(linkCallCount).toBe(0);
+          expect(yield* fs.readFileString(acceptedTarget)).toBe("previous solo");
+          expect(yield* fs.readFileString(groupTarget)).toBe("previous group");
+          expect(yield* fs.readFileString(manifestPath)).toBe("previous manifest");
+          expect(yield* sortedDirectoryEntries(path.dirname(acceptedTarget))).toEqual(["solo.jpg"]);
+          expect(yield* sortedDirectoryEntries(path.dirname(groupTarget))).toEqual(["group.jpg"]);
+          expect(
+            A.filter(yield* sortedDirectoryEntries(tmpDir), (name) => Str.startsWith(".beep-files-person-match-")(name))
+          ).toEqual([]);
+          expect(yield* fs.readFileString(soloPath)).toBe("solo source");
+          expect(yield* fs.readFileString(groupPath)).toBe("group source");
+          expect(yield* fs.readFileString(otherPath)).toBe("other source");
+          expect(yield* fs.readFileString(unreadablePath)).toBe("unreadable source");
+        })
+      )
+    ));
+
+  it.each([
+    { cacheChild: "insightface", targetState: "existing" },
+    { cacheChild: "insightface", targetState: "dangling" },
+    { cacheChild: "venv-cpu-py312-v1", targetState: "existing" },
+    { cacheChild: "venv-cpu-py312-v1", targetState: "dangling" },
+    { cacheChild: "uv-cache", targetState: "existing" },
+    { cacheChild: "uv-cache", targetState: "dangling" },
+  ])(
+    "rejects a $targetState symlinked $cacheChild cache child before starting the worker",
+    ({ cacheChild, targetState }) =>
+      Effect.runPromise(
+        withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const candidateDir = path.join(tmpDir, "candidates");
+            const referenceDir = path.join(tmpDir, "references");
+            const cacheDir = path.join(tmpDir, "cache");
+            const escapedDir = path.join(tmpDir, "escaped");
+            const canaryPath = path.join(escapedDir, "canary.txt");
+            const manifestPath = path.join(tmpDir, "person-match.json");
+            const uvPath = path.join(tmpDir, "uv");
+            const workerMarkerPath = path.join(tmpDir, "worker-started");
+            const targetExists = targetState === "existing";
+
+            yield* fs.makeDirectory(candidateDir, { recursive: true });
+            yield* fs.makeDirectory(referenceDir, { recursive: true });
+            yield* fs.makeDirectory(cacheDir, { recursive: true });
+            if (targetExists) {
+              yield* fs.makeDirectory(escapedDir, { recursive: true });
+              yield* fs.writeFileString(canaryPath, "untouched");
+            }
+            yield* fs.symlink(escapedDir, path.join(cacheDir, cacheChild));
+            yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
+
+            const message = yield* withEnvVar(
+              "BEEP_UV_PATH",
+              uvPath,
+              expectFilesCommandFailure([
+                "match-person",
+                "--references",
+                referenceDir,
+                "--dir",
+                candidateDir,
+                "--cache-dir",
+                cacheDir,
+                "--manifest",
+                manifestPath,
+                "--accept-model-license",
+              ])
+            );
+
+            expect(message).toMatch(targetExists ? /symlinked|aliased/i : /failed to resolve/i);
+            expect(message).toContain(path.join(cacheDir, cacheChild));
+            expect(yield* fs.exists(workerMarkerPath)).toBe(false);
+            expect(yield* fs.exists(manifestPath)).toBe(false);
+            if (targetExists) {
+              expect(yield* fs.readFileString(canaryPath)).toBe("untouched");
+              expect(yield* sortedDirectoryEntries(escapedDir)).toEqual(["canary.txt"]);
+            } else {
+              expect(yield* fs.exists(escapedDir)).toBe(false);
+            }
+          })
+        )
+      )
+  );
+
+  it("rejects overlapping person-match manifest, output, and cache paths before starting the worker", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const outputDir = path.join(tmpDir, "output");
+          const uvPath = path.join(tmpDir, "uv");
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* fs.makeDirectory(outputDir, { recursive: true });
+          yield* fs.writeFileString(uvPath, "#!/usr/bin/env bash\nexit 99\n");
+          yield* fs.chmod(uvPath, 0o755);
+
+          const message = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              path.join(tmpDir, "cache"),
+              "--manifest",
+              path.join(outputDir, "person-match.json"),
+              "--out-dir",
+              outputDir,
+              "--accept-model-license",
+            ])
+          );
+          expect(message).toContain("output directory must not overlap the manifest or cache paths");
         })
       )
     ));

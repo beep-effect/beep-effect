@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "freshbooks-driver",
+    "packetId": "goal-packet/v1:4bae9ffd1e29a0457e337322d7e7831e9efb91d0ff80d993ff32e650805107e3",
+    "title": "FreshBooks Driver",
+    "status": "active",
+    "created": "2026-08-30",
+    "updated": "2026-08-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/freshbooks-driver",
+  "lifecycle": "active",
+  "mission": "Ship @beep/freshbooks on the hubspot pattern: rotation-safe token helper, clients/invoices/payments reads, and spike-gated invoice-PDF retrieval",
+  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First action: the endpoint-validation spike against the existing dev app.",
+  "blockedBy": [],
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/practice-office-provisioning",
+    "graduated": "2026-08-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/freshbooks-driver/README.md",
+    "goals/freshbooks-driver/SPEC.md",
+    "goals/freshbooks-driver/PLAN.md",
+    "goals/freshbooks-driver/GOAL.md",
+    "goals/freshbooks-driver/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/freshbooks-driver/GOAL.md"
+    }
+  ],
+  "provides": ["drivers/freshbooks"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/freshbooks-driver/GOAL.md)\" -le 4000",
+    "jq . goals/freshbooks-driver/ops/manifest.json",
+    "rg -n \"freshbooks-driver|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/freshbooks-driver",
+    "git diff --check -- goals/freshbooks-driver",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The dev app cannot complete the auth-code flow after reasonable investigation.",
+    "Required source files are missing or materially contradictory.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
