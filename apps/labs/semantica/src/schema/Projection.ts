@@ -14,21 +14,7 @@ import { ModelIdentity } from "@/schema/Model";
 const $I = $SemanticaId.create("schema/Projection");
 const ProjectionMode = LiteralKit(["live", "replay"]);
 
-/**
- * Frozen exact-neighbour assertion for the C1 projection gate.
- *
- * **Example** (Inspect the expected rank)
- *
- * ```ts
- * import { KnnExpectation } from "@/schema/Projection"
- *
- * console.log(KnnExpectation.fields.rank !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class KnnExpectation extends S.Class<KnnExpectation>($I`KnnExpectation`)(
+class KnnExpectation extends S.Class<KnnExpectation>($I`KnnExpectation`)(
   {
     neighborChunk: ChunkId,
     queryChunk: ChunkId,
@@ -157,21 +143,7 @@ export class EmbeddingVector extends S.Class<EmbeddingVector>($I`EmbeddingVector
   })
 ) {}
 
-/**
- * Stable causes for the only legal C1 embedding degradation state.
- *
- * **Example** (Check an offline cache miss)
- *
- * ```ts
- * import { DegradedEmbeddingReason } from "@/schema/Projection"
- *
- * console.log(DegradedEmbeddingReason.is["cache-miss"]("cache-miss")) // true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const DegradedEmbeddingReason = LiteralKit([
+const DegradedEmbeddingReason = LiteralKit([
   "cache-corrupt",
   "cache-miss",
   "dimension-mismatch",

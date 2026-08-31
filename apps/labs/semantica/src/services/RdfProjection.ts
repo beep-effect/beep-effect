@@ -8,22 +8,7 @@ import type { SparqlExpectation, SparqlResultWitness } from "@/schema/Projection
 
 const $I = $SemanticaId.create("services/RdfProjection");
 
-/**
- * One disposable RDF dataset rebuilt from the append-only ledger.
- *
- * **Example** (Count canonical quads)
- *
- * ```ts
- * import type { RdfProjectionBuild } from "@/services/RdfProjection"
- *
- * const quadCount = (build: RdfProjectionBuild) => build.serializedQuads.length
- * console.log(typeof quadCount) // "function"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface RdfProjectionBuild {
+interface RdfProjectionBuild {
   readonly dataset: Rdf.Dataset;
   readonly serializedQuads: ReadonlyArray<string>;
 }

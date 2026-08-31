@@ -20,21 +20,7 @@ const modelEquivalence = S.toEquivalence(ModelIdentity);
 const vectorOrder = Order.mapInput(Order.String, (vector: EmbeddingVector) => vector.chunk);
 const degradedOrder = Order.mapInput(Order.String, (degraded: DegradedEmbedding) => degraded.chunk);
 
-/**
- * Hash of the frozen C1 chunk-to-embedding input policy.
- *
- * **Example** (Inspect the policy digest width)
- *
- * ```ts
- * import { EMBEDDING_INPUT_ARTIFACT_HASH } from "@/layers/EmbedderLive"
- *
- * console.log(EMBEDDING_INPUT_ARTIFACT_HASH.length) // 64
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const EMBEDDING_INPUT_ARTIFACT_HASH = Sha256Hex.make(
+const EMBEDDING_INPUT_ARTIFACT_HASH = Sha256Hex.make(
   "ef6cde7cc67e079a9a698268a31556afc576be71e79d97a12c57424ed0dbbd67"
 );
 
