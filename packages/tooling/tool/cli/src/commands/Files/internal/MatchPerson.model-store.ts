@@ -25,7 +25,7 @@ const artifactFileName = "model.safetensors";
 const artifactDirectoryName = "pinned";
 const modelStoreLockName = ".adaface-model-store.lock";
 const modelStoreChunkBytes = 1024 * 1024;
-const modelDownloadRangeBytes = 16 * 1024 * 1024;
+const modelDownloadRangeBytes = PosInt.make(16 * 1024 * 1024);
 const modelDownloadRetryCount = 2;
 const modelDownloadRetrySchedule = Schedule.exponential(Duration.seconds(1));
 const RetryableHttpFailureReason = LiteralKit(["DecodeError", "TransportError"]);
@@ -454,7 +454,9 @@ const downloadArtifactAttempt = Effect.fn("Files.PersonMatchModelStore.downloadA
   artifact: PinnedModelArtifact,
   stagedPath: string,
   rangePath: string,
-  client: HttpClient.HttpClient
+  client: HttpClient.HttpClient,
+  rangeBytes: PosInt,
+  retrySchedule: Schedule.Schedule<Duration.Duration>
 ): Effect.fn.Return<
   ObservedArtifact,
   MatchPersonModelAcquisitionError | MatchPersonModelIntegrityError,
@@ -469,17 +471,17 @@ const downloadArtifactAttempt = Effect.fn("Files.PersonMatchModelStore.downloadA
       )
     );
   const starts = A.unfold(0, (start) =>
-    start < artifact.sizeBytes ? O.some([start, start + modelDownloadRangeBytes] as const) : O.none()
+    start < artifact.sizeBytes ? O.some([start, start + rangeBytes] as const) : O.none()
   );
   const hasher = sha256.create();
   let sizeBytes = 0;
   yield* Effect.forEach(
     starts,
     (start) => {
-      const end = Num.min(start + modelDownloadRangeBytes - 1, artifact.sizeBytes - 1);
+      const end = Num.min(start + rangeBytes - 1, artifact.sizeBytes - 1);
       return downloadArtifactRangeAttempt(artifact, rangePath, start, end, client).pipe(
         Effect.retry({
-          schedule: modelDownloadRetrySchedule,
+          schedule: retrySchedule,
           times: modelDownloadRetryCount,
           while: isRetryableModelDownloadFailure,
         }),
@@ -515,8 +517,14 @@ const downloadArtifactAttempt = Effect.fn("Files.PersonMatchModelStore.downloadA
 const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact")(function* (
   artifact: PinnedModelArtifact,
   targetPath: string,
-  modelRoot: string
-): Effect.fn.Return<void, MatchPersonModelAcquisitionError | MatchPersonModelIntegrityError, ModelStoreRequirements> {
+  modelRoot: string,
+  rangeBytes = modelDownloadRangeBytes,
+  retrySchedule: Schedule.Schedule<Duration.Duration> = modelDownloadRetrySchedule
+): Effect.fn.Return<
+  void,
+  MatchPersonModelAcquisitionError | MatchPersonModelIntegrityError,
+  FileSystem.FileSystem | HttpClient.HttpClient | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const client = HttpClient.followRedirects(yield* HttpClient.HttpClient, 5);
@@ -539,7 +547,14 @@ const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact
           sizeBytes: artifact.sizeBytes,
         })
       );
-      const observed = yield* downloadArtifactAttempt(artifact, stagedPath, rangePath, client);
+      const observed = yield* downloadArtifactAttempt(
+        artifact,
+        stagedPath,
+        rangePath,
+        client,
+        rangeBytes,
+        retrySchedule
+      );
       yield* validateObservedArtifact(
         artifact,
         observed,
@@ -556,6 +571,61 @@ const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact
     }),
     fs.remove(stagingDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
   );
+});
+
+/**
+ * Acquires one tiny recognizer pin through the production ranged-download path for hermetic tests.
+ *
+ * **Details**
+ *
+ * The helper changes only the immutable pin and range size. Status, header, byte-ceiling,
+ * retry, integrity, staging-cleanup, and atomic-install behavior remain production behavior.
+ *
+ * **Example** (Build a hermetic acquisition effect)
+ *
+ * ```ts
+ * import { PosInt, Sha256Hex } from "@beep/schema"
+ * import { Effect } from "effect"
+ * import { acquirePinnedPersonMatchArtifactForTest } from "./MatchPerson.model-store.ts"
+ *
+ * const operation = acquirePinnedPersonMatchArtifactForTest(
+ *   "/cache/models",
+ *   "/cache/models/model.safetensors",
+ *   PosInt.make(3),
+ *   Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000"),
+ *   PosInt.make(2)
+ * )
+ * console.log(Effect.isEffect(operation))
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquirePinnedPersonMatchArtifactForTest = Effect.fn(
+  "Files.PersonMatchModelStore.acquirePinnedArtifactForTest"
+)(function* (
+  modelRoot: string,
+  targetPath: string,
+  expectedSizeBytes: PosInt,
+  expectedSha256: Sha256Hex,
+  rangeBytes: PosInt
+): Effect.fn.Return<
+  void,
+  MatchPersonModelAcquisitionError | MatchPersonModelIntegrityError,
+  FileSystem.FileSystem | HttpClient.HttpClient | Path.Path
+> {
+  const artifact = PinnedModelArtifact.make({
+    component: "recognizer",
+    fileName: artifactFileName,
+    licenseNotice: "Hermetic person-match ranged-download fixture.",
+    name: "person-match-ranged-download-fixture",
+    revision: "fixture",
+    sha256: expectedSha256,
+    sizeBytes: expectedSizeBytes,
+    url: "https://example.invalid/person-match/model.safetensors",
+  });
+  yield* downloadArtifact(artifact, targetPath, modelRoot, rangeBytes, Schedule.exponential(Duration.zero));
 });
 
 const ensureArtifact = Effect.fn("Files.PersonMatchModelStore.ensureArtifact")(function* (
