@@ -4,6 +4,18 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-31 — a zero-finding goals baseline cannot clear staleness
+
+- **Doing:** clearing Yeet's stale goals-doctor gate after updating the observation receipt.
+- **Evidence:** `yeet status --remote` reported that `goals/goals-doctor.baseline.jsonc` was older
+  than the observation file and instructed `bun run beep goals doctor --write-baseline`. The
+  command reported that it wrote a baseline with zero finding keys, but produced no file diff. A
+  commit therefore cannot advance the baseline path, and repeating the prescribed command cannot
+  clear a commit-age staleness check.
+- **Would have prevented it:** store a source fingerprint in the baseline or compare the current
+  finding-key set with the committed set. Do not use path commit age when a valid zero-finding
+  rewrite is content-identical.
+
 ## 2026-08-31 — a zsh loop variable erased command lookup
 
 - **Doing:** checking whether concurrent packet edits still had an open writer before preserving
