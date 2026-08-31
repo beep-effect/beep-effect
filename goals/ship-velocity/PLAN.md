@@ -148,5 +148,6 @@ the C5 metric correction and the new C7 item below.
   success. Current backpressure, parity, and hot-file receipts satisfy the authorized sample. Two
   independent same-origin full proofs overlapped for 48 minutes 49.201 seconds and both completed
   every lane at exit 0. PR #929 reached Yeet `merge-ready: yes` and merged on 2026-08-31. An
-  authorized 1Password session is still required for the cross-checkout remote-read observation;
-  see `research/metrics-closeout.md`.
+  authenticated canary then proved that the existing 1Password reference resolves but carries a
+  stale read token. The operator must update that mirror before the cross-checkout remote-read
+  observation can run; see `research/metrics-closeout.md`.

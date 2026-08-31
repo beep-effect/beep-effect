@@ -278,10 +278,23 @@ and the last safe CLI identity check was signed out. The final sample must resca
 the operator authorizes `op signin`, use an isolated local cache directory per root, and observe
 at least one first-touch `source: REMOTE` result from each frozen root before this gate closes.
 
+### Authenticated cache canary
+
+On 2026-08-31, an output-suppressed `op run --env-file=.env -- true` preflight resolved the
+existing references. The configured endpoint and team also matched the live repository variables.
+The canary `beep cache probe` still returned `Remote caching unavailable (Authentication failed)`.
+Sanitized control-plane metadata showed that the authoritative AWS read-token parameter changed on
+2026-08-12, while the referenced 1Password item was last updated in February. No secret value or
+reference path was printed, copied, or stored.
+
+Reference resolution therefore does not close the cache gate. The operator must update the
+existing 1Password mirror with the current read token, authorize a new session, and rerun the
+cross-checkout sample.
+
 ### Closeout state after the terminal trial
 
 The evidence-volume ruling closes the calendar-duration question, and the terminal dual proof
 closes the concurrency condition. PR #929 reached Yeet `merge-ready: yes` and merged on
-2026-08-31. The packet remains active only because an authorized 1Password session must produce a
-fresh remote-read observation from every active root. Lifecycle and P5 status remain unchanged
-until that gate is satisfied.
+2026-08-31. The packet remains active because the stale 1Password mirror blocks a fresh remote-read
+observation from every active root. Lifecycle and P5 status remain unchanged until the operator
+updates that mirror and the sample succeeds.

@@ -4,6 +4,20 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-31 — reference resolution did not prove cache authentication
+
+- **Doing:** running the final authenticated remote-read sample across a freshly frozen set of
+  live checkouts.
+- **Evidence:** the output-suppressed `op run --env-file=.env -- true` preflight resolved the
+  existing references, and the configured endpoint and team matched the live repository
+  variables. The canary `beep cache probe` nevertheless reported `Remote caching unavailable
+  (Authentication failed)`. Sanitized control-plane metadata showed that the authoritative AWS
+  read-token parameter was updated on 2026-08-12, while the referenced 1Password item was last
+  updated in February. No secret value or reference path was printed, copied, or stored.
+- **Would have prevented it:** make read-token rotation update the 1Password mirror in the same
+  operator workflow and finish with a read-only service canary. Reference resolvability should be
+  reported separately from successful remote-cache authentication.
+
 ## 2026-08-30 — scoped goal doctor invocation no longer matches the CLI
 
 - **Doing:** validating the packet after merging current `origin/main` into PR #929.

@@ -46,6 +46,7 @@ place of the original seven-day duration proxy. Operator PR #921 subsequently re
 published-PR ownership lease and automatic takeover path; the packet records that explicit
 supersession and does not claim takeover success. Two independent same-origin full proofs
 overlapped for 48 minutes 49.201 seconds and both completed every lane at exit 0. The initiative
-remains active because an authorized 1Password session is still required for the cross-checkout
-remote-read sample. PR #929 reached Yeet `merge-ready: yes` and merged on 2026-08-31; see
+remains active because the existing 1Password mirror carries a stale cache read token. The operator
+must update that mirror before the cross-checkout remote-read sample can run. PR #929 reached Yeet
+`merge-ready: yes` and merged on 2026-08-31; see
 [research/metrics-closeout.md](research/metrics-closeout.md).
