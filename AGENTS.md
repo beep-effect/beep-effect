@@ -54,11 +54,17 @@ workflows in skills.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
+- “Mergeable” describes the complete PR state, not GitHub's structural
+  `MERGEABLE` field alone. It requires both of the following:
+  - no outstanding PR comments or nits unless they are marked resolved, marked
+    outdated, or have received a response; and
+  - no failing CI jobs except Vercel deployments failing only because they were
+    rate limited.
 - PR closeout: run `bun run beep yeet monitor` until it reports
-  `merge-ready: yes`. Unresolved review threads are a hard merge gate —
-  answer and resolve every one via `bun run beep yeet reply` (drafts in
-  `.beep/yeet/reply-drafts.json`); never leave threads standing or ask the
-  operator to relay them.
+  `merge-ready: yes`. Unanswered review threads are a hard merge gate — answer
+  every one and resolve every actionable one via `bun run beep yeet reply`
+  (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
+  them.
 - Package handoff: any agent or sub-agent that edits a workspace package runs
   `bun run beep quality package-verify <@beep/package>` before handing the work
   back. Use `--quick` only when the touched surface justifies the lint+check
