@@ -9,7 +9,6 @@ import {
   encodeBoxProvisioningPlan,
   planBoxProvisioning,
 } from "@beep/box-provisioning";
-import { Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Layer, Ref } from "effect";
@@ -81,19 +80,43 @@ describe("@beep/box-provisioning orchestration", () => {
   );
 
   it.effect(
-    "rejects reviewed-plan drift before invoking the applier",
+    "rejects reviewed-plan content tampering even when the digest field is retained",
     Effect.fnUntraced(function* () {
       const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
-      const stalePlan = BoxProvisioningPlan.make({
+      const tamperedPlan = BoxProvisioningPlan.make({
         ...plan,
-        planDigest: Sha256Hex.make("f".repeat(64)),
+        foreignResources: [],
       });
-      const stalePlanJson = yield* encodeBoxProvisioningPlan(stalePlan);
+      const tamperedPlanJson = yield* encodeBoxProvisioningPlan(tamperedPlan);
       const applyCalls = yield* Ref.make(0);
       const dependencies = makeDependencies(plan, applyCalls);
 
       const error = yield* runProvisioning(dependencies, (service) =>
-        service.applyReviewedPlan(desiredInput, stalePlanJson)
+        service.applyReviewedPlan(desiredInput, tamperedPlanJson)
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("BoxProvisioningInvariantError");
+      if (error._tag === "BoxProvisioningInvariantError") {
+        expect(error.code).toBe("invalid-plan-digest");
+      }
+      expect(yield* Ref.get(applyCalls)).toBe(0);
+    })
+  );
+
+  it.effect(
+    "compares the complete reviewed plan with the freshly reproduced plan",
+    Effect.fnUntraced(function* () {
+      const reviewedPlan = yield* planBoxProvisioning(desiredFixture, observedFixture);
+      const reviewedPlanJson = yield* encodeBoxProvisioningPlan(reviewedPlan);
+      const inconsistentFreshPlan = BoxProvisioningPlan.make({
+        ...reviewedPlan,
+        foreignResources: [],
+      });
+      const applyCalls = yield* Ref.make(0);
+      const dependencies = makeDependencies(inconsistentFreshPlan, applyCalls);
+
+      const error = yield* runProvisioning(dependencies, (service) =>
+        service.applyReviewedPlan(desiredInput, reviewedPlanJson)
       ).pipe(Effect.flip);
 
       expect(error._tag).toBe("BoxProvisioningDriftError");

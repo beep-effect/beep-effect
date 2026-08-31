@@ -7,10 +7,9 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import { Sha256Hex } from "@beep/schema";
-import { Context, Effect, Equal, Layer, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
+import { Context, Effect, Equal, Layer, Match, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { BoxProvisioningSubjectMismatchError, BoxProvisioningTenantMismatchError } from "./BoxProvisioningErrors.ts";
 import {
   BoxCollaborationIntent,
@@ -39,12 +38,21 @@ import {
   BoxProvisioningPlan,
   BoxUpdateAction,
 } from "./BoxProvisioningPlan.ts";
-import { digestEncoded, digestText } from "./internal/canonical.ts";
-import type { BoxLogicalKey } from "./BoxProvisioningIntent.ts";
+import {
+  canonicalBoxDesiredState,
+  canonicalBoxObservedState,
+  canonicalObservedWebhook,
+  canonicalWebhookIntent,
+  digestText,
+  encodedDigest,
+  sealBoxProvisioningPlan,
+} from "./internal/canonical.ts";
+import type * as S from "effect/Schema";
+import type { BoxEntitlementAvailability, BoxLogicalKey } from "./BoxProvisioningIntent.ts";
+import type { BoxDiscovery } from "./BoxProvisioningObserved.ts";
 import type { BoxPlanAction, BoxResourceKind } from "./BoxProvisioningPlan.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningPlanner");
-const zeroDigest = Sha256Hex.make("0".repeat(64));
 
 type FolderResolution = {
   readonly actionKey: Sha256Hex;
@@ -96,45 +104,6 @@ const actionBase = (input: ActionBaseInput) => {
     }),
   };
 };
-
-const encodedDigest = <A, I>(schema: S.Codec<A, I>, value: A): Sha256Hex => digestEncoded(S.encodeSync(schema)(value));
-
-const byLogicalKey = <A extends { readonly logicalKey: BoxLogicalKey }>(values: ReadonlyArray<A>): ReadonlyArray<A> =>
-  A.sortWith(values, (value) => value.logicalKey, Order.String);
-
-const canonicalWebhookIntent = (webhook: BoxWebhookIntent): BoxWebhookIntent =>
-  BoxWebhookIntent.make({
-    ...webhook,
-    triggers: A.sort(webhook.triggers, Order.String),
-  });
-
-const canonicalObservedWebhook = (webhook: BoxObservedWebhook): BoxObservedWebhook =>
-  BoxObservedWebhook.make({
-    ...webhook,
-    triggers: A.sort(webhook.triggers, Order.String),
-  });
-
-const canonicalDesiredState = (desired: BoxDesiredState): BoxDesiredState =>
-  BoxDesiredState.make({
-    ...desired,
-    folders: byLogicalKey(desired.folders),
-    collaborations: byLogicalKey(desired.collaborations),
-    webhooks: byLogicalKey(A.map(desired.webhooks, canonicalWebhookIntent)),
-    metadata: byLogicalKey(desired.metadata),
-    retention: byLogicalKey(desired.retention),
-  });
-
-const canonicalObservedState = (observed: BoxObservedState): BoxObservedState =>
-  BoxObservedState.make({
-    ...observed,
-    folders: A.sortWith(observed.folders, (folder) => folder.providerId, Order.String),
-    collaborations: A.sortWith(observed.collaborations, (collaboration) => collaboration.providerId, Order.String),
-    webhooks: A.sortWith(
-      A.map(observed.webhooks, canonicalObservedWebhook),
-      (webhook) => webhook.providerId,
-      Order.String
-    ),
-  });
 
 const folderDepth = (folders: ReadonlyArray<BoxFolderIntent>, folder: BoxFolderIntent): number => {
   let depth = 0;
@@ -295,7 +264,8 @@ const collaborationAction = (
         observed,
         (candidate) =>
           Equal.equals(candidate.folderProviderId, folderProviderId) &&
-          Equal.equals(candidate.principal, desired.principal) &&
+          (Equal.equals(candidate.principal, desired.principal) ||
+            O.contains(candidate.principalProviderId, BoxProviderId.make(desired.principal))) &&
           Equal.equals(candidate.principalType, desired.principalType)
       ),
   });
@@ -377,10 +347,28 @@ const blockedCapabilityAction = <A extends BoxMetadataIntent | BoxRetentionInten
   schema: S.Codec<A, I>,
   resourceKind: "metadata" | "retention",
   planName: string,
-  available: boolean,
+  assertedAvailability: BoxEntitlementAvailability,
+  discovery: BoxDiscovery,
   folder: FolderResolution
-): BoxPlanAction =>
-  BoxBlockedAction.make({
+): BoxPlanAction => {
+  const reason = Match.value(discovery).pipe(
+    Match.tagsExhaustive({
+      Available: () =>
+        assertedAvailability === "available"
+          ? BoxBlockedByPolicy.make({ policy: `${resourceKind}-mutation-out-of-scope-v1` })
+          : BoxBlockedByPolicy.make({
+              policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
+            }),
+      BlockedByEntitlement: () =>
+        assertedAvailability === "unavailable"
+          ? BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName })
+          : BoxBlockedByPolicy.make({
+              policy: `${resourceKind}-entitlement-assertion-conflicts-with-live-discovery`,
+            }),
+      BlockedByPermission: () => BoxBlockedByPolicy.make({ policy: `${resourceKind}-discovery-permission-denied` }),
+    })
+  );
+  return BoxBlockedAction.make({
     ...actionBase({
       actionTag: "Blocked",
       afterDigest: O.some(encodedDigest(schema, desired)),
@@ -393,10 +381,9 @@ const blockedCapabilityAction = <A extends BoxMetadataIntent | BoxRetentionInten
       resourceKind,
       state: "absent",
     }),
-    reason: available
-      ? BoxBlockedByPolicy.make({ policy: `${resourceKind}-mutation-out-of-scope-v1` })
-      : BoxBlockedByEntitlement.make({ entitlement: resourceKind, planName }),
+    reason,
   });
+};
 
 /**
  * Produce a deterministic redacted plan from decoded desired and observed Box state.
@@ -438,8 +425,8 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
     });
   }
 
-  const canonicalDesired = canonicalDesiredState(desired);
-  const canonicalObserved = canonicalObservedState(observed);
+  const canonicalDesired = canonicalBoxDesiredState(desired);
+  const canonicalObserved = canonicalBoxObservedState(observed);
   const folderOrder = Order.combine(
     Order.mapInput(Order.Number, (folder: BoxFolderIntent) => folderDepth(canonicalDesired.folders, folder)),
     Order.mapInput(Order.String, (folder: BoxFolderIntent) => folder.logicalKey)
@@ -447,6 +434,8 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
   const orderedFolders = A.sort(canonicalDesired.folders, folderOrder);
   const resolutions = MutableHashMap.empty<BoxLogicalKey, FolderResolution>();
   const matchedFolderIds = MutableHashSet.empty<BoxProviderId>();
+  const matchedCollaborationIds = MutableHashSet.empty<BoxProviderId>();
+  const matchedWebhookIds = MutableHashSet.empty<BoxProviderId>();
   const folderActions = A.map(orderedFolders, (folder) => {
     const parent = O.match(folder.parentKey, {
       onNone: () => ({
@@ -501,8 +490,8 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
     return action;
   });
 
-  const collaborationActions = A.map(canonicalDesired.collaborations, (collaboration) =>
-    collaborationAction(
+  const collaborationActions = A.map(canonicalDesired.collaborations, (collaboration) => {
+    const action = collaborationAction(
       collaboration,
       O.getOrElse(MutableHashMap.get(resolutions, collaboration.folderKey), () => ({
         actionKey: digestText(`unresolved:${collaboration.folderKey}`),
@@ -510,10 +499,17 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
         providerId: O.none(),
       })),
       canonicalObserved.collaborations
-    )
-  );
-  const webhookActions = A.map(canonicalDesired.webhooks, (webhook) =>
-    webhookAction(
+    );
+    if (action._tag === "Noop" || action._tag === "Update") {
+      O.match(action.precondition.providerId, {
+        onNone: () => undefined,
+        onSome: (providerId) => MutableHashSet.add(matchedCollaborationIds, providerId),
+      });
+    }
+    return action;
+  });
+  const webhookActions = A.map(canonicalDesired.webhooks, (webhook) => {
+    const action = webhookAction(
       webhook,
       O.getOrElse(MutableHashMap.get(resolutions, webhook.folderKey), () => ({
         actionKey: digestText(`unresolved:${webhook.folderKey}`),
@@ -521,15 +517,23 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
         providerId: O.none(),
       })),
       canonicalObserved.webhooks
-    )
-  );
+    );
+    if (action._tag === "Noop" || action._tag === "Update") {
+      O.match(action.precondition.providerId, {
+        onNone: () => undefined,
+        onSome: (providerId) => MutableHashSet.add(matchedWebhookIds, providerId),
+      });
+    }
+    return action;
+  });
   const metadataActions = A.map(canonicalDesired.metadata, (metadata) =>
     blockedCapabilityAction(
       metadata,
       BoxMetadataIntent,
       "metadata",
       canonicalDesired.entitlements.planName,
-      canonicalDesired.entitlements.metadata === "available",
+      canonicalDesired.entitlements.metadata,
+      canonicalObserved.metadata,
       O.getOrElse(MutableHashMap.get(resolutions, metadata.folderKey), () => ({
         actionKey: digestText(`unresolved:${metadata.folderKey}`),
         blocked: true,
@@ -543,7 +547,8 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
       BoxRetentionIntent,
       "retention",
       canonicalDesired.entitlements.planName,
-      canonicalDesired.entitlements.retention === "available",
+      canonicalDesired.entitlements.retention,
+      canonicalObserved.retention,
       O.getOrElse(MutableHashMap.get(resolutions, retention.folderKey), () => ({
         actionKey: digestText(`unresolved:${retention.folderKey}`),
         blocked: true,
@@ -555,15 +560,38 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
     A.appendAll(A.appendAll(folderActions, collaborationActions), webhookActions),
     A.appendAll(metadataActions, retentionActions)
   );
-  const foreignResources = A.map(
-    A.filter(canonicalObserved.folders, (folder) => !MutableHashSet.has(matchedFolderIds, folder.providerId)),
-    (folder) =>
-      BoxForeignResource.make({
-        resourceKind: "folder",
-        providerId: folder.providerId,
-        identityDigest: digestText(folder.name),
-      })
-  );
+  const foreignResources = A.flatten([
+    A.map(
+      A.filter(canonicalObserved.folders, (folder) => !MutableHashSet.has(matchedFolderIds, folder.providerId)),
+      (folder) =>
+        BoxForeignResource.make({
+          resourceKind: "folder",
+          providerId: folder.providerId,
+          identityDigest: encodedDigest(BoxObservedFolder, folder),
+        })
+    ),
+    A.map(
+      A.filter(
+        canonicalObserved.collaborations,
+        (collaboration) => !MutableHashSet.has(matchedCollaborationIds, collaboration.providerId)
+      ),
+      (collaboration) =>
+        BoxForeignResource.make({
+          resourceKind: "collaboration",
+          providerId: collaboration.providerId,
+          identityDigest: encodedDigest(BoxObservedCollaboration, collaboration),
+        })
+    ),
+    A.map(
+      A.filter(canonicalObserved.webhooks, (webhook) => !MutableHashSet.has(matchedWebhookIds, webhook.providerId)),
+      (webhook) =>
+        BoxForeignResource.make({
+          resourceKind: "webhook",
+          providerId: webhook.providerId,
+          identityDigest: encodedDigest(BoxObservedWebhook, webhook),
+        })
+    ),
+  ]);
   const draft = BoxProvisioningPlan.make({
     sourceRevision: canonicalDesired.sourceRevision,
     expectedEnterpriseId,
@@ -571,7 +599,7 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
     rootFolderId: canonicalObserved.rootFolderId,
     desiredStateDigest: encodedDigest(BoxDesiredState, canonicalDesired),
     liveStateDigest: encodedDigest(BoxObservedState, canonicalObserved),
-    planDigest: zeroDigest,
+    planDigest: Sha256Hex.make("0".repeat(64)),
     actions,
     foreignResources,
     blockerCount: A.length(A.filter(actions, (action) => action._tag === "Blocked")),
@@ -580,10 +608,7 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
       A.filter(canonicalDesired.collaborations, (collaboration) => collaboration.billingImpact === "external")
     ),
   });
-  return BoxProvisioningPlan.make({
-    ...draft,
-    planDigest: encodedDigest(BoxProvisioningPlan, draft),
-  });
+  return sealBoxProvisioningPlan(draft);
 });
 
 /**

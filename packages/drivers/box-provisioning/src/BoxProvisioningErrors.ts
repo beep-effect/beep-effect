@@ -175,6 +175,11 @@ export class BoxProvisioningInvariantError extends S.TaggedError<BoxProvisioning
     code: LiteralKit([
       "missing-enterprise-id",
       "missing-provider-id",
+      "invalid-plan-digest",
+      "desired-state-digest-mismatch",
+      "action-after-digest-mismatch",
+      "action-precondition-mismatch",
+      "missing-before-digest",
       "unresolved-dependency",
       "unsupported-action",
       "unreadable-sdk-response",

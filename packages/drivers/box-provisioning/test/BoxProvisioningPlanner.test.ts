@@ -1,7 +1,11 @@
 import {
+  BoxCollaborationIntent,
   BoxDesiredState,
+  BoxDiscoveryPermissionBlocked,
   BoxFolderIntent,
   BoxLogicalKey,
+  BoxObservedCollaboration,
+  BoxObservedFolder,
   BoxObservedState,
   BoxObservedWebhook,
   BoxProviderId,
@@ -19,7 +23,7 @@ import { desiredFixture, observedFixture } from "./fixtures.ts";
 
 describe("@beep/box-provisioning planner", () => {
   it.effect(
-    "emits a deterministic redacted plan with foreign and entitlement evidence",
+    "emits a deterministic redacted plan with foreign and capability evidence",
     Effect.fnUntraced(function* () {
       const first = yield* planBoxProvisioning(desiredFixture, observedFixture);
       const second = yield* planBoxProvisioning(desiredFixture, observedFixture);
@@ -159,6 +163,140 @@ describe("@beep/box-provisioning planner", () => {
 
     expect(O.isNone(decoded)).toBe(true);
   });
+
+  it("rejects duplicate provider natural keys before inventory or planning", () => {
+    const encoded = S.encodeSync(BoxDesiredState)(desiredFixture);
+    const folders = O.getOrElse(O.fromUndefinedOr(encoded.folders), A.empty);
+    const collaborations = O.getOrElse(O.fromUndefinedOr(encoded.collaborations), A.empty);
+    const webhooks = O.getOrElse(O.fromUndefinedOr(encoded.webhooks), A.empty);
+    const duplicateFolder = {
+      ...O.getOrThrow(A.head(folders)),
+      logicalKey: "folder.duplicate",
+    };
+    const duplicateCollaboration = {
+      ...O.getOrThrow(A.head(collaborations)),
+      logicalKey: "collaboration.duplicate",
+    };
+    const duplicateWebhook = {
+      ...O.getOrThrow(A.head(webhooks)),
+      logicalKey: "webhook.duplicate",
+    };
+
+    expect(O.isNone(S.decodeOption(BoxDesiredState)({ ...encoded, folders: [...folders, duplicateFolder] }))).toBe(
+      true
+    );
+    expect(
+      O.isNone(
+        S.decodeOption(BoxDesiredState)({
+          ...encoded,
+          collaborations: [...collaborations, duplicateCollaboration],
+        })
+      )
+    ).toBe(true);
+    expect(O.isNone(S.decodeOption(BoxDesiredState)({ ...encoded, webhooks: [...webhooks, duplicateWebhook] }))).toBe(
+      true
+    );
+  });
+
+  it.effect(
+    "reports unmatched collaborations and webhooks as foreign resources",
+    Effect.fnUntraced(function* () {
+      const foreignObserved = BoxObservedState.make({
+        ...observedFixture,
+        collaborations: [
+          BoxObservedCollaboration.make({
+            folderProviderId: BoxProviderId.make("100"),
+            principal: "foreign@example.test",
+            principalProviderId: O.some(BoxProviderId.make("foreign-user-id")),
+            principalType: "user",
+            providerId: BoxProviderId.make("foreign-collaboration-id"),
+            role: "viewer",
+          }),
+        ],
+        webhooks: [
+          BoxObservedWebhook.make({
+            address: HttpsUrl.make("https://example.test/box/foreign"),
+            providerId: BoxProviderId.make("foreign-webhook-id"),
+            targetProviderId: BoxProviderId.make("100"),
+            triggers: ["FILE.DOWNLOADED"],
+          }),
+        ],
+      });
+
+      const plan = yield* planBoxProvisioning(desiredFixture, foreignObserved);
+
+      expect(A.map(plan.foreignResources, (resource) => resource.resourceKind)).toEqual([
+        "folder",
+        "collaboration",
+        "webhook",
+      ]);
+    })
+  );
+
+  it.effect(
+    "matches a collaboration by provider id while retaining its login",
+    Effect.fnUntraced(function* () {
+      const collaboration = O.getOrThrow(A.head(desiredFixture.collaborations));
+      const desiredByProviderId = BoxDesiredState.make({
+        ...desiredFixture,
+        collaborations: [BoxCollaborationIntent.make({ ...collaboration, principal: "user-id" })],
+      });
+      const observed = BoxObservedState.make({
+        ...observedFixture,
+        folders: [
+          ...observedFixture.folders,
+          BoxObservedFolder.make({
+            etag: O.none(),
+            name: "Fixture child",
+            parentProviderId: O.some(BoxProviderId.make("100")),
+            providerId: BoxProviderId.make("101"),
+          }),
+        ],
+        collaborations: [
+          BoxObservedCollaboration.make({
+            folderProviderId: BoxProviderId.make("101"),
+            principal: "user@example.test",
+            principalProviderId: O.some(BoxProviderId.make("user-id")),
+            principalType: "user",
+            providerId: BoxProviderId.make("collaboration-id"),
+            role: "editor",
+          }),
+        ],
+      });
+
+      const plan = yield* planBoxProvisioning(desiredByProviderId, observed);
+      const collaborationAction = A.findFirst(plan.actions, (action) => action.resourceKind === "collaboration");
+
+      expect(O.map(collaborationAction, (action) => action._tag)).toEqual(O.some("Noop"));
+      expect(A.some(plan.foreignResources, (resource) => resource.resourceKind === "collaboration")).toBe(false);
+    })
+  );
+
+  it.effect(
+    "surfaces permission-blocked discovery separately from entitlement blockers",
+    Effect.fnUntraced(function* () {
+      const plan = yield* planBoxProvisioning(
+        desiredFixture,
+        BoxObservedState.make({
+          ...observedFixture,
+          metadata: BoxDiscoveryPermissionBlocked.make({
+            code: O.some("insufficient_scope"),
+            kind: "metadata",
+            status: 403,
+          }),
+        })
+      );
+      const metadataAction = A.findFirst(plan.actions, (action) => action.resourceKind === "metadata");
+
+      expect(O.isSome(metadataAction)).toBe(true);
+      if (O.isSome(metadataAction) && metadataAction.value._tag === "Blocked") {
+        expect(metadataAction.value.reason._tag).toBe("BlockedByPolicy");
+        if (metadataAction.value.reason._tag === "BlockedByPolicy") {
+          expect(metadataAction.value.reason.policy).toBe("metadata-discovery-permission-denied");
+        }
+      }
+    })
+  );
 
   it.effect(
     "rejects an authenticated subject other than the pinned service identity",

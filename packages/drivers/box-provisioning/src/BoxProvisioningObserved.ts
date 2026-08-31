@@ -119,6 +119,40 @@ export class BoxDiscoveryBlocked extends S.TaggedClass<BoxDiscoveryBlocked>($I`B
 ) {}
 
 /**
+ * Permission-denied read of one Box capability family.
+ *
+ * **Example** (Record a missing-scope discovery)
+ *
+ * ```ts
+ * import { BoxDiscoveryPermissionBlocked } from "@beep/box-provisioning/BoxProvisioningObserved"
+ * import * as O from "effect/Option"
+ *
+ * const discovery = BoxDiscoveryPermissionBlocked.make({
+ *   code: O.some("insufficient_scope"),
+ *   kind: "metadata",
+ *   status: 403
+ * })
+ * console.log(discovery.code)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BoxDiscoveryPermissionBlocked extends S.TaggedClass<BoxDiscoveryPermissionBlocked>(
+  $I`BoxDiscoveryPermissionBlocked`
+)(
+  "BlockedByPermission",
+  {
+    kind: BoxDiscoveryKind,
+    status: S.Int.check(S.isBetween({ minimum: 400, maximum: 499 })),
+    code: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("BoxDiscoveryPermissionBlocked", {
+    description: "Read-only inventory result denied by Box permissions or application scopes.",
+  })
+) {}
+
+/**
  * Result of reading one entitlement-sensitive Box family.
  *
  * **Example** (Inspect the discovery schema)
@@ -132,9 +166,9 @@ export class BoxDiscoveryBlocked extends S.TaggedClass<BoxDiscoveryBlocked>($I`B
  * @category schemas
  * @since 0.0.0
  */
-export const BoxDiscovery = S.Union([BoxDiscoveryAvailable, BoxDiscoveryBlocked]).pipe(
+export const BoxDiscovery = S.Union([BoxDiscoveryAvailable, BoxDiscoveryBlocked, BoxDiscoveryPermissionBlocked]).pipe(
   $I.annoteSchema("BoxDiscovery", {
-    description: "Available or entitlement-blocked read-only Box capability discovery.",
+    description: "Available, entitlement-blocked, or permission-blocked Box capability discovery.",
   })
 );
 
@@ -211,6 +245,7 @@ export class BoxObservedCollaboration extends S.Class<BoxObservedCollaboration>(
     folderProviderId: BoxProviderId,
     principalType: LiteralKit(["user", "group"]),
     principal: S.NonEmptyString,
+    principalProviderId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
     role: S.NonEmptyString,
   },
   $I.annote("BoxObservedCollaboration", {

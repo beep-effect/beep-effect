@@ -9,6 +9,7 @@ import { $BoxProvisioningId } from "@beep/identity";
 import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
 import { MutableHashSet } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -296,6 +297,21 @@ const allLogicalKeys = (state: {
     A.map((resource) => resource.logicalKey)
   );
 
+const recordDuplicateNaturalKeys = <Resource>(
+  issues: Array<{ readonly path: ReadonlyArray<string | number>; readonly issue: string }>,
+  family: "folders" | "collaborations" | "webhooks",
+  resources: ReadonlyArray<Resource>,
+  sameNaturalKey: (left: Resource, right: Resource) => boolean
+): void =>
+  A.forEach(resources, (resource, index) => {
+    if (A.some(A.take(resources, index), (candidate) => sameNaturalKey(candidate, resource))) {
+      issues.push({
+        path: [family, index],
+        issue: `Duplicate ${family} provider natural key.`,
+      });
+    }
+  });
+
 const desiredStateCoherence = S.makeFilter<{
   readonly collaborations: ReadonlyArray<BoxCollaborationIntent>;
   readonly folders: ReadonlyArray<BoxFolderIntent>;
@@ -348,6 +364,28 @@ const desiredStateCoherence = S.makeFilter<{
         issues.push({ path: ["folderReferences", index], issue: "Resource folderKey does not name a desired folder." });
       }
     });
+
+    recordDuplicateNaturalKeys(
+      issues,
+      "folders",
+      state.folders,
+      (left, right) => Eq.equals(left.parentKey, right.parentKey) && left.name === right.name
+    );
+    recordDuplicateNaturalKeys(
+      issues,
+      "collaborations",
+      state.collaborations,
+      (left, right) =>
+        left.folderKey === right.folderKey &&
+        left.principalType === right.principalType &&
+        left.principal === right.principal
+    );
+    recordDuplicateNaturalKeys(
+      issues,
+      "webhooks",
+      state.webhooks,
+      (left, right) => left.folderKey === right.folderKey && left.address === right.address
+    );
 
     return issues;
   },

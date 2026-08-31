@@ -9,12 +9,12 @@ import { $BoxProvisioningId } from "@beep/identity";
 import { Context, Effect, Equal, Layer } from "effect";
 import { BoxProvisioningApplier } from "./BoxProvisioningApplier.ts";
 import { decodeBoxDesiredState, decodeBoxProvisioningPlan } from "./BoxProvisioningArtifacts.ts";
-import { BoxProvisioningDriftError } from "./BoxProvisioningErrors.ts";
+import { BoxProvisioningDriftError, BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
 import { BoxProvisioningInventory } from "./BoxProvisioningInventory.ts";
 import { BoxProvisioningPlanner } from "./BoxProvisioningPlanner.ts";
+import { hasValidBoxProvisioningPlanDigest } from "./internal/canonical.ts";
 import type * as B from "@beep/box";
 import type {
-  BoxProvisioningInvariantError,
   BoxProvisioningSchemaError,
   BoxProvisioningSubjectMismatchError,
   BoxProvisioningTenantMismatchError,
@@ -52,15 +52,18 @@ const makeService = (
       decodeBoxDesiredState(desiredInput),
       decodeBoxProvisioningPlan(reviewedPlanJson),
     ]);
+    if (!hasValidBoxProvisioningPlanDigest(reviewedPlan)) {
+      return yield* BoxProvisioningInvariantError.make({ code: "invalid-plan-digest" });
+    }
     const observed = yield* inventory.observe(desired);
     const freshPlan = yield* planner.plan(desired, observed);
-    if (!Equal.equals(reviewedPlan.planDigest, freshPlan.planDigest)) {
+    if (!Equal.equals(reviewedPlan, freshPlan)) {
       return yield* BoxProvisioningDriftError.make({
         actualPlanDigest: freshPlan.planDigest,
         expectedPlanDigest: reviewedPlan.planDigest,
       });
     }
-    return yield* applier.apply(desired, freshPlan);
+    return yield* applier.apply(desired, reviewedPlan);
   });
 
   return { applyReviewedPlan, dryRun, reconcile: dryRun };
@@ -91,7 +94,7 @@ export interface BoxProvisioningShape {
  *
  * `reconcile` and `dryRun` expose no mutation service. `applyReviewedPlan` is a
  * separate explicit call that inventories again and rejects drift before it
- * invokes the applier with the newly reproduced plan.
+ * invokes the applier with that exact reviewed plan.
  *
  * **Example** (Run the default dry-run entry point)
  *

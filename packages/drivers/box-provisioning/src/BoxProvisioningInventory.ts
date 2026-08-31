@@ -7,7 +7,7 @@
 
 import * as B from "@beep/box";
 import { $BoxProvisioningId } from "@beep/identity";
-import { HttpsUrl } from "@beep/schema";
+import { HttpsUrl, LiteralKit } from "@beep/schema";
 import { Context, Effect, Layer, MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -16,13 +16,14 @@ import { BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
 import {
   BoxDiscoveryAvailable,
   BoxDiscoveryBlocked,
+  BoxDiscoveryPermissionBlocked,
   BoxObservedCollaboration,
   BoxObservedFolder,
   BoxObservedState,
   BoxObservedWebhook,
   BoxProviderId,
 } from "./BoxProvisioningObserved.ts";
-import type { BoxDesiredState } from "./BoxProvisioningIntent.ts";
+import type { BoxDesiredState, BoxEntitlementAvailability } from "./BoxProvisioningIntent.ts";
 import type { BoxDiscovery, BoxDiscoveryKind } from "./BoxProvisioningObserved.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningInventory");
@@ -115,26 +116,31 @@ const listFolderCollaborations = (box: B.Box["Service"], folderId: BoxProviderId
 
 type CollaborationPrincipal = {
   readonly principal: string;
+  readonly principalProviderId: O.Option<BoxProviderId>;
   readonly principalType: "user" | "group";
 };
 
 const makeCollaborationPrincipal =
-  (principalType: CollaborationPrincipal["principalType"]) =>
-  (principal: string): CollaborationPrincipal => ({ principal, principalType });
+  (principalType: CollaborationPrincipal["principalType"], principalProviderId: O.Option<BoxProviderId>) =>
+  (principal: string): CollaborationPrincipal => ({ principal, principalProviderId, principalType });
 
 const collaborationPrincipal = (collaboration: B.Collaboration): O.Option<CollaborationPrincipal> => {
-  const pendingInvite = pipe(O.fromNullishOr(collaboration.inviteEmail), O.map(makeCollaborationPrincipal("user")));
+  const pendingInvite = pipe(
+    O.fromNullishOr(collaboration.inviteEmail),
+    O.map(makeCollaborationPrincipal("user", O.none()))
+  );
   return pipe(
     O.fromNullishOr(collaboration.accessibleBy),
     O.flatMap((accessibleBy): O.Option<CollaborationPrincipal> => {
+      const principalProviderId = pipe(O.fromNullishOr(accessibleBy.id), O.map(BoxProviderId.make));
       if (S.is(B.UserCollaborations)(accessibleBy)) {
         return pipe(
           O.fromNullishOr(accessibleBy.login),
           O.orElse(() => O.fromNullishOr(accessibleBy.id)),
-          O.map(makeCollaborationPrincipal("user"))
+          O.map(makeCollaborationPrincipal("user", principalProviderId))
         );
       }
-      return pipe(O.fromNullishOr(accessibleBy.id), O.map(makeCollaborationPrincipal("group")));
+      return pipe(O.fromNullishOr(accessibleBy.id), O.map(makeCollaborationPrincipal("group", principalProviderId)));
     }),
     O.orElse(() => pendingInvite)
   );
@@ -153,6 +159,7 @@ const toObservedCollaboration = (
           folderProviderId,
           principalType: principal.principalType,
           principal: principal.principal,
+          principalProviderId: principal.principalProviderId,
           role,
         })
       ),
@@ -196,35 +203,57 @@ const observeWebhooks = (box: B.Box["Service"]) =>
   ).pipe(
     Effect.flatMap((webhooks) =>
       Effect.forEach(
-        A.getSomes(A.map(webhooks, (webhook) => O.fromNullishOr(webhook.id))),
-        (webhookId) =>
-          box.webhooks
-            .getWebhookById(B.WebhooksGetWebhookByIdPayload.make({ webhookId }))
-            .pipe(Effect.flatMap(toObservedWebhook)),
+        webhooks,
+        (webhook) =>
+          O.match(O.fromNullishOr(webhook.id), {
+            onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "unreadable-sdk-response" })),
+            onSome: (webhookId) =>
+              box.webhooks
+                .getWebhookById(B.WebhooksGetWebhookByIdPayload.make({ webhookId }))
+                .pipe(Effect.flatMap(toObservedWebhook)),
+          }),
         { concurrency: 1 }
       )
     )
   );
 
+const PermissionErrorCode = LiteralKit(["access_denied_insufficient_permissions", "insufficient_scope"]);
+
+const forbiddenDiscovery = (
+  kind: "metadata" | "retention",
+  assertedAvailability: BoxEntitlementAvailability,
+  code: O.Option<string>
+): BoxDiscovery =>
+  O.exists(code, S.is(PermissionErrorCode)) || assertedAvailability === "available"
+    ? BoxDiscoveryPermissionBlocked.make({ code, kind, status: 403 })
+    : BoxDiscoveryBlocked.make({ kind, status: 403 });
+
 const entitlementDiscovery = (
   kind: "metadata" | "retention",
+  assertedAvailability: BoxEntitlementAvailability,
   count: Effect.Effect<number, B.BoxError>
 ): Effect.Effect<BoxDiscovery, B.BoxError> =>
   count.pipe(
     Effect.map((value) => BoxDiscoveryAvailable.make({ count: value, kind })),
-    Effect.catchTag("BoxError", (error) =>
-      O.contains(error.status, 403)
-        ? Effect.succeed(BoxDiscoveryBlocked.make({ kind, status: 403 }))
-        : Effect.fail(error)
-    )
+    Effect.catchTag("BoxError", (error) => {
+      if (O.contains(error.status, 403)) {
+        return Effect.succeed(forbiddenDiscovery(kind, assertedAvailability, error.code));
+      }
+      return Effect.fail(error);
+    })
   );
 
 const countOptionalEntries = (entries: ReadonlyArray<unknown> | null | undefined): number =>
   A.length(O.getOrElse(O.fromNullishOr(entries), A.empty));
 
-const observeMetadata = (box: B.Box["Service"], rootFolderId: BoxProviderId): Effect.Effect<BoxDiscovery, B.BoxError> =>
+const observeMetadata = (
+  box: B.Box["Service"],
+  rootFolderId: BoxProviderId,
+  assertedAvailability: BoxEntitlementAvailability
+): Effect.Effect<BoxDiscovery, B.BoxError> =>
   entitlementDiscovery(
     "metadata",
+    assertedAvailability,
     Effect.all(
       [
         box.folderMetadata.getFolderMetadata(B.FolderMetadataGetFolderMetadataPayload.make({ folderId: rootFolderId })),
@@ -233,11 +262,15 @@ const observeMetadata = (box: B.Box["Service"], rootFolderId: BoxProviderId): Ef
             queryParams: { folderId: rootFolderId },
           })
         ),
-        box.metadataTemplates.getEnterpriseMetadataTemplates(
-          B.MetadataTemplatesGetEnterpriseMetadataTemplatesPayload.make({ queryParams: { limit: markerPageLimit } })
+        collectMarkerPages<B.MetadataTemplate, B.BoxError>((marker) =>
+          box.metadataTemplates.getEnterpriseMetadataTemplates(
+            B.MetadataTemplatesGetEnterpriseMetadataTemplatesPayload.make({ queryParams: markerQuery(marker) })
+          )
         ),
-        box.metadataTemplates.getGlobalMetadataTemplates(
-          B.MetadataTemplatesGetGlobalMetadataTemplatesPayload.make({ queryParams: { limit: markerPageLimit } })
+        collectMarkerPages<B.MetadataTemplate, B.BoxError>((marker) =>
+          box.metadataTemplates.getGlobalMetadataTemplates(
+            B.MetadataTemplatesGetGlobalMetadataTemplatesPayload.make({ queryParams: markerQuery(marker) })
+          )
         ),
       ],
       { concurrency: 1 }
@@ -247,8 +280,8 @@ const observeMetadata = (box: B.Box["Service"], rootFolderId: BoxProviderId): Ef
           [
             countOptionalEntries(folderMetadata.entries),
             countOptionalEntries(cascadePolicies.entries),
-            countOptionalEntries(enterpriseTemplates.entries),
-            countOptionalEntries(globalTemplates.entries),
+            A.length(enterpriseTemplates),
+            A.length(globalTemplates),
           ],
           0,
           (count, itemCount) => count + itemCount
@@ -257,9 +290,13 @@ const observeMetadata = (box: B.Box["Service"], rootFolderId: BoxProviderId): Ef
     )
   );
 
-const observeRetention = (box: B.Box["Service"]): Effect.Effect<BoxDiscovery, B.BoxError> =>
+const observeRetention = (
+  box: B.Box["Service"],
+  assertedAvailability: BoxEntitlementAvailability
+): Effect.Effect<BoxDiscovery, B.BoxError> =>
   entitlementDiscovery(
     "retention",
+    assertedAvailability,
     collectMarkerPages<B.RetentionPolicy, B.BoxError>((marker) =>
       box.retentionPolicies.getRetentionPolicies(
         B.RetentionPoliciesGetRetentionPoliciesPayload.make({ queryParams: markerQuery(marker) })
@@ -327,8 +364,8 @@ const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
       [
         observeCollaborations(box, folders),
         observeWebhooks(box),
-        observeMetadata(box, rootFolderId),
-        observeRetention(box),
+        observeMetadata(box, rootFolderId, desired.entitlements.metadata),
+        observeRetention(box, desired.entitlements.retention),
         observeSignRequests(box),
         observeSignTemplates(box),
       ],
@@ -367,9 +404,9 @@ export interface BoxProvisioningInventoryShape {
  * **Details**
  *
  * Folder, collaboration, webhook, retention, and Sign listings follow marker
- * pagination. Metadata and retention 403 responses become typed entitlement
- * discovery results; every other driver error remains in the Effect error
- * channel. The service exposes no write verb.
+ * pagination. Metadata and retention 403 responses distinguish missing scopes
+ * from asserted subscription blockers; every other driver error remains in
+ * the Effect error channel. The service exposes no write verb.
  *
  * **Example** (Build the inventory layer from Box)
  *
