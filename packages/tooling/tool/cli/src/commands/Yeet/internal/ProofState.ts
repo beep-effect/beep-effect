@@ -19,6 +19,9 @@ import {
   commandTextForStep,
   currentEffectiveUserIdOption,
   isProcessPidAlive,
+  ProcessIdentityStatus,
+  processIdentityStatus,
+  processStartIdentityForPid,
   validatePrivateCoordinationDirectory,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -82,6 +85,7 @@ const proofLockOwnerFields = {
   checkoutRoot: S.String,
   command: S.String,
   pid: S.Finite,
+  procStart: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
   proofTier: YeetProofTier,
   startedAt: S.String,
 };
@@ -112,6 +116,18 @@ class YeetProofLockState extends S.Class<YeetProofLockState>($I`YeetProofLockSta
   })
 ) {}
 
+class YeetProofLockRetirementState extends S.Class<YeetProofLockRetirementState>($I`YeetProofLockRetirementState`)(
+  {
+    schemaVersion: S.Literal("yeet-proof-lock/v4"),
+    coordination: S.Literal("quality-scheduler/v1"),
+    retiredAt: S.String,
+  },
+  $I.annote("YeetProofLockRetirementState", {
+    description:
+      "Persistent marker retiring the exclusive origin lock after the weighted quality scheduler becomes authoritative.",
+  })
+) {}
+
 class YeetProofLockReapClaim extends S.Class<YeetProofLockReapClaim>($I`YeetProofLockReapClaim`)(
   {
     schemaVersion: S.Literal("yeet-proof-lock-reap-claim/v1"),
@@ -123,7 +139,13 @@ class YeetProofLockReapClaim extends S.Class<YeetProofLockReapClaim>($I`YeetProo
   })
 ) {}
 
-const ProofLockDisposition = LiteralKit(["replace-stale", "refuse-active", "refuse-legacy", "refuse-unreadable"]).pipe(
+const ProofLockDisposition = LiteralKit([
+  "replace-stale",
+  "refuse-active",
+  "refuse-legacy",
+  "refuse-unreadable",
+  "refuse-unverifiable",
+]).pipe(
   $I.annoteSchema("ProofLockDisposition", {
     description: "Fail-closed action selected for one observed proof-lock generation.",
   })
@@ -435,20 +457,23 @@ export const YeetProofLockStateForTesting = YeetProofLockState;
 
 const decodeProofLockState = S.decodeUnknownEffect(S.fromJsonString(YeetProofLockState));
 const decodeProofLockStateV2 = S.decodeUnknownEffect(S.fromJsonString(YeetProofLockStateV2));
+const decodeProofLockRetirementState = S.decodeUnknownEffect(S.fromJsonString(YeetProofLockRetirementState));
 const decodeProofLockReapClaim = S.decodeUnknownEffect(S.fromJsonString(YeetProofLockReapClaim));
 
 const proofLockDisposition = (
   state: O.Option<YeetProofLockState>,
-  ownerAlive: boolean,
+  ownerStatus: ProcessIdentityStatus,
   legacyState: boolean
 ): ProofLockDisposition =>
   legacyState
     ? ProofLockDisposition.Enum["refuse-legacy"]
     : O.isNone(state)
       ? ProofLockDisposition.Enum["refuse-unreadable"]
-      : ownerAlive
-        ? ProofLockDisposition.Enum["refuse-active"]
-        : ProofLockDisposition.Enum["replace-stale"];
+      : ProcessIdentityStatus.$match(ownerStatus, {
+          alive: () => ProofLockDisposition.Enum["refuse-active"],
+          dead: () => ProofLockDisposition.Enum["replace-stale"],
+          unknown: () => ProofLockDisposition.Enum["refuse-unverifiable"],
+        });
 
 /**
  * Decide whether an existing proof lock is stale, active, legacy, or unreadable.
@@ -470,15 +495,18 @@ const proofLockDisposition = (
  *   startedAt: "2026-07-08T00:00:00.000Z"
  * })
  *
- * strictEqual(proofLockDispositionForTesting(O.some(state), false, false), "replace-stale")
+ * strictEqual(proofLockDispositionForTesting(O.some(state), "dead", false), "replace-stale")
  * ```
  *
  * @category testing
  * @since 0.0.0
  */
 export const proofLockDispositionForTesting: {
-  (ownerAlive: boolean, legacyState: boolean): (state: O.Option<YeetProofLockState>) => ProofLockDisposition;
-  (state: O.Option<YeetProofLockState>, ownerAlive: boolean, legacyState: boolean): ProofLockDisposition;
+  (
+    ownerStatus: ProcessIdentityStatus,
+    legacyState: boolean
+  ): (state: O.Option<YeetProofLockState>) => ProofLockDisposition;
+  (state: O.Option<YeetProofLockState>, ownerStatus: ProcessIdentityStatus, legacyState: boolean): ProofLockDisposition;
 } = dual(3, proofLockDisposition);
 
 // Atomic exclusive create: succeeds only when this process is the one that
@@ -690,9 +718,10 @@ const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(func
   }
 
   return yield* Effect.gen(function* () {
-    const currentText = yield* fs
-      .readFileString(lockPath)
-      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    const currentText = yield* readProofCoordinationFile(
+      lockPath,
+      `Failed to revalidate Yeet proof lock at ${lockPath} before atomic movement.`
+    );
     if (O.isNone(currentText) || !Str.Equivalence(currentText.value, observedText)) {
       return false;
     }
@@ -746,7 +775,8 @@ export const tryReclaimStaleProofLockForTesting = tryReclaimStaleProofLock;
 
 interface ObservedProofLockState {
   readonly legacyState: O.Option<YeetProofLockStateV2>;
-  readonly ownerAlive: boolean;
+  readonly ownerStatus: ProcessIdentityStatus;
+  readonly retirementState: O.Option<YeetProofLockRetirementState>;
   readonly state: O.Option<YeetProofLockState>;
   readonly text: string;
 }
@@ -755,9 +785,11 @@ interface ObservedProofLockState {
 // decoder purely so decodable v2 locks can be refused instead of reclaimed.
 const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* (
   lockPath: string
-): Effect.fn.Return<ObservedProofLockState, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => ""));
+): Effect.fn.Return<ObservedProofLockState, YeetCommandError, FileSystem.FileSystem> {
+  const text = O.getOrElse(
+    yield* readProofCoordinationFile(lockPath, `Failed to inspect Yeet proof lock at ${lockPath}.`),
+    () => ""
+  );
   const state = yield* decodeProofLockState(text).pipe(
     Effect.map(O.some),
     Effect.orElseSucceed(O.none<YeetProofLockState>)
@@ -765,14 +797,21 @@ const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* 
   const legacyState = O.isNone(state)
     ? yield* decodeProofLockStateV2(text).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<YeetProofLockStateV2>))
     : O.none<YeetProofLockStateV2>();
-  const ownerAlive = yield* pipe(
+  const retirementState =
+    O.isNone(state) && O.isNone(legacyState)
+      ? yield* decodeProofLockRetirementState(text).pipe(
+          Effect.map(O.some),
+          Effect.orElseSucceed(O.none<YeetProofLockRetirementState>)
+        )
+      : O.none<YeetProofLockRetirementState>();
+  const ownerStatus = yield* pipe(
     state,
     O.match({
-      onNone: () => Effect.succeed(false),
-      onSome: (owner) => isProcessPidAlive(owner.pid),
+      onNone: () => Effect.succeed(ProcessIdentityStatus.Enum.dead),
+      onSome: processIdentityStatus,
     })
   );
-  return { text, state, legacyState, ownerAlive };
+  return { text, state, legacyState, retirementState, ownerStatus };
 });
 
 const tryReplaceStaleProofLock = Effect.fn("Yeet.tryReplaceStaleProofLock")(function* (
@@ -805,10 +844,91 @@ const activeProofLockRefusal = (lockPath: string, state: O.Option<YeetProofLockS
   });
 };
 
+const unverifiableProofLockRefusal = (lockPath: string, owner: YeetProofLockState): YeetCommandError =>
+  YeetCommandError.make({
+    message:
+      `Cannot verify the process identity recorded by the Yeet proof lock at ${lockPath}. ` +
+      `Owner checkout ${owner.checkoutRoot} on ${owner.branch}, pid ${owner.pid}, started ${owner.startedAt}.\n` +
+      "The coordinator refuses both unsafe reclamation and indefinite queueing behind an unverifiable PID. " +
+      "Retry after process identity inspection is available, or remove the lock only after independently confirming its owner is gone.",
+    command: "bun run beep yeet verify",
+    exitCode: 1,
+    file: lockPath,
+  });
+
+/**
+ * Build the fail-closed refusal used for a live PID whose process identity cannot be inspected.
+ *
+ * **Example** (Inspect an unverifiable-owner refusal)
+ *
+ * ```ts
+ * import { unverifiableProofLockRefusalForTesting, YeetProofLockStateForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * const owner = YeetProofLockStateForTesting.make({
+ *   branch: "feature/closeout",
+ *   checkoutRoot: "/repo",
+ *   command: "bun run beep yeet verify",
+ *   pid: 12345,
+ *   procStart: "ps:unavailable",
+ *   proofTier: "full",
+ *   schemaVersion: "yeet-proof-lock/v3",
+ *   startedAt: "2026-08-31T00:00:00.000Z"
+ * })
+ *
+ * console.log(unverifiableProofLockRefusalForTesting("/runtime/proof.lock", owner).exitCode) // 1
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const unverifiableProofLockRefusalForTesting: {
+  (owner: YeetProofLockState): (lockPath: string) => YeetCommandError;
+  (lockPath: string, owner: YeetProofLockState): YeetCommandError;
+} = dual(2, unverifiableProofLockRefusal);
+
 interface FullProofLockContention {
   readonly lease: O.Option<YeetProofLockLease>;
   readonly observed: ObservedProofLockState;
 }
+
+const noFullProofLockLease = (observed: ObservedProofLockState): FullProofLockContention => ({
+  lease: O.none(),
+  observed,
+});
+
+const refuseLegacyProofLockContention = Effect.fn("Yeet.refuseLegacyProofLockContention")(function* (
+  lockPath: string,
+  legacyState: YeetProofLockStateV2
+): Effect.fn.Return<FullProofLockContention, YeetCommandError> {
+  return yield* legacyProofLockRefusal(lockPath, legacyState);
+});
+
+const refuseUnverifiableProofLockContention = Effect.fn("Yeet.refuseUnverifiableProofLockContention")(function* (
+  lockPath: string,
+  owner: YeetProofLockState
+): Effect.fn.Return<FullProofLockContention, YeetCommandError> {
+  return yield* unverifiableProofLockRefusal(lockPath, owner);
+});
+
+const replaceStaleProofLockContention = Effect.fn("Yeet.replaceStaleProofLockContention")(function* (
+  lockPath: string,
+  lockText: string,
+  lease: YeetProofLockLease,
+  observed: ObservedProofLockState,
+  owner: YeetProofLockState
+): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  yield* Console.error(
+    `[yeet] reaping stale full-proof lock (pid ${owner.pid}, started ${owner.startedAt}, is no longer the recorded process identity)`
+  );
+  if (yield* tryReplaceStaleProofLock(lockPath, observed.text, lockText)) {
+    return { lease: O.some(lease), observed };
+  }
+  const current = yield* observeProofLockState(lockPath);
+  return yield* O.match(current.legacyState, {
+    onNone: () => Effect.succeed(noFullProofLockLease(current)),
+    onSome: (legacyState) => refuseLegacyProofLockContention(lockPath, legacyState),
+  });
+});
 
 // The single contention ladder shared by the fail-fast and queue-style
 // acquisition paths: refuse legacy, reap a decodable-dead owner, and report
@@ -818,26 +938,16 @@ const contendForFullProofLockCore = Effect.fn("Yeet.contendForFullProofLockCore"
   lockText: string,
   lease: YeetProofLockLease
 ): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
-  let observed = yield* observeProofLockState(lockPath);
-  const disposition = proofLockDisposition(observed.state, observed.ownerAlive, O.isSome(observed.legacyState));
-  if (ProofLockDisposition.is["refuse-legacy"](disposition) && O.isSome(observed.legacyState)) {
-    return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
-  }
-
-  if (ProofLockDisposition.is["replace-stale"](disposition) && O.isSome(observed.state)) {
-    yield* Console.error(
-      `[yeet] reaping stale full-proof lock (pid ${observed.state.value.pid} is not running, started ${observed.state.value.startedAt})`
-    );
-    if (yield* tryReplaceStaleProofLock(lockPath, observed.text, lockText)) {
-      return { lease: O.some(lease), observed };
-    }
-    observed = yield* observeProofLockState(lockPath);
-  }
-
-  if (O.isSome(observed.legacyState)) {
-    return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
-  }
-  return { lease: O.none(), observed };
+  const observed = yield* observeProofLockState(lockPath);
+  const disposition = proofLockDisposition(observed.state, observed.ownerStatus, O.isSome(observed.legacyState));
+  return yield* ProofLockDisposition.$match(disposition, {
+    "refuse-active": () => Effect.succeed(noFullProofLockLease(observed)),
+    "refuse-legacy": () => refuseLegacyProofLockContention(lockPath, O.getOrThrow(observed.legacyState)),
+    "refuse-unreadable": () => Effect.succeed(noFullProofLockLease(observed)),
+    "refuse-unverifiable": () => refuseUnverifiableProofLockContention(lockPath, O.getOrThrow(observed.state)),
+    "replace-stale": () =>
+      replaceStaleProofLockContention(lockPath, lockText, lease, observed, O.getOrThrow(observed.state)),
+  });
 });
 
 const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(function* (
@@ -853,13 +963,13 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
 });
 
 /**
- * Atomically acquire the full-proof lock for heavyweight Yeet verification.
+ * Acquire the legacy v3 full-proof lock for compatibility and migration tests.
  *
  * **Example** (Acquire full-proof lock)
  *
  * ```ts
  * import { Effect } from "effect"
- * import { acquireFullProofLock, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { acquireLegacyFullProofLockForTesting, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
  *   base: "origin/main",
@@ -883,7 +993,9 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
  *   scope: "repo"
  * })
  *
- * const acquired = acquireFullProofLock(context, [step]).pipe(Effect.map((lease) => lease.lockPath.endsWith(".lock")))
+ * const acquired = acquireLegacyFullProofLockForTesting(context, [step]).pipe(
+ *   Effect.map((lease) => lease.lockPath.endsWith(".lock"))
+ * )
  * ```
  *
  * @param context - Repo context whose origin identifies sibling checkouts.
@@ -892,7 +1004,7 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
  * @category resource-management
  * @since 0.0.0
  */
-export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(function* (
+const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(function* (
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<
@@ -906,6 +1018,22 @@ export const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(funct
   }
   return yield* contendForFullProofLock(prepared.lockPath, prepared.lockText, prepared.lease);
 });
+
+/**
+ * Compatibility alias exposing legacy v3 fail-closed acquisition to tests.
+ *
+ * **Example** (Reference the legacy test seam)
+ *
+ * ```ts
+ * import { acquireLegacyFullProofLockForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireLegacyFullProofLockForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireLegacyFullProofLockForTesting = acquireFullProofLock;
 
 interface PreparedFullProofLockLease {
   readonly lease: YeetProofLockLease;
@@ -930,14 +1058,29 @@ const prepareFullProofLockLeaseAt = Effect.fn("Yeet.prepareFullProofLockLeaseAt"
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  return yield* prepareFullProofLockLeaseForCommandAt(
+    lockPath,
+    context,
+    proofCommandForSteps(proofSteps),
+    O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "")
+  );
+});
+
+const prepareFullProofLockLeaseForCommandAt = Effect.fn("Yeet.prepareFullProofLockLeaseForCommandAt")(function* (
+  lockPath: string,
+  context: RepoRunContext,
+  command: string,
+  procStart: string
+): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
   const lockState = YeetProofLockState.make({
     schemaVersion: "yeet-proof-lock/v3",
     branch: context.branch,
     checkoutRoot: context.repoRoot,
-    command: proofCommandForSteps(proofSteps),
+    command,
     pid: process.pid,
+    procStart,
     proofTier: "full",
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
   });
@@ -964,8 +1107,17 @@ const contendOrObserveFullProofLock = Effect.fn("Yeet.contendOrObserveFullProofL
   return contention.lease;
 });
 
+const tryAcquirePreparedFullProofLock = Effect.fn("Yeet.tryAcquirePreparedFullProofLock")(function* (
+  prepared: PreparedFullProofLockLease
+): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
+    return O.some(prepared.lease);
+  }
+  return yield* contendOrObserveFullProofLock(prepared.lockPath, prepared.lockText, prepared.lease);
+});
+
 /**
- * Attempt one non-blocking acquisition of the full-proof coordinator.
+ * Attempt one non-blocking acquisition of the legacy v3 full-proof coordinator.
  *
  * Succeeds with `None` while a live sibling owns the lock, so queue-style
  * callers (the machine-wide admission scheduler) can keep waiting with
@@ -975,7 +1127,7 @@ const contendOrObserveFullProofLock = Effect.fn("Yeet.contendOrObserveFullProofL
  * **Example** (Attempt an acquisition without blocking)
  *
  * ```ts
- * import { acquireFullProofLockOrObserve, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { acquireLegacyFullProofLockOrObserveForTesting, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
@@ -1001,7 +1153,7 @@ const contendOrObserveFullProofLock = Effect.fn("Yeet.contendOrObserveFullProofL
  *   scope: "repo"
  * })
  *
- * const attempt = acquireFullProofLockOrObserve(context, [step]).pipe(
+ * const attempt = acquireLegacyFullProofLockOrObserveForTesting(context, [step]).pipe(
  *   Effect.map((acquisition) => O.isOption(acquisition))
  * )
  * console.log(Effect.isEffect(attempt)) // true
@@ -1013,7 +1165,7 @@ const contendOrObserveFullProofLock = Effect.fn("Yeet.contendOrObserveFullProofL
  * @category resource-management
  * @since 0.0.0
  */
-export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLockOrObserve")(function* (
+const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLockOrObserve")(function* (
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<
@@ -1026,7 +1178,23 @@ export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLoc
 });
 
 /**
- * {@link acquireFullProofLockOrObserve} against an already-resolved lock path.
+ * Compatibility alias exposing legacy v3 queue-style acquisition to tests.
+ *
+ * **Example** (Reference the legacy queue test seam)
+ *
+ * ```ts
+ * import { acquireLegacyFullProofLockOrObserveForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireLegacyFullProofLockOrObserveForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireLegacyFullProofLockOrObserveForTesting = acquireFullProofLockOrObserve;
+
+/**
+ * The legacy queue-style acquisition against an already-resolved lock path.
  *
  * Queue-style callers resolve the git origin identity once per run and retry
  * acquisition every scheduler tick without re-spawning git.
@@ -1034,9 +1202,9 @@ export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLoc
  * **Example** (Reference the resolved-path acquisition)
  *
  * ```ts
- * import { acquireFullProofLockOrObserveAtPath } from "@beep/repo-cli/test/Yeet"
+ * import { acquireLegacyFullProofLockOrObserveAtPathForTesting } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(typeof acquireFullProofLockOrObserveAtPath) // "function"
+ * console.log(typeof acquireLegacyFullProofLockOrObserveAtPathForTesting) // "function"
  * ```
  *
  * @param lockPath - Resolved coordinator lock path for this origin.
@@ -1046,17 +1214,245 @@ export const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLoc
  * @category resource-management
  * @since 0.0.0
  */
-export const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullProofLockOrObserveAtPath")(function* (
+const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullProofLockOrObserveAtPath")(function* (
   lockPath: string,
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
 ): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const prepared = yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
-  if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
-    return O.some(prepared.lease);
-  }
-  return yield* contendOrObserveFullProofLock(prepared.lockPath, prepared.lockText, prepared.lease);
+  return yield* tryAcquirePreparedFullProofLock(prepared);
 });
+
+/**
+ * Compatibility alias exposing resolved-path legacy v3 acquisition to tests.
+ *
+ * **Example** (Reference the resolved-path legacy test seam)
+ *
+ * ```ts
+ * import { acquireLegacyFullProofLockOrObserveAtPathForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireLegacyFullProofLockOrObserveAtPathForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireLegacyFullProofLockOrObserveAtPathForTesting = acquireFullProofLockOrObserveAtPath;
+
+const observeProofLockRetirementReplacement = Effect.fn("Yeet.observeProofLockRetirementReplacement")(function* (
+  lockPath: string
+): Effect.fn.Return<O.Option<boolean>, YeetCommandError, FileSystem.FileSystem> {
+  const replacement = yield* observeProofLockState(lockPath);
+  if (O.isSome(replacement.retirementState)) {
+    return O.some(true);
+  }
+  if (O.isSome(replacement.legacyState)) {
+    return yield* legacyProofLockRefusal(lockPath, replacement.legacyState.value);
+  }
+  if (O.isSome(replacement.state) || Str.isEmpty(replacement.text)) {
+    return O.none();
+  }
+  return yield* activeProofLockRefusal(lockPath, replacement.state);
+});
+
+const replaceStaleProofLockWithRetirement = Effect.fn("Yeet.replaceStaleProofLockWithRetirement")(function* (
+  lockPath: string,
+  retirementText: string,
+  owner: YeetProofLockState,
+  observed: ObservedProofLockState
+): Effect.fn.Return<O.Option<boolean>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  yield* Console.error(
+    `[yeet] retiring stale v3 full-proof lock (pid ${owner.pid}, started ${owner.startedAt}, is no longer the recorded process identity)`
+  );
+  if (yield* tryReplaceStaleProofLock(lockPath, observed.text, retirementText)) {
+    return O.some(true);
+  }
+  return yield* observeProofLockRetirementReplacement(lockPath);
+});
+
+const retireObservedProofLock = Effect.fn("Yeet.retireObservedProofLock")(function* (
+  lockPath: string,
+  retirementText: string,
+  observed: ObservedProofLockState
+): Effect.fn.Return<O.Option<boolean>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+  if (O.isSome(observed.retirementState)) {
+    return O.some(true);
+  }
+  if (O.isSome(observed.legacyState)) {
+    return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
+  }
+  return yield* pipe(
+    observed.state,
+    O.match({
+      onNone: () =>
+        Str.isEmpty(observed.text)
+          ? tryClaimProofLockExclusive(lockPath, retirementText).pipe(
+              Effect.map((claimed) => (claimed ? O.some(true) : O.none()))
+            )
+          : Effect.fail(activeProofLockRefusal(lockPath, observed.state)),
+      onSome: (owner) =>
+        ProcessIdentityStatus.$match(observed.ownerStatus, {
+          alive: () => Effect.succeed(O.none<boolean>()),
+          dead: () => replaceStaleProofLockWithRetirement(lockPath, retirementText, owner, observed),
+          unknown: () => Effect.fail(unverifiableProofLockRefusal(lockPath, owner)),
+        }),
+    })
+  );
+});
+
+/**
+ * Retire the exclusive origin lock once every prior-version owner has drained.
+ *
+ * **Details**
+ *
+ * The persistent v4 marker makes the weighted scheduler the sole current-version
+ * admission authority. Older v3 clients cannot decode the marker and therefore
+ * fail closed instead of racing a current proof. A live v3 owner yields `None`;
+ * a stale v3 owner is replaced through the existing observation-bound CAS path.
+ *
+ * **Example** (Reference the lock-retirement operation)
+ *
+ * ```ts
+ * import { retireFullProofLockOrObserveAtPath } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof retireFullProofLockOrObserveAtPath) // "function"
+ * ```
+ *
+ * @param lockPath - Existing per-origin coordinator path being retired.
+ * @returns `Some(true)` when the retirement marker is installed, otherwise
+ * `None` while a live v3 owner is still draining.
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const retireFullProofLockOrObserveAtPath = Effect.fn("Yeet.retireFullProofLockOrObserveAtPath")(function* (
+  lockPath: string
+): Effect.fn.Return<O.Option<boolean>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
+  const retirementText = `${yield* renderJson(
+    YeetProofLockRetirementState.make({
+      schemaVersion: "yeet-proof-lock/v4",
+      coordination: "quality-scheduler/v1",
+      retiredAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
+    })
+  )}\n`;
+  if (yield* tryClaimProofLockExclusive(lockPath, retirementText)) {
+    return O.some(true);
+  }
+  return yield* retireObservedProofLock(lockPath, retirementText, yield* observeProofLockState(lockPath));
+});
+
+const acquireFullProofFallbackLockOrObserveAtPathWithProcessStart = Effect.fn(
+  "Yeet.acquireFullProofFallbackLockOrObserveAtPathWithProcessStart"
+)(function* (
+  lockPath: string,
+  context: RepoRunContext,
+  command: string,
+  processStart: O.Option<string>
+): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+  const procStart = yield* pipe(
+    processStart,
+    O.match({
+      onNone: () =>
+        Effect.fail(
+          YeetCommandError.make({
+            message:
+              `Cannot acquire the machine-wide Yeet proof fallback lock at ${fallbackPath} because the current ` +
+              "process start identity is unavailable. Refusing PID-only ownership because PID reuse could strand the lock.",
+            command,
+            exitCode: 1,
+            file: fallbackPath,
+          })
+        ),
+      onSome: Effect.succeed,
+    })
+  );
+  const prepared = yield* prepareFullProofLockLeaseForCommandAt(fallbackPath, context, command, procStart);
+  return yield* tryAcquirePreparedFullProofLock(prepared);
+});
+
+/**
+ * Attempt the exclusive fallback lock used below the scheduler memory envelope.
+ *
+ * **Details**
+ *
+ * The fallback has one fixed path in the machine-wide proof-coordinator
+ * directory because each original origin path remains a persistent v4
+ * retirement marker. Every repository origin therefore contends for the same
+ * lock on machines that cannot safely create a weighted admission slot.
+ *
+ * **Example** (Reference the fallback acquisition)
+ *
+ * ```ts
+ * import { acquireFullProofFallbackLockOrObserveAtPath } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof acquireFullProofFallbackLockOrObserveAtPath) // "function"
+ * ```
+ *
+ * @param lockPath - Retired per-origin path whose parent is the machine-wide
+ * proof-coordinator directory.
+ * @param context - Repo context recorded as the prospective fallback owner.
+ * @param command - Full proof command recorded in fallback lock metadata.
+ * @returns The acquired fallback lease, or `None` while another current proof owns it.
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
+  "Yeet.acquireFullProofFallbackLockOrObserveAtPath"
+)(function* (
+  lockPath: string,
+  context: RepoRunContext,
+  command: string
+): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  return yield* acquireFullProofFallbackLockOrObserveAtPathWithProcessStart(
+    lockPath,
+    context,
+    command,
+    yield* processStartIdentityForPid(process.pid)
+  );
+});
+
+/**
+ * Exercise machine-wide fallback acquisition with an explicit process identity.
+ *
+ * **Example** (Model an unavailable process identity)
+ *
+ * ```ts
+ * import { acquireFullProofFallbackLockOrObserveAtPathForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { Option } from "effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/closeout",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ *
+ * const guarded = acquireFullProofFallbackLockOrObserveAtPathForTesting(
+ *   ".beep/yeet/proof.lock",
+ *   context,
+ *   "bun run beep yeet verify",
+ *   Option.none()
+ * )
+ * void guarded
+ * ```
+ *
+ * @param lockPath - Retired per-origin path used to locate the fallback lock.
+ * @param context - Repo context recorded as the prospective fallback owner.
+ * @param command - Full proof command recorded in fallback lock metadata.
+ * @param processStart - Explicit process-start identity used by the test.
+ * @returns The guarded fallback acquisition effect.
+ * @category testing
+ * @since 0.0.0
+ */
+export const acquireFullProofFallbackLockOrObserveAtPathForTesting =
+  acquireFullProofFallbackLockOrObserveAtPathWithProcessStart;
 
 /**
  * Remove a previously acquired full-proof lock path.
@@ -1066,7 +1462,7 @@ export const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullPr
  * ```ts
  * import { Effect } from "effect"
  * import {
- *   acquireFullProofLock,
+ *   acquireLegacyFullProofLockForTesting,
  *   releaseProofLock,
  *   RepoPlanStep,
  *   RepoRunContext
@@ -1095,14 +1491,14 @@ export const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullPr
  * })
  *
  * const guarded = Effect.acquireUseRelease(
- *   acquireFullProofLock(context, [step]),
+ *   acquireLegacyFullProofLockForTesting(context, [step]),
  *   (lease) => Effect.succeed(lease.lockPath),
  *   releaseProofLock
  * )
  * console.log(Effect.isEffect(guarded)) // true
  * ```
  *
- * @param lease - Exact lock generation returned by {@link acquireFullProofLock}.
+ * @param lease - Exact lock generation returned by the legacy acquisition test seam.
  * @returns An Effect that removes only the generation owned by the lease.
  * @category resource-management
  * @since 0.0.0

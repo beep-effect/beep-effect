@@ -12,9 +12,13 @@ import {
   appendAdmissionJournalEvent,
   decodeAdmissionJournalEvent,
   isOvershootLoserForTesting,
+  isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
   noAdmissionOriginGate,
   parseAdmissionProcStatStartTime,
+  processIdentityStatus,
+  processIdentityStatusWithStartForTesting,
+  processStartIdentityForPid,
   provideRuntimeRootForTesting,
   RunScopeRecord,
   RuntimeRootChoice,
@@ -22,6 +26,7 @@ import {
   releaseAdmissionJournalLockForTesting,
   withQualityAdmission,
   YeetAdmissionLease,
+  YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -42,6 +47,57 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 
 const DEAD_PID = 2_147_483_647;
 
+describe("process identity liveness", () => {
+  it.effect("uses a portable process identity when procfs is unavailable", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const withoutProcfs = FileSystem.FileSystem.of({
+        ...fs,
+        readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) =>
+          Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding)
+        ),
+      });
+      const identity = yield* processStartIdentityForPid(process.pid).pipe(
+        Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+      );
+
+      expect(O.isSome(identity)).toBe(true);
+      if (O.isSome(identity)) {
+        expect(Str.startsWith(process.platform === "win32" ? "win:" : "ps:")(identity.value)).toBe(true);
+        expect(
+          yield* processIdentityStatus({ pid: process.pid, procStart: identity.value }).pipe(
+            Effect.provideService(FileSystem.FileSystem, withoutProcfs)
+          )
+        ).toBe("alive");
+      }
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("classifies a recorded identity as unknown when the current process start is unreadable", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* processIdentityStatusWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
+      ).toBe("unknown");
+    })
+  );
+
+  it.effect("retains an unverifiable recorded identity during admission repair", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "recorded-start" }, O.none())
+      ).toBe(true);
+    })
+  );
+
+  it.effect("retains PID-only liveness for legacy identities", () =>
+    Effect.gen(function* () {
+      expect(yield* isProcessIdentityAliveWithStartForTesting({ pid: process.pid, procStart: "" }, O.none())).toBe(
+        true
+      );
+    })
+  );
+});
+
 // Millisecond-scale intervals so queue loops resolve fast under the real clock.
 const fastConfig = AdmissionConfig.make({
   heartbeatSeconds: 0.02,
@@ -52,6 +108,7 @@ const fastConfig = AdmissionConfig.make({
 
 const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
+const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
 
@@ -205,6 +262,38 @@ const writeFakeLease = Effect.fnUntraced(function* (
   const filePath = path.join(tempRoot.leases, name);
   yield* fs.writeFileString(filePath, `${yield* encodeLease(lease)}\n`);
   return filePath;
+});
+
+const writeLegacyTicket = Effect.fnUntraced(function* (
+  tempRoot: AdmissionTempRoot,
+  options: {
+    readonly enqueuedAtMillis: number;
+    readonly nonce: string;
+    readonly originKey: string;
+  }
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const ticketPath = path.join(tempRoot.queue, `legacy-${options.nonce}.ticket.json`);
+  const ticketText = yield* encodeJsonObject({
+    schemaVersion: "yeet-admission-ticket/v1",
+    pid: process.pid,
+    procStart: yield* ownProcStart(),
+    kind: "full-proof",
+    weightTokens: 3,
+    priority: "verify",
+    originKey: options.originKey,
+    checkoutRoot: "/repo/legacy",
+    branch: "feat/legacy",
+    command: "bun run beep yeet verify",
+    enqueuedAtMillis: options.enqueuedAtMillis,
+    heartbeatAtMillis: options.enqueuedAtMillis,
+    blockedOnOriginAtMillis: 0,
+    nonce: options.nonce,
+  });
+  yield* fs.makeDirectory(tempRoot.queue, { recursive: true, mode: 0o700 });
+  yield* fs.writeFileString(ticketPath, `${ticketText}\n`);
+  return ticketPath;
 });
 
 // Transient .tmp- staging files are atomically renamed away; only settled
@@ -622,22 +711,20 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("keeps a same-origin contender queued without blocking a different origin behind it", () =>
+  it("admits a same-origin contender when its weight fits beside the active lease", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
             yield* writeFakeLease(tempRoot, { weightTokens: 3, originKey: "origin-busy" });
-            const sameOrigin = yield* Effect.forkChild(
-              withQualityAdmission(
-                request({ originKey: "origin-busy", checkoutRoot: "/repo/busy" }),
-                noAdmissionOriginGate,
-                Effect.succeed("same"),
-                fastConfig
-              )
+            const sameOrigin = yield* withQualityAdmission(
+              request({ originKey: "origin-busy", checkoutRoot: "/repo/busy" }),
+              noAdmissionOriginGate,
+              Effect.succeed("same"),
+              fastConfig
             );
-            yield* Effect.sleep("80 millis");
+            expect(sameOrigin).toBe("same");
             const otherOrigin = yield* withQualityAdmission(
               request({ originKey: "origin-free", checkoutRoot: "/repo/free" }),
               noAdmissionOriginGate,
@@ -645,9 +732,178 @@ describe("quality-scheduler", () => {
               fastConfig
             );
             expect(otherOrigin).toBe("other");
-            // The same-origin contender is still waiting on its origin's lease.
-            expect(sameOrigin.pollUnsafe()).toBeUndefined();
-            yield* Fiber.interrupt(sameOrigin);
+          })
+        );
+      })
+    ));
+
+  it("serializes a same-checkout contender while allowing a sibling checkout", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const blocking = yield* writeFakeLease(tempRoot, {
+              checkoutRoot: "/repo/shared",
+              originKey: "origin-active",
+              weightTokens: 3,
+            });
+            const sameCheckout = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ checkoutRoot: "/repo/shared", originKey: "origin-contender" }),
+                noAdmissionOriginGate,
+                Effect.succeed("same-checkout"),
+                fastConfig
+              )
+            );
+
+            yield* Effect.sleep("120 millis");
+            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            expect(sameCheckout.pollUnsafe()).toBeUndefined();
+
+            const sibling = yield* withQualityAdmission(
+              request({ checkoutRoot: "/repo/sibling", originKey: "origin-contender" }),
+              noAdmissionOriginGate,
+              Effect.succeed("sibling"),
+              fastConfig
+            );
+            expect(sibling).toBe("sibling");
+
+            yield* fs.remove(blocking, { force: true });
+            expect(yield* Fiber.join(sameCheckout)).toBe("same-checkout");
+          })
+        );
+      })
+    ));
+
+  it("keeps a current contender queued until a same-origin legacy lease drains", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const procStart = yield* ownProcStart();
+            yield* fs.makeDirectory(tempRoot.leases, { recursive: true, mode: 0o700 });
+            const legacyPath = path.join(tempRoot.leases, "legacy-origin.lease.json");
+            const legacyText = yield* encodeJsonObject({
+              schemaVersion: "yeet-admission-lease/v1",
+              pid: process.pid,
+              procStart,
+              kind: "full-proof",
+              weightTokens: 3,
+              priority: "verify",
+              originKey: "origin-legacy",
+              checkoutRoot: "/repo/legacy",
+              branch: "feat/legacy",
+              command: "bun run beep yeet verify",
+              startedAt: "2026-08-27T00:00:00Z",
+              admittedAtMillis: 0,
+              heartbeatAtMillis: 0,
+            });
+            yield* fs.writeFileString(legacyPath, `${legacyText}\n`);
+
+            expect((yield* decodeLease(`${legacyText}\n`)).coordinationProtocol).toBe("legacy-origin-lock/v1");
+            const current = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-legacy", checkoutRoot: "/repo/current" }),
+                noAdmissionOriginGate,
+                Effect.succeed("current"),
+                fastConfig
+              )
+            );
+            yield* Effect.sleep("100 millis");
+            expect(current.pollUnsafe()).toBeUndefined();
+            yield* fs.remove(legacyPath, { force: true });
+            expect(yield* Fiber.join(current)).toBe("current");
+          })
+        );
+      })
+    ));
+
+  it("keeps a current contender queued behind an older same-origin legacy ticket", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const legacyPath = yield* writeLegacyTicket(tempRoot, {
+              enqueuedAtMillis: 1,
+              nonce: "legacy01",
+              originKey: "origin-legacy-ticket",
+            });
+            const current = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-legacy-ticket", checkoutRoot: "/repo/current" }),
+                noAdmissionOriginGate,
+                Effect.succeed("current"),
+                fastConfig
+              )
+            );
+
+            yield* Effect.sleep("100 millis");
+            expect(current.pollUnsafe()).toBeUndefined();
+            const currentName = pipe(
+              yield* listDirectory(tempRoot.queue),
+              A.findFirst((name) => !Str.startsWith("legacy-")(name)),
+              O.getOrThrow
+            );
+            const currentTicket = yield* fs
+              .readFileString(path.join(tempRoot.queue, currentName))
+              .pipe(Effect.flatMap(decodeTicket));
+            expect(currentTicket.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
+            expect(currentTicket.blockedOnOriginAtMillis).toBeGreaterThan(0);
+
+            yield* fs.remove(legacyPath, { force: true });
+            expect(yield* Fiber.join(current)).toBe("current");
+          })
+        );
+      })
+    ));
+
+  it("stamps an older current ticket so a younger legacy client can drain", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(20);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const current = yield* Effect.forkChild(
+              withQualityAdmission(
+                request({ originKey: "origin-current-first", checkoutRoot: "/repo/current" }),
+                noAdmissionOriginGate,
+                Effect.succeed("current"),
+                fastConfig
+              )
+            );
+
+            yield* Effect.sleep("80 millis");
+            const currentName = pipe(yield* listDirectory(tempRoot.queue), A.head, O.getOrThrow);
+            const currentPath = path.join(tempRoot.queue, currentName);
+            const firstCurrent = yield* fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket));
+            expect(firstCurrent.coordinationProtocol).toBe("scheduler-origin-concurrency/v1");
+
+            const legacyPath = yield* writeLegacyTicket(tempRoot, {
+              enqueuedAtMillis: firstCurrent.enqueuedAtMillis + 1,
+              nonce: "legacy02",
+              originKey: "origin-current-first",
+            });
+            expect((yield* fs.readFileString(legacyPath).pipe(Effect.flatMap(decodeTicket))).coordinationProtocol).toBe(
+              "legacy-origin-lock/v1"
+            );
+
+            yield* Effect.sleep("100 millis");
+            const stampedCurrent = yield* fs.readFileString(currentPath).pipe(Effect.flatMap(decodeTicket));
+            expect(stampedCurrent.blockedOnOriginAtMillis).toBeGreaterThan(0);
+
+            yield* fs.remove(legacyPath, { force: true });
+            yield* Ref.set(gibRef, 50);
+            expect(yield* Fiber.join(current)).toBe("current");
           })
         );
       })
@@ -758,10 +1014,12 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const busy = yield* Ref.make(true);
             const releases = yield* Ref.make(0);
+            const tryAcquire = Effect.gen(function* () {
+              return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
+            });
             const gate = {
-              tryAcquire: Effect.gen(function* () {
-                return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
-              }),
+              tryAcquire,
+              tryAcquireFallback: tryAcquire,
               release: (_: string) => Ref.update(releases, (count) => count + 1),
             };
             const fiber = yield* Effect.forkChild(
@@ -1419,6 +1677,7 @@ describe("quality-scheduler", () => {
             // sibling checkout on the previous Yeet release).
             const stuckGate = {
               tryAcquire: Effect.succeed(O.none<string>()),
+              tryAcquireFallback: Effect.succeed(O.none<string>()),
               release: (_: string) => Effect.void,
             };
             const stuck = yield* Effect.forkChild(
@@ -1513,6 +1772,7 @@ describe("quality-scheduler", () => {
             const releases = yield* Ref.make(0);
             const gate = {
               tryAcquire: Effect.succeed(O.some("origin-lease")),
+              tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
               release: (_: string) => Ref.update(releases, (count) => count + 1),
             };
             // Materialize the directories, then make the leases dir unwritable
@@ -1585,6 +1845,7 @@ describe("quality-scheduler", () => {
               const releases = yield* Ref.make(0);
               const gate = {
                 tryAcquire: Effect.succeed(O.some("origin-lease")),
+                tryAcquireFallback: Effect.succeed(O.some("origin-lease")),
                 release: (_: string) => Ref.update(releases, (count) => count + 1),
               };
               const result = yield* withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig);

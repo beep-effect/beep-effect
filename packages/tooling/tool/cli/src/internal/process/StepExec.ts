@@ -608,9 +608,7 @@ const resolveAdmissionWorkload = Effect.fn("StepExec.resolveAdmissionWorkload")(
       message: "Admission workload path and lease id must be provided together.",
     });
   }
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Publication subprocesses intentionally inherit this admission binding.
   const inheritedWorkloadPath = Bun.env.BEEP_YEET_ADMISSION_WORKLOAD_PATH;
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Publication subprocesses intentionally inherit this admission binding.
   const inheritedLeaseId = Bun.env.BEEP_YEET_ADMISSION_LEASE_ID;
   if ((inheritedWorkloadPath === undefined) !== (inheritedLeaseId === undefined)) {
     return yield* AdmissionWorkloadRegistrationError.make({
