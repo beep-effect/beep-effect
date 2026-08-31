@@ -1,9 +1,8 @@
 import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
-import { Clock, Console, Crypto, Effect, Exit, FileSystem, Layer, Number as N, Path } from "effect";
+import { Clock, Console, Crypto, Effect, Exit, FileSystem, Layer, Number as N, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { writeJsonArtifact } from "@/canary/Artifact";

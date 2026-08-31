@@ -15,7 +15,7 @@ import {
   SparqlSelectResult,
 } from "@beep/semantic-web/services/sparql-query";
 import { A, O, P, R } from "@beep/utils";
-import { Effect, Layer, Match, pipe } from "effect";
+import { Effect, Layer, Match, MutableHashMap, pipe } from "effect";
 import * as Str from "effect/String";
 import { OxigraphSparqlError } from "./Oxigraph.errors.ts";
 import type { SparqlQueryRequest, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
@@ -175,9 +175,9 @@ const fromOxigraphQuad = (quad: Oxigraph.Quad): Rdf.Quad =>
 
 const makeStore = Effect.fn("Oxigraph.makeStore")(function* (
   request: SparqlQueryRequest,
-  stores: WeakMap<Rdf.Dataset, Oxigraph.Store>
+  stores: MutableHashMap.MutableHashMap<Rdf.Dataset, Oxigraph.Store>
 ) {
-  const cached = O.fromNullishOr(stores.get(request.dataset));
+  const cached = MutableHashMap.get(stores, request.dataset);
   if (O.isSome(cached)) {
     return cached.value;
   }
@@ -197,7 +197,8 @@ const makeStore = Effect.fn("Oxigraph.makeStore")(function* (
     { discard: true }
   );
 
-  stores.set(request.dataset, store);
+  MutableHashMap.clear(stores);
+  MutableHashMap.set(stores, request.dataset, store);
   return store;
 });
 
@@ -260,7 +261,7 @@ const askResult = (result: unknown): Effect.Effect<SparqlAskResult, OxigraphSpar
 
 const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (
   request: SparqlQueryRequest,
-  stores: WeakMap<Rdf.Dataset, Oxigraph.Store>
+  stores: MutableHashMap.MutableHashMap<Rdf.Dataset, Oxigraph.Store>
 ) {
   const store = yield* makeStore(request, stores);
   const result = yield* executeRawQuery(store, request);
@@ -281,9 +282,9 @@ const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (
  *
  * The `oxigraph` package is imported lazily during query execution so this
  * Layer can be imported by browser and worker bundles without initializing
- * WebAssembly at module scope. Each Layer acquisition weakly retains one
- * loaded store per immutable dataset instance so repeated queries do not
- * rebuild the complete store.
+ * WebAssembly at module scope. Each Layer acquisition retains the latest
+ * loaded immutable dataset instance so repeated queries do not rebuild the
+ * complete store and a long-lived service does not accumulate prior stores.
  *
  * **Example** (Import the live layer)
  *
@@ -299,7 +300,7 @@ const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (
 export const OxigraphSparqlQueryServiceLive = Layer.effect(
   SparqlQueryService,
   Effect.sync(() => {
-    const stores = new WeakMap<Rdf.Dataset, Oxigraph.Store>();
+    const stores = MutableHashMap.empty<Rdf.Dataset, Oxigraph.Store>();
     return SparqlQueryService.of({
       execute: Effect.fn("SparqlQueryService.execute")((request) =>
         executeSparql(request, stores).pipe(Effect.mapError(semanticError))
