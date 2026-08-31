@@ -149,13 +149,14 @@ def test_main_refuses_model_acquisition_without_license_and_emits_one_json_objec
     assert exit_code == 2
     assert len(stdout_lines) == 1
     assert json.loads(stdout_lines[0]) == {
-        "schemaVersion": "beep.files.match-person.worker.v1",
+        "schemaVersion": "beep.files.match-person.worker.v2",
         "ok": False,
         "error": {
             "code": "model-license-not-accepted",
             "message": (
-                "buffalo_l is not installed. Pass --accept-model-license only after accepting "
-                "the InsightFace pretrained-model licensing terms; no model was downloaded."
+                "Pass --accept-model-license only after reviewing the selected checkpoints' "
+                "model and training-dataset terms. The flag records acknowledgment only and "
+                "does not grant or alter rights; no model was loaded."
             ),
         },
         "elapsedSeconds": pytest.approx(0.0, abs=0.1),
@@ -558,23 +559,73 @@ def test_run_worker_emits_success_report_shape(
     assert report["schemaVersion"] == worker.SCHEMA_VERSION
     assert report["ok"] is True
     assert report["model"] == {
+        "backend": "buffalo-l",
         "name": worker.MODEL_NAME,
+        "packageName": "insightface",
         "packageVersion": "1.0.1",
-        "providers": ["CPUExecutionProvider"],
-        "allowedModules": ["detection", "recognition"],
+        "runtime": {
+            "framework": "onnxruntime",
+            "packageVersion": "1.23.2",
+            "actualCompute": "cpu",
+            "precision": "fp32",
+            "providers": ["CPUExecutionProvider"],
+            "devices": [],
+            "warnings": [],
+        },
         "root": str(arguments.model_root),
-        "artifacts": [
+        "allowedModules": ["detection", "recognition"],
+        "components": [
             {
-                "name": "det_10g.onnx",
-                "path": str(detector_path),
-                "sha256": hashlib.sha256(b"detector").hexdigest(),
+                "role": "detector",
+                "name": "insightface-det_10g",
+                "revision": "v0.7",
+                "source": worker.MODEL_ARCHIVE_URL,
+                "licenseNotice": (
+                    "InsightFace pretrained-model terms: "
+                    "https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md"
+                ),
+                "artifacts": [
+                    {
+                        "name": "det_10g.onnx",
+                        "path": str(detector_path),
+                        "sizeBytes": len(b"detector"),
+                        "sha256": hashlib.sha256(b"detector").hexdigest(),
+                    }
+                ],
             },
             {
-                "name": "w600k_r50.onnx",
-                "path": str(recognizer_path),
-                "sha256": hashlib.sha256(b"recognizer").hexdigest(),
+                "role": "recognizer",
+                "name": "insightface-w600k_r50",
+                "revision": "v0.7",
+                "source": worker.MODEL_ARCHIVE_URL,
+                "licenseNotice": (
+                    "InsightFace pretrained-model terms: "
+                    "https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md"
+                ),
+                "artifacts": [
+                    {
+                        "name": "w600k_r50.onnx",
+                        "path": str(recognizer_path),
+                        "sizeBytes": len(b"recognizer"),
+                        "sha256": hashlib.sha256(b"recognizer").hexdigest(),
+                    }
+                ],
             },
         ],
+    }
+    assert report["parameters"] == {
+        "backend": "buffalo-l",
+        "compute": "auto",
+        "actualCompute": "cpu",
+        "devices": [],
+        "batchSize": 32,
+        "precision": "fp32",
+        "thresholdSource": "calibrated-default",
+        "detectionThreshold": 0.6,
+        "matchThreshold": 0.5,
+        "reviewThreshold": 0.35,
+        "minFaceAreaPct": 1.0,
+        "recursive": False,
     }
     assert report["summary"] == {
         "totalCount": 1,

@@ -21,7 +21,9 @@ import {
   ImageCurationDecisionDocument,
   ImageCurationManifest,
   NormalizeManifest,
+  PersonMatchModel,
   PersonMatchReport,
+  PersonMatchWorkerReport,
   ProcessFilesOptions,
   processFiles,
   renderFilesProgressBar,
@@ -279,6 +281,165 @@ const readPersonMatchManifest = Effect.fn("FilesTest.readPersonMatchManifest")(f
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(filePath);
   return yield* decodePersonMatchReport(content).pipe(Effect.mapError(filesTestError));
+});
+
+const insightFaceModelSource = "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip";
+const insightFaceModelLicenseNotice =
+  "InsightFace pretrained-model terms: https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md";
+const cvlFaceModelLicenseNotice =
+  "CVLFace code is MIT-licensed; checkpoint use is also subject to the training-dataset and model-card terms at the pinned source.";
+
+const makeBuffaloModelFixture = (path: Path.Path, cacheDir: string) => {
+  const root = path.join(cacheDir, "insightface");
+  const runtimeRoot = path.join(root, "models", "beep_buffalo_l_v1");
+  return {
+    backend: "buffalo-l",
+    name: "buffalo_l",
+    packageName: "insightface",
+    packageVersion: "1.0.1",
+    runtime: {
+      framework: "onnxruntime",
+      packageVersion: "1.23.2",
+      actualCompute: "cpu",
+      precision: "fp32",
+      providers: ["CPUExecutionProvider"],
+      devices: [],
+      warnings: [],
+    },
+    allowedModules: ["detection", "recognition"],
+    root,
+    components: [
+      {
+        role: "detector",
+        name: "insightface-det_10g",
+        revision: "v0.7",
+        source: insightFaceModelSource,
+        licenseNotice: insightFaceModelLicenseNotice,
+        artifacts: [
+          {
+            name: "det_10g.onnx",
+            path: path.join(runtimeRoot, "det_10g.onnx"),
+            sizeBytes: 16_923_827,
+            sha256: "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+          },
+        ],
+      },
+      {
+        role: "recognizer",
+        name: "insightface-w600k_r50",
+        revision: "v0.7",
+        source: insightFaceModelSource,
+        licenseNotice: insightFaceModelLicenseNotice,
+        artifacts: [
+          {
+            name: "w600k_r50.onnx",
+            path: path.join(runtimeRoot, "w600k_r50.onnx"),
+            sizeBytes: 174_383_860,
+            sha256: "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
+          },
+        ],
+      },
+    ],
+  };
+};
+
+const buffaloParametersFixture = {
+  backend: "buffalo-l",
+  compute: "auto",
+  actualCompute: "cpu",
+  devices: [],
+  batchSize: 32,
+  precision: "fp32",
+  thresholdSource: "calibrated-default",
+  detectionThreshold: 0.6,
+  matchThreshold: 0.5,
+  reviewThreshold: 0.35,
+  minFaceAreaPct: 1,
+  recursive: false,
+};
+
+const makePersonMatchFaceFixture = (matchScore: number) => ({
+  box: { x1: 10, y1: 20, x2: 110, y2: 140 },
+  detectionScore: 0.99,
+  faceAreaPct: 15,
+  matchScore,
+  centroidScore: matchScore,
+  top3MedianScore: matchScore,
+  bestReferenceScore: matchScore,
+  bestReferenceName: "reference.jpg",
+  qualityFlags: [],
+});
+
+const makeBuffaloWorkerReportFixture = (
+  path: Path.Path,
+  cacheDir: string,
+  candidateDir: string,
+  referencePath: string
+) => ({
+  schemaVersion: "beep.files.match-person.worker.v2",
+  ok: true,
+  model: makeBuffaloModelFixture(path, cacheDir),
+  parameters: buffaloParametersFixture,
+  references: [
+    {
+      sourceName: "reference.jpg",
+      sourcePath: referencePath,
+      accepted: true,
+      faceCount: 1,
+      detectionScore: 0.99,
+    },
+  ],
+  entries: [
+    {
+      sourceName: "group.jpg",
+      sourcePath: path.join(candidateDir, "group.jpg"),
+      relativePath: "group.jpg",
+      disposition: "group-match",
+      faceCount: 2,
+      bestScore: 0.72,
+      faces: [makePersonMatchFaceFixture(0.72), makePersonMatchFaceFixture(0.1)],
+    },
+    {
+      sourceName: "other.jpg",
+      sourcePath: path.join(candidateDir, "other.jpg"),
+      relativePath: "other.jpg",
+      disposition: "no-match",
+      faceCount: 1,
+      bestScore: 0.1,
+      faces: [makePersonMatchFaceFixture(0.1)],
+    },
+    {
+      sourceName: "solo.jpg",
+      sourcePath: path.join(candidateDir, "solo.jpg"),
+      relativePath: "solo.jpg",
+      disposition: "solo-match",
+      faceCount: 1,
+      bestScore: 0.81,
+      faces: [makePersonMatchFaceFixture(0.81)],
+    },
+    {
+      sourceName: "unreadable.jpg",
+      sourcePath: path.join(candidateDir, "unreadable.jpg"),
+      relativePath: "unreadable.jpg",
+      disposition: "unreadable",
+      faceCount: 0,
+      faces: [],
+      reason: "image-decode-failed",
+    },
+  ],
+  summary: {
+    totalCount: 4,
+    soloMatchCount: 1,
+    groupMatchCount: 1,
+    lowQualityMatchCount: 0,
+    reviewCount: 0,
+    noMatchCount: 1,
+    noFaceCount: 0,
+    unreadableCount: 1,
+    acceptedReferenceCount: 1,
+    rejectedReferenceCount: 0,
+  },
+  elapsedSeconds: 0.25,
 });
 
 const writeInsetCanvasImage = Effect.fn("FilesTest.writeInsetCanvasImage")(function* (
@@ -1366,6 +1527,308 @@ describe("files command", { concurrent: false }, () => {
       )
     ));
 
+  it("accepts exact pinned AdaFace provenance and rejects a Buffalo/PyTorch v2 mismatch", () => {
+    const adaFaceModel = {
+      backend: "adaface-kprpe",
+      name: "cvlface_adaface_vit_base_kprpe_webface12m",
+      codeRevision: "308142aa50adf2e187711354f7524635d3414f1e",
+      runtime: {
+        framework: "pytorch",
+        packageVersion: "2.9.1+rocm7.2.0.git7e1940d4",
+        hipVersion: "7.2.26015-fc0010cf6a",
+        actualCompute: "rocm",
+        precision: "fp32",
+        devices: [{ index: 0, name: "AMD Radeon AI PRO R9700", architecture: "gfx1201" }],
+        warnings: [],
+      },
+      root: "/cache/adaface-kprpe",
+      components: [
+        {
+          role: "detector",
+          name: "insightface-det_10g",
+          revision: "v0.7",
+          source: insightFaceModelSource,
+          licenseNotice: insightFaceModelLicenseNotice,
+          artifacts: [
+            {
+              name: "det_10g.onnx",
+              path: "/cache/adaface-kprpe/models/beep_buffalo_l_v1/det_10g.onnx",
+              sizeBytes: 16_923_827,
+              sha256: "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+            },
+          ],
+        },
+        {
+          role: "aligner",
+          name: "cvlface_DFA_mobilenet",
+          revision: "8317e6dda53d91e7074979923144c2cc08906a33",
+          source:
+            "https://huggingface.co/minchul/cvlface_DFA_mobilenet/resolve/8317e6dda53d91e7074979923144c2cc08906a33/model.safetensors",
+          licenseNotice: cvlFaceModelLicenseNotice,
+          artifacts: [
+            {
+              name: "model.safetensors",
+              path: "/cache/adaface-kprpe/pinned/aligner/model.safetensors",
+              sizeBytes: 2_007_980,
+              sha256: "80b6e922e4c76c10d5e24061fe47cd96112d18689bf5ae7e34af52e641c18c4a",
+            },
+          ],
+        },
+        {
+          role: "recognizer",
+          name: "cvlface_adaface_vit_base_kprpe_webface12m",
+          revision: "daefd5012d369588bd214fbaf4cc6b1d286e7066",
+          source:
+            "https://huggingface.co/minchul/cvlface_adaface_vit_base_kprpe_webface12m/resolve/daefd5012d369588bd214fbaf4cc6b1d286e7066/model.safetensors",
+          licenseNotice: cvlFaceModelLicenseNotice,
+          artifacts: [
+            {
+              name: "model.safetensors",
+              path: "/cache/adaface-kprpe/pinned/recognizer/model.safetensors",
+              sizeBytes: 460_344_344,
+              sha256: "99d16ed4aac0fdf0fcc82526b9b70703f3ec8c3041bf1bf44bd22751536e65db",
+            },
+          ],
+        },
+      ],
+    };
+    const mismatchedWorkerReport = {
+      schemaVersion: "beep.files.match-person.worker.v2",
+      ok: true,
+      model: {
+        backend: "buffalo-l",
+        name: "buffalo_l",
+        packageName: "insightface",
+        packageVersion: "1.0.1",
+        runtime: adaFaceModel.runtime,
+        allowedModules: ["detection", "recognition"],
+        root: "/cache/insightface",
+        components: [],
+      },
+      parameters: buffaloParametersFixture,
+      references: [],
+      entries: [],
+      summary: {
+        totalCount: 0,
+        soloMatchCount: 0,
+        groupMatchCount: 0,
+        lowQualityMatchCount: 0,
+        reviewCount: 0,
+        noMatchCount: 0,
+        noFaceCount: 0,
+        unreadableCount: 0,
+        acceptedReferenceCount: 0,
+        rejectedReferenceCount: 0,
+      },
+      elapsedSeconds: 0,
+    };
+
+    expect(O.isSome(S.decodeUnknownOption(PersonMatchModel)(adaFaceModel))).toBe(true);
+    expect(O.isNone(S.decodeUnknownOption(PersonMatchWorkerReport)(mismatchedWorkerReport))).toBe(true);
+  });
+
+  it.each([
+    { deviceCsv: "0,0", invalidCase: "duplicate" },
+    { deviceCsv: "0,,1", invalidCase: "blank" },
+  ])("rejects $invalidCase person-match device indexes before starting a worker", ({ deviceCsv }) =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const manifestPath = path.join(tmpDir, "person-match.json");
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+
+          const message = yield* expectFilesCommandFailure([
+            "match-person",
+            "--references",
+            referenceDir,
+            "--dir",
+            candidateDir,
+            "--manifest",
+            manifestPath,
+            "--devices",
+            deviceCsv,
+          ]);
+
+          expect(message).toContain("Invalid --devices value");
+          expect(yield* fs.exists(manifestPath)).toBe(false);
+        })
+      )
+    )
+  );
+
+  it.each([
+    {
+      invalidCase: "Buffalo with required ROCm",
+      options: ["--backend", "buffalo-l", "--compute", "rocm"],
+      expectedMessage: "Buffalo backend is CPU-only",
+    },
+    {
+      invalidCase: "CPU with explicit GPU devices",
+      options: ["--backend", "adaface-kprpe", "--compute", "cpu", "--devices", "0"],
+      expectedMessage: "Explicit GPU devices cannot be combined with --compute cpu",
+    },
+  ])("rejects $invalidCase before acquisition or worker startup", ({ expectedMessage, options }) =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const cacheDir = path.join(tmpDir, "cache");
+          const manifestPath = path.join(tmpDir, "person-match.json");
+          const uvPath = path.join(tmpDir, "uv");
+          const workerMarkerPath = path.join(tmpDir, "worker-started");
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
+
+          const message = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              manifestPath,
+              "--accept-model-license",
+              ...options,
+            ])
+          );
+
+          expect(message).toContain(expectedMessage);
+          expect(yield* fs.exists(workerMarkerPath)).toBe(false);
+          expect(yield* fs.exists(manifestPath)).toBe(false);
+        })
+      )
+    )
+  );
+
+  it("resolves Buffalo thresholds and requires an exact v2 worker parameter echo", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const cacheDir = path.join(tmpDir, "cache");
+          const uvPath = path.join(tmpDir, "uv");
+          const referencePath = path.join(referenceDir, "reference.jpg");
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* Effect.forEach(
+            ["group.jpg", "other.jpg", "solo.jpg", "unreadable.jpg"],
+            (name) => fs.writeFileString(path.join(candidateDir, name), name),
+            { concurrency: 1, discard: true }
+          );
+          yield* fs.writeFileString(referencePath, "reference");
+
+          const defaultManifestPath = path.join(tmpDir, "default-person-match.json");
+          const defaultWorkerReport = makeBuffaloWorkerReportFixture(path, cacheDir, candidateDir, referencePath);
+          const defaultWorkerJson = yield* encodeUnknownJson(defaultWorkerReport);
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${defaultWorkerJson}'\n`, uvPath);
+          yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runFilesCommand([
+              "match-person",
+              "--backend",
+              "buffalo-l",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              defaultManifestPath,
+              "--accept-model-license",
+            ])
+          );
+          expect((yield* readPersonMatchManifest(defaultManifestPath)).parameters).toEqual(buffaloParametersFixture);
+
+          const explicitParameters = {
+            ...buffaloParametersFixture,
+            thresholdSource: "explicit",
+            detectionThreshold: 0.7,
+            matchThreshold: 0.65,
+            reviewThreshold: 0.4,
+            minFaceAreaPct: 2,
+          };
+          const explicitManifestPath = path.join(tmpDir, "explicit-person-match.json");
+          const explicitWorkerReport = { ...defaultWorkerReport, parameters: explicitParameters };
+          const explicitWorkerJson = yield* encodeUnknownJson(explicitWorkerReport);
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${explicitWorkerJson}'\n`, uvPath);
+          yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runFilesCommand([
+              "match-person",
+              "--backend",
+              "buffalo-l",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              explicitManifestPath,
+              "--detection-threshold",
+              "0.7",
+              "--match-threshold",
+              "0.65",
+              "--review-threshold",
+              "0.4",
+              "--min-face-area-pct",
+              "2",
+              "--accept-model-license",
+            ])
+          );
+          expect((yield* readPersonMatchManifest(explicitManifestPath)).parameters).toEqual(explicitParameters);
+
+          const mismatchedManifestPath = path.join(tmpDir, "mismatched-person-match.json");
+          const mismatchedWorkerReport = {
+            ...defaultWorkerReport,
+            parameters: { ...buffaloParametersFixture, batchSize: 64 },
+          };
+          const mismatchedWorkerJson = yield* encodeUnknownJson(mismatchedWorkerReport);
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${mismatchedWorkerJson}'\n`, uvPath);
+          const message = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--backend",
+              "buffalo-l",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              mismatchedManifestPath,
+              "--accept-model-license",
+            ])
+          );
+          expect(message).toContain("reported parameters that do not match the requested scan");
+          expect(yield* fs.exists(mismatchedManifestPath)).toBe(false);
+        })
+      )
+    ));
+
   it("matches a person through the local worker boundary and copies only accepted review lanes", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
@@ -1392,107 +1855,7 @@ describe("files command", { concurrent: false }, () => {
           yield* fs.writeFileString(unreadablePath, "unreadable source");
           yield* fs.writeFileString(referencePath, "reference source");
 
-          const face = (matchScore: number) => ({
-            box: { x1: 10, y1: 20, x2: 110, y2: 140 },
-            detectionScore: 0.99,
-            faceAreaPct: 15,
-            matchScore,
-            centroidScore: matchScore,
-            top3MedianScore: matchScore,
-            bestReferenceScore: matchScore,
-            bestReferenceName: "reference.jpg",
-            qualityFlags: [],
-          });
-          const workerReport = {
-            schemaVersion: "beep.files.match-person.worker.v1",
-            ok: true,
-            model: {
-              name: "buffalo_l",
-              packageVersion: "1.0.1",
-              providers: ["CPUExecutionProvider"],
-              allowedModules: ["detection", "recognition"],
-              root: path.join(cacheDir, "insightface"),
-              artifacts: [
-                {
-                  name: "det_10g.onnx",
-                  path: path.join(cacheDir, "insightface", "models", "beep_buffalo_l_v1", "det_10g.onnx"),
-                  sha256: "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
-                },
-                {
-                  name: "w600k_r50.onnx",
-                  path: path.join(cacheDir, "insightface", "models", "beep_buffalo_l_v1", "w600k_r50.onnx"),
-                  sha256: "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
-                },
-              ],
-            },
-            parameters: {
-              detectionThreshold: 0.6,
-              matchThreshold: 0.5,
-              reviewThreshold: 0.35,
-              minFaceAreaPct: 1,
-              recursive: false,
-            },
-            references: [
-              {
-                sourceName: "reference.jpg",
-                sourcePath: referencePath,
-                accepted: true,
-                faceCount: 1,
-                detectionScore: 0.99,
-              },
-            ],
-            entries: [
-              {
-                sourceName: "group.jpg",
-                sourcePath: groupPath,
-                relativePath: "group.jpg",
-                disposition: "group-match",
-                faceCount: 2,
-                bestScore: 0.72,
-                faces: [face(0.72), face(0.1)],
-              },
-              {
-                sourceName: "other.jpg",
-                sourcePath: otherPath,
-                relativePath: "other.jpg",
-                disposition: "no-match",
-                faceCount: 1,
-                bestScore: 0.1,
-                faces: [face(0.1)],
-              },
-              {
-                sourceName: "solo.jpg",
-                sourcePath: soloPath,
-                relativePath: "solo.jpg",
-                disposition: "solo-match",
-                faceCount: 1,
-                bestScore: 0.81,
-                faces: [face(0.81)],
-              },
-              {
-                sourceName: "unreadable.jpg",
-                sourcePath: unreadablePath,
-                relativePath: "unreadable.jpg",
-                disposition: "unreadable",
-                faceCount: 0,
-                faces: [],
-                reason: "image-decode-failed",
-              },
-            ],
-            summary: {
-              totalCount: 4,
-              soloMatchCount: 1,
-              groupMatchCount: 1,
-              lowQualityMatchCount: 0,
-              reviewCount: 0,
-              noMatchCount: 1,
-              noFaceCount: 0,
-              unreadableCount: 1,
-              acceptedReferenceCount: 1,
-              rejectedReferenceCount: 0,
-            },
-            elapsedSeconds: 0.25,
-          };
+          const workerReport = makeBuffaloWorkerReportFixture(path, cacheDir, candidateDir, referencePath);
           const workerReportJson = yield* encodeUnknownJson(workerReport);
 
           yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${workerReportJson}'\n`);
@@ -1518,6 +1881,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             runFilesCommand([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1542,14 +1907,26 @@ describe("files command", { concurrent: false }, () => {
 
           const report = yield* readPersonMatchManifest(manifestPath);
           expect(A.join(jsonChunks, "")).toBe(yield* fs.readFileString(manifestPath));
-          expect(report.schemaVersion).toBe("beep.files.match-person.v1");
+          expect(report.schemaVersion).toBe("beep.files.match-person.v2");
           expect(report.summary).toMatchObject({
             groupMatchCount: 1,
             noMatchCount: 1,
             soloMatchCount: 1,
             unreadableCount: 1,
           });
-          expect(report.model.providers).toEqual(["CPUExecutionProvider"]);
+          expect(report.model).toMatchObject({
+            backend: "buffalo-l",
+            runtime: {
+              actualCompute: "cpu",
+              devices: [],
+              framework: "onnxruntime",
+              packageVersion: "1.23.2",
+              precision: "fp32",
+              providers: ["CPUExecutionProvider"],
+              warnings: [],
+            },
+          });
+          expect(report.parameters).toEqual(buffaloParametersFixture);
           expect(report.outputDirectory).toBe(outDir);
           expect(yield* fs.readFileString(path.join(outDir, "accepted", "solo.jpg"))).toBe("solo source");
           expect(yield* fs.readFileString(path.join(outDir, "group-review", "group.jpg"))).toBe("group source");
@@ -1568,6 +1945,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             runFilesCommand([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1582,15 +1961,89 @@ describe("files command", { concurrent: false }, () => {
           );
           expect((yield* readPersonMatchManifest(backupNamedManifestPath)).summary.totalCount).toBe(4);
 
+          const partialAlignerManifestPath = path.join(tmpDir, "partial-aligner-person-match.json");
+          const partialAlignerWorkerReport = {
+            ...workerReport,
+            entries: A.map(workerReport.entries, (entry) =>
+              entry.disposition === "group-match"
+                ? { ...entry, disposition: "review", reason: "aligner-confidence-failed" }
+                : entry
+            ),
+            summary: {
+              ...workerReport.summary,
+              groupMatchCount: 0,
+              reviewCount: 1,
+            },
+          };
+          const partialAlignerWorkerJson = yield* encodeUnknownJson(partialAlignerWorkerReport);
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${partialAlignerWorkerJson}'\n`, uvPath);
+          yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runFilesCommand([
+              "match-person",
+              "--backend",
+              "buffalo-l",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              partialAlignerManifestPath,
+              "--accept-model-license",
+            ])
+          );
+          const partialAlignerReport = yield* readPersonMatchManifest(partialAlignerManifestPath);
+          expect(partialAlignerReport.summary.reviewCount).toBe(1);
+          expect(partialAlignerReport.entries[0]).toMatchObject({
+            disposition: "review",
+            reason: "aligner-confidence-failed",
+          });
+
+          const incompleteManifestPath = path.join(tmpDir, "incomplete-person-match.json");
+          const incompleteWorkerReport = {
+            ...workerReport,
+            entries: A.filter(workerReport.entries, (entry) => entry.sourceName !== "other.jpg"),
+            summary: {
+              ...workerReport.summary,
+              totalCount: 3,
+              noMatchCount: 0,
+            },
+          };
+          const incompleteWorkerJson = yield* encodeUnknownJson(incompleteWorkerReport);
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${incompleteWorkerJson}'\n`, uvPath);
+          const incompleteMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--backend",
+              "buffalo-l",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              incompleteManifestPath,
+              "--accept-model-license",
+            ])
+          );
+          expect(incompleteMessage).toContain("did not report every eligible candidate and reference image");
+          expect(yield* fs.exists(incompleteManifestPath)).toBe(false);
+
           const invalidManifestPath = path.join(tmpDir, "invalid-person-match.json");
           const invalidOutDir = path.join(tmpDir, "invalid-matched");
           const invalidWorkerReport = {
             ...workerReport,
-            entries: workerReport.entries.map((entry, entryIndex) =>
+            entries: A.map(workerReport.entries, (entry, entryIndex) =>
               entryIndex === 0
                 ? {
                     ...entry,
-                    faces: entry.faces.map((entryFace, faceIndex) =>
+                    faces: A.map(entry.faces, (entryFace, faceIndex) =>
                       faceIndex === 0 ? { ...entryFace, embedding: [0.1, 0.2, 0.3] } : entryFace
                     ),
                   }
@@ -1604,6 +2057,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             expectFilesCommandFailure([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1627,8 +2082,15 @@ describe("files command", { concurrent: false }, () => {
             ...workerReport,
             model: {
               ...workerReport.model,
-              artifacts: workerReport.model.artifacts.map((artifact, index) =>
-                index === 0 ? { ...artifact, sha256: "0".repeat(64) } : artifact
+              components: A.map(workerReport.model.components, (component, componentIndex) =>
+                componentIndex === 0
+                  ? {
+                      ...component,
+                      artifacts: A.map(component.artifacts, (artifact, artifactIndex) =>
+                        artifactIndex === 0 ? { ...artifact, sha256: pipe("0", Str.repeat(64)) } : artifact
+                      ),
+                    }
+                  : component
               ),
             },
           };
@@ -1639,6 +2101,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             expectFilesCommandFailure([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1657,12 +2121,12 @@ describe("files command", { concurrent: false }, () => {
           const misclassifiedOutDir = path.join(tmpDir, "misclassified-matched");
           const misclassifiedWorkerReport = {
             ...workerReport,
-            entries: workerReport.entries.map((entry) =>
+            entries: A.map(workerReport.entries, (entry) =>
               entry.disposition === "solo-match"
                 ? {
                     ...entry,
                     bestScore: 0.1,
-                    faces: entry.faces.map((entryFace) => ({
+                    faces: A.map(entry.faces, (entryFace) => ({
                       ...entryFace,
                       bestReferenceScore: 0.1,
                       centroidScore: 0.1,
@@ -1680,6 +2144,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             expectFilesCommandFailure([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1701,7 +2167,7 @@ describe("files command", { concurrent: false }, () => {
           const inconsistentOutDir = path.join(tmpDir, "inconsistent-matched");
           const inconsistentWorkerReport = {
             ...workerReport,
-            entries: workerReport.entries.map((entry, index) =>
+            entries: A.map(workerReport.entries, (entry, index) =>
               index === 0 ? { ...entry, sourcePath: otherPath } : entry
             ),
           };
@@ -1712,6 +2178,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             expectFilesCommandFailure([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1749,6 +2217,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             expectFilesCommandFailure([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1808,6 +2278,8 @@ describe("files command", { concurrent: false }, () => {
             uvPath,
             runFilesCommand([
               "match-person",
+              "--backend",
+              "buffalo-l",
               "--references",
               referenceDir,
               "--dir",
@@ -1882,6 +2354,8 @@ describe("files command", { concurrent: false }, () => {
               uvPath,
               expectFilesCommandFailure([
                 "match-person",
+                "--backend",
+                "buffalo-l",
                 "--references",
                 referenceDir,
                 "--dir",

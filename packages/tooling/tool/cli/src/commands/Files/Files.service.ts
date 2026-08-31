@@ -101,6 +101,7 @@ import {
 import { runFlattenMediaFiles } from "./internal/FlattenMedia.ts";
 import { auditImagesImpl, curateImagesImpl } from "./internal/ImageCuration.ts";
 import { runMatchPerson } from "./internal/MatchPerson.ts";
+import { PersonMatchWorkerServiceLive } from "./internal/MatchPerson.worker-service.ts";
 import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.ts";
 import { processFilesImpl } from "./internal/Process.ts";
 import {
@@ -150,16 +151,19 @@ import type {
   ProcessFilesSummary,
   SafeFilePrefix,
 } from "./Files.schemas.ts";
+import type { PersonMatchWorkerService } from "./internal/MatchPerson.worker-service.ts";
 
 const $I = $RepoCliId.create("commands/Files/Files.service");
 
-type FilesCommandServiceRequirements =
+type FilesCommandPlatformRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | Terminal.Terminal
   | ChildProcessSpawner.ChildProcessSpawner
   | Crypto.Crypto
   | HttpClient.HttpClient;
+
+type FilesCommandServiceRequirements = FilesCommandPlatformRequirements | PersonMatchWorkerService;
 
 interface DetectBordersCollectedEntries {
   readonly files: ReadonlyArray<SortableFile>;
@@ -2534,8 +2538,8 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
  * @category layers
  * @since 0.0.0
  */
-export const FilesCommandServiceLive: Layer.Layer<FilesCommandService, never, FilesCommandServiceRequirements> =
-  Layer.effect(FilesCommandService, makeFilesCommandService());
+export const FilesCommandServiceLive: Layer.Layer<FilesCommandService, never, FilesCommandPlatformRequirements> =
+  Layer.effect(FilesCommandService, makeFilesCommandService()).pipe(Layer.provide(PersonMatchWorkerServiceLive));
 
 /**
  * Audit direct images and write deterministic review evidence without changing source files.
