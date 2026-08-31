@@ -36712,8 +36712,8 @@
   },
   "reasoning": {
     "crash": {
-      "afterRestartDigest": "6354861ded0e5c05a7c952f23dd6c61673179aace5dafad59a145e2591f24311",
-      "beforeCrashDigest": "6354861ded0e5c05a7c952f23dd6c61673179aace5dafad59a145e2591f24311",
+      "afterRestartDigest": "a56ba96c539095c3dcccfa883b736aac4ddceaf5caf7c03fcb29420476b7db1b",
+      "beforeCrashDigest": "a56ba96c539095c3dcccfa883b736aac4ddceaf5caf7c03fcb29420476b7db1b",
       "checkpoint": "after-ledger-commit-before-projection"
     },
     "gold": {
@@ -37377,6 +37377,6 @@
       ]
     }
   },
-  "reportDigest": "7fff1dc09bf517841a840071393ecc0f4a914366ff355d246964124d2ea9417e",
+  "reportDigest": "2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1",
   "stage": "c2"
 }
