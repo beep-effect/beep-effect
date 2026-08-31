@@ -95,7 +95,7 @@ const NumberInputText = S.String.check(
   $I.annoteSchema("NumberInputText", {
     description: "Editable text accepted by the number input during typing.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const isCoarseStepModifier = P.Tuple([P.isTruthy, P.isUnknown]);

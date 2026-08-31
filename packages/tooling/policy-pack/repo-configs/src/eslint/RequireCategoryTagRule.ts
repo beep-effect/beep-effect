@@ -23,7 +23,7 @@ import type ESTree from "estree";
 
 const CATEGORY_PATTERN = /@category\s+\S+/;
 
-const CategoryTaggedComment = S.String.check(S.isPattern(CATEGORY_PATTERN)).pipe(SchemaUtils.withCodecStatics);
+const CategoryTaggedComment = S.String.check(S.isPattern(CATEGORY_PATTERN)).pipe(SchemaUtils.withCodecStatics(["is"]));
 
 const EXPORT_DECLARATION_TYPES = HashSet.fromIterable(["ExportNamedDeclaration", "ExportDefaultDeclaration"]);
 

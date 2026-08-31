@@ -151,11 +151,10 @@ export const VaultSyncError = S.Union([
   SyncOperationRepositoryUnavailable,
   VaultScanFailed,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("VaultSyncError", {
     description: "Internal typed failure raised by the vault sync engine.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

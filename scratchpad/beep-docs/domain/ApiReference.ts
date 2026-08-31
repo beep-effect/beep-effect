@@ -454,7 +454,7 @@ export type Utf8TextFromBytes = typeof Utf8TextFromBytes.Type;
  */
 export const TypeDocProjectReflectionFromBytes = Utf8TextFromBytes.pipe(
   S.decodeTo(TypeDocProjectReflectionFromJsonString),
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("TypeDocProjectReflectionFromBytes", {
     description: "Byte codec for a TypeDoc project reflection: UTF-8 bytes, then JSON, then the reflection envelope.",
   })

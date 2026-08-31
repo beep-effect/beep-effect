@@ -32,7 +32,7 @@ export const UnknownRecord = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("UnknownRecord", {
     description: "A record of unknown values",
   }),
-  SchemaUtils.withOptionCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**

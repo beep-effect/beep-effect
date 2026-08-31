@@ -19,7 +19,7 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -341,8 +341,7 @@ export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
   .pipe(
     $I.annoteSchema("FieldProjectionOutcome", {
       description: "Inline or fetchable outcome of projecting a payload within a caller's size budget.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**

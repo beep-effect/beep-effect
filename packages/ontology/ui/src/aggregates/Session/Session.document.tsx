@@ -41,7 +41,7 @@ import { AsyncResult } from "effect/unstable/reactivity";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 
-const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
+const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeUnknownOption(Str.trim(value));
 
 const documentBadge = (sessionOpen: boolean, dirty: boolean) => {
   if (!sessionOpen) {

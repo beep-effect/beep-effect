@@ -54,7 +54,28 @@
     name = "onepassword-secret-refs"
     enabled = true
   [[skills.config]]
+    name = "ontology-architect"
+    enabled = true
+  [[skills.config]]
+    name = "ontology-conceptualizer"
+    enabled = true
+  [[skills.config]]
+    name = "ontology-curator"
+    enabled = true
+  [[skills.config]]
     name = "ontology-foundational-auditor"
+    enabled = true
+  [[skills.config]]
+    name = "ontology-mapper"
+    enabled = true
+  [[skills.config]]
+    name = "ontology-requirements"
+    enabled = true
+  [[skills.config]]
+    name = "ontology-scout"
+    enabled = true
+  [[skills.config]]
+    name = "ontology-validator"
     enabled = true
   [[skills.config]]
     name = "oracle"
@@ -76,6 +97,9 @@
     enabled = true
   [[skills.config]]
     name = "shadcn"
+    enabled = true
+  [[skills.config]]
+    name = "sparql-expert"
     enabled = true
   [[skills.config]]
     name = "teach"

@@ -583,7 +583,7 @@ if (!shouldRunPgliteIntegration) {
             matchBasis: normalized.matchBasis,
             orgId: secondOrganizationId,
             pair: normalized.pair,
-            publicId: contradictionCandidatePublicId.fromUnknown(
+            publicId: contradictionCandidatePublicId.decodeUnknownSync(
               `${ContradictionIdentity.ContradictionCandidateId.tableName}_aforeign${candidateKey}`
             ),
             recordedAt: command.recordedAt,

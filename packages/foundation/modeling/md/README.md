@@ -92,14 +92,20 @@ render fold; nested links in lists, tables, footnotes, admonitions, embeds, and 
 to a built-in policy.
 
 Use `makeMarkdownAdapter({ urlPolicy })`, `makeHtmlFragmentAdapter({ urlPolicy })`, or the `*WithPolicy` escape helpers
-when a sink needs stricter behavior such as `StrictWebUrlPolicySpec`. `UrlPolicy` and the old policy constants remain
-deprecated compatibility adapters; an empty legacy protocol list retains compatibility semantics.
+when a sink needs stricter behavior such as `StrictWebUrlPolicySpec`.
 
 ## Projection behavior
 
 Plain-text projection preserves content-bearing fallbacks: image nodes contribute their alt text and hard line breaks
-contribute `\n`. `TaskListItemSpec`/`Md.taskListFromItems` is the unambiguous tagged task-list input; the string/object
-shorthand accepted by `Md.taskList` remains a deprecated compatibility adapter.
+contribute `\n`. Use `Inline.toPlainText`, `Block.toPlainText`, or `Document.toPlainText` from the schema that owns the
+input. The established `renderPlainTextInline`, `renderPlainTextBlock`, and `renderPlainTextBlocks` functions delegate
+to those statics.
+
+HTML AST projection follows the same ownership: `Inline.toHtml`, `Block.toHtml`, and `Document.toHtml` return typed
+`@beep/html` nodes. They do not serialize or issue trusted output. `renderSafeHtml` remains the `SafeDocument` boundary
+that proves the projected fragment conformant, enforces HTML policy, and returns opaque `SafeHtml`.
+
+`TaskListItemSpec`/`Md.taskListFromItems` is the tagged task-list input.
 
 ## Development
 

@@ -19,7 +19,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { dual } from "@beep/utils";
 import * as P from "effect/Predicate";
@@ -43,8 +43,7 @@ const $I = $NlpId.create("Handoff/Contract");
  */
 export const ChunkId = S.String.pipe(
   S.brand("ChunkId"),
-  $I.annoteSchema("ChunkId", { description: "Stable identifier for a text chunk in the handoff IR." }),
-  SchemaUtils.withCodecStatics
+  $I.annoteSchema("ChunkId", { description: "Stable identifier for a text chunk in the handoff IR." })
 );
 
 /**
@@ -80,8 +79,7 @@ export type ChunkId = typeof ChunkId.Type;
  */
 export const MentionId = S.String.pipe(
   S.brand("MentionId"),
-  $I.annoteSchema("MentionId", { description: "Stable identifier for a surface mention in the handoff IR." }),
-  SchemaUtils.withCodecStatics
+  $I.annoteSchema("MentionId", { description: "Stable identifier for a surface mention in the handoff IR." })
 );
 
 /**
@@ -117,8 +115,7 @@ export type MentionId = typeof MentionId.Type;
  */
 export const EntityId = S.String.pipe(
   S.brand("EntityId"),
-  $I.annoteSchema("EntityId", { description: "Stable identifier for an entity in the handoff IR." }),
-  SchemaUtils.withCodecStatics
+  $I.annoteSchema("EntityId", { description: "Stable identifier for an entity in the handoff IR." })
 );
 
 /**
@@ -154,8 +151,7 @@ export type EntityId = typeof EntityId.Type;
  */
 export const RelationId = S.String.pipe(
   S.brand("RelationId"),
-  $I.annoteSchema("RelationId", { description: "Stable identifier for a relation in the handoff IR." }),
-  SchemaUtils.withCodecStatics
+  $I.annoteSchema("RelationId", { description: "Stable identifier for a relation in the handoff IR." })
 );
 
 /**
@@ -258,8 +254,7 @@ export const Span = SpanFields.check(
     $I.annoteSchema("Span", {
       description:
         "A half-open span [start, end) into the source text, measured in zero-based UTF-16 code units (the unit `String.length` and `slice` use).",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**

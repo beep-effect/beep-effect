@@ -14,7 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodePackageJsonEffect, findRepoRoot, jsonStringifyPretty, readPackageJsonFile } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, FileSystem, HashSet, Match, Order, Path, pipe } from "effect";
@@ -1410,7 +1410,7 @@ const resolveAffectedDoctestFiles = Effect.fn("CiLane.resolveAffectedDoctestFile
             `[ci] doctest: skipped deleted workspace manifest ${manifestPath} (git show exited ${baseManifestResult.exitCode})`
           ).pipe(Effect.as(O.none<string>()));
         }
-        return Unknown.decodeUnknownEffectFromJsonString(baseManifestResult.output).pipe(
+        return UnknownFromJsonString.decodeUnknownEffect(baseManifestResult.output).pipe(
           Effect.flatMap(decodePackageJsonEffect),
           Effect.map((manifest) => O.some(manifest.name)),
           Effect.catch(() =>

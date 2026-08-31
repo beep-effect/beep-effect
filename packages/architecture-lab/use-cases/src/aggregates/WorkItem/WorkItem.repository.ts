@@ -146,12 +146,17 @@ export const WorkItemRepositoryError = S.Union([
   WorkItemRepositoryConflict,
   WorkItemRepositoryUnavailable,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
+  // fallow-ignore-next-line code-duplication -- preserve the selected guard through Effect's tagged-union rebuild
   $I.annoteSchema("WorkItemRepositoryError", {
     title: "WorkItem repository error",
     description: "Tagged union of WorkItem repository port failures.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"]),
+  (schema) =>
+    schema.pipe(
+      S.toTaggedUnion("_tag"),
+      SchemaUtils.withStatics(() => ({ is: schema.is }))
+    )
 );
 
 /**

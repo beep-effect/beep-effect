@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { JSONSchema, SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R, Str, thunkFalse } from "@beep/utils";
 import { flow, HashSet, JsonPointer, Result } from "effect";
 import { dual } from "effect/Function";
@@ -22,7 +22,7 @@ type SubSchema = JSONSchema.SubSchema.Type;
 type Definitions = Readonly<Record<string, SubSchema>>;
 
 const decodeNode = S.decodeUnknownResult(JSONSchema.NodeCodec);
-const encodeJsonString = Unknown.encodeUnknownResultFromJsonString;
+const encodeJsonString = UnknownFromJsonString.encodeUnknownResult;
 
 const renderLiteral = (value: unknown): string =>
   pipe(
@@ -47,7 +47,7 @@ const renderLiteral = (value: unknown): string =>
  * @since 0.0.0
  */
 export const IdentifierSegment = S.String.check(S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*$/u)).pipe(
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["is"]),
   $I.annoteSchema("IdentifierSegment", {
     description: "An ECMAScript identifier segment safe to render after a dot.",
   })

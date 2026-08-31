@@ -393,7 +393,7 @@ export const EdgeAuthorityError = S.Union([
     title: "Edge authority error",
     description: "Union of every edge authority repository failure.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

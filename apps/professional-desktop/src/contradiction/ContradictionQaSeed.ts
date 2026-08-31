@@ -60,7 +60,7 @@ import {
 import { LiteralKit, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { Cuid } from "@beep/schema/Cuid";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Principal } from "@beep/shared-domain/entity/Principal";
+import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
@@ -317,7 +317,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly deadlineVerified = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.deadline.executed-amendment",
     createdAt: 1_767_225_600_100,
-    publicIdSuffix: Cuid.fromUnknown("deadline"),
+    publicIdSuffix: Cuid.decodeUnknownSync("deadline"),
     span: {
       confidence: 0.99,
       endChar: CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE),
@@ -330,7 +330,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly deadlineUnverified = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.deadline.renewal-notice",
     createdAt: 1_767_225_600_200,
-    publicIdSuffix: Cuid.fromUnknown("notice"),
+    publicIdSuffix: Cuid.decodeUnknownSync("notice"),
     span: {
       confidence: 0.91,
       endChar: Str.length("The renewal notice lists 15 July 2027."),
@@ -343,7 +343,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly capAgreement = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.liability-cap.executed-agreement",
     createdAt: 1_767_225_601_100,
-    publicIdSuffix: Cuid.fromUnknown("agreement"),
+    publicIdSuffix: Cuid.decodeUnknownSync("agreement"),
     span: {
       confidence: 0.97,
       endChar: Str.length("Liability is capped at USD 1,000,000."),
@@ -356,7 +356,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly capEmail = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.liability-cap.negotiation-email",
     createdAt: 1_767_225_601_200,
-    publicIdSuffix: Cuid.fromUnknown("email"),
+    publicIdSuffix: Cuid.decodeUnknownSync("email"),
     span: {
       confidence: 0.88,
       endChar: Str.length("The negotiated cap is USD 750,000."),
@@ -518,14 +518,14 @@ const evidenceVerificationTable = DbSchema.evidenceVerification;
 const edgeVersionTable = DbSchema.edgeVersion;
 const desktopOrganizationId = Shared.OrganizationId.make(1);
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
-const systemPrincipal = Principal.fromUnknown({
+const systemPrincipal = SystemPrincipal.make({
   component: "Runtime",
   kind: "System",
 });
 const schemaVersion = "0.0.0";
 const pendingEvidenceId = EpistemicIdentity.EvidenceId.make(1);
 const pendingVerificationId = Epistemic.EvidenceVerificationId.make(1);
-const verificationPublicIdSuffix = Cuid.fromUnknown("anchor");
+const verificationPublicIdSuffix = Cuid.decodeUnknownSync("anchor");
 const instant = DateTime.makeUnsafe;
 const decodeEvidence = S.decodeUnknownEffect(Evidence);
 const decodeWorkspaceVaultRootPath = S.decodeUnknownEffect(WorkspaceVaultRootPath);

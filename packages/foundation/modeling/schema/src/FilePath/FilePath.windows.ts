@@ -82,7 +82,7 @@ export const WindowsDrivePath = S.NonEmptyString.check(
   $I.annoteSchema("WindowsDrivePath", {
     description: "A Windows drive path with a drive prefix and at least one leaf segment.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -165,7 +165,7 @@ export const WindowsUncPath = S.NonEmptyString.check(
   $I.annoteSchema("WindowsUncPath", {
     description: "A Windows UNC file path with valid server, share, and leaf segments.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -260,7 +260,7 @@ export const WindowsRelativePath = S.NonEmptyString.check(
   $I.annoteSchema("WindowsRelativePath", {
     description: "A Windows relative path that uses backslashes and contains a leaf segment.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

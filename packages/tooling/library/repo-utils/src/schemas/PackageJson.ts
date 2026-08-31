@@ -11,7 +11,7 @@
 
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, FileSystem, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -58,7 +58,7 @@ export const NpmPackageName = S.String.check(S.isMinLength(1))
       title: "Npm Package Name",
       description: "An npm package name that satisfies the package.json SchemaStore constraints.",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 /**
@@ -84,7 +84,7 @@ export const RepoPackageName = S.String.check(S.isMinLength(1))
       description:
         "A repo-local package name, including the legacy mixed-case workspace names currently present in this monorepo.",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 const PackageManager = S.String.check(S.isPattern(packageManagerPattern)).pipe(
@@ -113,7 +113,7 @@ export const RelativeDotPath = S.String.check(S.isPattern(relativeDotPathPattern
     title: "Relative Dot Path",
     description: "A relative path that starts with ./, used by exports and publishConfig.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const ExportTopLevelKey = S.String.check(S.isPattern(exportTopLevelPattern)).pipe(
@@ -121,7 +121,7 @@ const ExportTopLevelKey = S.String.check(S.isPattern(exportTopLevelPattern)).pip
     title: "Export Top Level Key",
     description: "A top-level package exports key such as . or ./subpath.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const ImportSpecifierKey = S.String.check(S.isPattern(importSpecifierPattern)).pipe(
@@ -129,7 +129,7 @@ const ImportSpecifierKey = S.String.check(S.isPattern(importSpecifierPattern)).p
     title: "Import Specifier Key",
     description: "A package imports specifier key such as #internal or #config/*.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const ExportConditionKey = S.String.check(S.isPattern(exportConditionPattern)).pipe(
@@ -137,7 +137,7 @@ const ExportConditionKey = S.String.check(S.isPattern(exportConditionPattern)).p
     title: "Export Condition Key",
     description: "A conditional exports/imports key such as import, require, default, node, or types@>=5.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const StringArray = S.Array(S.String).pipe(
@@ -166,7 +166,7 @@ export const NonEmptyStringValue = S.String.check(S.isMinLength(1)).pipe(
     title: "Non Empty String Value",
     description: "A non-empty string value used for package metadata fields that should not be blank.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const makeStrictStringKeyRecord = <Value extends S.Top>(
@@ -400,8 +400,7 @@ export const Person = S.Union([S.String, PersonObject]).pipe(
     title: "Person",
     description:
       "A package author, contributor, or maintainer, either as a string or a structured object with a required name.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -486,8 +485,7 @@ export const Repository = S.Union([S.String, RepositoryObject]).pipe(
     title: "Repository",
     description:
       "A package repository reference represented as a shorthand string or a structured object with required type and url.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -509,8 +507,7 @@ export const Bugs = S.Union([S.String, BugsObject]).pipe(
     title: "Bugs",
     description:
       "A package bug tracker reference represented as a URL string or a structured object with optional url and email.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -532,8 +529,7 @@ export const Funding = S.Union([S.String, FundingEntry, S.NonEmptyArray(S.Union(
     title: "Funding",
     description:
       "Package funding metadata represented as a URL string, a structured funding object, or a non-empty array of those.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -554,8 +550,7 @@ export const Bin = S.Union([S.String, StringRecord]).pipe(
   $I.annoteSchema("Bin", {
     title: "Bin",
     description: "Executable binaries, either as a single file path string or a record mapping command names to paths.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -578,7 +573,7 @@ export const Browser = S.Union([S.String, S.Record(S.String, BrowserReplacement)
     description:
       "Browser-specific entry points represented as a replacement path string or a record of module replacements.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -645,8 +640,7 @@ export const Man = S.Union([S.String, StringArray]).pipe(
   $I.annoteSchema("Man", {
     title: "Man",
     description: "A man page reference represented as a single file path or an array of file paths.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -667,8 +661,7 @@ export const SideEffects = S.Union([S.Boolean, StringArray]).pipe(
   $I.annoteSchema("SideEffects", {
     title: "Side Effects",
     description: "Whether the package has side effects, represented as a boolean or an array of glob patterns.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -689,8 +682,7 @@ export const BundleDependencies = S.Union([S.Boolean, StringArray]).pipe(
   $I.annoteSchema("BundleDependencies", {
     title: "Bundle Dependencies",
     description: "Bundled dependency metadata represented as a boolean or an array of package names.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -715,7 +707,7 @@ export const PeerDependenciesMeta = S.Record(
     title: "Peer Dependencies Meta",
     description: "Metadata describing peer dependency usage, including whether a peer dependency is optional.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -737,7 +729,7 @@ export const TypesVersions = S.Record(S.String, S.Record(S.String, StringArray))
     title: "Types Versions",
     description: "TypeScript version-specific path mappings for declarations.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -910,7 +902,7 @@ export const PackageExports = S.Union([
     description:
       "The package exports field modeled as a path target, conditional exports object, subpath map, or fallback array.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 type PackageImportsEntry = string | null | { readonly [key: string]: PackageImportsEntryOrFallback };
@@ -989,7 +981,7 @@ export const PackageImports = makeStrictStringKeyRecord(
     title: "Package Imports",
     description: "Private package import mappings keyed by # specifiers.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 type OverrideValue = string | { readonly [key: string]: OverrideValue };
@@ -1053,8 +1045,7 @@ export const Workspaces = S.Union([StringArray, WorkspacesObject]).pipe(
     title: "Workspaces",
     description:
       "Workspace package globs represented as an array of strings or an object with packages and optional nohoist.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -1077,7 +1068,7 @@ export const PublishConfig = S.StructWithRest(PublishConfigBase, [S.Record(S.Str
     description:
       "npm publish configuration with explicit support for access, tag, registry, provenance, bin, exports, and additional JSON-valued config keys.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 const npmPackageJsonFields = {
@@ -1888,7 +1879,7 @@ export const encodePackageJsonPrettyEffect: (input: unknown) => Effect.Effect<st
     return yield* jsonStringifyPretty(validated);
   });
 
-const decodeUnknownFromJsonString = Unknown.decodeUnknownEffectFromJsonString;
+const decodeUnknownFromJsonString = UnknownFromJsonString.decodeUnknownEffect;
 
 /**
  * Read a `package.json` file from disk and decode it into a strict `PackageJson`.

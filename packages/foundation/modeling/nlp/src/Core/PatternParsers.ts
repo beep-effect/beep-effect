@@ -276,7 +276,7 @@ export type BracketStringToPatternElement = typeof BracketStringToPatternElement
  * ```ts import.meta.vitest name="Parse string array elements"
  * import { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
  *
- * const elements = PatternElementsFromString.fromUnknown(["[NOUN]"])
+ * const elements = PatternElementsFromString.decodeUnknownSync(["[NOUN]"])
  * elements[0]?._tag // => "POSPatternElement"
  * ```
  *
@@ -287,7 +287,7 @@ export const PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternE
   $I.annoteSchema("PatternElementsFromString", {
     description: "Decoder for non-empty arrays of supported bracket-string pattern elements.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -321,4 +321,4 @@ export type PatternElementsFromString = typeof PatternElementsFromString.Type;
  * @category validation
  * @since 0.0.0
  */
-export const PatternFromString = (input: unknown) => PatternElementsFromString.fromUnknown(input);
+export const PatternFromString = (input: unknown) => PatternElementsFromString.decodeUnknownSync(input);

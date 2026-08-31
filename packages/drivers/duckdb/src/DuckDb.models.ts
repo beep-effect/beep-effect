@@ -109,7 +109,7 @@ export class DuckDbParquetExport extends S.Class<DuckDbParquetExport>($I`DuckDbP
  * ```ts
  * import { DuckDbRow } from "@beep/duckdb"
  *
- * const row = DuckDbRow.fromUnknown({ count: 1, id: "run-1" })
+ * const row = DuckDbRow.decodeUnknownSync({ count: 1, id: "run-1" })
  * console.log(row.id) // "run-1"
  * ```
  *
@@ -120,7 +120,7 @@ export const DuckDbRow = JsonObject.pipe(
   $I.annoteSchema("DuckDbRow", {
     description: "JSON-compatible row returned from DuckDB queries.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -155,7 +155,7 @@ export type DuckDbRow = typeof DuckDbRow.Type;
  * ```ts
  * import { DuckDbRows } from "@beep/duckdb"
  *
- * const rows = DuckDbRows.fromUnknown([{ id: "run-1" }])
+ * const rows = DuckDbRows.decodeUnknownSync([{ id: "run-1" }])
  * console.log(rows.length) // 1
  * ```
  *
@@ -166,7 +166,7 @@ export const DuckDbRows = S.Array(DuckDbRow).pipe(
   $I.annoteSchema("DuckDbRows", {
     description: "JSON-compatible rows returned from DuckDB queries.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   SchemaUtils.withStatics((schema) => ({
     decodeEffect: S.decodeUnknownEffect(schema),
   }))

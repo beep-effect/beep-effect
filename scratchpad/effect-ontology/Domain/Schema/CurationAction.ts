@@ -36,8 +36,7 @@ const WikidataQid = S.String.check(
     S.brand("WikidataQid"),
     $I.annoteSchema("WikidataQid", {
       description: "Canonical Wikidata item identifier.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 const ActionBase = {

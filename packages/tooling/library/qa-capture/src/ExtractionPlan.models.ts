@@ -883,8 +883,7 @@ export const QaDriverRequest = S.Union([
   S.toTaggedUnion("kind"),
   $I.annoteSchema("QaDriverRequest", {
     description: "Tagged union of ffmpeg driver requests emitted by the planner.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

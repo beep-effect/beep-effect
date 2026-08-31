@@ -381,7 +381,16 @@ const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect
   const exit = yield* Effect.exit(effect);
   expect(Exit.isFailure(exit)).toBe(true);
 });
-const codecStaticKeys = ["is", "fromUnknown", "decodeOption", "decodeUnknownEffect", "encodeEffect", "equivalence"];
+const codecStaticKeys = [
+  "decodeEffect",
+  "decodeUnknownEffect",
+  "decodeUnknownOption",
+  "decodeUnknownSync",
+  "encodeEffect",
+  "encodeUnknownEffect",
+  "equivalence",
+  "is",
+];
 
 describe("P3 identity namespaces", () => {
   it("expose deterministic entity-id metadata", () => {
@@ -401,7 +410,9 @@ describe("P3 identity namespaces", () => {
       for (const key of codecStaticKeys) {
         expect(hasFunctionStatic(spec.schema, key), `${spec.label}.${key}`).toBe(true);
       }
-      expect(O.getOrThrow(invokeStatic(spec.schema, "fromUnknown", 1)), spec.label).toBe(1);
+      expect(hasFunctionStatic(spec.schema, "fromUnknown"), `${spec.label}.fromUnknown`).toBe(false);
+      expect(hasFunctionStatic(spec.schema, "decodeOption"), `${spec.label}.decodeOption`).toBe(false);
+      expect(O.getOrThrow(invokeStatic(spec.schema, "decodeUnknownSync", 1)), spec.label).toBe(1);
     }
   });
 

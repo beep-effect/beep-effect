@@ -24,7 +24,6 @@ import {
 } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, O } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -157,8 +156,7 @@ export const ChangeOperation = Object.assign(
     S.check(PartitionGraphCoherenceCheck),
     $I.annoteSchema("ChangeOperation", {
       description: "Typed change operation applied to an ontology session partition.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   ),
   {
     match: ChangeOperationBase.match,

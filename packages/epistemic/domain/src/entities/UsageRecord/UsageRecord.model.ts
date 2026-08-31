@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { NonNegativeInt, UnknownRecord } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
@@ -17,14 +17,12 @@ const pg = ProductEntity.pg;
 const UsageModelName = S.NonEmptyString.pipe(
   $I.annoteSchema("UsageModelName", {
     description: "Non-empty model name recorded for usage attribution.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 const UsageProviderName = S.NonEmptyString.pipe(
   $I.annoteSchema("UsageProviderName", {
     description: "Non-empty provider name recorded for usage attribution.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

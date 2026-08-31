@@ -9,10 +9,10 @@ import { FastCheck as fc } from "effect/testing";
 describe("HttpStatus", () => {
   it("accepts the complete standard three-digit status range", () => {
     expect(RootHttpStatusCode).toBe(HttpStatus.HttpStatusCode);
-    expect(HttpStatus.HttpStatusCode.decodeOption(100)).toStrictEqual(O.some(100));
-    expect(HttpStatus.HttpStatusCode.decodeOption(599)).toStrictEqual(O.some(599));
-    expect(O.isNone(HttpStatus.HttpStatusCode.decodeOption(99))).toBe(true);
-    expect(O.isNone(HttpStatus.HttpStatusCode.decodeOption(600))).toBe(true);
+    expect(HttpStatus.HttpStatusCode.decodeUnknownOption(100)).toStrictEqual(O.some(100));
+    expect(HttpStatus.HttpStatusCode.decodeUnknownOption(599)).toStrictEqual(O.some(599));
+    expect(O.isNone(HttpStatus.HttpStatusCode.decodeUnknownOption(99))).toBe(true);
+    expect(O.isNone(HttpStatus.HttpStatusCode.decodeUnknownOption(600))).toBe(true);
   });
 
   it("decodes and encodes status names through the canonical schema", () => {

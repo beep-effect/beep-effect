@@ -35,7 +35,7 @@ import {
   WriteContainerMetadataRequest,
   WriteContainerMetadataResult,
 } from "@beep/ffmpeg";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -66,7 +66,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
   );
 };
 
-const ffprobeJson = Unknown.encodeUnknownSyncFromJsonString({
+const ffprobeJson = UnknownFromJsonString.encodeUnknownSync({
   format: { duration: "2.0", start_time: "0.000000" },
   streams: [
     {

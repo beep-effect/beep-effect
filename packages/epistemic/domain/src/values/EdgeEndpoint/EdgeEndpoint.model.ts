@@ -31,8 +31,7 @@ export const EdgeEntityRef = S.NonEmptyString.pipe(
   S.brand("EdgeEntityRef"),
   $I.annoteSchema("EdgeEntityRef", {
     description: "Opaque non-empty reference to a domain entity used as an epistemic edge endpoint.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -73,8 +72,7 @@ export const EdgeObservationRef = S.NonEmptyString.pipe(
   S.brand("EdgeObservationRef"),
   $I.annoteSchema("EdgeObservationRef", {
     description: "Opaque non-empty reference to an observation used as an epistemic edge endpoint.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -185,8 +183,7 @@ export const EdgeEndpoint = EdgeEndpointBase.pipe(
   $I.annoteSchema("EdgeEndpoint", {
     description: "One end of a bitemporal epistemic edge, discriminated on endpoint kind.",
   }),
-  SchemaUtils.withStatics(edgeEndpointStatics),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withStatics(edgeEndpointStatics)
 );
 
 /**

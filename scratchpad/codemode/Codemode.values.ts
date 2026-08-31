@@ -391,7 +391,7 @@ export const CodeModeValue = S.Union([
   $I.annoteSchema("CodeModeValue", {
     description: "Mutable guest values backed by native JavaScript state.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

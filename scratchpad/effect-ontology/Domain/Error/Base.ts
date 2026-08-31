@@ -39,7 +39,7 @@ export const ErrorMessage = S.NonEmptyString.pipe(
     toArbitrary: () => (fc) => fc.string({ minLength: 1, maxLength: 1_024 }),
     description: "Non-empty human-readable diagnostic carried by an ontology domain error.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -370,8 +370,7 @@ export const Milliseconds = NonNegativeInt.annotate({
   S.brand("Milliseconds"),
   $I.annoteSchema("Milliseconds", {
     description: "Finite non-negative integer duration measured in milliseconds.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

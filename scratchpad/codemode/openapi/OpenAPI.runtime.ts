@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { MappedLiteralKit, NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, R, Str, Struct, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
 import { Chunk, Effect, Encoding, flow, HashMap, HashSet, Redacted, Result, Stream } from "effect";
 import * as S from "effect/Schema";
@@ -33,8 +33,8 @@ const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.runtime");
 
 const maxErrorBodyChars = 1_024;
 const maxResponseBodyBytes = 50 * 1_024 * 1_024;
-const decodeJson = Unknown.decodeUnknownOptionFromJsonString;
-const encodeJson = Unknown.encodeUnknownOptionFromJsonString;
+const decodeJson = UnknownFromJsonString.decodeUnknownOption;
+const encodeJson = UnknownFromJsonString.encodeUnknownOption;
 const decodeNonNegativeInt = S.decodeUnknownOption(NonNegativeInt);
 
 const EncodedPathPunctuation = MappedLiteralKit([

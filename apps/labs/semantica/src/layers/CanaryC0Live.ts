@@ -54,14 +54,13 @@ import type { EventBody as EventBodyValue, ProvenanceEvent as ProvenanceEventVal
 import type { ParseOutcome } from "@/schema/Text";
 import type { GoldSource } from "@/services/GoldSource";
 
-const GoldRefJson = S.fromJsonString(GoldRef).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeEffect(schema),
-  }))
-);
+const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const EvalReportJson = S.fromJsonString(EvalReport, { space: 2 });
 const EvalTelemetryJson = S.fromJsonString(EvalRunTelemetry, { space: 2 });
-const fallbackExtractor = SourceTextExtractor.make({ name: "semantica-parser-degraded", version: SEMANTICA_VERSION });
+const fallbackExtractor = SourceTextExtractor.make({
+  name: "semantica-parser-degraded",
+  version: SEMANTICA_VERSION,
+});
 
 const executionFailed = (message: string): C0ExecutionFailed => C0ExecutionFailed.make({ message });
 
@@ -74,7 +73,12 @@ const makeEvent = Effect.fn("CanaryC0.makeEvent")(function* (
   body: EventBodyValue,
   prev: O.Option<ProvenanceEventValue["id"]>
 ) {
-  const id = yield* Effect.fromResult(makeProvenanceEventId({ body, prev })).pipe(Effect.orDie);
+  const id = yield* Effect.fromResult(
+    makeProvenanceEventId({
+      body,
+      prev,
+    })
+  ).pipe(Effect.orDie);
   return ProvenanceEvent.make({ body, id, prev });
 });
 
@@ -94,7 +98,11 @@ const batchEvents = Effect.fn("CanaryC0.batchEvents")(function* (
     return [previous] as const;
   }
   const extracted = yield* makeEvent(
-    EventBody.cases.Extracted.make({ batch: outcome.batch.id, kind: "Extracted", model: outcome.batch.model }),
+    EventBody.cases.Extracted.make({
+      batch: outcome.batch.id,
+      kind: "Extracted",
+      model: outcome.batch.model,
+    }),
     O.some(previous.id)
   );
   return [

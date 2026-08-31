@@ -7,7 +7,7 @@
  */
 
 import { $SharedUseCasesId } from "@beep/identity/packages";
-import { KebabCaseStr, LiteralKit, SchemaUtils } from "@beep/schema";
+import { KebabCaseStr, LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $SharedUseCasesId.create("PromotionGate/PromotionGate.schema");
@@ -163,8 +163,7 @@ export const PromotionGateVerdict = PromotionGateOutcome.toTaggedUnion("outcome"
 }).pipe(
   $I.annoteSchema("PromotionGateVerdict", {
     description: "Total candidate-promotion verdict: clear or blocked with an opaque sanitized reason.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

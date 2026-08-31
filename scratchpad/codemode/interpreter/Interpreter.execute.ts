@@ -5,7 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import { parse } from "acorn";
 import { Cause, Effect, Result as Rs, Scope } from "effect";
@@ -309,7 +309,7 @@ const boundLogs = (logs: ReadonlyArray<string>, maxBytes: number) => {
 const boundFailureDiagnostic = (diagnostic: DiagnosticModel, maxOutputBytes: number) => {
   const serialized = pipe(
     S.encodeUnknownResult(DiagnosticModel)(diagnostic),
-    Rs.flatMap(Unknown.encodeUnknownResultFromJsonString),
+    Rs.flatMap(UnknownFromJsonString.encodeUnknownResult),
     Rs.getOrElse(() => "null")
   );
   const bytes = utf8ByteLength(serialized);
@@ -332,7 +332,7 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
   ResultModel.match(result, {
     Success: (success) => {
       const serialized = pipe(
-        Unknown.encodeUnknownResultFromJsonString(success.value),
+        UnknownFromJsonString.encodeUnknownResult(success.value),
         Rs.getOrElse(() => "null")
       );
       const bytes = utf8ByteLength(serialized);
@@ -348,7 +348,7 @@ const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =
       for (const warning of warnings) {
         const warningJson = pipe(
           S.encodeUnknownResult(DiagnosticModel)(warning),
-          Rs.flatMap(Unknown.encodeUnknownResultFromJsonString),
+          Rs.flatMap(UnknownFromJsonString.encodeUnknownResult),
           Rs.getOrElse(() => "null")
         );
         const warningSize = utf8ByteLength(warningJson) + 1;

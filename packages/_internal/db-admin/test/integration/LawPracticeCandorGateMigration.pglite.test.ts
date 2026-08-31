@@ -6,7 +6,7 @@ import { toCandorDispositionInsert } from "@beep/law-practice-tables/entities/Ca
 import { toIdsSubmissionFactInsert } from "@beep/law-practice-tables/entities/IdsSubmissionFact";
 import { toPatentCitationEventInsert } from "@beep/law-practice-tables/entities/PatentCitationEvent";
 import { makeDrizzle, migrate } from "@beep/postgres";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import {
   fcRuns,
   makePgliteIntegrationGate,
@@ -284,7 +284,7 @@ if (!shouldRunPgliteIntegration) {
                   ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, candidate_window, $1::jsonb, content, fees, modeled_from, office_treatment, operative_date, statement, submission_kind, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`
                   : `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, actor, $1::jsonb, discovery, grounding, observed_at, possible_duplicate_of, quarantine, reference, supersedes, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`;
 
-            const conformantIdentity = yield* Unknown.encodeEffectFromJsonString({
+            const conformantIdentity = yield* UnknownFromJsonString.encodeEffect({
               applicationNumber: "102014000345678",
               kind: "WipoSt13",
               officeCode: "EP",
@@ -295,7 +295,7 @@ if (!shouldRunPgliteIntegration) {
             );
             expect(accepted).toEqual([{ officeCode: "EP" }]);
 
-            const encodedIdentity = yield* Unknown.encodeEffectFromJsonString(identity);
+            const encodedIdentity = yield* UnknownFromJsonString.encodeEffect(identity);
             const violation = yield* sql.unsafe(recordSql, [encodedIdentity, 200, "-st13-invalid"]).pipe(Effect.flip);
 
             expect(violation).toBeInstanceOf(SqlError.SqlError);

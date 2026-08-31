@@ -63,8 +63,7 @@ export const ExecutionRunKey = Sha256Hex.pipe(
   S.brand("ExecutionRunKey"),
   $I.annoteSchema("ExecutionRunKey", {
     description: "Opaque digest key naming one governed run.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -105,8 +104,7 @@ export const DecisionRecordHash = Sha256Hex.pipe(
   S.brand("DecisionRecordHash"),
   $I.annoteSchema("DecisionRecordHash", {
     description: "Seal hash of one execution decision record.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -145,8 +143,7 @@ export const OutcomeRecordHash = Sha256Hex.pipe(
   S.brand("OutcomeRecordHash"),
   $I.annoteSchema("OutcomeRecordHash", {
     description: "Seal hash of one execution outcome record.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -187,8 +184,7 @@ export const SinkDestinationDigest = Sha256Hex.pipe(
   S.brand("SinkDestinationDigest"),
   $I.annoteSchema("SinkDestinationDigest", {
     description: "SHA-256 digest of a sink destination; the raw destination never enters the ledger.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -229,8 +225,7 @@ export const GrantOperationDigest = Sha256Hex.pipe(
   S.brand("GrantOperationDigest"),
   $I.annoteSchema("GrantOperationDigest", {
     description: "SHA-256 digest of a granted operation name; raw names never enter the ledger.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -371,8 +366,7 @@ export const ExecutionDecisionRecord = DecisionVerdictTag.toTaggedUnion("verdict
 }).pipe(
   $I.annoteSchema("ExecutionDecisionRecord", {
     description: "Write-ahead execution decision record, hash-chained per run; denied carries the bounded reason.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -612,8 +606,7 @@ export const ChainVerification = ChainVerificationTag.toTaggedUnion("result")({
 }).pipe(
   $I.annoteSchema("ChainVerification", {
     description: "Chain verification result: intact, or broken at the first failing index.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

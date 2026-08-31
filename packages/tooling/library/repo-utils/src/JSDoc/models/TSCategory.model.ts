@@ -1670,8 +1670,7 @@ export const Category = S.Union(CATEGORY_TAG_SCHEMAS).pipe(
   })),
   $I.annoteSchema("Category", {
     description: "A TypeScript category tag, representing a categorization of TypeScript constructs.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

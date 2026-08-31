@@ -21,11 +21,12 @@ material for capability, fixture, and security comparison only.
 | Module | Purpose |
 |--------|---------|
 | `index.ts` | Package entry point and named re-export surface |
-| `Md.model.ts` | Effect Schema models for inline nodes, block nodes, and documents |
+| `Md.model.ts` | Effect Schema models and schema-owned plain-text and HTML AST projections for inline nodes, block nodes, and documents |
+| `Md.behavior.ts` | Shared list-item run segmentation and compatibility aliases for schema-owned projections |
 | `Md.ts` | Public `Md` DSL namespace and constructor helpers |
 | `Md.render.ts` | Pure/effectful render adapter contracts, render APIs, and schema transformations |
 | `Md.escape.ts` | Markdown/HTML escaping, URL policy sanitation, code-language sanitation, and render primitives |
-| `Md.html.ts` | Direct `SafeDocument` to conformant/safe `@beep/html` AST projection |
+| `Md.html.ts` | `SafeDocument` conformance, policy, and opaque `SafeHtml` serialization boundary |
 | `Md.safe.ts` | Branded user-content refinements and path-located trust-boundary issues |
 
 ## Usage Patterns
@@ -54,13 +55,14 @@ nodes, user-content URLs outside the link/image allow lists, duplicate footnote 
 cannot complete safe HTML serialization. Use `refineSafeDocument` for decoded values and `decodeSafeDocument` for
 encoded external input.
 
-`renderSafeHtml(SafeDocument)` maps directly into the `@beep/html` AST and
-returns its opaque `SafeHtml`. Preserve that marker through intermediate code
-and call `safeHtmlValue` only at a final browser or framework sink.
+`Document.toHtml` maps directly into the `@beep/html` AST. For browser sinks,
+`renderSafeHtml(SafeDocument)` proves that fragment conformant, enforces HTML
+policy, and returns opaque `SafeHtml`. Preserve that marker through intermediate
+code and call `safeHtmlValue` only at a final browser or framework sink.
 
 `Md.rawMarkdown(...)` is trusted Markdown source. URL-bearing render sinks should choose
 `CompatibilityUrlPolicySpec`, `BrowserSafeUrlPolicySpec`, or `StrictWebUrlPolicySpec` explicitly. `UrlPolicySpec`
-is normalized once and applied inside the recursive render fold; legacy `UrlPolicy` values are compatibility adapters.
+is applied inside the recursive render fold.
 
 ## Design Decisions
 

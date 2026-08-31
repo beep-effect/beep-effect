@@ -43,7 +43,7 @@ export const OntologyFilePath = S.NonEmptyString.pipe(
   $I.annoteSchema("OntologyFilePath", {
     description: "Filesystem path for sidecar ontology documents.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
 );
 
 /**
@@ -85,8 +85,7 @@ export type OntologyFilePath = typeof OntologyFilePath.Type;
 export const TurtleDocumentText = S.String.pipe(
   $I.annoteSchema("TurtleDocumentText", {
     description: "Turtle source text.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

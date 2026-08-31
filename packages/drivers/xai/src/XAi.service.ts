@@ -7,7 +7,7 @@
 
 import { $XaiId } from "@beep/identity";
 import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, flow, Layer, Match, pipe, Queue, Redacted, Stream } from "effect";
@@ -570,7 +570,7 @@ const makeStreamingRequest = (request = XAiRequestOptions.make({})): XAiRequestO
   });
 
 const decodeSseJson = decodeJsonString;
-const decodeJsonOption = Unknown.decodeUnknownOptionFromJsonString;
+const decodeJsonOption = UnknownFromJsonString.decodeUnknownOption;
 const encodeJson = encodeJsonString;
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
@@ -690,14 +690,14 @@ const queryValueToStrings = (value: XAiQueryValue): ReadonlyArray<string> => {
   if (A.isArray(value)) {
     return pipe(
       value,
-      A.map((entry) => XAiQueryScalar.decodeOption(entry)),
+      A.map((entry) => XAiQueryScalar.decodeUnknownOption(entry)),
       A.getSomes,
       A.map(queryScalarToString)
     );
   }
 
   return pipe(
-    XAiQueryScalar.decodeOption(value),
+    XAiQueryScalar.decodeUnknownOption(value),
     O.map((scalar) => A.make(queryScalarToString(scalar))),
     O.getOrElse(A.empty<string>)
   );

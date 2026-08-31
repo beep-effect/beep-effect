@@ -39,8 +39,7 @@ export const PositivePixelDimension = S.Int.check(
 ).pipe(
   $I.annoteSchema("PositivePixelDimension", {
     description: "A positive integer pixel dimension.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -103,8 +102,7 @@ export const FaceDetectionConfidence = S.Finite.check(
 ).pipe(
   $I.annoteSchema("FaceDetectionConfidence", {
     description: "Normalized face detection confidence between zero and one.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -154,7 +152,7 @@ export const RawFaceDetectionConfidence = S.Finite.pipe(
   $I.annoteSchema("RawFaceDetectionConfidence", {
     description: "Finite raw ONNX confidence score normalized into the zero-to-one confidence domain.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync"])
 );
 
 /**
@@ -215,8 +213,7 @@ export const FaceDetectionPercentage = S.Finite.check(
 ).pipe(
   $I.annoteSchema("FaceDetectionPercentage", {
     description: "Percentage value between zero and 100.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -264,8 +261,7 @@ export const FaceDetectionTopK = S.Int.check(
 ).pipe(
   $I.annoteSchema("FaceDetectionTopK", {
     description: "Positive maximum number of face detections kept after non-maximum suppression.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -313,8 +309,7 @@ export const NonNegativeImageCoordinate = S.Finite.check(
 ).pipe(
   $I.annoteSchema("NonNegativeImageCoordinate", {
     description: "Finite image coordinate or dimension greater than or equal to zero.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

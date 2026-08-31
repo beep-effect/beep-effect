@@ -282,9 +282,9 @@ const ExistsSqlRow = S.Struct({ exists: S.Boolean }).pipe(
   })
 );
 
-const OneEmbeddingSqlRow = S.Tuple([EmbeddingSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
-const OneCountSqlRow = S.Tuple([CountSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
-const OneExistsSqlRow = S.Tuple([ExistsSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
+const OneEmbeddingSqlRow = S.Tuple([EmbeddingSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const OneCountSqlRow = S.Tuple([CountSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const OneExistsSqlRow = S.Tuple([ExistsSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeExecution = normalizeDrizzleError("execute");

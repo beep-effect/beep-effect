@@ -32,7 +32,7 @@ import {
   UnknownInline,
   UnknownMeta,
 } from "@beep/pandoc-ast/Pandoc.model";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { R } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -78,7 +78,7 @@ const SemanticClosureDocumentArbitrary = fc
     })
   );
 const JsonArbitrary = S.toArbitrary(S.Json)(fc);
-const decodeUnknownJsonString = Unknown.decodeUnknownEffectFromJsonString;
+const decodeUnknownJsonString = UnknownFromJsonString.decodeUnknownEffect;
 const pinnedPandocConstructorNames = [
   "Pandoc",
   "Meta",

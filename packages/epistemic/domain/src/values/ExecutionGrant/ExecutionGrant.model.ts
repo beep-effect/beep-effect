@@ -132,7 +132,7 @@ export const SinkDestination = S.NonEmptyString.pipe(
   $I.annoteSchema("SinkDestination", {
     description: "Raw granted sink destination; grant-side only, never persisted in execution records.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -211,8 +211,7 @@ export const GrantPurpose = S.NonEmptyString.pipe(
   S.brand("GrantPurpose"),
   $I.annoteSchema("GrantPurpose", {
     description: "Purpose a grant was issued for; opaque to evaluation.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -250,8 +249,7 @@ export const GrantResource = S.NonEmptyString.pipe(
   S.brand("GrantResource"),
   $I.annoteSchema("GrantResource", {
     description: "Resource selector a grant covers; opaque to evaluation in v1.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -291,8 +289,7 @@ export const GrantOperation = S.NonEmptyString.pipe(
   S.brand("GrantOperation"),
   $I.annoteSchema("GrantOperation", {
     description: "Operation a grant authorizes; exact match, no wildcard.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -330,12 +327,12 @@ export type GrantOperation = typeof GrantOperation.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const PolicyRevision = SemanticVersion.pipe(
+export const PolicyRevision = S.make<(typeof SemanticVersion)["Rebuild"]>(SemanticVersion.ast).pipe(
   S.brand("PolicyRevision"),
   $I.annoteSchema("PolicyRevision", {
     description: "Pinned policy revision a grant and its records were evaluated under.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**

@@ -397,7 +397,6 @@ export const GetOpenAPIStatus200Response = S.Record(S.String, S.Unknown).pipe(
     description:
       "GetOpenAPIStatus200Response schema generated from the Runpod OpenAPI document.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**
@@ -437,7 +436,6 @@ export const GetDocsStatus200TextResponse = S.String.pipe(
     description:
       "GetDocsStatus200TextResponse schema generated from the Runpod OpenAPI document.",
   }),
-  SchemaUtils.withCodecStatics,
 );
 
 /**

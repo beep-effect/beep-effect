@@ -68,13 +68,15 @@ const AiMetricsAbsoluteDataRootCheck = S.makeFilter(
  * @category models
  * @since 0.0.0
  */
-export const AiMetricsAbsoluteDataRoot = FilePath.check(AiMetricsAbsoluteDataRootCheck).pipe(
-  S.brand("AiMetricsAbsoluteDataRoot"),
-  SchemaUtils.withEffectCodecStatics,
-  $I.annoteSchema("AiMetricsAbsoluteDataRoot", {
-    description: "Absolute non-root filesystem path accepted for an AI metrics data root.",
-  })
-);
+export const AiMetricsAbsoluteDataRoot = S.make<(typeof FilePath)["Rebuild"]>(FilePath.ast)
+  .check(AiMetricsAbsoluteDataRootCheck)
+  .pipe(
+    S.brand("AiMetricsAbsoluteDataRoot"),
+    SchemaUtils.withCodecStatics(["decodeEffect"]),
+    $I.annoteSchema("AiMetricsAbsoluteDataRoot", {
+      description: "Absolute non-root filesystem path accepted for an AI metrics data root.",
+    })
+  );
 
 /**
  * Runtime type for {@link AiMetricsAbsoluteDataRoot}.

@@ -6,7 +6,7 @@
  *
  * @since 0.1.0
  */
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -27,7 +27,7 @@ const CWD = "/repo";
 const PROJECT_SETTINGS = `${CWD}/.claude/settings.json`;
 const MCP_PATH = `${CWD}/.mcp.json`;
 const SKILL_PATH = `${CWD}/skills/greet/SKILL.md`;
-const encodeJson = Unknown.encodeSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const notFoundError = (path: string, method: string) =>
   PlatformError.systemError({

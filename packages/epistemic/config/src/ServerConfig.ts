@@ -32,7 +32,7 @@ const $I = $EpistemicConfigId.create("ServerConfig");
  * @category constants
  * @since 0.0.0
  */
-export const defaultPolicyRevision = PolicyRevision.fromUnknown("1.0.0");
+export const defaultPolicyRevision = PolicyRevision.decodeUnknownSync("1.0.0");
 
 /**
  * Destination allowlist configuration declaration.
@@ -110,7 +110,7 @@ export const EpistemicPolicyRevisionConfig = Config.schema(PolicyRevision, "EPIS
  * import { SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
  *
  * const config = EpistemicServerConfig.make({
- *   destinationAllowlist: [SinkDestination.fromUnknown("https://registry.example")],
+ *   destinationAllowlist: [SinkDestination.decodeUnknownSync("https://registry.example")],
  *   policyRevision: defaultPolicyRevision
  * })
  * console.log(config.destinationAllowlist.length) // 1

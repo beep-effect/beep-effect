@@ -18,12 +18,13 @@ import type { LangExtractRequest } from "@beep/langextract/Extraction";
 const $I = $LangExtractId.create("Service");
 
 const PromptExampleEnvelope = ExtractionExample.mapFields(({ extractions }) => ({ extractions })).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    encodeEffectFromJsonString: S.encodeEffect(S.fromJsonString(schema)),
-  })),
   $I.annoteSchema("PromptExampleEnvelope", {
     description: "JSON envelope containing expected extractions for one few-shot LangExtract prompt example.",
   })
+);
+
+const PromptExampleEnvelopeFromJsonString = S.fromJsonString(PromptExampleEnvelope).pipe(
+  SchemaUtils.withCodecStatics(["encodeEffect"])
 );
 
 const renderTarget = (target: LangExtractRequest["targets"][number]): string => {
@@ -39,7 +40,7 @@ const renderTarget = (target: LangExtractRequest["targets"][number]): string => 
 };
 
 const renderExample = Effect.fnUntraced(function* (example: ExtractionExample) {
-  const encoded = yield* PromptExampleEnvelope.encodeEffectFromJsonString({
+  const encoded = yield* PromptExampleEnvelopeFromJsonString.encodeEffect({
     extractions: example.extractions,
   }).pipe(
     Effect.mapError(() =>

@@ -93,7 +93,7 @@ describe("makeTikaAppFileProcessingEngine", () => {
       javaPath: "java",
       timeoutMillis: 120_000,
     });
-    expect(TikaContentText.fromUnknown("\n  hello corpus world\n\n")).toBe("hello corpus world");
+    expect(TikaContentText.decodeUnknownSync("\n  hello corpus world\n\n")).toBe("hello corpus world");
   });
 
   it("round-trips schema-derived tika-app schemas through encoded form", () =>

@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -26,8 +26,8 @@ import type { LawEvaluation } from "./EvalScoring.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalLawLanes");
 const SCHEMA_FIRST_FIXTURE_PACKAGE_PREFIX = "packages/fixture/";
-const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
-const decodeUnknownJsonOption = Unknown.decodeUnknownOptionFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const decodeUnknownJsonOption = UnknownFromJsonString.decodeUnknownOption;
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
 const normalizePathSeparators = Str.replaceAll("\\", "/");

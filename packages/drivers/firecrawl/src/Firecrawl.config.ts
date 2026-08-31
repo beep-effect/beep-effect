@@ -52,8 +52,7 @@ export const FirecrawlApiUrl = S.String.pipe(
   ),
   $I.annoteSchema("FirecrawlApiUrl", {
     description: "Firecrawl API base URL with trailing slashes normalized away at the schema boundary.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

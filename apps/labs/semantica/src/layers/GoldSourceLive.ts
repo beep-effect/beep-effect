@@ -14,16 +14,8 @@ import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
 import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 
-const GoldFileJson = S.fromJsonString(GoldFileEncoded).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeEffect(schema),
-  }))
-);
-const GoldRefJson = S.fromJsonString(GoldRef).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeEffect: S.decodeEffect(schema),
-  }))
-);
+const GoldFileJson = S.fromJsonString(GoldFileEncoded).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
+const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const unavailable = (reason: GoldUnavailable["reason"], message: string): GoldUnavailable =>

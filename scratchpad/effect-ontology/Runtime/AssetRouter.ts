@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, Inspectable } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -283,7 +283,7 @@ export const AssetRouter = HttpRouter.addAll([
       }
 
       // Parse and return as JSON using Effect
-      const report = yield* Unknown.decodeEffectFromJsonString(content.value).pipe(Effect.option);
+      const report = yield* UnknownFromJsonString.decodeEffect(content.value).pipe(Effect.option);
 
       if (O.isNone(report)) {
         return yield* HttpServerResponse.json(

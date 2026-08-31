@@ -3859,6 +3859,7 @@ describe("files command", { concurrent: false }, () => {
             ImageCurationDecisionDocument.make({
               decisions: [
                 {
+                  crop: { height: 24, left: 0, top: 0, width: 32 },
                   disposition: "active-core",
                   reasons: ["clean-current-identity"],
                   sourceName: "first.jpg",
