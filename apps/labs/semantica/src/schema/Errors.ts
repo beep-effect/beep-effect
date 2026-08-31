@@ -46,6 +46,22 @@ const RelationPreviewFailureReason = LiteralKit([
   })
 );
 
+const ProjectionFailureReason = LiteralKit([
+  "embedding-degraded",
+  "expectation-mismatch",
+  "expectation-unavailable",
+  "model-mismatch",
+  "no-embedding-inputs",
+  "rdf-failed",
+  "rebuild-mismatch",
+  "report-invalid",
+  "vector-failed",
+]).annotate(
+  $I.annote("ProjectionFailureReason", {
+    description: "Stable reason codes for C1 embedding, vector, RDF, expectation, and rebuild failures.",
+  })
+);
+
 /**
  * Reports that a requested source document cannot be listed or read.
  *
@@ -310,5 +326,31 @@ export class RelationPreviewFailed extends S.TaggedError<RelationPreviewFailed>(
   { message: S.NonEmptyString, reason: RelationPreviewFailureReason },
   $I.annoteError<RelationPreviewFailed>("RelationPreviewFailed", {
     description: "Expected failure while validating or executing the zero-spend relation-candidate preview.",
+  })
+) {}
+
+/**
+ * Reports a fail-closed C1 projection or rebuild boundary failure.
+ *
+ * **Example** (Create an empty-projection failure)
+ *
+ * ```ts
+ * import { ProjectionFailed } from "@/schema/Errors"
+ *
+ * const error = ProjectionFailed.make({
+ *   message: "No claim-bearing chunks were available.",
+ *   reason: "no-embedding-inputs"
+ * })
+ * console.log(error.reason) // "no-embedding-inputs"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ProjectionFailed extends S.TaggedError<ProjectionFailed>($I`ProjectionFailed`)(
+  "ProjectionFailed",
+  { message: S.NonEmptyString, reason: ProjectionFailureReason },
+  $I.annoteError<ProjectionFailed>("ProjectionFailed", {
+    description: "Expected C1 failure with a stable projection or rebuild reason.",
   })
 ) {}

@@ -50,17 +50,17 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-P2 C0 is complete. The evidence-quote candidate passed the first vertical
-slice, all three G-relation papers, and the full-W1 R2 gate live and replay.
-The full reports were byte-identical; all 25 W1 papers parsed and extracted;
-unexpected degradation and failed anchors were zero. The retry was never
-used. P3 C1 waits for this C0 evidence PR to become merge-ready and land; its
-OpenAI-driver dependency is already merged.
+P3 C1 is complete. The first-probe projection candidate passed the committed G
+kNN and SPARQL expectations, alternate-dimension keying, rebuild identity, and
+the full-W1 R2 gate live and replay. The full reports were byte-identical; all
+25 W1 papers plus F1 projected without unexpected degradation. The retry was
+never used. P4 C2 waits for this C1 evidence PR to become merge-ready and land.
 
 ## Latest evidence
 
-[`history/p2-c0-r2.md`](./history/p2-c0-r2.md) records the full-W1 live/replay
-gate and resulting family verdicts.
+[`history/p3-c1-r2.md`](./history/p3-c1-r2.md) records the C1 G-projection,
+rebuild-identity, full-W1 live/replay gate, and resulting family verdicts.
+[`history/p2-c0-r2.md`](./history/p2-c0-r2.md) records the C0 full-W1 gate.
 [`history/p2-c0-relation-slate.md`](./history/p2-c0-relation-slate.md) records
 the preceding slice and relation-paper extension. The earlier
 [`history/p2-c0-evidence-quote-reentry.md`](./history/p2-c0-evidence-quote-reentry.md)

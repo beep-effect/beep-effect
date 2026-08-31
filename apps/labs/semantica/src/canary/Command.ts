@@ -12,6 +12,7 @@ import { LanguageModelRuntimeLive, XAiGoldModelIdentityLive, XAiGoldProviderLive
 import { LabConfig } from "@/runtime/Config";
 import { CanaryStage, EvalSelectionMode } from "@/schema/Eval";
 import { CanaryC0 } from "@/services/CanaryC0";
+import { CanaryC1 } from "@/services/CanaryC1";
 import type * as O from "effect/Option";
 import type {
   AnchorRejected,
@@ -20,6 +21,7 @@ import type {
   GoldUnavailable,
   LedgerFailed,
   ModelRevisionUnpinned,
+  ProjectionFailed,
   ReportInvalid,
 } from "@/schema/Errors";
 import type { GoldFile } from "@/schema/Gold";
@@ -145,17 +147,25 @@ type CanaryStageFailure =
   | GoldUnavailable
   | LedgerFailed
   | ModelRevisionUnpinned
+  | ProjectionFailed
   | ReportInvalid
   | StageNotImplemented;
 
-const runStage = (stage: CanaryStage, options: CanaryOptions): Effect.Effect<void, CanaryStageFailure, CanaryC0> =>
+const runStage = (
+  stage: CanaryStage,
+  options: CanaryOptions
+): Effect.Effect<void, CanaryStageFailure, CanaryC0 | CanaryC1> =>
   CanaryStage.$match(stage, {
     c0: () =>
       CanaryC0.pipe(
         Effect.flatMap((service) => service.run(options)),
         Effect.asVoid
       ),
-    c1: () => failStage(stage, options),
+    c1: () =>
+      CanaryC1.pipe(
+        Effect.flatMap((service) => service.run(options)),
+        Effect.asVoid
+      ),
     c2: () => failStage(stage, options),
   });
 
@@ -294,8 +304,9 @@ const RelationCommand = Command.make("relation").pipe(
  *
  * **Details**
  *
- * C0 runs the parse, extraction, ledger, and evaluation workflow. C1 and C2
- * retain the typed {@link StageNotImplemented} boundary.
+ * C0 runs the parse, extraction, ledger, and evaluation workflow. C1 rebuilds
+ * dimension-keyed vector and RDF projections from C0 truth. C2 retains the
+ * typed {@link StageNotImplemented} boundary.
  *
  * **Example** (Create a programmatic runner)
  *

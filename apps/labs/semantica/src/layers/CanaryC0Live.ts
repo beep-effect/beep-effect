@@ -30,6 +30,7 @@ import { SEMANTICA_VERSION } from "@/runtime/Version";
 import { contentDigest } from "@/schema/Digest";
 import { C0ExecutionFailed, GoldUnavailable, ReportInvalid } from "@/schema/Errors";
 import { EvalReport, EvalRun, EvalSelection, EvalSelectionMode, makeRunId } from "@/schema/Eval";
+import { C0ExecutionResult } from "@/schema/Execution";
 import { GoldRef } from "@/schema/Gold";
 import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
 import { EvalRunTelemetry } from "@/schema/Telemetry";
@@ -185,208 +186,205 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
   const path = yield* Path.Path;
   const providerCache = yield* ProviderCache;
 
+  const runWithSnapshot = Effect.fn("CanaryC0.runWithSnapshot")(function* (options: CanaryOptions) {
+    const startedAt = yield* DateTime.now;
+    const startedMillis = yield* Clock.currentTimeMillis;
+    const paper = yield* selectedPaper(options.paper);
+    const includeW1 = selectionIncludesW1(options.selection);
+    if (!includeW1 && O.isSome(paper)) {
+      return yield* executionFailed("The --paper flag requires --selection f1+w1.");
+    }
+    const selection = yield* loadDocumentSelection(options.manifest, paper, includeW1).pipe(
+      Effect.provideService(CorpusManifestBuilder, corpusManifestBuilder),
+      Effect.provideService(F1Catalog, f1Catalog),
+      Effect.mapError(() => executionFailed("The C0 document selection failed validation."))
+    );
+    const goldPath = path.join(config.goldDirectory, "gold.json");
+    const gold = yield* fs.readFileString(goldPath).pipe(
+      Effect.flatMap(GoldRefJson.decodeEffect),
+      Effect.mapError(() =>
+        GoldUnavailable.make({
+          message: `Required gold reference is unavailable: ${goldPath}`,
+          reason: "read-failed",
+        })
+      )
+    );
+    const documents = yield* documentSource.list(selection);
+    const w1 = A.getSomes(
+      A.map(documents, (document) =>
+        document.origin.kind === "W1Paper" ? O.some(document.origin.paperId) : O.none<CorpusPaperId>()
+      )
+    );
+    const f1 = A.getSomes(
+      A.map(documents, (document) =>
+        document.origin.kind === "Fixture" ? O.some(document.origin.fixtureId) : O.none<F1FixtureId>()
+      )
+    );
+    const selectedF1 = yield* A.match(f1, {
+      onEmpty: () => Effect.fail(executionFailed("C0 requires at least one F1 fixture.")),
+      onNonEmpty: Effect.succeed,
+    });
+    const hostedModel = yield* AnthropicExtractionModelIdentity({
+      artifactHash: yield* HOSTED_EXTRACTION_ARTIFACT_HASH.pipe(Effect.provideService(Crypto.Crypto, crypto)),
+      model: config.extractorModel,
+    });
+    const runBody = {
+      corpusHash: selection.manifest.corpusHash,
+      extractor: hostedModel,
+      fixtureIndexDigest: yield* contentDigest(F1Index)(selection.fixtures).pipe(
+        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.orDie
+      ),
+      gold,
+      patternLane: PATTERN_MODEL_IDENTITY,
+      selection: EvalSelection.make({ f1: selectedF1, w1 }),
+      stage: "c0" as const,
+    };
+    const run = EvalRun.make({ ...runBody, id: yield* Effect.fromResult(makeRunId(runBody)).pipe(Effect.orDie) });
+    const mode = RuntimeMode.$match(config.offline || options.offline ? "replay" : "live", {
+      live: () => "live" as const,
+      replay: () => "replay" as const,
+    });
+    const selectedConfig = LabConfig.of({ ...config, mode, offline: mode === "replay" });
+    const ledgerDirectory = path.join(config.ledgerRoot, run.id, mode);
+    yield* fs
+      .remove(ledgerDirectory, { force: true, recursive: true })
+      .pipe(Effect.mapError(() => executionFailed("The prior C0 mode ledger could not be cleared.")));
+    const beforeBytes = yield* directoryBytes(fs, path, ledgerDirectory);
+
+    const support = Layer.mergeAll(
+      Layer.succeed(Canonicalizer, canonicalizer),
+      Layer.succeed(Crypto.Crypto, crypto),
+      Layer.succeed(FileSystem.FileSystem, fs),
+      Layer.succeed(LabConfig, selectedConfig),
+      Layer.succeed(Path.Path, path),
+      Layer.succeed(ProviderCache, providerCache)
+    );
+    const identity = ActiveModelIdentityLive(hostedModel);
+    const languageModel = LanguageModelRuntimeLive(hostedProvider).pipe(
+      Layer.provide(identity),
+      Layer.provide(support)
+    );
+    const hosted = HostedLangExtractLive.pipe(
+      Layer.provide(languageModel),
+      Layer.provide(identity),
+      Layer.provide(support)
+    );
+    const nlp = NLPService.layer(WinkBackendLive).pipe(Layer.provide(WinkEngineLive));
+    const pattern = PatternExtractorLive.pipe(Layer.provide(nlp), Layer.provide(support));
+    const evaluator = EvaluatorLive.pipe(Layer.provide(goldSourceLayer(config.goldDirectory)), Layer.provide(support));
+    const executionLayer = Layer.mergeAll(
+      hosted,
+      pattern,
+      evaluator,
+      LedgerLive({ ledgerRoot: config.ledgerRoot, mode, runId: run.id }).pipe(Layer.provide(support))
+    );
+
+    const execution = yield* Effect.scoped(
+      Layer.build(executionLayer).pipe(
+        Effect.mapError(() => executionFailed("The selected C0 execution layers could not be acquired.")),
+        Effect.flatMap((context) =>
+          Effect.gen(function* () {
+            const layersReadyMillis = yield* Clock.currentTimeMillis;
+            const hostedExtractor = yield* HostedExtractor;
+            const patternExtractor = yield* PatternExtractor;
+            const ledger = yield* Ledger;
+            const evaluatorService = yield* Evaluator;
+            const results = yield* Effect.forEach(
+              documents,
+              Effect.fnUntraced(function* (document) {
+                const documentStarted = yield* Clock.currentTimeMillis;
+                const bytes = yield* documentSource.read(document);
+                const outcome = yield* parser.parse(document, bytes);
+                const ingested = yield* ProvenanceEvent.makeEffect({
+                  body: EventBody.cases.Ingested.make({ document: document.id, kind: "Ingested" }),
+                  id: document.acquired,
+                  prev: O.none(),
+                }).pipe(Effect.mapError(() => executionFailed("The document acquisition event id is not canonical.")));
+                const parsed = yield* makeEvent(parsedEventBody(document, outcome), O.some(ingested.id));
+                if (outcome.outcome === "Degraded") {
+                  yield* ledger.appendDocument(document, outcome, O.none(), [], [ingested, parsed]);
+                  return {
+                    outcomes: [] as ReadonlyArray<ExtractOutcomeValue>,
+                    timing: (yield* Clock.currentTimeMillis) - documentStarted,
+                  };
+                }
+                const canonical = yield* canonicalizer.identify(document, outcome);
+                const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Crypto.Crypto, crypto));
+                const chunked = yield* makeEvent(
+                  EventBody.cases.Chunked.make({
+                    chunks: A.map(chunks, (chunk) => chunk.id),
+                    document: document.id,
+                    kind: "Chunked",
+                  }),
+                  O.some(parsed.id)
+                );
+                yield* ledger.appendDocument(document, outcome, O.some(canonical), chunks, [ingested, parsed, chunked]);
+                const extractionOutcomes = yield* Effect.all(
+                  [hostedExtractor.extract(canonical, chunks), patternExtractor.extract(canonical, chunks)],
+                  { concurrency: 2 }
+                ).pipe(Effect.provideService(Crypto.Crypto, crypto));
+                yield* Effect.forEach(
+                  extractionOutcomes,
+                  Effect.fnUntraced(function* (extraction) {
+                    yield* ledger.appendBatch(extraction, yield* batchEvents(extraction, chunked));
+                  }),
+                  { concurrency: 1, discard: true }
+                );
+                return { outcomes: extractionOutcomes, timing: (yield* Clock.currentTimeMillis) - documentStarted };
+              }),
+              { concurrency: 1 }
+            );
+            const outcomes = A.flatMap(results, (result) => result.outcomes);
+            const snapshot = yield* ledger.read(run.id);
+            const report = yield* evaluatorService
+              .score(run, snapshot, outcomes)
+              .pipe(Effect.provideService(Crypto.Crypto, crypto));
+            return {
+              coldStartMs: N.max(0, layersReadyMillis - startedMillis),
+              report,
+              snapshot,
+              timings: A.map(results, (result) => result.timing),
+            };
+          }).pipe(Effect.provide(context))
+        )
+      )
+    );
+
+    const endedMillis = yield* Clock.currentTimeMillis;
+    const afterBytes = yield* directoryBytes(fs, path, ledgerDirectory);
+    const outputDirectory = options.out.pipe(O.getOrElse(() => path.join(".beep/semantica/runs", run.id, mode)));
+    yield* fs
+      .makeDirectory(outputDirectory, { recursive: true })
+      .pipe(Effect.mapError(() => executionFailed("The C0 output directory could not be created.")));
+    const telemetry = EvalRunTelemetry.make({
+      coldStartMs: NonNegativeInt.make(execution.coldStartMs),
+      dependencyBytes: O.none(),
+      diskGrowthBytes: NonNegativeInt.make(N.max(0, afterBytes - beforeBytes)),
+      mode,
+      modelBytes: O.none(),
+      p95Ms: NonNegativeInt.make(p95(execution.timings)),
+      reportDigest: execution.report.reportDigest,
+      rssBytes: NonNegativeInt.make(process.memoryUsage().rss),
+      runId: run.id,
+      schemaVersion: "eval-telemetry/v1",
+      startedAt,
+      wallClockMs: NonNegativeInt.make(N.max(0, endedMillis - startedMillis)),
+    });
+    yield* writeJson(fs, EvalReportJson, path.join(outputDirectory, "eval-report.json"), execution.report);
+    yield* writeJson(fs, EvalTelemetryJson, path.join(outputDirectory, "eval-telemetry.json"), telemetry);
+    yield* Console.log(execution.report.reportDigest);
+    if (execution.report.unexpectedDegraded > 0) {
+      return yield* ReportInvalid.make({ message: "C0 completed with unexpected degraded documents." });
+    }
+    return C0ExecutionResult.make({ report: execution.report, snapshot: execution.snapshot, telemetry });
+  });
+
   return CanaryC0.of({
-    run: Effect.fn("CanaryC0.run")(function* (options: CanaryOptions) {
-      const startedAt = yield* DateTime.now;
-      const startedMillis = yield* Clock.currentTimeMillis;
-      const paper = yield* selectedPaper(options.paper);
-      const includeW1 = selectionIncludesW1(options.selection);
-      if (!includeW1 && O.isSome(paper)) {
-        return yield* executionFailed("The --paper flag requires --selection f1+w1.");
-      }
-      const selection = yield* loadDocumentSelection(options.manifest, paper, includeW1).pipe(
-        Effect.provideService(CorpusManifestBuilder, corpusManifestBuilder),
-        Effect.provideService(F1Catalog, f1Catalog),
-        Effect.mapError(() => executionFailed("The C0 document selection failed validation."))
-      );
-      const goldPath = path.join(config.goldDirectory, "gold.json");
-      const gold = yield* fs.readFileString(goldPath).pipe(
-        Effect.flatMap(GoldRefJson.decodeEffect),
-        Effect.mapError(() =>
-          GoldUnavailable.make({
-            message: `Required gold reference is unavailable: ${goldPath}`,
-            reason: "read-failed",
-          })
-        )
-      );
-      const documents = yield* documentSource.list(selection);
-      const w1 = A.getSomes(
-        A.map(documents, (document) =>
-          document.origin.kind === "W1Paper" ? O.some(document.origin.paperId) : O.none<CorpusPaperId>()
-        )
-      );
-      const f1 = A.getSomes(
-        A.map(documents, (document) =>
-          document.origin.kind === "Fixture" ? O.some(document.origin.fixtureId) : O.none<F1FixtureId>()
-        )
-      );
-      const selectedF1 = yield* A.match(f1, {
-        onEmpty: () => Effect.fail(executionFailed("C0 requires at least one F1 fixture.")),
-        onNonEmpty: Effect.succeed,
-      });
-      const hostedModel = yield* AnthropicExtractionModelIdentity({
-        artifactHash: yield* HOSTED_EXTRACTION_ARTIFACT_HASH.pipe(Effect.provideService(Crypto.Crypto, crypto)),
-        model: config.extractorModel,
-      });
-      const runBody = {
-        corpusHash: selection.manifest.corpusHash,
-        extractor: hostedModel,
-        fixtureIndexDigest: yield* contentDigest(F1Index)(selection.fixtures).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
-          Effect.orDie
-        ),
-        gold,
-        patternLane: PATTERN_MODEL_IDENTITY,
-        selection: EvalSelection.make({ f1: selectedF1, w1 }),
-        stage: "c0" as const,
-      };
-      const run = EvalRun.make({ ...runBody, id: yield* Effect.fromResult(makeRunId(runBody)).pipe(Effect.orDie) });
-      const mode = RuntimeMode.$match(config.offline || options.offline ? "replay" : "live", {
-        live: () => "live" as const,
-        replay: () => "replay" as const,
-      });
-      const selectedConfig = LabConfig.of({ ...config, mode, offline: mode === "replay" });
-      const ledgerDirectory = path.join(config.ledgerRoot, run.id, mode);
-      yield* fs
-        .remove(ledgerDirectory, { force: true, recursive: true })
-        .pipe(Effect.mapError(() => executionFailed("The prior C0 mode ledger could not be cleared.")));
-      const beforeBytes = yield* directoryBytes(fs, path, ledgerDirectory);
-
-      const support = Layer.mergeAll(
-        Layer.succeed(Canonicalizer, canonicalizer),
-        Layer.succeed(Crypto.Crypto, crypto),
-        Layer.succeed(FileSystem.FileSystem, fs),
-        Layer.succeed(LabConfig, selectedConfig),
-        Layer.succeed(Path.Path, path),
-        Layer.succeed(ProviderCache, providerCache)
-      );
-      const identity = ActiveModelIdentityLive(hostedModel);
-      const languageModel = LanguageModelRuntimeLive(hostedProvider).pipe(
-        Layer.provide(identity),
-        Layer.provide(support)
-      );
-      const hosted = HostedLangExtractLive.pipe(
-        Layer.provide(languageModel),
-        Layer.provide(identity),
-        Layer.provide(support)
-      );
-      const nlp = NLPService.layer(WinkBackendLive).pipe(Layer.provide(WinkEngineLive));
-      const pattern = PatternExtractorLive.pipe(Layer.provide(nlp), Layer.provide(support));
-      const evaluator = EvaluatorLive.pipe(
-        Layer.provide(goldSourceLayer(config.goldDirectory)),
-        Layer.provide(support)
-      );
-      const executionLayer = Layer.mergeAll(
-        hosted,
-        pattern,
-        evaluator,
-        LedgerLive({ ledgerRoot: config.ledgerRoot, mode, runId: run.id }).pipe(Layer.provide(support))
-      );
-
-      const execution = yield* Effect.scoped(
-        Layer.build(executionLayer).pipe(
-          Effect.mapError(() => executionFailed("The selected C0 execution layers could not be acquired.")),
-          Effect.flatMap((context) =>
-            Effect.gen(function* () {
-              const layersReadyMillis = yield* Clock.currentTimeMillis;
-              const hostedExtractor = yield* HostedExtractor;
-              const patternExtractor = yield* PatternExtractor;
-              const ledger = yield* Ledger;
-              const evaluatorService = yield* Evaluator;
-              const results = yield* Effect.forEach(
-                documents,
-                Effect.fnUntraced(function* (document) {
-                  const documentStarted = yield* Clock.currentTimeMillis;
-                  const bytes = yield* documentSource.read(document);
-                  const outcome = yield* parser.parse(document, bytes);
-                  const ingested = yield* ProvenanceEvent.makeEffect({
-                    body: EventBody.cases.Ingested.make({ document: document.id, kind: "Ingested" }),
-                    id: document.acquired,
-                    prev: O.none(),
-                  }).pipe(
-                    Effect.mapError(() => executionFailed("The document acquisition event id is not canonical."))
-                  );
-                  const parsed = yield* makeEvent(parsedEventBody(document, outcome), O.some(ingested.id));
-                  if (outcome.outcome === "Degraded") {
-                    yield* ledger.appendDocument(document, outcome, O.none(), [], [ingested, parsed]);
-                    return {
-                      outcomes: [] as ReadonlyArray<ExtractOutcomeValue>,
-                      timing: (yield* Clock.currentTimeMillis) - documentStarted,
-                    };
-                  }
-                  const canonical = yield* canonicalizer.identify(document, outcome);
-                  const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Crypto.Crypto, crypto));
-                  const chunked = yield* makeEvent(
-                    EventBody.cases.Chunked.make({
-                      chunks: A.map(chunks, (chunk) => chunk.id),
-                      document: document.id,
-                      kind: "Chunked",
-                    }),
-                    O.some(parsed.id)
-                  );
-                  yield* ledger.appendDocument(document, outcome, O.some(canonical), chunks, [
-                    ingested,
-                    parsed,
-                    chunked,
-                  ]);
-                  const extractionOutcomes = yield* Effect.all(
-                    [hostedExtractor.extract(canonical, chunks), patternExtractor.extract(canonical, chunks)],
-                    { concurrency: 2 }
-                  ).pipe(Effect.provideService(Crypto.Crypto, crypto));
-                  yield* Effect.forEach(
-                    extractionOutcomes,
-                    Effect.fnUntraced(function* (extraction) {
-                      yield* ledger.appendBatch(extraction, yield* batchEvents(extraction, chunked));
-                    }),
-                    { concurrency: 1, discard: true }
-                  );
-                  return { outcomes: extractionOutcomes, timing: (yield* Clock.currentTimeMillis) - documentStarted };
-                }),
-                { concurrency: 1 }
-              );
-              const outcomes = A.flatMap(results, (result) => result.outcomes);
-              const snapshot = yield* ledger.read(run.id);
-              const report = yield* evaluatorService
-                .score(run, snapshot, outcomes)
-                .pipe(Effect.provideService(Crypto.Crypto, crypto));
-              return {
-                coldStartMs: N.max(0, layersReadyMillis - startedMillis),
-                report,
-                timings: A.map(results, (result) => result.timing),
-              };
-            }).pipe(Effect.provide(context))
-          )
-        )
-      );
-
-      const endedMillis = yield* Clock.currentTimeMillis;
-      const afterBytes = yield* directoryBytes(fs, path, ledgerDirectory);
-      const outputDirectory = options.out.pipe(O.getOrElse(() => path.join(".beep/semantica/runs", run.id, mode)));
-      yield* fs
-        .makeDirectory(outputDirectory, { recursive: true })
-        .pipe(Effect.mapError(() => executionFailed("The C0 output directory could not be created.")));
-      const telemetry = EvalRunTelemetry.make({
-        coldStartMs: NonNegativeInt.make(execution.coldStartMs),
-        dependencyBytes: O.none(),
-        diskGrowthBytes: NonNegativeInt.make(N.max(0, afterBytes - beforeBytes)),
-        mode,
-        modelBytes: O.none(),
-        p95Ms: NonNegativeInt.make(p95(execution.timings)),
-        reportDigest: execution.report.reportDigest,
-        rssBytes: NonNegativeInt.make(process.memoryUsage().rss),
-        runId: run.id,
-        schemaVersion: "eval-telemetry/v1",
-        startedAt,
-        wallClockMs: NonNegativeInt.make(N.max(0, endedMillis - startedMillis)),
-      });
-      yield* writeJson(fs, EvalReportJson, path.join(outputDirectory, "eval-report.json"), execution.report);
-      yield* writeJson(fs, EvalTelemetryJson, path.join(outputDirectory, "eval-telemetry.json"), telemetry);
-      yield* Console.log(execution.report.reportDigest);
-      if (execution.report.unexpectedDegraded > 0) {
-        return yield* ReportInvalid.make({ message: "C0 completed with unexpected degraded documents." });
-      }
-      return execution.report;
-    }),
+    run: Effect.fn("CanaryC0.run")((options: CanaryOptions) =>
+      runWithSnapshot(options).pipe(Effect.map((result) => result.report))
+    ),
+    runWithSnapshot,
   });
 });
 

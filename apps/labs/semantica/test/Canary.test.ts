@@ -9,8 +9,9 @@ import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand, CanaryOptions, CanaryStage, StageNotImplemented } from "@/canary/Command";
 import { LabConfig, RuntimeLayer } from "@/runtime/Layer";
-import { ReportInvalid } from "@/schema/Errors";
+import { ProjectionFailed, ReportInvalid } from "@/schema/Errors";
 import { CanaryC0 } from "@/services/CanaryC0";
+import { CanaryC1 } from "@/services/CanaryC1";
 
 const runtimeFromEnv = (env: Record<string, string>) =>
   RuntimeLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
@@ -60,9 +61,10 @@ describe("Semantica runtime layer", () => {
 describe("Semantica canary command", () => {
   const runCanary = Command.runWith(CanaryCommand, { renderErrors: false, version: "0.0.0" });
 
-  it.each([CanaryStage.Enum.c1, CanaryStage.Enum.c2])("fails stage %s with StageNotImplemented", (stage) =>
+  it("fails stage c2 with StageNotImplemented", () =>
     Effect.runPromise(
       Effect.gen(function* () {
+        const stage = CanaryStage.Enum.c2;
         const error = yield* provideScopedLayer(runtimeFromEnv({}))(runCanary([stage, "--offline"]).pipe(Effect.flip));
 
         expect(error).toBeInstanceOf(StageNotImplemented);
@@ -79,17 +81,35 @@ describe("Semantica canary command", () => {
           stage,
         });
       })
-    )
-  );
+    ));
 
   it("routes c0 through the injected workflow service", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const expected = ReportInvalid.make({ message: "stub-c0-ran" });
-        const stub = CanaryC0.of({ run: Effect.fn("CanaryC0.stub")(() => Effect.fail(expected)) });
+        const stub = CanaryC0.of({
+          run: Effect.fn("CanaryC0.stub")(() => Effect.fail(expected)),
+          runWithSnapshot: Effect.fn("CanaryC0.stubWithSnapshot")(() => Effect.fail(expected)),
+        });
         const error = yield* provideScopedLayer(runtimeFromEnv({}))(
           runCanary(["c0", "--offline", "--out", ".beep/test-run", "--selection", "f1"]).pipe(
             Effect.provideService(CanaryC0, stub),
+            Effect.flip
+          )
+        );
+
+        expect(error).toEqual(expected);
+      })
+    ));
+
+  it("routes c1 through the injected workflow service", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const expected = ProjectionFailed.make({ message: "stub-c1-ran", reason: "vector-failed" });
+        const stub = CanaryC1.of({ run: Effect.fn("CanaryC1.stub")(() => Effect.fail(expected)) });
+        const error = yield* provideScopedLayer(runtimeFromEnv({}))(
+          runCanary(["c1", "--offline", "--out", ".beep/test-run", "--selection", "f1"]).pipe(
+            Effect.provideService(CanaryC1, stub),
             Effect.flip
           )
         );
