@@ -20,14 +20,19 @@ import {
   ImageAuditManifest,
   ImageCurationDecisionDocument,
   ImageCurationManifest,
+  MatchPersonOptions,
   NormalizeManifest,
+  PersonMatchDeviceIndexesFromCsv,
   PersonMatchModel,
   PersonMatchModelArtifactVerifier,
   PersonMatchReport,
   PersonMatchWorkerReport,
+  PersonMatchWorkerService,
+  PersonMatchWorkerSuccess,
   ProcessFilesOptions,
   processFiles,
   renderFilesProgressBar,
+  runMatchPerson,
 } from "@beep/repo-cli/test/Files";
 import { fcRuns } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
@@ -60,6 +65,7 @@ const decodeFileProcessingCoverageSummary = S.decodeUnknownEffect(S.fromJsonStri
 const decodeFileProcessingFailureRecord = S.decodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord));
 const decodeNormalizeManifest = S.decodeUnknownSync(S.fromJsonString(NormalizeManifest));
 const decodePersonMatchReport = S.decodeUnknownEffect(S.fromJsonString(PersonMatchReport));
+const decodePersonMatchWorkerSuccess = S.decodeUnknownEffect(PersonMatchWorkerSuccess);
 const decodeProcessRunManifest = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
 const decodeSourceProcessingRecord = S.decodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
 const encodeDetectBordersReport = S.encodeUnknownEffect(S.fromJsonString(DetectBordersReport));
@@ -344,11 +350,95 @@ const makeBuffaloModelFixture = (path: Path.Path, cacheDir: string) => {
   };
 };
 
+const makeAdaFaceModelFixture = (path: Path.Path, cacheDir: string) => {
+  const root = path.join(cacheDir, "adaface-kprpe");
+  return {
+    backend: "adaface-kprpe",
+    name: "cvlface_adaface_vit_base_kprpe_webface12m",
+    codeRevision: "308142aa50adf2e187711354f7524635d3414f1e",
+    runtime: {
+      framework: "pytorch",
+      distribution: "rocm72",
+      packageVersion: "2.9.1+rocm7.2.0.git7e1940d4",
+      hipVersion: "7.2.26015-fc0010cf6a",
+      actualCompute: "rocm",
+      precision: "fp32",
+      devices: [{ index: 0, name: "AMD Radeon AI PRO R9700", architecture: "gfx1201" }],
+      warnings: [],
+    },
+    root,
+    components: [
+      {
+        role: "detector",
+        name: "insightface-det_10g",
+        revision: "v0.7",
+        source: insightFaceModelSource,
+        licenseNotice: insightFaceModelLicenseNotice,
+        artifacts: [
+          {
+            name: "det_10g.onnx",
+            path: path.join(root, "models", "beep_buffalo_l_v1", "det_10g.onnx"),
+            sizeBytes: 16_923_827,
+            sha256: "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+          },
+        ],
+      },
+      {
+        role: "aligner",
+        name: "cvlface_DFA_mobilenet",
+        revision: "8317e6dda53d91e7074979923144c2cc08906a33",
+        source:
+          "https://huggingface.co/minchul/cvlface_DFA_mobilenet/resolve/8317e6dda53d91e7074979923144c2cc08906a33/model.safetensors",
+        licenseNotice: cvlFaceModelLicenseNotice,
+        artifacts: [
+          {
+            name: "model.safetensors",
+            path: path.join(root, "pinned", "aligner", "model.safetensors"),
+            sizeBytes: 2_007_980,
+            sha256: "80b6e922e4c76c10d5e24061fe47cd96112d18689bf5ae7e34af52e641c18c4a",
+          },
+        ],
+      },
+      {
+        role: "recognizer",
+        name: "cvlface_adaface_vit_base_kprpe_webface12m",
+        revision: "daefd5012d369588bd214fbaf4cc6b1d286e7066",
+        source:
+          "https://huggingface.co/minchul/cvlface_adaface_vit_base_kprpe_webface12m/resolve/daefd5012d369588bd214fbaf4cc6b1d286e7066/model.safetensors",
+        licenseNotice: cvlFaceModelLicenseNotice,
+        artifacts: [
+          {
+            name: "model.safetensors",
+            path: path.join(root, "pinned", "recognizer", "model.safetensors"),
+            sizeBytes: 460_344_344,
+            sha256: "99d16ed4aac0fdf0fcc82526b9b70703f3ec8c3041bf1bf44bd22751536e65db",
+          },
+        ],
+      },
+    ],
+  };
+};
+
 const buffaloParametersFixture = {
   backend: "buffalo-l",
   compute: "auto",
   actualCompute: "cpu",
   devices: [],
+  batchSize: 32,
+  precision: "fp32",
+  thresholdSource: "calibrated-default",
+  detectionThreshold: 0.6,
+  matchThreshold: 0.5,
+  reviewThreshold: 0.35,
+  minFaceAreaPct: 1,
+  recursive: false,
+};
+
+const adaFaceRocmParametersFixture = {
+  backend: "adaface-kprpe",
+  compute: "rocm",
+  actualCompute: "rocm",
+  devices: [0],
   batchSize: 32,
   precision: "fp32",
   thresholdSource: "calibrated-default",
@@ -369,6 +459,77 @@ const makePersonMatchFaceFixture = (matchScore: number) => ({
   bestReferenceScore: matchScore,
   bestReferenceName: "reference.jpg",
   qualityFlags: [],
+});
+
+const makeAdaFaceRocmWorkerReportFixture = (
+  path: Path.Path,
+  cacheDir: string,
+  candidateDir: string,
+  referencePath: string
+) => ({
+  schemaVersion: "beep.files.match-person.worker.v2",
+  ok: true,
+  model: makeAdaFaceModelFixture(path, cacheDir),
+  parameters: adaFaceRocmParametersFixture,
+  references: [
+    {
+      sourceName: "reference.jpg",
+      sourcePath: referencePath,
+      accepted: true,
+      faceCount: 1,
+      detectionScore: 0.99,
+    },
+  ],
+  entries: [
+    {
+      sourceName: "solo.jpg",
+      sourcePath: path.join(candidateDir, "solo.jpg"),
+      relativePath: "solo.jpg",
+      disposition: "solo-match",
+      faceCount: 1,
+      bestScore: 0.81,
+      faces: [makePersonMatchFaceFixture(0.81)],
+    },
+    {
+      sourceName: "review.jpg",
+      sourcePath: path.join(candidateDir, "review.jpg"),
+      relativePath: "review.jpg",
+      disposition: "review",
+      faceCount: 1,
+      bestScore: 0.4,
+      faces: [makePersonMatchFaceFixture(0.4)],
+    },
+    {
+      sourceName: "no-face.jpg",
+      sourcePath: path.join(candidateDir, "no-face.jpg"),
+      relativePath: "no-face.jpg",
+      disposition: "no-face",
+      faceCount: 0,
+      faces: [],
+    },
+    {
+      sourceName: "aligner-rejected.jpg",
+      sourcePath: path.join(candidateDir, "aligner-rejected.jpg"),
+      relativePath: "aligner-rejected.jpg",
+      disposition: "no-face",
+      faceCount: 0,
+      faces: [],
+      reason: "aligner-confidence-failed",
+    },
+  ],
+  summary: {
+    totalCount: 4,
+    soloMatchCount: 1,
+    groupMatchCount: 0,
+    lowQualityMatchCount: 0,
+    reviewCount: 1,
+    noMatchCount: 0,
+    noFaceCount: 2,
+    unreadableCount: 0,
+    acceptedReferenceCount: 1,
+    rejectedReferenceCount: 0,
+  },
+  elapsedSeconds: 0.25,
 });
 
 const makeBuffaloWorkerReportFixture = (
@@ -1528,106 +1689,158 @@ describe("files command", { concurrent: false }, () => {
       )
     ));
 
-  it("accepts exact pinned AdaFace provenance and rejects a Buffalo/PyTorch v2 mismatch", () => {
-    const adaFaceModel = {
-      backend: "adaface-kprpe",
-      name: "cvlface_adaface_vit_base_kprpe_webface12m",
-      codeRevision: "308142aa50adf2e187711354f7524635d3414f1e",
-      runtime: {
-        framework: "pytorch",
-        distribution: "rocm72",
-        packageVersion: "2.9.1+rocm7.2.0.git7e1940d4",
-        hipVersion: "7.2.26015-fc0010cf6a",
-        actualCompute: "rocm",
-        precision: "fp32",
-        devices: [{ index: 0, name: "AMD Radeon AI PRO R9700", architecture: "gfx1201" }],
-        warnings: [],
-      },
-      root: "/cache/adaface-kprpe",
-      components: [
-        {
-          role: "detector",
-          name: "insightface-det_10g",
-          revision: "v0.7",
-          source: insightFaceModelSource,
-          licenseNotice: insightFaceModelLicenseNotice,
-          artifacts: [
-            {
-              name: "det_10g.onnx",
-              path: "/cache/adaface-kprpe/models/beep_buffalo_l_v1/det_10g.onnx",
-              sizeBytes: 16_923_827,
-              sha256: "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
+  it("accepts exact pinned AdaFace provenance and rejects a Buffalo/PyTorch v2 mismatch", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const adaFaceModel = makeAdaFaceModelFixture(path, path.join(tmpDir, "cache"));
+          const mismatchedWorkerReport = {
+            schemaVersion: "beep.files.match-person.worker.v2",
+            ok: true,
+            model: {
+              backend: "buffalo-l",
+              name: "buffalo_l",
+              packageName: "insightface",
+              packageVersion: "1.0.1",
+              runtime: adaFaceModel.runtime,
+              allowedModules: ["detection", "recognition"],
+              root: path.join(tmpDir, "cache", "insightface"),
+              components: [],
             },
-          ],
-        },
-        {
-          role: "aligner",
-          name: "cvlface_DFA_mobilenet",
-          revision: "8317e6dda53d91e7074979923144c2cc08906a33",
-          source:
-            "https://huggingface.co/minchul/cvlface_DFA_mobilenet/resolve/8317e6dda53d91e7074979923144c2cc08906a33/model.safetensors",
-          licenseNotice: cvlFaceModelLicenseNotice,
-          artifacts: [
-            {
-              name: "model.safetensors",
-              path: "/cache/adaface-kprpe/pinned/aligner/model.safetensors",
-              sizeBytes: 2_007_980,
-              sha256: "80b6e922e4c76c10d5e24061fe47cd96112d18689bf5ae7e34af52e641c18c4a",
+            parameters: buffaloParametersFixture,
+            references: [],
+            entries: [],
+            summary: {
+              totalCount: 0,
+              soloMatchCount: 0,
+              groupMatchCount: 0,
+              lowQualityMatchCount: 0,
+              reviewCount: 0,
+              noMatchCount: 0,
+              noFaceCount: 0,
+              unreadableCount: 0,
+              acceptedReferenceCount: 0,
+              rejectedReferenceCount: 0,
             },
-          ],
-        },
-        {
-          role: "recognizer",
-          name: "cvlface_adaface_vit_base_kprpe_webface12m",
-          revision: "daefd5012d369588bd214fbaf4cc6b1d286e7066",
-          source:
-            "https://huggingface.co/minchul/cvlface_adaface_vit_base_kprpe_webface12m/resolve/daefd5012d369588bd214fbaf4cc6b1d286e7066/model.safetensors",
-          licenseNotice: cvlFaceModelLicenseNotice,
-          artifacts: [
-            {
-              name: "model.safetensors",
-              path: "/cache/adaface-kprpe/pinned/recognizer/model.safetensors",
-              sizeBytes: 460_344_344,
-              sha256: "99d16ed4aac0fdf0fcc82526b9b70703f3ec8c3041bf1bf44bd22751536e65db",
-            },
-          ],
-        },
-      ],
-    };
-    const mismatchedWorkerReport = {
-      schemaVersion: "beep.files.match-person.worker.v2",
-      ok: true,
-      model: {
-        backend: "buffalo-l",
-        name: "buffalo_l",
-        packageName: "insightface",
-        packageVersion: "1.0.1",
-        runtime: adaFaceModel.runtime,
-        allowedModules: ["detection", "recognition"],
-        root: "/cache/insightface",
-        components: [],
-      },
-      parameters: buffaloParametersFixture,
-      references: [],
-      entries: [],
-      summary: {
-        totalCount: 0,
-        soloMatchCount: 0,
-        groupMatchCount: 0,
-        lowQualityMatchCount: 0,
-        reviewCount: 0,
-        noMatchCount: 0,
-        noFaceCount: 0,
-        unreadableCount: 0,
-        acceptedReferenceCount: 0,
-        rejectedReferenceCount: 0,
-      },
-      elapsedSeconds: 0,
-    };
+            elapsedSeconds: 0,
+          };
 
-    expect(O.isSome(S.decodeUnknownOption(PersonMatchModel)(adaFaceModel))).toBe(true);
-    expect(O.isNone(S.decodeUnknownOption(PersonMatchWorkerReport)(mismatchedWorkerReport))).toBe(true);
-  });
+          expect(O.isSome(S.decodeUnknownOption(PersonMatchModel)(adaFaceModel))).toBe(true);
+          expect(O.isNone(S.decodeUnknownOption(PersonMatchWorkerReport)(mismatchedWorkerReport))).toBe(true);
+        })
+      )
+    ));
+
+  it("validates a pinned AdaFace ROCm orchestration report with review and no-face semantics", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const cacheDir = path.join(tmpDir, "cache");
+          const manifestPath = path.join(tmpDir, "person-match.json");
+          const uvPath = path.join(tmpDir, "uv");
+          const liveWorkerMarkerPath = path.join(tmpDir, "live-worker-started");
+          const referencePath = path.join(referenceDir, "reference.jpg");
+
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* Effect.forEach(
+            ["aligner-rejected.jpg", "no-face.jpg", "review.jpg", "solo.jpg"],
+            (name) => fs.writeFileString(path.join(candidateDir, name), name),
+            { concurrency: 1, discard: true }
+          );
+          yield* fs.writeFileString(referencePath, "reference");
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${liveWorkerMarkerPath}"\nexit 99\n`, uvPath);
+
+          const worker = yield* decodePersonMatchWorkerSuccess(
+            makeAdaFaceRocmWorkerReportFixture(path, cacheDir, candidateDir, referencePath)
+          ).pipe(Effect.mapError(filesTestError));
+          const options = MatchPersonOptions.make({
+            acceptModelLicense: true,
+            backend: "adaface-kprpe",
+            cacheDir: O.some(cacheDir),
+            compute: "rocm",
+            detectionThreshold: 0.6,
+            devices: O.some(S.decodeUnknownSync(PersonMatchDeviceIndexesFromCsv)("0")),
+            dir: candidateDir,
+            manifest: manifestPath,
+            matchThreshold: 0.5,
+            minFaceAreaPct: 1,
+            references: referenceDir,
+            reviewThreshold: 0.35,
+          });
+          let workerCallCount = 0;
+          const workerService = PersonMatchWorkerService.of({
+            run: () =>
+              Effect.sync(() => {
+                workerCallCount += 1;
+                return worker;
+              }),
+          });
+
+          yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            runMatchPerson(options).pipe(Effect.provideService(PersonMatchWorkerService, workerService))
+          );
+
+          const manifest = yield* readPersonMatchManifest(manifestPath);
+          const reviewEntry = O.getOrUndefined(
+            A.findFirst(manifest.entries, (entry) => entry.sourceName === "review.jpg")
+          );
+          const noFaceEntry = O.getOrUndefined(
+            A.findFirst(manifest.entries, (entry) => entry.sourceName === "no-face.jpg")
+          );
+          const alignerRejectedEntry = O.getOrUndefined(
+            A.findFirst(manifest.entries, (entry) => entry.sourceName === "aligner-rejected.jpg")
+          );
+
+          expect(workerCallCount).toBe(1);
+          expect(yield* fs.exists(liveWorkerMarkerPath)).toBe(false);
+          expect(manifest.manifestWritten).toBe(true);
+          expect(manifest.model).toMatchObject({
+            backend: "adaface-kprpe",
+            runtime: {
+              actualCompute: "rocm",
+              devices: [{ architecture: "gfx1201", index: 0 }],
+              distribution: "rocm72",
+              packageVersion: "2.9.1+rocm7.2.0.git7e1940d4",
+              warnings: [],
+            },
+          });
+          expect(A.map(manifest.model.components, (component) => component.role)).toEqual([
+            "detector",
+            "aligner",
+            "recognizer",
+          ]);
+          expect(manifest.parameters).toMatchObject({
+            actualCompute: "rocm",
+            backend: "adaface-kprpe",
+            compute: "rocm",
+            devices: [0],
+          });
+          expect(manifest.summary).toMatchObject({
+            acceptedReferenceCount: 1,
+            noFaceCount: 2,
+            reviewCount: 1,
+            soloMatchCount: 1,
+            totalCount: 4,
+          });
+          expect(reviewEntry).toMatchObject({ disposition: "review" });
+          expect(reviewEntry?.reason).toBeUndefined();
+          expect(noFaceEntry).toMatchObject({ disposition: "no-face" });
+          expect(noFaceEntry?.reason).toBeUndefined();
+          expect(alignerRejectedEntry).toMatchObject({
+            disposition: "no-face",
+            reason: "aligner-confidence-failed",
+          });
+        })
+      )
+    ));
 
   it.each([
     { deviceCsv: "0,0", invalidCase: "duplicate" },
