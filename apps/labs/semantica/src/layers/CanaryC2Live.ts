@@ -12,6 +12,7 @@ import { p95 } from "@/layers/CanaryC0Live";
 import { LabConfig } from "@/runtime/Config";
 import { contentDigest, digestOmitting } from "@/schema/Digest";
 import { ReasoningFailed } from "@/schema/Errors";
+import { SparqlExpectation } from "@/schema/Projection";
 import {
   C2EvalReport,
   CrashIdentityWitness,
@@ -36,6 +37,15 @@ const expectationJson = S.fromJsonString(GEntailmentExpectation);
 const reportJson = S.fromJsonString(C2EvalReport, { space: 2 });
 const telemetryJson = S.fromJsonString(EvalRunTelemetry, { space: 2 });
 const tripleEquivalence = S.toEquivalence(S.Array(RdfTriple));
+const C2_INTERACTIVE_QUERY_LIMIT = PosInt.make(20);
+const C2_INTERACTIVE_QUERY: A.NonEmptyReadonlyArray<SparqlExpectation> = [
+  SparqlExpectation.make({
+    expectedCount: C2_INTERACTIVE_QUERY_LIMIT,
+    id: "c2-full-projection-page",
+    query:
+      "SELECT ?claim WHERE { ?claim a <https://beep.sh/semantica/ontology/EvidenceClaim> } ORDER BY ?claim LIMIT 20",
+  }),
+];
 
 const failed = (reason: ReasoningFailed["reason"], message: string): ReasoningFailed =>
   ReasoningFailed.make({ message, reason });
@@ -227,6 +237,17 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         base.baseTelemetry.mode
       );
       const projection = yield* rdf.rebuild(base.snapshot);
+      const interactiveWitness = yield* rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
+        Effect.flatMap(
+          A.match({
+            onEmpty: () => Effect.fail(failed("tier-l-exceeded", "The full-projection query returned no witness.")),
+            onNonEmpty: (witnesses) => Effect.succeed(A.headNonEmpty(witnesses)),
+          })
+        )
+      );
+      if (!N.Equivalence(interactiveWitness.count, C2_INTERACTIVE_QUERY_LIMIT)) {
+        return yield* failed("tier-l-exceeded", "The full-projection query did not return its bounded page.");
+      }
       const projected = yield* Effect.forEach(
         projection.serializedTriples,
         (triple) =>
@@ -285,10 +306,10 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         Effect.mapError(() => failed("report-invalid", "The C2 report violates its schema contract."))
       );
       const coldStartMs = yield* measureBundleColdStart(processSpawner, runtimeProbeEntry);
-      const timings = yield* Effect.forEach(A.replicate(asserted, 20), () =>
+      const timings = yield* Effect.forEach(A.replicate(C2_INTERACTIVE_QUERY, 20), () =>
         Clock.currentTimeMillis.pipe(
           Effect.flatMap((queryStarted) =>
-            reasoner.close(asserted).pipe(
+            rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
               Effect.andThen(Clock.currentTimeMillis),
               Effect.map((ended) => ended - queryStarted)
             )
