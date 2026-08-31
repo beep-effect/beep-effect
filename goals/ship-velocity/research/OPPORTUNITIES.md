@@ -4,6 +4,44 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-31 — 1Password MCP IPC failed while the exact CLI wrapper worked
+
+- **Doing:** authorizing the final remote-cache canary after the 1Password MCP server appeared in
+  a fresh Codex task.
+- **Evidence:** the MCP server was registered and its tools loaded. Authentication first reported
+  that the desktop app was not running, then returned `IPC request failed` after the desktop
+  process appeared. The output-suppressed `op run --env-file=.env -- true` wrapper succeeded in
+  the same checkout, and `beep cache probe` reached Turbo with remote caching enabled.
+- **Would have prevented it:** make the MCP relay report whether the failure is client approval,
+  desktop readiness, or relay transport, and add a bounded reconnect after the desktop process
+  starts. Keep the exact output-suppressed wrapper as the runtime proof because MCP and CLI
+  authorization are separate paths.
+
+## 2026-08-31 — Turbo rendered forbidden remote reads as cache misses
+
+- **Doing:** checking the repaired CLI session against the final isolated remote-cache sample.
+- **Evidence:** `beep cache probe` reported eight misses and a broader targeted lint canary
+  reported 35 more while both said `Remote caching enabled` and emitted no authentication
+  warning. An authorization-only GET for a known hosted artifact and a current lint artifact
+  returned HTTP 403 under the same injected read token. No token or reference was rendered.
+- **Would have prevented it:** make the cache probe distinguish 401/403 authorization failures
+  from 404 cache misses, and require one authenticated artifact GET before treating an all-miss
+  run as evidence that the remote namespace is merely cold.
+
+## 2026-08-31 — the first cache-recovery dispatch had no heavy runner
+
+- **Doing:** populating the current-generation Turbo hashes after Turbo reported 43 first-touch
+  misses and no remote hits.
+- **Evidence:** the repository's `Cache Warm` recovery workflow had no prior runs. Manual run
+  `33437433334` queued on exact `main` with the `beep-ec2-heavy` label, but GitHub still reported
+  no assigned runner, no pending environment approval, and zero registered runners with that
+  label after 18 minutes. It was cancelled before consuming a runner after the direct HTTP 403
+  proved that warming could not repair the rejected reader.
+- **Would have prevented it:** continuously test the scale-from-zero path with the shipped lane
+  probe, and alarm on genuine queued age when no matching runner registers. The recovery workflow
+  should expose whether its webhook was accepted, a scale-up was requested, or provisioning
+  failed before registration.
+
 ## 2026-08-31 — post-merge review forced a successor final-evidence PR
 
 - **Doing:** cleaning up PR #937 after its merge and preserving the initiative completion gate.
@@ -33,9 +71,12 @@ session/machine ids.
   them on the PR branch.
 - **Evidence:** a zsh loop used `path` as its iterator. In zsh, the special `path` array is tied to
   `PATH`, so the assignment replaced command lookup and the same shell reported `stat` and `git`
-  as not found. The command made no repository change.
+  as not found. A later workflow-cancellation poll reused the read-only special parameter
+  `status`; it printed the successful cancellation result, then exited on assignment. Neither
+  command made a repository change.
 - **Would have prevented it:** reserve zsh's special parameter names in agent shell snippets, use a
-  task-specific iterator such as `target_file`, or run portable snippets under Bash explicitly.
+  task-specific name such as `target_file` or `run_state`, or run portable snippets under Bash
+  explicitly.
 
 ## 2026-08-31 — reference resolution did not prove cache authentication
 
