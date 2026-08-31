@@ -32,23 +32,7 @@ const PandocCurrentInlineConstructorName = LiteralKit([
   })
 );
 
-const PandocSupportedInlineConstructorName = LiteralKit(
-  PandocCurrentInlineConstructorName.pickOptions([
-    "Str",
-    "Space",
-    "SoftBreak",
-    "LineBreak",
-    "Emph",
-    "Strong",
-    "Strikeout",
-    "Code",
-    "Link",
-    "Image",
-    "Span",
-    "Note",
-    "Math",
-  ])
-).pipe(
+const PandocSupportedInlineConstructorName = LiteralKit(PandocCurrentInlineConstructorName.Options).pipe(
   $I.annoteSchema("PandocSupportedInlineConstructorName", {
     description: "Pandoc inline constructors represented by the strict semantic model.",
   })
@@ -75,20 +59,7 @@ const PandocCurrentBlockConstructorName = LiteralKit([
   })
 );
 
-const PandocSupportedBlockConstructorName = LiteralKit(
-  PandocCurrentBlockConstructorName.pickOptions([
-    "Plain",
-    "Para",
-    "Header",
-    "BlockQuote",
-    "CodeBlock",
-    "BulletList",
-    "OrderedList",
-    "HorizontalRule",
-    "Div",
-    "Table",
-  ])
-).pipe(
+const PandocSupportedBlockConstructorName = LiteralKit(PandocCurrentBlockConstructorName.Options).pipe(
   $I.annoteSchema("PandocSupportedBlockConstructorName", {
     description: "Pandoc block constructors represented by the strict semantic model.",
   })
@@ -107,13 +78,43 @@ const PandocCurrentMetaConstructorName = LiteralKit([
   })
 );
 
-const PandocQuoteTypeConstructorName = LiteralKit(["SingleQuote", "DoubleQuote"]).pipe(
+/**
+ * Pandoc quotation-style constructor names.
+ *
+ * **Example** (Check a double quote marker)
+ *
+ * ```ts import.meta.vitest name="Check a double quote marker"
+ * import { PandocQuoteType } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * PandocQuoteType.is.DoubleQuote("DoubleQuote") // => true
+ * ```
+ *
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L286-L287} for the pinned pandoc-types definition.
+ * @category models
+ * @since 0.0.0
+ */
+export const PandocQuoteType = LiteralKit(["SingleQuote", "DoubleQuote"]).pipe(
   $I.annoteSchema("PandocQuoteTypeConstructorName", {
     description: "Exhaustive Pandoc 1.23.1 quote-type constructor-name registry.",
   })
 );
 
-const PandocCitationModeConstructorName = LiteralKit(["AuthorInText", "SuppressAuthor", "NormalCitation"]).pipe(
+/**
+ * Pandoc citation-mode constructor names.
+ *
+ * **Example** (Check a normal citation marker)
+ *
+ * ```ts import.meta.vitest name="Check a normal citation marker"
+ * import { PandocCitationMode } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * PandocCitationMode.is.NormalCitation("NormalCitation") // => true
+ * ```
+ *
+ * @see {@link https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs#L343-L355} for the pinned pandoc-types definition.
+ * @category models
+ * @since 0.0.0
+ */
+export const PandocCitationMode = LiteralKit(["AuthorInText", "SuppressAuthor", "NormalCitation"]).pipe(
   $I.annoteSchema("PandocCitationModeConstructorName", {
     description: "Exhaustive Pandoc 1.23.1 citation-mode constructor-name registry.",
   })
@@ -218,8 +219,8 @@ const PandocKnownConstructorName = S.Union([
   PandocCurrentInlineConstructorName,
   PandocCurrentBlockConstructorName,
   PandocCurrentMetaConstructorName,
-  PandocQuoteTypeConstructorName,
-  PandocCitationModeConstructorName,
+  PandocQuoteType,
+  PandocCitationMode,
   PandocCurrentStructuralConstructorName,
   PandocTableAlignmentConstructorName,
   PandocTableColumnWidthConstructorName,

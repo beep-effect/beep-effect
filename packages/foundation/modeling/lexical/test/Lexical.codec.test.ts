@@ -4,7 +4,10 @@ import {
   blockToLexical,
   documentToEditorState,
   editorStateToDocument,
+  LexicalNode,
+  ListNode,
   nodeToBlocks,
+  ParagraphNode,
   RootNode,
   SerializedEditorState,
   TableCellNode,
@@ -37,7 +40,11 @@ const tableState = (headerState: TableCellHeaderState): SerializedEditorState =>
     root: RootNode.make({
       children: [
         TableNode.make({
-          children: [TableRowNode.make({ children: [TableCellNode.make({ children: [], headerState })] })],
+          children: [
+            TableRowNode.make({
+              children: [TableCellNode.make({ children: [ParagraphNode.make({ children: [] })], headerState })],
+            }),
+          ],
         }),
       ],
     }),
@@ -108,6 +115,35 @@ describe("Lexical.codec", { concurrent: false }, () => {
     expect(roundTrip(document)).toEqual(document);
   });
 
+  it("constructs every Markdown list projection through the canonical ListNode payload cases", () => {
+    const projections = [
+      {
+        block: MdModel.Ul.make({ children: [MdModel.Li.make({ children: [mdText("bullet")] })] }),
+        expected: { listType: "bullet", start: 1, tag: "ul" },
+      },
+      {
+        block: MdModel.Ol.make({
+          children: [MdModel.Li.make({ children: [mdText("third")] })],
+          start: PosInt.make(3),
+        }),
+        expected: { listType: "number", start: 3, tag: "ol" },
+      },
+      {
+        block: MdModel.TaskList.make({
+          children: [MdModel.TaskItem.make({ checked: true, children: [mdText("done")] })],
+        }),
+        expected: { listType: "check", start: 1, tag: "ul" },
+      },
+    ] as const;
+
+    for (const { block, expected } of projections) {
+      const node = Effect.runSync(blockToLexical(block));
+
+      expect(ListNode.is(node)).toBe(true);
+      expect(node).toMatchObject({ type: "list", ...expected });
+    }
+  });
+
   it("preserves the complete user-content link domain through the editor codec", () => {
     const hrefs = ["#section", "/docs", "https://example.com", "mailto:user@example.com", "tel:+15551234567"];
 
@@ -117,6 +153,33 @@ describe("Lexical.codec", { concurrent: false }, () => {
       });
 
       expect(roundTrip(document)).toEqual(document);
+    }
+  });
+
+  it("materializes deterministic text for an empty Markdown link", () => {
+    const href = "https://example.com/empty";
+    const document = MdModel.Document.make({
+      children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [] })] })],
+    });
+
+    expect(roundTrip(document)).toEqual(
+      MdModel.Document.make({
+        children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [mdText(href)] })] })],
+      })
+    );
+  });
+
+  it("materializes one runtime list item for empty Markdown lists", () => {
+    const emptyLists = [
+      MdModel.Ul.make({ children: [] }),
+      MdModel.Ol.make({ children: [] }),
+      MdModel.TaskList.make({ children: [] }),
+    ];
+
+    for (const block of emptyLists) {
+      const node = Effect.runSync(blockToLexical(block));
+
+      expect(node).toMatchObject({ type: "list", children: [expect.objectContaining({ type: "listitem" })] });
     }
   });
 
@@ -583,6 +646,22 @@ describe("Lexical.codec", { concurrent: false }, () => {
     );
   });
 
+  it("wraps a loose text node in a Markdown paragraph", () => {
+    const looseText = Result.getOrThrow(
+      S.decodeResult(LexicalNode)({
+        type: "text",
+        version: 1,
+        detail: 0,
+        format: 0,
+        mode: "normal",
+        style: "",
+        text: "loose",
+      })
+    );
+
+    expect(nodeToBlocks(looseText)).toEqual([MdModel.P.make({ children: [mdText("loose")] })]);
+  });
+
   it("stabilizes after one Md → Lexical → Md pass (lossy codec idempotent on its stable image)", () => {
     fc.assert(
       fc.property(DocumentArbitrary, (document) => {
@@ -612,6 +691,87 @@ describe("Lexical.codec", { concurrent: false }, () => {
         children: [
           MdModel.BlockQuote.make({
             children: [MdModel.P.make({ children: [mdText("first"), MdModel.Br.make({}), mdText("second")] })],
+          }),
+        ],
+      })
+    );
+  });
+
+  it("preserves block structure for shadow-root quotes", () => {
+    const state = Result.getOrThrow(
+      S.decodeResult(SerializedEditorState)({
+        root: {
+          type: "root",
+          version: 1,
+          direction: null,
+          format: "",
+          indent: 0,
+          children: [
+            {
+              type: "quote",
+              version: 1,
+              direction: null,
+              format: "",
+              indent: 0,
+              shadowRoot: true,
+              children: [
+                {
+                  type: "heading",
+                  version: 1,
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  tag: "h2",
+                  children: [
+                    { type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "Title" },
+                  ],
+                },
+                {
+                  type: "list",
+                  version: 1,
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  listType: "bullet",
+                  start: 1,
+                  tag: "ul",
+                  children: [
+                    {
+                      type: "listitem",
+                      version: 1,
+                      direction: null,
+                      format: "",
+                      indent: 0,
+                      value: 1,
+                      children: [
+                        {
+                          type: "text",
+                          version: 1,
+                          detail: 0,
+                          format: 0,
+                          mode: "normal",
+                          style: "",
+                          text: "Item",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      })
+    );
+
+    expect(editorStateToDocument(state)).toEqual(
+      MdModel.Document.make({
+        children: [
+          MdModel.BlockQuote.make({
+            children: [
+              MdModel.Heading.make({ level: 2, children: [mdText("Title")] }),
+              MdModel.Ul.make({ children: [MdModel.Li.make({ children: [mdText("Item")] })] }),
+            ],
           }),
         ],
       })

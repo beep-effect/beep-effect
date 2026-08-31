@@ -2,6 +2,7 @@ import {
   conform,
   conformantRoot,
   enforceSafeHtml,
+  HtmlDocument,
   inspectConformance,
   inspectSafeHtml,
   safeHtmlAstConformant,
@@ -23,6 +24,7 @@ import {
   Document,
   Dt,
   ForeignElement,
+  Fragment,
   Head,
   Hr,
   Html,
@@ -47,6 +49,7 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { ConformantHtml, SafeHtml, SafeHtmlAst } from "@beep/html";
 
 const text = Text.fromValue;
@@ -58,14 +61,43 @@ const inspectSafe = (root: Parameters<typeof conform>[0]) =>
 const serializeExit = (root: Parameters<typeof serialize>[0]) => Effect.runSyncExit(serialize(root));
 
 describe("@beep/html conformance branch matrix", () => {
+  it("rejects a structurally invalid recursive conformance view", () => {
+    const issues = Reflect.apply(inspectConformance, undefined, [
+      { _tag: "#fragment", children: [{ _tag: "div", children: [null] }] },
+    ]);
+
+    expect(issues).toStrictEqual([
+      expect.objectContaining({
+        path: [],
+        rule: "encodingFailure",
+      }),
+    ]);
+  });
+
+  it("constructs recursive conformance views with canonical Option doctypes", () => {
+    const fragment = Fragment.make({
+      children: [Div.make({ children: [Span.make({ children: [text("nested")] })] })],
+    });
+
+    expect(inspectConformance(fragment)).toStrictEqual([]);
+
+    const html = Html.make({
+      children: [Head.make({ children: [Title.make({ content: "Beep" })] }), Body.make({ children: [] })],
+    });
+    const document = Document.make({ doctype: O.some(Doctype.html()), children: [html] });
+
+    expect(inspectConformance(document)).toStrictEqual([]);
+  });
+
   it("locates every document doctype and root-placement failure", () => {
     const html = Html.make({
       children: [Head.make({ children: [Title.make({ content: "Beep" })] }), Body.make({ children: [] })],
     });
-    const canonical = Document.make({
+    const canonical = HtmlDocument.make({
       doctype: O.some(Doctype.html()),
       children: [comment("before root"), html],
     });
+    expect(S.is(HtmlDocument)(canonical)).toBe(true);
     expect(inspectConformance(canonical)).toStrictEqual([]);
 
     const doctypes = [
@@ -164,6 +196,10 @@ describe("@beep/html conformance branch matrix", () => {
     ).toBe(true);
     expect(hasRule(Acronym.make({ children: [] }), "obsoleteElement")).toBe(true);
     expect(hasRule(Div.make({ children: [] }), "obsoleteElement")).toBe(false);
+  });
+
+  it("rejects obsolete elements at the inspectConformance boundary", () => {
+    expect(hasRule(Acronym.make({ children: [] }), "obsoleteElement")).toBe(true);
   });
 
   it("allows and rejects foreign/text children according to the generated content tokens", () => {

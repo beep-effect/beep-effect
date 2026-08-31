@@ -1,0 +1,962 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/html",
+  "profileIds": [
+    "html-whatwg-living-2026-08-30",
+    "html-current-vendored-2026-06-15",
+    "html-safe-output-policy-e6e88af6"
+  ],
+  "coverage": [
+    {
+      "invariantId": "html.inventory.generated-elements",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30",
+        "html-current-vendored-2026-06-15"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.inventory.generated-elements"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.inventory.generated-elements"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.inventory.generated-elements"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.test.ts#covers-every-WHATWG-element-from-the-pinned-dataset-conforming-obsolete"
+      ],
+      "negativeTestIds": [
+        "test/Html.test.ts#rejects-tags-outside-the-generated-HtmlNode-inventory"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.inventory.approved-refresh-drift",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "html.ast.literal-tag-discrimination",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.test.ts, test/Html.coverage-matrix.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.ast.literal-tag-discrimination"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.test.ts#round-trips-schema-derived-HTML-AST-schemas"
+      ],
+      "negativeTestIds": [
+        "test/Html.coverage-matrix.test.ts#fails-malformed-JavaScript-callers-at-the-schema-snapshot-boundary"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.element.local-content-model",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts, test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.element.local-content-model"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.element.local-content-model"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.coverage-matrix.test.ts#allows-and-rejects-foreign-text-children-according-to-the-generated-content-tokens"
+      ],
+      "negativeTestIds": [
+        "test/Html.security.test.ts#enforces-table-child-sequence-and-cardinality"
+      ],
+      "status": "partial"
+    },
+    {
+      "invariantId": "html.heading.phrasing-children",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.phrasing-children"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.heading.phrasing-children"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Html.heading-conformance.test.ts#rejects-heading-descendants-because-heading-content-is-phrasing-only",
+        "test/Html.heading-conformance.test.ts#rejects-non-phrasing-flow-children-in-headings"
+      ],
+      "status": "partial"
+    },
+    {
+      "invariantId": "html.heading.computed-levels",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "computeHeadingOutline"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.computed-levels"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "computeHeadingOutline"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.heading-conformance.test.ts#applies-ancestor-offsets-and-reset-boundaries",
+        "test/Html.heading-conformance.test.ts#caps-computed-heading-levels-at-nine"
+      ],
+      "negativeTestIds": [
+        "test/Html.heading-conformance.test.ts#rejects-an-offset-induced-skipped-computed-heading-level"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.heading.no-skipped-levels",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.no-skipped-levels"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Html.heading-conformance.test.ts#rejects-a-skipped-computed-heading-level-in-tree-order",
+        "test/Html.heading-conformance.test.ts#rejects-an-offset-induced-skipped-computed-heading-level"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.heading.level-one-advisory",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectBestPractices"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.level-one-advisory"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectBestPractices"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.heading-conformance.test.ts#keeps-the-level-one-recommendation-advisory"
+      ],
+      "negativeTestIds": [],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.document.structure",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.document.structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlDocument"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.document.structure"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.document.structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlDocument"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.coverage-matrix.test.ts#serializes-optional-and-canonical-doctypes-and-rejects-every-noncanonical-component"
+      ],
+      "negativeTestIds": [
+        "test/Html.coverage-matrix.test.ts#locates-every-document-doctype-and-root-placement-failure"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.content.special-child-grammars",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts, test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.content.special-child-grammars"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.conformance-hardening.test.ts#keeps-schema-generated-valid-grammar-fixtures-free-of-grammar-issues"
+      ],
+      "negativeTestIds": [
+        "test/Html.security.test.ts#enforces-table-child-sequence-and-cardinality",
+        "test/Html.conformance-hardening.test.ts#enforces-edge-conditional-media-and-alternative-grammars"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.attributes.conditional-requirements",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.generator.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.conditional-requirements"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.attributes.conditional-requirements"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.generator.test.ts#publishes-the-exact-required-and-tree-unique-attribute-profiles"
+      ],
+      "negativeTestIds": [
+        "test/Html.conformance-hardening.test.ts#enforces-generated-base-map-and-track-attribute-laws",
+        "test/Html.conformance-hardening.test.ts#enforces-link-addresses-and-the-meta-charset-mode"
+      ],
+      "status": "partial"
+    },
+    {
+      "invariantId": "html.attributes.input-state-applicability",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.generator.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.input-state-applicability"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.attributes.input-state-applicability"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.generator.test.ts#publishes-the-exact-attribute-conditional-category-profiles"
+      ],
+      "negativeTestIds": [
+        "test/Html.conformance-hardening.test.ts#enforces-state-specific-input-and-effective-submit-button-attributes"
+      ],
+      "status": "partial"
+    },
+    {
+      "invariantId": "html.script.type-state",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html ScriptState and ScriptDataBlockMimeType schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "resolveScriptState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.script.test.ts",
+          "oracle": "Pinned WHATWG HTML and MIME Sniffing script type algorithms"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html ScriptState and ScriptDataBlockMimeType schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "resolveScriptState"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.script.test.ts#recognizes-the-exact-JavaScript-MIME-essence-registry-as-classic-script",
+        "test/Html.script.test.ts#classifies-every-author-conforming-script-type-without-rewriting-its-wire",
+        "test/Html.script.test.ts#exhaustively-matches-every-script-semantic-state",
+        "test/Html.script.test.ts#round-trips-schema-derived-script-semantic-states"
+      ],
+      "negativeTestIds": [
+        "test/Html.script.test.ts#returns-a-typed-failure-and-conformance-diagnostic-for-an-invalid-script-type",
+        "test/Html.script.test.ts#enforces-script-MIME-correlations-at-compile-and-decode-boundaries"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.script.attribute-applicability",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.script.test.ts",
+          "oracle": "Pinned WHATWG script attribute applicability table"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.script.test.ts#accepts-the-contextual-script-attribute-matrix"
+      ],
+      "negativeTestIds": [
+        "test/Html.script.test.ts#rejects-attributes-outside-the-contextual-script-matrix"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.script.payload-language-validity",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "Payload-language conformance requires language-specific parsers or profile adapters that are outside the structural HTML AST validator."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "Profile-specific script payload language adapters are required before this target can name an executable validator."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "html.attributes.microsyntaxes",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.attributes.microsyntaxes"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.microsyntax.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.microsyntaxes"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.attributes.microsyntaxes"
+        },
+        {
+          "kind": "runtime",
+          "validator": "HtmlNode"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.microsyntax.test.ts#models-boolean-presence-without-a-false-value",
+        "test/Html.microsyntax.test.ts#canonicalizes-encoded-enumerated-keywords-while-preserving-fixed-point-Types"
+      ],
+      "negativeTestIds": [
+        "test/Html.conformance-hardening.test.ts#decodes-presence-booleans-blocking-tokens-and-exact-enumerations"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.attributes.numeric-relationships",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.generator.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.numeric-relationships"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.generator.test.ts#publishes-the-complete-generated-meter-and-progress-relationship-profiles"
+      ],
+      "negativeTestIds": [
+        "test/Html.conformance-hardening.test.ts#enforces-generated-meter-and-progress-domains-and-relationships"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.document.unique-ids-and-references",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.document.unique-ids-and-references"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [
+        "test/Html.conformance-hardening.test.ts#reports-every-duplicate-id-occurrence-at-its-root-relative-attribute-path",
+        "test/Html.conformance-hardening.test.ts#resolves-case-sensitive-id-references-in-the-same-root-and-nearest-table"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.track.language-tags",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.track.language-tags"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.conformance-hardening.test.ts#accepts-registered-grandfathered-private-use-extension-and-deprecated-tags"
+      ],
+      "negativeTestIds": [
+        "test/Html.conformance-hardening.test.ts#rejects-malformed-unregistered-repeated-and-incomplete-tags-at-srclang",
+        "test/Html.conformance-hardening.test.ts#requires-every-registered-extlang-to-follow-its-IANA-primary-language-prefix"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.responsive.srcset",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSrcset"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.srcset.test.ts, test/Html.responsive-image-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.responsive.srcset"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSrcset"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.srcset.test.ts#accepts-WHATWG-density-width-and-descriptorless-profiles"
+      ],
+      "negativeTestIds": [
+        "test/Html.srcset.test.ts#rejects-malformed-non-positive-and-multiple-descriptors",
+        "test/Html.responsive-image-conformance.test.ts#enforces-picture-source-width-and-auto-relationships-against-the-following-img"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.responsive.sizes",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSourceSizeList"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.source-size.test.ts, test/Html.responsive-image-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.responsive.sizes"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSourceSizeList"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.source-size.test.ts#accepts-WHATWG-conditional-lists-and-CSS-whitespace-or-comments"
+      ],
+      "negativeTestIds": [
+        "test/Html.source-size.test.ts#rejects-malformed-list-structure-instead-of-browser-processing-recovery",
+        "test/Html.responsive-image-conformance.test.ts#enforces-img-descriptor-pairing-and-the-narrow-lazy-auto-exception"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.foreign.names-and-namespaces",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts, test/Html.coverage-matrix.test.ts, test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.foreign.names-and-namespaces"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.conformance-hardening.test.ts#covers-every-standard-SVG-and-MathML-adjustment-entry"
+      ],
+      "negativeTestIds": [
+        "test/Html.coverage-matrix.test.ts#accepts-namespace-matching-qualified-foreign-names-and-rejects-mismatches",
+        "test/Html.security.test.ts#requires-foreign-integration-roots-and-rejects-context-free-noscript-proofs"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.serialization.text-modes",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "serialize"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.serialization.text-modes"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "serialize"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.security.test.ts#escapes-text-and-attributes-and-emits-deterministic-attribute-order"
+      ],
+      "negativeTestIds": [
+        "test/Html.security.test.ts#rejects-scalar-hazards-ambiguous-comments-raw-end-tags-and-plaintext"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.obsolete.nonconforming-elements",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30",
+        "html-current-vendored-2026-06-15"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.obsolete.nonconforming-elements"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.coverage-matrix.test.ts#covers-picture-datalist-select-ruby-and-obsolete-element-alternatives"
+      ],
+      "negativeTestIds": [
+        "test/Html.coverage-matrix.test.ts#rejects-obsolete-elements-at-the-inspectConformance-boundary"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.spec.per-rule-traceability",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectBestPractices"
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "cannotTell"
+    },
+    {
+      "invariantId": "html.parser.tree-construction",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "unsupportedProfile"
+    },
+    {
+      "invariantId": "html.custom-elements.open-world",
+      "profileIds": [
+        "html-whatwg-living-2026-08-30"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "positiveTestIds": [],
+      "negativeTestIds": [],
+      "status": "unsupportedProfile"
+    },
+    {
+      "invariantId": "html.safe-profile.active-content",
+      "profileIds": [
+        "html-safe-output-policy-e6e88af6"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.security.test.ts",
+          "oracle": "Package safe-output policy behavior for html.safe-profile.active-content"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.security.test.ts#admits-only-self-targets-or-protected-blank-targets"
+      ],
+      "negativeTestIds": [
+        "test/Html.security.test.ts#denies-active-foreign-form-data-event-style-and-broad-global-attributes",
+        "test/Html.security.test.ts#rejects-prototype-spread-JSON-and-plain-object-proof-forgeries"
+      ],
+      "status": "covered"
+    },
+    {
+      "invariantId": "html.aria.role-compatibility",
+      "profileIds": [
+        "html-safe-output-policy-e6e88af6"
+      ],
+      "currentEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Package safe-output policy behavior for html.aria.role-compatibility"
+        }
+      ],
+      "targetEnforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectSafeHtml"
+        },
+        {
+          "kind": "runtime",
+          "validator": "enforceSafeHtml"
+        }
+      ],
+      "positiveTestIds": [
+        "test/Html.coverage-matrix.test.ts#applies-role-compatibility-across-matching-mismatching-and-absent-roles"
+      ],
+      "negativeTestIds": [
+        "test/Html.coverage-matrix.test.ts#applies-each-element-aware-ARIA-compatibility-rule"
+      ],
+      "status": "covered"
+    }
+  ]
+}

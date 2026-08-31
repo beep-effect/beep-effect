@@ -156,6 +156,7 @@ export class AllowListUrlPolicySpec extends S.TaggedClass<AllowListUrlPolicySpec
  * @since 0.0.0
  */
 export const UrlPolicySpec = S.Union([CompatibilityUrlPolicy, AllowListUrlPolicySpec]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("UrlPolicySpec", {
     description: "Canonical tagged URL destination policy.",
   })

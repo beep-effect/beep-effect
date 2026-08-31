@@ -1,0 +1,3158 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/html",
+  "profileIds": [
+    "html-whatwg-living-2026-08-30",
+    "html-current-vendored-2026-06-15",
+    "html-safe-output-policy-e6e88af6"
+  ],
+  "items": [
+    {
+      "id": "html.element.a",
+      "symbol": "A",
+      "tag": "a",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated a element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.abbr",
+      "symbol": "Abbr",
+      "tag": "abbr",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated abbr element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.acronym",
+      "symbol": "Acronym",
+      "tag": "acronym",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated acronym element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.address",
+      "symbol": "Address",
+      "tag": "address",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated address element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.applet",
+      "symbol": "Applet",
+      "tag": "applet",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated applet element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.area",
+      "symbol": "Area",
+      "tag": "area",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated area element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.article",
+      "symbol": "Article",
+      "tag": "article",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated article element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.aside",
+      "symbol": "Aside",
+      "tag": "aside",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated aside element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.audio",
+      "symbol": "Audio",
+      "tag": "audio",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated audio element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.b",
+      "symbol": "B",
+      "tag": "b",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated b element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.base",
+      "symbol": "Base",
+      "tag": "base",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated base element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.basefont",
+      "symbol": "Basefont",
+      "tag": "basefont",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated basefont element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.bdi",
+      "symbol": "Bdi",
+      "tag": "bdi",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated bdi element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.bdo",
+      "symbol": "Bdo",
+      "tag": "bdo",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated bdo element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.bgsound",
+      "symbol": "Bgsound",
+      "tag": "bgsound",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated bgsound element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.big",
+      "symbol": "Big",
+      "tag": "big",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated big element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.blink",
+      "symbol": "Blink",
+      "tag": "blink",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated blink element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.blockquote",
+      "symbol": "Blockquote",
+      "tag": "blockquote",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated blockquote element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.body",
+      "symbol": "Body",
+      "tag": "body",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated body element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.br",
+      "symbol": "Br",
+      "tag": "br",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated br element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.button",
+      "symbol": "Button",
+      "tag": "button",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated button element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.canvas",
+      "symbol": "Canvas",
+      "tag": "canvas",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated canvas element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.caption",
+      "symbol": "Caption",
+      "tag": "caption",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated caption element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.center",
+      "symbol": "Center",
+      "tag": "center",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated center element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.cite",
+      "symbol": "Cite",
+      "tag": "cite",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated cite element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.code",
+      "symbol": "Code",
+      "tag": "code",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated code element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.col",
+      "symbol": "Col",
+      "tag": "col",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated col element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.colgroup",
+      "symbol": "Colgroup",
+      "tag": "colgroup",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated colgroup element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.data",
+      "symbol": "Data",
+      "tag": "data",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated data element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.datalist",
+      "symbol": "Datalist",
+      "tag": "datalist",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated datalist element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.dd",
+      "symbol": "Dd",
+      "tag": "dd",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated dd element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.del",
+      "symbol": "Del",
+      "tag": "del",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated del element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.details",
+      "symbol": "Details",
+      "tag": "details",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated details element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.dfn",
+      "symbol": "Dfn",
+      "tag": "dfn",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated dfn element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.dialog",
+      "symbol": "Dialog",
+      "tag": "dialog",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated dialog element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.dir",
+      "symbol": "DirElement",
+      "tag": "dir",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated dir element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.div",
+      "symbol": "Div",
+      "tag": "div",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated div element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.dl",
+      "symbol": "Dl",
+      "tag": "dl",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated dl element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.dt",
+      "symbol": "Dt",
+      "tag": "dt",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated dt element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.em",
+      "symbol": "Em",
+      "tag": "em",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated em element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.embed",
+      "symbol": "Embed",
+      "tag": "embed",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated embed element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.fieldset",
+      "symbol": "Fieldset",
+      "tag": "fieldset",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated fieldset element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.figcaption",
+      "symbol": "Figcaption",
+      "tag": "figcaption",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated figcaption element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.figure",
+      "symbol": "Figure",
+      "tag": "figure",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated figure element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.font",
+      "symbol": "Font",
+      "tag": "font",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated font element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.footer",
+      "symbol": "Footer",
+      "tag": "footer",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated footer element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.form",
+      "symbol": "Form",
+      "tag": "form",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated form element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.frame",
+      "symbol": "Frame",
+      "tag": "frame",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated frame element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.frameset",
+      "symbol": "Frameset",
+      "tag": "frameset",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated frameset element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.h1",
+      "symbol": "H1",
+      "tag": "h1",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated h1 element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.h2",
+      "symbol": "H2",
+      "tag": "h2",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated h2 element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.h3",
+      "symbol": "H3",
+      "tag": "h3",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated h3 element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.h4",
+      "symbol": "H4",
+      "tag": "h4",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated h4 element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.h5",
+      "symbol": "H5",
+      "tag": "h5",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated h5 element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.h6",
+      "symbol": "H6",
+      "tag": "h6",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated h6 element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.head",
+      "symbol": "Head",
+      "tag": "head",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated head element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.header",
+      "symbol": "Header",
+      "tag": "header",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated header element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.hgroup",
+      "symbol": "Hgroup",
+      "tag": "hgroup",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated hgroup element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.hr",
+      "symbol": "Hr",
+      "tag": "hr",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated hr element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.html",
+      "symbol": "Html",
+      "tag": "html",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated html element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.i",
+      "symbol": "I",
+      "tag": "i",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated i element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.iframe",
+      "symbol": "Iframe",
+      "tag": "iframe",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated iframe element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.img",
+      "symbol": "Img",
+      "tag": "img",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated img element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.input",
+      "symbol": "Input",
+      "tag": "input",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated input element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.ins",
+      "symbol": "Ins",
+      "tag": "ins",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated ins element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.isindex",
+      "symbol": "Isindex",
+      "tag": "isindex",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated isindex element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.kbd",
+      "symbol": "Kbd",
+      "tag": "kbd",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated kbd element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.keygen",
+      "symbol": "Keygen",
+      "tag": "keygen",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated keygen element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.label",
+      "symbol": "Label",
+      "tag": "label",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated label element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.legend",
+      "symbol": "Legend",
+      "tag": "legend",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated legend element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.li",
+      "symbol": "Li",
+      "tag": "li",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated li element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.link",
+      "symbol": "Link",
+      "tag": "link",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated link element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.listing",
+      "symbol": "Listing",
+      "tag": "listing",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated listing element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.main",
+      "symbol": "Main",
+      "tag": "main",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated main element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.map",
+      "symbol": "MapElement",
+      "tag": "map",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated map element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.mark",
+      "symbol": "Mark",
+      "tag": "mark",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated mark element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.marquee",
+      "symbol": "Marquee",
+      "tag": "marquee",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated marquee element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.menu",
+      "symbol": "Menu",
+      "tag": "menu",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated menu element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.menuitem",
+      "symbol": "Menuitem",
+      "tag": "menuitem",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated menuitem element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.meta",
+      "symbol": "Meta",
+      "tag": "meta",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated meta element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.meter",
+      "symbol": "Meter",
+      "tag": "meter",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated meter element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.multicol",
+      "symbol": "Multicol",
+      "tag": "multicol",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated multicol element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.nav",
+      "symbol": "Nav",
+      "tag": "nav",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated nav element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.nextid",
+      "symbol": "Nextid",
+      "tag": "nextid",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated nextid element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.nobr",
+      "symbol": "Nobr",
+      "tag": "nobr",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated nobr element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.noembed",
+      "symbol": "Noembed",
+      "tag": "noembed",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated noembed element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.noframes",
+      "symbol": "Noframes",
+      "tag": "noframes",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated noframes element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.noscript",
+      "symbol": "Noscript",
+      "tag": "noscript",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated noscript element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.object",
+      "symbol": "ObjectElement",
+      "tag": "object",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated object element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.ol",
+      "symbol": "Ol",
+      "tag": "ol",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated ol element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.optgroup",
+      "symbol": "Optgroup",
+      "tag": "optgroup",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated optgroup element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.option",
+      "symbol": "Option",
+      "tag": "option",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated option element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.output",
+      "symbol": "Output",
+      "tag": "output",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated output element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.p",
+      "symbol": "P",
+      "tag": "p",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated p element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.param",
+      "symbol": "Param",
+      "tag": "param",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated param element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.picture",
+      "symbol": "Picture",
+      "tag": "picture",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated picture element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.plaintext",
+      "symbol": "Plaintext",
+      "tag": "plaintext",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated plaintext element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.pre",
+      "symbol": "Pre",
+      "tag": "pre",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated pre element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.progress",
+      "symbol": "Progress",
+      "tag": "progress",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated progress element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.q",
+      "symbol": "Q",
+      "tag": "q",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated q element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.rb",
+      "symbol": "Rb",
+      "tag": "rb",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated rb element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.rp",
+      "symbol": "Rp",
+      "tag": "rp",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated rp element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.rt",
+      "symbol": "Rt",
+      "tag": "rt",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated rt element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.rtc",
+      "symbol": "Rtc",
+      "tag": "rtc",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated rtc element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.ruby",
+      "symbol": "Ruby",
+      "tag": "ruby",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated ruby element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.s",
+      "symbol": "SElement",
+      "tag": "s",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated s element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.samp",
+      "symbol": "Samp",
+      "tag": "samp",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated samp element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.script",
+      "symbol": "Script",
+      "tag": "script",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated script element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.search",
+      "symbol": "Search",
+      "tag": "search",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated search element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.section",
+      "symbol": "Section",
+      "tag": "section",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated section element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.select",
+      "symbol": "Select",
+      "tag": "select",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated select element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.selectedcontent",
+      "symbol": "Selectedcontent",
+      "tag": "selectedcontent",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated selectedcontent element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.slot",
+      "symbol": "Slot",
+      "tag": "slot",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated slot element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.small",
+      "symbol": "Small",
+      "tag": "small",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated small element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.source",
+      "symbol": "Source",
+      "tag": "source",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated source element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.spacer",
+      "symbol": "Spacer",
+      "tag": "spacer",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated spacer element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.span",
+      "symbol": "Span",
+      "tag": "span",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated span element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.strike",
+      "symbol": "Strike",
+      "tag": "strike",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated strike element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.strong",
+      "symbol": "Strong",
+      "tag": "strong",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated strong element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.style",
+      "symbol": "Style",
+      "tag": "style",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated style element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.sub",
+      "symbol": "Sub",
+      "tag": "sub",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated sub element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.summary",
+      "symbol": "Summary",
+      "tag": "summary",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated summary element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.sup",
+      "symbol": "Sup",
+      "tag": "sup",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated sup element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.table",
+      "symbol": "Table",
+      "tag": "table",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated table element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.tbody",
+      "symbol": "Tbody",
+      "tag": "tbody",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated tbody element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.td",
+      "symbol": "Td",
+      "tag": "td",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated td element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.template",
+      "symbol": "Template",
+      "tag": "template",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated template element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.textarea",
+      "symbol": "Textarea",
+      "tag": "textarea",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated textarea element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.tfoot",
+      "symbol": "Tfoot",
+      "tag": "tfoot",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated tfoot element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.th",
+      "symbol": "Th",
+      "tag": "th",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated th element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.thead",
+      "symbol": "Thead",
+      "tag": "thead",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated thead element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.time",
+      "symbol": "Time",
+      "tag": "time",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated time element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.title",
+      "symbol": "Title",
+      "tag": "title",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated title element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.tr",
+      "symbol": "Tr",
+      "tag": "tr",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated tr element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.track",
+      "symbol": "Track",
+      "tag": "track",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated track element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.tt",
+      "symbol": "Tt",
+      "tag": "tt",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated tt element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.u",
+      "symbol": "U",
+      "tag": "u",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated u element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.ul",
+      "symbol": "Ul",
+      "tag": "ul",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated ul element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.var",
+      "symbol": "Var",
+      "tag": "var",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated var element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.video",
+      "symbol": "Video",
+      "tag": "video",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated video element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.wbr",
+      "symbol": "Wbr",
+      "tag": "wbr",
+      "kind": "conforming-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-webref-elements-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated wbr element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.element.xmp",
+      "symbol": "Xmp",
+      "tag": "xmp",
+      "kind": "obsolete-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-obsolete-interfaces-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "The generated xmp element already has its own literal _tag and participates in exhaustive public unions."
+    },
+    {
+      "id": "html.node.text",
+      "symbol": "Text",
+      "tag": "#text",
+      "kind": "ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public node or root already has a stable literal _tag; document-wide validity remains a tree-validation concern."
+    },
+    {
+      "id": "html.node.comment",
+      "symbol": "Comment",
+      "tag": "#comment",
+      "kind": "ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public node or root already has a stable literal _tag; document-wide validity remains a tree-validation concern."
+    },
+    {
+      "id": "html.node.doctype",
+      "symbol": "Doctype",
+      "tag": "#doctype",
+      "kind": "document-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public node or root already has a stable literal _tag; document-wide validity remains a tree-validation concern."
+    },
+    {
+      "id": "html.node.foreign",
+      "symbol": "ForeignElement",
+      "tag": "#foreign",
+      "kind": "ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public node or root already has a stable literal _tag; document-wide validity remains a tree-validation concern."
+    },
+    {
+      "id": "html.root.fragment",
+      "symbol": "Fragment",
+      "tag": "#fragment",
+      "kind": "root-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public node or root already has a stable literal _tag; document-wide validity remains a tree-validation concern."
+    },
+    {
+      "id": "html.root.document",
+      "symbol": "Document",
+      "tag": "#document",
+      "kind": "root-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public node or root already has a stable literal _tag; document-wide validity remains a tree-validation concern."
+    },
+    {
+      "id": "html.root.canonical-document",
+      "symbol": "HtmlDocument",
+      "tag": "#document",
+      "kind": "root-ast-member",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-member",
+      "candidateReason": "This public node or root already has a stable literal _tag; document-wide validity remains a tree-validation concern."
+    },
+    {
+      "id": "html.union.child",
+      "symbol": "HtmlChild",
+      "tag": "all child tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.root",
+      "symbol": "HtmlRoot",
+      "tag": "#document | #fragment | element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.node",
+      "symbol": "HtmlNode",
+      "tag": "all 142 element and auxiliary node tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.document-child",
+      "symbol": "HtmlDocumentChild",
+      "tag": "html | #comment",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.metadata",
+      "symbol": "Metadata",
+      "tag": "metadata-category element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.flow",
+      "symbol": "Flow",
+      "tag": "flow-category element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.sectioning",
+      "symbol": "Sectioning",
+      "tag": "sectioning-category element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.heading",
+      "symbol": "Heading",
+      "tag": "h1 | h2 | h3 | h4 | h5 | h6",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.phrasing",
+      "symbol": "Phrasing",
+      "tag": "phrasing-category element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.embedded",
+      "symbol": "Embedded",
+      "tag": "embedded-category element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.interactive",
+      "symbol": "Interactive",
+      "tag": "interactive-category element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.palpable",
+      "symbol": "Palpable",
+      "tag": "palpable-category element tags",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.union.script-supporting",
+      "symbol": "ScriptSupporting",
+      "tag": "script | template",
+      "kind": "tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-whatwg-content-model-current-local",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This public union already uses a literal _tag discriminator and exposes exhaustive matching helpers."
+    },
+    {
+      "id": "html.candidate.input-state",
+      "symbol": "InputState",
+      "tag": "hidden | text | search | tel | url | email | password | date | month | week | time | datetime-local | number | range | color | checkbox | radio | file | submit | image | reset | button",
+      "kind": "inner-tagged-union",
+      "existingDiscriminator": "state",
+      "currentEnforcementLayers": [
+        "type",
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-webref-dfns-current-local",
+        "html-classification-current-local",
+        "html-whatwg-source-approved"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "InputState now exposes all 22 effective type states through state-discriminated cases and exhaustive matching. resolveInputState applies the missing-value Text default without rewriting Input.type, and inspectConformance consumes the view for state-specific attribute applicability."
+    },
+    {
+      "id": "html.candidate.button-state",
+      "symbol": "ButtonState",
+      "tag": "submit | nonSubmit",
+      "kind": "inner-tagged-union",
+      "existingDiscriminator": "state",
+      "currentEnforcementLayers": [
+        "type",
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-classification-current-local",
+        "html-whatwg-source-approved"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "ButtonState now correlates submit and nonSubmit cases with explicit or Auto-state bases. resolveButtonState accounts for missing type, command, commandfor, and the immediate select parent while preserving Button's flat wire, and inspectConformance consumes the view for submit-only attributes."
+    },
+    {
+      "id": "html.candidate.script-state",
+      "symbol": "ScriptState",
+      "tag": "classic | module | importMap | speculationRules | dataBlock",
+      "kind": "inner-tagged-union",
+      "existingDiscriminator": "state",
+      "currentEnforcementLayers": [
+        "type",
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-classification-current-local",
+        "html-whatwg-source-approved",
+        "html-mimesniff-source-approved"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "The dedicated Html.script role now publishes ScriptState with classic, module, importMap, speculationRules, and dataBlock cases without rewriting Script.type. Its dataBlock case carries a schema-refined valid MIME string that is not a JavaScript MIME essence match, resolveScriptState returns typed InvalidScriptType failures for invalid author values, and inspectConformance exhaustively applies the contextual attribute matrix. Payload-language validity remains explicitly cannotTell because the structural package has no JavaScript, JSON, speculation-rules, script-documentation, or arbitrary MIME payload parser."
+    },
+    {
+      "id": "html.candidate.attribute-value-constraint",
+      "symbol": "HtmlAttributeValueConstraint",
+      "tag": "allowedValues | containsAllTokens | containsAnyToken | equals",
+      "kind": "internal-tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This private generator-owned implementation union already uses S.toTaggedUnion for four exhaustive cases. It is consumed internally by Html.conformance and is not part of the public Html.meta surface."
+    },
+    {
+      "id": "html.candidate.attribute-requirement-predicate",
+      "symbol": "HtmlAttributeRequirementPredicate",
+      "tag": "attributeContainsToken | attributeEquals | attributeEqualsOrMissing | attributePresent",
+      "kind": "internal-tagged-union",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "This private generator-owned implementation union already uses S.toTaggedUnion for four exhaustive predicate cases. It is consumed internally by Html.conformance and is not part of the public Html.meta surface."
+    },
+    {
+      "id": "html.candidate.link-relation",
+      "symbol": "HtmlRelationList",
+      "tag": "link[rel]",
+      "kind": "reviewed-non-candidate",
+      "existingDiscriminator": "none",
+      "currentEnforcementLayers": [
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-classification-current-local"
+      ],
+      "candidateDisposition": "retain-literal-token-list",
+      "candidateReason": "rel is an open multi-token set with extension relations and contextual combinations, so a single discriminant would misrepresent its semantics."
+    },
+    {
+      "id": "html.candidate.heading-elements",
+      "symbol": "Heading",
+      "tag": "h1 | h2 | h3 | h4 | h5 | h6",
+      "kind": "reviewed-existing-design",
+      "existingDiscriminator": "_tag",
+      "currentEnforcementLayers": [
+        "type",
+        "decode",
+        "tree"
+      ],
+      "sources": [
+        "html-whatwg-source-approved",
+        "html-whatwg-content-model-current-local"
+      ],
+      "candidateDisposition": "retain-existing-tagged-union",
+      "candidateReason": "HTML headings are already six distinct AST members and an exhaustive Heading union; no nested level payload is needed."
+    }
+  ]
+}

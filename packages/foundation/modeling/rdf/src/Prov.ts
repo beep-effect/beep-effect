@@ -11,7 +11,7 @@ import { SchemaUtils } from "@beep/schema";
 import { DateTime } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("prov");
 

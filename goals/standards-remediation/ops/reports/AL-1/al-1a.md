@@ -16,7 +16,7 @@ No commits made.
 | `WINK-SIMILARITY-NATIVE-SET-BRIDGE` | `packages/drivers/wink/src/WinkSimilarity.service.ts:86` | new-map-set | **unconvertible** | Read the real shipped dependency: `node_modules/wink-nlp/utilities/similarity.js:108-133` — `similarity.set.tversky` reads `setA.size`/`setB.size` as bare properties and calls `.has()`/`.forEach()` as instance methods. Neither `HashSet` nor `MutableHashSet` (effect v4) expose `.size`/`.has`/`.forEach` as instance members (only as free functions `HashSet.size(self)`, `HashSet.has(self, v)`; there is no `.forEach` at all). Attempted conversion to `MutableHashSet.fromIterable` (diff below, reverted): compile failure `TS2740: Type 'MutableHashSet<string>' is missing the following properties from type 'Set<string>': add, clear, delete, forEach, and 6 more`. Runtime proof against the real wink-nlp module with an effect-shaped stand-in reproducing HashSet/MutableHashSet's actual instance surface: `TypeError: setB.forEach is not a function`. |
 | `ECFR-OPENAPI-GENERATOR-NATIVE-COLLECTIONS` | `packages/drivers/ecfr/scripts/generate.ts` | object-method | **fixed** | `Object.values`/`Object.entries`/`Object.keys` (5 call sites: `refsOf`, `renderModel`, `operationsOf` ×2, `main`) → `R.values`/`R.toEntries`/`R.keys` (`effect/Record`). |
 | `ECFR-OPENAPI-GENERATOR-NATIVE-COLLECTIONS` | `packages/drivers/ecfr/scripts/generate.ts` | new-map-set | **fixed** | `visited`/`required` native `Set` (topo-sort cycle guard + required-field lookup) → `MutableHashSet`; `[...new Set(refsOf(...))].sort()` dedup → `A.dedupe(...).sort()`. Direct precedent: `packages/drivers/box/scripts/generate.ts` already uses this exact pattern (`MutableHashSet.empty`/`.has`/`.add` for visited/visiting cycle guards, `A.dedupe` for schema dedup) cleanly. |
-| `RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL` | `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:399` | new-map-set | **unconvertible** — but recorded reason is wrong; see note | The recorded reason ("needs weak-key semantics to avoid retaining visited schema nodes") is **false**: `visited` is a brand-new `WeakSet` created fresh per top-level call (`getSemanticSchemaMetadata`, line 465) and never persisted anywhere — nothing is retained either way. The real, verified constraint is different: `effect/Equal.ts`'s `compareObjects` (lines 332-346) shows Effect's default equality for plain objects/AST nodes implementing neither `Equal` nor `Hash` is **deep structural comparison**, not reference identity — so `HashSet`/`MutableHashSet` would silently swap this traversal's O(1) identity-based cycle guard for an O(subtree-size) structural-hash guard. Attempted conversion (diff below, reverted): `npx tsgo -b` exit 0, `npx vitest run` 29/29 pass (existing tests don't exercise this). Targeted micro-benchmark reproducing the exact traversal shape (linear wrapper chain, `visited.has`/`.add` at every node) at depths 200/500/1000/2000: MutableHashSet took 8.8x / 2.7x / 11.7x / 31.1x longer than WeakSet, consistent with the predicted O(n) → O(n²)-ish blowup. Corroborated by `effect/Hash.ts:527-529`'s own reliance on native `WeakMap`/`WeakSet` to hash arbitrary/possibly-cyclic object graphs safely — the same class of problem this function solves. **Recommend the driver rewrite the entry's `reason` text** to the structural-equality/complexity argument above rather than the GC-retention claim, which does not hold. |
+| `RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL` | `packages/foundation/modeling/schema/src/SchemaUtils/collectAnnotationsAt.ts:17` | new-map-set | **obsolete** | The RDF-specific traversal and its native `WeakSet` no longer exist. Semantic metadata now delegates to the shared `collectAnnotationsAt` AST collector. That collector records visited AST nodes in an Effect `Array` and compares identities with `Equivalence.strictEqual`, preserving reference identity without native collections or structural `HashSet` semantics. `collectAnnotationsAt.test.ts` covers recursive termination and proves structurally equal sibling ASTs are not collapsed. The old GC-retention and `MutableHashSet` complexity arguments describe removed code and must not remain as a current allowlist justification. |
 | `PROFESSIONAL-DESKTOP-BUILD-SIDECAR-TRIPLE-INVARIANT` | `apps/professional-desktop/scripts/build-sidecar.ts:16` | native-error | **fixed** | `throw new Error(...)` → `throw new MissingTargetTripleError({...})`, a `Data.TaggedError`. Direct in-directory precedent: the sibling script `apps/professional-desktop/scripts/sync-migration-bundle.ts:15-18,84` already throws a `Data.TaggedError` instance from plain synchronous code (not wrapped in a full Effect runtime) for the identical class of "abort a one-shot Bun build script" case, refuting the recorded "matching build-tool failure conventions rather than Effect runtime error flow" justification. Verified end-to-end, not just type-checked: real run compiled the actual sidecar binary and printed the unchanged success message; a simulated-failure run (shimmed `rustc` on `PATH` to omit the `host:` line) reproduced the same uncaught-exception → non-zero-exit (code 1) behavior as the original `Error`, since `Data.TaggedError` instances are real `Error` subclasses (`Cause.YieldableError`). |
 
 ## Attempted-conversion diffs (unconvertible entries — reverted, not applied)
@@ -46,21 +46,10 @@ Compiles + passes tests; rejected on the heap-growth evidence above.
 ```
 Fails to compile: `TS2740`.
 
-**RDF** (`packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts`):
-```diff
-+import * as MutableHashSet from "effect/MutableHashSet";
--const findSemanticSchemaMetadata = (value: unknown, visited: WeakSet<object>): ... => {
-+const findSemanticSchemaMetadata = (value: unknown, visited: MutableHashSet.MutableHashSet<object>): ... => {
-   ...
--  if (visited.has(value)) return;
--  visited.add(value);
-+  if (MutableHashSet.has(visited, value)) return;
-+  MutableHashSet.add(visited, value);
-   ...
--O.orElse(() => O.fromNullishOr(findSemanticSchemaMetadata(schema.ast, new WeakSet())))
-+O.orElse(() => O.fromNullishOr(findSemanticSchemaMetadata(schema.ast, MutableHashSet.empty())))
-```
-Compiles + passes tests; rejected on the measured superlinear slowdown above.
+**RDF** (superseded): the attempted `WeakSet` to `MutableHashSet` conversion described by the original report targeted a
+package-local traversal that has since been deleted. The current implementation delegates to
+`@beep/schema/SchemaUtils/collectAnnotationsAt`, whose strict-reference Effect-array cycle guard makes that historical
+experiment and its allowlist rationale inapplicable.
 
 ## Fixed-entry diffs (applied in the working tree, not reverted)
 
@@ -106,12 +95,15 @@ Compiles + passes tests; rejected on the measured superlinear slowdown above.
 Not touched (conversion attempted, reverted, original restored — confirmed via `git status --short` showing no diff):
 - `packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts`
 - `packages/drivers/wink/src/WinkSimilarity.service.ts`
-- `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts`
 
 `standards/effect-laws.allowlist.jsonc` not touched (driver-owned). No repo-wide `turbo`/`yeet`/inventory regen run. No commits made.
 
 ## For the driver
 
-Removable from the allowlist now: both `ECFR-OPENAPI-GENERATOR-NATIVE-COLLECTIONS` rows and `PROFESSIONAL-DESKTOP-BUILD-SIDECAR-TRIPLE-INVARIANT`.
+Removable from the allowlist now: both `ECFR-OPENAPI-GENERATOR-NATIVE-COLLECTIONS` rows,
+`PROFESSIONAL-DESKTOP-BUILD-SIDECAR-TRIPLE-INVARIANT`, and the obsolete
+`RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL` row. No RDF row remains in the current
+`standards/effect-laws.allowlist.jsonc`.
 
-Stay on the allowlist (evidence above holds up under attempted-conversion + measurement): `CHALK-WEAKMAP-MEMOIZATION`, `WINK-SIMILARITY-NATIVE-SET-BRIDGE`, `RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL` — but the RDF entry's `reason` text is factually wrong (claims GC-retention that cannot occur for a function-scoped, freshly-allocated-per-call `WeakSet`) and should be rewritten to the structural-equality/complexity argument in the table above.
+Stay on the allowlist (evidence above holds up under attempted-conversion + measurement):
+`CHALK-WEAKMAP-MEMOIZATION` and `WINK-SIMILARITY-NATIVE-SET-BRIDGE`.

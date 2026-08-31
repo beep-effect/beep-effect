@@ -929,6 +929,121 @@ export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.fr
 ]);
 
 /**
+ * Exact generated domain of HTML input type states.
+ *
+ * **Example** (Check an input state)
+ *
+ * ```ts import.meta.vitest name="Check an input state"
+ * import { HtmlInputStateName } from "@beep/html/Html.meta"
+ *
+ * HtmlInputStateName.is.file("file") // => true
+ * ```
+ *
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#states-of-the-type-attribute | WHATWG input type states} for the normative state inventory.
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlInputStateName = LiteralKit([
+  "hidden",
+  "text",
+  "search",
+  "tel",
+  "url",
+  "email",
+  "password",
+  "date",
+  "month",
+  "week",
+  "time",
+  "datetime-local",
+  "number",
+  "range",
+  "color",
+  "checkbox",
+  "radio",
+  "file",
+  "submit",
+  "image",
+  "reset",
+  "button",
+]).pipe(
+  $I.annoteSchema("HtmlInputStateName", {
+    description: "Exact generated domain of HTML input type states.",
+  })
+);
+
+/**
+ * Runtime input-state name accepted by {@link HtmlInputStateName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlInputStateName = typeof HtmlInputStateName.Type;
+
+/**
+ * Exact generated domain of conditionally applicable input attributes.
+ *
+ * **Example** (Check a conditional input attribute)
+ *
+ * ```ts import.meta.vitest name="Check a conditional input attribute"
+ * import { HtmlConditionalInputAttributeName } from "@beep/html/Html.meta"
+ *
+ * HtmlConditionalInputAttributeName.is.accept("accept") // => true
+ * ```
+ *
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#input-type-attr-summary | WHATWG input attribute summary} for state-specific applicability.
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlConditionalInputAttributeName = LiteralKit([
+  "accept",
+  "alpha",
+  "alt",
+  "autocomplete",
+  "checked",
+  "colorspace",
+  "dirname",
+  "formaction",
+  "formenctype",
+  "formmethod",
+  "formnovalidate",
+  "formtarget",
+  "height",
+  "list",
+  "max",
+  "maxlength",
+  "min",
+  "minlength",
+  "multiple",
+  "pattern",
+  "placeholder",
+  "popovertarget",
+  "popovertargetaction",
+  "readonly",
+  "required",
+  "size",
+  "src",
+  "step",
+  "width",
+]).pipe(
+  $I.annoteSchema("HtmlConditionalInputAttributeName", {
+    description: "Exact generated domain of conditionally applicable input attributes.",
+  })
+);
+
+/**
+ * Runtime conditional input-attribute name accepted by {@link HtmlConditionalInputAttributeName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlConditionalInputAttributeName = typeof HtmlConditionalInputAttributeName.Type;
+
+const freezeConditionalInputAttributeNames = <const Names extends ReadonlyArray<HtmlConditionalInputAttributeName>>(
+  names: Names
+): Readonly<Names> => Object.freeze(names);
+
+/**
  * Exact conditional attribute applicability for every input type state.
  *
  * **Example** (Read input attribute applicability)
@@ -939,16 +1054,25 @@ export const HTML_AUTOCOMPLETE_CONTACT_FIELDS: ReadonlyArray<string> = Object.fr
  * HTML_INPUT_ATTRIBUTE_APPLICABILITY.file.includes("accept") // => true
  * ```
  *
+ * @invariant Every standard input state occurs exactly once and every value belongs to {@link HtmlConditionalInputAttributeName}.
  * @category constants
  * @since 0.0.0
  */
-export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, ReadonlyArray<string>>> = Object.freeze({
-  button: Object.freeze(["popovertarget", "popovertargetaction"]),
-  checkbox: Object.freeze(["checked", "required"]),
-  color: Object.freeze(["alpha", "autocomplete", "colorspace", "list"]),
-  date: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
-  "datetime-local": Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
-  email: Object.freeze([
+export const HTML_INPUT_ATTRIBUTE_APPLICABILITY = Object.freeze({
+  button: freezeConditionalInputAttributeNames(["popovertarget", "popovertargetaction"]),
+  checkbox: freezeConditionalInputAttributeNames(["checked", "required"]),
+  color: freezeConditionalInputAttributeNames(["alpha", "autocomplete", "colorspace", "list"]),
+  date: freezeConditionalInputAttributeNames(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+  "datetime-local": freezeConditionalInputAttributeNames([
+    "autocomplete",
+    "list",
+    "max",
+    "min",
+    "readonly",
+    "required",
+    "step",
+  ]),
+  email: freezeConditionalInputAttributeNames([
     "autocomplete",
     "dirname",
     "list",
@@ -961,9 +1085,9 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "required",
     "size",
   ]),
-  file: Object.freeze(["accept", "multiple", "required"]),
-  hidden: Object.freeze(["autocomplete", "dirname"]),
-  image: Object.freeze([
+  file: freezeConditionalInputAttributeNames(["accept", "multiple", "required"]),
+  hidden: freezeConditionalInputAttributeNames(["autocomplete", "dirname"]),
+  image: freezeConditionalInputAttributeNames([
     "alt",
     "formaction",
     "formenctype",
@@ -976,9 +1100,18 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "src",
     "width",
   ]),
-  month: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
-  number: Object.freeze(["autocomplete", "list", "max", "min", "placeholder", "readonly", "required", "step"]),
-  password: Object.freeze([
+  month: freezeConditionalInputAttributeNames(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+  number: freezeConditionalInputAttributeNames([
+    "autocomplete",
+    "list",
+    "max",
+    "min",
+    "placeholder",
+    "readonly",
+    "required",
+    "step",
+  ]),
+  password: freezeConditionalInputAttributeNames([
     "autocomplete",
     "dirname",
     "maxlength",
@@ -989,10 +1122,10 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "required",
     "size",
   ]),
-  radio: Object.freeze(["checked", "required"]),
-  range: Object.freeze(["autocomplete", "list", "max", "min", "step"]),
-  reset: Object.freeze(["popovertarget", "popovertargetaction"]),
-  search: Object.freeze([
+  radio: freezeConditionalInputAttributeNames(["checked", "required"]),
+  range: freezeConditionalInputAttributeNames(["autocomplete", "list", "max", "min", "step"]),
+  reset: freezeConditionalInputAttributeNames(["popovertarget", "popovertargetaction"]),
+  search: freezeConditionalInputAttributeNames([
     "autocomplete",
     "dirname",
     "list",
@@ -1004,7 +1137,7 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "required",
     "size",
   ]),
-  submit: Object.freeze([
+  submit: freezeConditionalInputAttributeNames([
     "dirname",
     "formaction",
     "formenctype",
@@ -1014,7 +1147,7 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "popovertarget",
     "popovertargetaction",
   ]),
-  tel: Object.freeze([
+  tel: freezeConditionalInputAttributeNames([
     "autocomplete",
     "dirname",
     "list",
@@ -1026,7 +1159,7 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "required",
     "size",
   ]),
-  text: Object.freeze([
+  text: freezeConditionalInputAttributeNames([
     "autocomplete",
     "dirname",
     "list",
@@ -1038,8 +1171,8 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "required",
     "size",
   ]),
-  time: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
-  url: Object.freeze([
+  time: freezeConditionalInputAttributeNames(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+  url: freezeConditionalInputAttributeNames([
     "autocomplete",
     "dirname",
     "list",
@@ -1051,8 +1184,8 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
     "required",
     "size",
   ]),
-  week: Object.freeze(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
-});
+  week: freezeConditionalInputAttributeNames(["autocomplete", "list", "max", "min", "readonly", "required", "step"]),
+}) satisfies Readonly<Record<HtmlInputStateName, ReadonlyArray<HtmlConditionalInputAttributeName>>>;
 
 /**
  * Conditional input attributes covered by the applicability table.
@@ -1068,7 +1201,7 @@ export const HTML_INPUT_ATTRIBUTE_APPLICABILITY: Readonly<Record<string, Readonl
  * @category constants
  * @since 0.0.0
  */
-export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze([
+export const HTML_CONDITIONAL_INPUT_ATTRIBUTE_NAMES: ReadonlyArray<HtmlConditionalInputAttributeName> = Object.freeze([
   "accept",
   "alpha",
   "alt",
@@ -1404,6 +1537,7 @@ const HtmlAttributeValueConstraint = S.Union([
     value: S.String,
   }),
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("HtmlAttributeValueConstraint", {
     description: "Generated relationship constraint over an HTML attribute value.",
   })
@@ -1415,6 +1549,7 @@ const HtmlAttributeRequirementPredicate = S.Union([
   S.TaggedStruct("attributeEqualsOrMissing", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributePresent", { attribute: S.String }),
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("HtmlAttributeRequirementPredicate", {
     description: "Generated predicate controlling when an HTML attribute requirement applies.",
   })

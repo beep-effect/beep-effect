@@ -33,7 +33,9 @@ compatibility helper beside `Md.embed(...)`.
 `Document` is persistence truth and intentionally permits trusted raw nodes. `SafeDocument` is the narrower
 user-content refinement used by editor and RPC boundaries. It has the same encoded JSON representation, but rejects
 `rawMarkdown`, `rawHtml`, URL destinations outside the user-content policy, duplicate footnote definitions, and NUL
-or lone-surrogate strings that cannot complete the safe HTML projection. Use `refineSafeDocument` for an
+or lone-surrogate strings that cannot complete the safe HTML projection. It also rejects document structures whose
+direct `@beep/html` projection violates a hard author-conformance rule, such as a skipped heading level. Use
+`refineSafeDocument` for an
 already-decoded `Document`, `decodeSafeDocument` at a JSON/wire boundary, and `documentSafetyIssues` when UI needs
 path-located conversion feedback.
 

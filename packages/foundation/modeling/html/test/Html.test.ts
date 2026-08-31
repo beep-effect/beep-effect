@@ -280,6 +280,10 @@ describe("ELEMENT_META", () => {
     expect(Object.keys(ELEMENT_META)).toHaveLength(142);
   });
 
+  it("rejects tags outside the generated HtmlNode inventory", () => {
+    expect(Result.isFailure(S.decodeUnknownResult(HtmlNode)({ _tag: "not-an-html-element", children: [] }))).toBe(true);
+  });
+
   it("tags conformance, void, and raw-text correctly", () => {
     expect(ELEMENT_META.div?.conformance).toBe("conforming");
     expect(ELEMENT_META.img?.void).toBe(true);

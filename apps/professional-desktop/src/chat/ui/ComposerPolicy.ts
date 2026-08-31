@@ -148,6 +148,7 @@ export class ComposerSafetyRefusal extends S.Class<ComposerSafetyRefusal>($I`Com
 class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`DocumentViolationFlags`)(
   {
     footnote: S.Boolean,
+    htmlProjection: S.Boolean,
     scalar: S.Boolean,
     url: S.Boolean,
   },
@@ -157,6 +158,7 @@ class DocumentViolationFlags extends S.Class<DocumentViolationFlags>($I`Document
 ) {
   static readonly empty = DocumentViolationFlags.make({
     footnote: false,
+    htmlProjection: false,
     scalar: false,
     url: false,
   });
@@ -173,6 +175,7 @@ const documentViolationFlags = (issues: ReadonlyArray<DocumentSafetyViolation>):
     Match.value(issue).pipe(
       Match.tagsExhaustive({
         DuplicateFootnoteDefinition: () => ({ ...flags, footnote: true }),
+        HtmlProjection: () => ({ ...flags, htmlProjection: true }),
         RawNode: () => flags,
         InvalidScalar: () => ({ ...flags, scalar: true }),
         UnsafeUrl: () => ({ ...flags, url: true }),
@@ -203,6 +206,7 @@ const documentViolationReason = flow(
     ),
     Match.when({ scalar: true }, () => "unsupported text encoding (a NUL character or lone UTF-16 surrogate)"),
     Match.when({ url: true }, () => "a link or embedded URL outside the safe destination policy"),
+    Match.when({ htmlProjection: true }, () => "a document structure that cannot be rendered as conformant HTML"),
     Match.orElse(() => "trusted raw Markdown or HTML")
   )
 );
@@ -213,9 +217,11 @@ const documentViolationReason = flow(
  * **Gotchas**
  *
  * Trusted raw nodes carry no presence flag of their own, so an issue list that
- * names no footnote, scalar, or URL violation renders the raw-node phrasing.
- * Callers pass a non-empty violation list; an empty one would read as a raw-node
- * refusal.
+ * names no footnote, scalar, URL, or HTML-projection violation renders the
+ * raw-node phrasing. When multiple specialized categories are present, the
+ * more actionable URL, scalar, and footnote explanations take precedence over
+ * the structural HTML-projection explanation. Callers pass a non-empty
+ * violation list; an empty one would read as a raw-node refusal.
  *
  * **Example** (Explain a trusted raw node refusal)
  *

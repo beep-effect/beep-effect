@@ -20,7 +20,7 @@ import {
   TextQuoteSelector,
 } from "../Evidence.ts";
 import { IRIReference } from "../Iri.ts";
-import { makeSemanticSchemaMetadata } from "../SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "../SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("adapters/web-annotation");
 

@@ -64,6 +64,13 @@ export {
   nodeToBlocks,
 } from "./Lexical.codec.ts";
 /**
+ * Exhaustive strict, normalizable, unsupported, or invalid editor-state classification.
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export { inspectEditorStateConformance, LexicalConformanceResult } from "./Lexical.conformance.ts";
+/**
  * Schema-first models of Lexical's serialized editor state.
  *
  * **Example** (Decode linebreak node)
@@ -107,6 +114,7 @@ export {
   LinkNode,
   ListItemNode,
   ListNode,
+  ListNodeValue,
   ListTag,
   ListType,
   ParagraphNode,

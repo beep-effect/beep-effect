@@ -14,7 +14,7 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { IRI } from "./Iri.ts";
-import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("rdf");
 

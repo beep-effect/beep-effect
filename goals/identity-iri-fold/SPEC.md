@@ -64,7 +64,7 @@ identity registry.
   assembly model/error taxonomy, classification markers, pure projections,
   public barrels, fixtures, and tests, coexisting with the FOLIO models and
   the semantic-foundation M1 taxonomy surface (no deletions).
-- `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts` only for the
+- `packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts` only for the
   ratified address-field deprecation/layering needed by the fold.
 - `packages/foundation/modeling/rdf/src/Vocab/*` — shared-five term
   inventories (`rdf`/`rdfs`/`skos`/`owl`/`dcterms`) regenerated from the

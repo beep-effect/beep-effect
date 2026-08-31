@@ -1316,6 +1316,16 @@ describe("editor contract hardening", { concurrent: false }, () => {
     expect(gate.message).not.toMatch(/private|first|second/u);
   });
 
+  it("describes document structures that cannot render as conformant HTML", () => {
+    const document = Md.Document.make({
+      children: [Md.Heading.make({ level: 2, children: [] }), Md.Heading.make({ level: 5, children: [] })],
+    });
+    const gate = O.getOrThrow(prepareComposerDocumentSafetyGate(document));
+
+    expect(gate.issueCount).toBe(1);
+    expect(gate.message).toMatch(/document structure that cannot be rendered as conformant HTML/u);
+  });
+
   it.effect(
     "preserves persistence-owned seed frontmatter through the editor projection",
     Effect.fnUntraced(function* () {
