@@ -1101,3 +1101,14 @@ worktree provisioner should install the complete workspace instead of linking on
   completed in 0.25 seconds at exit 0.
 - **Would have prevented it:** preserve and return the live command handle whenever capture
   yields, and make Lefthook finalize a parallel command when its child has already exited.
+
+## 2026-08-30 — The machine-wide fallback inherited a PID-only liveness check
+
+- **Doing:** closing the exact-head Greptile review after moving below-envelope proofs from
+  per-origin fallback paths to one machine-wide lock.
+- **Evidence:** the shared lock still used the legacy v3 owner schema and considered any live
+  process with the recorded PID to be its owner. If the proof exited without cleanup and Linux
+  recycled that PID, every repository origin could remain queued behind the unrelated process.
+- **Would have prevented it:** require every newly written process-owned coordination record to
+  carry `/proc/<pid>/stat` start time and reuse the scheduler's PID-plus-start-time liveness helper
+  before broadening a lock from per-origin to machine-wide scope.

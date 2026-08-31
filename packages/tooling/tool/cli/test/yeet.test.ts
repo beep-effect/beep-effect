@@ -3048,6 +3048,42 @@ describe("yeet publish scope helpers", () => {
       )
     ));
 
+  it("reclaims a scheduler fallback lock whose PID was recycled", () =>
+    Effect.runPromise(
+      withProofCoordinatorRepo(({ lockPath, tempContext }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
+          const recycledOwnerText = `${yield* encodeJson(
+            YeetProofLockStateForTesting.make({
+              schemaVersion: "yeet-proof-lock/v3",
+              branch: "feature/recycled-owner",
+              checkoutRoot: "/repo/recycled-owner",
+              command: "bun run beep yeet verify",
+              pid: process.pid,
+              procStart: "not-the-current-process-start-time",
+              proofTier: "full",
+              startedAt: "2026-08-25T00:00:00.000Z",
+            })
+          )}\n`;
+          yield* fs.writeFileString(fallbackPath, recycledOwnerText);
+
+          const replacement = yield* acquireFullProofFallbackLockOrObserveAtPath(
+            lockPath,
+            tempContext,
+            "bun run beep yeet verify"
+          );
+
+          expect(O.isSome(replacement)).toBe(true);
+          expect(yield* fs.readFileString(fallbackPath)).not.toBe(recycledOwnerText);
+          if (O.isSome(replacement)) {
+            yield* releaseProofLock(replacement.value);
+          }
+        })
+      )
+    ));
+
   it("refuses an active proof coordinator and preserves its owner metadata", () =>
     Effect.runPromise(
       withProofCoordinatorRepo(({ lockPath, tempContext }) =>

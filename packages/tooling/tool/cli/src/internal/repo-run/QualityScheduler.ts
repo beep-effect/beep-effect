@@ -243,7 +243,31 @@ export const isProcessPidAlive = (pid: number): Effect.Effect<boolean> =>
     }
   });
 
-const procStartTimeForPid = Effect.fnUntraced(function* (
+/**
+ * Read the Linux process start time used to fence PID reuse.
+ *
+ * **Details**
+ *
+ * A missing or unreadable proc entry returns `None`, allowing callers to
+ * retain their documented non-Linux fallback behavior.
+ *
+ * **Example** (Read the current process identity)
+ *
+ * ```ts
+ * import { processStartTimeForPid } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const available = processStartTimeForPid(process.pid).pipe(Effect.map(O.isSome))
+ * console.log(Effect.isEffect(available)) // true
+ * ```
+ *
+ * @param pid - Process whose `/proc/<pid>/stat` start time is requested.
+ * @returns The process start time when the proc entry is readable.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const processStartTimeForPid = Effect.fnUntraced(function* (
   pid: number
 ): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
@@ -255,7 +279,30 @@ const procStartTimeForPid = Effect.fnUntraced(function* (
 // An owner is dead when its pid is gone, or when the pid is alive but its
 // recorded /proc start time no longer matches (pid reuse). An unreadable
 // current start time (non-Linux, permission) degrades to the pid-only check.
-const isAdmissionOwnerAlive = Effect.fnUntraced(function* (owner: {
+/**
+ * Check a process identity using both its PID and recorded start time.
+ *
+ * **Details**
+ *
+ * A start-time mismatch proves the PID was recycled. Empty recorded start
+ * times and unreadable proc entries retain the legacy PID-only behavior.
+ *
+ * **Example** (Check a recorded process identity)
+ *
+ * ```ts
+ * import { isProcessIdentityAlive } from "@beep/repo-cli/test/RepoRun"
+ * import { Effect } from "effect"
+ *
+ * const alive = isProcessIdentityAlive({ pid: process.pid, procStart: "" })
+ * console.log(Effect.isEffect(alive)) // true
+ * ```
+ *
+ * @param owner - PID and optional Linux process start time recorded by an owner.
+ * @returns Whether the same process identity is still alive.
+ * @category liveness
+ * @since 0.0.0
+ */
+export const isProcessIdentityAlive = Effect.fnUntraced(function* (owner: {
   readonly pid: number;
   readonly procStart: string;
 }): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
@@ -266,7 +313,7 @@ const isAdmissionOwnerAlive = Effect.fnUntraced(function* (owner: {
   if (Str.isEmpty(owner.procStart)) {
     return true;
   }
-  const current = yield* procStartTimeForPid(owner.pid);
+  const current = yield* processStartTimeForPid(owner.pid);
   return O.match(current, {
     onNone: () => true,
     onSome: (start) => start === owner.procStart,
@@ -493,7 +540,7 @@ const classifyAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
   if (O.isNone(decoded)) {
     return { kind: "malformed" };
   }
-  const alive = yield* isAdmissionOwnerAlive(codec.ownerOf(decoded.value));
+  const alive = yield* isProcessIdentityAlive(codec.ownerOf(decoded.value));
   return alive ? { kind: "live", entry: decoded.value } : { kind: "dead", entry: decoded.value };
 });
 
@@ -1256,7 +1303,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const admittedRequest = AdmissionRequest.make({ ...request, weightTokens });
   const directories = yield* ensureAdmissionDirectories();
   const nowMillis = yield* Clock.currentTimeMillis;
-  const procStart = O.getOrElse(yield* procStartTimeForPid(process.pid), () => "");
+  const procStart = O.getOrElse(yield* processStartTimeForPid(process.pid), () => "");
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,

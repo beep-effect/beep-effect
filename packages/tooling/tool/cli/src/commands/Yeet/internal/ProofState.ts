@@ -18,7 +18,9 @@ import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import {
   commandTextForStep,
   currentEffectiveUserIdOption,
+  isProcessIdentityAlive,
   isProcessPidAlive,
+  processStartTimeForPid,
   validatePrivateCoordinationDirectory,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -82,6 +84,7 @@ const proofLockOwnerFields = {
   checkoutRoot: S.String,
   command: S.String,
   pid: S.Finite,
+  procStart: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
   proofTier: YeetProofTier,
   startedAt: S.String,
 };
@@ -793,7 +796,7 @@ const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* 
     state,
     O.match({
       onNone: () => Effect.succeed(false),
-      onSome: (owner) => isProcessPidAlive(owner.pid),
+      onSome: isProcessIdentityAlive,
     })
   );
   return { text, state, legacyState, retirementState, ownerAlive };
@@ -850,7 +853,7 @@ const contendForFullProofLockCore = Effect.fn("Yeet.contendForFullProofLockCore"
 
   if (ProofLockDisposition.is["replace-stale"](disposition) && O.isSome(observed.state)) {
     yield* Console.error(
-      `[yeet] reaping stale full-proof lock (pid ${observed.state.value.pid} is not running, started ${observed.state.value.startedAt})`
+      `[yeet] reaping stale full-proof lock (pid ${observed.state.value.pid}, started ${observed.state.value.startedAt}, is no longer the recorded process identity)`
     );
     if (yield* tryReplaceStaleProofLock(lockPath, observed.text, lockText)) {
       return { lease: O.some(lease), observed };
@@ -988,6 +991,7 @@ const prepareFullProofLockLeaseForCommandAt = Effect.fn("Yeet.prepareFullProofLo
     checkoutRoot: context.repoRoot,
     command,
     pid: process.pid,
+    procStart: O.getOrElse(yield* processStartTimeForPid(process.pid), () => ""),
     proofTier: "full",
     startedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
   });
@@ -1169,7 +1173,7 @@ const replaceStaleProofLockWithRetirement = Effect.fn("Yeet.replaceStaleProofLoc
   observed: ObservedProofLockState
 ): Effect.fn.Return<O.Option<boolean>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   yield* Console.error(
-    `[yeet] retiring stale v3 full-proof lock (pid ${owner.pid} is not running, started ${owner.startedAt})`
+    `[yeet] retiring stale v3 full-proof lock (pid ${owner.pid}, started ${owner.startedAt}, is no longer the recorded process identity)`
   );
   if (yield* tryReplaceStaleProofLock(lockPath, observed.text, retirementText)) {
     return O.some(true);
