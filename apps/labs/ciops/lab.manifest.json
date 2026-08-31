@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "lab-manifest/v1",
+  "purpose": "CI-ops S7 projection lab: deterministic admission-order projection over the ratified ci-ops ontology",
+  "created": "2026-08-31",
+  "disposition": "active"
+}

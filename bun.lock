@@ -84,6 +84,21 @@
         "typescript": "catalog:",
       },
     },
+    "apps/labs/ciops": {
+      "name": "@beep/ciops",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/labs/lejeune-bolt-workbench": {
       "name": "@beep/lejeune-bolt-workbench",
       "version": "0.0.0",
@@ -3389,6 +3404,8 @@
     "@beep/brand": ["@beep/brand@workspace:packages/foundation/ui-system/brand"],
 
     "@beep/chalk": ["@beep/chalk@workspace:packages/foundation/capability/chalk"],
+
+    "@beep/ciops": ["@beep/ciops@workspace:apps/labs/ciops"],
 
     "@beep/codegen-kit": ["@beep/codegen-kit@workspace:packages/tooling/library/codegen-kit"],
 
