@@ -14,17 +14,21 @@ const permuteDirectoryEntries = (entries: ReadonlyArray<string>, iteration: numb
   return iteration % 2 === 0 ? rotated : A.reverse(rotated);
 };
 
-export const permutedDirectoryReadsFileSystem = (
-  fileSystem: FileSystem.FileSystem,
-  iteration: number
-): FileSystem.FileSystem =>
-  FileSystem.FileSystem.of({
-    ...fileSystem,
-    readDirectory: (path, options) =>
-      fileSystem
-        .readDirectory(path, options)
-        .pipe(Effect.map((entries) => permuteDirectoryEntries(entries, iteration))),
-  });
+export const permutedDirectoryReadsFileSystem: {
+  (fileSystem: FileSystem.FileSystem, iteration: number): FileSystem.FileSystem;
+  (iteration: number): (fileSystem: FileSystem.FileSystem) => FileSystem.FileSystem;
+} = dual(
+  2,
+  (fileSystem: FileSystem.FileSystem, iteration: number): FileSystem.FileSystem =>
+    FileSystem.FileSystem.of({
+      ...fileSystem,
+      readDirectory: Effect.fn("CommandTest.permutedReadDirectory")((path, options) =>
+        fileSystem
+          .readDirectory(path, options)
+          .pipe(Effect.map((entries) => A.fromIterable(permuteDirectoryEntries(entries, iteration))))
+      ),
+    })
+);
 
 export const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.scoped(
