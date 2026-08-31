@@ -1,6 +1,7 @@
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { OPENAI_DEFAULT_EMBEDDING_MODEL, OPENAI_EMBEDDING_MODEL_ENV } from "@beep/openai";
+import { LiteralKit, PosInt } from "@beep/schema";
 import { Config, Context, Duration, Layer } from "effect";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
@@ -30,6 +31,9 @@ export const RuntimeMode = LiteralKit(["live", "replay"]).pipe(
 class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
   {
     corpusRoot: S.OptionFromNullOr(S.NonEmptyString),
+    embeddingDimension: PosInt,
+    embeddingModel: S.NonEmptyString,
+    embeddingRevision: S.NonEmptyString,
     extractionTimeout: S.Duration,
     extractorModel: S.NonEmptyString,
     goldDirectory: S.NonEmptyString,
@@ -38,6 +42,7 @@ class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
     ledgerRoot: S.NonEmptyString,
     mode: RuntimeMode,
     offline: S.Boolean,
+    projectionTimeout: S.Duration,
     providerCacheDirectory: S.NonEmptyString,
   },
   $I.annote("LabConfigValue", {
@@ -53,10 +58,12 @@ class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
  * `SEMANTICA_CORPUS_ROOT` is optional so the shell can start in a typed degraded
  * mode. `SEMANTICA_PROVIDER_CACHE_DIR` defaults to the repository-local cache
  * directory, `SEMANTICA_XAI_MODEL` defaults to `grok-4.6`,
- * `SEMANTICA_GOLD_GENERATION_TIMEOUT` defaults to 45 minutes,
+ * `SEMANTICA_GOLD_GENERATION_TIMEOUT` defaults to 45 minutes, the C1 embedding
+ * identity freezes `text-embedding-3-small` at 1,536 dimensions,
  * `SEMANTICA_EXTRACTION_TIMEOUT` bounds one hosted extraction generation and
- * defaults to 15 minutes, and `SEMANTICA_OFFLINE` selects explicit `replay`
- * mode when true.
+ * defaults to 15 minutes, `SEMANTICA_PROJECTION_TIMEOUT` bounds every
+ * Oxigraph call at 30 seconds, and `SEMANTICA_OFFLINE` selects explicit
+ * `replay` mode when true.
  *
  * **Example** (Read runtime configuration)
  *
@@ -75,6 +82,15 @@ export class LabConfig extends Context.Service<LabConfig, LabConfigValue>()($I`L
 
 const labConfig = Config.all({
   corpusRoot: Config.option(Config.nonEmptyString("SEMANTICA_CORPUS_ROOT")),
+  embeddingDimension: Config.schema(PosInt, "SEMANTICA_EMBEDDING_DIMENSION").pipe(
+    Config.withDefault(PosInt.make(1536))
+  ),
+  embeddingModel: Config.nonEmptyString(OPENAI_EMBEDDING_MODEL_ENV).pipe(
+    Config.withDefault(OPENAI_DEFAULT_EMBEDDING_MODEL)
+  ),
+  embeddingRevision: Config.nonEmptyString("SEMANTICA_EMBEDDING_REVISION").pipe(
+    Config.withDefault("text-embedding-3-small@2024-01-25")
+  ),
   extractionTimeout: Config.duration("SEMANTICA_EXTRACTION_TIMEOUT").pipe(Config.withDefault(Duration.minutes(15))),
   extractorModel: Config.nonEmptyString("AI_ANTHROPIC_MODEL").pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL)),
   goldDirectory: Config.nonEmptyString("SEMANTICA_GOLD_DIR").pipe(Config.withDefault("fixtures/gold/v1")),
@@ -84,6 +100,7 @@ const labConfig = Config.all({
   goldModel: Config.nonEmptyString("SEMANTICA_XAI_MODEL").pipe(Config.withDefault("grok-4.6")),
   ledgerRoot: Config.nonEmptyString("SEMANTICA_LEDGER_ROOT").pipe(Config.withDefault(".beep/semantica/ledger")),
   offline: Config.boolean("SEMANTICA_OFFLINE").pipe(Config.withDefault(false)),
+  projectionTimeout: Config.duration("SEMANTICA_PROJECTION_TIMEOUT").pipe(Config.withDefault(Duration.seconds(30))),
   providerCacheDirectory: Config.nonEmptyString("SEMANTICA_PROVIDER_CACHE_DIR").pipe(
     Config.withDefault(".beep/semantica/provider-cache")
   ),

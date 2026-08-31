@@ -243,7 +243,7 @@ Canonicalizer row).
       and G-relation (S7); "every span slices back" is proven by
       `verifyTextAnchor` succeeding for every span. The full W1 manifest + F1 runs
       end-to-end live and replay with equal digests and zero unexpected typed-degraded document failures — the F1 malformed specimens are expected to decode to their declared degraded states; any W1 paper degrading fails the gate — before the Extractor/Input verdicts are written (R2).
-- [ ] **C1 pass** — projections match the committed `G-projection` expectations
+- [x] **C1 pass** — projections match the committed `G-projection` expectations
       first (a known kNN neighbour pair and non-empty SPARQL result sets; empty or
       mismatched projections fail, R3), then "rebuild identity (drop projections,
       rebuild, identical query results); embedding dimension is frozen by this stage with an

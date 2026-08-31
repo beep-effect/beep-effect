@@ -9,12 +9,12 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Finish the C0 evidence PR at `merge-ready: yes` and land it, then begin `P3 C1`. The sibling `openai-driver` packet is merged and `completed-retained`, so no dependency remains after the C0 phase boundary. | P2 live probe and R2 gate; E1-E9 re-entry work; stage `graduate` and its PR A/B/C sequence |
+| Next work | Finish the C1 evidence PR at `merge-ready: yes` and land it, then begin `P4 C2`: ρdf closure plus the EYE oracle, crash identity, and Tier-L bundle gates. | P3 C1 projection probe and R2 gate; P2 live probe and R2 gate; E1-E9 re-entry work; stage `graduate` and its PR A/B/C sequence |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
-| Storage | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger | D8 one-of-three; the sheet's `Bundle` verdict |
-| Embeddings | park-pending-canary; contract = `effect/unstable/ai` `EmbeddingModel`; M1 Layer = the shipped `@effect/ai-openai` `OpenAiEmbeddingModel` composed through a new `@beep/openai` driver that mirrors `@beep/anthropic` (S3-rev) — use `OpenAiEmbeddingModel.model()` where `Dimensions` is needed (`.layer` provides `EmbeddingModel` only); the driver is its own goal packet `openai-driver` at template weight, key-only config (M3); Anthropic has no embeddings API; local Snowflake/ONNX lane parked | S3 (openai-compat `/embeddings` op); G6 "via the agents slice"; S3-rev's "`.layer` provides Dimensions" |
+| Storage | **bundle** (C1, 2026-08-31): authoritative file-backed PGlite ledger + dimension-keyed DuckDB exact-vector projection + Oxigraph RDF rebuild-from-ledger. The C1 G and full-W1 runs passed ordered kNN/SPARQL expectations and empty `QuadDelta` rebuild identity. PGlite adjacency/proof tables remain the C2 derived-graph component; ANN, DuckDB VSS, pgvector-on-PGlite, and persistent RDF stores stay contingent. | `park-pending-canary`; D8 one-of-three; the sheet's provisional `Bundle` verdict |
+| Embeddings | **pick-one** (C1, 2026-08-31): hosted `@beep/openai` `OpenAiEmbeddingModel` using `text-embedding-3-small` revision `text-embedding-3-small@2024-01-25`, content-addressed cache replay, and `DegradedEmbedding` as the only failure state. Dimension 1,536 is frozen from C1 onward. The local Snowflake/ONNX lane remains parked for a separate same-model local-runtime probe. | `park-pending-canary`; S3 (openai-compat `/embeddings` op); G6 "via the agents slice"; the sheet's provisional local Snowflake/ONNX winner |
 | Input | **pick-one** (C0, 2026-08-30): the proven C0 input stack, with `@beep/doc-text` for born-digital W1 PDFs, identity decoding for Markdown, and the lab's deterministic HTML text extraction. All 25 W1 papers parsed in R2 without the direct-`unpdf` retry; MuPDF stays parked. | `park-pending-canary`; the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
 | Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
 | Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
@@ -677,3 +677,27 @@ Source:
   `7d1918096fc2ae893b9257a0a84aeb7def1cad7bf8f4d5c8add13c660faf210a`.
   The retry was not used. The legacy relation-dropping handoff and Wink's
   fabricated-span adapter remain parked; they are not the selected boundary.
+
+## 2026-08-31 (C1 pass) — Storage and Embeddings verdicts
+
+Source:
+[`goals/semantica-canary/history/p3-c1-r2.md`](../../goals/semantica-canary/history/p3-c1-r2.md).
+
+- **Storage: `bundle`.** The authoritative file-backed PGlite ledger rebuilt
+  into dimension-keyed DuckDB exact-vector tables and a fresh Oxigraph RDF
+  view. The committed G kNN and SPARQL witnesses passed before rebuild
+  identity; alternate three- and four-dimensional fixtures proved keying; the
+  full 34-document live and replay reports were byte-identical at digest
+  `90bf21c551bb764c2e07a1985929a54c7e185ce01e7933436cc2b65c63551510`;
+  and both rebuilds produced an empty `QuadDelta`. PGlite adjacency and proof
+  tables remain the C2 bundle component. ANN, DuckDB VSS, pgvector-on-PGlite,
+  and persistent RDF stores remain contingent rather than selected.
+- **Embeddings: `pick-one`.** The selected C1 boundary is the hosted
+  `@beep/openai` embedding Layer with `text-embedding-3-small` revision
+  `text-embedding-3-small@2024-01-25`, content-addressed live results, and
+  cache-only offline replay. `DegradedEmbedding` is the only declared failure
+  state. All 4,837 full-W1/F1 chunks replayed with zero unexpected degradation,
+  and dimension 1,536 is frozen from this stage onward. The local
+  Snowflake/ONNX lane stays parked for its separate same-model runtime probe;
+  it is not implied by this hosted-live/replay-offline verdict. The retry was
+  not used.

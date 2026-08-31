@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "g-projection/v1",
+  "model": {
+    "artifactHash": "ef6cde7cc67e079a9a698268a31556afc576be71e79d97a12c57424ed0dbbd67",
+    "dimension": 1536,
+    "name": "text-embedding-3-small",
+    "provider": "openai",
+    "revision": "text-embedding-3-small@2024-01-25",
+    "taskType": "embedding"
+  },
+  "paper": "057e356e94f8",
+  "knn": {
+    "neighborChunk": "74384a3c77dec7b5992f99f1b9d99abe42d218266f254dfb2f23503c7bedb8b3",
+    "queryChunk": "033a560c3dc0cf4ca34780db6003b2c86ff49dbb4f88ad720690e003e27ff0cc",
+    "rank": 1
+  },
+  "sparql": [
+    {
+      "expectedCount": 577,
+      "id": "all-evidence-claims",
+      "query": "SELECT ?claim WHERE { ?claim a <https://beep.sh/semantica/ontology/EvidenceClaim> } ORDER BY ?claim"
+    },
+    {
+      "expectedCount": 22,
+      "id": "relation-claims",
+      "query": "SELECT ?claim WHERE { ?claim a <https://beep.sh/semantica/ontology/RelationClaim> } ORDER BY ?claim"
+    }
+  ]
+}
