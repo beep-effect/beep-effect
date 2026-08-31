@@ -4,7 +4,7 @@
   "subset": "relation",
   "labels": [
     {
-      "predicate": "affiliated_with",
+      "predicate": "affiliated with",
       "subjectStartChar": 87,
       "subjectEndChar": 184,
       "subjectSha256": "08a230a3916926b388ead21aced92835327fd7630177bb21afa9393462bf9c88",
@@ -14,7 +14,7 @@
       "startChar": 87,
       "endChar": 249,
       "quoteSha256": "321eaa6b88631781d1cadffb803d306a9d55c4f6ad6f09c325873736c7e8645e",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "selected",
@@ -27,7 +27,7 @@
       "startChar": 789,
       "endChar": 841,
       "quoteSha256": "3b28eccd806b7afa1bee6adbb4be57597f3b527b57f0658e0ea013dccd2da6b5",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "shows",
@@ -40,7 +40,7 @@
       "startChar": 1348,
       "endChar": 1408,
       "quoteSha256": "d4317b6f0d798b58ecb613fa7c8eb3a84966f4b73ca63d1f4d7ab36aceb8187e",
-      "verified": false
+      "verified": true
     }
   ],
   "proposer": {

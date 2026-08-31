@@ -12,8 +12,10 @@
   "packetPath": "goals/practice-box-provisioning",
   "lifecycle": "active",
   "mission": "Expand @beep/box with the provisioning manager surface and ship the Effect-native desired-state reconciler for the service-identity-owned client/matter tree",
-  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First actions: CCG approval verification, SDK provenance repair, package-home choice, Box quote table.",
-  "blockedBy": [],
+  "statusNote": "P0 and P1 are complete. The budgeted driver and reconciler pass canonical package verification. P2 private CCG injection and read-only identity bootstrap pass; private practice inputs, live dry-run, and attended apply remain.",
+  "blockedBy": [
+    "P2 live dry-run and apply require the three private practice inputs and the operator present; CCG injection and identity guards are established."
+  ],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -52,17 +54,17 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

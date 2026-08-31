@@ -815,6 +815,22 @@
         "ts-morph": "catalog:",
       },
     },
+    "packages/drivers/box-provisioning": {
+      "name": "@beep/box-provisioning",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/box": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/cosmos": {
       "name": "@beep/cosmos",
       "version": "0.0.0",
@@ -3400,6 +3416,8 @@
     "@beep/architecture-lab-use-cases": ["@beep/architecture-lab-use-cases@workspace:packages/architecture-lab/use-cases"],
 
     "@beep/box": ["@beep/box@workspace:packages/drivers/box"],
+
+    "@beep/box-provisioning": ["@beep/box-provisioning@workspace:packages/drivers/box-provisioning"],
 
     "@beep/brand": ["@beep/brand@workspace:packages/foundation/ui-system/brand"],
 

@@ -1,6 +1,6 @@
 {
   "version": "gold/v1",
-  "digest": "e94228ce6ce3bf4e597ed282164e4392340548f43f5132c5f803dd6ee52439bc",
+  "digest": "9321c57c92402fba398ff226a178d9bc2922bb48f116f892fd8584a44ad72f29",
   "proposer": {
     "provider": "xai",
     "name": "grok-4.6",
@@ -8,7 +8,7 @@
     "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
     "taskType": "gold-proposal"
   },
-  "spotCheckedFraction": 0,
+  "spotCheckedFraction": 0.05570291777188329,
   "subsets": {
     "structure": [
       "057e356e94f8",

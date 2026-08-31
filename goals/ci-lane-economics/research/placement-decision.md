@@ -181,3 +181,16 @@ pre-packet placement cannot raise the approved projection.
 | `31794013295` / `94746974171` | `beep-ec2-heavy` | Failed after 22m26s | The 3m35s prebuild passed 128/128 tasks and seven mixed shards passed in 15m37s-17m30s. The repo-utils and repo-cli shards failed because the Node coverage Glob shim repeatedly traversed unrelated repository paths and raced temporary-directory teardown; no runner shutdown or OOM occurred. | Reject correctness and timing, exclude the attempt from duration percentiles, repair the shared test infrastructure, and require a fresh nine-shard admission. |
 | `31799253491` / `94763099702` | `beep-ec2-heavy` | Failed after 1m27s | The cold prebuild repeated the impossible `thunk.ts is not a module` cascade before any shard started. The exact merge ref passed 128/128 forced build tasks with zero cache hits in 1m03s; its trace showed `@beep/ontology-config` recursively building Schema -> Data -> Utils beside Turbo's own `@beep/utils` task because of an unused project reference. After that reference was removed, the same forced zero-cache build passed 128/128 tasks in 56.2s without the nested Schema -> Data -> Utils build. | Exclude from duration percentiles, remove the stale project reference so Turbo owns cross-package ordering, and require a fresh live admission. |
 | `31802039933` / `94772037908` | `beep-ec2-heavy` | Passed after 21m39s | The repaired nine-shard design passed all tests and compared all 127 baseline packages. Its 3m38s zero-cache prebuild preceded repo-utils at 2m15s, repo-cli at 13m48s, and mixed queues at 14m55s-16m44s; no shutdown or OOM occurred. | Accept correctness but reject timing. Exclude it from the accepted P3 population; move repo-utils to one worker and use the recovered worker for an eighth mixed queue without raising aggregate fan-out above 11. |
+| `31807417266` / `95215341649` | `beep-ec2-heavy` | Passed after 21m37s | The final ten-shard PR head passed correctness without shutdown or OOM, but its complete job remained above 20 minutes. | Reject the single-wave timing result. The implementation merged as #719; require the post-merge representative-week gate before P3 close. |
+
+## P2 disposition and P3 handoff — 2026-08-30
+
+Every action in the signed placement table is merged. PR #719 is the final P2
+implementation merge, so P2 is complete without another runner, job, VM, or
+monthly-spend delta. The rejected 21m37s PR wave is not laundered into P3.
+
+The later representative week in `live-week-p95.md` admits the current
+Coverage lane at 16m26s p95 across PR and push waves. It also falsifies the
+standing Lint and Test Unit assumptions at 20m31s and 22m48s. The P1 decision
+contains no further signed move for either lane; changing their placement,
+concurrency, or shard topology requires a new signed and costed decision.

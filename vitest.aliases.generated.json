@@ -241,23 +241,11 @@
   "@beep/workspace-domain/values/CandidateLifecycle": [
     "./packages/workspace/domain/src/values/CandidateLifecycle/index.ts"
   ],
-  "@beep/shared-domain/entity/AuditEntity": [
-    "./packages/shared/domain/src/entity/AuditEntity.ts"
-  ],
-  "@beep/shared-domain/entity/BaseEntity": [
-    "./packages/shared/domain/src/entity/BaseEntity.ts"
-  ],
   "@beep/shared-domain/entity/EntityId": [
     "./packages/shared/domain/src/entity/EntityId.ts"
   ],
-  "@beep/shared-domain/entity/EntityKit": [
-    "./packages/shared/domain/src/entity/EntityKit.ts"
-  ],
   "@beep/shared-domain/entity/EntityRef": [
     "./packages/shared/domain/src/entity/EntityRef.ts"
-  ],
-  "@beep/shared-domain/entity/OrgEntity": [
-    "./packages/shared/domain/src/entity/OrgEntity.ts"
   ],
   "@beep/shared-domain/entity/Principal": [
     "./packages/shared/domain/src/entity/Principal.ts"
@@ -1105,7 +1093,6 @@
   "@beep/govinfo": ["./packages/drivers/govinfo/src/index.ts"],
   "@beep/govinfo/*": ["./packages/drivers/govinfo/src/*"],
   "@beep/ecfr": ["./packages/drivers/ecfr/src/index.ts"],
-  "@beep/ecfr/contract": ["./packages/drivers/ecfr/src/contract.ts"],
   "@beep/nlp-processing": [
     "./packages/foundation/capability/nlp-processing/src/index.ts"
   ],
@@ -1791,8 +1778,21 @@
   "@beep/editor/capability/toolbar": [
     "./packages/foundation/ui-system/editor/src/capability/toolbar.tsx"
   ],
+  "@beep/ecfr/contract": ["./packages/drivers/ecfr/src/contract.ts"],
   "@beep/brand": ["./packages/foundation/ui-system/brand/src/index.ts"],
   "@beep/brand/react": ["./packages/foundation/ui-system/brand/src/react.tsx"],
+  "@beep/shared-domain/entity/AuditEntity": [
+    "./packages/shared/domain/src/entity/AuditEntity.ts"
+  ],
+  "@beep/shared-domain/entity/BaseEntity": [
+    "./packages/shared/domain/src/entity/BaseEntity.ts"
+  ],
+  "@beep/shared-domain/entity/EntityKit": [
+    "./packages/shared/domain/src/entity/EntityKit.ts"
+  ],
+  "@beep/shared-domain/entity/OrgEntity": [
+    "./packages/shared/domain/src/entity/OrgEntity.ts"
+  ],
   "@beep/law-practice-domain/values/PatentDocument": [
     "./packages/law-practice/domain/src/values/PatentDocument/index.ts"
   ],
@@ -1811,5 +1811,9 @@
   "@beep/schema/FileTypeChecker": [
     "./packages/foundation/modeling/schema/src/FileTypeChecker/index.ts"
   ],
-  "@beep/openai": ["./packages/drivers/openai/src/index.ts"]
+  "@beep/openai": ["./packages/drivers/openai/src/index.ts"],
+  "@beep/box-provisioning": [
+    "./packages/drivers/box-provisioning/src/index.ts"
+  ],
+  "@beep/box-provisioning/*": ["./packages/drivers/box-provisioning/src/*"]
 }

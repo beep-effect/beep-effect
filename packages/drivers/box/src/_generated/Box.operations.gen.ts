@@ -82,6 +82,10 @@ export type BoxGeneratedOperations = {
     readonly getFileThumbnailUrl: (payload: M.FilesGetFileThumbnailUrlPayload) => Effect.Effect<M.FilesGetFileThumbnailUrlSuccess, BoxError>;
     readonly updateFileById: (payload: M.FilesUpdateFileByIdPayload) => Effect.Effect<M.FilesUpdateFileByIdSuccess, BoxError>;
   };
+  readonly folderMetadata: {
+    readonly getFolderMetadata: (payload: M.FolderMetadataGetFolderMetadataPayload) => Effect.Effect<M.FolderMetadataGetFolderMetadataSuccess, BoxError>;
+    readonly getFolderMetadataById: (payload: M.FolderMetadataGetFolderMetadataByIdPayload) => Effect.Effect<M.FolderMetadataGetFolderMetadataByIdSuccess, BoxError>;
+  };
   readonly folders: {
     readonly copyFolder: (payload: M.FoldersCopyFolderPayload) => Effect.Effect<M.FoldersCopyFolderSuccess, BoxError>;
     readonly createFolder: (payload: M.FoldersCreateFolderPayload) => Effect.Effect<M.FoldersCreateFolderSuccess, BoxError>;
@@ -90,8 +94,51 @@ export type BoxGeneratedOperations = {
     readonly getFolderItems: (payload: M.FoldersGetFolderItemsPayload) => Effect.Effect<M.FoldersGetFolderItemsSuccess, BoxError>;
     readonly updateFolderById: (payload: M.FoldersUpdateFolderByIdPayload) => Effect.Effect<M.FoldersUpdateFolderByIdSuccess, BoxError>;
   };
+  readonly listCollaborations: {
+    readonly getCollaborations: (payload: M.ListCollaborationsGetCollaborationsPayload) => Effect.Effect<M.ListCollaborationsGetCollaborationsSuccess, BoxError>;
+    readonly getFileCollaborations: (payload: M.ListCollaborationsGetFileCollaborationsPayload) => Effect.Effect<M.ListCollaborationsGetFileCollaborationsSuccess, BoxError>;
+    readonly getFolderCollaborations: (payload: M.ListCollaborationsGetFolderCollaborationsPayload) => Effect.Effect<M.ListCollaborationsGetFolderCollaborationsSuccess, BoxError>;
+    readonly getGroupCollaborations: (payload: M.ListCollaborationsGetGroupCollaborationsPayload) => Effect.Effect<M.ListCollaborationsGetGroupCollaborationsSuccess, BoxError>;
+  };
+  readonly metadataCascadePolicies: {
+    readonly getMetadataCascadePolicies: (payload: M.MetadataCascadePoliciesGetMetadataCascadePoliciesPayload) => Effect.Effect<M.MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess, BoxError>;
+    readonly getMetadataCascadePolicyById: (payload: M.MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload) => Effect.Effect<M.MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess, BoxError>;
+  };
+  readonly metadataTemplates: {
+    readonly getEnterpriseMetadataTemplates: (payload: M.MetadataTemplatesGetEnterpriseMetadataTemplatesPayload) => Effect.Effect<M.MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess, BoxError>;
+    readonly getGlobalMetadataTemplates: (payload: M.MetadataTemplatesGetGlobalMetadataTemplatesPayload) => Effect.Effect<M.MetadataTemplatesGetGlobalMetadataTemplatesSuccess, BoxError>;
+    readonly getMetadataTemplate: (payload: M.MetadataTemplatesGetMetadataTemplatePayload) => Effect.Effect<M.MetadataTemplatesGetMetadataTemplateSuccess, BoxError>;
+    readonly getMetadataTemplateById: (payload: M.MetadataTemplatesGetMetadataTemplateByIdPayload) => Effect.Effect<M.MetadataTemplatesGetMetadataTemplateByIdSuccess, BoxError>;
+    readonly getMetadataTemplatesByInstanceId: (payload: M.MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload) => Effect.Effect<M.MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess, BoxError>;
+  };
+  readonly retentionPolicies: {
+    readonly getRetentionPolicies: (payload: M.RetentionPoliciesGetRetentionPoliciesPayload) => Effect.Effect<M.RetentionPoliciesGetRetentionPoliciesSuccess, BoxError>;
+    readonly getRetentionPolicyById: (payload: M.RetentionPoliciesGetRetentionPolicyByIdPayload) => Effect.Effect<M.RetentionPoliciesGetRetentionPolicyByIdSuccess, BoxError>;
+  };
+  readonly retentionPolicyAssignments: {
+    readonly getFilesUnderRetentionPolicyAssignment: (payload: M.RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload) => Effect.Effect<M.RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess, BoxError>;
+    readonly getRetentionPolicyAssignmentById: (payload: M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload) => Effect.Effect<M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess, BoxError>;
+    readonly getRetentionPolicyAssignments: (payload: M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload) => Effect.Effect<M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess, BoxError>;
+  };
+  readonly signRequests: {
+    readonly cancelSignRequest: (payload: M.SignRequestsCancelSignRequestPayload) => Effect.Effect<M.SignRequestsCancelSignRequestSuccess, BoxError>;
+    readonly createSignRequest: (payload: M.SignRequestsCreateSignRequestPayload) => Effect.Effect<M.SignRequestsCreateSignRequestSuccess, BoxError>;
+    readonly getSignRequestById: (payload: M.SignRequestsGetSignRequestByIdPayload) => Effect.Effect<M.SignRequestsGetSignRequestByIdSuccess, BoxError>;
+    readonly getSignRequests: (payload: M.SignRequestsGetSignRequestsPayload) => Effect.Effect<M.SignRequestsGetSignRequestsSuccess, BoxError>;
+    readonly resendSignRequest: (payload: M.SignRequestsResendSignRequestPayload) => Effect.Effect<M.SignRequestsResendSignRequestSuccess, BoxError>;
+  };
+  readonly signTemplates: {
+    readonly getSignTemplateById: (payload: M.SignTemplatesGetSignTemplateByIdPayload) => Effect.Effect<M.SignTemplatesGetSignTemplateByIdSuccess, BoxError>;
+    readonly getSignTemplates: (payload: M.SignTemplatesGetSignTemplatesPayload) => Effect.Effect<M.SignTemplatesGetSignTemplatesSuccess, BoxError>;
+  };
   readonly uploads: {
     readonly preflightFileUploadCheck: (payload: M.UploadsPreflightFileUploadCheckPayload) => Effect.Effect<M.UploadsPreflightFileUploadCheckSuccess, BoxError>;
+  };
+  readonly userCollaborations: {
+    readonly createCollaboration: (payload: M.UserCollaborationsCreateCollaborationPayload) => Effect.Effect<M.UserCollaborationsCreateCollaborationSuccess, BoxError>;
+    readonly deleteCollaborationById: (payload: M.UserCollaborationsDeleteCollaborationByIdPayload) => Effect.Effect<M.UserCollaborationsDeleteCollaborationByIdSuccess, BoxError>;
+    readonly getCollaborationById: (payload: M.UserCollaborationsGetCollaborationByIdPayload) => Effect.Effect<M.UserCollaborationsGetCollaborationByIdSuccess, BoxError>;
+    readonly updateCollaborationById: (payload: M.UserCollaborationsUpdateCollaborationByIdPayload) => Effect.Effect<M.UserCollaborationsUpdateCollaborationByIdSuccess, BoxError>;
   };
   readonly users: {
     readonly createUser: (payload: M.UsersCreateUserPayload) => Effect.Effect<M.UsersCreateUserSuccess, BoxError>;
@@ -100,6 +147,14 @@ export type BoxGeneratedOperations = {
     readonly getUserMe: (payload: M.UsersGetUserMePayload) => Effect.Effect<M.UsersGetUserMeSuccess, BoxError>;
     readonly getUsers: (payload: M.UsersGetUsersPayload) => Effect.Effect<M.UsersGetUsersSuccess, BoxError>;
     readonly updateUserById: (payload: M.UsersUpdateUserByIdPayload) => Effect.Effect<M.UsersUpdateUserByIdSuccess, BoxError>;
+  };
+  readonly webhooks: {
+    readonly createWebhook: (payload: M.WebhooksCreateWebhookPayload) => Effect.Effect<M.WebhooksCreateWebhookSuccess, BoxError>;
+    readonly deleteWebhookById: (payload: M.WebhooksDeleteWebhookByIdPayload) => Effect.Effect<M.WebhooksDeleteWebhookByIdSuccess, BoxError>;
+    readonly getWebhookById: (payload: M.WebhooksGetWebhookByIdPayload) => Effect.Effect<M.WebhooksGetWebhookByIdSuccess, BoxError>;
+    readonly getWebhooks: (payload: M.WebhooksGetWebhooksPayload) => Effect.Effect<M.WebhooksGetWebhooksSuccess, BoxError>;
+    readonly updateWebhookById: (payload: M.WebhooksUpdateWebhookByIdPayload) => Effect.Effect<M.WebhooksUpdateWebhookByIdSuccess, BoxError>;
+    readonly validateMessage: (payload: M.WebhooksValidateMessagePayload) => Effect.Effect<M.WebhooksValidateMessageSuccess, BoxError>;
   };
   readonly zipDownloads: {
     readonly createZipDownload: (payload: M.ZipDownloadsCreateZipDownloadPayload) => Effect.Effect<M.ZipDownloadsCreateZipDownloadSuccess, BoxError>;
@@ -470,6 +525,38 @@ export const makeGeneratedOperations: {
           ])
       ),
   },
+  folderMetadata: {
+    getFolderMetadata: (payload) =>
+      runSdkCall(
+        "folderMetadata",
+        "getFolderMetadata",
+        "folderMetadata.getFolderMetadata",
+        M.FolderMetadataGetFolderMetadataPayload,
+        M.FolderMetadataGetFolderMetadataSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "folderMetadata", "getFolderMetadata", [
+            decoded.folderId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getFolderMetadataById: (payload) =>
+      runSdkCall(
+        "folderMetadata",
+        "getFolderMetadataById",
+        "folderMetadata.getFolderMetadataById",
+        M.FolderMetadataGetFolderMetadataByIdPayload,
+        M.FolderMetadataGetFolderMetadataByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "folderMetadata", "getFolderMetadataById", [
+            decoded.folderId,
+            decoded.scope,
+            decoded.templateKey,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
   folders: {
     copyFolder: (payload) =>
       runSdkCall(
@@ -557,6 +644,348 @@ export const makeGeneratedOperations: {
           ])
       ),
   },
+  listCollaborations: {
+    getCollaborations: (payload) =>
+      runSdkCall(
+        "listCollaborations",
+        "getCollaborations",
+        "listCollaborations.getCollaborations",
+        M.ListCollaborationsGetCollaborationsPayload,
+        M.ListCollaborationsGetCollaborationsSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "listCollaborations", "getCollaborations", [
+            decoded.queryParams,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getFileCollaborations: (payload) =>
+      runSdkCall(
+        "listCollaborations",
+        "getFileCollaborations",
+        "listCollaborations.getFileCollaborations",
+        M.ListCollaborationsGetFileCollaborationsPayload,
+        M.ListCollaborationsGetFileCollaborationsSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "listCollaborations", "getFileCollaborations", [
+            decoded.fileId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getFolderCollaborations: (payload) =>
+      runSdkCall(
+        "listCollaborations",
+        "getFolderCollaborations",
+        "listCollaborations.getFolderCollaborations",
+        M.ListCollaborationsGetFolderCollaborationsPayload,
+        M.ListCollaborationsGetFolderCollaborationsSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "listCollaborations", "getFolderCollaborations", [
+            decoded.folderId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getGroupCollaborations: (payload) =>
+      runSdkCall(
+        "listCollaborations",
+        "getGroupCollaborations",
+        "listCollaborations.getGroupCollaborations",
+        M.ListCollaborationsGetGroupCollaborationsPayload,
+        M.ListCollaborationsGetGroupCollaborationsSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "listCollaborations", "getGroupCollaborations", [
+            decoded.groupId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
+  metadataCascadePolicies: {
+    getMetadataCascadePolicies: (payload) =>
+      runSdkCall(
+        "metadataCascadePolicies",
+        "getMetadataCascadePolicies",
+        "metadataCascadePolicies.getMetadataCascadePolicies",
+        M.MetadataCascadePoliciesGetMetadataCascadePoliciesPayload,
+        M.MetadataCascadePoliciesGetMetadataCascadePoliciesSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "metadataCascadePolicies", "getMetadataCascadePolicies", [
+            decoded.queryParams,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getMetadataCascadePolicyById: (payload) =>
+      runSdkCall(
+        "metadataCascadePolicies",
+        "getMetadataCascadePolicyById",
+        "metadataCascadePolicies.getMetadataCascadePolicyById",
+        M.MetadataCascadePoliciesGetMetadataCascadePolicyByIdPayload,
+        M.MetadataCascadePoliciesGetMetadataCascadePolicyByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "metadataCascadePolicies", "getMetadataCascadePolicyById", [
+            decoded.metadataCascadePolicyId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
+  metadataTemplates: {
+    getEnterpriseMetadataTemplates: (payload) =>
+      runSdkCall(
+        "metadataTemplates",
+        "getEnterpriseMetadataTemplates",
+        "metadataTemplates.getEnterpriseMetadataTemplates",
+        M.MetadataTemplatesGetEnterpriseMetadataTemplatesPayload,
+        M.MetadataTemplatesGetEnterpriseMetadataTemplatesSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "metadataTemplates", "getEnterpriseMetadataTemplates", [
+            decoded.queryParams,
+            decoded.headersInput,
+            combineCancellationToken(decoded.cancellationToken, signal)
+          ])
+      ),
+    getGlobalMetadataTemplates: (payload) =>
+      runSdkCall(
+        "metadataTemplates",
+        "getGlobalMetadataTemplates",
+        "metadataTemplates.getGlobalMetadataTemplates",
+        M.MetadataTemplatesGetGlobalMetadataTemplatesPayload,
+        M.MetadataTemplatesGetGlobalMetadataTemplatesSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "metadataTemplates", "getGlobalMetadataTemplates", [
+            decoded.queryParams,
+            decoded.headersInput,
+            combineCancellationToken(decoded.cancellationToken, signal)
+          ])
+      ),
+    getMetadataTemplate: (payload) =>
+      runSdkCall(
+        "metadataTemplates",
+        "getMetadataTemplate",
+        "metadataTemplates.getMetadataTemplate",
+        M.MetadataTemplatesGetMetadataTemplatePayload,
+        M.MetadataTemplatesGetMetadataTemplateSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "metadataTemplates", "getMetadataTemplate", [
+            decoded.scope,
+            decoded.templateKey,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getMetadataTemplateById: (payload) =>
+      runSdkCall(
+        "metadataTemplates",
+        "getMetadataTemplateById",
+        "metadataTemplates.getMetadataTemplateById",
+        M.MetadataTemplatesGetMetadataTemplateByIdPayload,
+        M.MetadataTemplatesGetMetadataTemplateByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "metadataTemplates", "getMetadataTemplateById", [
+            decoded.templateId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getMetadataTemplatesByInstanceId: (payload) =>
+      runSdkCall(
+        "metadataTemplates",
+        "getMetadataTemplatesByInstanceId",
+        "metadataTemplates.getMetadataTemplatesByInstanceId",
+        M.MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload,
+        M.MetadataTemplatesGetMetadataTemplatesByInstanceIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "metadataTemplates", "getMetadataTemplatesByInstanceId", [
+            decoded.queryParams,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
+  retentionPolicies: {
+    getRetentionPolicies: (payload) =>
+      runSdkCall(
+        "retentionPolicies",
+        "getRetentionPolicies",
+        "retentionPolicies.getRetentionPolicies",
+        M.RetentionPoliciesGetRetentionPoliciesPayload,
+        M.RetentionPoliciesGetRetentionPoliciesSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "retentionPolicies", "getRetentionPolicies", [
+            decoded.queryParams,
+            decoded.headersInput,
+            combineCancellationToken(decoded.cancellationToken, signal)
+          ])
+      ),
+    getRetentionPolicyById: (payload) =>
+      runSdkCall(
+        "retentionPolicies",
+        "getRetentionPolicyById",
+        "retentionPolicies.getRetentionPolicyById",
+        M.RetentionPoliciesGetRetentionPolicyByIdPayload,
+        M.RetentionPoliciesGetRetentionPolicyByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "retentionPolicies", "getRetentionPolicyById", [
+            decoded.retentionPolicyId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
+  retentionPolicyAssignments: {
+    getFilesUnderRetentionPolicyAssignment: (payload) =>
+      runSdkCall(
+        "retentionPolicyAssignments",
+        "getFilesUnderRetentionPolicyAssignment",
+        "retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment",
+        M.RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentPayload,
+        M.RetentionPolicyAssignmentsGetFilesUnderRetentionPolicyAssignmentSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "retentionPolicyAssignments", "getFilesUnderRetentionPolicyAssignment", [
+            decoded.retentionPolicyAssignmentId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getRetentionPolicyAssignmentById: (payload) =>
+      runSdkCall(
+        "retentionPolicyAssignments",
+        "getRetentionPolicyAssignmentById",
+        "retentionPolicyAssignments.getRetentionPolicyAssignmentById",
+        M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdPayload,
+        M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "retentionPolicyAssignments", "getRetentionPolicyAssignmentById", [
+            decoded.retentionPolicyAssignmentId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getRetentionPolicyAssignments: (payload) =>
+      runSdkCall(
+        "retentionPolicyAssignments",
+        "getRetentionPolicyAssignments",
+        "retentionPolicyAssignments.getRetentionPolicyAssignments",
+        M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsPayload,
+        M.RetentionPolicyAssignmentsGetRetentionPolicyAssignmentsSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "retentionPolicyAssignments", "getRetentionPolicyAssignments", [
+            decoded.retentionPolicyId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
+  signRequests: {
+    cancelSignRequest: (payload) =>
+      runSdkCall(
+        "signRequests",
+        "cancelSignRequest",
+        "signRequests.cancelSignRequest",
+        M.SignRequestsCancelSignRequestPayload,
+        M.SignRequestsCancelSignRequestSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "signRequests", "cancelSignRequest", [
+            decoded.signRequestId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    createSignRequest: (payload) =>
+      runSdkCall(
+        "signRequests",
+        "createSignRequest",
+        "signRequests.createSignRequest",
+        M.SignRequestsCreateSignRequestPayload,
+        M.SignRequestsCreateSignRequestSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "signRequests", "createSignRequest", [
+            decoded.requestBody,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getSignRequestById: (payload) =>
+      runSdkCall(
+        "signRequests",
+        "getSignRequestById",
+        "signRequests.getSignRequestById",
+        M.SignRequestsGetSignRequestByIdPayload,
+        M.SignRequestsGetSignRequestByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "signRequests", "getSignRequestById", [
+            decoded.signRequestId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getSignRequests: (payload) =>
+      runSdkCall(
+        "signRequests",
+        "getSignRequests",
+        "signRequests.getSignRequests",
+        M.SignRequestsGetSignRequestsPayload,
+        M.SignRequestsGetSignRequestsSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "signRequests", "getSignRequests", [
+            decoded.queryParams,
+            decoded.headersInput,
+            combineCancellationToken(decoded.cancellationToken, signal)
+          ])
+      ),
+    resendSignRequest: (payload) =>
+      runSdkCall(
+        "signRequests",
+        "resendSignRequest",
+        "signRequests.resendSignRequest",
+        M.SignRequestsResendSignRequestPayload,
+        M.SignRequestsResendSignRequestSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "signRequests", "resendSignRequest", [
+            decoded.signRequestId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
+  signTemplates: {
+    getSignTemplateById: (payload) =>
+      runSdkCall(
+        "signTemplates",
+        "getSignTemplateById",
+        "signTemplates.getSignTemplateById",
+        M.SignTemplatesGetSignTemplateByIdPayload,
+        M.SignTemplatesGetSignTemplateByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "signTemplates", "getSignTemplateById", [
+            decoded.templateId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getSignTemplates: (payload) =>
+      runSdkCall(
+        "signTemplates",
+        "getSignTemplates",
+        "signTemplates.getSignTemplates",
+        M.SignTemplatesGetSignTemplatesPayload,
+        M.SignTemplatesGetSignTemplatesSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "signTemplates", "getSignTemplates", [
+            decoded.queryParams,
+            decoded.headersInput,
+            combineCancellationToken(decoded.cancellationToken, signal)
+          ])
+      ),
+  },
   uploads: {
     preflightFileUploadCheck: (payload) =>
       runSdkCall(
@@ -571,6 +1000,64 @@ export const makeGeneratedOperations: {
             decoded.requestBody,
             decoded.headersInput,
             combineCancellationToken(decoded.cancellationToken, signal)
+          ])
+      ),
+  },
+  userCollaborations: {
+    createCollaboration: (payload) =>
+      runSdkCall(
+        "userCollaborations",
+        "createCollaboration",
+        "userCollaborations.createCollaboration",
+        M.UserCollaborationsCreateCollaborationPayload,
+        M.UserCollaborationsCreateCollaborationSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "userCollaborations", "createCollaboration", [
+            decoded.requestBody,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    deleteCollaborationById: (payload) =>
+      runSdkCall(
+        "userCollaborations",
+        "deleteCollaborationById",
+        "userCollaborations.deleteCollaborationById",
+        M.UserCollaborationsDeleteCollaborationByIdPayload,
+        M.UserCollaborationsDeleteCollaborationByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "userCollaborations", "deleteCollaborationById", [
+            decoded.collaborationId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getCollaborationById: (payload) =>
+      runSdkCall(
+        "userCollaborations",
+        "getCollaborationById",
+        "userCollaborations.getCollaborationById",
+        M.UserCollaborationsGetCollaborationByIdPayload,
+        M.UserCollaborationsGetCollaborationByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "userCollaborations", "getCollaborationById", [
+            decoded.collaborationId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    updateCollaborationById: (payload) =>
+      runSdkCall(
+        "userCollaborations",
+        "updateCollaborationById",
+        "userCollaborations.updateCollaborationById",
+        M.UserCollaborationsUpdateCollaborationByIdPayload,
+        M.UserCollaborationsUpdateCollaborationByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "userCollaborations", "updateCollaborationById", [
+            decoded.collaborationId,
+            mergeCancellation(decoded.optionalsInput, signal)
           ])
       ),
   },
@@ -658,6 +1145,95 @@ export const makeGeneratedOperations: {
         (decoded, signal) =>
           invokeSdkMethod(client, "users", "updateUserById", [
             decoded.userId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+  },
+  webhooks: {
+    createWebhook: (payload) =>
+      runSdkCall(
+        "webhooks",
+        "createWebhook",
+        "webhooks.createWebhook",
+        M.WebhooksCreateWebhookPayload,
+        M.WebhooksCreateWebhookSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "webhooks", "createWebhook", [
+            decoded.requestBody,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    deleteWebhookById: (payload) =>
+      runSdkCall(
+        "webhooks",
+        "deleteWebhookById",
+        "webhooks.deleteWebhookById",
+        M.WebhooksDeleteWebhookByIdPayload,
+        M.WebhooksDeleteWebhookByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "webhooks", "deleteWebhookById", [
+            decoded.webhookId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getWebhookById: (payload) =>
+      runSdkCall(
+        "webhooks",
+        "getWebhookById",
+        "webhooks.getWebhookById",
+        M.WebhooksGetWebhookByIdPayload,
+        M.WebhooksGetWebhookByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "webhooks", "getWebhookById", [
+            decoded.webhookId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    getWebhooks: (payload) =>
+      runSdkCall(
+        "webhooks",
+        "getWebhooks",
+        "webhooks.getWebhooks",
+        M.WebhooksGetWebhooksPayload,
+        M.WebhooksGetWebhooksSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "webhooks", "getWebhooks", [
+            decoded.queryParams,
+            decoded.headersInput,
+            combineCancellationToken(decoded.cancellationToken, signal)
+          ])
+      ),
+    updateWebhookById: (payload) =>
+      runSdkCall(
+        "webhooks",
+        "updateWebhookById",
+        "webhooks.updateWebhookById",
+        M.WebhooksUpdateWebhookByIdPayload,
+        M.WebhooksUpdateWebhookByIdSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "webhooks", "updateWebhookById", [
+            decoded.webhookId,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    validateMessage: (payload) =>
+      runSdkCall(
+        "webhooks",
+        "validateMessage",
+        "webhooks.validateMessage",
+        M.WebhooksValidateMessagePayload,
+        M.WebhooksValidateMessageSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "webhooks", "validateMessage", [
+            decoded.body,
+            decoded.headers,
+            decoded.primaryKey,
             mergeCancellation(decoded.optionalsInput, signal)
           ])
       ),

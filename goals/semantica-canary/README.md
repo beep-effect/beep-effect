@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -50,18 +50,21 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-Paused in P2 after the C0 Extraction probe and its single retry failed the
-relation-paper slate. Review invalidated two earlier apparent passes because
-their endpoint entities used ambiguous first-occurrence anchors. The family is
-`park`, and the source exploration has returned to `decompose`. C1, C2, and
-the full-W1 R2 gate did not run.
+P2 C0 is complete. The evidence-quote candidate passed the first vertical
+slice, all three G-relation papers, and the full-W1 R2 gate live and replay.
+The full reports were byte-identical; all 25 W1 papers parsed and extracted;
+unexpected degradation and failed anchors were zero. The retry was never
+used. P3 C1 waits for this C0 evidence PR to become merge-ready and land; its
+OpenAI-driver dependency is already merged.
 
 ## Latest evidence
 
-[`history/p2-c0-probe-breaker.md`](./history/p2-c0-probe-breaker.md) records
-the superseded diagnostic digests, the candidate and retry failures, the
-review-closeout live/replay failure on the unique-alignment code, their
-provider-cache evidence, and the exact re-entry questions.
+[`history/p2-c0-r2.md`](./history/p2-c0-r2.md) records the full-W1 live/replay
+gate and resulting family verdicts.
+[`history/p2-c0-relation-slate.md`](./history/p2-c0-relation-slate.md) records
+the preceding slice and relation-paper extension. The earlier
+[`history/p2-c0-evidence-quote-reentry.md`](./history/p2-c0-evidence-quote-reentry.md)
+records the candidate contract, zero-spend preview, and gold repair.
 
 ## Notes
 

@@ -3,14 +3,14 @@
   "initiative": {
     "id": "semantica-canary",
     "title": "Semantica Canary",
-    "status": "paused",
+    "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-08-26",
+    "updated": "2026-08-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-canary",
-  "lifecycle": "paused",
-  "statusNote": "Paused at P2 C0 after the Extraction candidate and single retry failed the frozen relation-paper slate. Review invalidated two apparent passes that relied on ambiguous first-occurrence entity anchors; no review-safe vertical slice passed. Extraction is parked and the source exploration has returned to decompose; see history/p2-c0-probe-breaker.md.",
+  "lifecycle": "active",
+  "statusNote": "P2 C0 passed: the evidence-quote candidate cleared its slice, all three G-relation papers, and the full-W1 R2 gate with byte-identical live/replay reports, zero unexpected degradation, and no retry. P3 starts after the C0 evidence PR lands; see history/p2-c0-r2.md.",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -58,7 +58,7 @@
     {
       "id": "P2",
       "name": "C0",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",

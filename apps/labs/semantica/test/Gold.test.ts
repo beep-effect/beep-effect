@@ -3,7 +3,7 @@
 import { SourceTextExtractor } from "@beep/provenance";
 import { NonNegativeInt } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Duration, Effect, FileSystem, Layer, Path, Stream } from "effect";
+import { Duration, Effect, FileSystem, Layer, Match, Number as N, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -14,7 +14,7 @@ import * as Response from "effect/unstable/ai/Response";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
 import { CanaryCommand } from "@/canary/Command";
-import { proposeGold, resolveGoldQuoteAnchor } from "@/canary/Gold";
+import { GOLD_SUBSETS, GoldArtifactSemantics, proposeGold, resolveGoldQuoteAnchor } from "@/canary/Gold";
 import { CorpusManifest, CorpusPaperId } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import { F1Catalog, F1Index } from "@/fixtures/F1";
@@ -22,14 +22,15 @@ import { GOLD_PROMPT_ARTIFACT_HASH } from "@/gold/Prompts";
 import { CanonicalizerLive } from "@/layers/CanonicalizerLive";
 import { ActiveModelIdentityLive, promptText } from "@/layers/LanguageModelLive";
 import { LabConfig } from "@/runtime/Config";
-import { sha256TextSync } from "@/schema/Digest";
+import { contentDigest, sha256TextSync } from "@/schema/Digest";
 import { Origin, SourceDocument } from "@/schema/Document";
 import { GoldUnavailable } from "@/schema/Errors";
-import { CurrentGoldDocumentText, GoldFile, GoldRef } from "@/schema/Gold";
+import { CurrentGoldDocumentText, GoldFile, GoldFileEncoded, GoldRef } from "@/schema/Gold";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { ParseOutcome } from "@/schema/Text";
 import { CanaryC0 } from "@/services/CanaryC0";
+import { Chunker } from "@/services/Chunker";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
 import { ProviderCache } from "@/services/ProviderCache";
@@ -37,7 +38,24 @@ import { ProviderCache } from "@/services/ProviderCache";
 const CorpusManifestJson = S.fromJsonString(CorpusManifest);
 const F1IndexJson = S.fromJsonString(F1Index);
 const GoldFileJson = S.fromJsonString(GoldFile);
+const GoldFileEncodedJson = S.fromJsonString(GoldFileEncoded);
 const GoldRefJson = S.fromJsonString(GoldRef);
+
+const goldLabelCount = (file: GoldFileEncoded): number =>
+  Match.value(file).pipe(
+    Match.when({ subset: "structure" }, (value) => A.length(value.labels)),
+    Match.when({ subset: "entity" }, (value) => A.length(value.labels)),
+    Match.when({ subset: "relation" }, (value) => A.length(value.labels)),
+    Match.exhaustive
+  );
+
+const verifiedGoldLabelCount = (file: GoldFileEncoded): number =>
+  Match.value(file).pipe(
+    Match.when({ subset: "structure" }, (value) => A.length(A.filter(value.labels, (label) => label.verified))),
+    Match.when({ subset: "entity" }, (value) => A.length(A.filter(value.labels, (label) => label.verified))),
+    Match.when({ subset: "relation" }, (value) => A.length(A.filter(value.labels, (label) => label.verified))),
+    Match.exhaustive
+  );
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -46,6 +64,10 @@ const provideScopedLayer =
 
 const unusedCanaryC0 = CanaryC0.of({
   run: Effect.fn("CanaryC0.unused")(() => Effect.die(new Error("C0 is not used by gold command tests."))),
+});
+
+const unusedChunker = Chunker.of({
+  chunk: Effect.fn("Chunker.unused")(() => Effect.die(new Error("Chunker is not used by gold command tests."))),
 });
 
 const sourceText = "Café relates to Beta.";
@@ -181,6 +203,54 @@ describe("C0 gold proposer", () => {
       { numRuns: 20 }
     );
   });
+
+  it("keeps the committed E6 annotation and refreeze receipt coherent", () =>
+    Effect.runPromise(
+      provideScopedLayer(BunServices.layer)(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const reference = yield* fs
+            .readFileString("fixtures/gold/v1/gold.json")
+            .pipe(Effect.flatMap(S.decodeEffect(GoldRefJson)));
+          const files = A.sort(
+            yield* Effect.forEach(
+              GOLD_SUBSETS,
+              (subset) =>
+                Effect.forEach(reference.subsets[subset], (paperId) =>
+                  fs
+                    .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
+                    .pipe(Effect.flatMap(S.decodeEffect(GoldFileEncodedJson)))
+                ),
+              { concurrency: 1 }
+            ).pipe(Effect.map(A.flatten)),
+            GoldArtifactSemantics.fileOrder
+          );
+          const verified = A.reduce(files, 0, (total, file) => N.sum(total, verifiedGoldLabelCount(file)));
+          const total = A.reduce(files, 0, (count, file) => N.sum(count, goldLabelCount(file)));
+          const digest = yield* contentDigest(S.Array(GoldFileEncoded))(files);
+          const relationLabels = A.flatMap(files, (file) => (file.subset === "relation" ? file.labels : []));
+          const abstractLabels = A.flatMap(files, (file) =>
+            file.subset === "structure" ? A.filter(file.labels, (label) => label.role === "abstract") : []
+          );
+
+          expect(files).toHaveLength(18);
+          expect([verified, total]).toEqual([21, 377]);
+          expect(reference.digest).toBe(digest);
+          expect(reference.spotCheckedFraction).toBe(N.divideUnsafe(verified, total));
+          expect(A.every(relationLabels, (label) => label.verified)).toBe(true);
+          expect(A.some(relationLabels, (label) => Str.Equivalence(label.predicate, "affiliated_with"))).toBe(false);
+          expect(
+            A.some(relationLabels, (label) => Str.Equivalence(label.predicate, "published in proceedings of"))
+          ).toBe(false);
+          expect(
+            A.every(
+              abstractLabels,
+              (label) => label.verified && N.Equivalence(N.subtract(label.endChar, label.startChar), 8)
+            )
+          ).toBe(true);
+        })
+      )
+    ));
 
   it("keeps an exact claimed anchor ahead of an earlier whitespace-folded occurrence", () => {
     expect(resolveGoldQuoteAnchor("Alpha   Beta Alpha Beta", "Alpha Beta", 13)).toEqual(O.some([13, 23, "Alpha Beta"]));
@@ -463,6 +533,7 @@ describe("C0 gold proposer", () => {
           const error = yield* provideScopedLayer(makeGoldTestLayer(manifest, fixtures))(
             runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(
               Effect.provideService(CanaryC0, unusedCanaryC0),
+              Effect.provideService(Chunker, unusedChunker),
               Effect.flip
             )
           );
