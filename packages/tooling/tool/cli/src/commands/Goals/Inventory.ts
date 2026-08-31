@@ -154,10 +154,12 @@ const scanGoalPackets = Effect.fn("Goals.scanGoalPackets")(function* (repoRoot: 
   const path = yield* Path.Path;
   const goalsDir = path.join(repoRoot, GOALS_DIR);
   const entries = yield* readGoalEntries(goalsDir, mode);
-  const records = yield* Effect.forEach(
-    A.filter(entries, (slug) => slug !== TEMPLATE_SLUG && !Str.startsWith(".")(slug)),
-    (slug) => scanGoalPacket(goalsDir, slug, mode)
+  const slugs = pipe(
+    entries,
+    A.filter((slug) => slug !== TEMPLATE_SLUG && !Str.startsWith(".")(slug)),
+    A.sort(Order.String)
   );
+  const records = yield* Effect.forEach(slugs, (slug) => scanGoalPacket(goalsDir, slug, mode), { concurrency: 1 });
   return pipe(records, A.getSomes, A.sort(recordBySlug));
 });
 
