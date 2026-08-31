@@ -58,3 +58,15 @@ Friction receipts captured while shipping, per the repository friction law.
    **What would have prevented it:** package verification could run the
    touched-file Effect governance checks scoped to the target package, so a
    green package handoff implies the root policy lanes will accept that package.
+
+4. **Planner digests preserved incidental provider ordering.** `owned`
+
+   PR review found that reordering equal-depth desired resources, observed
+   resources, or webhook trigger sets could change state and plan digests even
+   when their semantics were unchanged. The planner now canonicalizes logical
+   resources, provider resources, and trigger sets before producing actions or
+   digests; regression proof covers both desired and observed reorderings.
+
+   **What would have prevented it:** the planner's initial determinism tests
+   should have included permutation invariance, not only repeated execution of
+   one fixed input ordering.
