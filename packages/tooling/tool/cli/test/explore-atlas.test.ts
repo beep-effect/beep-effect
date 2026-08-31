@@ -1,4 +1,8 @@
-import { buildExplorationProjection, explorationProjectionDriftPaths } from "@beep/repo-cli/commands/Explore";
+import {
+  buildExplorationProjection,
+  explorationProjectionDriftPaths,
+  writeExplorationAtlas,
+} from "@beep/repo-cli/commands/Explore";
 import {
   PacketEvent,
   PacketEventStoreLive,
@@ -12,9 +16,11 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { describe, expect, it } from "vitest";
+import { permutedDirectoryReadsFileSystem } from "./support/CommandTest.ts";
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const PROJECTION_REPEAT_RUNS = 20;
 
 const provideTestLayer = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   Effect.scoped(Layer.build(testLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
@@ -83,6 +89,34 @@ const writeStream = Effect.fnUntraced(function* (
 });
 
 describe("exploration projections", () => {
+  it("preserves metadata when projected README bytes are already current", () =>
+    Effect.runPromise(
+      provideTestLayer(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-metadata-" });
+          yield* writePacket(
+            root,
+            "alpha",
+            manifest("alpha", "Alpha", "active", "research"),
+            readme("Alpha", "research", "active")
+          );
+          yield* writeExplorationAtlas(root);
+
+          const readmePath = path.join(root, "explorations", "alpha", "README.md");
+          yield* fs.chmod(readmePath, 0o744);
+          const before = yield* fs.readFileString(readmePath);
+          yield* writeExplorationAtlas(root);
+          const after = yield* fs.stat(readmePath);
+
+          expect(yield* fs.readFileString(readmePath)).toBe(before);
+          expect(after.mode & 0o777).toBe(0o744);
+          yield* fs.remove(root, { recursive: true });
+        })
+      )
+    ));
+
   it("renders adoption-derived D3 state and preserves authored README sections", () =>
     Effect.runPromise(
       provideTestLayer(
@@ -118,6 +152,14 @@ describe("exploration projections", () => {
           yield* fs.makeDirectory(path.join(root, "explorations", "_internal"), { recursive: true });
 
           const projection = yield* buildExplorationProjection(root);
+          const repeated = yield* Effect.forEach(
+            A.makeBy(PROJECTION_REPEAT_RUNS, (index) => index),
+            (index) =>
+              buildExplorationProjection(root).pipe(
+                Effect.provideService(FileSystem.FileSystem, permutedDirectoryReadsFileSystem(fs, index))
+              ),
+            { concurrency: 1 }
+          );
 
           expect(projection.atlasContent).toContain("5 exploration packets.");
           expect(projection.atlasContent).toContain("## Active (2)");
@@ -126,6 +168,19 @@ describe("exploration projections", () => {
           expect(projection.atlasContent).toContain("## Underivable packets (1)");
           expect(projection.atlasContent).toContain("manifest-adoption");
           expect(projection.atlasContent.indexOf("[Alpha]")).toBeLessThan(projection.atlasContent.indexOf("[Zeta]"));
+          expect(A.every(repeated, (next) => next.atlasContent === projection.atlasContent)).toBe(true);
+          expect(
+            A.every(
+              repeated,
+              (next) =>
+                A.length(next.readmes) === A.length(projection.readmes) &&
+                A.every(
+                  A.zip(next.readmes, projection.readmes),
+                  ([nextReadme, firstReadme]) =>
+                    nextReadme.path === firstReadme.path && nextReadme.projected === firstReadme.projected
+                )
+            )
+          ).toBe(true);
           expect(projection.issues).toHaveLength(1);
           expect(projection.issues[0]?.detail).toContain("manifest is missing or invalid");
 

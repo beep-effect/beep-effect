@@ -9,7 +9,7 @@ holds now; when a log entry disagrees with it, the table wins.
 
 | Topic | Holds now | Supersedes |
 | --- | --- | --- |
-| Next work | Stage `decompose`: the evidence-quote relation candidate is defined (E1-E8, 2026-08-27). Delivery order: capability PR for the fold alignment tier, then a lab PR for the relation contract, endpoint rule, frozen-vocabulary target, and preview harness. The zero-spend preview (E5) and the operator gold spot-check-and-repair pass (E6) both gate the live probe; the paused `semantica-canary` packet resumes only after both clear. Do not scaffold a queued MAP row from the failed gate; MAP v1.0's extractor prose is superseded by this table (dated note in MAP.md). | "define a new exact-evidence relation candidate" as open work; stage `graduate` and its PR A/B/C sequence |
+| Next work | Stage `P2 C0`: the evidence-quote relation candidate cleared E5 and E6 on 2026-08-30 and the `semantica-canary` packet is active. Publish the lab candidate through its mergeable PR, then spend its single live probe on F1 plus one relation paper. Do not scaffold a queued MAP row from the failed gate; MAP v1.0's extractor prose is superseded by this table (dated note in MAP.md). | E1-E8 candidate definition at stage `decompose`; "define a new exact-evidence relation candidate" as open work; stage `graduate` and its PR A/B/C sequence |
 | Stop rule | Probe-denominated circuit breaker (S1): first-probe candidate, one retry, then the family parks and the packet drops to decompose; wall-clock is `EvalRunTelemetry` sidecar telemetry (R1), never a gate. Re-entry is bounded (E8): one decompose re-entry candidate per family per stage; a second park is terminal absent an explicit operator ratification recorded in this file | BRIEF v0.1 "two weeks, C0 in four days"; contract v1.2 two-week falsifier; unbounded slate re-entry |
 | Gold labels | Gold-proposer provider family ≠ extraction provider family, enforced as a schema refinement on EvalRun; spot-checked fraction committed as a number in gold/v1 (S2) | contract v1.2 "LLM-proposed and spot-checked" |
 | Lab shape | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written `server/main.ts` + `src/runtime/Layer.ts` as the headless proof surface (S4) | D12/G2 wording without a runtime entry |
@@ -18,7 +18,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | Input | park-pending-canary; per-stage slate is probe order; PDF first probe = `@beep/doc-text` (the exact string the product pipeline digests); breaker retry = direct `unpdf` text items with `disableNormalization: true` inside the lab (same MIT dep) if G-structure needs page/font structure; MuPDF parked (AGPL subprocess, new binary) (M1) | the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
 | Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
 | Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
-| Extraction | **park** (S1, 2026-08-26): the hosted candidate and its one exact-evidence prompt retry did not produce a review-safe relation-paper slice; unique alignment exposed ambiguous endpoint anchors in two earlier apparent passes, and pattern-only declares relations unsupported. The evidence-quote candidate (E1-E8, 2026-08-27) is the queued slate row: fold alignment tier, lab-local subject/object/evidence-quote contract, endpoints anchored inside the evidence span, target enumerating the frozen gold predicate vocabulary; it carries one probe-plus-retry budget once the preview and spot-check-and-repair gates clear, and a second park is terminal (E8) | `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
+| Extraction | **active re-entry** (E9, 2026-08-30): the evidence-quote candidate passed its zero-spend preview with 10 grounded cached relations on two papers, and gold-v1 was reviewed, repaired, and refrozen. Its endpoint policy scopes unique subject/object alignment to the evidence span; fuzzy relation evidence is disqualified. One live probe plus one retry remain, and a second park is terminal (E8). | `park` (S1, 2026-08-26); `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the `EvalReport` digest with network off; Tier-L/Tier-D numbers live in a per-run `EvalRunTelemetry` sidecar outside the digest (R1) | A8's fully-offline M1; "byte-identical EvalReports" |
@@ -642,3 +642,18 @@ Decisions, grilled and locked 2026-08-27:
   here, not another silent slate row. This closes the loop the breaker left
   open, where a packet could park, rename a row, and pay for probes
   indefinitely.
+
+## 2026-08-30 (evidence-quote gates) — E9
+
+- **E9 (E5 and E6 cleared; P2 resumes).** The committed zero-spend preview
+  replayed all three breaker responses through the production grounding
+  boundary and grounded 10 relations on two papers. The annotation pass
+  reviewed all 13 proposed relation labels and all nine proposed abstract
+  labels. It dropped the date-as-venue triple, normalized
+  `affiliated_with` to `affiliated with`, and standardized abstract gold on
+  the exact heading span. The gold codec recomputed edited slice digests;
+  the 18-file reference is refrozen at 21/377 reviewed labels with digest
+  `9321c57c92402fba398ff226a178d9bc2922bb48f116f892fd8584a44ad72f29`.
+  The E5/E6 gates therefore clear and `semantica-canary` returns to active
+  P2. No live probe was spent by the preview or annotation pass; E8's one
+  probe plus one retry remain.

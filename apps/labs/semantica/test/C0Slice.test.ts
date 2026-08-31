@@ -183,7 +183,7 @@ describe("C0 F1 live-to-replay slice", () => {
                 .pipe(Effect.flatMap(S.decodeEffect(EvalTelemetryJson)));
 
               expect(live.reportDigest).toBe(replay.reportDigest);
-              expect(live.reportDigest).toBe("8c6a73fe8d37f45328ee438b5a59365bc5884180b944c8f9e2f2034827cd762c");
+              expect(live.reportDigest).toBe("95cc0a0dbe099ab307d18f36e657b9ab758e95753bb46bbf44e0ecf623c17dc9");
               expect(writtenLive.reportDigest).toBe(writtenReplay.reportDigest);
               expect(writtenLive.reportDigest).toBe(live.reportDigest);
               expect(live.unexpectedDegraded).toBe(0);

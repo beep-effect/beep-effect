@@ -4,6 +4,7 @@ import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { GOLD_SUBSETS, proposeGold } from "@/canary/Gold";
+import { RelationPreviewOptions, runRelationPreview } from "@/canary/RelationPreview";
 import { CorpusManifest, ManifestWriteFailed } from "@/corpus/Manifest";
 import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import { GOLD_PROMPT_ARTIFACT_HASH } from "@/gold/Prompts";
@@ -273,6 +274,20 @@ const GoldCommand = Command.make("gold").pipe(
   ])
 );
 
+const previewCases = Flag.path("cases").pipe(
+  Flag.withDefault("fixtures/relation-preview.json"),
+  Flag.withDescription("Committed E5 manifest of historical provider-cache keys and W1 paper ids.")
+);
+
+const RelationCommand = Command.make("relation").pipe(
+  Command.withDescription("Evidence-quote relation-candidate controls."),
+  Command.withSubcommands([
+    Command.make("preview", { cases: previewCases, manifest: stageManifest }, (options) =>
+      runRelationPreview(RelationPreviewOptions.make(options)).pipe(Effect.asVoid)
+    ).pipe(Command.withDescription("Replay the three breaker responses offline and enforce the E5 grounding floor.")),
+  ])
+);
+
 /**
  * Headless Semantica canary command with manifest, gold, C0, C1, and C2
  * subcommands.
@@ -300,6 +315,7 @@ export const CanaryCommand = Command.make("canary").pipe(
   Command.withSubcommands([
     ManifestCommand,
     GoldCommand,
+    RelationCommand,
     makeStageCommand(CanaryStage.Enum.c0),
     makeStageCommand(CanaryStage.Enum.c1),
     makeStageCommand(CanaryStage.Enum.c2),
