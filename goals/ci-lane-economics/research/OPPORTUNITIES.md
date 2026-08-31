@@ -540,3 +540,16 @@ evidence, what would have prevented it). Redact for the public repo.
   admission eligibility, or keep the admitted command waiting on its live
   origin owner while preserving queue position instead of failing after the
   machine-budget wait has completed.
+
+## 2026-08-30 — publish monitor treated pending checks as a failed lane
+
+- **Doing:** completing the one admitted `yeet publish --pr --monitor` cycle
+  after the exact head had been pushed and PR #930 had opened.
+- **Evidence:** the full pre-push and CI-parity lanes passed, but
+  `monitor:02-pr-checks-watch` exited after 964 ms while the status summary
+  reported 17 required checks, zero failing, and ten pending. The verdict still
+  labeled the monitor lane failed and proposed rerunning the Nix lane even
+  though Nix was pending rather than failed.
+- **Would have prevented it:** keep the monitor attached while required checks
+  are pending, and derive repair commands only from terminal failing required
+  contexts rather than from a generic nonzero pending-check exit.
