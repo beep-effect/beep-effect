@@ -1,0 +1,508 @@
+{
+  "schemaVersion": "eval-report/v1",
+  "run": {
+    "id": "fc7da72e44cc08a46524019f4915c7e42d05a98d559d09978302675899fe4ee5",
+    "stage": "c0",
+    "corpusHash": "cc0637e1ff947147bcb3d676d2d1e355d502276bfebc9d8de6134924c1741bb3",
+    "fixtureIndexDigest": "233e15ba31dd14a3f8caa6e4433b422881a72280a18752759323698c158bd673",
+    "gold": {
+      "version": "gold/v1",
+      "digest": "9321c57c92402fba398ff226a178d9bc2922bb48f116f892fd8584a44ad72f29",
+      "proposer": {
+        "provider": "xai",
+        "name": "grok-4.6",
+        "revision": "grok-4.6",
+        "artifactHash": "1bce70d152618aa6b5dcb74a65a42f6b4f375e5cde3df3b9a0cbebdda5f6bd1e",
+        "taskType": "gold-proposal"
+      },
+      "spotCheckedFraction": 0.05570291777188329,
+      "subsets": {
+        "structure": [
+          "057e356e94f8",
+          "05afbbf3e1e9",
+          "06c93f91ef3d",
+          "06df406f321e",
+          "08e376be5ed2",
+          "0a4ab229f341",
+          "0a8de1437753",
+          "0d06c1a2189a",
+          "0f75da2dbb9f",
+          "10828be135bf"
+        ],
+        "entity": [
+          "057e356e94f8",
+          "05afbbf3e1e9",
+          "06c93f91ef3d",
+          "06df406f321e",
+          "08e376be5ed2"
+        ],
+        "relation": ["057e356e94f8", "05afbbf3e1e9", "06c93f91ef3d"]
+      }
+    },
+    "extractor": {
+      "provider": "anthropic",
+      "name": "claude-opus-4-6",
+      "revision": "claude-opus-4-6",
+      "artifactHash": "9d9530e8cef53088d23552cce31eb7aa6b90365e609960231fcbc7a370163071",
+      "taskType": "extraction"
+    },
+    "patternLane": {
+      "provider": "wink",
+      "name": "wink-nlp",
+      "revision": "0.0.0",
+      "artifactHash": "8355dfbf1f4818df10cac28043190b325ccc24051f80460cd048b1598e5c5da6",
+      "taskType": "extraction"
+    },
+    "selection": {
+      "w1": ["06c93f91ef3d"],
+      "f1": [
+        "md-structure",
+        "md-unicode",
+        "md-invalid-utf8",
+        "html-article",
+        "html-entities-tables",
+        "html-truncated",
+        "pdf-two-column",
+        "pdf-multipage",
+        "pdf-truncated"
+      ]
+    }
+  },
+  "documents": [
+    {
+      "document": "6e7b34e59eb55e15b5711d3f5e77295b3b60a487cfa46919978c8f00e5639a3c",
+      "origin": {
+        "kind": "W1Paper",
+        "corpusId": "academia-2026-07",
+        "paperId": "06c93f91ef3d",
+        "relativePath": "06c93f91ef3d.pdf"
+      },
+      "parse": "parsed",
+      "extraction": {
+        "hosted": "extracted",
+        "pattern": "extracted"
+      },
+      "chunks": 805,
+      "claims": {
+        "hosted": {
+          "entity": 21,
+          "relation": 9,
+          "structure": 65
+        },
+        "pattern": {
+          "entity": 185,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 27,
+      "anchorsVerified": 1085,
+      "anchorsFailed": 0,
+      "cacheKeys": [
+        "dd7689f7e49034639c1bf74f45c06805f0d68d8042e28445b221b5540fce7fca"
+      ]
+    },
+    {
+      "document": "7208c33fa2e8e5898d09854df0910fae314f050fab56a77e1662636bd0a879a4",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "html-entities-tables",
+        "relativePath": "documents/html-entities-tables.html",
+        "declared": {
+          "expectation": "parses",
+          "degradedKind": null
+        }
+      },
+      "parse": "parsed",
+      "extraction": {
+        "hosted": "extracted",
+        "pattern": "extracted"
+      },
+      "chunks": 13,
+      "claims": {
+        "hosted": {
+          "entity": 2,
+          "relation": 1,
+          "structure": 2
+        },
+        "pattern": {
+          "entity": 0,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 5,
+      "anchorsVerified": 18,
+      "anchorsFailed": 0,
+      "cacheKeys": [
+        "bf2c101dde676380194e17a06bd2efa2b78b80a7fab7b45075c8ac1cefd81a52"
+      ]
+    },
+    {
+      "document": "8a0833e9681404c635c494091f2a58e5fb90b9ac3f94876422c1ba290c5e88f9",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "md-invalid-utf8",
+        "relativePath": "documents/md-invalid-utf8.md",
+        "declared": {
+          "expectation": "degraded",
+          "degradedKind": "invalid-utf8"
+        }
+      },
+      "parse": "invalid-utf8",
+      "extraction": {
+        "hosted": "invalid-utf8",
+        "pattern": "invalid-utf8"
+      },
+      "chunks": 0,
+      "claims": {
+        "hosted": {
+          "entity": 0,
+          "relation": 0,
+          "structure": 0
+        },
+        "pattern": {
+          "entity": 0,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 0,
+      "anchorsVerified": 0,
+      "anchorsFailed": 0,
+      "cacheKeys": []
+    },
+    {
+      "document": "8f268f20326b9ef07c9c996dd1986733955f12c6c654af0f22b3df0cfc5cedcd",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "pdf-two-column",
+        "relativePath": "documents/pdf-two-column.pdf",
+        "declared": {
+          "expectation": "parses",
+          "degradedKind": null
+        }
+      },
+      "parse": "parsed",
+      "extraction": {
+        "hosted": "extracted",
+        "pattern": "extracted"
+      },
+      "chunks": 9,
+      "claims": {
+        "hosted": {
+          "entity": 2,
+          "relation": 1,
+          "structure": 4
+        },
+        "pattern": {
+          "entity": 3,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 4,
+      "anchorsVerified": 19,
+      "anchorsFailed": 0,
+      "cacheKeys": [
+        "d255619090d3afc658ffc0a968daaedbdd4e034196d69b83d19878462be12c75"
+      ]
+    },
+    {
+      "document": "a40ded8122757c518d81fe556717fdfd1407fd9b1841d5f0fd4784828569efeb",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "md-unicode",
+        "relativePath": "documents/md-unicode.md",
+        "declared": {
+          "expectation": "parses",
+          "degradedKind": null
+        }
+      },
+      "parse": "parsed",
+      "extraction": {
+        "hosted": "extracted",
+        "pattern": "extracted"
+      },
+      "chunks": 9,
+      "claims": {
+        "hosted": {
+          "entity": 4,
+          "relation": 2,
+          "structure": 3
+        },
+        "pattern": {
+          "entity": 5,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 4,
+      "anchorsVerified": 23,
+      "anchorsFailed": 0,
+      "cacheKeys": [
+        "8d47353571353eb94bc570e84b97f123be9c333ad51a7269c0f6c24f348580a2"
+      ]
+    },
+    {
+      "document": "a65434d8f21da004ab8793f75507a0109c772e5ad127cfc137243ddf0f56b8be",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "pdf-multipage",
+        "relativePath": "documents/pdf-multipage.pdf",
+        "declared": {
+          "expectation": "parses",
+          "degradedKind": null
+        }
+      },
+      "parse": "parsed",
+      "extraction": {
+        "hosted": "extracted",
+        "pattern": "extracted"
+      },
+      "chunks": 11,
+      "claims": {
+        "hosted": {
+          "entity": 6,
+          "relation": 3,
+          "structure": 4
+        },
+        "pattern": {
+          "entity": 5,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 6,
+      "anchorsVerified": 29,
+      "anchorsFailed": 0,
+      "cacheKeys": [
+        "e445508a9f2cc7b8c64da7cd0759a3e0214626d116ff0b26adf093b8abe90d77"
+      ]
+    },
+    {
+      "document": "c106fce0a6387dd9539bc26f6a7b8ada744d17fa4bd329eddbf6e9c9b3aebeaf",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "html-truncated",
+        "relativePath": "documents/html-truncated.html",
+        "declared": {
+          "expectation": "degraded",
+          "degradedKind": "truncated"
+        }
+      },
+      "parse": "truncated",
+      "extraction": {
+        "hosted": "truncated",
+        "pattern": "truncated"
+      },
+      "chunks": 0,
+      "claims": {
+        "hosted": {
+          "entity": 0,
+          "relation": 0,
+          "structure": 0
+        },
+        "pattern": {
+          "entity": 0,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 0,
+      "anchorsVerified": 0,
+      "anchorsFailed": 0,
+      "cacheKeys": []
+    },
+    {
+      "document": "c81d571f80b02e976bf57e2cfeccb60bf3518ff48aad48b7fecd2787d0aad62a",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "html-article",
+        "relativePath": "documents/html-article.html",
+        "declared": {
+          "expectation": "parses",
+          "degradedKind": null
+        }
+      },
+      "parse": "parsed",
+      "extraction": {
+        "hosted": "extracted",
+        "pattern": "extracted"
+      },
+      "chunks": 10,
+      "claims": {
+        "hosted": {
+          "entity": 4,
+          "relation": 2,
+          "structure": 3
+        },
+        "pattern": {
+          "entity": 2,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 9,
+      "anchorsVerified": 21,
+      "anchorsFailed": 0,
+      "cacheKeys": [
+        "7683ffcf04494f5bf0cf85c9abad3956e9b3f79af183078680ac01f3ac549619"
+      ]
+    },
+    {
+      "document": "ccf4725c350d720d6c391d5e2396c86f0fafb78ea175cbf4ce79649fb1dd8491",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "md-structure",
+        "relativePath": "documents/md-structure.md",
+        "declared": {
+          "expectation": "parses",
+          "degradedKind": null
+        }
+      },
+      "parse": "parsed",
+      "extraction": {
+        "hosted": "extracted",
+        "pattern": "extracted"
+      },
+      "chunks": 31,
+      "claims": {
+        "hosted": {
+          "entity": 7,
+          "relation": 3,
+          "structure": 8
+        },
+        "pattern": {
+          "entity": 11,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 6,
+      "anchorsVerified": 60,
+      "anchorsFailed": 0,
+      "cacheKeys": [
+        "b7f465f9cccbb3e0204970593b6df5a0633d123e93836aa1c429ea691873c0b2"
+      ]
+    },
+    {
+      "document": "d6402d6f7cdd4a60fdaadbf0d26ae7ba4c235126d801bb446ccf2aec00991201",
+      "origin": {
+        "kind": "Fixture",
+        "fixtureId": "pdf-truncated",
+        "relativePath": "documents/pdf-truncated.pdf",
+        "declared": {
+          "expectation": "degraded",
+          "degradedKind": "extraction-failed"
+        }
+      },
+      "parse": "extraction-failed",
+      "extraction": {
+        "hosted": "extraction-failed",
+        "pattern": "extraction-failed"
+      },
+      "chunks": 0,
+      "claims": {
+        "hosted": {
+          "entity": 0,
+          "relation": 0,
+          "structure": 0
+        },
+        "pattern": {
+          "entity": 0,
+          "relation": 0,
+          "structure": 0
+        }
+      },
+      "degradedClaims": 0,
+      "anchorsVerified": 0,
+      "anchorsFailed": 0,
+      "cacheKeys": []
+    }
+  ],
+  "metrics": [
+    {
+      "name": "structure-span-f1",
+      "subset": "structure",
+      "lane": "hosted",
+      "status": "scored",
+      "value": 0.05882352941176471,
+      "support": 1
+    },
+    {
+      "name": "structure-span-f1",
+      "subset": "structure",
+      "lane": "pattern",
+      "status": "unsupported",
+      "value": 0,
+      "support": 0
+    },
+    {
+      "name": "entity-span-f1",
+      "subset": "entity",
+      "lane": "hosted",
+      "status": "scored",
+      "value": 0.6,
+      "support": 1
+    },
+    {
+      "name": "entity-span-f1",
+      "subset": "entity",
+      "lane": "pattern",
+      "status": "scored",
+      "value": 0,
+      "support": 1
+    },
+    {
+      "name": "rebel-end-to-end-triple-f1",
+      "subset": "relation",
+      "lane": "hosted",
+      "status": "scored",
+      "value": 0.7142857142857143,
+      "support": 1
+    },
+    {
+      "name": "rebel-end-to-end-triple-f1",
+      "subset": "relation",
+      "lane": "pattern",
+      "status": "unsupported",
+      "value": 0,
+      "support": 0
+    },
+    {
+      "name": "pairwise-f1",
+      "subset": "entity",
+      "lane": "hosted",
+      "status": "scored",
+      "value": 0,
+      "support": 1
+    },
+    {
+      "name": "pairwise-f1",
+      "subset": "entity",
+      "lane": "pattern",
+      "status": "scored",
+      "value": 0,
+      "support": 1
+    },
+    {
+      "name": "b-cubed",
+      "subset": "entity",
+      "lane": "hosted",
+      "status": "scored",
+      "value": 0.8108108108108109,
+      "support": 1
+    },
+    {
+      "name": "b-cubed",
+      "subset": "entity",
+      "lane": "pattern",
+      "status": "scored",
+      "value": 0.7741935483870968,
+      "support": 1
+    }
+  ],
+  "unexpectedDegraded": 0,
+  "reportDigest": "1bde32bf7b58aeb3dd568995f680e08115be407a08789ecfe9e14ae264110bf4"
+}
