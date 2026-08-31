@@ -5,11 +5,10 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { MutableHashSet, pipe, Result } from "effect";
+import { MutableHashSet, pipe, Result, SchemaParser } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as SchemaParser from "effect/SchemaParser";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { InvariantDescriptor } from "./Conformance.invariant.schema.ts";
 import { ConformanceProfile } from "./Conformance.profile.schema.ts";

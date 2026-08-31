@@ -4,9 +4,8 @@
  * @since 0.0.0
  */
 
-import { pipe, Result, SchemaIssue } from "effect";
+import { pipe, Result, SchemaIssue, SchemaParser } from "effect";
 import * as S from "effect/Schema";
-import * as SchemaParser from "effect/SchemaParser";
 import { collectAnnotationsAt } from "../SchemaUtils/collectAnnotationsAt.ts";
 import { Annotation } from "./Conformance.annotations.ts";
 

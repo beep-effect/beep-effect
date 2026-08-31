@@ -83,7 +83,7 @@ const secondaryEnforcement = [
     kind: "documented",
     rationale: "The secondary example is advisory documentation rather than a runtime claim.",
   },
-] satisfies ReadonlyArray<typeof Conformance.InvariantEnforcement.Encoded>;
+] satisfies (typeof Conformance.Invariant.Encoded)["enforcement"];
 
 const secondaryInvariant = {
   ...invariant,
@@ -96,7 +96,7 @@ const secondaryInvariant = {
   testIds: [],
 } satisfies typeof Conformance.Invariant.Encoded;
 
-const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(function* (options: {
+type FixtureOptions = {
   readonly coverageStatus: string;
   readonly inventorySourceId: string;
   readonly primaryProfileInvariantIds?: ReadonlyArray<string>;
@@ -107,122 +107,135 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
   readonly primaryNegativeTestIds?: ReadonlyArray<string>;
   readonly primaryStrength?: Conformance.RequirementStrength;
   readonly primaryDecidability?: Conformance.InvariantDecidability;
-  readonly primaryEnforcement?: ReadonlyArray<typeof Conformance.InvariantEnforcement.Encoded>;
+  readonly primaryEnforcement?: (typeof Conformance.Invariant.Encoded)["enforcement"];
   readonly evidenceSource?: string;
   readonly annotation?: Conformance.Annotation;
-}) {
+};
+
+const primaryEvidenceFrom = (options: FixtureOptions) => ({
+  positiveTestIds: options.primaryTestIds ?? [],
+  negativeTestIds: options.primaryNegativeTestIds ?? [negativeEvidenceTestId],
+  enforcement: options.primaryEnforcement ?? enforcement,
+});
+
+const encodeSourcesArtifact = (options: FixtureOptions) =>
+  encodeJson({
+    schemaVersion: 1,
+    packageName,
+    profileIds: [profileId, secondaryProfileId],
+    sources: [source, secondarySource],
+    profiles: [
+      {
+        ...profile,
+        sourceIds: options.primaryProfileSourceIds ?? profile.sourceIds,
+        invariantIds: options.primaryProfileInvariantIds ?? profile.invariantIds,
+      },
+      secondaryProfile,
+    ],
+  });
+
+const encodeInventoryArtifact = (options: FixtureOptions) =>
+  encodeJson({
+    schemaVersion: 1,
+    packageName,
+    profileIds: [profileId, secondaryProfileId],
+    items: [
+      {
+        id: "example.member",
+        symbol: "Example",
+        tag: "example",
+        kind: "ast-member",
+        existingDiscriminator: "_tag",
+        currentEnforcementLayers: ["type", "decode"],
+        sources: [options.inventorySourceId],
+        candidateDisposition: "retain-existing-tagged-member",
+        candidateReason: "The example member already has a stable literal discriminator.",
+      },
+    ],
+  });
+
+const encodeInvariantsArtifact = (options: FixtureOptions, primaryEvidence: ReturnType<typeof primaryEvidenceFrom>) =>
+  encodeJson({
+    schemaVersion: 1,
+    packageName,
+    profileIds: [profileId, secondaryProfileId],
+    invariants: [
+      {
+        ...invariant,
+        strength: options.primaryStrength ?? invariant.strength,
+        decidability: options.primaryDecidability ?? invariant.decidability,
+        enforcement: primaryEvidence.enforcement,
+        testIds: [...primaryEvidence.positiveTestIds, ...primaryEvidence.negativeTestIds],
+      },
+      secondaryInvariant,
+    ],
+  });
+
+const encodeCoverageArtifact = (options: FixtureOptions, primaryEvidence: ReturnType<typeof primaryEvidenceFrom>) =>
+  encodeJson({
+    schemaVersion: 1,
+    packageName,
+    profileIds: [profileId, secondaryProfileId],
+    coverage: [
+      {
+        invariantId,
+        profileIds: options.primaryCoverageProfileIds ?? [profileId],
+        currentEnforcement: primaryEvidence.enforcement,
+        targetEnforcement: primaryEvidence.enforcement,
+        positiveTestIds: primaryEvidence.positiveTestIds,
+        negativeTestIds: primaryEvidence.negativeTestIds,
+        status: options.coverageStatus,
+      },
+      {
+        invariantId: secondaryInvariantId,
+        profileIds: options.secondaryCoverageProfileIds ?? [secondaryProfileId],
+        currentEnforcement: secondaryEnforcement,
+        targetEnforcement: secondaryEnforcement,
+        positiveTestIds: [],
+        negativeTestIds: [],
+        status: "covered",
+      },
+    ],
+  });
+
+const fixtureFiles = (options: FixtureOptions) => {
+  const primaryEvidence = primaryEvidenceFrom(options);
+
+  return [
+    ["data/conformance/sources.json", encodeSourcesArtifact(options)],
+    ["data/conformance/inventory.json", encodeInventoryArtifact(options)],
+    ["data/conformance/invariants.json", encodeInvariantsArtifact(options, primaryEvidence)],
+    ["data/conformance/coverage.json", encodeCoverageArtifact(options, primaryEvidence)],
+    ["data/conformance/SOURCES.md", "# Example conformance sources\n"],
+    ["test/ConformanceEvidence.test.ts", options.evidenceSource ?? evidenceTestSource],
+  ] as const;
+};
+
+const validateFixtureArtifacts = (root: string, options: FixtureOptions) => {
+  const packageRoot = pathToFileURL(`${root}/`);
+
+  return options.annotation === undefined
+    ? validateConformanceLedgerArtifacts(packageRoot, packageName)
+    : validateConformanceAnnotationAgainstLedgerArtifacts(packageRoot, packageName, options.annotation);
+};
+
+const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(function* (options: FixtureOptions) {
   const fileSystem = yield* FileSystem.FileSystem;
   const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-conformance-ledger-" });
-  const dataRoot = `${root}/data/conformance`;
-  const testRoot = `${root}/test`;
-  const primaryPositiveTestIds = options.primaryTestIds ?? [];
-  const primaryNegativeTestIds = options.primaryNegativeTestIds ?? [negativeEvidenceTestId];
-  const primaryEnforcement = options.primaryEnforcement ?? enforcement;
-  yield* fileSystem.makeDirectory(dataRoot, { recursive: true });
-  yield* fileSystem.makeDirectory(testRoot, { recursive: true });
-  yield* Effect.all(
-    [
-      fileSystem.writeFileString(
-        `${dataRoot}/sources.json`,
-        encodeJson({
-          schemaVersion: 1,
-          packageName,
-          profileIds: [profileId, secondaryProfileId],
-          sources: [source, secondarySource],
-          profiles: [
-            {
-              ...profile,
-              sourceIds: options.primaryProfileSourceIds ?? profile.sourceIds,
-              invariantIds: options.primaryProfileInvariantIds ?? profile.invariantIds,
-            },
-            secondaryProfile,
-          ],
-        })
-      ),
-      fileSystem.writeFileString(
-        `${dataRoot}/inventory.json`,
-        encodeJson({
-          schemaVersion: 1,
-          packageName,
-          profileIds: [profileId, secondaryProfileId],
-          items: [
-            {
-              id: "example.member",
-              symbol: "Example",
-              tag: "example",
-              kind: "ast-member",
-              existingDiscriminator: "_tag",
-              currentEnforcementLayers: ["type", "decode"],
-              sources: [options.inventorySourceId],
-              candidateDisposition: "retain-existing-tagged-member",
-              candidateReason: "The example member already has a stable literal discriminator.",
-            },
-          ],
-        })
-      ),
-      fileSystem.writeFileString(
-        `${dataRoot}/invariants.json`,
-        encodeJson({
-          schemaVersion: 1,
-          packageName,
-          profileIds: [profileId, secondaryProfileId],
-          invariants: [
-            {
-              ...invariant,
-              strength: options.primaryStrength ?? invariant.strength,
-              decidability: options.primaryDecidability ?? invariant.decidability,
-              enforcement: primaryEnforcement,
-              testIds: [...primaryPositiveTestIds, ...primaryNegativeTestIds],
-            },
-            secondaryInvariant,
-          ],
-        })
-      ),
-      fileSystem.writeFileString(
-        `${dataRoot}/coverage.json`,
-        encodeJson({
-          schemaVersion: 1,
-          packageName,
-          profileIds: [profileId, secondaryProfileId],
-          coverage: [
-            {
-              invariantId,
-              profileIds: options.primaryCoverageProfileIds ?? [profileId],
-              currentEnforcement: primaryEnforcement,
-              targetEnforcement: primaryEnforcement,
-              positiveTestIds: primaryPositiveTestIds,
-              negativeTestIds: primaryNegativeTestIds,
-              status: options.coverageStatus,
-            },
-            {
-              invariantId: secondaryInvariantId,
-              profileIds: options.secondaryCoverageProfileIds ?? [secondaryProfileId],
-              currentEnforcement: secondaryEnforcement,
-              targetEnforcement: secondaryEnforcement,
-              positiveTestIds: [],
-              negativeTestIds: [],
-              status: "covered",
-            },
-          ],
-        })
-      ),
-      fileSystem.writeFileString(`${dataRoot}/SOURCES.md`, "# Example conformance sources\n"),
-      fileSystem.writeFileString(
-        `${testRoot}/ConformanceEvidence.test.ts`,
-        options.evidenceSource ?? evidenceTestSource
-      ),
-    ],
+  yield* Effect.all([
+    fileSystem.makeDirectory(`${root}/data/conformance`, { recursive: true }),
+    fileSystem.makeDirectory(`${root}/test`, { recursive: true }),
+  ]);
+  yield* Effect.forEach(
+    fixtureFiles(options),
+    ([relativePath, contents]) => fileSystem.writeFileString(`${root}/${relativePath}`, contents),
     { concurrency: "unbounded" }
   );
 
-  const packageRoot = pathToFileURL(`${root}/`);
-  return options.annotation === undefined
-    ? yield* validateConformanceLedgerArtifacts(packageRoot, packageName)
-    : yield* validateConformanceAnnotationAgainstLedgerArtifacts(packageRoot, packageName, options.annotation);
+  return yield* validateFixtureArtifacts(root, options);
 });
 
-const runFixture = (options: Parameters<typeof validateFixture>[0]) =>
-  validateFixture(options).pipe(provideScopedLayer(BunFileSystem.layer));
+const runFixture = (options: FixtureOptions) => validateFixture(options).pipe(provideScopedLayer(BunFileSystem.layer));
 
 describe("conformance-ledger validation", () => {
   it.effect("matches a published annotation against its profile-selected ledger records", () =>
@@ -248,7 +261,7 @@ describe("conformance-ledger validation", () => {
         ...profile,
         sourceIds: [secondarySourceId, sourceId],
         invariantIds: [secondaryInvariantId, invariantId],
-      };
+      } satisfies typeof Conformance.Profile.Encoded;
       const annotation = Conformance.makeAnnotation({
         sources: [secondarySource, source],
         profiles: [orderedProfile],

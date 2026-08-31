@@ -295,11 +295,11 @@ describe("Conformance", () => {
           "decodePandocJsonStrict,encodePandocJson",
           "Heading.validateOutline()",
         ],
-        (validator) => Result.isFailure(S.decodeUnknownResult(Enforcement)({ kind: "runtime", validator }))
+        (validator) => Result.isFailure(S.decodeResult(Enforcement)({ kind: "runtime", validator }))
       )
     ).toBe(true);
     expect(
-      Result.isSuccess(S.decodeUnknownResult(Enforcement)({ kind: "runtime", validator: "Heading.validateOutline" }))
+      Result.isSuccess(S.decodeResult(Enforcement)({ kind: "runtime", validator: "Heading.validateOutline" }))
     ).toBe(true);
   });
 

@@ -33,10 +33,14 @@ import {
 import { renderHtmlBlock } from "@beep/md/Md.render";
 import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.safe";
 import { ConformanceReport } from "@beep/schema/Conformance";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const HeadingArbitrary = S.toArbitrary(Heading)(fc);
 
 const tags = (issues: ReadonlyArray<MarkdownConformanceIssue>): ReadonlyArray<MarkdownConformanceIssue["_tag"]> =>
   A.map(issues, ({ _tag }) => _tag);
@@ -85,6 +89,17 @@ describe("Markdown semantic conformance", () => {
 
     expect(Result.isFailure(result)).toBe(true);
   });
+
+  it("round-trips schema-derived headings through their codec", () =>
+    fc.assert(
+      fc.property(HeadingArbitrary, (heading) => {
+        const encoded = Result.getOrThrow(S.encodeResult(Heading)(heading));
+        const decoded = Result.getOrThrow(S.decodeResult(Heading)(encoded));
+
+        expect(decoded).toEqual(heading);
+      }),
+      fcRuns(50)
+    ));
 
   it("rejects unknown Markdown variant tags", () => {
     expect(Result.isFailure(S.decodeUnknownResult(Inline)({ _tag: "futureInline" }))).toBe(true);

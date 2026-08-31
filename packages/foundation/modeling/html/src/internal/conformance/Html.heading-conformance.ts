@@ -76,7 +76,7 @@ const HtmlHeadingTag = LiteralKit(["h1", "h2", "h3", "h4", "h5", "h6"]);
  * @category guards
  * @since 0.0.0
  */
-export const isHtmlHeadingTag = S.is(HtmlHeadingTag);
+const isHtmlHeadingTag = S.is(HtmlHeadingTag);
 
 /**
  * Native HTML heading tag represented by the private heading inspector.
@@ -85,7 +85,7 @@ export const isHtmlHeadingTag = S.is(HtmlHeadingTag);
  * @category models
  * @since 0.0.0
  */
-export type HtmlHeadingTag = typeof HtmlHeadingTag.Type;
+type HtmlHeadingTag = typeof HtmlHeadingTag.Type;
 
 /**
  * One heading in document tree order with its computed semantic level.

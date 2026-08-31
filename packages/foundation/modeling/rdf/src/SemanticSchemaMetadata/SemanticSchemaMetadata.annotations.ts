@@ -7,10 +7,9 @@
 
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A } from "@beep/utils";
-import { pipe, Result, SchemaIssue } from "effect";
+import { pipe, Result, SchemaIssue, SchemaParser } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as SchemaParser from "effect/SchemaParser";
 import { SemanticSchemaMetadata } from "./SemanticSchemaMetadata.schema.ts";
 import type { O } from "@beep/utils";
 

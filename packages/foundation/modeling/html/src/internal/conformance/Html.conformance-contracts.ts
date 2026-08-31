@@ -12,22 +12,15 @@ import { A } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { Doctype } from "../../Html.nodes.ts";
+import { Doctype } from "../../Html.nodes.ts";
 
 const $I = $HtmlId.create("Html.conformance");
 
-/**
- * Recursive structural view shared by private HTML conformance inspectors.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface HtmlChildView {
+interface HtmlChildViewShape {
   readonly _tag: string;
   readonly alt?: unknown;
   readonly attributes?: unknown;
-  readonly children?: ReadonlyArray<HtmlChildView>;
+  readonly children?: ReadonlyArray<HtmlChildViewShape>;
   readonly content?: unknown;
   readonly headingoffset?: unknown;
   readonly headingreset?: unknown;
@@ -43,16 +36,72 @@ export interface HtmlChildView {
   readonly value?: unknown;
 }
 
+const htmlChildViewFields = {
+  _tag: S.String,
+  alt: S.Unknown.pipe(S.optionalKey),
+  attributes: S.Unknown.pipe(S.optionalKey),
+  children: S.suspend((): S.Codec<HtmlChildViewShape> => HtmlChildView).pipe(S.Array, S.optionalKey),
+  content: S.Unknown.pipe(S.optionalKey),
+  headingoffset: S.Unknown.pipe(S.optionalKey),
+  headingreset: S.Unknown.pipe(S.optionalKey),
+  href: S.Unknown.pipe(S.optionalKey),
+  id: S.Unknown.pipe(S.optionalKey),
+  name: S.Unknown.pipe(S.optionalKey),
+  namespace: S.String.pipe(S.optionalKey),
+  src: S.Unknown.pipe(S.optionalKey),
+  srcset: S.Unknown.pipe(S.optionalKey),
+  tabindex: S.Unknown.pipe(S.optionalKey),
+  target: S.Unknown.pipe(S.optionalKey),
+  type: S.Unknown.pipe(S.optionalKey),
+  value: S.Unknown.pipe(S.optionalKey),
+};
+
 /**
- * Root structural view shared by private HTML conformance inspectors.
+ * Recursive structural schema shared by private HTML conformance inspectors.
  *
  * @internal
  * @category models
  * @since 0.0.0
  */
-export interface HtmlRootView extends HtmlChildView {
-  readonly doctype?: O.Option<Doctype>;
-}
+export const HtmlChildView = S.Struct(htmlChildViewFields).pipe(
+  $I.annoteSchema("HtmlChildView", {
+    description: "Recursive structural view consumed by private HTML conformance inspectors.",
+  })
+);
+
+/**
+ * Decoded recursive structural view consumed by private HTML inspectors.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlChildView = typeof HtmlChildView.Type;
+
+/**
+ * Root structural schema shared by private HTML conformance inspectors.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlRootView = S.Struct({
+  ...htmlChildViewFields,
+  doctype: Doctype.pipe(S.Option, S.optionalKey),
+}).pipe(
+  $I.annoteSchema("HtmlRootView", {
+    description: "HTML conformance root view with an optional document type declaration.",
+  })
+);
+
+/**
+ * Decoded structural root view consumed by private HTML inspectors.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlRootView = typeof HtmlRootView.Type;
 
 /**
  * Rules reported by the HTML conformance validator.

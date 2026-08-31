@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-31T05:20:35.226Z
+Generated: 2026-08-31T07:49:22.633Z
 
 ## Scope
 
@@ -10,12 +10,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 135 |
-| cleanPackages | 74 |
+| packages | 136 |
+| cleanPackages | 75 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 58 |
-| publicModules | 2974 |
-| publicExports | 20755 |
+| publicModules | 2985 |
+| publicExports | 21158 |
 | openModules | 347 |
 | openExports | 99 |
 | missingExportExamples | 4 |
@@ -112,7 +112,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 125 | 0 | 0 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | clean | 469 | 4233 | 0 | 0 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 9 | 285 | 4 | 0 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 9 | 275 | 4 | 0 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 7 | 14 | 0 | 0 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 113 | 4 | 0 |
@@ -127,11 +127,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 1 |
 | 71 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 72 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
-| 73 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 227 | 0 | 0 |
+| 73 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 228 | 0 | 0 |
 | 74 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 75 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 76 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 3 | 10 | 2 | 0 |
-| 77 | `@beep/box` | `packages/drivers/box` | clean | 7 | 517 | 0 | 0 |
+| 77 | `@beep/box` | `packages/drivers/box` | clean | 7 | 858 | 0 | 0 |
 | 78 | `@beep/openai-compat` | `packages/drivers/openai-compat` | clean | 4 | 54 | 0 | 0 |
 | 79 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
 | 80 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 0 |
@@ -153,43 +153,44 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 96 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 82 | 0 | 0 |
 | 97 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 262 | 1610 | 24 | 1 |
 | 98 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 23 | 51 | 8 | 4 |
-| 99 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 28 | 265 | 1 | 1 |
-| 100 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
-| 101 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 21 | 0 | 0 |
-| 102 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 86 | 2 | 0 |
-| 103 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 8 |
-| 104 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
-| 105 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 34 | 0 | 0 |
-| 106 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 6 | 28 | 0 | 0 |
-| 107 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
-| 108 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
-| 109 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 0 |
-| 110 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 7 | 0 |
-| 111 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
-| 112 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 21 | 3 | 0 |
-| 113 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 28 | 126 | 9 | 0 |
-| 114 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 2 | 0 |
-| 115 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 24 | 163 | 0 | 0 |
-| 116 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 117 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 14 | 553 | 8 | 2 |
-| 118 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
-| 119 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 133 | 553 | 0 | 0 |
-| 120 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
-| 121 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 139 | 0 | 1 |
-| 122 | `@beep/openai` | `packages/drivers/openai` | clean | 4 | 17 | 0 | 0 |
-| 123 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
-| 124 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 73 | 1 | 0 |
-| 125 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 43 | 0 | 0 |
-| 126 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 50 | 0 | 0 |
-| 127 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 5 | 37 | 0 | 0 |
-| 128 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 48 | 0 | 0 |
-| 129 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
-| 130 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
-| 131 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 87 | 4 | 0 |
-| 132 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
-| 133 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 12 | 0 | 0 |
-| 134 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 120 | 0 | 0 |
-| 135 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 16 | 0 | 0 |
+| 99 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | clean | 11 | 80 | 0 | 0 |
+| 100 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 28 | 265 | 1 | 1 |
+| 101 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
+| 102 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 21 | 0 | 0 |
+| 103 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 86 | 2 | 0 |
+| 104 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 8 |
+| 105 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
+| 106 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 34 | 0 | 0 |
+| 107 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 6 | 28 | 0 | 0 |
+| 108 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 109 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
+| 110 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 0 |
+| 111 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 7 | 0 |
+| 112 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
+| 113 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 21 | 3 | 0 |
+| 114 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 28 | 126 | 9 | 0 |
+| 115 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 2 | 0 |
+| 116 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 24 | 163 | 0 | 0 |
+| 117 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
+| 118 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 14 | 544 | 8 | 2 |
+| 119 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
+| 120 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 133 | 553 | 0 | 0 |
+| 121 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
+| 122 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 139 | 0 | 1 |
+| 123 | `@beep/openai` | `packages/drivers/openai` | clean | 4 | 17 | 0 | 0 |
+| 124 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
+| 125 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 73 | 1 | 0 |
+| 126 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 43 | 0 | 0 |
+| 127 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 50 | 0 | 0 |
+| 128 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 5 | 37 | 0 | 0 |
+| 129 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 48 | 0 | 0 |
+| 130 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
+| 131 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
+| 132 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 87 | 4 | 0 |
+| 133 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
+| 134 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 12 | 0 | 0 |
+| 135 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 120 | 0 | 0 |
+| 136 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 16 | 0 | 0 |
 
 ## Open Findings
 
@@ -361,7 +362,7 @@ Export findings:
 - `src/commands/Ci/CiLane.ts:339` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:916` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:107` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
-- `src/commands/Explore/Atlas.ts:659` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
+- `src/commands/Explore/Atlas.ts:676` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:570` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
@@ -544,10 +545,10 @@ Module findings:
 - `src/Lexical.normalize.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Lexical.model.ts:1137` `ElementNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:2282` `YouTubeNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3232` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3315` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:1138` `ElementNode` (class) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:2284` `YouTubeNode` (class) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3235` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
+- `src/Lexical.model.ts:3318` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
 
 ### @beep/md
 
