@@ -26785,15 +26785,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 91.43,
-          "statements": 91.21,
-          "branches": 86.07,
-          "functions": 85.52,
+          "lines": 91.66,
+          "statements": 91.66,
+          "branches": 86.7,
+          "functions": 86.18,
           "uncovered": {
-            "lines": 37,
-            "statements": 39,
-            "branches": 22,
-            "functions": 22
+            "lines": 36,
+            "statements": 37,
+            "branches": 21,
+            "functions": 21
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {
