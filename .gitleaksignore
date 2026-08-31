@@ -11,6 +11,19 @@
 # Documentation examples
 # docs/**
 
+# Deterministic C1 embedding model-key digests in archived Semantica reports.
+# These are public SHA-256 projection identities, not provider credentials.
+goals/semantica-canary/history/c1/g.exact-head-replay.eval-report.json:generic-api-key:518
+goals/semantica-canary/history/c1/g.exact-head-replay.eval-report.json:generic-api-key:2352
+goals/semantica-canary/history/c1/g.live.eval-report.json:generic-api-key:518
+goals/semantica-canary/history/c1/g.live.eval-report.json:generic-api-key:2352
+goals/semantica-canary/history/c1/g.replay.eval-report.json:generic-api-key:518
+goals/semantica-canary/history/c1/g.replay.eval-report.json:generic-api-key:2352
+goals/semantica-canary/history/c1/full-w1.live.eval-report.json:generic-api-key:1340
+goals/semantica-canary/history/c1/full-w1.live.eval-report.json:generic-api-key:3174
+goals/semantica-canary/history/c1/full-w1.replay.eval-report.json:generic-api-key:1340
+goals/semantica-canary/history/c1/full-w1.replay.eval-report.json:generic-api-key:3174
+
 # False positives from imported upstream test fixtures in local subtree commits.
 4f6b06621704b4f5b7f578f57914e6d9e7f4d376:packages/client/test/client/crossAppAccess.test.ts:generic-api-key:13
 4f6b06621704b4f5b7f578f57914e6d9e7f4d376:packages/client/test/client/crossAppAccess.test.ts:generic-api-key:24
