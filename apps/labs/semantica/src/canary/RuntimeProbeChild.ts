@@ -38,8 +38,8 @@ if (probeMode === "bundle") {
     Effect.scoped(Layer.build(services).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
   if (probeMode === "crash") {
-    await Effect.runPromise(provideServices(Ledger.pipe(Effect.flatMap((ledger) => ledger.read(runId)))));
-    await Bun.write(Bun.stdout, "ledger-reopened\n");
+    await Effect.runPromise(provideServices(Ledger.pipe(Effect.flatMap((ledger) => ledger.commitCheckpoint))));
+    await Bun.write(Bun.stdout, "ledger-committed\n");
     process.kill(process.pid, "SIGKILL");
   } else {
     const digest = await Effect.runPromise(

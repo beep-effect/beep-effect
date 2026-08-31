@@ -445,4 +445,8 @@ ratifies.
   Oxigraph service silently constructed and reloaded a new store for every request; service-local
   reuse of the immutable dataset's store reduced the same ordered query to a measured 5 ms
   p95. Prevention: a query boundary over an already loaded dataset must not hide dataset rebuild
-  work inside every execution.
+  work inside every execution. Follow-up review also found that both recovery digests came from
+  the persisted representation and that the killed child had not itself committed data. Fix: the
+  expected digest now comes from the original in-memory C1 snapshot, while the killed child first
+  commits a durable ledger checkpoint. Prevention: crash evidence needs an independent pre-crash
+  oracle and must mutate the durability boundary in the process that is actually killed.

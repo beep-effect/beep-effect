@@ -164,7 +164,7 @@ describe("C2 declarative reasoner", () => {
                 [Stream.mkString(Stream.decodeText(crash.stdout)), Effect.exit(crash.exitCode)],
                 { concurrency: "unbounded" }
               ).pipe(Effect.timeout("30 seconds"));
-              expect(crashOutput).toContain("ledger-reopened");
+              expect(crashOutput).toContain("ledger-committed");
               expect(Exit.isFailure(crashExit)).toBe(true);
               const second = yield* recover;
               expect(S.is(Sha256Hex)(first)).toBe(true);

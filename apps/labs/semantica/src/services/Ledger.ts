@@ -31,6 +31,7 @@ interface LedgerShape {
     chunks: ReadonlyArray<Chunk>,
     events: A.NonEmptyReadonlyArray<ProvenanceEvent>
   ) => Effect.Effect<void, LedgerFailed>;
+  readonly commitCheckpoint: Effect.Effect<void, LedgerFailed>;
   readonly read: (run: RunId) => Effect.Effect<LedgerSnapshot, LedgerFailed>;
 }
 

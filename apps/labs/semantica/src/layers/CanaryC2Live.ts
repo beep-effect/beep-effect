@@ -84,9 +84,9 @@ const runCrashProbe = Effect.fn("CanaryC2.runCrashProbe")(function* (
   entry: string,
   ledgerRoot: string,
   runId: string,
-  mode: "live" | "replay"
+  mode: "live" | "replay",
+  beforeCrashDigest: Sha256Hex
 ) {
-  const beforeCrashDigest = yield* runProjectionProbe(processSpawner, entry, ledgerRoot, runId, mode);
   const crashCommand = ChildProcess.make("bun", ["run", entry, "crash", ledgerRoot, runId, mode], {
     cwd: process.cwd(),
     stderr: "pipe",
@@ -104,7 +104,7 @@ const runCrashProbe = Effect.fn("CanaryC2.runCrashProbe")(function* (
     Effect.timeout("30 seconds"),
     Effect.mapError(() => failed("crash-mismatch", "The ledger checkpoint process did not terminate as expected."))
   );
-  if (!Str.includes("ledger-reopened")(crashOutput) || !Exit.isFailure(crashExit)) {
+  if (!Str.includes("ledger-committed")(crashOutput) || !Exit.isFailure(crashExit)) {
     return yield* failed("crash-mismatch", "The ledger checkpoint process did not reach its SIGKILL boundary.");
   }
   const afterRestartDigest = yield* runProjectionProbe(processSpawner, entry, ledgerRoot, runId, mode);
@@ -228,14 +228,19 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.mapError(() => failed("expectation-unavailable", "The C2 expectation digest failed."))
       );
+      const projection = yield* rdf.rebuild(base.snapshot);
+      const beforeCrashDigest = yield* contentDigest(S.Array(S.String))(projection.serializedQuads).pipe(
+        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.mapError(() => failed("crash-mismatch", "The in-memory C1 projection digest failed."))
+      );
       const crash = yield* runCrashProbe(
         processSpawner,
         runtimeProbeEntry,
         config.ledgerRoot,
         base.report.base.run.id,
-        base.baseTelemetry.mode
+        base.baseTelemetry.mode,
+        beforeCrashDigest
       );
-      const projection = yield* rdf.rebuild(base.snapshot);
       const interactiveWitness = yield* rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
         Effect.flatMap(
           A.match({
