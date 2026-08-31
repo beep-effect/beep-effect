@@ -1,7 +1,7 @@
 # SUGGESTED ACTIONS — 2026-08-31
 
 Executable captures. Human admits. Do not auto-append to `explorations/INBOX.md` or `goals/`.
-Derivew from `claims.jsonl` (21 findings). An item graduates when a human fires its capture command.
+Derived from `claims.jsonl` (21 findings). An item graduates when a human fires its capture command.
 
 ## Priority (PROMPT kickoffs)
 
