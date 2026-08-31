@@ -15,9 +15,9 @@
       "role": "abstract",
       "depth": 0,
       "startChar": 372,
-      "endChar": 1879,
-      "quoteSha256": "b06c0f1927cadb770910248e135c98ffbd5e497a5ada0c97d570d2946fbcd92a",
-      "verified": false
+      "endChar": 380,
+      "quoteSha256": "d21b4a64a2d8656a0fdf7ab2e89a49164ac504686cfa2a3d442e87c209286330",
+      "verified": true
     },
     {
       "role": "section",
