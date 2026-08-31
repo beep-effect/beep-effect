@@ -42,3 +42,10 @@ export * from "./Schema.ts";
  * @since 0.0.0
  */
 export * from "./SqlTest.ts";
+/**
+ * Privacy-safe system temporary-root helpers for generated-payload tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export * from "./SystemTemp.ts";

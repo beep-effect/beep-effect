@@ -1,20 +1,14 @@
 #!/usr/bin/env bash
-# Local backpressure adapter for Claude Code, Codex, and Grok-compatible tails.
+# Local inbox adapter for Claude Code, Codex, and Grok-compatible tails.
 # The hook never calls GitHub or git. Its hot path reads only .beep/inbox state.
-# Bash, Write, Edit, NotebookEdit, MultiEdit, and apply_patch can directly mutate
-# this checkout, so lease and one-shot P0 fences apply only to those tools.
-# Harness tools evolve; every other name is context-only except the ratified P0
-# new-work launches.
-# A live Yeet lease process descended from this hook's parent belongs to the
-# launching harness session; the next unlocked hook refresh records that owner.
-# A busy mutex reports its OS holder. If no live lease owner remains, one hook
-# generation-fences an inode replacement so queued retirements can drain.
+# PreToolUse events inject context without denying tools. Unacknowledged P0 rows
+# remain a hard gate only at Stop and SubagentStop.
 set -u
 
 harness="${1:-claude}"
 payload="$(cat 2>/dev/null || true)"
 
-# A missing parser must not turn the mutex into a broken standing denial.
+# A missing parser must not turn inbox bookkeeping into a standing denial.
 command -v jq >/dev/null 2>&1 || exit 0
 
 event="$(printf '%s' "$payload" | jq -r '.hook_event_name // empty' 2>/dev/null || true)"
@@ -45,12 +39,6 @@ fi
 acks="$inbox/acks"
 dispatch="$inbox/dispatch.json"
 sessions="$inbox/sessions"
-
-empty_stop_output() {
-  if [ "$event" = "Stop" ] || [ "$event" = "SubagentStop" ]; then
-    printf '{}\n'
-  fi
-}
 
 failures_present=true
 [ -f "$failures" ] || failures_present=false
@@ -96,194 +84,6 @@ parse_timestamp_epoch() {
   printf '%s' "$parsed_epoch"
 }
 
-proc_start() {
-  proc_pid="$1"
-  [ -r "/proc/$proc_pid/stat" ] || return 1
-  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
-  [ -n "$proc_rest" ] || return 1
-  # shellcheck disable=SC2086
-  set -- $proc_rest
-  eval 'printf "%s" "${20:-}"'
-}
-
-proc_state() {
-  proc_pid="$1"
-  [ -r "/proc/$proc_pid/stat" ] || return 1
-  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
-  [ -n "$proc_rest" ] || return 1
-  # shellcheck disable=SC2086
-  set -- $proc_rest
-  printf '%s' "${1:-}"
-}
-
-proc_parent() {
-  proc_pid="$1"
-  [ -r "/proc/$proc_pid/stat" ] || return 1
-  proc_rest="$(sed 's/^.*) //' "/proc/$proc_pid/stat" 2>/dev/null || true)"
-  [ -n "$proc_rest" ] || return 1
-  # shellcheck disable=SC2086
-  set -- $proc_rest
-  [ -n "${2:-}" ] || return 1
-  printf '%s' "$2"
-}
-
-proc_has_ancestor() {
-  lineage_pid="$1"
-  lineage_ancestor="$2"
-  case "$lineage_pid" in ''|*[!0-9]*) return 1 ;; esac
-  case "$lineage_ancestor" in ''|*[!0-9]*) return 1 ;; esac
-  lineage_depth=0
-  while [ "$lineage_pid" -gt 1 ] && [ "$lineage_depth" -lt 64 ]; do
-    [ "$lineage_pid" = "$lineage_ancestor" ] && return 0
-    lineage_parent="$(proc_parent "$lineage_pid" || true)"
-    case "$lineage_parent" in ''|*[!0-9]*) return 1 ;; esac
-    [ "$lineage_parent" != "$lineage_pid" ] || return 1
-    lineage_pid="$lineage_parent"
-    lineage_depth="$((lineage_depth + 1))"
-  done
-  [ "$lineage_pid" = "$lineage_ancestor" ]
-}
-
-file_inode() {
-  local inode_path="$1" inode=''
-  inode="$(stat -Lc '%i' "$inode_path" 2>/dev/null || true)"
-  if [ -z "$inode" ]; then
-    inode="$(stat -f '%i' "$inode_path" 2>/dev/null || true)"
-  fi
-  [ -n "$inode" ] || return 1
-  printf '%s' "$inode"
-}
-
-mutex_holder_details() {
-  local lock_path="$1" lock_inode='' holders='' holder_pid='' holder_comm='unknown'
-  lock_inode="$(file_inode "$lock_path" || true)"
-  if [ -n "$lock_inode" ] && command -v lslocks >/dev/null 2>&1; then
-    holders="$(lslocks -n -r -o PID,COMMAND,INODE 2>/dev/null | awk -v inode="$lock_inode" '
-      $3 == inode {
-        if (seen++) printf ", "
-        printf "pid %s (%s)", $1, $2
-      }
-    ')"
-  fi
-  if [ -z "$holders" ] && [ -n "$lock_inode" ] && [ -r /proc/locks ]; then
-    holder_pid="$(awk -v inode="$lock_inode" '$6 ~ (":" inode "$") { print $5; exit }' /proc/locks 2>/dev/null || true)"
-    if [ -n "$holder_pid" ] && [ -r "/proc/$holder_pid/comm" ]; then
-      holder_comm="$(tr -d '\n' <"/proc/$holder_pid/comm" 2>/dev/null || printf 'unknown')"
-    fi
-    if [ -n "$holder_pid" ]; then
-      holders="pid $holder_pid ($holder_comm)"
-    fi
-  fi
-  if [ -n "$holders" ]; then
-    printf '%s' "$holders"
-  elif [ -n "$lock_inode" ]; then
-    printf 'unknown holder (inode %s)' "$lock_inode"
-  else
-    printf 'unknown holder'
-  fi
-}
-
-mutex_recovery_allowed() {
-  local unavailable_lease="$inbox/pr-lease.json" unavailable_status='' unavailable_pid=''
-  local unavailable_start='' unavailable_observed_start='' unavailable_observed_state=''
-  if [ ! -e "$unavailable_lease" ]; then
-    return 0
-  fi
-  [ -f "$unavailable_lease" ] && [ ! -L "$unavailable_lease" ] && [ -r "$unavailable_lease" ] || return 1
-  unavailable_status="$(jq -r 'select(.schemaVersion == "yeet-pr-lease/v1") | .status // "active"' "$unavailable_lease" 2>/dev/null || true)"
-  case "$unavailable_status" in
-    retired) return 0 ;;
-    active|claiming) ;;
-    *) return 1 ;;
-  esac
-  unavailable_pid="$(jq -r '.pid // empty' "$unavailable_lease" 2>/dev/null || true)"
-  unavailable_start="$(jq -r '.procStart // empty' "$unavailable_lease" 2>/dev/null || true)"
-  case "$unavailable_pid" in ''|*[!0-9]*) return 1 ;; esac
-  [ -n "$unavailable_start" ] || return 1
-  unavailable_observed_start="$(proc_start "$unavailable_pid" || true)"
-  unavailable_observed_state="$(proc_state "$unavailable_pid" || true)"
-  if [ "$unavailable_observed_start" = "$unavailable_start" ]; then
-    case "$unavailable_observed_state" in
-      Z|X|x) return 0 ;;
-      *) return 1 ;;
-    esac
-  fi
-  return 0
-}
-
-claim_mutex_recovery() {
-  local recovery_inode="$1" existing_claim='' claim_owner='' claim_rest='' claim_start=''
-  local observed_start='' observed_state=''
-  mutex_recovery_claim="$inbox/hook-mutex-recovery-$recovery_inode"
-  mutex_recovery_claim_start="$(proc_start "$$" || true)"
-  [ -n "$mutex_recovery_claim_start" ] || return 1
-  mutex_recovery_claim_target="$$:$mutex_recovery_claim_start:$recovery_inode"
-  if ln -s "$mutex_recovery_claim_target" "$mutex_recovery_claim" 2>/dev/null; then
-    return 0
-  fi
-  [ -L "$mutex_recovery_claim" ] || return 1
-  existing_claim="$(readlink "$mutex_recovery_claim" 2>/dev/null || true)"
-  claim_owner="${existing_claim%%:*}"
-  claim_rest="${existing_claim#*:}"
-  claim_start="${claim_rest%%:*}"
-  case "$claim_owner" in ''|*[!0-9]*) return 1 ;; esac
-  [ -n "$claim_start" ] || return 1
-  observed_start="$(proc_start "$claim_owner" || true)"
-  observed_state="$(proc_state "$claim_owner" || true)"
-  if [ "$observed_start" = "$claim_start" ]; then
-    case "$observed_state" in Z|X|x) ;; *) return 1 ;; esac
-  fi
-  rm -f "$mutex_recovery_claim" 2>/dev/null || return 1
-  ln -s "$mutex_recovery_claim_target" "$mutex_recovery_claim" 2>/dev/null
-}
-
-release_mutex_recovery_claim() {
-  [ -L "$mutex_recovery_claim" ] || return 0
-  [ "$(readlink "$mutex_recovery_claim" 2>/dev/null || true)" = "$mutex_recovery_claim_target" ] || return 0
-  rm -f "$mutex_recovery_claim" 2>/dev/null || true
-}
-
-reopen_and_lock_current_mutex() {
-  exec 9>&-
-  exec 9>"$inbox/hook-mutex.lock" 2>/dev/null || return 1
-  flock -w 1 9 2>/dev/null
-}
-
-recover_hook_mutex() {
-  local opened_inode="$1" current_inode='' replacement='' recovery_result=1
-  [ -n "$opened_inode" ] || return 1
-  mutex_recovery_allowed || return 1
-  if ! claim_mutex_recovery "$opened_inode"; then
-    reopen_and_lock_current_mutex
-    return
-  fi
-  current_inode="$(file_inode "$inbox/hook-mutex.lock" || true)"
-  if [ "$current_inode" != "$opened_inode" ]; then
-    release_mutex_recovery_claim
-    reopen_and_lock_current_mutex
-    return
-  fi
-  if ! mutex_recovery_allowed; then
-    release_mutex_recovery_claim
-    return 1
-  fi
-  replacement="$(mktemp "$inbox/.hook-mutex-replacement.XXXXXX" 2>/dev/null || true)"
-  if [ -z "$replacement" ]; then
-    release_mutex_recovery_claim
-    return 1
-  fi
-  chmod 600 "$replacement" 2>/dev/null || true
-  if mv -f "$replacement" "$inbox/hook-mutex.lock" 2>/dev/null; then
-    if reopen_and_lock_current_mutex; then
-      recovery_result=0
-    fi
-  else
-    rm -f "$replacement" 2>/dev/null || true
-  fi
-  release_mutex_recovery_claim
-  return "$recovery_result"
-}
-
 active_ack_ids() {
   loaded_ack_ids='[]'
   if [ -d "$acks" ]; then
@@ -305,95 +105,11 @@ active_ack_ids() {
   printf '%s' "$loaded_ack_ids"
 }
 
-unacked_stop_p0_rows() {
-  [ "$failures_present" = true ] || { printf '[]'; return 0; }
-  stop_ack_ids="$(active_ack_ids)"
-  stop_wave='null'
-  if [ -f "$dispatch" ] && [ ! -L "$dispatch" ] && [ -r "$dispatch" ]; then
-    stop_wave="$(jq -c 'select(.schemaVersion == "yeet-dispatch/v1")' "$dispatch" 2>/dev/null || printf 'null')"
-    [ -n "$stop_wave" ] || stop_wave='null'
-  fi
-  jq -Rsc --argjson acks "$stop_ack_ids" --argjson wave "$stop_wave" '
-    split("\n")
-    | map(try fromjson catch empty)
-    | map(select(.schemaVersion == "yeet-inbox/v1" and .severity == "P0"))
-    | unique_by(.id)
-    | map(. as $row | select(($acks | index($row.id)) == null))
-    | map(select(
-        ($wave | type) != "object"
-        or .capsule.headSha? == null
-        or .capsule.prNumber? == null
-        or (.capsule.headSha == $wave.headSha and .capsule.prNumber == $wave.prNumber)
-      ))
-  ' "$failures" 2>/dev/null || printf '[]'
-}
-
-block_stop_while_mutex_unavailable() {
-  if [ "$event" != "Stop" ] && [ "$event" != "SubagentStop" ]; then
-    return 0
-  fi
-  stop_rows="$(unacked_stop_p0_rows)"
-  [ "$(printf '%s' "$stop_rows" | jq 'length')" -gt 0 ] || { printf '{}\n'; return 0; }
-  stop_context="$(printf '%s' "$stop_rows" | jq -r '
-    "Fix this now. The checkout has unacknowledged Yeet inbox work:\n" +
-    (map("- " + .severity + " " + (.capsule.lane // .capsule.shard // .kind // "incident") + " [" + .id + "]") | join("\n"))
-  ')"
-  jq -cn --arg context "$stop_context" '{decision:"block",reason:$context}'
-}
-
-deny_mutating_nonowner_while_mutex_unavailable() {
-  [ "$pretool_checkout_mutating" = true ] || return 0
-  unavailable_lease="$inbox/pr-lease.json"
-  [ -f "$unavailable_lease" ] && [ ! -L "$unavailable_lease" ] && [ -r "$unavailable_lease" ] || return 0
-  unavailable_status="$(jq -r 'select(.schemaVersion == "yeet-pr-lease/v1") | .status // "active"' "$unavailable_lease" 2>/dev/null || true)"
-  case "$unavailable_status" in active|claiming) ;; *) return 0 ;; esac
-  unavailable_session="$(jq -r '.sessionId // empty' "$unavailable_lease" 2>/dev/null || true)"
-  unavailable_pid="$(jq -r '.pid // empty' "$unavailable_lease" 2>/dev/null || true)"
-  unavailable_start="$(jq -r '.procStart // empty' "$unavailable_lease" 2>/dev/null || true)"
-  current_start="$(proc_start "$PPID" || true)"
-  unavailable_observed_start="$(proc_start "$unavailable_pid" || true)"
-  if [ "$unavailable_session" = "$harness:$session_id" ] || {
-    [ "$unavailable_pid" = "$PPID" ] && [ -n "$current_start" ] && [ "$unavailable_start" = "$current_start" ];
-  } || {
-    [ -n "$unavailable_observed_start" ] && [ "$unavailable_start" = "$unavailable_observed_start" ] &&
-      proc_has_ancestor "$unavailable_pid" "$PPID";
-  }; then
-    return 0
-  fi
-  context="[lease-mutex-busy] Published PR ownership cannot be verified while its mutex is busy. Retry this checkout-mutating tool after the active ownership generation settles. Mutex holder: $mutex_holder."
-  jq -cn --arg context "$context" \
-    '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
-}
-
-context_nonmutating_while_mutex_unavailable() {
-  [ "$event" = "PreToolUse" ] || return 0
-  [ "$pretool_checkout_mutating" = false ] || return 0
-  context="[lease-mutex-busy] Checkout ownership state is temporarily busy, but this context-only tool remains available. Mutex holder: $mutex_holder."
-  jq -cn --arg context "$context" \
-    '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$context}}'
-}
-
-# Every adapter shares this checkout-local critical section. A contended or
-# unavailable lock fails closed for non-owner mutation. If the lease owner is
-# dead or absent, one inode-keyed claimant replaces the wedged lock and all
-# concurrent invocations reopen the same current inode before proceeding.
-mutex_holder='unknown holder'
-exec 9>"$inbox/hook-mutex.lock" 2>/dev/null || {
-  deny_mutating_nonowner_while_mutex_unavailable
-  context_nonmutating_while_mutex_unavailable
-  block_stop_while_mutex_unavailable
-  exit 0
-}
-if command -v flock >/dev/null 2>&1; then
-  mutex_opened_inode="$(file_inode "/proc/$$/fd/9" || file_inode "$inbox/hook-mutex.lock" || true)"
-  if ! flock -w 1 9 2>/dev/null; then
-    mutex_holder="$(mutex_holder_details "$inbox/hook-mutex.lock")"
-    if ! recover_hook_mutex "$mutex_opened_inode"; then
-      deny_mutating_nonowner_while_mutex_unavailable
-      context_nonmutating_while_mutex_unavailable
-      block_stop_while_mutex_unavailable
-      exit 0
-    fi
+# Serialize per-session seen-state updates when possible. A busy or unavailable
+# bookkeeping mutex must not hide inbox context or bypass the Stop P0 decision.
+if exec 9>"$inbox/hook-mutex.lock" 2>/dev/null; then
+  if command -v flock >/dev/null 2>&1; then
+    flock -w 1 9 2>/dev/null || true
   fi
 fi
 
@@ -496,191 +212,6 @@ if [ -z "$first_p0" ]; then
   write_state
 fi
 
-# Published-PR ownership is a separate generation from the inbox session
-# state. Hooks refresh the current owner, CAS-take over a dead/frozen owner,
-# and fence mutations from a zombie session that lost ownership.
-pr_lease="$inbox/pr-lease.json"
-pr_lease_retirements="$inbox/pr-lease-retirements"
-current_owner_pid="$PPID"
-
-current_proc_start="$(proc_start "$current_owner_pid" || true)"
-current_lease_session="$harness:$session_id"
-lease_generation=''
-lease_status=''
-lease_session=''
-lease_pid=''
-lease_proc_start=''
-lease_owner_alive=false
-lease_owner_frozen=false
-lease_owner_stale=false
-lease_owned_by_current=false
-
-load_pr_lease() {
-  lease_generation=''
-  lease_status=''
-  [ -f "$pr_lease" ] && [ ! -L "$pr_lease" ] && [ -r "$pr_lease" ] || return 1
-  lease_generation="$(jq -r 'select(.schemaVersion == "yeet-pr-lease/v1") | .generationId // empty' "$pr_lease" 2>/dev/null || true)"
-  [ -n "$lease_generation" ] || return 1
-  lease_status="$(jq -r '.status // "active"' "$pr_lease" 2>/dev/null || true)"
-  case "$lease_status" in
-    active|claiming) ;;
-    *) lease_generation=''; return 1 ;;
-  esac
-  lease_session="$(jq -r '.sessionId // empty' "$pr_lease")"
-  lease_pid="$(jq -r '.pid // empty' "$pr_lease")"
-  lease_proc_start="$(jq -r '.procStart // empty' "$pr_lease")"
-  lease_refreshed_at="$(jq -r '.refreshedAt // empty' "$pr_lease")"
-  observed_start="$(proc_start "$lease_pid" || true)"
-  observed_state="$(proc_state "$lease_pid" || true)"
-  refreshed_epoch="$(parse_timestamp_epoch "$lease_refreshed_at" || true)"
-  stale_seconds="${BEEP_YEET_LEASE_STALE_SECONDS:-240}"
-  if [ -n "$refreshed_epoch" ] && [ "$(( $(date +%s) - refreshed_epoch ))" -ge "$stale_seconds" ]; then
-    lease_owner_stale=true
-  else
-    lease_owner_stale=false
-  fi
-  if [ -n "$observed_start" ] && [ "$observed_start" = "$lease_proc_start" ]; then
-    lease_owner_alive=true
-  else
-    lease_owner_alive=false
-  fi
-  case "$observed_state" in
-    T|t) lease_owner_frozen=true ;;
-    *) lease_owner_frozen=false ;;
-  esac
-  if [ "$lease_session" = "$current_lease_session" ] || {
-    [ "$lease_pid" = "$current_owner_pid" ] && [ -n "$current_proc_start" ] && [ "$lease_proc_start" = "$current_proc_start" ];
-  } || {
-    [ "$lease_owner_alive" = true ] && proc_has_ancestor "$lease_pid" "$current_owner_pid";
-  }; then
-    lease_owned_by_current=true
-  else
-    lease_owned_by_current=false
-  fi
-  return 0
-}
-
-apply_pr_lease_retirement_requests() {
-  [ -d "$pr_lease_retirements" ] && [ ! -L "$pr_lease_retirements" ] || return 0
-  for retirement_path in "$pr_lease_retirements"/*.json; do
-    [ -e "$retirement_path" ] || continue
-    [ -f "$retirement_path" ] && [ ! -L "$retirement_path" ] && [ -r "$retirement_path" ] || continue
-    retirement_request="$(jq -c '
-      select(
-        .schemaVersion == "yeet-pr-lease-retirement/v1"
-        and (.generationId | type) == "string"
-        and (.headSha | type) == "string"
-        and (.prNumber | type) == "number"
-        and (.reason | type) == "string"
-      )
-    ' "$retirement_path" 2>/dev/null || true)"
-    [ -n "$retirement_request" ] || continue
-    if [ ! -f "$pr_lease" ] || [ -L "$pr_lease" ] || [ ! -r "$pr_lease" ]; then
-      rm -f "$retirement_path" 2>/dev/null || true
-      continue
-    fi
-    retirement_generation="$(printf '%s' "$retirement_request" | jq -r '.generationId')"
-    retirement_head="$(printf '%s' "$retirement_request" | jq -r '.headSha')"
-    retirement_pr="$(printf '%s' "$retirement_request" | jq -r '.prNumber | tostring')"
-    retirement_reason="$(printf '%s' "$retirement_request" | jq -r '.reason')"
-    observed_lease="$(jq -c 'select(.schemaVersion == "yeet-pr-lease/v1")' "$pr_lease" 2>/dev/null || true)"
-    [ -n "$observed_lease" ] || continue
-    observed_generation="$(printf '%s' "$observed_lease" | jq -r '.generationId // empty')"
-    observed_status="$(printf '%s' "$observed_lease" | jq -r '.status // "active"')"
-    if [ "$observed_generation" != "$retirement_generation" ] || [ "$observed_status" = "retired" ]; then
-      rm -f "$retirement_path" 2>/dev/null || true
-      continue
-    fi
-    [ "$observed_status" = "active" ] || continue
-    observed_head="$(printf '%s' "$observed_lease" | jq -r '.headSha // empty')"
-    observed_pr="$(printf '%s' "$observed_lease" | jq -r '.prNumber // empty | tostring')"
-    [ "$observed_head" = "$retirement_head" ] && [ "$observed_pr" = "$retirement_pr" ] || continue
-    lease_tmp="$(mktemp "$inbox/.pr-lease-retired.XXXXXX" 2>/dev/null || true)"
-    [ -n "$lease_tmp" ] || continue
-    retired_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    if jq -c \
-      --arg generation "$retirement_generation" \
-      --arg head "$retirement_head" \
-      --arg pr "$retirement_pr" \
-      --arg retired_at "$retired_at" \
-      --arg reason "$retirement_reason" \
-      'select(
-         .generationId == $generation
-         and .headSha == $head
-         and (.prNumber | tostring) == $pr
-         and (.status // "active") == "active"
-       )
-       | .status = "retired"
-       | .retiredAt = $retired_at
-       | .refreshedAt = $retired_at
-       | .retireReason = ("requested:" + $reason)' \
-      "$pr_lease" >"$lease_tmp" 2>/dev/null && [ -s "$lease_tmp" ] && mv -f "$lease_tmp" "$pr_lease" 2>/dev/null; then
-      rm -f "$retirement_path" 2>/dev/null || true
-    else
-      rm -f "$lease_tmp" 2>/dev/null || true
-    fi
-  done
-}
-
-write_pr_lease_generation() {
-  expected_generation="$1"
-  takeover_reason="${2:-}"
-  load_pr_lease || return 0
-  [ "$lease_generation" = "$expected_generation" ] || return 0
-  lease_tmp="$(mktemp "$inbox/.pr-lease.XXXXXX" 2>/dev/null || true)"
-  [ -n "$lease_tmp" ] || return 0
-  now_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  next_generation="$expected_generation"
-  if [ -n "$takeover_reason" ]; then
-    next_generation="$session_key-$(date +%s)"
-  fi
-  if jq -c \
-    --arg expected "$expected_generation" \
-    --arg generation "$next_generation" \
-    --arg session "$current_lease_session" \
-    --argjson pid "$current_owner_pid" \
-    --arg proc_start "$current_proc_start" \
-    --arg now "$now_iso" \
-    --arg reason "$takeover_reason" \
-    'select(.generationId == $expected)
-     | .generationId = $generation
-     | .sessionId = $session
-     | .pid = $pid
-     | .procStart = $proc_start
-     | .refreshedAt = $now
-     | .status = "active"
-     | if $reason == "" then . else .takeoverOf = $expected | .takeoverReason = $reason end' \
-    "$pr_lease" >"$lease_tmp" 2>/dev/null; then
-    mv -f "$lease_tmp" "$pr_lease" 2>/dev/null || true
-  else
-    rm -f "$lease_tmp" 2>/dev/null || true
-  fi
-}
-
-apply_pr_lease_retirement_requests
-
-if load_pr_lease; then
-  observed_generation="$lease_generation"
-  if [ "$lease_owned_by_current" = true ]; then
-    write_pr_lease_generation "$observed_generation"
-  elif [ "$lease_owner_stale" = true ] && {
-    [ "$lease_owner_alive" = false ] || [ "$lease_owner_frozen" = true ];
-  }; then
-    # This hook invocation is the resumed owner: the hook mutex is the CAS
-    # boundary. Recovery must not depend on a hosted failure capsule because a
-    # hard-killed early publisher can strand its lease before any P0 exists.
-    write_pr_lease_generation "$observed_generation" "stale-dead-or-frozen"
-  fi
-  load_pr_lease || true
-fi
-
-if [ "$pretool_checkout_mutating" = true ] && [ -n "$lease_generation" ] && [ "$lease_owned_by_current" = false ]; then
-  context="[lease-nonowner] Published PR ownership belongs to session $lease_session (pid $lease_pid). This session lost lease generation $lease_generation and is fenced from checkout-mutating tools."
-  jq -cn --arg context "$context" \
-    '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
-  exit 0
-fi
-
 case "$harness:$event" in
   grok:*|*:GrokTail)
     if [ "$(printf '%s' "$entries" | jq 'length')" -eq 0 ]; then
@@ -730,17 +261,17 @@ case "$harness:$event" in
           state="$(printf '%s' "$state" | jq -c --arg id "$row_id" '.incidentId = $id')"
           write_state
         fi
-        deny_context="[p0-new-work] Unacknowledged P0 work keeps this checkout in incident mode; starting unrelated Agent/Task/spawn_agent or workspace/bootstrap work is blocked until ACK.
+        deny_context="[p0-new-work] Unacknowledged P0 work keeps this checkout in incident mode. Finish or acknowledge it before starting unrelated Agent/Task/spawn_agent or workspace/bootstrap work.
 $context"
         jq -cn --arg context "$deny_context" \
-          '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
+          '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$context}}'
       elif [ "$pretool_checkout_mutating" = true ] && [ "$incident_id" != "$row_id" ]; then
         state="$(printf '%s' "$state" | jq -c --arg id "$row_id" '.incidentId = $id')"
         write_state
-        deny_context="[p0-attention] The first checkout-mutating tool after a new P0 is interrupted once.
+        deny_context="[p0-attention] The first checkout-mutating tool after a new P0 gets an explicit reminder.
 $context"
         jq -cn --arg context "$deny_context" \
-          '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$context}}'
+          '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$context}}'
       else
         jq -cn --arg context "$context" \
           '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$context}}'

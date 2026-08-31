@@ -1,5 +1,6 @@
 import { docgenCommand } from "@beep/repo-cli/commands/Docgen";
 import {
+  aggregateDocgenPackagesForTesting,
   aggregateGeneratedDocs,
   analyzeDocgenQuality,
   analyzeDocgenQualityWorkerEval,
@@ -22,6 +23,7 @@ import {
   generateQualityJson,
   generateQualityReport,
   generateQualityWorkerEvalJson,
+  isCanonicalDocgenAggregateConfigForTesting,
   loadDocgenConfigDocument,
   makeQualityWorkerRunpodEvalPodCreateInput,
   requiredQualityWorkerRunpodEvalModel,
@@ -600,6 +602,72 @@ describe("Docgen operations", () => {
       fcRuns(16)
     );
   });
+
+  it("aggregates only canonical Docgen output configurations during scoped runs", () => {
+    expect(isCanonicalDocgenAggregateConfigForTesting(DocgenConfigDocument.make({ srcDir: "src" }))).toBe(true);
+    expect(
+      isCanonicalDocgenAggregateConfigForTesting(DocgenConfigDocument.make({ srcDir: "src", outDir: "docs" }))
+    ).toBe(true);
+    expect(
+      isCanonicalDocgenAggregateConfigForTesting(
+        DocgenConfigDocument.make({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
+      )
+    ).toBe(false);
+  });
+
+  it("skips non-canonical outputs while aggregating canonical scoped packages", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = process.cwd();
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/foundation/*/*"],
+            })
+          );
+
+          const canonicalDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
+          const focusedDir = path.join(tmpDir, "packages", "foundation", "modeling", "types");
+          yield* fs.makeDirectory(path.join(canonicalDir, "docs", "modules"), { recursive: true });
+          yield* fs.makeDirectory(focusedDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(canonicalDir, "package.json"),
+            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+          );
+          yield* fs.writeFileString(path.join(canonicalDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(
+            path.join(canonicalDir, "docs", "modules", "Schema.md"),
+            `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
+          );
+          yield* fs.writeFileString(
+            path.join(focusedDir, "package.json"),
+            encodeJson({ name: "@beep/types", version: "0.0.0" })
+          );
+          yield* fs.writeFileString(
+            path.join(focusedDir, "docgen.json"),
+            encodeJson({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
+          );
+
+          const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
+          const aggregateCount = yield* aggregateDocgenPackagesForTesting(packages);
+          const aggregateExists = yield* fs.exists(
+            path.join(tmpDir, "docs", "generated", "foundation", "modeling", "schema", "Schema.md")
+          );
+          const focusedAggregateExists = yield* fs.exists(
+            path.join(tmpDir, "docs", "generated", "foundation", "modeling", "types")
+          );
+
+          expect(aggregateCount).toBe(1);
+          expect(aggregateExists).toBe(true);
+          expect(focusedAggregateExists).toBe(false);
+        })
+      )
+    ));
 
   it("selects package-local inputs for the bounded local docgen lane", () =>
     Effect.runPromise(
@@ -1393,6 +1461,48 @@ export const ProofFixture = 1;
           expect(results[0]?.docsOutputPath).toBe("foundation/modeling/schema");
           expect(aggregated).toContain('parent: "@beep/schema"');
           expect(aggregatedIndex).toContain("permalink: /docs/foundation/modeling/schema");
+        })
+      )
+    ));
+
+  it("aggregates private JSDoc loop output when a package emits it", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = process.cwd();
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["scratchpad"],
+            })
+          );
+
+          const packageDir = path.join(tmpDir, "scratchpad");
+          const privateModulesDir = path.join(packageDir, ".jsdoc-loop", "generated-docs", "modules");
+          yield* fs.makeDirectory(privateModulesDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(packageDir, "package.json"),
+            encodeJson({ name: "@beep/scratchpad", version: "0.0.0" })
+          );
+          yield* fs.writeFileString(
+            path.join(packageDir, "docgen.json"),
+            encodeJson({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
+          );
+          yield* fs.writeFileString(
+            path.join(privateModulesDir, "Scratchpad.md"),
+            `---\nparent: Modules\ntitle: Scratchpad\n---\n\ncontent\n`
+          );
+
+          const results = yield* aggregateGeneratedDocs();
+          const aggregatedPath = path.join(tmpDir, "docs", "generated", "scratchpad", "Scratchpad.md");
+          const aggregated = yield* fs.readFileString(aggregatedPath);
+
+          expect(results).toHaveLength(1);
+          expect(aggregated).toContain('parent: "@beep/scratchpad"');
         })
       )
     ));

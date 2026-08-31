@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-mail-backfill",
+    "packetId": "goal-packet/v1:ad91e643122261810703688f5a5d4a04d718aa1937f25f9ca9d4da8e105c6b66",
+    "title": "Practice Mail Backfill",
+    "status": "active",
+    "created": "2026-08-30",
+    "updated": "2026-08-30",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-mail-backfill",
+  "lifecycle": "active",
+  "mission": "Import the historical PST estate into the attorney's archive mailbox via Purview network upload — licensed, tranched, reconciled, and verified in Outlook search",
+  "statusNote": "Graduated 2026-08-30 from explorations/practice-office-provisioning; P0 not started. First actions: CSP quote + dry-run EOP2 assignment, >100 GB support case, PST census.",
+  "blockedBy": [],
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/practice-office-provisioning",
+    "graduated": "2026-08-30"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-mail-backfill/README.md",
+    "goals/practice-mail-backfill/SPEC.md",
+    "goals/practice-mail-backfill/PLAN.md",
+    "goals/practice-mail-backfill/GOAL.md",
+    "goals/practice-mail-backfill/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-mail-backfill/GOAL.md"
+    }
+  ],
+  "provides": ["practice/mail-history-searchable"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-mail-backfill/GOAL.md)\" -le 4000",
+    "jq . goals/practice-mail-backfill/ops/manifest.json",
+    "rg -n \"practice-mail-backfill|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-mail-backfill",
+    "git diff --check -- goals/practice-mail-backfill",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The dry-run license assignment shows a service-plan conflict beside Business Premium.",
+    "The Microsoft support case contradicts the staged >100 GB tranche plan.",
+    "A tranche reconciliation shows unexplained loss.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
+  ]
+}

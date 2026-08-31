@@ -83,10 +83,11 @@ assert that #855's final head was merge-ready.
 - [x] A second migration preview is empty and `bun run beep explore --check`
       reports zero findings.
 - [x] Focused tests, typecheck, repo verification, and reflection lint pass for
-      the shipped implementation and recovery; the recovery head carries the
-      lifecycle closeout and is accepted through Yeet's exact-head
-      merge-readiness proof. PR #855's historical final-head check and Greptile
-      gaps remain explicitly recorded under D27.
+      the shipped implementation and recovery. The full local proof applies to
+      the implementation head; final-tip acceptance remains gated on terminal
+      hosted checks, review closure, and Greptile 5/5 for that exact head. PR
+      #855's historical final-head check and Greptile gaps remain explicitly
+      recorded under D27.
 
 ## Stop conditions
 
