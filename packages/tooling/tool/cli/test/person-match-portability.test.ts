@@ -6,9 +6,11 @@ import {
   trustedUvRootDirectoriesForPlatform,
   validatePersonMatchBackendPlatform,
 } from "@beep/repo-cli/test/Files";
+import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const makePersonMatchOptions = (
   backend: "buffalo-l" | "adaface-kprpe",
@@ -25,6 +27,9 @@ const makePersonMatchOptions = (
     references: "/photos/references",
     reviewThreshold: 0.35,
   });
+
+const workerFailureJson = (code: "pytorch-runtime-load-failed" | "worker-failed"): string =>
+  `{"schemaVersion":"beep.files.match-person.worker.v2","ok":false,"error":{"code":"${code}","message":"simulated worker failure"},"elapsedSeconds":0}`;
 
 describe("person-match backend portability", () => {
   it("keeps AdaFace as the Linux x64 default", () => {
@@ -72,6 +77,65 @@ describe("person-match backend portability", () => {
     ).toBe(false);
     expect(PersonMatchWorkerPolicyForTest.shouldRetryAdaFaceOnCpu(automatic, "cpu", "rocm-unavailable")).toBe(false);
   });
+
+  it.effect("rejects a retry-authorizing worker failure on a successful process exit", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        PersonMatchWorkerPolicyForTest.decodeWorkerExecution(
+          workerFailureJson("pytorch-runtime-load-failed"),
+          "",
+          0,
+          false
+        )
+      );
+
+      expect(error._tag).toBe("MatchPersonProtocolError");
+    })
+  );
+
+  it.effect("accepts only the worker-defined failure exit for a retry-authorizing report", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        PersonMatchWorkerPolicyForTest.decodeWorkerExecution(
+          workerFailureJson("pytorch-runtime-load-failed"),
+          "",
+          2,
+          false
+        )
+      );
+
+      expect(error).toMatchObject({
+        _tag: "MatchPersonRuntimeError",
+        workerCode: "pytorch-runtime-load-failed",
+      });
+    })
+  );
+
+  it.effect("preserves a worker-failed diagnostic from either defined failure exit", () =>
+    Effect.forEach([1, 2], (exitCode) =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          PersonMatchWorkerPolicyForTest.decodeWorkerExecution(workerFailureJson("worker-failed"), "", exitCode, false)
+        );
+
+        expect(error).toMatchObject({
+          _tag: "MatchPersonProtocolError",
+          message: "Person-match worker failed [worker-failed]: simulated worker failure",
+        });
+      })
+    )
+  );
+
+  it.effect("writes automatic setup fallback evidence only to stderr", () =>
+    Effect.gen(function* () {
+      yield* PersonMatchWorkerPolicyForTest.writeAdaFaceSetupFallbackDiagnostic("simulated setup failure");
+
+      expect(A.map(yield* TestConsole.logLines, String)).toEqual([]);
+      expect(A.map(yield* TestConsole.errorLines, String)).toEqual([
+        "Person-match primary environment setup failed; retrying the pinned CPU environment: simulated setup failure",
+      ]);
+    }).pipe(Effect.provide(TestConsole.layer))
+  );
 
   it("removes ROCm loader paths only from the CPU attempt", () => {
     expect(PersonMatchWorkerPolicyForTest.workerLibraryEnvironment("primary", O.none())).toStrictEqual({});

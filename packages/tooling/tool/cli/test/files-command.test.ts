@@ -1759,6 +1759,137 @@ describe("files command", { concurrent: false }, () => {
       )
     ));
 
+  it.each([
+    {
+      compute: "auto",
+      expectedEnvironmentChildren: ["venv-adaface-rocm72-py312-v1", "venv-adaface-cpu-py312-v1"],
+    },
+    {
+      compute: "rocm",
+      expectedEnvironmentChildren: ["venv-adaface-rocm72-py312-v1"],
+    },
+  ])(
+    "bounds AdaFace $compute environment setup failures before model acquisition",
+    ({ compute, expectedEnvironmentChildren }) =>
+      Effect.runPromise(
+        withTempDirectory((tmpDir) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const candidateDir = path.join(tmpDir, "candidates");
+            const referenceDir = path.join(tmpDir, "references");
+            const cacheDir = path.join(tmpDir, "cache");
+            const manifestPath = path.join(tmpDir, "person-match.json");
+            const uvPath = path.join(tmpDir, "uv");
+            const invocationPath = path.join(tmpDir, "uv-invocations");
+            yield* fs.makeDirectory(candidateDir, { recursive: true });
+            yield* fs.makeDirectory(referenceDir, { recursive: true });
+            yield* fs.writeFileString(path.join(candidateDir, "candidate.jpg"), "candidate");
+            yield* fs.writeFileString(path.join(referenceDir, "reference.jpg"), "reference");
+            yield* writeProcessStub(
+              `#!/usr/bin/env bash
+printf '%s\t%s\n' "$UV_PROJECT_ENVIRONMENT" "$*" >> "${invocationPath}"
+if [ "$1" = "lock" ]; then exit 0; fi
+printf 'simulated pinned environment setup failure' >&2
+exit 73
+`,
+              uvPath
+            );
+
+            const message = yield* withEnvVar(
+              "BEEP_UV_PATH",
+              uvPath,
+              expectFilesCommandFailure([
+                "match-person",
+                "--backend",
+                "adaface-kprpe",
+                "--compute",
+                compute,
+                "--references",
+                referenceDir,
+                "--dir",
+                candidateDir,
+                "--cache-dir",
+                cacheDir,
+                "--manifest",
+                manifestPath,
+                "--accept-model-license",
+              ])
+            );
+
+            const invocations = A.filter(Str.split(yield* fs.readFileString(invocationPath), "\n"), Str.isNonEmpty);
+            expect(invocations[0]).toContain("lock --check");
+            expect(A.drop(invocations, 1)).toHaveLength(A.length(expectedEnvironmentChildren));
+            A.forEach(expectedEnvironmentChildren, (environmentChild, index) => {
+              const invocation = invocations[index + 1];
+              expect(invocation).toContain(path.join(cacheDir, environmentChild));
+              expect(invocation).toContain("sync");
+              expect(invocation).toContain(
+                Str.includes("cpu")(environmentChild) ? "--extra adaface-cpu" : "--extra adaface"
+              );
+            });
+            expect(message).toContain("environment");
+            expect(yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"))).toBe(false);
+            expect(yield* fs.exists(manifestPath)).toBe(false);
+          })
+        )
+      )
+  );
+
+  it("fails closed on an invalid person-match uv lock before environment or model setup", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const cacheDir = path.join(tmpDir, "cache");
+          const manifestPath = path.join(tmpDir, "person-match.json");
+          const uvPath = path.join(tmpDir, "uv");
+          const invocationPath = path.join(tmpDir, "uv-invocations");
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* fs.writeFileString(path.join(candidateDir, "candidate.jpg"), "candidate");
+          yield* fs.writeFileString(path.join(referenceDir, "reference.jpg"), "reference");
+          yield* writeProcessStub(
+            `#!/usr/bin/env bash
+printf '%s\n' "$*" >> "${invocationPath}"
+printf 'simulated stale uv lock' >&2
+exit 74
+`,
+            uvPath
+          );
+
+          const message = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--backend",
+              "adaface-kprpe",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              manifestPath,
+              "--accept-model-license",
+            ])
+          );
+
+          const invocations = A.filter(Str.split(yield* fs.readFileString(invocationPath), "\n"), Str.isNonEmpty);
+          expect(invocations).toHaveLength(1);
+          expect(invocations[0]).toContain("lock --check");
+          expect(message).toContain("lock");
+          expect(yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"))).toBe(false);
+          expect(yield* fs.exists(manifestPath)).toBe(false);
+        })
+      )
+    ));
+
   it("resolves Buffalo thresholds and requires an exact v2 worker parameter echo", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>

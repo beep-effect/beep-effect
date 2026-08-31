@@ -282,8 +282,10 @@ it is not installed in a standard system location or `$HOME/.local/bin`.
 `--devices` accepts at most one non-negative ROCm device index. A worker uses
 one GPU; run separate workers with different device indices to use multiple
 GPUs. `--compute rocm` fails closed if the requested GPU or pinned runtime is
-unavailable. `--compute auto` may fall back to CPU and records that fallback in
-the manifest.
+unavailable. `--compute auto` may fall back to the separate pinned CPU
+environment and records that fallback in the manifest. Before either attempt,
+the CLI verifies the committed uv lock; lock, process, and worker-protocol
+failures remain terminal.
 
 References must contain exactly one detected face. Use several clear photos
 covering different ages, expressions, lighting, eyewear, and hair styles. A

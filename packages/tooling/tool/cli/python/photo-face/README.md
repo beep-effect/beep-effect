@@ -43,13 +43,17 @@ supply the library directory together with the matching system
 `/opt/rocm/lib` through the parent process's `LD_LIBRARY_PATH`. A PyTorch native
 loader failure is returned as the typed `pytorch-runtime-load-failed` failure.
 
-The repo CLI defaults to AdaFace on Linux x64. With `--compute auto`, it tries
+The repo CLI first checks the committed uv lock, materializes the selected
+environment with a frozen sync, and starts the worker with dependency syncing
+disabled. It defaults to AdaFace on Linux x64. With `--compute auto`, it tries
 the pinned ROCm environment first and retries the same AdaFace model once in a
-separate pinned CPU environment when PyTorch cannot load ROCm or the selected
-device fails its probe. The first automatic run can therefore create both
-environments. CPU AdaFace preserves the recognition model and thresholds but
-is substantially slower. `--compute cpu` selects the CPU environment directly;
-`--compute rocm` is fail-closed and never retries.
+separate pinned CPU environment when the ROCm environment cannot be
+materialized, PyTorch cannot load ROCm, or the selected device fails its probe.
+The first automatic run can therefore create both environments. A lock
+mismatch, uv spawn failure, or worker protocol failure remains terminal. CPU
+AdaFace preserves the recognition model and thresholds but is substantially
+slower. `--compute cpu` selects the CPU environment directly; `--compute rocm`
+is fail-closed and never retries.
 
 Linux arm64, macOS x64/arm64, and Windows x64 default to Buffalo CPU. Other
 host/architecture pairs fail before cache or model acquisition because the

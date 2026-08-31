@@ -10,7 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, Context, Effect, FileSystem, flow, Layer, Match, Number as Num, Path } from "effect";
+import { Config, Console, Context, Effect, FileSystem, flow, Layer, Match, Number as Num, Path } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
@@ -46,6 +46,10 @@ const workerOutputBound = OutputBound.make({
   maxChars: 268_435_456,
   truncatedNotice: "\n[files match-person output truncated]",
 });
+const workerSetupOutputBound = OutputBound.make({
+  maxChars: 16_384,
+  truncatedNotice: "\n[files match-person setup output truncated]",
+});
 const adaFaceCpuRuntimePackageVersion = "2.9.1+cpu";
 const adaFaceRocmRuntimePackageVersion = "2.9.1+rocm7.2.0.git7e1940d4";
 const adaFaceHipVersionPrefix = "7.2";
@@ -55,8 +59,35 @@ const localRocmLibraryDirectorySegments = ["rocm-libs", "hipsparselt-7.2.4-1.1",
 const hipSparseLtSoname = "libhipsparselt.so.0";
 const hipSparseLtVersionedName = "libhipsparselt.so.0.2";
 const deviceIndexesEquivalence = S.toEquivalence(S.Array(NonNegativeInt));
+const isNonNegativeInt = S.is(NonNegativeInt);
 const PersonMatchWorkerEnvironment = LiteralKit(["primary", "cpu"]);
 type PersonMatchWorkerEnvironment = typeof PersonMatchWorkerEnvironment.Type;
+
+class MatchPersonWorkerEnvironmentSetupError extends S.TaggedError<MatchPersonWorkerEnvironmentSetupError>(
+  $I`MatchPersonWorkerEnvironmentSetupError`
+)(
+  "MatchPersonWorkerEnvironmentSetupError",
+  {
+    environment: PersonMatchWorkerEnvironment,
+    exitCode: NonNegativeInt,
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<MatchPersonWorkerEnvironmentSetupError>("MatchPersonWorkerEnvironmentSetupError", {
+    description: "A completed uv sync that could not materialize one isolated person-match worker environment.",
+  })
+) {}
+
+class MaterializedPersonMatchWorkerEnvironment extends S.Class<MaterializedPersonMatchWorkerEnvironment>(
+  $I`MaterializedPersonMatchWorkerEnvironment`
+)(
+  {
+    environment: PersonMatchWorkerEnvironment,
+    workerLibraryPath: S.Option(S.NonEmptyString),
+  },
+  $I.annote("MaterializedPersonMatchWorkerEnvironment", {
+    description: "One synchronized worker environment and its resolved runtime library path.",
+  })
+) {}
 
 /**
  * Canonical paths and isolated caches supplied to one worker execution.
@@ -355,20 +386,34 @@ const backendWorkerArguments = (
     Match.exhaustive
   );
 
-const workerArguments = (
+const workerSyncArguments = (
   options: MatchPersonOptions,
-  inputs: CanonicalMatchPersonInputs,
-  artifacts: O.Option<PreparedAdaFaceArtifacts>,
   environment: PersonMatchWorkerEnvironment
 ): ReadonlyArray<string> => [
-  "run",
+  "sync",
   "--project",
   workerProjectDirectory,
+  "--frozen",
+  "--python",
+  "3.12",
+  "--no-python-downloads",
+  "--no-dev",
   ...Match.value(options.backend).pipe(
     Match.when("buffalo-l", A.empty<string>),
     Match.when("adaface-kprpe", () => ["--extra", environment === "cpu" ? "adaface-cpu" : "adaface"]),
     Match.exhaustive
   ),
+];
+
+const workerArguments = (
+  options: MatchPersonOptions,
+  inputs: CanonicalMatchPersonInputs,
+  artifacts: O.Option<PreparedAdaFaceArtifacts>
+): ReadonlyArray<string> => [
+  "run",
+  "--project",
+  workerProjectDirectory,
+  "--no-sync",
   "--frozen",
   "--python",
   "3.12",
@@ -449,17 +494,26 @@ const decodeWorkerExecution = Effect.fn("Files.PersonMatchWorker.decodeExecution
       )
     )
   );
-  if (!report.ok) {
-    return yield* workerFailureError(report);
+  if (report.ok) {
+    if (exitCode !== 0) {
+      return yield* processError(
+        Str.isNonEmpty(diagnostic)
+          ? `Person-match worker exited with code ${exitCode}: ${diagnostic}`
+          : `Person-match worker exited with code ${exitCode}.`
+      );
+    }
+    return report;
   }
-  if (exitCode !== 0) {
-    return yield* processError(
-      Str.isNonEmpty(diagnostic)
-        ? `Person-match worker exited with code ${exitCode}: ${diagnostic}`
-        : `Person-match worker exited with code ${exitCode}.`
+  const expectedExitCodes = report.error.code === "worker-failed" ? [1, 2] : [2];
+  if (!A.contains(expectedExitCodes, exitCode)) {
+    return yield* protocolError(
+      `Person-match worker failure [${report.error.code}] used exit code ${exitCode}; expected ${A.join(
+        A.map(expectedExitCodes, (code) => `${code}`),
+        " or "
+      )}.`
     );
   }
-  return report;
+  return yield* workerFailureError(report);
 });
 
 const requestedParametersMatch = (worker: PersonMatchWorkerSuccess, options: MatchPersonOptions): boolean => {
@@ -703,16 +757,21 @@ const workerLibraryEnvironment = (
     Match.exhaustive
   );
 
-const runWorkerAttempt = Effect.fn("Files.PersonMatchWorker.runAttempt")(function* (
-  options: MatchPersonOptions,
-  inputs: CanonicalMatchPersonInputs,
-  artifacts: O.Option<PreparedAdaFaceArtifacts>,
-  environment: PersonMatchWorkerEnvironment
-): Effect.fn.Return<PersonMatchWorkerSuccess, PersonMatchWorkerServiceError, WorkerServiceRequirements> {
-  const workerLibraryPath = yield* resolveWorkerLibraryPath(options, inputs, environment);
+const capturedCommandFailureMessage = (summary: string, stdout: string, stderr: string, exitCode: number): string => {
+  const stderrDiagnostic = Str.trim(stderr);
+  const stdoutDiagnostic = Str.trim(stdout);
+  const diagnostic = Str.isNonEmpty(stderrDiagnostic) ? stderrDiagnostic : stdoutDiagnostic;
+  return Str.isNonEmpty(diagnostic)
+    ? `${summary} with code ${exitCode}: ${diagnostic}`
+    : `${summary} with code ${exitCode}.`;
+};
+
+const validateWorkerLock = Effect.fn("Files.PersonMatchWorker.validateLock")(function* (
+  inputs: CanonicalMatchPersonInputs
+): Effect.fn.Return<void, PersonMatchWorkerServiceError, ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCapturedStreams({
     command: inputs.uvPath,
-    args: workerArguments(options, inputs, artifacts, environment),
+    args: ["lock", "--check", "--project", workerProjectDirectory, "--python", "3.12", "--no-python-downloads"],
     cwd: workerProjectDirectory,
     extendEnv: true,
     env: {
@@ -720,9 +779,86 @@ const runWorkerAttempt = Effect.fn("Files.PersonMatchWorker.runAttempt")(functio
       PYTHONUTF8: "1",
       UV_CACHE_DIR: inputs.uvCacheRoot,
       UV_NO_PROGRESS: "1",
-      UV_PROJECT_ENVIRONMENT: environment === "cpu" ? inputs.uvCpuEnvironment : inputs.uvEnvironment,
-      ...workerLibraryEnvironment(environment, workerLibraryPath),
     },
+    bound: workerSetupOutputBound,
+    trim: true,
+  }).pipe(Effect.mapError((cause) => processError("Failed to start person-match uv lock validation.", cause)));
+  if (result.exitCode !== 0) {
+    return yield* processError(
+      capturedCommandFailureMessage(
+        "Person-match uv lock validation failed",
+        result.stdout,
+        result.stderr,
+        result.exitCode
+      )
+    );
+  }
+});
+
+const workerProcessEnvironment = (
+  inputs: CanonicalMatchPersonInputs,
+  environment: PersonMatchWorkerEnvironment,
+  workerLibraryPath: O.Option<string>
+): Readonly<Record<string, string | undefined>> => ({
+  NO_COLOR: "1",
+  PYTHONUTF8: "1",
+  UV_CACHE_DIR: inputs.uvCacheRoot,
+  UV_NO_PROGRESS: "1",
+  UV_PROJECT_ENVIRONMENT: environment === "cpu" ? inputs.uvCpuEnvironment : inputs.uvEnvironment,
+  ...workerLibraryEnvironment(environment, workerLibraryPath),
+});
+
+const materializeWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.materializeEnvironment")(function* (
+  options: MatchPersonOptions,
+  inputs: CanonicalMatchPersonInputs,
+  environment: PersonMatchWorkerEnvironment
+): Effect.fn.Return<
+  MaterializedPersonMatchWorkerEnvironment,
+  MatchPersonWorkerEnvironmentSetupError | PersonMatchWorkerServiceError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const workerLibraryPath = yield* resolveWorkerLibraryPath(options, inputs, environment);
+  const processEnvironment = workerProcessEnvironment(inputs, environment, workerLibraryPath);
+  const result = yield* runCapturedStreams({
+    command: inputs.uvPath,
+    args: workerSyncArguments(options, environment),
+    cwd: workerProjectDirectory,
+    extendEnv: true,
+    env: processEnvironment,
+    bound: workerSetupOutputBound,
+    trim: true,
+  }).pipe(Effect.mapError((cause) => processError("Failed to start person-match environment sync.", cause)));
+  if (result.exitCode !== 0) {
+    if (!isNonNegativeInt(result.exitCode)) {
+      return yield* processError(`Person-match environment sync returned invalid exit code ${result.exitCode}.`);
+    }
+    return yield* MatchPersonWorkerEnvironmentSetupError.make({
+      environment,
+      exitCode: result.exitCode,
+      message: capturedCommandFailureMessage(
+        `Person-match ${environment} environment sync failed`,
+        result.stdout,
+        result.stderr,
+        result.exitCode
+      ),
+    });
+  }
+  return MaterializedPersonMatchWorkerEnvironment.make({ environment, workerLibraryPath });
+});
+
+const executeWorker = Effect.fn("Files.PersonMatchWorker.execute")(function* (
+  options: MatchPersonOptions,
+  inputs: CanonicalMatchPersonInputs,
+  artifacts: O.Option<PreparedAdaFaceArtifacts>,
+  materialized: MaterializedPersonMatchWorkerEnvironment
+): Effect.fn.Return<PersonMatchWorkerSuccess, PersonMatchWorkerServiceError, WorkerServiceRequirements> {
+  const processEnvironment = workerProcessEnvironment(inputs, materialized.environment, materialized.workerLibraryPath);
+  const result = yield* runCapturedStreams({
+    command: inputs.uvPath,
+    args: workerArguments(options, inputs, artifacts),
+    cwd: workerProjectDirectory,
+    extendEnv: true,
+    env: processEnvironment,
     bound: workerOutputBound,
     trim: true,
   }).pipe(Effect.mapError((cause) => processError("Failed to start the local person-match worker.", cause)));
@@ -753,6 +889,46 @@ const shouldRetryAdaFaceOnCpu = (
     workerCode === "rocm-unavailable" ||
     workerCode === "device-probe-failed");
 
+const shouldRetryAdaFaceSetupOnCpu = (
+  options: MatchPersonOptions,
+  environment: PersonMatchWorkerEnvironment
+): boolean => options.backend === "adaface-kprpe" && options.compute === "auto" && environment === "primary";
+
+const setupErrorToServiceError = (error: MatchPersonWorkerEnvironmentSetupError): PersonMatchWorkerServiceError =>
+  processError(error.message);
+
+const writeAdaFaceSetupFallbackDiagnostic = Effect.fn("Files.PersonMatchWorker.writeSetupFallbackDiagnostic")(
+  function* (message: string) {
+    yield* Console.error(
+      `Person-match primary environment setup failed; retrying the pinned CPU environment: ${message}`
+    );
+  }
+);
+
+const writeAdaFaceSetupFallback = (error: MatchPersonWorkerEnvironmentSetupError): Effect.Effect<void> =>
+  writeAdaFaceSetupFallbackDiagnostic(error.message);
+
+const materializeInitialWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.materializeInitialEnvironment")(
+  function* (
+    options: MatchPersonOptions,
+    inputs: CanonicalMatchPersonInputs,
+    environment: PersonMatchWorkerEnvironment
+  ): Effect.fn.Return<
+    MaterializedPersonMatchWorkerEnvironment,
+    PersonMatchWorkerServiceError,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  > {
+    return yield* materializeWorkerEnvironment(options, inputs, environment).pipe(
+      Effect.catchTag("MatchPersonWorkerEnvironmentSetupError", (error) =>
+        shouldRetryAdaFaceSetupOnCpu(options, error.environment)
+          ? writeAdaFaceSetupFallback(error).pipe(Effect.andThen(materializeWorkerEnvironment(options, inputs, "cpu")))
+          : Effect.fail(setupErrorToServiceError(error))
+      ),
+      Effect.catchTag("MatchPersonWorkerEnvironmentSetupError", flow(setupErrorToServiceError, Effect.fail))
+    );
+  }
+);
+
 /**
  * Exposes the runtime-attempt policy to package tests without making it part of the command API.
  *
@@ -770,8 +946,11 @@ const shouldRetryAdaFaceOnCpu = (
  * @since 0.0.0
  */
 export const PersonMatchWorkerPolicyForTest = {
+  decodeWorkerExecution,
   initialEnvironment: initialWorkerEnvironment,
   shouldRetryAdaFaceOnCpu,
+  shouldRetryAdaFaceSetupOnCpu,
+  writeAdaFaceSetupFallbackDiagnostic,
   workerLibraryEnvironment,
 };
 
@@ -780,12 +959,17 @@ const runWorker = Effect.fn("Files.PersonMatchWorker.run")(function* (
   inputs: CanonicalMatchPersonInputs
 ): Effect.fn.Return<PersonMatchWorkerSuccess, PersonMatchWorkerServiceError, WorkerServiceRequirements> {
   yield* validateRuntimeRequest(options);
-  const artifacts = yield* prepareBackendArtifacts(options, inputs);
+  yield* validateWorkerLock(inputs);
   const environment = initialWorkerEnvironment(options);
-  return yield* runWorkerAttempt(options, inputs, artifacts, environment).pipe(
+  const materialized = yield* materializeInitialWorkerEnvironment(options, inputs, environment);
+  const artifacts = yield* prepareBackendArtifacts(options, inputs);
+  return yield* executeWorker(options, inputs, artifacts, materialized).pipe(
     Effect.catchTag("MatchPersonRuntimeError", (error) =>
-      shouldRetryAdaFaceOnCpu(options, environment, error.workerCode)
-        ? runWorkerAttempt(options, inputs, artifacts, "cpu")
+      shouldRetryAdaFaceOnCpu(options, materialized.environment, error.workerCode)
+        ? materializeWorkerEnvironment(options, inputs, "cpu").pipe(
+            Effect.catchTag("MatchPersonWorkerEnvironmentSetupError", flow(setupErrorToServiceError, Effect.fail)),
+            Effect.flatMap((cpuEnvironment) => executeWorker(options, inputs, artifacts, cpuEnvironment))
+          )
         : Effect.fail(error)
     )
   );
