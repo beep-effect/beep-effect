@@ -76,10 +76,12 @@
     },
     "apps/labs/semantica": {
       // These are intentional process entry points: the fixture generator is invoked manually,
-      // while the two helpers are spawned by path to keep EYE and crash recovery isolated from
+      // while the three helpers are spawned by path to keep EYE, crash recovery, and bundle
+      // readiness isolated from
       // the Vitest process. Knip cannot follow either path-based process boundary.
       "entry": [
         "scripts/generate-g-entailment.ts",
+        "src/canary/RuntimeProbeChild.ts",
         "test/helpers/CrashProbeChild.ts",
         "test/helpers/EyeOracleChild.ts"
       ]

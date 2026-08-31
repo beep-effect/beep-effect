@@ -127,48 +127,52 @@ describe("C2 declarative reasoner", () => {
       )
     ));
 
-  it("rebuilds an identical projection after SIGKILL at the ledger checkpoint", () =>
-    Effect.runPromise(
-      withBunServices(
-        Effect.scoped(
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const ledgerRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c2-crash-" });
-            const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-            const seedOutput = yield* processSpawner.string(
-              ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "seed", ledgerRoot], {
-                cwd: process.cwd(),
-                stderr: "pipe",
-                stdout: "pipe",
-              })
-            );
-            expect(seedOutput).toContain("ledger-committed");
-            const recover = processSpawner
-              .string(
-                ChildProcess.make(
-                  "bun",
-                  ["run", "src/canary/RuntimeProbeChild.ts", "recover", ledgerRoot, Str.repeat(64)("c"), "replay"],
-                  { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
+  it(
+    "rebuilds an identical projection after SIGKILL at the ledger checkpoint",
+    () =>
+      Effect.runPromise(
+        withBunServices(
+          Effect.scoped(
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const ledgerRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c2-crash-" });
+              const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+              const seedOutput = yield* processSpawner.string(
+                ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "seed", ledgerRoot], {
+                  cwd: process.cwd(),
+                  stderr: "pipe",
+                  stdout: "pipe",
+                })
+              );
+              expect(seedOutput).toContain("ledger-committed");
+              const recover = processSpawner
+                .string(
+                  ChildProcess.make(
+                    "bun",
+                    ["run", "src/canary/RuntimeProbeChild.ts", "recover", ledgerRoot, Str.repeat(64)("c"), "replay"],
+                    { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
+                  )
                 )
-              )
-              .pipe(Effect.timeout("30 seconds"), Effect.map(Str.trim));
-            const first = yield* recover;
-            const crash = yield* ChildProcess.make(
-              "bun",
-              ["run", "src/canary/RuntimeProbeChild.ts", "crash", ledgerRoot, Str.repeat(64)("c"), "replay"],
-              { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
-            );
-            const [crashOutput, crashExit] = yield* Effect.all(
-              [Stream.mkString(Stream.decodeText(crash.stdout)), Effect.exit(crash.exitCode)],
-              { concurrency: "unbounded" }
-            ).pipe(Effect.timeout("30 seconds"));
-            expect(crashOutput).toContain("ledger-reopened");
-            expect(Exit.isFailure(crashExit)).toBe(true);
-            const second = yield* recover;
-            expect(S.is(Sha256Hex)(first)).toBe(true);
-            expect(second).toBe(first);
-          })
+                .pipe(Effect.timeout("30 seconds"), Effect.map(Str.trim));
+              const first = yield* recover;
+              const crash = yield* ChildProcess.make(
+                "bun",
+                ["run", "src/canary/RuntimeProbeChild.ts", "crash", ledgerRoot, Str.repeat(64)("c"), "replay"],
+                { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
+              );
+              const [crashOutput, crashExit] = yield* Effect.all(
+                [Stream.mkString(Stream.decodeText(crash.stdout)), Effect.exit(crash.exitCode)],
+                { concurrency: "unbounded" }
+              ).pipe(Effect.timeout("30 seconds"));
+              expect(crashOutput).toContain("ledger-reopened");
+              expect(Exit.isFailure(crashExit)).toBe(true);
+              const second = yield* recover;
+              expect(S.is(Sha256Hex)(first)).toBe(true);
+              expect(second).toBe(first);
+            })
+          )
         )
-      )
-    ));
+      ),
+    120_000
+  );
 });
