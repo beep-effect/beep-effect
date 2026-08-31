@@ -178,6 +178,37 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
+  it("exhaustively distinguishes inline and display Pandoc math projections", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const pandoc = Pandoc.PandocDocument.make({
+          blocks: [
+            Pandoc.Para.make({
+              children: [
+                Pandoc.Math.make({ mathType: "InlineMath", text: "x" }),
+                Pandoc.Math.make({ mathType: "DisplayMath", text: "y" }),
+              ],
+            }),
+          ],
+          meta: {},
+        });
+        const result = yield* pandocToDocument(pandoc);
+        const paragraph = result.document.children[0];
+
+        expect(result.report.profile).toBe("gap");
+        expect(A.map(result.report.issues, (entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+          ["Math", "lossy", "/blocks/0/children/1"],
+        ]);
+        expect(paragraph?._tag).toBe("p");
+        if (paragraph?._tag === "p") {
+          expect(paragraph.children).toEqual([
+            expect.objectContaining({ _tag: "inlineMath", value: "x" }),
+            expect.objectContaining({ _tag: "inlineMath", value: "y" }),
+          ]);
+        }
+      })
+    ));
+
   it("records DOCX-origin compatibility gaps while producing partial Md output", () =>
     Effect.runPromise(
       Effect.gen(function* () {

@@ -15,7 +15,7 @@ import { Text as HtmlText } from "@beep/html/Html.nodes";
 import { A } from "@beep/utils";
 import { Effect, Match, pipe } from "effect";
 import * as O from "effect/Option";
-import { Inline as InlineSchema } from "./Md.model.ts";
+import { HeadingValue, Inline as InlineSchema } from "./Md.model.ts";
 import type { HtmlChildNode, SafeHtml } from "@beep/html";
 import type { Block, Document, Embed, Inline, Li, ListItemChild, Table, TableCell, TableRow } from "./Md.model.ts";
 import type { SafeDocument } from "./Md.safe.ts";
@@ -140,17 +140,16 @@ const embedToHtml = (embed: Embed): HtmlModel.Figure => {
 const blockToHtml = (block: Block): HtmlChildNode =>
   Match.value(block).pipe(
     Match.tagsExhaustive({
-      heading: ({ children, level }) => {
-        const rendered = inlineChildrenToHtml(children, rootInlineContext);
-        return Match.value(level).pipe(
-          Match.when(1, () => HtmlModel.H1.make({ children: rendered })),
-          Match.when(2, () => HtmlModel.H2.make({ children: rendered })),
-          Match.when(3, () => HtmlModel.H3.make({ children: rendered })),
-          Match.when(4, () => HtmlModel.H4.make({ children: rendered })),
-          Match.when(5, () => HtmlModel.H5.make({ children: rendered })),
-          Match.when(6, () => HtmlModel.H6.make({ children: rendered })),
-          Match.exhaustive
-        );
+      heading: (heading) => {
+        const rendered = inlineChildrenToHtml(heading.children, rootInlineContext);
+        return HeadingValue.match(heading, {
+          1: () => HtmlModel.H1.make({ children: rendered }),
+          2: () => HtmlModel.H2.make({ children: rendered }),
+          3: () => HtmlModel.H3.make({ children: rendered }),
+          4: () => HtmlModel.H4.make({ children: rendered }),
+          5: () => HtmlModel.H5.make({ children: rendered }),
+          6: () => HtmlModel.H6.make({ children: rendered }),
+        });
       },
       p: ({ children }) => HtmlModel.P.make({ children: inlineChildrenToHtml(children, rootInlineContext) }),
       blockquote: ({ children }) => HtmlModel.Blockquote.make({ children: A.map(children, blockToHtml) }),

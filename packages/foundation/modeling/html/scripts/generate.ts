@@ -613,6 +613,7 @@ const AttributeValueConstraint = S.Union([
     value: S.String,
   }),
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("AttributeValueConstraint", {
     description: "Generated relationship constraint over an HTML attribute value.",
   })
@@ -631,6 +632,7 @@ const AttributeRequirementPredicate = S.Union([
   }),
   S.TaggedStruct("attributePresent", { attribute: S.String }),
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("AttributeRequirementPredicate", {
     description: "Generated predicate controlling when an HTML attribute requirement applies.",
   })
@@ -3690,6 +3692,7 @@ const HtmlAttributeValueConstraint = S.Union([
     value: S.String,
   }),
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("HtmlAttributeValueConstraint", {
     description: "Generated relationship constraint over an HTML attribute value.",
   })
@@ -3701,6 +3704,7 @@ const HtmlAttributeRequirementPredicate = S.Union([
   S.TaggedStruct("attributeEqualsOrMissing", { attribute: S.String, value: S.String }),
   S.TaggedStruct("attributePresent", { attribute: S.String }),
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("HtmlAttributeRequirementPredicate", {
     description: "Generated predicate controlling when an HTML attribute requirement applies.",
   })

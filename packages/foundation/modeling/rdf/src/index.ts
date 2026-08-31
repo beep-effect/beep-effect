@@ -72,12 +72,19 @@ export * from "./ProvRdf.ts";
  */
 export * from "./Rdf.ts";
 /**
+ * RDF projection adapters for shared conformance metadata.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export * from "./SemanticSchemaConformance.ts";
+/**
  * Effect Schema annotation helpers for RDF metadata.
  *
  * @category utilities
  * @since 0.0.0
  */
-export * from "./SemanticSchemaMetadata.ts";
+export * from "./SemanticSchemaMetadata/index.ts";
 /**
  * URI schema and branded URI helpers.
  *

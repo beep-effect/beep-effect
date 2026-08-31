@@ -31,7 +31,7 @@ import {
 } from "./Md.escape.ts";
 import {
   Document as DocumentSchema,
-  HeadingLevel,
+  HeadingValue,
   Inline as InlineSchema,
   TableAlignment,
   TableCell,
@@ -356,8 +356,24 @@ const renderEscapedRawHtmlAsHtml = ({ value }: { readonly value: string }): stri
 const renderMarkdownHeading = (block: Heading): string =>
   `${pipe("#", Str.repeat(block.level))} ${renderMarkdownInlines(block.children)}`;
 
+const isHeadingValue = S.is(HeadingValue);
+
+const headingTag: (block: Heading) => string = Match.type<Heading>().pipe(
+  Match.when(isHeadingValue, (heading) =>
+    HeadingValue.match(heading, {
+      1: () => "h1",
+      2: () => "h2",
+      3: () => "h3",
+      4: () => "h4",
+      5: () => "h5",
+      6: () => "h6",
+    })
+  ),
+  Match.orElse(() => "h6")
+);
+
 const renderHtmlHeading = (block: Heading): string => {
-  const tag = S.is(HeadingLevel)(block.level) ? `h${block.level}` : "h6";
+  const tag = headingTag(block);
   return `<${tag}>${renderHtmlInlines(block.children)}</${tag}>`;
 };
 
@@ -1230,8 +1246,9 @@ const renderMarkdownBlocksWithPolicy = (policy: UrlPolicySpec, blocks: ReadonlyA
 const renderHtmlBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string =>
   Match.value(block).pipe(
     Match.tagsExhaustive({
-      heading: ({ children, level }) => {
-        const tag = S.is(HeadingLevel)(level) ? `h${level}` : "h6";
+      heading: (heading) => {
+        const { children } = heading;
+        const tag = headingTag(heading);
         return `<${tag}>${renderHtmlInlinesWithPolicy(policy, children)}</${tag}>`;
       },
       p: ({ children }) => `<p>${renderHtmlInlinesWithPolicy(policy, children)}</p>`,

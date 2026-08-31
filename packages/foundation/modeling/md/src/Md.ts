@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { PosInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, Match } from "effect";
 import { dual, pipe } from "effect/Function";
@@ -35,6 +34,7 @@ import {
   Li,
   MathBlock,
   Ol,
+  OrderedListStart,
   P as PNode,
   Pre,
   RawHtml,
@@ -968,7 +968,7 @@ export const ol: {
   (children: ReadonlyArray<ListItemInput>, options: { readonly start?: number } = {}): Ol =>
     Ol.make({
       children: A.map(children, asListItem),
-      ...(P.isNumber(options.start) ? { start: PosInt.make(options.start) } : {}),
+      ...(P.isNumber(options.start) ? { start: OrderedListStart.fromUnknown(options.start) } : {}),
     })
 );
 

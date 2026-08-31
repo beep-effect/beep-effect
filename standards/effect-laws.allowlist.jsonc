@@ -124,14 +124,6 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-      "kind": "new-map-set",
-      "reason": "Semantic schema metadata traversal needs WeakSet identity tracking to avoid retaining visited schema nodes while preventing recursive graph cycles.",
-      "owner": "@beep/modeling-rdf",
-      "issue": "RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/editor/src/viewer.tsx",
       "kind": "new-map-set",
       "reason": "The viewer memoizes each message's encoded state against the state object itself; the weak keys are the point, since an Effect HashMap would retain every message ever rendered and turn a render cache into a transcript-sized leak.",

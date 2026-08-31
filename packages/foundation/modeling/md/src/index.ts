@@ -39,6 +39,22 @@ export const VERSION = "0.0.2" as const;
  */
 export * from "./Md.behavior.ts";
 /**
+ * Strict and lossless semantic conformance profiles for decoded Markdown ASTs.
+ *
+ * **Example** (Inspect CommonMark conformance)
+ *
+ * ```ts import.meta.vitest name="Inspect CommonMark conformance"
+ * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile, Md } from "@beep/md"
+ *
+ * const report = inspectMarkdownDocumentLosslessly(Md.make([Md.p("Hello")]), MarkdownConformanceProfile.Enum.CommonMark)
+ * report.issues.length // => 0
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Md.conformance.ts";
+/**
  * Markdown and HTML escaping and URL-sanitization helpers.
  *
  * **Example** (Escape markdown hash)

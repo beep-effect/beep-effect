@@ -12,7 +12,7 @@ import { Str } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
+import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("uri");
 

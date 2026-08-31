@@ -1,0 +1,1934 @@
+/**
+ * Profile-aware conformance checks for the semantic Markdown AST.
+ *
+ * These checks inspect already-decoded AST values. They do not parse Markdown
+ * source and do not claim coverage of the official CommonMark or GFM example
+ * corpora. The broad {@link Document} schema remains the lossless persistence
+ * model; strict profile schemas and refinements are additive boundaries.
+ *
+ * @packageDocumentation \@beep/md/Md.conformance
+ * @since 0.0.0
+ */
+
+import { $MdId } from "@beep/identity/packages";
+import * as Conformance from "@beep/schema/Conformance";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Number as N, Result } from "effect";
+import * as A from "effect/Array";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { Block, Document, FootnoteIdentifier, Inline } from "./Md.model.ts";
+import { DocumentSafetyPathSegment } from "./Md.safe.ts";
+import type { ListItemChild, Table } from "./Md.model.ts";
+
+const $I = $MdId.create("Md.conformance");
+
+const CommonMarkConformanceAnnotation = {
+  sources: [
+    {
+      id: "md-commonmark-0.31.2-spec",
+      title: "CommonMark Specification 0.31.2",
+      role: "primarySpecification",
+      canonicalUrl: "https://spec.commonmark.org/0.31.2/spec.txt",
+      revision: {
+        kind: "release",
+        version: "0.31.2",
+      },
+      contentSha256: "bfef4ddc97276b6ab6c2a28ace48478e35b1c50e60cde9f517ab8ab030aa3b82",
+      license: "CC-BY-SA-4.0",
+      scope:
+        "Approved target authority for the CommonMark block, inline, container, and rendering profile; not yet vendored or run as a package conformance corpus. Consumed anchors: blocks-and-inlines, atx-headings, setext-headings, lists, links, raw-html.",
+    },
+    {
+      id: "md-beep-extensions-baseline",
+      title: "Beep Markdown extension profile baseline",
+      role: "implementationReference",
+      canonicalUrl:
+        "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/md/src/Md.model.ts",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/beep-effect/beep-effect",
+        commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+      },
+      contentSha256: "9176ad9b581bf13f7656d3cec0f93338bc8b56a8d3825d022afd8acc3f54a805",
+      license: "MIT",
+      scope:
+        "Immutable public pre-initiative package-owned extension baseline, including math, footnotes, admonitions, embeds, YouTube blocks, and trust-aware raw nodes. Consumed anchors: Inline, Block, Document.",
+    },
+  ],
+  profiles: [
+    {
+      id: "commonmark-0.31.2",
+      title: "CommonMark semantic AST",
+      version: "0.31.2",
+      description: "Implemented CommonMark 0.31.2 invariants decidable from a decoded Markdown AST.",
+      sourceIds: ["md-commonmark-0.31.2-spec", "md-beep-extensions-baseline"],
+      invariantIds: [
+        "md.link.nested-links",
+        "md.extensions.nonstandard-members",
+        "md.list.nonempty",
+        "md.list.ordered-start-range",
+      ],
+    },
+  ],
+  invariants: [
+    {
+      id: "md.link.nested-links",
+      title: "Links must not produce nested HTML anchors",
+      statement:
+        "The broad lossless AST retains nested links, the strict profile inspector rejects them with exact paths, and the HTML adapter degrades inner anchors to inert spans.",
+      strength: "mustNot",
+      scope: "conversion",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "runtime",
+          validator: "@beep/md adapter boundary for md.link.nested-links",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.test.ts, test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.link.nested-links",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "links",
+        },
+      ],
+      testIds: [
+        "test/Md.test.ts#normalizes-nested-Markdown-links-into-conformant-non-interactive-descendants",
+        "test/Md.conformance.test.ts#rejects-nested-links-strictly-while-retaining-the-exact-lossless-tree",
+      ],
+    },
+    {
+      id: "md.list.nonempty",
+      title: "Strict semantic lists must contain at least one item",
+      statement:
+        "The broad lossless AST accepts empty list containers; strict profile validation reports every empty unordered, ordered, or task list without rewriting the supplied tree.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.list.nonempty",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "list-items",
+        },
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "lists",
+        },
+      ],
+      testIds: ["test/Md.conformance.test.ts#reports-empty-lists-without-narrowing-the-broad-document-schema"],
+    },
+    {
+      id: "md.list.ordered-start-range",
+      title: "Strict semantic ordered-list starts must be in the CommonMark marker range",
+      statement:
+        "The broad lossless AST accepts integer starts including zero; strict profile validation accepts 0 through 999999999 and rejects larger semantic values. Because source lexemes are not retained, this does not prove the original marker used one to nine digits.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.list.ordered-start-range",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "list-items",
+        },
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "lists",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#models-zero-ordered-list-starts-losslessly-and-enforces-CommonMark-s-upper-bound-strictly",
+      ],
+    },
+    {
+      id: "md.extensions.nonstandard-members",
+      title: "Package extensions must not be presented as CommonMark or GFM requirements",
+      statement:
+        "Extension members remain valid in the broad Beep profile, carry package-owned provenance, and are rejected by strict CommonMark or GFM profile validation when the selected profile does not define them.",
+      strength: "must",
+      scope: "value",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "typeLevel",
+          mechanism: "@beep/md exported schema type for md.extensions.nonstandard-members",
+        },
+        {
+          kind: "runtime",
+          validator: "@beep/md Effect Schema decode boundary for md.extensions.nonstandard-members",
+        },
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.test.ts, test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.extensions.nonstandard-members",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Inline",
+        },
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Block",
+        },
+      ],
+      testIds: [
+        "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions",
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions",
+      ],
+    },
+  ],
+} satisfies typeof Conformance.Annotation.Encoded;
+
+const GfmConformanceAnnotation = {
+  sources: [
+    {
+      id: "md-commonmark-0.31.2-spec",
+      title: "CommonMark Specification 0.31.2",
+      role: "primarySpecification",
+      canonicalUrl: "https://spec.commonmark.org/0.31.2/spec.txt",
+      revision: {
+        kind: "release",
+        version: "0.31.2",
+      },
+      contentSha256: "bfef4ddc97276b6ab6c2a28ace48478e35b1c50e60cde9f517ab8ab030aa3b82",
+      license: "CC-BY-SA-4.0",
+      scope:
+        "Approved target authority for the CommonMark block, inline, container, and rendering profile; not yet vendored or run as a package conformance corpus. Consumed anchors: blocks-and-inlines, atx-headings, setext-headings, lists, links, raw-html.",
+    },
+    {
+      id: "md-gfm-0.29.0.gfm.13-spec",
+      title: "GitHub Flavored Markdown base specification fixture",
+      role: "primarySpecification",
+      canonicalUrl: "https://github.com/github/cmark-gfm/blob/587a12bb54d95ac37241377e6ddc93ea0e45439b/test/spec.txt",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/github/cmark-gfm",
+        commit: "587a12bb54d95ac37241377e6ddc93ea0e45439b",
+      },
+      contentSha256: "7d8e5814befec287ac116786d81ff14e0adc9b13295b4494649e995408fd871c",
+      license: "CC-BY-SA-4.0",
+      scope:
+        "Approved target GFM base corpus at tag 0.29.0.gfm.13; not yet vendored or wired into package tests. Consumed anchors: test/spec.txt.",
+    },
+    {
+      id: "md-gfm-0.29.0.gfm.13-extensions",
+      title: "GitHub Flavored Markdown extension fixtures",
+      role: "primarySpecification",
+      canonicalUrl:
+        "https://github.com/github/cmark-gfm/blob/587a12bb54d95ac37241377e6ddc93ea0e45439b/test/extensions.txt",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/github/cmark-gfm",
+        commit: "587a12bb54d95ac37241377e6ddc93ea0e45439b",
+      },
+      contentSha256: "a2a45e98be9fca95f564f927265a0f63beea6cae5369d1cf4bde44caa51b2a3a",
+      license: "CC-BY-SA-4.0",
+      scope:
+        "Approved target GFM extension corpus for tables, task-list items, strikethrough, autolinks, and tag filtering; not yet vendored or wired into package tests. Consumed anchors: tables, task-list-items, strikethrough-extension, autolinks-extension, disallowed-raw-html-extension.",
+    },
+    {
+      id: "md-beep-extensions-baseline",
+      title: "Beep Markdown extension profile baseline",
+      role: "implementationReference",
+      canonicalUrl:
+        "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/md/src/Md.model.ts",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/beep-effect/beep-effect",
+        commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+      },
+      contentSha256: "9176ad9b581bf13f7656d3cec0f93338bc8b56a8d3825d022afd8acc3f54a805",
+      license: "MIT",
+      scope:
+        "Immutable public pre-initiative package-owned extension baseline, including math, footnotes, admonitions, embeds, YouTube blocks, and trust-aware raw nodes. Consumed anchors: Inline, Block, Document.",
+    },
+  ],
+  profiles: [
+    {
+      id: "gfm-0.29.0.gfm.13",
+      title: "GitHub Flavored Markdown semantic AST",
+      version: "0.29.0.gfm.13",
+      description: "Implemented GFM invariants decidable from a decoded Markdown AST.",
+      sourceIds: [
+        "md-commonmark-0.31.2-spec",
+        "md-gfm-0.29.0.gfm.13-spec",
+        "md-gfm-0.29.0.gfm.13-extensions",
+        "md-beep-extensions-baseline",
+      ],
+      invariantIds: [
+        "md.link.nested-links",
+        "md.extensions.nonstandard-members",
+        "md.list.nonempty",
+        "md.list.ordered-start-range",
+        "md.gfm.table-header",
+        "md.gfm.table-rectangularity",
+        "md.gfm.table-alignment-width",
+        "md.gfm.disallowed-raw-html",
+      ],
+    },
+  ],
+  invariants: [
+    {
+      id: "md.link.nested-links",
+      title: "Links must not produce nested HTML anchors",
+      statement:
+        "The broad lossless AST retains nested links, the strict profile inspector rejects them with exact paths, and the HTML adapter degrades inner anchors to inert spans.",
+      strength: "mustNot",
+      scope: "conversion",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "runtime",
+          validator: "@beep/md adapter boundary for md.link.nested-links",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.test.ts, test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.link.nested-links",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "links",
+        },
+      ],
+      testIds: [
+        "test/Md.test.ts#normalizes-nested-Markdown-links-into-conformant-non-interactive-descendants",
+        "test/Md.conformance.test.ts#rejects-nested-links-strictly-while-retaining-the-exact-lossless-tree",
+      ],
+    },
+    {
+      id: "md.list.nonempty",
+      title: "Strict semantic lists must contain at least one item",
+      statement:
+        "The broad lossless AST accepts empty list containers; strict profile validation reports every empty unordered, ordered, or task list without rewriting the supplied tree.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.list.nonempty",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "list-items",
+        },
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "lists",
+        },
+      ],
+      testIds: ["test/Md.conformance.test.ts#reports-empty-lists-without-narrowing-the-broad-document-schema"],
+    },
+    {
+      id: "md.list.ordered-start-range",
+      title: "Strict semantic ordered-list starts must be in the CommonMark marker range",
+      statement:
+        "The broad lossless AST accepts integer starts including zero; strict profile validation accepts 0 through 999999999 and rejects larger semantic values. Because source lexemes are not retained, this does not prove the original marker used one to nine digits.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.list.ordered-start-range",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "list-items",
+        },
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "lists",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#models-zero-ordered-list-starts-losslessly-and-enforces-CommonMark-s-upper-bound-strictly",
+      ],
+    },
+    {
+      id: "md.gfm.table-rectangularity",
+      title: "Strict GFM table rows must match the semantic header width",
+      statement:
+        "The broad table AST remains permissive, while the strict GFM profile rejects every row whose cell count differs from the first header row's width.",
+      strength: "should",
+      scope: "value",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.gfm.table-rectangularity",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-gfm-0.29.0.gfm.13-extensions",
+          section: "tables",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants",
+      ],
+    },
+    {
+      id: "md.gfm.table-alignment-width",
+      title: "Strict GFM alignment metadata must match the header width",
+      statement:
+        "The strict GFM profile permits an empty alignment list or one entry per header cell and rejects every other alignment width; the broad table AST remains lossless and permissive.",
+      strength: "must",
+      scope: "value",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.gfm.table-alignment-width",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-gfm-0.29.0.gfm.13-extensions",
+          section: "tables",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants",
+      ],
+    },
+    {
+      id: "md.gfm.disallowed-raw-html",
+      title: "Strict GFM documents must apply the disallowed raw HTML filter",
+      statement:
+        "The GFM strict profile rejects raw HTML containing the pinned disallowed tag family, while CommonMark and the package-owned Beep profile do not inherit that GFM-only filter.",
+      strength: "mustNot",
+      scope: "node",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.gfm.disallowed-raw-html",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-gfm-0.29.0.gfm.13-extensions",
+          section: "disallowed-raw-html-extension",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#applies-the-GFM-raw-HTML-filter-without-attributing-it-to-CommonMark-or-Beep",
+      ],
+    },
+    {
+      id: "md.gfm.table-header",
+      title: "Strict GFM tables must have a non-empty header row",
+      statement:
+        "The broad Beep table permits non-GFM tables, while the strict GFM profile requires headerRow true and a first row containing at least one cell.",
+      strength: "must",
+      scope: "value",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.gfm.table-header",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-gfm-0.29.0.gfm.13-extensions",
+          section: "tables",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants",
+      ],
+    },
+    {
+      id: "md.extensions.nonstandard-members",
+      title: "Package extensions must not be presented as CommonMark or GFM requirements",
+      statement:
+        "Extension members remain valid in the broad Beep profile, carry package-owned provenance, and are rejected by strict CommonMark or GFM profile validation when the selected profile does not define them.",
+      strength: "must",
+      scope: "value",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "typeLevel",
+          mechanism: "@beep/md exported schema type for md.extensions.nonstandard-members",
+        },
+        {
+          kind: "runtime",
+          validator: "@beep/md Effect Schema decode boundary for md.extensions.nonstandard-members",
+        },
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.test.ts, test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.extensions.nonstandard-members",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Inline",
+        },
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Block",
+        },
+      ],
+      testIds: [
+        "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions",
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions",
+      ],
+    },
+  ],
+} satisfies typeof Conformance.Annotation.Encoded;
+
+const BeepMarkdownConformanceAnnotation = {
+  sources: [
+    {
+      id: "md-commonmark-0.31.2-spec",
+      title: "CommonMark Specification 0.31.2",
+      role: "primarySpecification",
+      canonicalUrl: "https://spec.commonmark.org/0.31.2/spec.txt",
+      revision: {
+        kind: "release",
+        version: "0.31.2",
+      },
+      contentSha256: "bfef4ddc97276b6ab6c2a28ace48478e35b1c50e60cde9f517ab8ab030aa3b82",
+      license: "CC-BY-SA-4.0",
+      scope:
+        "Approved target authority for the CommonMark block, inline, container, and rendering profile; not yet vendored or run as a package conformance corpus. Consumed anchors: blocks-and-inlines, atx-headings, setext-headings, lists, links, raw-html.",
+    },
+    {
+      id: "md-beep-extensions-baseline",
+      title: "Beep Markdown extension profile baseline",
+      role: "implementationReference",
+      canonicalUrl:
+        "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/md/src/Md.model.ts",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/beep-effect/beep-effect",
+        commit: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+      },
+      contentSha256: "9176ad9b581bf13f7656d3cec0f93338bc8b56a8d3825d022afd8acc3f54a805",
+      license: "MIT",
+      scope:
+        "Immutable public pre-initiative package-owned extension baseline, including math, footnotes, admonitions, embeds, YouTube blocks, and trust-aware raw nodes. Consumed anchors: Inline, Block, Document.",
+    },
+  ],
+  profiles: [
+    {
+      id: "beep-md-extensions-v1",
+      title: "Beep Markdown extension semantic AST",
+      version: "1",
+      description: "Implemented package-owned Markdown extension invariants decidable from a decoded AST.",
+      sourceIds: ["md-commonmark-0.31.2-spec", "md-beep-extensions-baseline"],
+      invariantIds: [
+        "md.link.nested-links",
+        "md.extensions.nonstandard-members",
+        "md.list.nonempty",
+        "md.list.ordered-start-range",
+        "md.footnote.unique-definitions",
+        "md.footnote.defined-references",
+      ],
+    },
+  ],
+  invariants: [
+    {
+      id: "md.link.nested-links",
+      title: "Links must not produce nested HTML anchors",
+      statement:
+        "The broad lossless AST retains nested links, the strict profile inspector rejects them with exact paths, and the HTML adapter degrades inner anchors to inert spans.",
+      strength: "mustNot",
+      scope: "conversion",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "runtime",
+          validator: "@beep/md adapter boundary for md.link.nested-links",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.test.ts, test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.link.nested-links",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "links",
+        },
+      ],
+      testIds: [
+        "test/Md.test.ts#normalizes-nested-Markdown-links-into-conformant-non-interactive-descendants",
+        "test/Md.conformance.test.ts#rejects-nested-links-strictly-while-retaining-the-exact-lossless-tree",
+      ],
+    },
+    {
+      id: "md.list.nonempty",
+      title: "Strict semantic lists must contain at least one item",
+      statement:
+        "The broad lossless AST accepts empty list containers; strict profile validation reports every empty unordered, ordered, or task list without rewriting the supplied tree.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.list.nonempty",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "list-items",
+        },
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "lists",
+        },
+      ],
+      testIds: ["test/Md.conformance.test.ts#reports-empty-lists-without-narrowing-the-broad-document-schema"],
+    },
+    {
+      id: "md.list.ordered-start-range",
+      title: "Strict semantic ordered-list starts must be in the CommonMark marker range",
+      statement:
+        "The broad lossless AST accepts integer starts including zero; strict profile validation accepts 0 through 999999999 and rejects larger semantic values. Because source lexemes are not retained, this does not prove the original marker used one to nine digits.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.list.ordered-start-range",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "list-items",
+        },
+        {
+          sourceId: "md-commonmark-0.31.2-spec",
+          section: "lists",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#models-zero-ordered-list-starts-losslessly-and-enforces-CommonMark-s-upper-bound-strictly",
+      ],
+    },
+    {
+      id: "md.footnote.unique-definitions",
+      title: "Footnote definition identifiers must be unique throughout a document",
+      statement:
+        "Both the safe-document refinement and the Beep strict-profile inspector traverse nested containers and report repeated footnote-definition identifiers at exact paths.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.test.ts, test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.footnote.unique-definitions",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "FootnoteDefinition",
+        },
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Document",
+        },
+      ],
+      testIds: [
+        "test/Md.test.ts#rejects-duplicate-footnote-definitions-recursively-at-their-exact-paths",
+        "test/Md.test.ts#rejects-every-schema-derived-duplicate-footnote-identifier",
+        "test/Md.conformance.test.ts#checks-Beep-footnote-definition-uniqueness-and-reference-resolution-recursively",
+      ],
+    },
+    {
+      id: "md.footnote.defined-references",
+      title: "Every Beep footnote reference must resolve to a definition",
+      statement:
+        "The Beep strict-profile inspector collects definitions and references recursively and reports every reference identifier absent from the document's definition set.",
+      strength: "must",
+      scope: "document",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.footnote.defined-references",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "FootnoteDefinition",
+        },
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "FootnoteReference",
+        },
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Document",
+        },
+      ],
+      testIds: [
+        "test/Md.conformance.test.ts#checks-Beep-footnote-definition-uniqueness-and-reference-resolution-recursively",
+      ],
+    },
+    {
+      id: "md.extensions.nonstandard-members",
+      title: "Package extensions must not be presented as CommonMark or GFM requirements",
+      statement:
+        "Extension members remain valid in the broad Beep profile, carry package-owned provenance, and are rejected by strict CommonMark or GFM profile validation when the selected profile does not define them.",
+      strength: "must",
+      scope: "value",
+      decidability: "contextualRuntime",
+      enforcement: [
+        {
+          kind: "typeLevel",
+          mechanism: "@beep/md exported schema type for md.extensions.nonstandard-members",
+        },
+        {
+          kind: "runtime",
+          validator: "@beep/md Effect Schema decode boundary for md.extensions.nonstandard-members",
+        },
+        {
+          kind: "runtime",
+          validator: "markdownConformanceIssues and strict profile schemas",
+        },
+        {
+          kind: "test",
+          suite: "test/Md.test.ts, test/Md.conformance.test.ts",
+          oracle: "Pinned source rule and package expectation for md.extensions.nonstandard-members",
+        },
+      ],
+      references: [
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Inline",
+        },
+        {
+          sourceId: "md-beep-extensions-baseline",
+          section: "Block",
+        },
+      ],
+      testIds: [
+        "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions",
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions",
+      ],
+    },
+  ],
+} satisfies typeof Conformance.Annotation.Encoded;
+const commonMarkOrderedListMaximum = 999_999_999;
+const gfmDisallowedRawHtmlPattern =
+  /<\/?(?:title|textarea|style|xmp|iframe|noembed|noframes|script|plaintext)(?:[\t\n\f\r />]|$)/iu;
+
+/**
+ * Specification profile selected for semantic Markdown AST validation.
+ *
+ * **Details**
+ *
+ * GFM includes the CommonMark structural rules plus the pinned table,
+ * task-list, strikethrough, and raw-HTML filtering extensions. The Beep
+ * profile permits package-owned nodes and applies package-owned footnote
+ * invariants.
+ *
+ * **Example** (Select the GFM profile)
+ *
+ * ```ts import.meta.vitest name="Select the GFM profile"
+ * import { MarkdownConformanceProfile } from "@beep/md/Md.conformance"
+ *
+ * MarkdownConformanceProfile.Enum.Gfm // => "gfm-0.29.0.gfm.13"
+ * ```
+ *
+ * @see [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) for the base Markdown specification.
+ * @see [cmark-gfm 0.29.0.gfm.13](https://github.com/github/cmark-gfm/tree/0.29.0.gfm.13) for the pinned GFM extension corpus.
+ * @category specifications
+ * @since 0.0.0
+ */
+export const MarkdownConformanceProfile = LiteralKit({
+  literals: ["commonmark-0.31.2", "gfm-0.29.0.gfm.13", "beep-md-extensions-v1"],
+  enumMapping: [
+    ["commonmark-0.31.2", "CommonMark"],
+    ["gfm-0.29.0.gfm.13", "Gfm"],
+    ["beep-md-extensions-v1", "Beep"],
+  ],
+}).pipe(
+  $I.annoteSchema("MarkdownConformanceProfile", {
+    description: "Specification profile selected for semantic Markdown AST validation.",
+  })
+);
+
+/**
+ * Runtime profile accepted by {@link MarkdownConformanceProfile}.
+ *
+ * @see {@link MarkdownConformanceProfile} for named values and guards.
+ * @category specifications
+ * @since 0.0.0
+ */
+export type MarkdownConformanceProfile = typeof MarkdownConformanceProfile.Type;
+
+const commonMarkCheckedInvariantIds: A.NonEmptyReadonlyArray<string> = [
+  "md.link.nested-links",
+  "md.extensions.nonstandard-members",
+  "md.list.nonempty",
+  "md.list.ordered-start-range",
+];
+
+const gfmCheckedInvariantIds: A.NonEmptyReadonlyArray<string> = [
+  "md.link.nested-links",
+  "md.extensions.nonstandard-members",
+  "md.list.nonempty",
+  "md.list.ordered-start-range",
+  "md.gfm.table-header",
+  "md.gfm.table-rectangularity",
+  "md.gfm.table-alignment-width",
+  "md.gfm.disallowed-raw-html",
+];
+
+const beepCheckedInvariantIds: A.NonEmptyReadonlyArray<string> = [
+  "md.link.nested-links",
+  "md.extensions.nonstandard-members",
+  "md.list.nonempty",
+  "md.list.ordered-start-range",
+  "md.footnote.unique-definitions",
+  "md.footnote.defined-references",
+];
+
+/**
+ * Shared specification profile for implemented CommonMark semantic-tree checks.
+ *
+ * **Gotchas**
+ *
+ * This profile names only checks decidable from an already-decoded AST. It
+ * does not claim that the official source-level example corpus has run.
+ *
+ * @see [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) for the pinned normative source.
+ * @category specifications
+ * @since 0.0.0
+ */
+export const CommonMarkSpecificationProfile = Conformance.ConformanceProfile.make({
+  id: MarkdownConformanceProfile.Enum.CommonMark,
+  title: "CommonMark semantic AST",
+  version: "0.31.2",
+  description: "Implemented CommonMark 0.31.2 invariants decidable from a decoded Markdown AST.",
+  sourceIds: ["md-commonmark-0.31.2-spec", "md-beep-extensions-baseline"],
+  invariantIds: commonMarkCheckedInvariantIds,
+});
+
+/**
+ * Shared specification profile for implemented pinned-GFM semantic-tree checks.
+ *
+ * **Gotchas**
+ *
+ * The profile records the selected GFM sources but does not represent a run of
+ * the unvendored cmark-gfm fixture corpus.
+ *
+ * @see [cmark-gfm 0.29.0.gfm.13](https://github.com/github/cmark-gfm/tree/0.29.0.gfm.13) for the pinned implementation and fixtures.
+ * @category specifications
+ * @since 0.0.0
+ */
+export const GfmSpecificationProfile = Conformance.ConformanceProfile.make({
+  id: MarkdownConformanceProfile.Enum.Gfm,
+  title: "GitHub Flavored Markdown semantic AST",
+  version: "0.29.0.gfm.13",
+  description: "Implemented GFM invariants decidable from a decoded Markdown AST.",
+  sourceIds: [
+    "md-commonmark-0.31.2-spec",
+    "md-gfm-0.29.0.gfm.13-spec",
+    "md-gfm-0.29.0.gfm.13-extensions",
+    "md-beep-extensions-baseline",
+  ],
+  invariantIds: gfmCheckedInvariantIds,
+});
+
+/**
+ * Shared package-owned profile for implemented Beep Markdown extension checks.
+ *
+ * @see {@link BeepMarkdownDocument} for the corresponding strict schema boundary.
+ * @category specifications
+ * @since 0.0.0
+ */
+export const BeepMarkdownSpecificationProfile = Conformance.ConformanceProfile.make({
+  id: MarkdownConformanceProfile.Enum.Beep,
+  title: "Beep Markdown extension semantic AST",
+  version: "1",
+  description: "Implemented package-owned Markdown extension invariants decidable from a decoded AST.",
+  sourceIds: ["md-commonmark-0.31.2-spec", "md-beep-extensions-baseline"],
+  invariantIds: beepCheckedInvariantIds,
+});
+
+/**
+ * AST member that belongs to a narrower extension profile than CommonMark.
+ *
+ * **Example** (Recognize a GFM table member)
+ *
+ * ```ts import.meta.vitest name="Recognize a GFM table member"
+ * import { MarkdownExtensionNodeTag } from "@beep/md/Md.conformance"
+ *
+ * MarkdownExtensionNodeTag.is.table("table") // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const MarkdownExtensionNodeTag = LiteralKit([
+  "rawMarkdown",
+  "del",
+  "inlineMath",
+  "footnoteReference",
+  "taskList",
+  "table",
+  "youtube",
+  "mathBlock",
+  "footnoteDefinition",
+  "admonition",
+  "embed",
+]).pipe(
+  $I.annoteSchema("MarkdownExtensionNodeTag", {
+    description: "Markdown AST member governed by GFM or Beep extension profiles.",
+  })
+);
+
+/**
+ * Runtime extension tag represented by {@link MarkdownExtensionNodeTag}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MarkdownExtensionNodeTag = typeof MarkdownExtensionNodeTag.Type;
+
+const MarkdownConformancePath = S.Array(DocumentSafetyPathSegment).pipe(
+  $I.annoteSchema("MarkdownConformancePath", {
+    description: "Property and array-index path locating a Markdown conformance issue.",
+  })
+);
+
+class NestedLinkIssue extends S.TaggedClass<NestedLinkIssue>($I`NestedLinkIssue`)(
+  "NestedLink",
+  {
+    invariantId: S.tag("md.link.nested-links"),
+    path: MarkdownConformancePath,
+  },
+  $I.annote("NestedLinkIssue", {
+    description: "Link node nested below another link node.",
+  })
+) {}
+
+class UnsupportedNodeIssue extends S.TaggedClass<UnsupportedNodeIssue>($I`UnsupportedNodeIssue`)(
+  "UnsupportedNode",
+  {
+    invariantId: S.tag("md.extensions.nonstandard-members"),
+    path: MarkdownConformancePath,
+    nodeTag: MarkdownExtensionNodeTag,
+    profile: MarkdownConformanceProfile,
+  },
+  $I.annote("UnsupportedNodeIssue", {
+    description: "Extension node used outside the profile that defines it.",
+  })
+) {}
+
+class EmptyListIssue extends S.TaggedClass<EmptyListIssue>($I`EmptyListIssue`)(
+  "EmptyList",
+  {
+    invariantId: S.tag("md.list.nonempty"),
+    path: MarkdownConformancePath,
+    listTag: LiteralKit(["ul", "ol", "taskList"]),
+  },
+  $I.annote("EmptyListIssue", {
+    description: "List block without any list items.",
+  })
+) {}
+
+class OrderedListStartIssue extends S.TaggedClass<OrderedListStartIssue>($I`OrderedListStartIssue`)(
+  "OrderedListStart",
+  {
+    invariantId: S.tag("md.list.ordered-start-range"),
+    path: MarkdownConformancePath,
+    start: S.Int,
+  },
+  $I.annote("OrderedListStartIssue", {
+    description: "Ordered-list start outside CommonMark's one-to-nine digit marker range.",
+  })
+) {}
+
+class GfmTableHeaderIssue extends S.TaggedClass<GfmTableHeaderIssue>($I`GfmTableHeaderIssue`)(
+  "GfmTableHeader",
+  {
+    invariantId: S.tag("md.gfm.table-header"),
+    path: MarkdownConformancePath,
+  },
+  $I.annote("GfmTableHeaderIssue", {
+    description: "GFM table without a non-empty header row.",
+  })
+) {}
+
+class GfmTableRowWidthIssue extends S.TaggedClass<GfmTableRowWidthIssue>($I`GfmTableRowWidthIssue`)(
+  "GfmTableRowWidth",
+  {
+    invariantId: S.tag("md.gfm.table-rectangularity"),
+    path: MarkdownConformancePath,
+    expected: S.Natural,
+    actual: S.Natural,
+  },
+  $I.annote("GfmTableRowWidthIssue", {
+    description: "GFM table row whose cell count differs from the header width.",
+  })
+) {}
+
+class GfmTableAlignmentWidthIssue extends S.TaggedClass<GfmTableAlignmentWidthIssue>($I`GfmTableAlignmentWidthIssue`)(
+  "GfmTableAlignmentWidth",
+  {
+    invariantId: S.tag("md.gfm.table-alignment-width"),
+    path: MarkdownConformancePath,
+    expected: S.Natural,
+    actual: S.Natural,
+  },
+  $I.annote("GfmTableAlignmentWidthIssue", {
+    description: "Non-empty GFM alignment metadata whose length differs from the header width.",
+  })
+) {}
+
+class GfmDisallowedRawHtmlIssue extends S.TaggedClass<GfmDisallowedRawHtmlIssue>($I`GfmDisallowedRawHtmlIssue`)(
+  "GfmDisallowedRawHtml",
+  {
+    invariantId: S.tag("md.gfm.disallowed-raw-html"),
+    path: MarkdownConformancePath,
+  },
+  $I.annote("GfmDisallowedRawHtmlIssue", {
+    description: "Raw HTML containing a tag filtered by the GFM disallowed-raw-HTML extension.",
+  })
+) {}
+
+class DuplicateFootnoteDefinitionIssue extends S.TaggedClass<DuplicateFootnoteDefinitionIssue>(
+  $I`DuplicateFootnoteDefinitionIssue`
+)(
+  "DuplicateFootnoteDefinition",
+  {
+    invariantId: S.tag("md.footnote.unique-definitions"),
+    path: MarkdownConformancePath,
+    identifier: FootnoteIdentifier,
+  },
+  $I.annote("DuplicateFootnoteDefinitionIssue", {
+    description: "Repeated Beep footnote definition identifier.",
+  })
+) {}
+
+class UndefinedFootnoteReferenceIssue extends S.TaggedClass<UndefinedFootnoteReferenceIssue>(
+  $I`UndefinedFootnoteReferenceIssue`
+)(
+  "UndefinedFootnoteReference",
+  {
+    invariantId: S.tag("md.footnote.defined-references"),
+    path: MarkdownConformancePath,
+    identifier: FootnoteIdentifier,
+  },
+  $I.annote("UndefinedFootnoteReferenceIssue", {
+    description: "Beep footnote reference without a matching definition.",
+  })
+) {}
+
+/**
+ * Exhaustive path-located semantic Markdown conformance issue.
+ *
+ * **Example** (Construct and match an issue)
+ *
+ * ```ts import.meta.vitest name="Construct and match an issue"
+ * import { MarkdownConformanceIssue } from "@beep/md/Md.conformance"
+ *
+ * const issue = MarkdownConformanceIssue.cases.NestedLink.make({ path: ["children", 0] })
+ * const invariantId = MarkdownConformanceIssue.match(issue, {
+ *   NestedLink: ({ invariantId }) => invariantId,
+ *   UnsupportedNode: ({ invariantId }) => invariantId,
+ *   EmptyList: ({ invariantId }) => invariantId,
+ *   OrderedListStart: ({ invariantId }) => invariantId,
+ *   GfmTableHeader: ({ invariantId }) => invariantId,
+ *   GfmTableRowWidth: ({ invariantId }) => invariantId,
+ *   GfmTableAlignmentWidth: ({ invariantId }) => invariantId,
+ *   GfmDisallowedRawHtml: ({ invariantId }) => invariantId,
+ *   DuplicateFootnoteDefinition: ({ invariantId }) => invariantId,
+ *   UndefinedFootnoteReference: ({ invariantId }) => invariantId,
+ * })
+ *
+ * invariantId // => "md.link.nested-links"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const MarkdownConformanceIssue = S.Union([
+  NestedLinkIssue,
+  UnsupportedNodeIssue,
+  EmptyListIssue,
+  OrderedListStartIssue,
+  GfmTableHeaderIssue,
+  GfmTableRowWidthIssue,
+  GfmTableAlignmentWidthIssue,
+  GfmDisallowedRawHtmlIssue,
+  DuplicateFootnoteDefinitionIssue,
+  UndefinedFootnoteReferenceIssue,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("MarkdownConformanceIssue", {
+    description: "Exhaustive path-located semantic Markdown conformance issue.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime issue represented by {@link MarkdownConformanceIssue}.
+ *
+ * @see {@link MarkdownConformanceIssue} for constructors, guards, and exhaustive matching.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export type MarkdownConformanceIssue = typeof MarkdownConformanceIssue.Type;
+
+/**
+ * Lossless profile inspection result retaining the exact supplied document.
+ *
+ * **Example** (Inspect without rejecting)
+ *
+ * ```ts import.meta.vitest name="Inspect without rejecting"
+ * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
+ * import { Md } from "@beep/md"
+ *
+ * const document = Md.make([Md.p(Md.footnoteRef("missing"))])
+ * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum.Beep)
+ * report.mode // => "lossless"
+ * report.issues.length // => 1
+ * ```
+ *
+ * @invariant Inspection never removes, rewrites, or substitutes the supplied AST.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class LosslessMarkdownConformanceReport extends S.Class<LosslessMarkdownConformanceReport>(
+  $I`LosslessMarkdownConformanceReport`
+)(
+  {
+    mode: S.tag("lossless"),
+    profile: MarkdownConformanceProfile,
+    document: Document,
+    issues: S.Array(MarkdownConformanceIssue),
+  },
+  $I.annote("LosslessMarkdownConformanceReport", {
+    description: "Lossless Markdown profile inspection retaining the exact supplied document and all issues.",
+  })
+) {}
+
+/**
+ * Typed failure returned by strict Markdown profile refinement.
+ *
+ * **Example** (Construct a strict failure)
+ *
+ * ```ts import.meta.vitest name="Construct a strict failure"
+ * import { MarkdownConformanceError, MarkdownConformanceIssue, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
+ *
+ * const error = MarkdownConformanceError.make({
+ *   profile: MarkdownConformanceProfile.Enum.CommonMark,
+ *   issues: [MarkdownConformanceIssue.cases.EmptyList.make({ path: ["children", 0], listTag: "ul" })]
+ * })
+ * error._tag // => "MarkdownConformanceError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class MarkdownConformanceError extends S.TaggedError<MarkdownConformanceError>($I`MarkdownConformanceError`)(
+  "MarkdownConformanceError",
+  {
+    profile: MarkdownConformanceProfile,
+    issues: S.NonEmptyArray(MarkdownConformanceIssue),
+  },
+  $I.annoteError<MarkdownConformanceError>("MarkdownConformanceError", {
+    description: "Strict Markdown profile refinement failed one or more semantic invariants.",
+  })
+) {}
+
+const GfmDisallowedRawHtml = S.String.check(
+  S.isPattern(gfmDisallowedRawHtmlPattern, {
+    identifier: $I`GfmDisallowedRawHtmlCheck`,
+    title: "GFM disallowed raw HTML",
+    description: "Raw HTML containing a tag filtered by the GFM disallowed-raw-HTML extension.",
+    message: "Raw HTML contains a tag filtered by GFM.",
+  })
+).pipe(
+  $I.annoteSchema("GfmDisallowedRawHtml", {
+    description: "Raw HTML containing a tag filtered by the GFM disallowed-raw-HTML extension.",
+  })
+);
+const isGfmDisallowedRawHtml = S.is(GfmDisallowedRawHtml);
+
+type MarkdownConformancePath = ReadonlyArray<DocumentSafetyPathSegment>;
+type FootnoteOccurrence = readonly [identifier: FootnoteIdentifier, path: MarkdownConformancePath];
+type MarkdownScan = readonly [
+  issues: ReadonlyArray<MarkdownConformanceIssue>,
+  definitions: ReadonlyArray<FootnoteOccurrence>,
+  references: ReadonlyArray<FootnoteOccurrence>,
+];
+
+const appendPath = (
+  path: MarkdownConformancePath,
+  ...segments: ReadonlyArray<DocumentSafetyPathSegment>
+): MarkdownConformancePath => A.appendAll(path, segments);
+
+const emptyScan = (): MarkdownScan => [
+  A.empty<MarkdownConformanceIssue>(),
+  A.empty<FootnoteOccurrence>(),
+  A.empty<FootnoteOccurrence>(),
+];
+
+const scanFromIssues = (issues: ReadonlyArray<MarkdownConformanceIssue>): MarkdownScan => [
+  issues,
+  A.empty<FootnoteOccurrence>(),
+  A.empty<FootnoteOccurrence>(),
+];
+
+const scanFromReference = (occurrence: FootnoteOccurrence): MarkdownScan => [
+  A.empty<MarkdownConformanceIssue>(),
+  A.empty<FootnoteOccurrence>(),
+  A.of(occurrence),
+];
+
+const prependDefinition = (scan: MarkdownScan, occurrence: FootnoteOccurrence): MarkdownScan => [
+  scan[0],
+  A.prepend(scan[1], occurrence),
+  scan[2],
+];
+
+const mergeScans = (left: MarkdownScan, right: MarkdownScan): MarkdownScan => [
+  A.appendAll(left[0], right[0]),
+  A.appendAll(left[1], right[1]),
+  A.appendAll(left[2], right[2]),
+];
+
+const mergeAllScans = (scans: ReadonlyArray<MarkdownScan>): MarkdownScan => A.reduce(scans, emptyScan(), mergeScans);
+
+const issueUnsupportedNode = (
+  profile: MarkdownConformanceProfile,
+  nodeTag: MarkdownExtensionNodeTag,
+  path: MarkdownConformancePath,
+  supportedByGfm: boolean
+): ReadonlyArray<MarkdownConformanceIssue> =>
+  MarkdownConformanceProfile.is.Beep(profile) || (supportedByGfm && MarkdownConformanceProfile.is.Gfm(profile))
+    ? A.empty()
+    : A.of(MarkdownConformanceIssue.cases.UnsupportedNode.make({ path, nodeTag, profile }));
+
+const scanInlineChildren = (
+  children: ReadonlyArray<Inline>,
+  profile: MarkdownConformanceProfile,
+  path: MarkdownConformancePath,
+  insideLink: boolean
+): MarkdownScan =>
+  mergeAllScans(A.map(children, (inline, index) => scanInline(inline, profile, appendPath(path, index), insideLink)));
+
+const scanInline = (
+  inline: Inline,
+  profile: MarkdownConformanceProfile,
+  path: MarkdownConformancePath,
+  insideLink: boolean
+): MarkdownScan =>
+  Inline.match(inline, {
+    text: emptyScan,
+    rawMarkdown: () => scanFromIssues(issueUnsupportedNode(profile, "rawMarkdown", path, false)),
+    rawHtml: ({ value }) =>
+      scanFromIssues(
+        MarkdownConformanceProfile.is.Gfm(profile) && isGfmDisallowedRawHtml(value)
+          ? A.of(MarkdownConformanceIssue.cases.GfmDisallowedRawHtml.make({ path }))
+          : A.empty()
+      ),
+    strong: ({ children }) => scanInlineChildren(children, profile, appendPath(path, "children"), insideLink),
+    em: ({ children }) => scanInlineChildren(children, profile, appendPath(path, "children"), insideLink),
+    del: ({ children }) =>
+      mergeScans(
+        scanFromIssues(issueUnsupportedNode(profile, "del", path, true)),
+        scanInlineChildren(children, profile, appendPath(path, "children"), insideLink)
+      ),
+    code: emptyScan,
+    a: ({ children }) =>
+      mergeScans(
+        scanFromIssues(insideLink ? A.of(MarkdownConformanceIssue.cases.NestedLink.make({ path })) : A.empty()),
+        scanInlineChildren(children, profile, appendPath(path, "children"), true)
+      ),
+    img: emptyScan,
+    br: emptyScan,
+    inlineMath: () => scanFromIssues(issueUnsupportedNode(profile, "inlineMath", path, false)),
+    footnoteReference: ({ identifier }) =>
+      mergeScans(
+        scanFromIssues(issueUnsupportedNode(profile, "footnoteReference", path, false)),
+        scanFromReference([identifier, appendPath(path, "identifier")])
+      ),
+  });
+
+const scanListItemChild = (
+  child: ListItemChild,
+  profile: MarkdownConformanceProfile,
+  path: MarkdownConformancePath
+): MarkdownScan => (Inline.is(child) ? scanInline(child, profile, path, false) : scanBlock(child, profile, path));
+
+const scanListItems = (
+  children: ReadonlyArray<{ readonly children: ReadonlyArray<ListItemChild> }>,
+  profile: MarkdownConformanceProfile,
+  path: MarkdownConformancePath
+): MarkdownScan =>
+  mergeAllScans(
+    A.flatMap(children, (item, itemIndex) =>
+      A.map(item.children, (child, childIndex) =>
+        scanListItemChild(child, profile, appendPath(path, itemIndex, "children", childIndex))
+      )
+    )
+  );
+
+const emptyListIssues = (
+  children: ReadonlyArray<unknown>,
+  listTag: "ul" | "ol" | "taskList",
+  path: MarkdownConformancePath
+): ReadonlyArray<MarkdownConformanceIssue> =>
+  A.isReadonlyArrayNonEmpty(children)
+    ? A.empty()
+    : A.of(MarkdownConformanceIssue.cases.EmptyList.make({ path, listTag }));
+
+const gfmTableIssues = (table: Table, path: MarkdownConformancePath): ReadonlyArray<MarkdownConformanceIssue> => {
+  const firstRow = A.head(table.children);
+  const headerWidth = pipe(
+    firstRow,
+    O.map(({ children }) => A.length(children)),
+    O.getOrElse(() => 0)
+  );
+  const headerIssues =
+    table.headerRow && O.exists(firstRow, ({ children }) => A.isReadonlyArrayNonEmpty(children))
+      ? A.empty<MarkdownConformanceIssue>()
+      : A.of(MarkdownConformanceIssue.cases.GfmTableHeader.make({ path }));
+  const rowIssues = A.flatMap(table.children, (row, index) => {
+    const actual = A.length(row.children);
+    return N.Equivalence(actual, headerWidth)
+      ? A.empty<MarkdownConformanceIssue>()
+      : A.of(
+          MarkdownConformanceIssue.cases.GfmTableRowWidth.make({
+            path: appendPath(path, "children", index),
+            expected: headerWidth,
+            actual,
+          })
+        );
+  });
+  const alignmentWidth = A.length(table.align);
+  const alignmentIssues =
+    N.Equivalence(alignmentWidth, 0) || N.Equivalence(alignmentWidth, headerWidth)
+      ? A.empty<MarkdownConformanceIssue>()
+      : A.of(
+          MarkdownConformanceIssue.cases.GfmTableAlignmentWidth.make({
+            path: appendPath(path, "align"),
+            expected: headerWidth,
+            actual: alignmentWidth,
+          })
+        );
+  return A.appendAll(A.appendAll(headerIssues, rowIssues), alignmentIssues);
+};
+
+const scanTableChildren = (
+  table: Table,
+  profile: MarkdownConformanceProfile,
+  path: MarkdownConformancePath
+): MarkdownScan =>
+  mergeAllScans(
+    A.flatMap(table.children, (row, rowIndex) =>
+      A.map(row.children, (cell, cellIndex) =>
+        scanInlineChildren(
+          cell.children,
+          profile,
+          appendPath(path, "children", rowIndex, "children", cellIndex, "children"),
+          false
+        )
+      )
+    )
+  );
+
+const scanBlockChildren = (
+  children: ReadonlyArray<Block>,
+  profile: MarkdownConformanceProfile,
+  path: MarkdownConformancePath
+): MarkdownScan => mergeAllScans(A.map(children, (block, index) => scanBlock(block, profile, appendPath(path, index))));
+
+const scanBlock = (block: Block, profile: MarkdownConformanceProfile, path: MarkdownConformancePath): MarkdownScan =>
+  Block.match(block, {
+    heading: ({ children }) => scanInlineChildren(children, profile, appendPath(path, "children"), false),
+    p: ({ children }) => scanInlineChildren(children, profile, appendPath(path, "children"), false),
+    blockquote: ({ children }) => scanBlockChildren(children, profile, appendPath(path, "children")),
+    pre: emptyScan,
+    ul: ({ children }) =>
+      mergeScans(
+        scanFromIssues(emptyListIssues(children, "ul", path)),
+        scanListItems(children, profile, appendPath(path, "children"))
+      ),
+    ol: ({ children, start }) =>
+      mergeAllScans([
+        scanFromIssues(emptyListIssues(children, "ol", path)),
+        scanFromIssues(
+          N.between(start, { minimum: 0, maximum: commonMarkOrderedListMaximum })
+            ? A.empty()
+            : A.of(
+                MarkdownConformanceIssue.cases.OrderedListStart.make({
+                  path: appendPath(path, "start"),
+                  start,
+                })
+              )
+        ),
+        scanListItems(children, profile, appendPath(path, "children")),
+      ]),
+    taskList: ({ children }) =>
+      mergeAllScans([
+        scanFromIssues(issueUnsupportedNode(profile, "taskList", path, true)),
+        scanFromIssues(emptyListIssues(children, "taskList", path)),
+        scanListItems(children, profile, appendPath(path, "children")),
+      ]),
+    table: (table) =>
+      mergeAllScans([
+        scanFromIssues(issueUnsupportedNode(profile, "table", path, true)),
+        scanFromIssues(MarkdownConformanceProfile.is.Gfm(profile) ? gfmTableIssues(table, path) : A.empty()),
+        scanTableChildren(table, profile, path),
+      ]),
+    youtube: () => scanFromIssues(issueUnsupportedNode(profile, "youtube", path, false)),
+    mathBlock: () => scanFromIssues(issueUnsupportedNode(profile, "mathBlock", path, false)),
+    footnoteDefinition: ({ children, identifier }) => {
+      const nested = scanBlockChildren(children, profile, appendPath(path, "children"));
+      return prependDefinition(
+        mergeScans(scanFromIssues(issueUnsupportedNode(profile, "footnoteDefinition", path, false)), nested),
+        [identifier, appendPath(path, "identifier")]
+      );
+    },
+    admonition: ({ children }) =>
+      mergeScans(
+        scanFromIssues(issueUnsupportedNode(profile, "admonition", path, false)),
+        scanBlockChildren(children, profile, appendPath(path, "children"))
+      ),
+    embed: () => scanFromIssues(issueUnsupportedNode(profile, "embed", path, false)),
+    hr: emptyScan,
+  });
+
+const footnoteIssues = (
+  definitions: ReadonlyArray<FootnoteOccurrence>,
+  references: ReadonlyArray<FootnoteOccurrence>
+): ReadonlyArray<MarkdownConformanceIssue> => {
+  const identifierEquivalence = S.toEquivalence(FootnoteIdentifier);
+  const duplicateIssues = A.flatMap(definitions, ([identifier, path]) =>
+    A.length(A.filter(definitions, ([candidate]) => identifierEquivalence(candidate, identifier))) > 1
+      ? A.of(MarkdownConformanceIssue.cases.DuplicateFootnoteDefinition.make({ identifier, path }))
+      : A.empty()
+  );
+  const definitionIds = HashSet.fromIterable(A.map(definitions, ([identifier]) => identifier));
+  const undefinedIssues = A.flatMap(references, ([identifier, path]) =>
+    HashSet.has(definitionIds, identifier)
+      ? A.empty()
+      : A.of(MarkdownConformanceIssue.cases.UndefinedFootnoteReference.make({ identifier, path }))
+  );
+  return A.appendAll(duplicateIssues, undefinedIssues);
+};
+
+/**
+ * Reports every implemented semantic invariant violation for a profile.
+ *
+ * **Details**
+ *
+ * The inspector checks nested links, list cardinality and ordered starts,
+ * extension membership, GFM table shape and filtered raw HTML, and Beep
+ * footnote identity/reference rules. It does not parse source syntax or claim
+ * official-corpus completeness.
+ *
+ * **Example** (Report a nested link)
+ *
+ * ```ts import.meta.vitest name="Report a nested link"
+ * import { markdownConformanceIssues, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
+ * import { Md } from "@beep/md"
+ *
+ * const document = Md.make([Md.p(Md.a("/outer", Md.a("/inner", "nested")))])
+ * const issues = markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.CommonMark)
+ * issues[0]?._tag // => "NestedLink"
+ * ```
+ *
+ * @see [CommonMark links](https://spec.commonmark.org/0.31.2/#links) for the prohibition on nested links.
+ * @see [CommonMark list items](https://spec.commonmark.org/0.31.2/#list-items) for ordered marker bounds and list structure.
+ * @see [GFM extensions](https://github.github.com/gfm/) for tables, task-list items, strikethrough, and filtered raw HTML.
+ * @category validation
+ * @since 0.0.0
+ */
+export const markdownConformanceIssues: {
+  (document: Document, profile: MarkdownConformanceProfile): ReadonlyArray<MarkdownConformanceIssue>;
+  (profile: MarkdownConformanceProfile): (document: Document) => ReadonlyArray<MarkdownConformanceIssue>;
+} = dual(2, (document: Document, profile: MarkdownConformanceProfile): ReadonlyArray<MarkdownConformanceIssue> => {
+  const scan = mergeAllScans(
+    A.map(document.children, (block, index) => scanBlock(block, profile, ["children", index]))
+  );
+  return MarkdownConformanceProfile.is.Beep(profile) ? A.appendAll(scan[0], footnoteIssues(scan[1], scan[2])) : scan[0];
+});
+
+/**
+ * Renders one conformance issue as a stable diagnostic sentence.
+ *
+ * **Example** (Format an empty-list issue)
+ *
+ * ```ts import.meta.vitest name="Format an empty-list issue"
+ * import { formatMarkdownConformanceIssue, MarkdownConformanceIssue } from "@beep/md/Md.conformance"
+ *
+ * const issue = MarkdownConformanceIssue.cases.EmptyList.make({ path: [], listTag: "ul" })
+ * formatMarkdownConformanceIssue(issue) // => "The ul list has no items."
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const formatMarkdownConformanceIssue = MarkdownConformanceIssue.match({
+  NestedLink: () => "A link is nested inside another link.",
+  UnsupportedNode: ({ nodeTag, profile }) => `The ${nodeTag} node is not part of ${profile}.`,
+  EmptyList: ({ listTag }) => `The ${listTag} list has no items.`,
+  OrderedListStart: ({ start }) =>
+    `The ordered-list start ${start} is outside CommonMark's 0..${commonMarkOrderedListMaximum} range.`,
+  GfmTableHeader: () => "A GFM table requires a non-empty header row.",
+  GfmTableRowWidth: ({ actual, expected }) => `The GFM table row has ${actual} cells; the header has ${expected}.`,
+  GfmTableAlignmentWidth: ({ actual, expected }) =>
+    `The GFM alignment list has ${actual} entries; the header has ${expected} cells.`,
+  GfmDisallowedRawHtml: () => "Raw HTML contains a tag filtered by GFM.",
+  DuplicateFootnoteDefinition: ({ identifier }) => `Footnote ${identifier} is defined more than once.`,
+  UndefinedFootnoteReference: ({ identifier }) => `Footnote ${identifier} is referenced but not defined.`,
+});
+
+/**
+ * Inspects a document losslessly and retains the exact supplied AST alongside
+ * every issue.
+ *
+ * **Example** (Retain an unsupported extension)
+ *
+ * ```ts import.meta.vitest name="Retain an unsupported extension"
+ * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
+ * import { Md } from "@beep/md"
+ *
+ * const document = Md.make([Md.mathBlock("x")])
+ * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum.CommonMark)
+ * report.document.children[0]?._tag // => "mathBlock"
+ * report.issues[0]?._tag // => "UnsupportedNode"
+ * ```
+ *
+ * @postcondition The returned report contains the supplied document without normalization or repair.
+ * @category validation
+ * @since 0.0.0
+ */
+export const inspectMarkdownDocumentLosslessly: {
+  (document: Document, profile: MarkdownConformanceProfile): LosslessMarkdownConformanceReport;
+  (profile: MarkdownConformanceProfile): (document: Document) => LosslessMarkdownConformanceReport;
+} = dual(
+  2,
+  (document: Document, profile: MarkdownConformanceProfile): LosslessMarkdownConformanceReport =>
+    LosslessMarkdownConformanceReport.make({
+      profile,
+      document,
+      issues: markdownConformanceIssues(document, profile),
+    })
+);
+
+const CommonMarkDocumentCheck = S.makeFilter<Document>(
+  (document) =>
+    !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.CommonMark)),
+  {
+    identifier: $I`CommonMarkDocumentCheck`,
+    title: "CommonMark semantic document",
+    description: "A Markdown AST satisfying every implemented CommonMark 0.31.2 semantic-tree invariant.",
+    message: "Document violates an implemented CommonMark 0.31.2 semantic-tree invariant.",
+  }
+);
+
+const GfmDocumentCheck = S.makeFilter<Document>(
+  (document) => !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Gfm)),
+  {
+    identifier: $I`GfmDocumentCheck`,
+    title: "GFM semantic document",
+    description: "A Markdown AST satisfying every implemented pinned-GFM semantic-tree invariant.",
+    message: "Document violates an implemented GFM semantic-tree invariant.",
+  }
+);
+
+const BeepMarkdownDocumentCheck = S.makeFilter<Document>(
+  (document) => !A.isReadonlyArrayNonEmpty(markdownConformanceIssues(document, MarkdownConformanceProfile.Enum.Beep)),
+  {
+    identifier: $I`BeepMarkdownDocumentCheck`,
+    title: "Beep Markdown semantic document",
+    description: "A Markdown AST satisfying every implemented Beep extension semantic-tree invariant.",
+    message: "Document violates an implemented Beep Markdown semantic-tree invariant.",
+  }
+);
+
+/**
+ * Branded document satisfying every implemented CommonMark semantic-tree check.
+ *
+ * **Gotchas**
+ *
+ * This schema validates the semantic AST subset only. It does not prove source
+ * parsing, source-syntax preservation, or official example-corpus coverage.
+ *
+ * **Example** (Decode a CommonMark semantic document)
+ *
+ * ```ts import.meta.vitest name="Decode a CommonMark semantic document"
+ * import { CommonMarkDocument } from "@beep/md/Md.conformance"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * Result.isSuccess(S.decodeUnknownResult(CommonMarkDocument)({ _tag: "document", children: [] })) // => true
+ * ```
+ *
+ * @invariant Decoded values contain no violation reported by the implemented CommonMark semantic-tree inspector.
+ * @see [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) for the governing specification.
+ * @category validation
+ * @since 0.0.0
+ */
+export const CommonMarkDocument = Document.pipe(
+  S.check(CommonMarkDocumentCheck),
+  S.brand("CommonMarkDocument"),
+  Conformance.annotateConformance(CommonMarkConformanceAnnotation),
+  $I.annoteSchema("CommonMarkDocument", {
+    description: "Markdown AST satisfying every implemented CommonMark 0.31.2 semantic-tree check.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime branded value decoded by {@link CommonMarkDocument}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CommonMarkDocument = typeof CommonMarkDocument.Type;
+
+/**
+ * Branded document satisfying every implemented pinned-GFM semantic-tree check.
+ *
+ * **Gotchas**
+ *
+ * This schema does not parse Markdown source or substitute for running the
+ * official cmark-gfm fixtures.
+ *
+ * **Example** (Decode a GFM semantic document)
+ *
+ * ```ts import.meta.vitest name="Decode a GFM semantic document"
+ * import { GfmDocument } from "@beep/md/Md.conformance"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const value = { _tag: "document", children: [] }
+ * Result.isSuccess(S.decodeUnknownResult(GfmDocument)(value)) // => true
+ * ```
+ *
+ * @invariant Decoded values contain no violation reported by the implemented GFM semantic-tree inspector.
+ * @see [GFM extensions](https://github.github.com/gfm/) for the extension semantics.
+ * @category validation
+ * @since 0.0.0
+ */
+export const GfmDocument = Document.pipe(
+  S.check(GfmDocumentCheck),
+  S.brand("GfmDocument"),
+  Conformance.annotateConformance(GfmConformanceAnnotation),
+  $I.annoteSchema("GfmDocument", {
+    description: "Markdown AST satisfying every implemented pinned-GFM semantic-tree check.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime branded value decoded by {@link GfmDocument}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GfmDocument = typeof GfmDocument.Type;
+
+/**
+ * Branded document satisfying the Beep extension profile's implemented checks.
+ *
+ * **Details**
+ *
+ * Package-owned raw, math, footnote, admonition, embed, and YouTube nodes are
+ * valid in this profile. Use {@link SafeDocument} when raw content and unsafe
+ * destinations must be rejected at a user-content boundary.
+ *
+ * **Example** (Decode a Beep extension document)
+ *
+ * ```ts import.meta.vitest name="Decode a Beep extension document"
+ * import { BeepMarkdownDocument } from "@beep/md/Md.conformance"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const value = { _tag: "document", children: [{ _tag: "mathBlock", value: "x" }] }
+ * Result.isSuccess(S.decodeUnknownResult(BeepMarkdownDocument)(value)) // => true
+ * ```
+ *
+ * @invariant Decoded values contain no violation reported by the implemented Beep semantic-tree inspector.
+ * @see {@link Document} for the permissive lossless AST.
+ * @see {@link SafeDocument} for the user-content safety refinement.
+ * @see [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) for the normative base syntax.
+ * @category validation
+ * @since 0.0.0
+ */
+export const BeepMarkdownDocument = Document.pipe(
+  S.check(BeepMarkdownDocumentCheck),
+  S.brand("BeepMarkdownDocument"),
+  Conformance.annotateConformance(BeepMarkdownConformanceAnnotation),
+  $I.annoteSchema("BeepMarkdownDocument", {
+    description: "Markdown AST satisfying every implemented Beep extension semantic-tree check.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime branded value decoded by {@link BeepMarkdownDocument}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BeepMarkdownDocument = typeof BeepMarkdownDocument.Type;
+
+/**
+ * Strict document brand selected by a {@link MarkdownConformanceProfile}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StrictMarkdownDocument = CommonMarkDocument | GfmDocument | BeepMarkdownDocument;
+
+const makeStrictMarkdownDocument = (document: Document, profile: MarkdownConformanceProfile): StrictMarkdownDocument =>
+  MarkdownConformanceProfile.$match(profile, {
+    CommonMark: () => CommonMarkDocument.make(document),
+    Gfm: () => GfmDocument.make(document),
+    Beep: () => BeepMarkdownDocument.make(document),
+  });
+
+/**
+ * Refines a decoded document into the strict brand selected by a profile.
+ *
+ * **Example** (Reject a GFM table without a header)
+ *
+ * ```ts import.meta.vitest name="Reject a GFM table without a header"
+ * import { MarkdownConformanceProfile, refineStrictMarkdownDocument } from "@beep/md/Md.conformance"
+ * import { Md } from "@beep/md"
+ * import { Result } from "effect"
+ *
+ * const document = Md.make([Md.table([["cell"]])])
+ * Result.isFailure(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum.Gfm)) // => true
+ * ```
+ *
+ * @returns A profile-branded document or a typed error containing every implemented violation.
+ * @invariant Success is issued only after the selected profile's implemented semantic-tree checks return no issues.
+ * @category validation
+ * @since 0.0.0
+ */
+export const refineStrictMarkdownDocument: {
+  (
+    document: Document,
+    profile: MarkdownConformanceProfile
+  ): Result.Result<StrictMarkdownDocument, MarkdownConformanceError>;
+  (
+    profile: MarkdownConformanceProfile
+  ): (document: Document) => Result.Result<StrictMarkdownDocument, MarkdownConformanceError>;
+} = dual(
+  2,
+  (
+    document: Document,
+    profile: MarkdownConformanceProfile
+  ): Result.Result<StrictMarkdownDocument, MarkdownConformanceError> => {
+    const issues = markdownConformanceIssues(document, profile);
+    return A.isReadonlyArrayNonEmpty(issues)
+      ? Result.fail(MarkdownConformanceError.make({ profile, issues }))
+      : Result.succeed(makeStrictMarkdownDocument(document, profile));
+  }
+);
+
+const sharedProfileFor = MarkdownConformanceProfile.$match({
+  CommonMark: () => CommonMarkSpecificationProfile,
+  Gfm: () => GfmSpecificationProfile,
+  Beep: () => BeepMarkdownSpecificationProfile,
+});
+
+const checkedInvariantIdsFor = MarkdownConformanceProfile.$match({
+  CommonMark: () => commonMarkCheckedInvariantIds,
+  Gfm: () => gfmCheckedInvariantIds,
+  Beep: () => beepCheckedInvariantIds,
+});
+
+const must = (): Conformance.RequirementStrength => "must";
+const mustNot = (): Conformance.RequirementStrength => "mustNot";
+const should = (): Conformance.RequirementStrength => "should";
+
+const sharedRequirementStrength = MarkdownConformanceIssue.match({
+  NestedLink: mustNot,
+  UnsupportedNode: mustNot,
+  EmptyList: must,
+  OrderedListStart: must,
+  GfmTableHeader: must,
+  GfmTableRowWidth: should,
+  GfmTableAlignmentWidth: must,
+  GfmDisallowedRawHtml: mustNot,
+  DuplicateFootnoteDefinition: must,
+  UndefinedFootnoteReference: must,
+});
+
+const toSharedViolation = (issue: MarkdownConformanceIssue) =>
+  Conformance.ConformanceIssue.cases.violation.make({
+    invariantId: issue.invariantId,
+    strength: sharedRequirementStrength(issue),
+    path: issue.path,
+    message: formatMarkdownConformanceIssue(issue),
+  });
+
+/**
+ * Projects the package-local Markdown inspection into the shared conformance
+ * report model.
+ *
+ * **Details**
+ *
+ * The result is conforming only with respect to the profile's declared
+ * `checkedInvariantIds`. Source parsing and official-corpus execution are not
+ * among those IDs and are therefore not implied by a conforming result.
+ *
+ * **Example** (Project a nested-link violation)
+ *
+ * ```ts import.meta.vitest name="Project a nested-link violation"
+ * import { inspectMarkdownSpecificationConformance, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
+ * import { Md } from "@beep/md"
+ *
+ * const document = Md.make([Md.p(Md.a("/outer", Md.a("/inner", "nested")))])
+ * const report = inspectMarkdownSpecificationConformance(document, MarkdownConformanceProfile.Enum.CommonMark)
+ * report.status // => "nonConforming"
+ * ```
+ *
+ * @returns A shared conforming or non-conforming report for every implemented profile check.
+ * @invariant `nonConforming` is returned exactly when the package-local inspector returns at least one violation.
+ * @see {@link inspectMarkdownDocumentLosslessly} for a report that also retains the exact document.
+ * @category validation
+ * @since 0.0.0
+ */
+export const inspectMarkdownSpecificationConformance: {
+  (document: Document, profile: MarkdownConformanceProfile): Conformance.ConformanceReport;
+  (profile: MarkdownConformanceProfile): (document: Document) => Conformance.ConformanceReport;
+} = dual(2, (document: Document, profile: MarkdownConformanceProfile): Conformance.ConformanceReport => {
+  const issues = markdownConformanceIssues(document, profile);
+  const sharedProfile = sharedProfileFor(profile);
+  const profileIds: A.NonEmptyReadonlyArray<string> = [sharedProfile.id];
+  const checkedInvariantIds = checkedInvariantIdsFor(profile);
+
+  return A.isReadonlyArrayNonEmpty(issues)
+    ? Conformance.ConformanceReport.cases.nonConforming.make({
+        profileIds,
+        checkedInvariantIds,
+        issues: A.map(issues, toSharedViolation),
+      })
+    : Conformance.ConformanceReport.cases.conforming.make({ profileIds, checkedInvariantIds });
+});

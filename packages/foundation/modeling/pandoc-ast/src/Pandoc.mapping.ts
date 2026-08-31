@@ -30,6 +30,7 @@ import {
   PandocAttr,
   PandocDocument,
   Math as PandocMath,
+  PandocMathType,
   PandocTarget,
   Para,
   Plain,
@@ -145,14 +146,21 @@ const pandocInlineText: (inline: PandocInline.Type) => string = Match.type<Pando
     softbreak: () => " ",
     linebreak: () => "\n",
     emph: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+    underline: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
     strong: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
     strikeout: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+    superscript: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+    subscript: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+    smallCaps: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+    quoted: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
+    cite: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
     code: (inline) => inline.text,
     link: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
     image: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
     span: (inline) => A.join(A.map(inline.children, pandocInlineText), ""),
     note: (inline) => A.join(A.map(inline.blocks, pandocBlockText), "\n"),
     math: (inline) => inline.text,
+    rawInline: (inline) => inline.text,
     unknownInline: () => "",
   })
 );
@@ -161,9 +169,15 @@ const pandocBlockText: (block: PandocBlock.Type) => string = Match.type<PandocBl
   Match.tagsExhaustive({
     plain: (block) => A.join(A.map(block.children, pandocInlineText), ""),
     para: (block) => A.join(A.map(block.children, pandocInlineText), ""),
+    lineBlock: (block) =>
+      A.join(
+        A.map(block.lines, (line) => A.join(A.map(line, pandocInlineText), "")),
+        "\n"
+      ),
     header: (block) => A.join(A.map(block.children, pandocInlineText), ""),
     blockquote: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
     codeblock: (block) => block.text,
+    rawBlock: (block) => block.text,
     bulletlist: (block) =>
       A.join(
         A.map(block.items, (item) => A.join(A.map(item, pandocBlockText), "\n")),
@@ -174,9 +188,26 @@ const pandocBlockText: (block: PandocBlock.Type) => string = Match.type<PandocBl
         A.map(block.items, (item) => A.join(A.map(item, pandocBlockText), "\n")),
         "\n"
       ),
+    definitionList: (block) =>
+      A.join(
+        A.map(block.items, ([term, definitions]) =>
+          A.join(
+            [
+              A.join(A.map(term, pandocInlineText), ""),
+              A.join(
+                A.flatMap(definitions, (definition) => A.map(definition, pandocBlockText)),
+                "\n"
+              ),
+            ],
+            "\n"
+          )
+        ),
+        "\n"
+      ),
     horizontalrule: () => "",
     div: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
     table: (block) => A.join(A.map(block.caption, pandocInlineText), ""),
+    figure: (block) => A.join(A.map(block.children, pandocBlockText), "\n"),
     unknownBlock: () => "",
   })
 );
@@ -236,6 +267,20 @@ const pandocInlineToMd = (
           issues,
           value: [Md.Em.make({ children: value })],
         })),
+      underline: (node) =>
+        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
+          issues: [
+            ...issues,
+            issue({
+              construct: "Underline",
+              direction: "pandoc-to-md",
+              message: "Pandoc underline styling has no Md-core equivalent and its children are retained unstyled.",
+              path,
+              severity: "lossy",
+            }),
+          ],
+          value,
+        })),
       strong: (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues,
@@ -245,6 +290,78 @@ const pandocInlineToMd = (
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues,
           value: [Md.Del.make({ children: value })],
+        })),
+      superscript: (node) =>
+        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
+          issues: [
+            ...issues,
+            issue({
+              construct: "Superscript",
+              direction: "pandoc-to-md",
+              message: "Pandoc superscript semantics have no Md-core equivalent and its children are retained inline.",
+              path,
+              severity: "lossy",
+            }),
+          ],
+          value,
+        })),
+      subscript: (node) =>
+        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
+          issues: [
+            ...issues,
+            issue({
+              construct: "Subscript",
+              direction: "pandoc-to-md",
+              message: "Pandoc subscript semantics have no Md-core equivalent and its children are retained inline.",
+              path,
+              severity: "lossy",
+            }),
+          ],
+          value,
+        })),
+      smallCaps: (node) =>
+        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
+          issues: [
+            ...issues,
+            issue({
+              construct: "SmallCaps",
+              direction: "pandoc-to-md",
+              message: "Pandoc small-capital styling has no Md-core equivalent and its children are retained unstyled.",
+              path,
+              severity: "lossy",
+            }),
+          ],
+          value,
+        })),
+      quoted: (node) =>
+        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => {
+          const delimiter = node.quoteType === "SingleQuote" ? "'" : '"';
+          return {
+            issues: [
+              ...issues,
+              issue({
+                construct: "Quoted",
+                direction: "pandoc-to-md",
+                message: "Pandoc quotation style is materialized as literal delimiters in Md-core.",
+                path,
+                severity: "lossy",
+              }),
+            ],
+            value: [mdText(delimiter), ...value, mdText(delimiter)],
+          };
+        }),
+      cite: (node) =>
+        Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
+          issues: [
+            ...issues,
+            issue({
+              construct: "Cite",
+              direction: "pandoc-to-md",
+              message: "Structured Pandoc citations are outside Md-core; only rendered fallback children are retained.",
+              path,
+            }),
+          ],
+          value,
         })),
       code: (node) =>
         Effect.succeed({
@@ -334,20 +451,34 @@ const pandocInlineToMd = (
           value: [mdText(pandocInlineText(node))],
         }),
       math: (node) =>
+        Effect.succeed(
+          PandocMathType.$match(node.mathType, {
+            InlineMath: () => emptyProjection([Md.InlineMath.make({ value: node.text })]),
+            DisplayMath: () => ({
+              issues: [
+                issue({
+                  construct: "Math",
+                  direction: "pandoc-to-md",
+                  message: "Pandoc display math appeared in inline position and is kept as Md inline math.",
+                  path,
+                  severity: "lossy",
+                }),
+              ],
+              value: [Md.InlineMath.make({ value: node.text })],
+            }),
+          })
+        ),
+      rawInline: (node) =>
         Effect.succeed({
-          issues:
-            node.mathType === "DisplayMath"
-              ? [
-                  issue({
-                    construct: "Math",
-                    direction: "pandoc-to-md",
-                    message: "Pandoc display math appeared in inline position and is kept as Md inline math.",
-                    path,
-                    severity: "lossy",
-                  }),
-                ]
-              : [],
-          value: [Md.InlineMath.make({ value: node.text })],
+          issues: [
+            issue({
+              construct: "RawInline",
+              direction: "pandoc-to-md",
+              message: `Untrusted raw ${node.format} inline content is emitted as plain text instead of a trusted Md raw node.`,
+              path,
+            }),
+          ],
+          value: [mdText(node.text)],
         }),
       unknownInline: (node) =>
         Effect.succeed({
@@ -630,6 +761,30 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
           issues,
           value: Md.P.make({ children: value }),
         })),
+      lineBlock: (node) =>
+        Effect.map(
+          Effect.forEach(node.lines, (line, index) => pandocInlinesToMd(line, appendIndex(path, "lines", index))),
+          (lines) => ({
+            issues: [
+              ...mergeIssues(lines),
+              issue({
+                construct: "LineBlock",
+                direction: "pandoc-to-md",
+                message: "Pandoc non-breaking line groups are represented with hard breaks in one Md paragraph.",
+                path,
+                severity: "lossy",
+              }),
+            ],
+            value: Md.P.make({
+              children: A.flatten(
+                A.intersperse(
+                  A.map(lines, (line) => line.value),
+                  [Md.Br.make({})]
+                )
+              ),
+            }),
+          })
+        ),
       header: (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => {
           const headingLevel = pandocHeadingLevelProjection(node.level, path);
@@ -680,6 +835,18 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
             value: node.text,
           }),
         }),
+      rawBlock: (node) =>
+        Effect.succeed({
+          issues: [
+            issue({
+              construct: "RawBlock",
+              direction: "pandoc-to-md",
+              message: `Untrusted raw ${node.format} block content is emitted as plain paragraph text.`,
+              path,
+            }),
+          ],
+          value: Md.P.make({ children: [mdText(node.text)] }),
+        }),
       bulletlist: (node) =>
         Effect.map(pandocListItemsToMd(node.items, path), ({ issues, value }) => ({
           issues,
@@ -714,6 +881,38 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
           ],
           value: Md.Ol.make({ children: value, start: PosInt.make(node.start < 1 ? 1 : node.start) }),
         })),
+      definitionList: (node) =>
+        Effect.map(
+          Effect.forEach(node.items, ([term, definitions], itemIndex) =>
+            Effect.all([
+              pandocInlinesToMd(term, appendIndex(path, "items", itemIndex)),
+              Effect.map(
+                Effect.forEach(definitions, (definition, definitionIndex) =>
+                  pandocChildBlocksToMd(
+                    definition,
+                    appendIndex(appendIndex(path, "items", itemIndex), "definitions", definitionIndex)
+                  )
+                ),
+                (projected) => ({
+                  issues: mergeIssues(projected),
+                  value: A.flatten(A.map(projected, (entry) => entry.value)),
+                })
+              ),
+            ])
+          ),
+          (items) => ({
+            issues: [
+              ...A.flatMap(items, ([term, definitions]) => [...term.issues, ...definitions.issues]),
+              issue({
+                construct: "DefinitionList",
+                direction: "pandoc-to-md",
+                message: "Pandoc definition-list structure is outside Md-core and is flattened to paragraph text.",
+                path,
+              }),
+            ],
+            value: Md.P.make({ children: [mdText(pandocBlockText(node))] }),
+          })
+        ),
       horizontalrule: () => Effect.succeed(emptyProjection(Md.Hr.make({}))),
       div: (node) =>
         Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
@@ -745,6 +944,22 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
           value: Md.P.make({ children: [mdText(caption.length === 0 ? "[table]" : caption)] }),
         });
       },
+      figure: (node) =>
+        Effect.map(pandocChildBlocksToMd(node.children, path), ({ issues, value }) => ({
+          issues: [
+            ...issues,
+            issue({
+              construct: "Figure",
+              direction: "pandoc-to-md",
+              message:
+                "Pandoc figure attributes and caption semantics are outside Md-core; figure content is retained in a blockquote.",
+              path,
+            }),
+          ],
+          value: Md.BlockQuote.make({
+            children: A.isReadonlyArrayNonEmpty(value) ? value : [Md.P.make({ children: [mdText("[figure]")] })],
+          }),
+        })),
       unknownBlock: (node) =>
         Effect.succeed({
           issues: [

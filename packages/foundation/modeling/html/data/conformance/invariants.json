@@ -1,0 +1,974 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/html",
+  "profileIds": [
+    "html-whatwg-living-2026-08-30",
+    "html-current-vendored-2026-06-15"
+  ],
+  "invariants": [
+    {
+      "id": "html.inventory.generated-elements",
+      "title": "Generated element inventory is exhaustive for the current vendored index",
+      "statement": "The current model exposes 142 generated HTML element members, including 29 obsolete members, with stable literal tags.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.inventory.generated-elements"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.inventory.generated-elements"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.inventory.generated-elements"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-webref-dfns-current-local",
+          "section": "dfns"
+        }
+      ],
+      "testIds": [
+        "test/Html.test.ts#covers-every-WHATWG-element-from-the-pinned-dataset-conforming-obsolete"
+      ]
+    },
+    {
+      "id": "html.inventory.approved-refresh-drift",
+      "title": "Approved source refresh is not yet the consumed generator corpus",
+      "statement": "Conformance against the approved WHATWG and webref refresh cannot be claimed until the approved bytes are vendored, regenerated, and reviewed; the model currently consumes older webref and dated derived-index bytes.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "elements"
+        },
+        {
+          "sourceId": "html-webref-dfns-approved-target",
+          "section": "dfns"
+        },
+        {
+          "sourceId": "html-webref-dfns-current-local",
+          "section": "dfns"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "html.ast.literal-tag-discrimination",
+      "title": "Every public node variant has a stable literal discriminator",
+      "statement": "Generated elements and auxiliary nodes use literal _tag values and existing public unions are exhaustively discriminated by _tag.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.test.ts, test/Html.coverage-matrix.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.ast.literal-tag-discrimination"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-webref-dfns-current-local",
+          "section": "dfns"
+        }
+      ],
+      "testIds": [
+        "test/Html.test.ts#round-trips-schema-derived-HTML-AST-schemas",
+        "test/Html.coverage-matrix.test.ts#fails-malformed-JavaScript-callers-at-the-schema-snapshot-boundary"
+      ]
+    },
+    {
+      "id": "html.element.local-content-model",
+      "title": "Element-local child schemas should reject impossible child categories",
+      "statement": "Most generated element classes currently admit broad HtmlChildren at type and decode boundaries; content categories and contextual grammars are applied later by inspectConformance.",
+      "strength": "must",
+      "scope": "children",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts, test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.element.local-content-model"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "content-models"
+        },
+        {
+          "sourceId": "html-whatwg-content-model-current-local",
+          "section": "elements-3"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "specialChildGrammars"
+        }
+      ],
+      "testIds": [
+        "test/Html.coverage-matrix.test.ts#allows-and-rejects-foreign-text-children-according-to-the-generated-content-tokens",
+        "test/Html.security.test.ts#enforces-table-child-sequence-and-cardinality"
+      ]
+    },
+    {
+      "id": "html.heading.phrasing-children",
+      "title": "Heading elements must contain only permitted phrasing content",
+      "statement": "H1 through H6 retain broad HtmlChildren at the local schema boundary, while inspectConformance rejects nested heading descendants through the generated phrasing-only content model.",
+      "strength": "must",
+      "scope": "children",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.phrasing-children"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "headings-and-outlines"
+        }
+      ],
+      "testIds": [
+        "test/Html.heading-conformance.test.ts#rejects-heading-descendants-because-heading-content-is-phrasing-only"
+      ]
+    },
+    {
+      "id": "html.heading.computed-levels",
+      "title": "Computed heading levels must apply offsets, reset boundaries, and the level-nine cap",
+      "statement": "computeHeadingOutline applies inherited headingoffset values, resets the inherited offset at headingreset boundaries, and caps computed heading levels at nine.",
+      "strength": "must",
+      "scope": "subtree",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.computed-levels"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "heading-levels-and-offsets"
+        }
+      ],
+      "testIds": [
+        "test/Html.heading-conformance.test.ts#applies-ancestor-offsets-and-reset-boundaries",
+        "test/Html.heading-conformance.test.ts#caps-computed-heading-levels-at-nine"
+      ]
+    },
+    {
+      "id": "html.heading.no-skipped-levels",
+      "title": "Computed heading levels must not skip a level in tree order",
+      "statement": "inspectConformance emits a headingOutline error when a computed heading level increases by more than one relative to the preceding heading in tree order.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.no-skipped-levels"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "heading-levels-and-offsets"
+        }
+      ],
+      "testIds": [
+        "test/Html.heading-conformance.test.ts#rejects-a-skipped-computed-heading-level-in-tree-order"
+      ]
+    },
+    {
+      "id": "html.heading.level-one-advisory",
+      "title": "A heading outline should contain at least one computed level-one heading",
+      "statement": "Missing computed level-one headings do not fail inspectConformance; inspectBestPractices reports the separate headingLevelOne advisory.",
+      "strength": "should",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectBestPractices"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.heading-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.heading.level-one-advisory"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "headings-and-outlines"
+        }
+      ],
+      "testIds": [
+        "test/Html.heading-conformance.test.ts#keeps-the-level-one-recommendation-advisory"
+      ]
+    },
+    {
+      "id": "html.document.structure",
+      "title": "A canonical HTML document has valid doctype and document-element structure",
+      "statement": "The canonical document boundary narrows direct children, while conform checks doctype placement, document element cardinality, and root placement.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.document.structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.document.structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.document.structure"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "the-html-element"
+        },
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "the-doctype"
+        }
+      ],
+      "testIds": [
+        "test/Html.coverage-matrix.test.ts#serializes-optional-and-canonical-doctypes-and-rejects-every-noncanonical-component",
+        "test/Html.coverage-matrix.test.ts#locates-every-document-doctype-and-root-placement-failure"
+      ]
+    },
+    {
+      "id": "html.content.special-child-grammars",
+      "title": "Context-sensitive element child sequences must satisfy reviewed grammars",
+      "statement": "The generated conformance registry applies reviewed child-sequence and contextual grammars that cannot be represented by one local array schema.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts, test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.content.special-child-grammars"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "elements"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "specialChildGrammars"
+        }
+      ],
+      "testIds": [
+        "test/Html.conformance-hardening.test.ts#keeps-schema-generated-valid-grammar-fixtures-free-of-grammar-issues",
+        "test/Html.security.test.ts#enforces-table-child-sequence-and-cardinality",
+        "test/Html.conformance-hardening.test.ts#enforces-edge-conditional-media-and-alternative-grammars"
+      ]
+    },
+    {
+      "id": "html.attributes.conditional-requirements",
+      "title": "Conditional required, forbidden, and value-constrained attributes must be enforced",
+      "statement": "Generated schemas enforce local value domains and inspectConformance enforces contextual attribute requirements and exclusions.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.attributes.conditional-requirements"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.generator.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.conditional-requirements"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "attributes"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "attributeRequirements"
+        }
+      ],
+      "testIds": [
+        "test/Html.generator.test.ts#publishes-the-exact-required-and-tree-unique-attribute-profiles",
+        "test/Html.conformance-hardening.test.ts#enforces-generated-base-map-and-track-attribute-laws",
+        "test/Html.conformance-hardening.test.ts#enforces-link-addresses-and-the-meta-charset-mode"
+      ]
+    },
+    {
+      "id": "html.attributes.input-state-applicability",
+      "title": "Input attributes must be valid for the effective input state",
+      "statement": "The current flat Input model decodes finite type values and the tree validator applies the reviewed 22-state attribute applicability table.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.attributes.input-state-applicability"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.generator.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.input-state-applicability"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-webref-dfns-current-local",
+          "section": "input-type"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "inputAttributeApplicability"
+        }
+      ],
+      "testIds": [
+        "test/Html.generator.test.ts#publishes-the-exact-attribute-conditional-category-profiles",
+        "test/Html.conformance-hardening.test.ts#enforces-state-specific-input-and-effective-submit-button-attributes"
+      ]
+    },
+    {
+      "id": "html.script.type-state",
+      "title": "Script type values must resolve to an author-conforming semantic state",
+      "statement": "ScriptState classifies missing, empty, JavaScript MIME essence-match, module, import-map, speculation-rules, and valid data-block type values while preserving Script.type; invalid non-special strings produce typed failures and conformance diagnostics.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html ScriptState and ScriptDataBlockMimeType schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "resolveScriptState and inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.script.test.ts",
+          "oracle": "Pinned WHATWG HTML and MIME Sniffing script type algorithms"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "attr-script-type"
+        },
+        {
+          "sourceId": "html-mimesniff-source-approved",
+          "section": "valid-mime-type"
+        },
+        {
+          "sourceId": "html-mimesniff-source-approved",
+          "section": "javascript-mime-type"
+        }
+      ],
+      "testIds": [
+        "test/Html.script.test.ts#recognizes-the-exact-JavaScript-MIME-essence-registry-as-classic-script",
+        "test/Html.script.test.ts#classifies-every-author-conforming-script-type-without-rewriting-its-wire",
+        "test/Html.script.test.ts#returns-a-typed-failure-and-conformance-diagnostic-for-an-invalid-script-type",
+        "test/Html.script.test.ts#enforces-script-MIME-correlations-at-compile-and-decode-boundaries",
+        "test/Html.script.test.ts#exhaustively-matches-every-script-semantic-state",
+        "test/Html.script.test.ts#round-trips-schema-derived-script-semantic-states"
+      ]
+    },
+    {
+      "id": "html.script.attribute-applicability",
+      "title": "Script attributes must be valid for the effective type and inline or external context",
+      "statement": "inspectConformance exhaustively applies the WHATWG classic, module, import-map, speculation-rules, and data-block attribute matrix, including that src is limited to classic and module scripts and data blocks remain inline.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.script.test.ts",
+          "oracle": "Pinned WHATWG script attribute applicability table"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "the-script-element"
+        }
+      ],
+      "testIds": [
+        "test/Html.script.test.ts#accepts-the-contextual-script-attribute-matrix",
+        "test/Html.script.test.ts#rejects-attributes-outside-the-contextual-script-matrix"
+      ]
+    },
+    {
+      "id": "html.script.payload-language-validity",
+      "title": "Inline script payloads must conform to their selected language or data format",
+      "statement": "The AST retains script content losslessly, but the package does not parse JavaScript, module, import-map, speculation-rules, script-documentation, or arbitrary data-block MIME payload languages and therefore cannot establish their language-level validity.",
+      "strength": "must",
+      "scope": "children",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "Payload-language conformance requires language-specific parsers or profile adapters that are outside the structural HTML AST validator."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "restrictions-for-contents-of-script-elements"
+        },
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "attr-script-type"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "html.attributes.microsyntaxes",
+      "title": "Finite keywords, booleans, numbers, token lists, and case rules must decode canonically",
+      "statement": "Generated and hand-authored attribute schemas enforce finite keyword, presence-boolean, numeric, token-list, and ASCII-case fixed points where modeled.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/html exported schema type for html.attributes.microsyntaxes"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.attributes.microsyntaxes"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.microsyntax.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.microsyntaxes"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "common-microsyntaxes"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "attributeSyntaxes"
+        }
+      ],
+      "testIds": [
+        "test/Html.microsyntax.test.ts#models-boolean-presence-without-a-false-value",
+        "test/Html.microsyntax.test.ts#canonicalizes-encoded-enumerated-keywords-while-preserving-fixed-point-Types",
+        "test/Html.conformance-hardening.test.ts#decodes-presence-booleans-blocking-tokens-and-exact-enumerations"
+      ]
+    },
+    {
+      "id": "html.attributes.numeric-relationships",
+      "title": "Cross-attribute numeric relationships must hold",
+      "statement": "Generated relationship records enforce ordering, defaults, and bounded domains that span multiple attributes.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.generator.test.ts, test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.attributes.numeric-relationships"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "common-element-apis"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "numericAttributeRelationships"
+        }
+      ],
+      "testIds": [
+        "test/Html.generator.test.ts#publishes-the-complete-generated-meter-and-progress-relationship-profiles",
+        "test/Html.conformance-hardening.test.ts#enforces-generated-meter-and-progress-domains-and-relationships"
+      ]
+    },
+    {
+      "id": "html.document.unique-ids-and-references",
+      "title": "IDs must be unique and constrained references must resolve in the required scope",
+      "statement": "The tree validator reports duplicate IDs and validates configured single and list ID references with case-sensitive scope rules.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.document.unique-ids-and-references"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "the-id-attribute"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "idReferenceAttributes"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "idReferenceListAttributes"
+        }
+      ],
+      "testIds": [
+        "test/Html.conformance-hardening.test.ts#reports-every-duplicate-id-occurrence-at-its-root-relative-attribute-path",
+        "test/Html.conformance-hardening.test.ts#resolves-case-sensitive-id-references-in-the-same-root-and-nearest-table"
+      ]
+    },
+    {
+      "id": "html.track.language-tags",
+      "title": "Subtitle track srclang values must use registered and structurally valid language tags",
+      "statement": "The generator verifies the IANA registry digest and emits the tables used by conditional srclang validation, including extlang prefix constraints.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.track.language-tags"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.track.language-tags"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-iana-language-subtag-registry-current-local",
+          "section": "File-Date"
+        },
+        {
+          "sourceId": "html-iana-language-subtag-registry-current-local",
+          "section": "RFC-5646-2.2.9"
+        },
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "the-track-element"
+        }
+      ],
+      "testIds": [
+        "test/Html.conformance-hardening.test.ts#accepts-registered-grandfathered-private-use-extension-and-deprecated-tags",
+        "test/Html.conformance-hardening.test.ts#rejects-malformed-unregistered-repeated-and-incomplete-tags-at-srclang",
+        "test/Html.conformance-hardening.test.ts#requires-every-registered-extlang-to-follow-its-IANA-primary-language-prefix"
+      ]
+    },
+    {
+      "id": "html.responsive.srcset",
+      "title": "Responsive image srcset syntax and descriptor relationships must be valid",
+      "statement": "The package parses srcset candidates, validates descriptors and URLs, and applies element-context relationships.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.responsive.srcset"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.srcset.test.ts, test/Html.responsive-image-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.responsive.srcset"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "srcset-attributes"
+        }
+      ],
+      "testIds": [
+        "test/Html.srcset.test.ts#accepts-WHATWG-density-width-and-descriptorless-profiles",
+        "test/Html.srcset.test.ts#rejects-malformed-non-positive-and-multiple-descriptors",
+        "test/Html.responsive-image-conformance.test.ts#enforces-picture-source-width-and-auto-relationships-against-the-following-img"
+      ]
+    },
+    {
+      "id": "html.responsive.sizes",
+      "title": "Responsive image source-size lists must satisfy the supported WHATWG and CSS grammar",
+      "statement": "The source-size analyzer validates supported lengths, math functions, media conditions, auto placement, and contextual responsive-image relationships.",
+      "strength": "must",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.responsive.sizes"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.source-size.test.ts, test/Html.responsive-image-conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.responsive.sizes"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "sizes-attributes"
+        }
+      ],
+      "testIds": [
+        "test/Html.source-size.test.ts#accepts-WHATWG-conditional-lists-and-CSS-whitespace-or-comments",
+        "test/Html.source-size.test.ts#rejects-malformed-list-structure-instead-of-browser-processing-recovery",
+        "test/Html.responsive-image-conformance.test.ts#enforces-img-descriptor-pairing-and-the-narrow-lazy-auto-exception"
+      ]
+    },
+    {
+      "id": "html.foreign.names-and-namespaces",
+      "title": "Foreign element and qualified attribute names must obey namespace and adjustment rules",
+      "statement": "The package validates SVG, MathML, XML, XMLNS, and XLink name adjustments and requires compatible foreign integration context.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/html Effect Schema decode boundary for html.foreign.names-and-namespaces"
+        },
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.conformance-hardening.test.ts, test/Html.coverage-matrix.test.ts, test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.foreign.names-and-namespaces"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "adjust-svg-attributes"
+        },
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "adjust-mathml-attributes"
+        },
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "adjust-foreign-attributes"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "svgElementNameAdjustments"
+        }
+      ],
+      "testIds": [
+        "test/Html.conformance-hardening.test.ts#covers-every-standard-SVG-and-MathML-adjustment-entry",
+        "test/Html.coverage-matrix.test.ts#accepts-namespace-matching-qualified-foreign-names-and-rejects-mismatches",
+        "test/Html.security.test.ts#requires-foreign-integration-roots-and-rejects-context-free-noscript-proofs"
+      ]
+    },
+    {
+      "id": "html.serialization.text-modes",
+      "title": "Text, comment, raw-text, RCDATA, plaintext, and void serialization must be deterministic and safe",
+      "statement": "Serialization applies context-specific escaping, deterministic attribute order, void handling, and raw end-tag hazard checks.",
+      "strength": "must",
+      "scope": "serialization",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/html adapter boundary for html.serialization.text-modes"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.serialization.text-modes"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "serializing-html-fragments"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "rawText"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "rcData"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "plaintext"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "void"
+        }
+      ],
+      "testIds": [
+        "test/Html.security.test.ts#escapes-text-and-attributes-and-emits-deterministic-attribute-order",
+        "test/Html.security.test.ts#rejects-scalar-hazards-ambiguous-comments-raw-end-tags-and-plaintext"
+      ]
+    },
+    {
+      "id": "html.safe-profile.active-content",
+      "title": "The safe profile must reject active content and unsafe attributes",
+      "statement": "SafeHtml narrows the broad structural AST by denying active, event, style, form, foreign, and unsafe URL surfaces and by issuing an opaque conformance proof.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/html adapter boundary for html.safe-profile.active-content"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.security.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.safe-profile.active-content"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "conformanceRules"
+        }
+      ],
+      "testIds": [
+        "test/Html.security.test.ts#admits-only-self-targets-or-protected-blank-targets",
+        "test/Html.security.test.ts#denies-active-foreign-form-data-event-style-and-broad-global-attributes",
+        "test/Html.security.test.ts#rejects-prototype-spread-JSON-and-plain-object-proof-forgeries"
+      ]
+    },
+    {
+      "id": "html.aria.role-compatibility",
+      "title": "ARIA roles and element-specific role compatibility must be checked",
+      "statement": "The conformance pass checks configured role compatibility and element-aware ARIA rules; it does not claim exhaustive accessibility conformance.",
+      "strength": "should",
+      "scope": "attributes",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.aria.role-compatibility"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "conformanceRules"
+        }
+      ],
+      "testIds": [
+        "test/Html.coverage-matrix.test.ts#applies-role-compatibility-across-matching-mismatching-and-absent-roles",
+        "test/Html.coverage-matrix.test.ts#applies-each-element-aware-ARIA-compatibility-rule"
+      ]
+    },
+    {
+      "id": "html.obsolete.nonconforming-elements",
+      "title": "Obsolete elements must remain losslessly decodable but be reported as non-conforming",
+      "statement": "The broad AST retains obsolete element wires for compatibility, while conformance metadata marks them non-conforming.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "inspectConformance"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Html.coverage-matrix.test.ts",
+          "oracle": "Pinned source rule and package expectation for html.obsolete.nonconforming-elements"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-webref-dfns-current-local",
+          "section": "obsolete"
+        },
+        {
+          "sourceId": "html-obsolete-interfaces-current-local",
+          "section": "interfaces"
+        }
+      ],
+      "testIds": [
+        "test/Html.coverage-matrix.test.ts#covers-picture-datalist-select-ruby-and-obsolete-element-alternatives"
+      ]
+    },
+    {
+      "id": "html.spec.per-rule-traceability",
+      "title": "Every generated or reviewed rule should cite an immutable source anchor",
+      "statement": "Current reviewed classification entries and generated element docs do not carry stable per-rule source IDs and anchors, so exhaustive semantic traceability is not yet proven.",
+      "strength": "should",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "source"
+        },
+        {
+          "sourceId": "html-classification-current-local",
+          "section": "conformanceRules"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "html.parser.tree-construction",
+      "title": "HTML source parsing and browser tree repair are outside the AST profile",
+      "statement": "The package validates already-constructed AST values and does not claim to tokenize arbitrary HTML source or reproduce browser error recovery.",
+      "strength": "may",
+      "scope": "document",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "parsing"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "html.custom-elements.open-world",
+      "title": "Arbitrary custom elements are outside the generated standard-element union",
+      "statement": "HtmlNode is exhaustive for the pinned standard and obsolete element inventory; arbitrary autonomous custom HTML element classes are not modeled as first-class generated members.",
+      "strength": "may",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "html-whatwg-source-approved",
+          "section": "custom-elements"
+        }
+      ],
+      "testIds": []
+    }
+  ]
+}

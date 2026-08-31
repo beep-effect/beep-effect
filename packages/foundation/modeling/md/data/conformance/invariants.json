@@ -1,0 +1,883 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/md",
+  "profileIds": [
+    "commonmark-0.31.2",
+    "gfm-0.29.0.gfm.13",
+    "beep-md-extensions-v1"
+  ],
+  "invariants": [
+    {
+      "id": "md.profile.explicit-boundaries",
+      "title": "CommonMark, GFM, and Beep extensions must remain distinguishable",
+      "statement": "The broad lossless AST contains CommonMark, GFM, and package-owned extension members, while strict profile brands and the tree inspector reject members outside the selected profile.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.profile.explicit-boundaries"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.profile.explicit-boundaries"
+        },
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.profile.explicit-boundaries"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "blocks-and-inlines"
+        },
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "extensions"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Inline"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Block"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions",
+        "test/Md.conformance.test.ts#issues-distinct-strict-brands-for-documents-accepted-by-each-profile",
+        "test/Md.conformance.test.ts#projects-implemented-checks-into-shared-specification-reports"
+      ]
+    },
+    {
+      "id": "md.corpus.commonmark-exhaustive",
+      "title": "The official CommonMark examples must be exercised exhaustively",
+      "statement": "The approved spec and example digests are recorded, but the bytes are not vendored and package tests do not execute the official example corpus.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "examples"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-examples",
+          "section": "examples"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "md.corpus.gfm-exhaustive",
+      "title": "The official selected GFM examples must be exercised exhaustively",
+      "statement": "The approved GFM base and extension digests are recorded, but neither corpus is vendored or run against @beep/md.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The current pinned evidence cannot establish exhaustive conformance for this invariant."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-spec",
+          "section": "test/spec.txt"
+        },
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "tables"
+        },
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "task-list-items"
+        },
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "strikethrough-extension"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "md.ast.literal-tag-discrimination",
+      "title": "Inline and block variants must have stable literal tags",
+      "statement": "All current inline and block members carry literal _tag values and the public Inline and Block schemas expose exhaustive tagged-union matching.",
+      "strength": "must",
+      "scope": "node",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.ast.literal-tag-discrimination"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.ast.literal-tag-discrimination"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Inline"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Block"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#round-trips-schema-derived-Markdown-AST-nodes"
+      ]
+    },
+    {
+      "id": "md.heading.level-domain",
+      "title": "Heading levels must be integers from one through six",
+      "statement": "HeadingLevel is a six-member finite domain and HTML projection exhaustively selects h1 through h6.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.heading.level-domain"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.heading.level-domain"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.heading.level-domain"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.heading.level-domain"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "atx-headings"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "setext-headings"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#renders-every-block-variant-to-Markdown-and-HTML",
+        "test/Md.conformance.test.ts#exposes-six-flat-heading-payload-cases-with-exhaustive-helpers",
+        "test/Md.test.ts#falls-back-to-a-closed-heading-tag-for-forged-heading-levels"
+      ]
+    },
+    {
+      "id": "md.heading.inline-children",
+      "title": "Heading content must be inline-only",
+      "statement": "Heading children use InlineChildren, preventing block nodes and nested heading blocks in the Markdown AST.",
+      "strength": "must",
+      "scope": "children",
+      "decidability": "typeLevel",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.heading.inline-children"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.heading.inline-children"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.heading.inline-children"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "atx-headings"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "setext-headings"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#round-trips-schema-derived-Markdown-AST-nodes"
+      ]
+    },
+    {
+      "id": "md.heading.source-syntax",
+      "title": "ATX and setext source distinctions are outside the semantic AST",
+      "statement": "Heading stores semantic level and inline content but intentionally does not preserve whether source used ATX or setext syntax.",
+      "strength": "may",
+      "scope": "value",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "documented",
+          "rationale": "The rule is intentionally outside this semantic profile boundary."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "atx-headings"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "setext-headings"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "md.link.nested-links",
+      "title": "Links must not produce nested HTML anchors",
+      "statement": "The broad lossless AST retains nested links, the strict profile inspector rejects them with exact paths, and the HTML adapter degrades inner anchors to inert spans.",
+      "strength": "mustNot",
+      "scope": "conversion",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.link.nested-links"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.link.nested-links"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "links"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#normalizes-nested-Markdown-links-into-conformant-non-interactive-descendants",
+        "test/Md.conformance.test.ts#rejects-nested-links-strictly-while-retaining-the-exact-lossless-tree"
+      ]
+    },
+    {
+      "id": "md.list.nonempty",
+      "title": "Strict semantic lists must contain at least one item",
+      "statement": "The broad lossless AST accepts empty list containers; strict profile validation reports every empty unordered, ordered, or task list without rewriting the supplied tree.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.list.nonempty"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "list-items"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "lists"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#reports-empty-lists-without-narrowing-the-broad-document-schema"
+      ]
+    },
+    {
+      "id": "md.list.ordered-start-range",
+      "title": "Strict semantic ordered-list starts must be in the CommonMark marker range",
+      "statement": "The broad lossless AST accepts integer starts including zero; strict profile validation accepts 0 through 999999999 and rejects larger semantic values. Because source lexemes are not retained, this does not prove the original marker used one to nine digits.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.list.ordered-start-range"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "list-items"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "lists"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#models-zero-ordered-list-starts-losslessly-and-enforces-CommonMark-s-upper-bound-strictly"
+      ]
+    },
+    {
+      "id": "md.list.item-content",
+      "title": "List items must preserve representable inline and block content",
+      "statement": "ListItemChild accepts both Inline and Block tagged members and recursive list structures; exact source tight/loose-list semantics are not retained as a separate field.",
+      "strength": "must",
+      "scope": "children",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.list.item-content"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.list.item-content"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.list.item-content"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.list.item-content"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "list-items"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "lists"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#supports-template-interpolation-for-inline-and-block-containers"
+      ]
+    },
+    {
+      "id": "md.gfm.task-lists",
+      "title": "Task-list items must retain checked state and list-item content",
+      "statement": "The AST has explicit task item and task list members with boolean checked state and list-item child content.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.task-lists"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.gfm.task-lists"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.gfm.task-lists"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.task-lists"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "task-list-items"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions"
+      ]
+    },
+    {
+      "id": "md.gfm.strikethrough",
+      "title": "Strikethrough content must remain inline and render deterministically",
+      "statement": "Del is a dedicated inline member with InlineChildren and deterministic Markdown and HTML projections.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.strikethrough"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.gfm.strikethrough"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.gfm.strikethrough"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.strikethrough"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "strikethrough-extension"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#renders-inline-Markdown-and-HTML-variants-with-escaped-text-by-default"
+      ]
+    },
+    {
+      "id": "md.gfm.table-structure",
+      "title": "Table cells must contain inline content and rows must contain cells",
+      "statement": "Nested table schemas enforce Table to TableRow to TableCell to InlineChildren structure and finite alignment values.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.gfm.table-structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.gfm.table-structure"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.gfm.table-structure"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-structure"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "tables"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#renders-later-table-rows-when-the-first-row-has-no-cells"
+      ]
+    },
+    {
+      "id": "md.gfm.table-rectangularity",
+      "title": "Strict GFM table rows must match the semantic header width",
+      "statement": "The broad table AST remains permissive, while the strict GFM profile rejects every row whose cell count differs from the first header row's width.",
+      "strength": "should",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-rectangularity"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "tables"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants"
+      ]
+    },
+    {
+      "id": "md.gfm.table-alignment-width",
+      "title": "Strict GFM alignment metadata must match the header width",
+      "statement": "The strict GFM profile permits an empty alignment list or one entry per header cell and rejects every other alignment width; the broad table AST remains lossless and permissive.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-alignment-width"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "tables"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants"
+      ]
+    },
+    {
+      "id": "md.gfm.disallowed-raw-html",
+      "title": "Strict GFM documents must apply the disallowed raw HTML filter",
+      "statement": "The GFM strict profile rejects raw HTML containing the pinned disallowed tag family, while CommonMark and the package-owned Beep profile do not inherit that GFM-only filter.",
+      "strength": "mustNot",
+      "scope": "node",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.disallowed-raw-html"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "disallowed-raw-html-extension"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#applies-the-GFM-raw-HTML-filter-without-attributing-it-to-CommonMark-or-Beep"
+      ]
+    },
+    {
+      "id": "md.gfm.table-header",
+      "title": "Strict GFM tables must have a non-empty header row",
+      "statement": "The broad Beep table permits non-GFM tables, while the strict GFM profile requires headerRow true and a first row containing at least one cell.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.gfm.table-header"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-gfm-0.29.0.gfm.13-extensions",
+          "section": "tables"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#enforces-GFM-header-rectangularity-and-alignment-width-as-tree-invariants"
+      ]
+    },
+    {
+      "id": "md.safe.raw-content",
+      "title": "Untrusted safe documents must reject raw Markdown and raw HTML nodes",
+      "statement": "The broad AST retains trusted raw nodes, while refineSafeDocument reports them before safe HTML projection.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.safe.raw-content"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "RawMarkdown"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "RawHtml"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#refines-user-authored-documents-without-changing-their-encoded-wire",
+        "test/Md.test.ts#keeps-active-HTML-constructs-outside-the-SafeDocument-to-SafeHtml-path"
+      ]
+    },
+    {
+      "id": "md.safe.urls-and-scalars",
+      "title": "Safe documents must reject unsafe URLs and invalid scalar strings",
+      "statement": "URL policy and scalar checks are applied recursively, and denied targets render as inert content rather than executable links.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.safe.urls-and-scalars"
+        },
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.safe.urls-and-scalars"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.safe.urls-and-scalars"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Inline"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Block"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#keeps-canonical-URL-policy-sanitization-at-a-fixed-point",
+        "test/Md.test.ts#applies-a-custom-URL-policy-across-every-recursive-render-fold",
+        "test/Md.test.ts#renders-policy-denied-top-level-and-nested-YouTube-blocks-as-inert-text"
+      ]
+    },
+    {
+      "id": "md.footnote.unique-definitions",
+      "title": "Footnote definition identifiers must be unique throughout a document",
+      "statement": "Both the safe-document refinement and the Beep strict-profile inspector traverse nested containers and report repeated footnote-definition identifiers at exact paths.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.footnote.unique-definitions"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "FootnoteDefinition"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Document"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#rejects-duplicate-footnote-definitions-recursively-at-their-exact-paths",
+        "test/Md.test.ts#rejects-every-schema-derived-duplicate-footnote-identifier",
+        "test/Md.conformance.test.ts#checks-Beep-footnote-definition-uniqueness-and-reference-resolution-recursively"
+      ]
+    },
+    {
+      "id": "md.footnote.defined-references",
+      "title": "Every Beep footnote reference must resolve to a definition",
+      "statement": "The Beep strict-profile inspector collects definitions and references recursively and reports every reference identifier absent from the document's definition set.",
+      "strength": "must",
+      "scope": "document",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.footnote.defined-references"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "FootnoteDefinition"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "FootnoteReference"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Document"
+        }
+      ],
+      "testIds": [
+        "test/Md.conformance.test.ts#checks-Beep-footnote-definition-uniqueness-and-reference-resolution-recursively"
+      ]
+    },
+    {
+      "id": "md.render.escaping",
+      "title": "Markdown and HTML rendering must escape untrusted text and attributes deterministically",
+      "statement": "Rendering utilities escape text, Markdown destinations, HTML attributes, and raw-looking inline payloads according to the selected trust path.",
+      "strength": "must",
+      "scope": "conversion",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "runtime",
+          "validator": "@beep/md adapter boundary for md.render.escaping"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.render.escaping"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Inline"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Block"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#renders-inline-Markdown-and-HTML-variants-with-escaped-text-by-default"
+      ]
+    },
+    {
+      "id": "md.soft-break-representation",
+      "title": "Soft line endings must have an explicit semantic policy",
+      "statement": "The current Inline union has Br for hard breaks but no distinct CommonMark soft-break node; conversions normalize soft breaks elsewhere and cannot preserve the distinction.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "localRuntime",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "soft-line-breaks"
+        },
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "hard-line-breaks"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "md.source-parser",
+      "title": "Arbitrary Markdown source parsing is outside the current package API",
+      "statement": "The package owns a semantic AST and renderers but does not expose a CommonMark-complete source parser; micromark is used only as a focused test oracle.",
+      "strength": "may",
+      "scope": "document",
+      "decidability": "externalAuthority",
+      "enforcement": [
+        {
+          "kind": "notEnforced",
+          "gap": "The package does not implement the required profile boundary."
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-commonmark-0.31.2-spec",
+          "section": "blocks-and-inlines"
+        },
+        {
+          "sourceId": "md-micromark-4.0.2",
+          "section": "package"
+        }
+      ],
+      "testIds": []
+    },
+    {
+      "id": "md.extensions.nonstandard-members",
+      "title": "Package extensions must not be presented as CommonMark or GFM requirements",
+      "statement": "Extension members remain valid in the broad Beep profile, carry package-owned provenance, and are rejected by strict CommonMark or GFM profile validation when the selected profile does not define them.",
+      "strength": "must",
+      "scope": "value",
+      "decidability": "contextualRuntime",
+      "enforcement": [
+        {
+          "kind": "typeLevel",
+          "mechanism": "@beep/md exported schema type for md.extensions.nonstandard-members"
+        },
+        {
+          "kind": "runtime",
+          "validator": "@beep/md Effect Schema decode boundary for md.extensions.nonstandard-members"
+        },
+        {
+          "kind": "runtime",
+          "validator": "markdownConformanceIssues and strict profile schemas"
+        },
+        {
+          "kind": "test",
+          "suite": "test/Md.test.ts, test/Md.conformance.test.ts",
+          "oracle": "Pinned source rule and package expectation for md.extensions.nonstandard-members"
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Inline"
+        },
+        {
+          "sourceId": "md-beep-extensions-baseline",
+          "section": "Block"
+        }
+      ],
+      "testIds": [
+        "test/Md.test.ts#renders-core-parity-rich-extension-frontmatter-and-URL-policy-additions",
+        "test/Md.conformance.test.ts#keeps-profile-membership-explicit-for-GFM-and-Beep-extensions"
+      ]
+    }
+  ]
+}

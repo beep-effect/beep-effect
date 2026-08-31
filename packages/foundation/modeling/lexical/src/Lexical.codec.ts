@@ -16,7 +16,7 @@ import { $LexicalSchemaId } from "@beep/identity/packages";
 import { segmentInlineRuns } from "@beep/md/Md.behavior";
 import * as Md from "@beep/md/Md.model";
 import { MappedLiteralKit, PosInt, SchemaUtils } from "@beep/schema";
-import { A, dual, O, P, Str } from "@beep/utils";
+import { A, dual, N, O, P, Str } from "@beep/utils";
 import { Effect, flow, Match, pipe } from "effect";
 import * as S from "effect/Schema";
 import { nodeToPlainText } from "./Lexical.behavior.ts";
@@ -31,6 +31,7 @@ import {
   LinkNode,
   ListItemNode,
   ListNode,
+  ListNodeValue,
   ListType,
   ParagraphNode,
   QuoteNode,
@@ -121,6 +122,7 @@ const firstOrdinal = PosInt.make(1);
 const noTableCellHeader = 0 satisfies TableCellHeaderState;
 const rowTableCellHeader = 1 satisfies TableCellHeaderState;
 const decodeSafeUrl = S.decodeUnknownEffect(SafeUrl);
+const runtimeListStart = (value: number): PosInt => PosInt.make(N.max(1, value));
 
 // Reversible map between the Lexical heading `tag` ("h1".."h6") and the Md
 // `Heading.level` (1..6): `From.Enum` resolves a tag to its level, `To.Enum`
@@ -230,6 +232,15 @@ const inlinesToLexical = (
     A.flatten
   );
 
+const ensureLinkChildren = (
+  children: ReadonlyArray<LexicalNode>,
+  fallback: string,
+  format: TextFormatMask
+): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
+  A.isReadonlyArrayNonEmpty(children)
+    ? Effect.succeed(children)
+    : Effect.map(textLeaf(fallback, format), A.of<LexicalNode>);
+
 const inlineToLexical = (
   inline: Md.Inline,
   format: TextFormatMask,
@@ -249,11 +260,15 @@ const inlineToLexical = (
       a: (node) =>
         insideLink
           ? inlinesToLexical(node.children, format, true)
-          : Effect.flatMap(inlinesToLexical(node.children, format, true), (children) =>
-              Effect.flatMap(decodeSafeUrl(node.href), (url) =>
-                Effect.map(asSchemaError(LinkNode.makeEffect({ url, children, title: node.title })), A.of<LexicalNode>)
-              )
-            ),
+          : Effect.gen(function* () {
+              const children = yield* inlinesToLexical(node.children, format, true);
+              const runtimeChildren = yield* ensureLinkChildren(children, node.href, format);
+              const url = yield* decodeSafeUrl(node.href);
+              const link = yield* asSchemaError(
+                LinkNode.makeEffect({ url, children: runtimeChildren, title: node.title })
+              );
+              return A.of<LexicalNode>(link);
+            }),
       // Images normally degrade to links so the destination survives. Inside
       // an outer link, only the alt-text run is representable (README).
       img: (node) =>
@@ -279,8 +294,13 @@ const listItemsToLexical = (
     readonly checked?: boolean;
   }>,
   start: PosInt = firstOrdinal
-): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
-  Effect.forEach(items, (item, index) =>
+): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> => {
+  const runtimeItems: ReadonlyArray<{
+    readonly children: ReadonlyArray<Md.ListItemChild>;
+    readonly checked?: boolean;
+  }> = A.isReadonlyArrayNonEmpty(items) ? items : [{ children: A.emptyReadonly<Md.ListItemChild>() }];
+
+  return Effect.forEach(runtimeItems, (item, index) =>
     Effect.flatMap(listItemChildrenToLexical(item.children), (children) =>
       asSchemaError(
         ListItemNode.makeEffect({
@@ -291,6 +311,7 @@ const listItemsToLexical = (
       )
     )
   );
+};
 
 const listItemChildrenToLexical = (
   children: ReadonlyArray<Md.ListItemChild>
@@ -395,16 +416,27 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
       });
     }),
     table: Effect.fn("Lexical.codec.blockToLexical.table")(function* (node: Md.Table) {
+      const sourceColumnCount = A.reduce(node.children, 0, (maximum, row) => N.max(maximum, A.length(row.children)));
+      const runtimeColumnCount = N.max(1, sourceColumnCount);
+      const sourceRows = A.isReadonlyArrayNonEmpty(node.children)
+        ? node.children
+        : [Md.TableRow.make({ children: [] })];
       const rows = yield* Effect.forEach(
-        node.children,
+        sourceRows,
         Effect.fnUntraced(function* (row: Md.TableRow, rowIndex) {
           const cells = yield* Effect.forEach(
-            row.children,
+            A.makeBy(runtimeColumnCount, (columnIndex) =>
+              pipe(
+                A.get(row.children, columnIndex),
+                O.getOrElse(() => Md.TableCell.make({ children: [] }))
+              )
+            ),
             Effect.fnUntraced(function* (cell: Md.TableCell) {
               const inlines = yield* inlinesToLexical(cell.children, emptyTextFormat);
               const paragraph = yield* ParagraphNode.makeEffect({ children: inlines });
               return yield* TableCellNode.makeEffect({
-                headerState: node.headerRow && rowIndex === 0 ? rowTableCellHeader : noTableCellHeader,
+                headerState:
+                  sourceColumnCount > 0 && node.headerRow && rowIndex === 0 ? rowTableCellHeader : noTableCellHeader,
                 children: [paragraph],
               });
             })
@@ -419,16 +451,18 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
     youtube: (node) => YouTubeNode.makeEffect({ videoID: node.videoId }),
     ul: (node) =>
       Effect.flatMap(listItemsToLexical(node.children), (children) =>
-        ListNode.makeEffect({ listType: "bullet", start: firstOrdinal, tag: "ul", children })
+        ListNode.makeEffect(ListNodeValue.cases.bullet.make({ start: firstOrdinal, children }))
       ),
-    ol: (node) =>
-      Effect.flatMap(listItemsToLexical(node.children, node.start), (children) =>
-        ListNode.makeEffect({ listType: "number", start: node.start, tag: "ol", children })
-      ),
+    ol: (node) => {
+      const start = runtimeListStart(node.start);
+      return Effect.flatMap(listItemsToLexical(node.children, start), (children) =>
+        ListNode.makeEffect(ListNodeValue.cases.number.make({ start, children }))
+      );
+    },
     taskList: (node) =>
       Effect.flatMap(
         listItemsToLexical(A.map(node.children, (item) => ({ children: item.children, checked: item.checked }))),
-        (children) => ListNode.makeEffect({ listType: "check", start: firstOrdinal, tag: "ul", children })
+        (children) => ListNode.makeEffect(ListNodeValue.cases.check.make({ start: firstOrdinal, children }))
       ),
     // Thematic breaks are outside the v1 node scope; they degrade to a literal
     // "---" paragraph (README "Lossiness profile").

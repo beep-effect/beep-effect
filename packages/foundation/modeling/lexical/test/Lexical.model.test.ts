@@ -9,6 +9,7 @@ import {
   LexicalNode,
   LinkNode,
   ListNode,
+  ListNodeValue,
   ListTag,
   ListType,
   nodeToPlainText,
@@ -22,6 +23,7 @@ import {
   TextNode,
 } from "@beep/lexical-schema";
 import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
+import { PosInt } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -497,6 +499,32 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
   });
 
+  it("constructs exhaustive list payload cases with canonical tags", () => {
+    const numberPayload = ListNodeValue.cases.number.make({ children: [], start: PosInt.make(3) });
+    const bulletPayload = ListNodeValue.cases.bullet.make({ children: [], start: PosInt.make(1) });
+    const checkPayload = ListNodeValue.cases.check.make({ children: [], start: PosInt.make(1) });
+    const numberTag: "ol" = numberPayload.tag;
+    const bulletTag: "ul" = bulletPayload.tag;
+    const checkTag: "ul" = checkPayload.tag;
+
+    expect([numberTag, bulletTag, checkTag]).toEqual(["ol", "ul", "ul"]);
+    expect(ListNodeValue.guards.number(numberPayload)).toBe(true);
+    expect(ListNodeValue.guards.bullet(numberPayload)).toBe(false);
+    expect(ListNodeValue.isAnyOf(["bullet", "check"])(checkPayload)).toBe(true);
+    expect(
+      ListNodeValue.match(numberPayload, {
+        number: ({ tag }) => tag,
+        bullet: ({ tag }) => tag,
+        check: ({ tag }) => tag,
+      })
+    ).toBe("ol");
+    expect(S.is(ListNodeValue)({ ...numberPayload, tag: "ul" })).toBe(false);
+
+    const node = ListNode.make(numberPayload);
+    expect(ListNode.is(node)).toBe(true);
+    expect(node).toMatchObject({ type: "list", listType: "number", start: 3, tag: "ol", children: [] });
+  });
+
   it("rejects contradictory list metadata strictly while retaining the exact lossless wire", () => {
     const mismatches: ReadonlyArray<readonly [ListType, ListTag]> = [
       ["number", "ul"],
@@ -818,7 +846,7 @@ describe("Lexical.model", { concurrent: false }, () => {
         S.decodeSync(LexicalNode)({
           type: "tab",
           version: 1,
-          detail: 0,
+          detail: 2,
           format: 0,
           mode: "normal",
           style: "",

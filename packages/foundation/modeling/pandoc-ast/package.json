@@ -40,6 +40,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./Pandoc.codec": "./src/Pandoc.codec.ts",
+    "./Pandoc.conformance": "./src/Pandoc.conformance.ts",
     "./Pandoc.mapping": "./src/Pandoc.mapping.ts",
     "./Pandoc.model": "./src/Pandoc.model.ts",
     "./Pandoc.report": "./src/Pandoc.report.ts",
@@ -60,6 +61,7 @@
     "exports": {
       ".": "./dist/index.js",
       "./Pandoc.codec": "./dist/Pandoc.codec.js",
+      "./Pandoc.conformance": "./dist/Pandoc.conformance.js",
       "./Pandoc.mapping": "./dist/Pandoc.mapping.js",
       "./Pandoc.model": "./dist/Pandoc.model.js",
       "./Pandoc.report": "./dist/Pandoc.report.js",

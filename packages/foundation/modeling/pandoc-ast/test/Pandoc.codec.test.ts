@@ -285,13 +285,12 @@ describe("Pandoc.codec", () => {
       meta: {},
     };
 
-    expectSchemaMakeToFail(
-      () =>
-        Table.make({
-          payload: [["", [], []], null, [], null, [], null],
-        }),
-      "Expected a Pandoc table payload whose nested constructors are valid in their semantic contexts."
-    );
+    expect(
+      S.is(Table)({
+        _tag: "table",
+        payload: [["", [], []], null, [], null, [], null],
+      })
+    ).toBe(false);
     expect(() => Effect.runSync(decodePandocJsonStrict(wire))).toThrow();
 
     const lossless = Effect.runSync(decodePandocJsonLossless(wire));
@@ -400,7 +399,7 @@ describe("Pandoc.codec", () => {
     expect(Effect.runSync(decodePandocJsonStrict(encoded))).toEqual(document);
   });
 
-  it("rejects pinned current constructors outside the semantic subset and reports them losslessly", () => {
+  it("rejects malformed Cite and Figure payloads and reports them losslessly", () => {
     const unsupported = [
       {
         expected: ["Cite", "inline", "/blocks/0/c/0"],

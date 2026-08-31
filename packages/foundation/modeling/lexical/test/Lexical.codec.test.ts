@@ -4,7 +4,9 @@ import {
   blockToLexical,
   documentToEditorState,
   editorStateToDocument,
+  ListNode,
   nodeToBlocks,
+  ParagraphNode,
   RootNode,
   SerializedEditorState,
   TableCellNode,
@@ -37,7 +39,11 @@ const tableState = (headerState: TableCellHeaderState): SerializedEditorState =>
     root: RootNode.make({
       children: [
         TableNode.make({
-          children: [TableRowNode.make({ children: [TableCellNode.make({ children: [], headerState })] })],
+          children: [
+            TableRowNode.make({
+              children: [TableCellNode.make({ children: [ParagraphNode.make({ children: [] })], headerState })],
+            }),
+          ],
         }),
       ],
     }),
@@ -106,6 +112,35 @@ describe("Lexical.codec", { concurrent: false }, () => {
     });
 
     expect(roundTrip(document)).toEqual(document);
+  });
+
+  it("constructs every Markdown list projection through the canonical ListNode payload cases", () => {
+    const projections = [
+      {
+        block: MdModel.Ul.make({ children: [MdModel.Li.make({ children: [mdText("bullet")] })] }),
+        expected: { listType: "bullet", start: 1, tag: "ul" },
+      },
+      {
+        block: MdModel.Ol.make({
+          children: [MdModel.Li.make({ children: [mdText("third")] })],
+          start: PosInt.make(3),
+        }),
+        expected: { listType: "number", start: 3, tag: "ol" },
+      },
+      {
+        block: MdModel.TaskList.make({
+          children: [MdModel.TaskItem.make({ checked: true, children: [mdText("done")] })],
+        }),
+        expected: { listType: "check", start: 1, tag: "ul" },
+      },
+    ] as const;
+
+    for (const { block, expected } of projections) {
+      const node = Effect.runSync(blockToLexical(block));
+
+      expect(ListNode.is(node)).toBe(true);
+      expect(node).toMatchObject({ type: "list", ...expected });
+    }
   });
 
   it("preserves the complete user-content link domain through the editor codec", () => {

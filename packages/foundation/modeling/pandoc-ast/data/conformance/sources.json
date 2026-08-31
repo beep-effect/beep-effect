@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "packageName": "@beep/pandoc-ast",
+  "profileIds": [
+    "pandoc-json-1.23.1",
+    "pandoc-cli-3.10.2",
+    "beep-pandoc-md-v1"
+  ],
+  "profiles": [
+    {
+      "id": "pandoc-json-1.23.1",
+      "title": "Pandoc JSON data-model profile",
+      "version": "1.23.1",
+      "description": "Pinned pandoc-types constructor and recursive payload profile with strict and lossless decoding.",
+      "sourceIds": [
+        "pandoc-types-1.23.1-definition",
+        "pandoc-registry-baseline",
+        "pandoc-model-baseline"
+      ],
+      "invariantIds": [
+        "pandoc.registry.upstream-generation",
+        "pandoc.registry.known-name-exhaustiveness",
+        "pandoc.codec.future-constructors",
+        "pandoc.codec.known-unsupported",
+        "pandoc.codec.constructor-context",
+        "pandoc.codec.nullary-payloads",
+        "pandoc.table.recursive-payload",
+        "pandoc.meta.recursive-values",
+        "pandoc.api-version.exact-profile",
+        "pandoc.list.constructor-domains",
+        "pandoc.math.constructor-domain",
+        "pandoc.semantic-subset",
+        "pandoc.raw.exact-retention",
+        "pandoc.table.column-width-payload"
+      ]
+    },
+    {
+      "id": "pandoc-cli-3.10.2",
+      "title": "Pandoc command-line behavior profile",
+      "version": "3.10.2",
+      "description": "Pinned Pandoc manual and retrieved filter documentation for executable-dependent behavior.",
+      "sourceIds": [
+        "pandoc-manual-3.10.2",
+        "pandoc-filters-page-2026-08-30",
+        "pandoc-lua-filters-page-2026-08-30",
+        "pandoc-green-core-fixture-baseline",
+        "pandoc-docx-gap-fixture-baseline"
+      ],
+      "invariantIds": [
+        "pandoc.fixture.command-provenance",
+        "pandoc.filters.execution",
+        "pandoc.cli.reader-writer-behavior"
+      ]
+    },
+    {
+      "id": "beep-pandoc-md-v1",
+      "title": "Beep Pandoc to Markdown mapping profile",
+      "version": "1",
+      "description": "Package-owned Markdown mapping boundary, lossiness reporting, and target-specific conversion behavior.",
+      "sourceIds": [
+        "pandoc-types-1.23.1-definition",
+        "pandoc-registry-baseline",
+        "pandoc-model-baseline",
+        "pandoc-green-core-fixture-baseline",
+        "pandoc-docx-gap-fixture-baseline"
+      ],
+      "invariantIds": [
+        "pandoc.ast.internal-tag-discrimination",
+        "pandoc.codec.strict-lossless-separation",
+        "pandoc.header.level-adaptation",
+        "pandoc.mapping.supported-report",
+        "pandoc.mapping.lossiness-reporting",
+        "pandoc.image-description.profile"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "pandoc-types-1.23.1-definition",
+      "title": "pandoc-types 1.23.1 Definition.hs",
+      "role": "primarySpecification",
+      "canonicalUrl": "https://github.com/jgm/pandoc-types/blob/8e064fa71e4448397165608beeffa9e6833cc373/src/Text/Pandoc/Definition.hs",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/jgm/pandoc-types",
+        "commit": "8e064fa71e4448397165608beeffa9e6833cc373"
+      },
+      "contentSha256": "a578c3b4f09e3d8452e2d9f4395846b7d6d608738ec68f6bf0eb5dd5eef483f7",
+      "license": "BSD-3-Clause",
+      "scope": "Approved upstream authority for the Pandoc 1.23.1 JSON constructor universe; not yet vendored or used to generate the local registry. Consumed anchors: data-Pandoc, data-Block, data-Inline, data-MetaValue, table-types."
+    },
+    {
+      "id": "pandoc-manual-3.10.2",
+      "title": "Pandoc 3.10.2 manual source",
+      "role": "primarySpecification",
+      "canonicalUrl": "https://github.com/jgm/pandoc/blob/f2ee5dfee866aab007a33552acc6bc01810c6918/MANUAL.txt",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/jgm/pandoc",
+        "commit": "f2ee5dfee866aab007a33552acc6bc01810c6918"
+      },
+      "contentSha256": "d638b172d2d7aca2661425f12f1d21409d3ebb0a008c681827ff64fd62faa503",
+      "license": "GPL-2.0-or-later",
+      "scope": "Approved official behavior reference for Pandoc readers, writers, extensions, and JSON-filter integration; most CLI behavior remains outside the pure AST package profile. Consumed anchors: extensions, pandocs-markdown, json-filters, metadata."
+    },
+    {
+      "id": "pandoc-filters-page-2026-08-30",
+      "title": "Pandoc filters documentation",
+      "role": "bestPractice",
+      "canonicalUrl": "https://pandoc.org/filters.html",
+      "revision": {
+        "kind": "retrievedSnapshot",
+        "retrievedOn": "2026-08-30"
+      },
+      "contentSha256": "3430077eca26421168115ad54899fd792f1ac661d263ffdf0f3050fb6cebc182",
+      "license": "GPL-2.0-or-later",
+      "scope": "Informative filter traversal and JSON representation guidance; executable filters are outside this package's pure modeling profile. Consumed anchors: a-simple-example, the-pandoc-type."
+    },
+    {
+      "id": "pandoc-lua-filters-page-2026-08-30",
+      "title": "Pandoc Lua filters documentation",
+      "role": "bestPractice",
+      "canonicalUrl": "https://pandoc.org/lua-filters.html",
+      "revision": {
+        "kind": "retrievedSnapshot",
+        "retrievedOn": "2026-08-30"
+      },
+      "contentSha256": "fa660832e1a1e65a238f005118de94feb81457c5c5f4fdad2b3565e112f6ff8e",
+      "license": "GPL-2.0-or-later",
+      "scope": "Informative Lua element and traversal API reference; Lua execution is outside this package's pure modeling profile. Consumed anchors: module-pandoc, type-wise-traversal."
+    },
+    {
+      "id": "pandoc-registry-baseline",
+      "title": "Beep Pandoc 1.23.1 constructor registry baseline",
+      "role": "implementationReference",
+      "canonicalUrl": "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.registry.ts",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/beep-effect/beep-effect",
+        "commit": "1ed08f66df016a18c6d7d56bd97aa778912cb37b"
+      },
+      "contentSha256": "006cda579d8ea3670dbf95df16d72e5aa3b55aa70cd6a006b27616e8080b77fd",
+      "license": "MIT",
+      "scope": "Immutable public pre-initiative hand-authored 78-name known-constructor registry baseline; not yet mechanically generated from the approved pandoc-types source. Consumed anchors: PandocKnownConstructorName, PandocSupportedConstructorName."
+    },
+    {
+      "id": "pandoc-model-baseline",
+      "title": "Beep Pandoc semantic and lossless v1 model baseline",
+      "role": "implementationReference",
+      "canonicalUrl": "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/beep-effect/beep-effect",
+        "commit": "1ed08f66df016a18c6d7d56bd97aa778912cb37b"
+      },
+      "contentSha256": "e818ee0900f4eee076f05d4423f69f070b2b743baff7de3fd5885ae143417f8f",
+      "license": "MIT",
+      "scope": "Immutable public pre-initiative package-owned semantic and lossless model baseline, including the strict subset, future-constructor nodes, recursive metadata, and table payload grammar. Consumed anchors: PandocInline, PandocBlock, PandocMetaValue, PandocDocument."
+    },
+    {
+      "id": "pandoc-green-core-fixture-baseline",
+      "title": "Beep Pandoc green-core wire fixture baseline",
+      "role": "implementationReference",
+      "canonicalUrl": "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/pandoc-ast/test/fixtures/green-core.pandoc.json",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/beep-effect/beep-effect",
+        "commit": "1ed08f66df016a18c6d7d56bd97aa778912cb37b"
+      },
+      "contentSha256": "93ef96a5eb85e751f4c6d5cf86085c89540565ce3d0f5dbd127c9274ec01fde3",
+      "license": "MIT",
+      "scope": "Immutable public pre-initiative hand-authored smoke-fixture baseline for the supported Md-core-compatible wire profile; not an upstream-generated oracle. Consumed anchors: fixture."
+    },
+    {
+      "id": "pandoc-docx-gap-fixture-baseline",
+      "title": "Beep Pandoc DOCX-gap wire fixture baseline",
+      "role": "implementationReference",
+      "canonicalUrl": "https://github.com/beep-effect/beep-effect/blob/1ed08f66df016a18c6d7d56bd97aa778912cb37b/packages/foundation/modeling/pandoc-ast/test/fixtures/gap-docx-styles.pandoc.json",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/beep-effect/beep-effect",
+        "commit": "1ed08f66df016a18c6d7d56bd97aa778912cb37b"
+      },
+      "contentSha256": "1fdc48e4cd91fce6a2d14033bfc9a1edda5d7d9ce2760a78b8b4e9a6ce0430fc",
+      "license": "MIT",
+      "scope": "Immutable public pre-initiative hand-minimized DOCX-origin compatibility fixture baseline; not an upstream-generated oracle. Consumed anchors: fixture."
+    }
+  ]
+}

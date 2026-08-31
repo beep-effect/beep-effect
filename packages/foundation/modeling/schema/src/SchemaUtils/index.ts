@@ -14,6 +14,11 @@ export * from "./codecStatics.ts";
  * @since 0.0.0
  * @category utilities
  */
+export * from "./collectAnnotationsAt.ts";
+/**
+ * @since 0.0.0
+ * @category utilities
+ */
 export * from "./encoders.ts";
 /**
  * @since 0.0.0

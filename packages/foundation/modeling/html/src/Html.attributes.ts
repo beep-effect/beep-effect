@@ -19,13 +19,17 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as Eq from "@beep/utils/Equal";
 import * as Struct from "@beep/utils/Struct";
-import { Effect, flow, pipe, SchemaIssue, SchemaTransformation, Tuple } from "effect";
 import * as A from "effect/Array";
-import { identity } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { flow, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { toAsciiLowerCase } from "./internal/Html.ascii.ts";
 import { readonlyStruct } from "./internal/Html.readonly.ts";
 
@@ -80,7 +84,7 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
   assertAsciiFoldUnique(values, "ASCII-case-insensitive enumerated attribute", true);
   const Canonical = LiteralKit(values);
   const findCanonical = (value: string) =>
-    A.findFirst(values, (candidate) => toAsciiLowerCase(candidate) === toAsciiLowerCase(value));
+    A.findFirst(values, flow(toAsciiLowerCase, Eq.equals(toAsciiLowerCase(value))));
   const Input = S.String.check(
     S.makeFilter(flow(findCanonical, O.isSome), {
       identifier: $I`AsciiCaseInsensitiveEnumeratedCheck`,
@@ -923,6 +927,8 @@ export type ButtonCommand = typeof ButtonCommand.Type;
  * S.is(HeadingOffset)(9) // => false
  * ```
  *
+ * @invariant Values are integers from zero through eight, inclusive.
+ * @see [WHATWG HTML heading levels and offsets](https://html.spec.whatwg.org/multipage/sections.html#heading-levels-and-offsets)
  * @category schemas
  * @since 0.0.0
  */

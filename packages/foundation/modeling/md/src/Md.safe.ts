@@ -295,6 +295,7 @@ export const DocumentSafetyViolation = S.Union([
   ScalarSafetyViolation,
   UrlSafetyViolation,
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("DocumentSafetyViolation", {
     description: "Path-located Markdown user-content safety violation.",
   })
