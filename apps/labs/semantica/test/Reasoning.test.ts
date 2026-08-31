@@ -151,7 +151,9 @@ describe("C2 declarative reasoner", () => {
                   stdout: "pipe",
                 })
               );
-              yield* S.decodeEffect(S.fromJsonString(CrashProjectionInput))(fixture);
+              const input = yield* S.decodeEffect(S.fromJsonString(CrashProjectionInput))(fixture);
+              expect(input.outcomes).toHaveLength(2);
+              expect(input.events).toHaveLength(2);
               const inputPath = path.join(ledgerRoot, "projection-input.json");
               yield* fs.writeFileString(inputPath, fixture);
               const recover = processSpawner

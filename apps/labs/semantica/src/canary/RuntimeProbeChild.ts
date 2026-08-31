@@ -45,7 +45,16 @@ if (probeMode === "bundle") {
     }
     const input = S.decodeSync(S.fromJsonString(CrashProjectionInput))(await Bun.file(inputPath).text());
     await Effect.runPromise(
-      provideServices(Ledger.pipe(Effect.flatMap((ledger) => ledger.appendBatch(input.outcome, [input.event]))))
+      provideServices(
+        Ledger.pipe(
+          Effect.flatMap((ledger) =>
+            Effect.forEach(input.outcomes, (outcome) => ledger.appendBatch(outcome, input.events), {
+              concurrency: 1,
+              discard: true,
+            })
+          )
+        )
+      )
     );
     await Bun.write(Bun.stdout, "projection-state-committed\n");
     process.kill(process.pid, "SIGKILL");

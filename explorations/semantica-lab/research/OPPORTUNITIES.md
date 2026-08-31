@@ -449,11 +449,13 @@ ratifies.
   the persisted representation and that the killed child had not itself committed data. The first
   repair added a durable checkpoint, but a fresh review correctly showed that metadata was absent
   from the recovered RDF projection and could still pass without projection-relevant recovery.
-  Final fix: an isolated crash ledger starts empty; the killed child transaction commits one real,
-  non-empty extraction batch; the parent independently projects that expected batch; recovery must
-  differ from the empty projection and remain stable across another restart. The metadata-only
-  checkpoint API was removed. Prevention: crash evidence needs an independent pre-crash oracle and
-  must mutate state consumed by recovery in the process that is actually killed.
+  The first projection-relevant repair then selected only one non-empty batch, so a passing digest
+  still omitted the rest of the committed C1 state. Final fix: an isolated crash ledger starts
+  empty; the killed child commits every C1 extraction outcome and provenance event; the parent
+  independently digests the full C1 projection; recovery must match that digest and remain stable
+  across another restart. The metadata-only checkpoint API was removed. Prevention: crash evidence
+  needs an independent full-state pre-crash oracle and must mutate every projection-relevant row in
+  the process that is actually killed.
 
 - **2026-08-31 — An unrelated scheduler coverage floor failed two exact-head C2 runs.** The
   hosted coverage lane repeatedly reported `QualityScheduler.ts` statements `91.44 < 91.66` and

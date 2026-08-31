@@ -11,10 +11,7 @@ import { p95 } from "@/layers/CanaryC0Live";
 import { LabConfig } from "@/runtime/Config";
 import { contentDigest, digestOmitting } from "@/schema/Digest";
 import { ReasoningFailed } from "@/schema/Errors";
-import { ExtractOutcome } from "@/schema/Evidence";
-import { LedgerSnapshot } from "@/schema/Ledger";
 import { SparqlExpectation } from "@/schema/Projection";
-import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
 import {
   C2EvalReport,
   CrashIdentityWitness,
@@ -235,53 +232,25 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         Effect.mapError(() => failed("expectation-unavailable", "The C2 expectation digest failed."))
       );
       const projection = yield* rdf.rebuild(base.snapshot);
-      const crashBatch = yield* A.match(
-        A.getSomes(
-          A.map(base.snapshot.batches, (outcome) =>
-            ExtractOutcome.match(outcome, {
-              Degraded: () => O.none(),
-              Extracted: ({ batch }) =>
-                A.match(batch.claims, {
-                  onEmpty: () => O.none(),
-                  onNonEmpty: () => O.some(batch),
-                }),
-            })
-          )
-        ),
-        {
-          onEmpty: () =>
-            Effect.fail(failed("crash-mismatch", "C2 found no non-empty extraction batch for its crash witness.")),
-          onNonEmpty: (batches) => Effect.succeed(A.headNonEmpty(batches)),
-        }
-      );
-      const crashOutcome = ExtractOutcome.cases.Extracted.make({ batch: crashBatch, outcome: "Extracted" });
-      const crashEventBody = EventBody.cases.Extracted.make({
-        batch: crashBatch.id,
-        kind: "Extracted",
-        model: crashBatch.model,
+      const crashOutcomes = yield* A.match(base.snapshot.batches, {
+        onEmpty: () =>
+          Effect.fail(failed("crash-mismatch", "C2 found no committed extraction batches for its crash witness.")),
+        onNonEmpty: Effect.succeed,
       });
-      const crashEventPrev = O.none();
-      const crashEvent = ProvenanceEvent.make({
-        body: crashEventBody,
-        id: yield* Effect.fromResult(makeProvenanceEventId({ body: crashEventBody, prev: crashEventPrev })).pipe(
-          Effect.mapError(() => failed("crash-mismatch", "The crash witness event identity could not be built."))
-        ),
-        prev: crashEventPrev,
+      const crashEvents = yield* A.match(base.snapshot.events, {
+        onEmpty: () =>
+          Effect.fail(failed("crash-mismatch", "C2 found no committed provenance events for its crash witness.")),
+        onNonEmpty: Effect.succeed,
       });
-      const crashSnapshot = LedgerSnapshot.make({
-        batches: [crashOutcome],
-        documents: [],
-        events: [crashEvent],
-        run: base.report.base.run.id,
-      });
-      const crashProjection = yield* rdf.rebuild(crashSnapshot);
-      const beforeCrashDigest = yield* contentDigest(S.Array(S.String))(crashProjection.serializedQuads).pipe(
+      const beforeCrashDigest = yield* contentDigest(S.Array(S.String))(projection.serializedQuads).pipe(
         Effect.provideService(Crypto.Crypto, crypto),
-        Effect.mapError(() => failed("crash-mismatch", "The expected crash projection digest failed."))
+        Effect.mapError(() => failed("crash-mismatch", "The full C1 projection digest failed."))
       );
       const encodedCrashInput = yield* S.encodeEffect(crashInputJson)(
-        CrashProjectionInput.make({ event: crashEvent, outcome: crashOutcome })
-      ).pipe(Effect.mapError(() => failed("crash-mismatch", "The crash projection input could not be encoded.")));
+        CrashProjectionInput.make({ events: crashEvents, outcomes: crashOutcomes })
+      ).pipe(
+        Effect.mapError(() => failed("crash-mismatch", "The full C1 crash projection input could not be encoded."))
+      );
       const crashLedgerRoot = path.join(config.ledgerRoot, "c2-crash-probe");
       yield* fs
         .remove(path.join(crashLedgerRoot, base.report.base.run.id, base.baseTelemetry.mode), {

@@ -546,23 +546,23 @@ export class GEntailmentWitness extends S.Class<GEntailmentWitness>($I`GEntailme
 ) {}
 
 /**
- * Projection-relevant ledger input committed by the process killed in the C2 crash probe.
+ * Projection-relevant C1 ledger input committed by the process killed in the C2 crash probe.
  *
- * **Example** (Inspect the committed extraction field)
+ * **Example** (Inspect the committed extraction fields)
  *
  * ```ts
  * import { CrashProjectionInput } from "@/schema/Reasoning"
  *
- * console.log(CrashProjectionInput.fields.outcome !== undefined) // true
+ * console.log(CrashProjectionInput.fields.outcomes !== undefined) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class CrashProjectionInput extends S.Class<CrashProjectionInput>($I`CrashProjectionInput`)(
-  { event: ProvenanceEvent, outcome: ExtractOutcome },
+  { events: S.NonEmptyArray(ProvenanceEvent), outcomes: S.NonEmptyArray(ExtractOutcome) },
   $I.annote("CrashProjectionInput", {
-    description: "Typed extraction batch and provenance event committed immediately before the injected SIGKILL.",
+    description: "Every C1 extraction batch and provenance event committed immediately before the injected SIGKILL.",
   })
 ) {}
 
