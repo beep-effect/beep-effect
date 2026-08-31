@@ -139,7 +139,7 @@ export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).
   $I.annoteSchema("UsptoMcpFailure", {
     description: "Union of the api_key_required envelope and post-gate USPTO driver failures.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

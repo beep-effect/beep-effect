@@ -43,7 +43,7 @@ export const CorpusPaperId = S.String.check(
   ])
 ).pipe(
   S.brand("CorpusPaperId"),
-  SchemaUtils.withEffectCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("CorpusPaperId", {
     description: "Twelve-character lowercase hexadecimal academia corpus identifier.",
   })

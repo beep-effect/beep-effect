@@ -328,8 +328,8 @@ const ExampleStatsSqlRow = S.Struct({
 
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeQueryError = normalizeDrizzleError("execute");
-const LlmExampleRows = S.Tuple([LlmExamples.select]).pipe(SchemaUtils.withEffectCodecStatics);
-const ExampleStatsRows = S.Tuple([ExampleStatsSqlRow]).pipe(SchemaUtils.withEffectCodecStatics);
+const LlmExampleRows = S.Tuple([LlmExamples.select]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
+const ExampleStatsRows = S.Tuple([ExampleStatsSqlRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const decodeOneLlmExampleRow = (rows: unknown) => normalizeDecodedRows(LlmExampleRows.decodeUnknownEffect(rows));
 const decodeLlmExampleRows = (rows: unknown) =>

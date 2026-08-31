@@ -55,7 +55,7 @@ export const PositiveFrameRate = S.Finite.check(
   $I.annoteSchema("PositiveFrameRate", {
     description: "Positive finite frame extraction rate in frames per second.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -117,8 +117,7 @@ export const PositiveMilliseconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveMilliseconds", {
     description: "Positive finite timeout value in milliseconds.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -181,7 +180,7 @@ export const SafeFramePrefix = S.String.check(
   $I.annoteSchema("SafeFramePrefix", {
     description: "Frame filename prefix that cannot escape the output directory.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -228,7 +227,7 @@ export const NonNegativeSeconds = S.Finite.check(
   $I.annoteSchema("NonNegativeSeconds", {
     description: "Non-negative finite duration measured in seconds.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -275,7 +274,7 @@ export const FrameIndex = S.Int.check(
   $I.annoteSchema("FrameIndex", {
     description: "Zero-based non-negative integer frame index.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -322,7 +321,7 @@ export const FrameCount = S.Int.check(
   $I.annoteSchema("FrameCount", {
     description: "Non-negative integer frame count.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -368,8 +367,7 @@ export const VideoDimension = S.Int.check(
 ).pipe(
   $I.annoteSchema("VideoDimension", {
     description: "Positive integer pixel dimension.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -430,8 +428,7 @@ export const FFmpegProgressPercent = S.Finite.check(
 ).pipe(
   $I.annoteSchema("FFmpegProgressPercent", {
     description: "Progress percentage in the closed 0-100 range.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -477,8 +474,7 @@ export const FrameFilenamePadding = S.Int.check(
 ).pipe(
   $I.annoteSchema("FrameFilenamePadding", {
     description: "Positive integer filename padding width used for generated frame numbers.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -1182,8 +1178,7 @@ export const FFmpegEvent = S.Union([FFmpegStartedEvent, FFmpegProgressEvent, FFm
   S.toTaggedUnion("kind"),
   $I.annoteSchema("FFmpegEvent", {
     description: "Structured events emitted by extract-frames.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

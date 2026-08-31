@@ -93,7 +93,7 @@ import {
   writeAiMetricsDerivedStorage,
 } from "@beep/repo-ai-metrics";
 import { NonEmptyTrimmedStr } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -2864,7 +2864,7 @@ volumes:
           yield* writeText(
             path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json"),
             // TODO(effect-native-migration): model schema
-            yield* Unknown.encodeUnknownEffectFromJsonString({
+            yield* UnknownFromJsonString.encodeUnknownEffect({
               excludedDirectoryNames: [],
               fileCount: 1,
               files: [

@@ -210,9 +210,9 @@ describe("@beep/face-detection", () => {
     ));
 
   it("normalizes raw model confidence at the schema boundary", () => {
-    expect(RawFaceDetectionConfidence.fromUnknown(-0.2)).toBe(0);
-    expect(RawFaceDetectionConfidence.fromUnknown(0.5)).toBe(0.5);
-    expect(RawFaceDetectionConfidence.fromUnknown(1.2)).toBe(1);
+    expect(RawFaceDetectionConfidence.decodeUnknownSync(-0.2)).toBe(0);
+    expect(RawFaceDetectionConfidence.decodeUnknownSync(0.5)).toBe(0.5);
+    expect(RawFaceDetectionConfidence.decodeUnknownSync(1.2)).toBe(1);
   });
 
   it.effect("runs workflows through the service contract", () =>

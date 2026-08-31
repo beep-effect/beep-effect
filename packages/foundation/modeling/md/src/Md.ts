@@ -295,37 +295,6 @@ export type ListItemContentBuilder<Node> = {
  */
 export type ListItemInput = ListItemContent | Li;
 
-type TaskListCompatibilityInput =
-  | string
-  | TaskItem
-  | {
-      readonly text: string;
-      readonly checked?: boolean;
-    }
-  | {
-      readonly children: ListItemContent;
-      readonly checked?: boolean;
-    };
-
-/**
- * Input accepted by task list constructors.
- *
- * **Example** (Checked task item object)
- *
- * ```ts
- * import type { TaskListItemInput } from "@beep/md/Md"
- *
- * const item: TaskListItemInput = { text: "Done", checked: true }
- * console.log(item)
- * ```
- *
- * @deprecated Prefer the tagged {@link TaskListItemSpec} input with
- * {@link taskListFromItems}. This union remains for shorthand compatibility.
- * @category models
- * @since 0.0.0
- */
-export type TaskListItemInput = TaskListCompatibilityInput;
-
 /**
  * Input accepted by table cell constructors.
  *
@@ -547,17 +516,6 @@ const makeListItemContentBuilder = <Node>(
 };
 
 const asListItem = (input: ListItemInput): Li => (Li.is(input) ? input : li(input));
-
-const asTaskItem = (input: TaskListCompatibilityInput): TaskItem =>
-  Match.value(input).pipe(
-    Match.when(TaskItem.is, (item) => item),
-    Match.when(P.isString, (value) => taskItem(value)),
-    Match.orElse((options) => {
-      const children = P.hasProperty(options, "children") ? options.children : options.text;
-
-      return P.isBoolean(options.checked) ? taskItem(children, { checked: options.checked }) : taskItem(children);
-    })
-  );
 
 const asTableCell = (input: TableCellInput): TableCell =>
   TableCell.is(input) ? input : TableCell.make({ children: asInlineArray(input) });
@@ -999,28 +957,6 @@ export const taskItem: {
     })
 );
 
-const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInput>): TaskList =>
-  TaskList.make({ children: A.map(children, asTaskItem) });
-
-/**
- * Creates a GFM task list block.
- *
- * **Example** (Create task list)
- *
- * ```ts import.meta.vitest name="Create task list"
- * import { Md } from "@beep/md"
- *
- * const node = Md.taskList(["Todo", Md.taskItem("Done", { checked: true })])
- * node._tag // => "taskList"
- * ```
- *
- * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
- * ambiguous strings and object shapes for compatibility.
- * @category constructors
- * @since 0.0.0
- */
-export const taskList = taskListCompatibility;
-
 /**
  * Creates a GFM task list from canonical tagged task items.
  *
@@ -1446,11 +1382,6 @@ export const Md = {
   tableCell,
   tableRow,
   taskItem,
-  /**
-   * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
-   * ambiguous strings and object shapes for compatibility.
-   */
-  taskList: taskListCompatibility,
   taskListFromItems,
   text,
   ul,

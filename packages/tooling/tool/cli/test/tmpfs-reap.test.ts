@@ -451,6 +451,41 @@ describe("tmpfs reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("fails closed when discovered candidates change during the liveness scan", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeNewClassFixtures(root);
+        const stubGitFile = path.join(fixture.stubEligible, ".git");
+        const worktreeGitFile = path.join(fixture.vitestWrongShape, ".git");
+        const missingStatTarget = path.join(root, "missing-stat-target");
+        const missingCacheRoot = path.join(root, "missing-cache-root");
+        let stubGitStatCount = 0;
+        const racingFileSystem = FileSystem.makeNoop({
+          ...fs,
+          stat: (target) => {
+            if (Str.Equivalence(target, stubGitFile)) {
+              stubGitStatCount += 1;
+              if (stubGitStatCount > 1) return fs.stat(missingStatTarget);
+            }
+            return fs.stat(target);
+          },
+        });
+
+        const report = yield* runTmpfsReap({
+          cacheRoot: missingCacheRoot,
+          listProcessCommandLines: () => fs.remove(worktreeGitFile).pipe(Effect.orDie, Effect.as(A.empty<string>())),
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: fixture.tmpRoot,
+        }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+        expect(candidateByPath(report, fixture.stubEligible).skipReason).toBe("contents-present");
+        expect(candidateByPath(report, fixture.vitestWrongShape).skipReason).toBe("dirty-worktree");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("preserves a container child created when non-recursive cleanup begins", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {

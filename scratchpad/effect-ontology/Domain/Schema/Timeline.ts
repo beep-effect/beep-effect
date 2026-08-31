@@ -139,7 +139,7 @@ const OrderedUtcRangeDefinition = S.Struct({
       }
     )
   )
-  .pipe(SchemaUtils.withCodecStatics);
+  .pipe(SchemaUtils.withCodecStatics(["is"]));
 
 const OrderedUtcRangeFromSelf = S.declare((input: unknown): input is typeof OrderedUtcRangeDefinition.Type =>
   OrderedUtcRangeDefinition.is(input)

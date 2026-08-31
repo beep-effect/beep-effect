@@ -126,7 +126,7 @@ const canonicalizePublishConfig = (
     out = R.set(out, key, canonicalizeUnknownValue(entryValue));
   }
 
-  return PublishConfig.fromUnknown(out);
+  return PublishConfig.decodeUnknownSync(out);
 };
 
 const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJson.Encoded =>
@@ -157,17 +157,17 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ typings: O.fromUndefinedOr(encoded.typings) }),
     ...O.getSomesStruct({
       exports: O.map(O.fromUndefinedOr(encoded.exports), (exports) =>
-        PackageExports.fromUnknown(canonicalizeUnknownValue(exports))
+        PackageExports.decodeUnknownSync(canonicalizeUnknownValue(exports))
       ),
     }),
     ...O.getSomesStruct({
       imports: O.map(O.fromUndefinedOr(encoded.imports), (imports) =>
-        PackageImports.fromUnknown(canonicalizeUnknownValue(imports))
+        PackageImports.decodeUnknownSync(canonicalizeUnknownValue(imports))
       ),
     }),
     ...O.getSomesStruct({
       browser: O.map(O.fromUndefinedOr(encoded.browser), (browser) =>
-        P.isString(browser) ? browser : Browser.fromUnknown(canonicalizeUnknownValue(browser))
+        P.isString(browser) ? browser : Browser.decodeUnknownSync(canonicalizeUnknownValue(browser))
       ),
     }),
     ...O.getSomesStruct({ bin: O.fromUndefinedOr(encoded.bin) }),
@@ -198,7 +198,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     }),
     ...O.getSomesStruct({
       peerDependenciesMeta: O.map(O.fromUndefinedOr(encoded.peerDependenciesMeta), (peerDependenciesMeta) =>
-        PeerDependenciesMeta.fromUnknown(canonicalizeUnknownValue(peerDependenciesMeta))
+        PeerDependenciesMeta.decodeUnknownSync(canonicalizeUnknownValue(peerDependenciesMeta))
       ),
     }),
     ...O.getSomesStruct({
@@ -232,7 +232,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ readme: O.fromUndefinedOr(encoded.readme) }),
     ...O.getSomesStruct({
       typesVersions: O.map(O.fromUndefinedOr(encoded.typesVersions), (typesVersions) =>
-        TypesVersions.fromUnknown(canonicalizeUnknownValue(typesVersions))
+        TypesVersions.decodeUnknownSync(canonicalizeUnknownValue(typesVersions))
       ),
     }),
   }) satisfies PackageJson.Encoded;

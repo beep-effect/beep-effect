@@ -43,7 +43,7 @@ export const EvidenceVerificationManifestationKey = Sha256Hex.pipe(
   $I.annoteSchema("EvidenceVerificationManifestationKey", {
     description: "SHA-256 digest naming one exact evidence id and verified source-text anchor within an organization.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

@@ -18,19 +18,19 @@ describe("AllowedDevOrigin", () => {
   it("accepts documented exact and wildcard host entries", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        expect(AllowedDevOrigin.fromUnknown("local-origin.dev")).toBe("local-origin.dev");
-        expect(AllowedDevOrigin.fromUnknown("*.local-origin.dev")).toBe("*.local-origin.dev");
-        expect(AllowedDevOrigin.fromUnknown(" oip-web.beep.localhost ")).toBe("oip-web.beep.localhost");
+        expect(AllowedDevOrigin.decodeUnknownSync("local-origin.dev")).toBe("local-origin.dev");
+        expect(AllowedDevOrigin.decodeUnknownSync("*.local-origin.dev")).toBe("*.local-origin.dev");
+        expect(AllowedDevOrigin.decodeUnknownSync(" oip-web.beep.localhost ")).toBe("oip-web.beep.localhost");
       })
     ));
 
   it("rejects URL-like values and invalid wildcard domains", () => {
-    expect(O.isNone(AllowedDevOrigin.decodeOption(""))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeOption("https://local-origin.dev"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeOption("local-origin.dev:3000"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeOption("local-origin.dev/path"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeOption("*.*.local-origin.dev"))).toBe(true);
-    expect(O.isNone(AllowedDevOrigin.decodeOption("*."))).toBe(true);
+    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption(""))).toBe(true);
+    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("https://local-origin.dev"))).toBe(true);
+    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("local-origin.dev:3000"))).toBe(true);
+    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("local-origin.dev/path"))).toBe(true);
+    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("*.*.local-origin.dev"))).toBe(true);
+    expect(O.isNone(AllowedDevOrigin.decodeUnknownOption("*."))).toBe(true);
   });
 
   it("round-trips schema-derived allowed origins", () => {

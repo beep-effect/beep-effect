@@ -83,7 +83,7 @@ export type PrefixFor<Entity extends EntityId.Any> = Entity["tableName"];
  *
  * const id: PublicEntityIdValueFor<"shared_organization", "SharedOrganizationPublicId"> = fromCuid(
  *   OrganizationId,
- *   Cuid.fromUnknown("a123")
+ *   Cuid.decodeUnknownSync("a123")
  * )
  * console.log(id)
  * ```
@@ -107,7 +107,7 @@ export type PublicEntityIdValueFor<Prefix extends string, TBrand extends string>
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
  *
- * const id: PublicEntityIdFor<typeof OrganizationId> = fromCuid(OrganizationId, Cuid.fromUnknown("a123"))
+ * const id: PublicEntityIdFor<typeof OrganizationId> = fromCuid(OrganizationId, Cuid.decodeUnknownSync("a123"))
  * console.log(id)
  * ```
  *
@@ -128,7 +128,10 @@ type PublicEntityIdStatics<
   Entity extends EntityId.Any,
   Prefix extends string,
   TBrand extends string,
-> = SchemaUtils.CodecStatics<PublicEntityIdSchema<Prefix, TBrand>> & {
+> = SchemaUtils.SelectedCodecStatics<
+  PublicEntityIdSchema<Prefix, TBrand>,
+  readonly ["decodeUnknownOption", "decodeUnknownSync", "is"]
+> & {
   readonly brand: TBrand;
   readonly entityType: Entity["entityType"];
   readonly equivalence: PublicEntityIdEquivalence<Prefix, TBrand>;
@@ -190,14 +193,18 @@ const attachPublicEntityIdStatics = <
   const TBrand extends string,
 >(
   schema: PublicEntityIdSchema<Prefix, TBrand>,
-  statics: Omit<PublicEntityIdStatics<Entity, Prefix, TBrand>, keyof SchemaUtils.CodecStatics<typeof schema>>
+  statics: Omit<
+    PublicEntityIdStatics<Entity, Prefix, TBrand>,
+    keyof SchemaUtils.SelectedCodecStatics<
+      PublicEntityIdSchema<Prefix, TBrand>,
+      readonly ["decodeUnknownOption", "decodeUnknownSync", "is"]
+    >
+  >
 ): PublicEntityId<Entity, Prefix, TBrand> =>
-  SchemaUtils.withStatics(schema, (self) => ({
-    decodeOption: S.decodeUnknownOption(self),
-    fromUnknown: S.decodeUnknownSync(self),
-    is: S.is(self),
-    ...statics,
-  })) as PublicEntityId<Entity, Prefix, TBrand>;
+  SchemaUtils.withStatics(
+    schema.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"])),
+    () => statics
+  );
 
 /**
  * Build a public id schema from an existing numeric entity-id schema.
@@ -248,7 +255,7 @@ export const factory = <const Entity extends EntityId.Any>(
  * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
  * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
  *
- * const id = fromCuid(OrganizationId, Cuid.fromUnknown("a123"))
+ * const id = fromCuid(OrganizationId, Cuid.decodeUnknownSync("a123"))
  * console.log(id)
  * ```
  *
@@ -261,7 +268,7 @@ export const fromCuid: {
 } = dual(
   2,
   <const Entity extends EntityId.Any>(entityId: Entity, id: Cuid): PublicEntityIdFor<Entity> =>
-    factory(entityId).fromUnknown(`${entityId.tableName}_${id}`)
+    factory(entityId).decodeUnknownSync(`${entityId.tableName}_${id}`)
 );
 
 /**

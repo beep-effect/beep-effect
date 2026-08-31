@@ -46,7 +46,7 @@ const decodeClaimRows = (rows: unknown) =>
 const decodeCorrectionRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(Corrections.select.pipe(S.Array, S.mutable))(rows));
 
-const ClaimCountRows = S.Tuple([ClaimCountDatabaseRow]).pipe(SchemaUtils.withEffectCodecStatics);
+const ClaimCountRows = S.Tuple([ClaimCountDatabaseRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const decodeClaimCountRows = (rows: unknown) =>
   normalizeDecodedRows(ClaimCountRows.decodeUnknownEffect(rows));

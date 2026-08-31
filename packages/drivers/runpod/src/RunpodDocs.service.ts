@@ -24,7 +24,7 @@ const RunpodDocsUrl = S.String.check(URLStr.filter).pipe(
     description: "Absolute URL parsed from Runpod documentation index links.",
     toArbitrary: () => (fc) => fc.webUrl(),
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -128,7 +128,7 @@ const normalizeUrl = Str.replace(/\/+$/, "");
 const resolveConfig = (config: RunpodDocsConfigInput): ResolvedRunpodDocsConfig =>
   ResolvedRunpodDocsConfig.make({
     headers: config.headers,
-    indexUrl: RunpodConfigUrl.fromUnknown(config.indexUrl),
+    indexUrl: RunpodConfigUrl.decodeUnknownSync(config.indexUrl),
   });
 
 const nonEmptyTrimmed: (value: string) => O.Option<string> = flow(Str.trim, O.liftPredicate(Str.isNonEmpty));

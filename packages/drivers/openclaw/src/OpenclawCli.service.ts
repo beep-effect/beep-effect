@@ -14,7 +14,7 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Context, Duration, Effect, flow, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -276,7 +276,7 @@ const decodeChannelAccount = S.decodeUnknownEffect(OpenclawChannelAccountStatus)
 const decodeChannelAccountEnvelope = S.decodeUnknownEffect(OpenclawChannelAccountEnvelopeWire);
 const decodeChannelsStatusWire = S.decodeUnknownEffect(S.fromJsonString(OpenclawChannelsStatusWire));
 const decodeGatewayHealthWire = S.decodeUnknownEffect(S.fromJsonString(OpenclawGatewayHealthWire));
-const decodeJsonDocument = Unknown.decodeUnknownEffectFromJsonString;
+const decodeJsonDocument = UnknownFromJsonString.decodeUnknownEffect;
 const decodeSecretsReloadOutput = S.decodeUnknownEffect(S.fromJsonString(OpenclawSecretsReloadOutput));
 const decodeSkillInventory = S.decodeUnknownEffect(S.fromJsonString(OpenclawSkillInventory));
 const decodeTelegramSendResult = S.decodeUnknownEffect(S.fromJsonString(OpenclawTelegramSendResult));
@@ -289,9 +289,9 @@ const firstNonBlank = (primary: string, fallback: string): string =>
     O.getOrElse(() => fallback)
   );
 const stderrDiagnostics = (result: OpenclawProcessResult): OpenclawDiagnosticText =>
-  OpenclawDiagnosticText.fromUnknown(firstNonBlank(result.stderr, result.stdout));
+  OpenclawDiagnosticText.decodeUnknownSync(firstNonBlank(result.stderr, result.stdout));
 const stdoutDiagnostics = (result: OpenclawProcessResult): OpenclawDiagnosticText =>
-  OpenclawDiagnosticText.fromUnknown(firstNonBlank(result.stdout, result.stderr));
+  OpenclawDiagnosticText.decodeUnknownSync(firstNonBlank(result.stdout, result.stderr));
 
 const cliTimeoutArguments = (timeoutMs: number | undefined): ReadonlyArray<string> =>
   O.match(O.fromUndefinedOr(timeoutMs), {

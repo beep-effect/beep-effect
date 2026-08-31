@@ -45,7 +45,7 @@ type WinkCustomEntityRecord = {
  * ```ts
  * import { InstanceId } from "@beep/wink"
  *
- * const instanceId = InstanceId.fromUnknown("wink-engine-example-1")
+ * const instanceId = InstanceId.decodeUnknownSync("wink-engine-example-1")
  * console.log(instanceId)
  * ```
  *
@@ -57,7 +57,7 @@ export const InstanceId = S.NonEmptyString.pipe(
   $I.annoteSchema("InstanceId", {
     description: "Stable identifier for one live wink engine instance.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
 );
 
 /**

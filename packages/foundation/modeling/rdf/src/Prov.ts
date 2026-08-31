@@ -76,6 +76,7 @@ const provDateTimeChecks = S.makeFilterGroup(
  */
 export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
   S.brand("ProvObjectRef"),
+  SchemaUtils.withCodecStatics(["decodeResult"]),
   $I.annoteSchema("ObjectRef", {
     description: "PROV object reference encoded as an IRI, CURIE, or local identifier.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
@@ -87,8 +88,7 @@ export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
       equivalenceBasis: "Exact reference-string equality inside a bounded provenance bundle.",
       provenanceProfile: "minimal-core-v1",
     }),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -137,8 +137,7 @@ export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
       equivalenceBasis: "Canonical ISO string equality after decoding and re-encoding.",
       timeSemantics: "PROV activity and lifecycle timestamps remain distinct from domain lifecycle fields.",
     }),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -187,8 +186,7 @@ export const ProvDateTime = ProvDateTimeEncoded.pipe(
       equivalenceBasis: "UTC instant equality.",
       timeSemantics: "PROV timestamps express activity and influence time, not all domain lifecycle semantics.",
     }),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

@@ -107,10 +107,10 @@ export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
   $I.annoteSchema("ThunkUnknown", {
     description: "A schema for a function that returns a value.",
   }),
+  SchemaUtils.withCodecStatics(["is"]),
   SchemaUtils.withStatics(() => ({
     generic: <A = never>(guard: (u: unknown) => u is () => A) => S.declare<() => A>(guard),
-  })),
-  SchemaUtils.withCodecStatics
+  }))
 );
 
 /**

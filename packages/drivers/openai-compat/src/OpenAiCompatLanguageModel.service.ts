@@ -49,7 +49,7 @@ import type {
 import type { OpenAiCompatClientShape } from "./OpenAiCompatClient.service.ts";
 
 const $I = $OpenaiCompatId.create("OpenAiCompatLanguageModel.service");
-const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics);
+const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption"]));
 const OptionalPosInt = S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault);
 const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault);
 const OptionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault);
@@ -268,7 +268,7 @@ const mapSchemaError =
     makeAiError(moduleName, method, AiError.InvalidOutputError.fromSchemaError(cause));
 
 const jsonObjectOrEmpty: (value: unknown) => Readonly<Record<string, unknown>> = flow(
-  UnknownRecord.decodeOption,
+  UnknownRecord.decodeUnknownOption,
   O.getOrElse(R.empty<string, unknown>)
 );
 

@@ -301,7 +301,7 @@ const ParentDir = S.String.check(S.isPattern(PARENT_DIR_PATTERN)).pipe(
   $I.annoteSchema("ParentDir", {
     description: "Validated repo-relative parent directory for package scaffolding.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 const PackageName = S.String.check(S.isPattern(PACKAGE_NAME_PATTERN)).pipe(
@@ -309,7 +309,7 @@ const PackageName = S.String.check(S.isPattern(PACKAGE_NAME_PATTERN)).pipe(
   $I.annoteSchema("PackageName", {
     description: "Package name segment used for @beep scoped package creation.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

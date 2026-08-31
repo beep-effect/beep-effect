@@ -159,7 +159,7 @@ describe("FilePath", () => {
         .sample(S.toArbitrary(FilePathSchema.FilePath)(fc), { numRuns: 20, seed: 0x5eed })
         .every(FilePathSchema.FilePath.is)
     ).toBe(true);
-    expect(FilePathSchema.FilePath.fromUnknown("data/ontology.ttl")).toBe("data/ontology.ttl");
+    expect(FilePathSchema.FilePath.decodeUnknownSync("data/ontology.ttl")).toBe("data/ontology.ttl");
   });
 
   it("accepts valid POSIX file paths", () => {

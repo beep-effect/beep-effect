@@ -113,7 +113,7 @@ import { PosInt } from "@beep/schema/Int";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { Percentage } from "@beep/schema/Percentage";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -155,7 +155,7 @@ const PullRequestConfigLayer = ConfigProvider.layer(
 const MainPushConfigLayer = ConfigProvider.layer(
   ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
 );
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
 const decodeCoverageRegressionBaselineJsoncForTesting = decodeJsoncTextAs(CoverageRegressionBaseline);
 const isDomainError = S.is(DomainError);

@@ -27,7 +27,7 @@ import {
   resolveWildcardExportTarget,
 } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { normalizePath } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect, FileSystem, flow, HashMap, HashSet, Path, pipe } from "effect";
@@ -297,7 +297,7 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
     const relativeDir = toPosixPath(path.relative(rootDir, absoluteDir));
     const packageJsonPath = path.join(absoluteDir, "package.json");
     const packageJsonContent = yield* readFileString(packageJsonPath);
-    const packageJson = yield* Unknown.decodeEffectFromJsonString(packageJsonContent).pipe(
+    const packageJson = yield* UnknownFromJsonString.decodeEffect(packageJsonContent).pipe(
       Effect.mapError(DomainError.newCause(`Failed to parse JSON in "${packageJsonPath}"`)),
       Effect.flatMap(
         Effect.fnUntraced(function* (parsed) {

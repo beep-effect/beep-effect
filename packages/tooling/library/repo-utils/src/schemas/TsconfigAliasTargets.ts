@@ -39,7 +39,7 @@ export const RootAliasTarget = S.String.check(S.isPattern(rootAliasTargetPattern
   $I.annoteSchema("RootAliasTarget", {
     description: "A repo-relative alias target beginning with ./ and containing no wildcard segment.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -76,7 +76,7 @@ export const WildcardAliasTarget = S.String.check(S.isPattern(wildcardAliasTarge
   $I.annoteSchema("WildcardAliasTarget", {
     description: "A repo-relative alias target beginning with ./ and containing a wildcard segment.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

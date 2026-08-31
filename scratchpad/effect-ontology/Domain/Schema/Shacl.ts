@@ -132,7 +132,7 @@ export const ShaclValidationReport = ShaclValidationReportFields.annotate({
     description:
       "Complete normalized SHACL validation report with spec-consistent conformance, graph sizes, completion time, and finite duration.",
   }),
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics(["decodeEffect"])
 );
 
 /**
@@ -221,7 +221,7 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
   $I.annoteSchema("ValidationPolicy", {
     description: "Workflow policy for failing on SHACL Violation or Warning results, with an overriding log-only mode.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   SchemaUtils.withStatics((schema) => ({
     shouldFail: dual(2, (policy: typeof schema.Type, results: ReadonlyArray<ShaclValidationViolation>): boolean =>
       Bool.and(

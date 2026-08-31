@@ -53,8 +53,7 @@ export const PositiveMilliseconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveMilliseconds", {
     description: "Positive finite timeout value in milliseconds.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -115,8 +114,7 @@ export const ObsWebSocketPort = S.Int.check(
 ).pipe(
   $I.annoteSchema("ObsWebSocketPort", {
     description: "Network port number in the closed 1-65535 range.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

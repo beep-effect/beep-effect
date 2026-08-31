@@ -147,9 +147,11 @@ describe("@beep/duckdb", { concurrent: false }, () => {
       )
     ).toBe(JSON.stringify({ filePath: "exports/events.parquet", tableName: "events" }));
     expect(
-      JSON.stringify(encodeSchema(DuckDbRow, DuckDbRow.fromUnknown({ empty: null, id: "run-1", ok: true, value: 42 })))
+      JSON.stringify(
+        encodeSchema(DuckDbRow, DuckDbRow.decodeUnknownSync({ empty: null, id: "run-1", ok: true, value: 42 }))
+      )
     ).toBe(JSON.stringify({ empty: null, id: "run-1", ok: true, value: 42 }));
-    expect(JSON.stringify(encodeSchema(DuckDbRows, DuckDbRows.fromUnknown([{ id: "run-1", value: 42 }])))).toBe(
+    expect(JSON.stringify(encodeSchema(DuckDbRows, DuckDbRows.decodeUnknownSync([{ id: "run-1", value: 42 }])))).toBe(
       JSON.stringify([{ id: "run-1", value: 42 }])
     );
     expect(

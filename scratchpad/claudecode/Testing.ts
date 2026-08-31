@@ -13,7 +13,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import {
   Cause,
   Effect,
@@ -324,7 +324,7 @@ export const runHookWithMockStdin = <In extends HookInputEnvelope, Out, E, R>(
     const trimmed = stdout.trim();
     const output: unknown =
       trimmed.length > 0
-        ? yield* Unknown.decodeEffectFromJsonString(trimmed).pipe(Effect.orElseSucceed(() => undefined))
+        ? yield* UnknownFromJsonString.decodeEffect(trimmed).pipe(Effect.orElseSucceed(() => undefined))
         : undefined;
 
     const { exitCode, errorTag } = classifyExit(exit);

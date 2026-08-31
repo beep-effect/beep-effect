@@ -220,7 +220,7 @@ export const ResultModel = S.Union([SuccessModel, FailureModel]).pipe(
   $I.annoteSchema("ResultModel", {
     description: "Schema-owned success or failure model.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

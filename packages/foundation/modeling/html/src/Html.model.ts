@@ -11,7 +11,7 @@
  * @packageDocumentation \@beep/html/Html.model
  * @since 0.0.0
  */
-import { $HtmlId } from "@beep/identity";
+import { $HtmlId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
@@ -70,7 +70,8 @@ const taggedUnion = <A extends Tagged, E extends Tagged>(
   id: string,
   description: string,
   members: TaggedMembers<A, E>
-) => S.Union(members).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema(id, { description }), S.revealCodec);
+): S.Codec<A, E, never, never> =>
+  S.Union(members).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema(id, { description }), S.revealCodec);
 
 /**
  * Recursive list of nodes that may occur as element or fragment children.
@@ -148,6 +149,7 @@ export class Fragment extends S.TaggedClass<Fragment>($I`Fragment`)(
   { children: HtmlChildren },
   $I.annote("Fragment", { description: "A document fragment node (a detached group of children)." })
 ) {}
+
 /**
  * Companion namespace for {@link Fragment}.
  *
@@ -165,9 +167,15 @@ export class Fragment extends S.TaggedClass<Fragment>($I`Fragment`)(
  */
 export declare namespace Fragment {
   /** @since 0.0.0 */
-  export type Type = { readonly _tag: "#fragment"; readonly children: HtmlChildren.Type };
+  export type Type = {
+    readonly _tag: "#fragment";
+    readonly children: HtmlChildren.Type;
+  };
   /** @since 0.0.0 */
-  export type Encoded = { readonly _tag: "#fragment"; readonly children: HtmlChildren.Encoded };
+  export type Encoded = {
+    readonly _tag: "#fragment";
+    readonly children: HtmlChildren.Encoded;
+  };
 }
 
 /**
@@ -367,6 +375,7 @@ export class A extends S.TaggedClass<A>($I`A`)(
   },
   $I.annote("A", { description: "The <a> element." })
 ) {}
+
 /**
  * Companion namespace for {@link A}.
  *
@@ -458,6 +467,7 @@ export class Abbr extends S.TaggedClass<Abbr>($I`Abbr`)(
   },
   $I.annote("Abbr", { description: "The <abbr> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Abbr}.
  *
@@ -509,6 +519,7 @@ export class Acronym extends S.TaggedClass<Acronym>($I`Acronym`)(
   },
   $I.annote("Acronym", { description: "The <acronym> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Acronym}.
  *
@@ -560,6 +571,7 @@ export class Address extends S.TaggedClass<Address>($I`Address`)(
   },
   $I.annote("Address", { description: "The <address> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Address}.
  *
@@ -611,6 +623,7 @@ export class Applet extends S.TaggedClass<Applet>($I`Applet`)(
   },
   $I.annote("Applet", { description: "The <applet> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Applet}.
  *
@@ -675,6 +688,7 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
   },
   $I.annote("Area", { description: "The <area> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Area}.
  *
@@ -758,6 +772,7 @@ export class Article extends S.TaggedClass<Article>($I`Article`)(
   },
   $I.annote("Article", { description: "The <article> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Article}.
  *
@@ -809,6 +824,7 @@ export class Aside extends S.TaggedClass<Aside>($I`Aside`)(
   },
   $I.annote("Aside", { description: "The <aside> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Aside}.
  *
@@ -872,6 +888,7 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
   },
   $I.annote("Audio", { description: "The <audio> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Audio}.
  *
@@ -939,6 +956,7 @@ export class B extends S.TaggedClass<B>($I`B`)(
   },
   $I.annote("B", { description: "The <b> element." })
 ) {}
+
 /**
  * Companion namespace for {@link B}.
  *
@@ -991,6 +1009,7 @@ export class Base extends S.TaggedClass<Base>($I`Base`)(
   },
   $I.annote("Base", { description: "The <base> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Base}.
  *
@@ -1043,6 +1062,7 @@ export class Basefont extends S.TaggedClass<Basefont>($I`Basefont`)(
   },
   $I.annote("Basefont", { description: "The <basefont> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Basefont}.
  *
@@ -1092,6 +1112,7 @@ export class Bdi extends S.TaggedClass<Bdi>($I`Bdi`)(
   },
   $I.annote("Bdi", { description: "The <bdi> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Bdi}.
  *
@@ -1143,6 +1164,7 @@ export class Bdo extends S.TaggedClass<Bdo>($I`Bdo`)(
   },
   $I.annote("Bdo", { description: "The <bdo> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Bdo}.
  *
@@ -1193,6 +1215,7 @@ export class Bgsound extends S.TaggedClass<Bgsound>($I`Bgsound`)(
   },
   $I.annote("Bgsound", { description: "The <bgsound> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Bgsound}.
  *
@@ -1242,6 +1265,7 @@ export class Big extends S.TaggedClass<Big>($I`Big`)(
   },
   $I.annote("Big", { description: "The <big> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Big}.
  *
@@ -1293,6 +1317,7 @@ export class Blink extends S.TaggedClass<Blink>($I`Blink`)(
   },
   $I.annote("Blink", { description: "The <blink> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Blink}.
  *
@@ -1345,6 +1370,7 @@ export class Blockquote extends S.TaggedClass<Blockquote>($I`Blockquote`)(
   },
   $I.annote("Blockquote", { description: "The <blockquote> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Blockquote}.
  *
@@ -1427,6 +1453,7 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
   },
   $I.annote("Body", { description: "The <body> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Body}.
  *
@@ -1536,6 +1563,7 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
   },
   $I.annote("Br", { description: "The <br> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Br}.
  *
@@ -1615,6 +1643,7 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
   },
   $I.annote("Button", { description: "The <button> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Button}.
  *
@@ -1708,6 +1737,7 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
   },
   $I.annote("Canvas", { description: "The <canvas> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Canvas}.
  *
@@ -1764,6 +1794,7 @@ export class Caption extends S.TaggedClass<Caption>($I`Caption`)(
   },
   $I.annote("Caption", { description: "The <caption> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Caption}.
  *
@@ -1817,6 +1848,7 @@ export class Center extends S.TaggedClass<Center>($I`Center`)(
   },
   $I.annote("Center", { description: "The <center> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Center}.
  *
@@ -1868,6 +1900,7 @@ export class Cite extends S.TaggedClass<Cite>($I`Cite`)(
   },
   $I.annote("Cite", { description: "The <cite> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Cite}.
  *
@@ -1919,6 +1952,7 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
   },
   $I.annote("Code", { description: "The <code> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Code}.
  *
@@ -1975,6 +2009,7 @@ export class Col extends S.TaggedClass<Col>($I`Col`)(
   },
   $I.annote("Col", { description: "The <col> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Col}.
  *
@@ -2037,6 +2072,7 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
   },
   $I.annote("Colgroup", { description: "The <colgroup> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Colgroup}.
  *
@@ -2091,6 +2127,7 @@ export class Data extends S.TaggedClass<Data>($I`Data`)(
   },
   $I.annote("Data", { description: "The <data> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Data}.
  *
@@ -2144,6 +2181,7 @@ export class Datalist extends S.TaggedClass<Datalist>($I`Datalist`)(
   },
   $I.annote("Datalist", { description: "The <datalist> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Datalist}.
  *
@@ -2195,6 +2233,7 @@ export class Dd extends S.TaggedClass<Dd>($I`Dd`)(
   },
   $I.annote("Dd", { description: "The <dd> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Dd}.
  *
@@ -2248,6 +2287,7 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
   },
   $I.annote("Del", { description: "The <del> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Del}.
  *
@@ -2305,6 +2345,7 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
   },
   $I.annote("Details", { description: "The <details> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Details}.
  *
@@ -2360,6 +2401,7 @@ export class Dfn extends S.TaggedClass<Dfn>($I`Dfn`)(
   },
   $I.annote("Dfn", { description: "The <dfn> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Dfn}.
  *
@@ -2415,6 +2457,7 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
   },
   $I.annote("Dialog", { description: "The <dialog> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Dialog}.
  *
@@ -2470,6 +2513,7 @@ export class DirElement extends S.TaggedClass<DirElement>($I`DirElement`)(
   },
   $I.annote("DirElement", { description: "The <dir> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link DirElement}.
  *
@@ -2522,6 +2566,7 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
   },
   $I.annote("Div", { description: "The <div> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Div}.
  *
@@ -2576,6 +2621,7 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
   },
   $I.annote("Dl", { description: "The <dl> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Dl}.
  *
@@ -2629,6 +2675,7 @@ export class Dt extends S.TaggedClass<Dt>($I`Dt`)(
   },
   $I.annote("Dt", { description: "The <dt> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Dt}.
  *
@@ -2680,6 +2727,7 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
   },
   $I.annote("Em", { description: "The <em> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Em}.
  *
@@ -2738,6 +2786,7 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
   },
   $I.annote("Embed", { description: "The <embed> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Embed}.
  *
@@ -2807,6 +2856,7 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
   },
   $I.annote("Fieldset", { description: "The <fieldset> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Fieldset}.
  *
@@ -2866,6 +2916,7 @@ export class Figcaption extends S.TaggedClass<Figcaption>($I`Figcaption`)(
   },
   $I.annote("Figcaption", { description: "The <figcaption> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Figcaption}.
  *
@@ -2917,6 +2968,7 @@ export class Figure extends S.TaggedClass<Figure>($I`Figure`)(
   },
   $I.annote("Figure", { description: "The <figure> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Figure}.
  *
@@ -2968,6 +3020,7 @@ export class Font extends S.TaggedClass<Font>($I`Font`)(
   },
   $I.annote("Font", { description: "The <font> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Font}.
  *
@@ -3019,6 +3072,7 @@ export class Footer extends S.TaggedClass<Footer>($I`Footer`)(
   },
   $I.annote("Footer", { description: "The <footer> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Footer}.
  *
@@ -3089,6 +3143,7 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
   },
   $I.annote("Form", { description: "The <form> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Form}.
  *
@@ -3169,6 +3224,7 @@ export class Frame extends S.TaggedClass<Frame>($I`Frame`)(
   },
   $I.annote("Frame", { description: "The <frame> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Frame}.
  *
@@ -3218,6 +3274,7 @@ export class Frameset extends S.TaggedClass<Frameset>($I`Frameset`)(
   },
   $I.annote("Frameset", { description: "The <frameset> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Frameset}.
  *
@@ -3270,6 +3327,7 @@ export class H1 extends S.TaggedClass<H1>($I`H1`)(
   },
   $I.annote("H1", { description: "The <h1> element." })
 ) {}
+
 /**
  * Companion namespace for {@link H1}.
  *
@@ -3324,6 +3382,7 @@ export class H2 extends S.TaggedClass<H2>($I`H2`)(
   },
   $I.annote("H2", { description: "The <h2> element." })
 ) {}
+
 /**
  * Companion namespace for {@link H2}.
  *
@@ -3378,6 +3437,7 @@ export class H3 extends S.TaggedClass<H3>($I`H3`)(
   },
   $I.annote("H3", { description: "The <h3> element." })
 ) {}
+
 /**
  * Companion namespace for {@link H3}.
  *
@@ -3432,6 +3492,7 @@ export class H4 extends S.TaggedClass<H4>($I`H4`)(
   },
   $I.annote("H4", { description: "The <h4> element." })
 ) {}
+
 /**
  * Companion namespace for {@link H4}.
  *
@@ -3486,6 +3547,7 @@ export class H5 extends S.TaggedClass<H5>($I`H5`)(
   },
   $I.annote("H5", { description: "The <h5> element." })
 ) {}
+
 /**
  * Companion namespace for {@link H5}.
  *
@@ -3540,6 +3602,7 @@ export class H6 extends S.TaggedClass<H6>($I`H6`)(
   },
   $I.annote("H6", { description: "The <h6> element." })
 ) {}
+
 /**
  * Companion namespace for {@link H6}.
  *
@@ -3594,6 +3657,7 @@ export class Head extends S.TaggedClass<Head>($I`Head`)(
   },
   $I.annote("Head", { description: "The <head> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Head}.
  *
@@ -3647,6 +3711,7 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
   },
   $I.annote("Header", { description: "The <header> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Header}.
  *
@@ -3698,6 +3763,7 @@ export class Hgroup extends S.TaggedClass<Hgroup>($I`Hgroup`)(
   },
   $I.annote("Hgroup", { description: "The <hgroup> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Hgroup}.
  *
@@ -3753,6 +3819,7 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
   },
   $I.annote("Hr", { description: "The <hr> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Hr}.
  *
@@ -3814,6 +3881,7 @@ export class Html extends S.TaggedClass<Html>($I`Html`)(
   },
   $I.annote("Html", { description: "The <html> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Html}.
  *
@@ -3869,6 +3937,7 @@ export class I extends S.TaggedClass<I>($I`I`)(
   },
   $I.annote("I", { description: "The <i> element." })
 ) {}
+
 /**
  * Companion namespace for {@link I}.
  *
@@ -3958,6 +4027,7 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
   },
   $I.annote("Iframe", { description: "The <iframe> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Iframe}.
  *
@@ -4085,6 +4155,7 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
   },
   $I.annote("Img", { description: "The <img> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Img}.
  *
@@ -4256,6 +4327,7 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
   },
   $I.annote("Input", { description: "The <input> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Input}.
  *
@@ -4410,6 +4482,7 @@ export class Ins extends S.TaggedClass<Ins>($I`Ins`)(
   },
   $I.annote("Ins", { description: "The <ins> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Ins}.
  *
@@ -4464,6 +4537,7 @@ export class Isindex extends S.TaggedClass<Isindex>($I`Isindex`)(
   },
   $I.annote("Isindex", { description: "The <isindex> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Isindex}.
  *
@@ -4513,6 +4587,7 @@ export class Kbd extends S.TaggedClass<Kbd>($I`Kbd`)(
   },
   $I.annote("Kbd", { description: "The <kbd> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Kbd}.
  *
@@ -4563,6 +4638,7 @@ export class Keygen extends S.TaggedClass<Keygen>($I`Keygen`)(
   },
   $I.annote("Keygen", { description: "The <keygen> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Keygen}.
  *
@@ -4613,6 +4689,7 @@ export class Label extends S.TaggedClass<Label>($I`Label`)(
   },
   $I.annote("Label", { description: "The <label> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Label}.
  *
@@ -4667,6 +4744,7 @@ export class Legend extends S.TaggedClass<Legend>($I`Legend`)(
   },
   $I.annote("Legend", { description: "The <legend> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Legend}.
  *
@@ -4722,6 +4800,7 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
   },
   $I.annote("Li", { description: "The <li> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Li}.
  *
@@ -4815,6 +4894,7 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
   },
   $I.annote("Link", { description: "The <link> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Link}.
  *
@@ -4930,6 +5010,7 @@ export class Listing extends S.TaggedClass<Listing>($I`Listing`)(
   },
   $I.annote("Listing", { description: "The <listing> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Listing}.
  *
@@ -4981,6 +5062,7 @@ export class Main extends S.TaggedClass<Main>($I`Main`)(
   },
   $I.annote("Main", { description: "The <main> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Main}.
  *
@@ -5033,6 +5115,7 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
   },
   $I.annote("MapElement", { description: "The <map> element." })
 ) {}
+
 /**
  * Companion namespace for {@link MapElement}.
  *
@@ -5086,6 +5169,7 @@ export class Mark extends S.TaggedClass<Mark>($I`Mark`)(
   },
   $I.annote("Mark", { description: "The <mark> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Mark}.
  *
@@ -5141,6 +5225,7 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
   },
   $I.annote("Marquee", { description: "The <marquee> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Marquee}.
  *
@@ -5203,6 +5288,7 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
   },
   $I.annote("Menu", { description: "The <menu> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Menu}.
  *
@@ -5260,6 +5346,7 @@ export class Menuitem extends S.TaggedClass<Menuitem>($I`Menuitem`)(
   },
   $I.annote("Menuitem", { description: "The <menuitem> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Menuitem}.
  *
@@ -5324,6 +5411,7 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
   },
   $I.annote("Meta", { description: "The <meta> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Meta}.
  *
@@ -5393,6 +5481,7 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
   },
   $I.annote("Meter", { description: "The <meter> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Meter}.
  *
@@ -5456,6 +5545,7 @@ export class Multicol extends S.TaggedClass<Multicol>($I`Multicol`)(
   },
   $I.annote("Multicol", { description: "The <multicol> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Multicol}.
  *
@@ -5507,6 +5597,7 @@ export class Nav extends S.TaggedClass<Nav>($I`Nav`)(
   },
   $I.annote("Nav", { description: "The <nav> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Nav}.
  *
@@ -5557,6 +5648,7 @@ export class Nextid extends S.TaggedClass<Nextid>($I`Nextid`)(
   },
   $I.annote("Nextid", { description: "The <nextid> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Nextid}.
  *
@@ -5606,6 +5698,7 @@ export class Nobr extends S.TaggedClass<Nobr>($I`Nobr`)(
   },
   $I.annote("Nobr", { description: "The <nobr> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Nobr}.
  *
@@ -5657,6 +5750,7 @@ export class Noembed extends S.TaggedClass<Noembed>($I`Noembed`)(
   },
   $I.annote("Noembed", { description: "The <noembed> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Noembed}.
  *
@@ -5708,6 +5802,7 @@ export class Noframes extends S.TaggedClass<Noframes>($I`Noframes`)(
   },
   $I.annote("Noframes", { description: "The <noframes> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Noframes}.
  *
@@ -5759,6 +5854,7 @@ export class Noscript extends S.TaggedClass<Noscript>($I`Noscript`)(
   },
   $I.annote("Noscript", { description: "The <noscript> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Noscript}.
  *
@@ -5831,6 +5927,7 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
   },
   $I.annote("ObjectElement", { description: "The <object> element." })
 ) {}
+
 /**
  * Companion namespace for {@link ObjectElement}.
  *
@@ -5928,6 +6025,7 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
   },
   $I.annote("Ol", { description: "The <ol> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Ol}.
  *
@@ -5989,6 +6087,7 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
   },
   $I.annote("Optgroup", { description: "The <optgroup> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Optgroup}.
  *
@@ -6049,6 +6148,7 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
   },
   $I.annote("Option", { description: "The <option> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Option}.
  *
@@ -6115,6 +6215,7 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
   },
   $I.annote("Output", { description: "The <output> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Output}.
  *
@@ -6177,6 +6278,7 @@ export class P extends S.TaggedClass<P>($I`P`)(
   },
   $I.annote("P", { description: "The <p> element." })
 ) {}
+
 /**
  * Companion namespace for {@link P}.
  *
@@ -6229,6 +6331,7 @@ export class Param extends S.TaggedClass<Param>($I`Param`)(
   },
   $I.annote("Param", { description: "The <param> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Param}.
  *
@@ -6278,6 +6381,7 @@ export class Picture extends S.TaggedClass<Picture>($I`Picture`)(
   },
   $I.annote("Picture", { description: "The <picture> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Picture}.
  *
@@ -6329,6 +6433,7 @@ export class Plaintext extends S.TaggedClass<Plaintext>($I`Plaintext`)(
   },
   $I.annote("Plaintext", { description: "The <plaintext> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Plaintext}.
  *
@@ -6381,6 +6486,7 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
   },
   $I.annote("Pre", { description: "The <pre> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Pre}.
  *
@@ -6436,6 +6542,7 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
   },
   $I.annote("Progress", { description: "The <progress> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Progress}.
  *
@@ -6492,6 +6599,7 @@ export class Q extends S.TaggedClass<Q>($I`Q`)(
   },
   $I.annote("Q", { description: "The <q> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Q}.
  *
@@ -6545,6 +6653,7 @@ export class Rb extends S.TaggedClass<Rb>($I`Rb`)(
   },
   $I.annote("Rb", { description: "The <rb> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Rb}.
  *
@@ -6596,6 +6705,7 @@ export class Rp extends S.TaggedClass<Rp>($I`Rp`)(
   },
   $I.annote("Rp", { description: "The <rp> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Rp}.
  *
@@ -6647,6 +6757,7 @@ export class Rt extends S.TaggedClass<Rt>($I`Rt`)(
   },
   $I.annote("Rt", { description: "The <rt> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Rt}.
  *
@@ -6698,6 +6809,7 @@ export class Rtc extends S.TaggedClass<Rtc>($I`Rtc`)(
   },
   $I.annote("Rtc", { description: "The <rtc> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Rtc}.
  *
@@ -6749,6 +6861,7 @@ export class Ruby extends S.TaggedClass<Ruby>($I`Ruby`)(
   },
   $I.annote("Ruby", { description: "The <ruby> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Ruby}.
  *
@@ -6800,6 +6913,7 @@ export class SElement extends S.TaggedClass<SElement>($I`SElement`)(
   },
   $I.annote("SElement", { description: "The <s> element." })
 ) {}
+
 /**
  * Companion namespace for {@link SElement}.
  *
@@ -6851,6 +6965,7 @@ export class Samp extends S.TaggedClass<Samp>($I`Samp`)(
   },
   $I.annote("Samp", { description: "The <samp> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Samp}.
  *
@@ -6918,6 +7033,7 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
   },
   $I.annote("Script", { description: "The <script> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Script}.
  *
@@ -7007,6 +7123,7 @@ export class Search extends S.TaggedClass<Search>($I`Search`)(
   },
   $I.annote("Search", { description: "The <search> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Search}.
  *
@@ -7058,6 +7175,7 @@ export class Section extends S.TaggedClass<Section>($I`Section`)(
   },
   $I.annote("Section", { description: "The <section> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Section}.
  *
@@ -7116,6 +7234,7 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
   },
   $I.annote("Select", { description: "The <select> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Select}.
  *
@@ -7181,6 +7300,7 @@ export class Selectedcontent extends S.TaggedClass<Selectedcontent>($I`Selectedc
   },
   $I.annote("Selectedcontent", { description: "The <selectedcontent> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Selectedcontent}.
  *
@@ -7233,6 +7353,7 @@ export class Slot extends S.TaggedClass<Slot>($I`Slot`)(
   },
   $I.annote("Slot", { description: "The <slot> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Slot}.
  *
@@ -7286,6 +7407,7 @@ export class Small extends S.TaggedClass<Small>($I`Small`)(
   },
   $I.annote("Small", { description: "The <small> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Small}.
  *
@@ -7343,6 +7465,7 @@ export class Source extends S.TaggedClass<Source>($I`Source`)(
   },
   $I.annote("Source", { description: "The <source> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Source}.
  *
@@ -7405,6 +7528,7 @@ export class Spacer extends S.TaggedClass<Spacer>($I`Spacer`)(
   },
   $I.annote("Spacer", { description: "The <spacer> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Spacer}.
  *
@@ -7454,6 +7578,7 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
   },
   $I.annote("Span", { description: "The <span> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Span}.
  *
@@ -7505,6 +7630,7 @@ export class Strike extends S.TaggedClass<Strike>($I`Strike`)(
   },
   $I.annote("Strike", { description: "The <strike> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Strike}.
  *
@@ -7556,6 +7682,7 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
   },
   $I.annote("Strong", { description: "The <strong> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Strong}.
  *
@@ -7610,6 +7737,7 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
   },
   $I.annote("Style", { description: "The <style> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Style}.
  *
@@ -7667,6 +7795,7 @@ export class Sub extends S.TaggedClass<Sub>($I`Sub`)(
   },
   $I.annote("Sub", { description: "The <sub> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Sub}.
  *
@@ -7718,6 +7847,7 @@ export class Summary extends S.TaggedClass<Summary>($I`Summary`)(
   },
   $I.annote("Summary", { description: "The <summary> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Summary}.
  *
@@ -7769,6 +7899,7 @@ export class Sup extends S.TaggedClass<Sup>($I`Sup`)(
   },
   $I.annote("Sup", { description: "The <sup> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Sup}.
  *
@@ -7832,6 +7963,7 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
   },
   $I.annote("Table", { description: "The <table> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Table}.
  *
@@ -7912,6 +8044,7 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
   },
   $I.annote("Tbody", { description: "The <tbody> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Tbody}.
  *
@@ -7975,15 +8108,25 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    colspan: S.OptionFromOptionalKey(
+      S.Int.check(
+        S.isBetween({
+          minimum: 1,
+          maximum: 1000,
+        })
+      )
+    ).pipe(SchemaUtils.withNoneDefault),
     headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
     height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    rowspan: S.OptionFromOptionalKey(
+      S.Int.check(
+        S.isBetween({
+          minimum: 0,
+          maximum: 65534,
+        })
+      )
+    ).pipe(SchemaUtils.withNoneDefault),
     scope: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
@@ -7991,6 +8134,7 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
   },
   $I.annote("Td", { description: "The <td> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Td}.
  *
@@ -8080,6 +8224,7 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
   },
   $I.annote("Template", { description: "The <template> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Template}.
  *
@@ -8158,6 +8303,7 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
   },
   $I.annote("Textarea", { description: "The <textarea> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Textarea}.
  *
@@ -8235,6 +8381,7 @@ export class Tfoot extends S.TaggedClass<Tfoot>($I`Tfoot`)(
   },
   $I.annote("Tfoot", { description: "The <tfoot> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Tfoot}.
  *
@@ -8288,15 +8435,25 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    colspan: S.OptionFromOptionalKey(
+      S.Int.check(
+        S.isBetween({
+          minimum: 1,
+          maximum: 1000,
+        })
+      )
+    ).pipe(SchemaUtils.withNoneDefault),
     headers: S.OptionFromOptionalKey(HtmlIdReferenceList).pipe(SchemaUtils.withNoneDefault),
     height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-    rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    rowspan: S.OptionFromOptionalKey(
+      S.Int.check(
+        S.isBetween({
+          minimum: 0,
+          maximum: 65534,
+        })
+      )
+    ).pipe(SchemaUtils.withNoneDefault),
     scope: S.OptionFromOptionalKey(makeAsciiCaseInsensitiveEnumerated(["row", "col", "rowgroup", "colgroup"])).pipe(
       SchemaUtils.withNoneDefault
     ),
@@ -8306,6 +8463,7 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
   },
   $I.annote("Th", { description: "The <th> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Th}.
  *
@@ -8385,6 +8543,7 @@ export class Thead extends S.TaggedClass<Thead>($I`Thead`)(
   },
   $I.annote("Thead", { description: "The <thead> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Thead}.
  *
@@ -8437,6 +8596,7 @@ export class Time extends S.TaggedClass<Time>($I`Time`)(
   },
   $I.annote("Time", { description: "The <time> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Time}.
  *
@@ -8490,6 +8650,7 @@ export class Title extends S.TaggedClass<Title>($I`Title`)(
   },
   $I.annote("Title", { description: "The <title> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Title}.
  *
@@ -8547,6 +8708,7 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
   },
   $I.annote("Tr", { description: "The <tr> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Tr}.
  *
@@ -8616,6 +8778,7 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
   },
   $I.annote("Track", { description: "The <track> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Track}.
  *
@@ -8675,6 +8838,7 @@ export class Tt extends S.TaggedClass<Tt>($I`Tt`)(
   },
   $I.annote("Tt", { description: "The <tt> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Tt}.
  *
@@ -8726,6 +8890,7 @@ export class U extends S.TaggedClass<U>($I`U`)(
   },
   $I.annote("U", { description: "The <u> element." })
 ) {}
+
 /**
  * Companion namespace for {@link U}.
  *
@@ -8779,6 +8944,7 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
   },
   $I.annote("Ul", { description: "The <ul> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Ul}.
  *
@@ -8834,6 +9000,7 @@ export class Var extends S.TaggedClass<Var>($I`Var`)(
   },
   $I.annote("Var", { description: "The <var> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Var}.
  *
@@ -8901,6 +9068,7 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
   },
   $I.annote("Video", { description: "The <video> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Video}.
  *
@@ -8975,6 +9143,7 @@ export class Wbr extends S.TaggedClass<Wbr>($I`Wbr`)(
   },
   $I.annote("Wbr", { description: "The <wbr> element." })
 ) {}
+
 /**
  * Companion namespace for {@link Wbr}.
  *
@@ -9024,6 +9193,7 @@ export class Xmp extends S.TaggedClass<Xmp>($I`Xmp`)(
   },
   $I.annote("Xmp", { description: "The <xmp> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
+
 /**
  * Companion namespace for {@link Xmp}.
  *

@@ -40,8 +40,7 @@ export const ProcessExitCode = S.Int.check(
 ).pipe(
   $I.annoteSchema("ProcessExitCode", {
     description: "Non-negative integer process exit status.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

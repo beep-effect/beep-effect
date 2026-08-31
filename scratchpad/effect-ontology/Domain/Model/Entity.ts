@@ -131,8 +131,7 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
     $I.annoteSchema("EvidenceSpan", {
       description:
         "Legacy text-field ingress codec decoding to a canonical TextAnchor-backed span with optional confidence.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 /**

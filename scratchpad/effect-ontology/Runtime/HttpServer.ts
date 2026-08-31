@@ -184,7 +184,7 @@ const stageManifest = Effect.fn("HttpServer.stageManifest")(function* (manifest:
   yield* storage.set(manifestPath, manifestJson);
 
   const bucket = resolveBucket(config);
-  return GcsUri.fromUnknown(`gs://${bucket}/${manifestPath}`);
+  return GcsUri.decodeUnknownSync(`gs://${bucket}/${manifestPath}`);
 });
 
 const toPayload = (

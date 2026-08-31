@@ -42,7 +42,7 @@ export const SanityQueryParamValue = S.Union([S.Boolean, S.Finite, S.String]).pi
   $I.annoteSchema("SanityQueryParamValue", {
     description: "Scalar JSON value accepted in Sanity query params.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

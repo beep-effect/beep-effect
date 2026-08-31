@@ -814,8 +814,8 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       value: { value: "quoted" },
     });
 
-    expect(rendered).toContain('import { Unknown } from "@beep/schema/Unknown"');
-    expect(rendered).toContain("Unknown.decodeUnknownResultFromJsonString");
+    expect(rendered).toContain('import { UnknownFromJsonString } from "@beep/schema/Unknown"');
+    expect(rendered).toContain("UnknownFromJsonString.decodeUnknownResult");
     expect(rendered).toContain("Result.getOrThrow");
     expect(rendered).toContain("export const FixtureData: unknown");
     expect(rendered).not.toContain("JSON.parse");

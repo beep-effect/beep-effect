@@ -172,7 +172,7 @@ const decodeConflictRecords = (rows: unknown) =>
 const decodeConflictRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(Conflicts.select.pipe(S.Array, S.mutable))(rows));
 
-const CountRows = S.Tuple([CountRow]).pipe(SchemaUtils.withEffectCodecStatics);
+const CountRows = S.Tuple([CountRow]).pipe(SchemaUtils.withCodecStatics(["decodeUnknownEffect"]));
 
 const decodeCountRow = (rows: unknown) => normalizeDecodedRows(CountRows.decodeUnknownEffect(rows));
 

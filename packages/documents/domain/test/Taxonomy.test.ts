@@ -77,4 +77,17 @@ describe("@beep/documents-domain taxonomy seed", () => {
       fcRuns(10)
     );
   });
+
+  it("retains native tagged-union utilities alongside its selected decoder", () => {
+    const outcome = FilingOutcome.decodeUnknownSync({
+      confidence: 1,
+      kind: "filed",
+      rationale: "Matched deterministic taxonomy token for pleadings.",
+      taxonomyConceptId: "pleadings",
+    });
+
+    expect(FilingOutcome.guards.filed(outcome)).toBe(true);
+    expect(FilingOutcome.match(outcome, { filed: () => "filed", inboxed: () => "inboxed" })).toBe("filed");
+    expect(Reflect.has(FilingOutcome, "decodeUnknownOption")).toBe(false);
+  });
 });

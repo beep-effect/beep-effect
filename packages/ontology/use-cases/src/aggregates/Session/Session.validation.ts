@@ -812,7 +812,7 @@ const datasetDescriptionDataset = (session: Session): Dataset => {
 };
 
 const exportPrefixes = (): PrefixMap =>
-  PrefixMap.fromUnknown({
+  PrefixMap.decodeUnknownSync({
     dcat: DCAT_NAMESPACE,
     dcterms: DCTERMS_NAMESPACE,
     prov: PROV_NAMESPACE,

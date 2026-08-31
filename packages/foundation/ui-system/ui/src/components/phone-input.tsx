@@ -86,7 +86,7 @@ export const phoneCountryOptions = A.filter(countryOptions, (option) => isSuppor
  * ```ts
  * import { PhoneNumberE164 } from "@beep/ui/components/phone-input"
  *
- * const supportLine = PhoneNumberE164.fromUnknown("+14155552671")
+ * const supportLine = PhoneNumberE164.decodeUnknownSync("+14155552671")
  *
  * console.log(supportLine.startsWith("+"))
  * ```
@@ -120,7 +120,7 @@ export const PhoneNumberE164 = S.String.check(
   $I.annoteSchema("PhoneNumberE164", {
     description: "Valid E.164 phone number accepted by PhoneInput.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
 );
 
 /**

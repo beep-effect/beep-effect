@@ -619,7 +619,7 @@ const decodeRefNode = (term: ObjectTerm | Subject): Result.Result<ObjectRef, Pro
           : Result.succeed(term.value),
         Result.flatMap((value) =>
           pipe(
-            S.decodeResult(ObjectRefSchema)(value),
+            ObjectRefSchema.decodeResult(value),
             Result.mapError(() => codecError(`Invalid PROV object reference: ${value}`))
           )
         )

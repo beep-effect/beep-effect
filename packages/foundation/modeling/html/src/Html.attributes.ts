@@ -663,8 +663,7 @@ export type PopoverTargetAction = typeof PopoverTargetAction.Type;
  * @since 0.0.0
  */
 export const BooleanAttribute = S.Literals([true, ""]).pipe(
-  $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute presence (`true` or empty string)." }),
-  SchemaUtils.withCodecStatics
+  $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute presence (`true` or empty string)." })
 );
 /**
  * Decoded type of {@link BooleanAttribute}.
@@ -889,8 +888,7 @@ const CustomButtonCommand = S.String.check(
  * @since 0.0.0
  */
 export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]).pipe(
-  $I.annoteSchema("ButtonCommand", { description: "Canonical built-in or custom HTML button command." }),
-  SchemaUtils.withCodecStatics
+  $I.annoteSchema("ButtonCommand", { description: "Canonical built-in or custom HTML button command." })
 );
 
 /**
@@ -1194,8 +1192,7 @@ export type HtmlPositiveNumber = typeof HtmlPositiveNumber.Type;
  * @since 0.0.0
  */
 export const HtmlStep = S.Union([makeAsciiCaseInsensitiveEnumerated(["any"]), HtmlPositiveNumber]).pipe(
-  $I.annoteSchema("HtmlStep", { description: "Canonical positive numeric or any HTML step value." }),
-  SchemaUtils.withCodecStatics
+  $I.annoteSchema("HtmlStep", { description: "Canonical positive numeric or any HTML step value." })
 );
 
 /**

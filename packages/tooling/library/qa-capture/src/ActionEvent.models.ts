@@ -43,8 +43,7 @@ export const SequenceNumber = S.Int.check(
 ).pipe(
   $I.annoteSchema("SequenceNumber", {
     description: "Monotonically increasing witness event sequence number.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -93,8 +92,7 @@ export const EpochMilliseconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("EpochMilliseconds", {
     description: "Non-negative wall-clock timestamp in epoch milliseconds.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -131,8 +129,7 @@ export type EpochMilliseconds = typeof EpochMilliseconds.Type;
 export const PixelPosition = S.Finite.pipe(
   $I.annoteSchema("PixelPosition", {
     description: "Finite CSS-pixel coordinate inside the viewport coordinate space.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -176,8 +173,7 @@ export const DurationMilliseconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("DurationMilliseconds", {
     description: "Non-negative finite duration in milliseconds.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -221,8 +217,7 @@ export const NonNegativePixels = S.Finite.check(
 ).pipe(
   $I.annoteSchema("NonNegativePixels", {
     description: "Non-negative finite CSS-pixel extent.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -266,8 +261,7 @@ export const SelectorPath = S.String.check(
 ).pipe(
   $I.annoteSchema("SelectorPath", {
     description: "Deterministic selector path produced by the witness selector builder.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -316,8 +310,7 @@ export const NonPrintableKey = S.String.check(
 ).pipe(
   $I.annoteSchema("NonPrintableKey", {
     description: "Non-printable key identity with at least two characters.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -1355,8 +1348,7 @@ export const ActionEvent = S.Union([
   S.toTaggedUnion("kind"),
   $I.annoteSchema("ActionEvent", {
     description: "Union of all witness action events, discriminated by kind.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

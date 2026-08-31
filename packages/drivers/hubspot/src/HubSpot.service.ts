@@ -6,7 +6,6 @@
  */
 
 import { $HubspotId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import { Config, Context, Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -38,8 +37,7 @@ const HubSpotContactEmail = S.NonEmptyString.check(
   .pipe(
     $I.annoteSchema("HubSpotContactEmail", {
       description: "HubSpot contact email used as the CRM upsert identity.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 const HubSpotFieldName = S.NonEmptyString.pipe(
   $I.annoteSchema("HubSpotFieldName", {

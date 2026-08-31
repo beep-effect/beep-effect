@@ -299,11 +299,6 @@ const OntologyEventEntryDefinition: S.toTaggedUnion<"event", OntologyEventEntryM
   BatchStateChangedEventEntry,
 ]).pipe(S.toTaggedUnion("event"));
 
-type OntologyEventEntryCodec = S.Codec<
-  typeof OntologyEventEntryDefinition.Type,
-  typeof OntologyEventEntryDefinition.Encoded
->;
-
 /**
  * Canonical journal entry pairing every ontology event tag with its payload schema.
  *
@@ -334,10 +329,8 @@ type OntologyEventEntryCodec = S.Codec<
  * @category events
  * @since 0.0.0
  */
-export const OntologyEventEntry: ReturnType<
-  typeof SchemaUtils.withEffectCodecStatics<OntologyEventEntryCodec>
-> = OntologyEventEntryDefinition.pipe(
-  SchemaUtils.withEffectCodecStatics,
+export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
   $I.annoteSchema("OntologyEventEntry", {
     description: "Schema-validated journal entry whose event tag determines its canonical payload.",
     toArbitrary: () => S.toArbitrary(OntologyEventEntryDefinition),

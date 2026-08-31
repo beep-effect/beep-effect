@@ -43,8 +43,7 @@ const AgentConcurrency = PosInt.check(
   .pipe(
     $I.annoteSchema("AgentConcurrency", {
       description: "Bounded ontology-agent concurrency from one through 64 tasks.",
-    }),
-    SchemaUtils.withCodecStatics
+    })
   );
 
 class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`OntologyAgentConfig`)(
@@ -54,7 +53,7 @@ class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`Onto
       S.annotateKey({ description: "Exact ontology version, or no override to use the configured default." })
     ),
     validationPolicy: ValidationPolicy.pipe(
-      SchemaUtils.withKeyDefaults(ValidationPolicy.fromUnknown({})),
+      SchemaUtils.withKeyDefaults(ValidationPolicy.decodeUnknownSync({})),
       S.annotateKey({ description: "Severity-to-workflow failure policy." })
     ),
     concurrency: AgentConcurrency.pipe(
@@ -99,7 +98,6 @@ export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
   $I.annoteSchema("OntologyAgentConfig", {
     description: "Complete schema-defaulted policy for ontology-agent operations.",
   }),
-  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({
     /** @returns The canonical ontology-agent policy. */
     default: (): OntologyAgentConfigModel => OntologyAgentConfigModel.make({}),
@@ -443,8 +441,7 @@ export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
 }).pipe(
   $I.annoteSchema("ExtractWithClaimsOptions", {
     description: "Schema-defaulted options for extraction with claim provenance.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -657,8 +654,7 @@ export const QueryBinding = QueryBindingModel.pipe(
   $I.annoteSchema("QueryBinding", {
     description: "One immutable row of SPARQL variable bindings.",
     toArbitrary: () => (fc) => S.toArbitrary(QueryBindingModel)(fc),
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -739,8 +735,7 @@ export const QueryResult = QueryResultModel.annotate({
 }).pipe(
   $I.annoteSchema("QueryResult", {
     description: "Natural-language answer, transparent SPARQL, bindings, and confidence.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -788,8 +783,7 @@ export const ReasoningResult = ReasoningResultModel.annotate({
 }).pipe(
   $I.annoteSchema("ReasoningResult", {
     description: "Inferred-triple count, applied reasoning rules, and elapsed duration.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -885,8 +879,7 @@ export const ViolationsByLevel = ViolationsByLevelModel.annotate({
 }).pipe(
   $I.annoteSchema("ViolationsByLevel", {
     description: "SHACL diagnostics partitioned by standard severity.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -948,8 +941,7 @@ export const ViolationExplanation = ViolationExplanationModel.annotate({
 }).pipe(
   $I.annoteSchema("ViolationExplanation", {
     description: "Explainable SHACL diagnostic with focus, path, severity, and optional correction.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -1089,8 +1081,7 @@ export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
 }).pipe(
   $I.annoteSchema("EnhancedValidationReport", {
     description: "SHACL conformance report augmented with grouped and explainable diagnostics.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

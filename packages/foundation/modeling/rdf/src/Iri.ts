@@ -942,13 +942,13 @@ export const IRIReference = S.String.pipe(
     toArbitrary: () => (fc) => fc.constantFrom(...IriReferenceArbitraryValues),
   }),
   S.brand("IRIReference"),
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"]),
   SchemaUtils.withStatics((schema) => ({
     equivalence: SchemaUtils.toEquivalence(schema),
   })),
   $I.annoteSchema("IRIReference", {
     description: "RFC 3987 IRI reference syntax, including both absolute and relative forms.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -993,7 +993,7 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
     $I.annoteSchema("RelativeIRIReference", {
       description: "RFC 3987 relative IRI reference syntax (`irelative-ref`).",
     }),
-    SchemaUtils.withCodecStatics
+    SchemaUtils.withCodecStatics(["decodeUnknownSync"])
   );
 
 /**
@@ -1038,7 +1038,7 @@ export const AbsoluteIRI = S.String.pipe(
   $I.annoteSchema("AbsoluteIRI", {
     description: "RFC 3987 absolute IRI syntax without a fragment component.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownSync"])
 );
 
 /**
@@ -1083,9 +1083,13 @@ export const IRI = S.String.pipe(
   $I.annoteSchema("IRI", {
     description: "RFC 3987 IRI syntax.",
   }),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withResultCodecStatics,
-  SchemaUtils.withEffectCodecStatics
+  SchemaUtils.withCodecStatics([
+    "decodeEffect",
+    "decodeUnknownOption",
+    "decodeUnknownResult",
+    "decodeUnknownSync",
+    "is",
+  ])
 );
 
 /**

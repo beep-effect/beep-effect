@@ -25,7 +25,7 @@ import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
 import { Defect, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -50,7 +50,7 @@ const decodeContentDigest = S.decodeUnknownEffect(ContentDigest);
 const decodeOperationId = S.decodeUnknownEffect(OperationId);
 const decodePosixPath = S.decodeUnknownEffect(PosixPath);
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
-const encodeUnknownJson = Unknown.encodeUnknownEffectFromJsonString;
+const encodeUnknownJson = UnknownFromJsonString.encodeUnknownEffect;
 
 /**
  * One normalized patent document supplied directly to the claims batch.

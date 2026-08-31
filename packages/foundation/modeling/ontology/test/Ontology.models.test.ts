@@ -101,7 +101,7 @@ const httpValidationErrorWire: S.Codec.Encoded<typeof HTTPValidationError> = {
 describe("@beep/ontology models", () => {
   it("owns constructive HTTP URL metadata and codec statics", () => {
     expect(SchemaAST.resolve(HttpUrl.ast)?.toArbitrary).toBeDefined();
-    expect(HttpUrl.fromUnknown("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
+    expect(HttpUrl.decodeUnknownSync("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
   });
 
   it("accepts only HTTP and HTTPS URL schemes", () => {

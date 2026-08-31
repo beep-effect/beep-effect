@@ -28,7 +28,7 @@ const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const PositiveInteger = S.Int.check(S.isGreaterThan(0));
 
 const withOutputCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(self: Sch) =>
-  SchemaUtils.withCodecStatics(self).pipe(
+  self.pipe(
     SchemaUtils.withStatics((schema) => ({
       decodeResult: S.decodeUnknownResult(schema),
     }))

@@ -204,11 +204,11 @@ describe("@beep/openclaw models", () => {
     });
     const doctor = OpenclawDoctorReport.make({
       exitCode: 1,
-      findings: OpenclawDiagnosticText.fromUnknown("Doctor config writes are disabled\n"),
+      findings: OpenclawDiagnosticText.decodeUnknownSync("Doctor config writes are disabled\n"),
     });
     const validation = OpenclawConfigInvalid.make({
       _tag: "Invalid",
-      diagnostics: OpenclawDiagnosticText.fromUnknown("Unknown top-level key: unexpected"),
+      diagnostics: OpenclawDiagnosticText.decodeUnknownSync("Unknown top-level key: unexpected"),
       exitCode: 1,
     });
     const reloaded = OpenclawSecretsReloaded.make({
@@ -217,7 +217,7 @@ describe("@beep/openclaw models", () => {
     });
     const degraded = OpenclawSecretsReloadDegraded.make({
       _tag: "Degraded",
-      diagnostics: OpenclawDiagnosticText.fromUnknown("secrets.reload failed"),
+      diagnostics: OpenclawDiagnosticText.decodeUnknownSync("secrets.reload failed"),
       exitCode: 1,
     });
 
@@ -265,12 +265,12 @@ describe("@beep/openclaw models", () => {
   });
 
   it("caps and trims diagnostic text", () => {
-    expect(OpenclawDiagnosticText.fromUnknown(" secrets.reload failed\n")).toBe("secrets.reload failed");
+    expect(OpenclawDiagnosticText.decodeUnknownSync(" secrets.reload failed\n")).toBe("secrets.reload failed");
 
-    const capped = OpenclawDiagnosticText.fromUnknown("x".repeat(5_000));
+    const capped = OpenclawDiagnosticText.decodeUnknownSync("x".repeat(5_000));
     expect(capped.length).toBe(2_000);
 
-    const trimmedAfterCap = OpenclawDiagnosticText.fromUnknown(`${"a".repeat(1_999)} ${"b".repeat(3_000)}`);
+    const trimmedAfterCap = OpenclawDiagnosticText.decodeUnknownSync(`${"a".repeat(1_999)} ${"b".repeat(3_000)}`);
     expect(trimmedAfterCap).toBe("a".repeat(1_999));
   });
 
@@ -295,7 +295,7 @@ describe("@beep/openclaw models", () => {
       subcommand: "config validate",
     });
     const exit = OpenclawCommandExitError.make({
-      diagnostics: O.some(OpenclawDiagnosticText.fromUnknown("Unknown top-level key: unexpected")),
+      diagnostics: O.some(OpenclawDiagnosticText.decodeUnknownSync("Unknown top-level key: unexpected")),
       executable: "openclaw",
       exitCode: 1,
       stderrLength: 34,

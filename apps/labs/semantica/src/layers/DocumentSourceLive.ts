@@ -19,6 +19,7 @@ import type { F1Fixture } from "@/fixtures/F1";
 import type { MediaType } from "@/schema/MediaType";
 
 const F1_ROOT = "fixtures/f1";
+const encodeEventBodyEffect = S.encodeEffect(EventBody);
 
 const unavailable = (message: string): DocumentUnavailable => DocumentUnavailable.make({ message });
 
@@ -75,7 +76,7 @@ const makeDocumentSource = Effect.gen(function* () {
 
   const makeAcquiredId = Effect.fn("DocumentSource.makeAcquiredId")(function* (document: DocumentId) {
     const body = EventBody.cases.Ingested.make({ document });
-    const encodedBody = yield* S.encodeEffect(EventBody)(body).pipe(Effect.orDie);
+    const encodedBody = yield* encodeEventBodyEffect(body).pipe(Effect.orDie);
     const preimage = new TextEncoder().encode(canonicalJson({ body: encodedBody, prev: null }));
     return ProvenanceEventId.make(yield* hashBytes(preimage));
   });

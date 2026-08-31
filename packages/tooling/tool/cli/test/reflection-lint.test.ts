@@ -1,7 +1,7 @@
 import { lintCommand } from "@beep/repo-cli";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { Unknown } from "@beep/schema/Unknown";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
-const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
   expect(Exit.isFailure(exit)).toBe(true);

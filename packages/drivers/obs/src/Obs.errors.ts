@@ -40,8 +40,7 @@ export const ObsRequestStatusCode = S.Int.check(
 ).pipe(
   $I.annoteSchema("ObsRequestStatusCode", {
     description: "Non-negative integer obs-websocket RequestStatus code.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -87,8 +86,7 @@ export const ObsWebSocketCloseCode = S.Int.check(
 ).pipe(
   $I.annoteSchema("ObsWebSocketCloseCode", {
     description: "Non-negative integer WebSocket close code.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

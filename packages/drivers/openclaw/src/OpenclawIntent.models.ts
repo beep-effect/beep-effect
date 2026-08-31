@@ -61,7 +61,7 @@ export const OpenclawSecretReference = S.String.check(
   $I.annoteSchema("OpenclawSecretReference", {
     description: "Driver-local op://vault/item/field 1Password secret reference.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics(["decodeUnknownOption"])
 );
 
 /**
@@ -144,8 +144,7 @@ export const OpenclawAbsolutePath = S.String.check(
 ).pipe(
   $I.annoteSchema("OpenclawAbsolutePath", {
     description: "Absolute filesystem path starting with '/'.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -181,8 +180,7 @@ export type OpenclawAbsolutePath = typeof OpenclawAbsolutePath.Type;
 export const OpenclawGatewayPort = S.Int.check(S.isBetween({ minimum: 1024, maximum: 65535 })).pipe(
   $I.annoteSchema("OpenclawGatewayPort", {
     description: "Unprivileged TCP port in the 1024-65535 range.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

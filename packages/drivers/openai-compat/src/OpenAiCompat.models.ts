@@ -573,8 +573,7 @@ export const OpenAiCompatChatMessage = OpenAiCompatChatRole.mapMembers(
   $I.annoteSchema("OpenAiCompatChatMessage", {
     description: "Role-discriminated chat message accepted by OpenAI-compatible chat completion endpoints.",
   }),
-  S.toTaggedUnion("role"),
-  SchemaUtils.withCodecStatics
+  S.toTaggedUnion("role")
 );
 
 /**
@@ -791,8 +790,7 @@ export const OpenAiCompatResponseFormat = OpenAiCompatResponseFormatKind.mapMemb
   $I.annoteSchema("OpenAiCompatResponseFormat", {
     description: "Response format configuration accepted by OpenAI-compatible chat completion requests.",
   }),
-  S.toTaggedUnion("type"),
-  SchemaUtils.withCodecStatics
+  S.toTaggedUnion("type")
 );
 
 /**

@@ -303,7 +303,7 @@ const makeExtractionRunService = Effect.gen(function* () {
   const storage = yield* StorageService;
 
   const KeyIndex = S.Record(S.String, DocumentId).pipe(
-    SchemaUtils.withEffectCodecStatics,
+    SchemaUtils.withCodecStatics(["decodeEffect"]),
   );
   const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 }).pipe(
     SchemaUtils.withStatics((schema) => ({
@@ -401,7 +401,7 @@ const makeExtractionRunService = Effect.gen(function* () {
       events: [AuditEvent.make({ timestamp: now, type: "started" })],
       errors: [],
       idempotencyKey: O.fromNullishOr(options?.idempotencyKey),
-      ontologyVersion: O.map(O.fromNullishOr(options?.ontologyVersion), OntologyVersion.fromUnknown),
+      ontologyVersion: O.map(O.fromNullishOr(options?.ontologyVersion), OntologyVersion.decodeUnknownSync),
     });
     yield* storage.set(metadataKey(runId), yield* ExtractionRun.encodeJsonStringEffect(run));
     if (P.isNotUndefined(options?.idempotencyKey)) yield* updateKeyIndex(options.idempotencyKey, runId);

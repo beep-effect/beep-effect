@@ -751,8 +751,7 @@ export const M365DriveItemDownload = S.Union([M365DownloadedContent, M365Skipped
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("M365DriveItemDownload", {
     description: "Download result for a drive item, including protected/encrypted skips.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**

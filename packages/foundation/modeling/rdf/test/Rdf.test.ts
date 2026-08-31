@@ -120,16 +120,17 @@ import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
 
-const decodeIri = IRI.fromUnknown;
-const decodeAbsoluteIri = AbsoluteIRI.fromUnknown;
-const decodeIriReference = IRIReference.fromUnknown;
-const decodeRelativeIriReference = RelativeIRIReference.fromUnknown;
-const decodeUri = URI.fromUnknown;
-const decodeAbsoluteUri = AbsoluteURI.fromUnknown;
-const decodeUriReference = URIReference.fromUnknown;
-const decodeRelativeUriReference = RelativeURIReference.fromUnknown;
-const decodePrefixLabel = PrefixLabel.fromUnknown;
-const decodePrefixMap = PrefixMap.fromUnknown;
+const decodeIri = IRI.decodeUnknownSync;
+const decodeAbsoluteIri = AbsoluteIRI.decodeUnknownSync;
+const decodeIriReference = IRIReference.decodeUnknownSync;
+const decodeRelativeIriReference = RelativeIRIReference.decodeUnknownSync;
+const decodeJsonLdLiteralValue = S.decodeSync(JsonLdLiteralValue);
+const decodeUri = URI.decodeUnknownSync;
+const decodeAbsoluteUri = AbsoluteURI.decodeUnknownSync;
+const decodeUriReference = URIReference.decodeUnknownSync;
+const decodeRelativeUriReference = RelativeURIReference.decodeUnknownSync;
+const decodePrefixLabel = PrefixLabel.decodeUnknownSync;
+const decodePrefixMap = PrefixMap.decodeUnknownSync;
 const encodePrefixMap = S.encodeSync(PrefixMap);
 
 const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
@@ -448,15 +449,15 @@ describe("@beep/rdf RDF term and dataset models", () => {
   const typed = makeLiteral(XSD_STRING.value)("Alice");
 
   it("decodes scalar RDF helpers and rejects malformed labels", () => {
-    expect(PrefixLabel.fromUnknown("schema")).toBe("schema");
-    expect(PrefixLabel.fromUnknown("")).toBe("");
-    expect(Curie.fromUnknown("schema:Thing")).toBe("schema:Thing");
-    expect(LanguageTag.fromUnknown("en-US")).toBe("en-US");
-    expect(() => PrefixLabel.fromUnknown("bad prefix")).toThrow(
+    expect(PrefixLabel.decodeUnknownSync("schema")).toBe("schema");
+    expect(PrefixLabel.decodeUnknownSync("")).toBe("");
+    expect(Curie.decodeUnknownSync("schema:Thing")).toBe("schema:Thing");
+    expect(LanguageTag.decodeUnknownSync("en-US")).toBe("en-US");
+    expect(() => PrefixLabel.decodeUnknownSync("bad prefix")).toThrow(
       "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
     );
     expect(() => S.decodeSync(Curie)("missing-colon")).toThrow("CURIE values must be of the form");
-    expect(() => LanguageTag.fromUnknown("en_US")).toThrow("Language tags must use alphanumeric subtags");
+    expect(() => LanguageTag.decodeUnknownSync("en_US")).toThrow("Language tags must use alphanumeric subtags");
     expect(() => makeBlankNode("")).toThrow("Blank node labels must not be empty");
     expect(() => S.decodeSync(BlankNode)({ termType: "BlankNode", value: "" })).toThrow(
       "Blank node labels must not be empty"
@@ -580,28 +581,28 @@ describe("@beep/rdf JSON-LD models", () => {
     expect(S.is(JsonLdKeyword)("@invalid")).toBe(false);
     expect(context["@base"]).toEqual(O.some(decodeAbsoluteIri("https://example.com/")));
     expect(S.decodeSync(JsonLdTermDefinition)({ "@id": "https://schema.org/name" })["@type"]).toEqual(O.none());
-    expect(JsonLdBlankNodeIdentifier.fromUnknown("_:alice")).toBe("_:alice");
-    expect(JsonLdNodeIdentifier.fromUnknown("_:alice")).toBe("_:alice");
+    expect(JsonLdBlankNodeIdentifier.decodeUnknownSync("_:alice")).toBe("_:alice");
+    expect(JsonLdNodeIdentifier.decodeUnknownSync("_:alice")).toBe("_:alice");
     expect(S.decodeSync(JsonLdReferenceValue)({ "@id": "https://example.com/alice" })["@id"]).toBe(
       "https://example.com/alice"
     );
-    expect(S.decodeSync(JsonLdLiteralValue)({ "@value": true })["@value"]).toBe(true);
-    expect(JsonLdPropertyValue.fromUnknown({ "@id": "_:bob" })).toEqual(
+    expect(decodeJsonLdLiteralValue({ "@value": true })["@value"]).toBe(true);
+    expect(JsonLdPropertyValue.decodeUnknownSync({ "@id": "_:bob" })).toEqual(
       S.decodeSync(JsonLdReferenceValue)({ "@id": "_:bob" })
     );
-    expect(JsonLdPropertyValue.fromUnknown({ "@value": 1 })).toEqual(S.decodeSync(JsonLdLiteralValue)({ "@value": 1 }));
+    expect(JsonLdPropertyValue.decodeUnknownSync({ "@value": 1 })).toEqual(decodeJsonLdLiteralValue({ "@value": 1 }));
     expect(document["@graph"]).toEqual([node]);
     expect(frame.includeProperties).toEqual(O.some(["https://schema.org/name"]));
   });
 
   it("rejects malformed JSON-LD identifiers", () => {
-    expect(() => JsonLdBlankNodeIdentifier.fromUnknown("alice")).toThrow(
+    expect(() => JsonLdBlankNodeIdentifier.decodeUnknownSync("alice")).toThrow(
       "Blank-node identifiers must begin with `_:`, and must not contain whitespace"
     );
-    expect(() => JsonLdBlankNodeIdentifier.fromUnknown("_:bad node")).toThrow(
+    expect(() => JsonLdBlankNodeIdentifier.decodeUnknownSync("_:bad node")).toThrow(
       "Blank-node identifiers must begin with `_:`, and must not contain whitespace"
     );
-    expect(() => JsonLdNodeIdentifier.fromUnknown("\u202Ebad")).toThrow();
+    expect(() => JsonLdNodeIdentifier.decodeUnknownSync("\u202Ebad")).toThrow();
   });
 });
 
@@ -671,11 +672,11 @@ describe("@beep/rdf crispening parity", () => {
     const quoteSelector = TextQuoteSelector.make({ kind: "text-quote", exact: "quoted text" });
     const fragmentSelector = FragmentSelector.make({ kind: "fragment", value: "section-1" });
     const target = EvidenceTarget.make({
-      source: IRIReference.fromUnknown("https://example.org/document"),
+      source: IRIReference.decodeUnknownSync("https://example.org/document"),
       selector: fragmentSelector,
     });
     const anchor = EvidenceAnchor.make({
-      id: IRIReference.fromUnknown("https://example.org/annotation/1"),
+      id: IRIReference.decodeUnknownSync("https://example.org/annotation/1"),
       target,
     });
     const specification = SemanticSchemaSpecification.make({
@@ -724,21 +725,25 @@ describe("@beep/rdf crispening parity", () => {
       end: NonNegativeInt.make(5),
     });
     const target = EvidenceTarget.make({
-      source: IRIReference.fromUnknown("https://example.org/document"),
+      source: IRIReference.decodeUnknownSync("https://example.org/document"),
       selector,
     });
     const anchor = EvidenceAnchor.make({
-      id: IRIReference.fromUnknown("https://example.org/annotation/1"),
+      id: IRIReference.decodeUnknownSync("https://example.org/annotation/1"),
       target,
     });
     const encodedSelector = Effect.runSync(S.encodeEffect(EvidenceSelector)(selector));
     const encodedTarget = Effect.runSync(S.encodeEffect(EvidenceTarget)(target));
     const encodedAnchor = Effect.runSync(S.encodeEffect(EvidenceAnchor)(anchor));
 
-    const annotation = WebAnnotationFromEvidenceAnchor.fromUnknown(encodedAnchor);
+    const annotation = WebAnnotationFromEvidenceAnchor.decodeUnknownSync(encodedAnchor);
 
-    expect(WebAnnotationSelectorFromEvidenceSelector.fromUnknown(encodedSelector).type).toBe("TextPositionSelector");
-    expect(WebAnnotationTargetFromEvidenceTarget.fromUnknown(encodedTarget).selector.type).toBe("TextPositionSelector");
+    expect(WebAnnotationSelectorFromEvidenceSelector.decodeUnknownSync(encodedSelector).type).toBe(
+      "TextPositionSelector"
+    );
+    expect(WebAnnotationTargetFromEvidenceTarget.decodeUnknownSync(encodedTarget).selector.type).toBe(
+      "TextPositionSelector"
+    );
     expect(evidenceAnchorToWebAnnotation(anchor)).toEqual(annotation);
     expect(webAnnotationToEvidenceAnchor(annotation)).toEqual(anchor);
     expect(Effect.runSync(S.encodeEffect(WebAnnotationFromEvidenceAnchor)(annotation))).toEqual({
