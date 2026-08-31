@@ -20641,15 +20641,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 78.9,
-      "statements": 78.7,
-      "branches": 68.19,
-      "functions": 72.62,
+      "lines": 79.13,
+      "statements": 78.94,
+      "branches": 68.45,
+      "functions": 72.93,
       "uncovered": {
-        "lines": 8417,
-        "statements": 8889,
-        "branches": 4808,
-        "functions": 3279
+        "lines": 8418,
+        "statements": 8887,
+        "branches": 4811,
+        "functions": 3281
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -25393,15 +25393,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": {
-          "lines": 38.78,
-          "statements": 36.83,
+          "lines": 39.26,
+          "statements": 37.36,
           "branches": 23.16,
-          "functions": 25.19,
+          "functions": 27.13,
           "uncovered": {
-            "lines": 262,
+            "lines": 263,
             "statements": 295,
             "branches": 136,
-            "functions": 95
+            "functions": 94
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts": {
@@ -25597,15 +25597,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
-          "lines": 83.54,
-          "statements": 83.18,
-          "branches": 58.24,
+          "lines": 84.89,
+          "statements": 84.94,
+          "branches": 60.19,
           "functions": 80,
           "uncovered": {
-            "lines": 38,
-            "statements": 39,
-            "branches": 38,
-            "functions": 11
+            "lines": 45,
+            "statements": 45,
+            "branches": 41,
+            "functions": 17
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts": {
@@ -26473,15 +26473,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 89.82,
-          "statements": 89.63,
-          "branches": 84.96,
-          "functions": 83.45,
+          "lines": 91.66,
+          "statements": 91.66,
+          "branches": 86.7,
+          "functions": 86.18,
           "uncovered": {
-            "lines": 41,
-            "statements": 43,
-            "branches": 20,
-            "functions": 23
+            "lines": 36,
+            "statements": 37,
+            "branches": 21,
+            "functions": 21
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {
@@ -26581,15 +26581,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
-          "lines": 96.56,
-          "statements": 95.78,
-          "branches": 89.9,
-          "functions": 95.67,
+          "lines": 96.96,
+          "statements": 96.16,
+          "branches": 90.38,
+          "functions": 96.29,
           "uncovered": {
-            "lines": 17,
-            "statements": 22,
-            "branches": 21,
-            "functions": 7
+            "lines": 15,
+            "statements": 20,
+            "branches": 20,
+            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {
