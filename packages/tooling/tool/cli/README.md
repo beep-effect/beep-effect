@@ -242,31 +242,50 @@ into nested directories.
 #### `files match-person`
 
 Find photos containing one target person using a trusted directory of
-single-person reference photos. Matching is fully local: the command runs the
-InsightFace `buffalo_l` SCRFD detector and ArcFace recognizer through a pinned
-Python 3.12/ONNX Runtime CPU environment, never uploads photos, and never writes
-raw face embeddings to disk.
+single-person reference photos. Matching stays on the workstation and never
+writes raw face embeddings to disk. On Linux x64, the default backend combines
+InsightFace's `det_10g` face detector with DFA MobileNet alignment and CVLFace
+AdaFace ViT-Base KP-RPE recognition. Linux arm64, macOS x64/arm64, and Windows
+x64 hosts default to the InsightFace Buffalo CPU backend. Other host/architecture
+pairs, including Windows arm64, fail before cache or model acquisition because
+the frozen environment has no complete wheel set for them. Explicit AdaFace
+selection outside Linux x64 fails at the same preflight boundary.
 
 ```bash
-bun run files match-person \
+bun run beep files match-person \
   --references ./known-person \
   --dir ./mixed-photos \
   --manifest ./person-match.json \
   --out-dir ./person-match-output \
+  --compute rocm \
+  --devices 0 \
   --accept-model-license
 ```
 
-The InsightFace source code is MIT-licensed, but its published model weights
-are restricted to non-commercial research use. Review the upstream
-[`buffalo_l` model licensing terms](https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md)
-before passing `--accept-model-license`; the command refuses to acquire or run
-the model without that explicit acknowledgement. The first run creates an
-isolated `uv` environment and downloads the hash-verified model into
-`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`. That default keeps both the
-environment and model outside the repository; an explicit `--cache-dir`
-controls their location. Set `BEEP_UV_PATH` to an absolute trusted `uv`
-executable when it is not installed in a standard system location or
-`$HOME/.local/bin`.
+The source projects use MIT licenses, but their checkpoints also carry model
+and training-dataset terms. Review the pinned
+[DFA MobileNet](https://huggingface.co/minchul/cvlface_DFA_mobilenet/tree/8317e6dda53d91e7074979923144c2cc08906a33),
+[AdaFace KP-RPE](https://huggingface.co/minchul/cvlface_adaface_vit_base_kprpe_webface12m/tree/daefd5012d369588bd214fbaf4cc6b1d286e7066),
+and [InsightFace detector](https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md)
+terms before passing `--accept-model-license`. The flag records the caller's
+confirmation; it does not grant or change a license.
+
+On Linux x64, the first AdaFace run creates a pinned Python 3.12 environment
+and downloads the hash-verified aligner and recognizer into
+`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`. The AMD runtime also needs a
+compatible `libhipsparselt.so.0`. Install the matching ROCm `hipsparselt`
+package, or set `BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH` to the one directory that
+contains that library. An explicit `--cache-dir` moves the isolated environment
+and model cache. Set `BEEP_UV_PATH` to an absolute trusted `uv` executable when
+it is not installed in a standard system location or `$HOME/.local/bin`.
+
+`--devices` accepts at most one non-negative ROCm device index. A worker uses
+one GPU; run separate workers with different device indices to use multiple
+GPUs. `--compute rocm` fails closed if the requested GPU or pinned runtime is
+unavailable. `--compute auto` may fall back to the separate pinned CPU
+environment and records that fallback in the manifest. Before either attempt,
+the CLI verifies the committed uv lock; lock, process, and worker-protocol
+failures remain terminal.
 
 References must contain exactly one detected face. Use several clear photos
 covering different ages, expressions, lighting, eyewear, and hair styles. A

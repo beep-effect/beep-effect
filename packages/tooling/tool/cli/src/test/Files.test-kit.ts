@@ -6,3 +6,22 @@
  */
 
 export * from "../commands/Files/index.ts";
+export {
+  acquirePinnedPersonMatchArtifactForTest,
+  PreparedAdaFaceArtifacts,
+  prepareAdaFaceArtifacts,
+  verifyPersonMatchModelArtifacts,
+} from "../commands/Files/internal/MatchPerson.model-store.ts";
+export {
+  defaultPersonMatchBackendForPlatform,
+  runMatchPerson,
+  trustedUvExecutableNameForPlatform,
+  trustedUvRootDirectoriesForPlatform,
+  validatePersonMatchBackendPlatform,
+} from "../commands/Files/internal/MatchPerson.ts";
+export {
+  CanonicalMatchPersonInputs,
+  PersonMatchModelArtifactVerifier,
+  PersonMatchWorkerPolicyForTest,
+  PersonMatchWorkerService,
+} from "../commands/Files/internal/MatchPerson.worker-service.ts";
