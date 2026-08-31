@@ -221,7 +221,7 @@ const validateFolderAbsent = Effect.fn("BoxProvisioningApplier.validateFolderAbs
   parentProviderId: BoxProviderId,
   desired: BoxFolderIntent
 ) {
-  const items = yield* listFolderItems({ box, folderId: parentProviderId });
+  const items = yield* listFolderItems(box, parentProviderId);
   const names = yield* Effect.forEach(
     A.filter(items, S.is(B.FolderMini)),
     (item) =>
@@ -241,9 +241,9 @@ const validateCollaborationAbsent = Effect.fn("BoxProvisioningApplier.validateCo
   folderProviderId: BoxProviderId,
   desired: BoxCollaborationIntent
 ) {
-  const collaborations = yield* listFolderCollaborations({ box, folderId: folderProviderId }).pipe(
+  const collaborations = yield* listFolderCollaborations(box, folderProviderId).pipe(
     Effect.flatMap((entries) =>
-      Effect.forEach(entries, (collaboration) => toObservedCollaboration({ collaboration, folderProviderId }), {
+      Effect.forEach(entries, (collaboration) => toObservedCollaboration(collaboration, folderProviderId), {
         concurrency: 1,
       })
     )

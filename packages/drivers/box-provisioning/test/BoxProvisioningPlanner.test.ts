@@ -14,14 +14,29 @@ import {
   planBoxProvisioning,
 } from "@beep/box-provisioning";
 import { HttpsUrl } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { desiredFixture, observedFixture } from "./fixtures.ts";
 
 describe("@beep/box-provisioning planner", () => {
+  it("round-trips schema-derived observed folders", () => {
+    const decode = S.decodeUnknownSync(BoxObservedFolder);
+    const encode = S.encodeSync(BoxObservedFolder);
+    const equivalent = S.toEquivalence(BoxObservedFolder);
+
+    fc.assert(
+      fc.property(S.toArbitrary(BoxObservedFolder)(fc), (folder) => {
+        expect(equivalent(decode(encode(folder)), folder)).toBe(true);
+      }),
+      fcRuns(10)
+    );
+  });
+
   it.effect(
     "emits a deterministic redacted plan with foreign and capability evidence",
     Effect.fnUntraced(function* () {

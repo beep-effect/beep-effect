@@ -2,6 +2,7 @@ import * as B from "@beep/box";
 import { HttpsUrl } from "@beep/schema";
 import { Effect, MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxProvisioningInvariantError } from "../BoxProvisioningErrors.ts";
@@ -49,25 +50,33 @@ export const markerQuery = (marker: O.Option<string>) =>
 
 const markerFolderQuery = (marker: O.Option<string>) => ({ ...markerQuery(marker), usemarker: true });
 
-export const listFolderItems = (input: { readonly box: B.Box["Service"]; readonly folderId: string }) =>
+export const listFolderItems: {
+  (folderId: string): (box: B.Box["Service"]) => Effect.Effect<ReadonlyArray<B.Item>, B.BoxError>;
+  (box: B.Box["Service"], folderId: string): Effect.Effect<ReadonlyArray<B.Item>, B.BoxError>;
+} = dual(2, (box: B.Box["Service"], folderId: string) =>
   collectMarkerPages<B.Item, B.BoxError>((marker) =>
-    input.box.folders.getFolderItems(
+    box.folders.getFolderItems(
       B.FoldersGetFolderItemsPayload.make({
-        folderId: input.folderId,
+        folderId,
         optionalsInput: { queryParams: markerFolderQuery(marker) },
       })
     )
-  );
+  )
+);
 
-export const listFolderCollaborations = (input: { readonly box: B.Box["Service"]; readonly folderId: BoxProviderId }) =>
+export const listFolderCollaborations: {
+  (folderId: BoxProviderId): (box: B.Box["Service"]) => Effect.Effect<ReadonlyArray<B.Collaboration>, B.BoxError>;
+  (box: B.Box["Service"], folderId: BoxProviderId): Effect.Effect<ReadonlyArray<B.Collaboration>, B.BoxError>;
+} = dual(2, (box: B.Box["Service"], folderId: BoxProviderId) =>
   collectMarkerPages<B.Collaboration, B.BoxError>((marker) =>
-    input.box.listCollaborations.getFolderCollaborations(
+    box.listCollaborations.getFolderCollaborations(
       B.ListCollaborationsGetFolderCollaborationsPayload.make({
-        folderId: input.folderId,
+        folderId,
         optionalsInput: { queryParams: markerQuery(marker) },
       })
     )
-  );
+  )
+);
 
 type CollaborationPrincipal = {
   readonly principal: string;
@@ -101,22 +110,28 @@ const collaborationPrincipal = (collaboration: B.Collaboration): O.Option<Collab
   );
 };
 
-export const toObservedFolderFromMini = (input: {
-  readonly item: B.FolderMini;
-  readonly parentProviderId: BoxProviderId;
-}): Effect.Effect<BoxObservedFolder, BoxProvisioningInvariantError> =>
-  O.match(O.fromNullishOr(input.item.name), {
+export const toObservedFolderFromMini: {
+  (
+    parentProviderId: BoxProviderId
+  ): (item: B.FolderMini) => Effect.Effect<BoxObservedFolder, BoxProvisioningInvariantError>;
+  (
+    item: B.FolderMini,
+    parentProviderId: BoxProviderId
+  ): Effect.Effect<BoxObservedFolder, BoxProvisioningInvariantError>;
+} = dual(2, (item: B.FolderMini, parentProviderId: BoxProviderId) =>
+  O.match(O.fromNullishOr(item.name), {
     onNone: () => Effect.fail(invariant()),
     onSome: (name) =>
       Effect.succeed(
         BoxObservedFolder.make({
-          etag: O.fromNullishOr(input.item.etag),
+          etag: O.fromNullishOr(item.etag),
           name,
-          parentProviderId: O.some(input.parentProviderId),
-          providerId: BoxProviderId.make(input.item.id),
+          parentProviderId: O.some(parentProviderId),
+          providerId: BoxProviderId.make(item.id),
         })
       ),
-  });
+  })
+);
 
 export const toObservedFolderFromFull = (
   folder: B.FolderFull
@@ -143,27 +158,30 @@ export const toObservedFolderFromFull = (
     }
   );
 
-export const toObservedCollaboration = (input: {
-  readonly collaboration: B.Collaboration;
-  readonly folderProviderId: BoxProviderId;
-}): Effect.Effect<BoxObservedCollaboration, BoxProvisioningInvariantError> =>
-  O.match(
-    O.all({ principal: collaborationPrincipal(input.collaboration), role: O.fromNullishOr(input.collaboration.role) }),
-    {
-      onNone: () => Effect.fail(invariant()),
-      onSome: ({ principal, role }) =>
-        Effect.succeed(
-          BoxObservedCollaboration.make({
-            folderProviderId: input.folderProviderId,
-            principal: principal.principal,
-            principalProviderId: principal.principalProviderId,
-            principalType: principal.principalType,
-            providerId: BoxProviderId.make(input.collaboration.id),
-            role,
-          })
-        ),
-    }
-  );
+export const toObservedCollaboration: {
+  (
+    folderProviderId: BoxProviderId
+  ): (collaboration: B.Collaboration) => Effect.Effect<BoxObservedCollaboration, BoxProvisioningInvariantError>;
+  (
+    collaboration: B.Collaboration,
+    folderProviderId: BoxProviderId
+  ): Effect.Effect<BoxObservedCollaboration, BoxProvisioningInvariantError>;
+} = dual(2, (collaboration: B.Collaboration, folderProviderId: BoxProviderId) =>
+  O.match(O.all({ principal: collaborationPrincipal(collaboration), role: O.fromNullishOr(collaboration.role) }), {
+    onNone: () => Effect.fail(invariant()),
+    onSome: ({ principal, role }) =>
+      Effect.succeed(
+        BoxObservedCollaboration.make({
+          folderProviderId,
+          principal: principal.principal,
+          principalProviderId: principal.principalProviderId,
+          principalType: principal.principalType,
+          providerId: BoxProviderId.make(collaboration.id),
+          role,
+        })
+      ),
+  })
+);
 
 export const toObservedCollaborationFromFull = (
   collaboration: B.Collaboration
@@ -173,8 +191,7 @@ export const toObservedCollaborationFromFull = (
     O.flatMap((item) => O.fromNullishOr(item.id)),
     O.match({
       onNone: () => Effect.fail(invariant()),
-      onSome: (folderProviderId) =>
-        toObservedCollaboration({ collaboration, folderProviderId: BoxProviderId.make(folderProviderId) }),
+      onSome: (folderProviderId) => toObservedCollaboration(collaboration, BoxProviderId.make(folderProviderId)),
     })
   );
 

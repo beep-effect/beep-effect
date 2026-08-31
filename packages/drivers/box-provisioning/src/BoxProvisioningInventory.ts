@@ -39,10 +39,10 @@ const scanFolderTree = Effect.fn("BoxProvisioningInventory.scanFolderTree")(func
   box: B.Box["Service"],
   parentProviderId: BoxProviderId
 ): Effect.fn.Return<ReadonlyArray<BoxObservedFolder>, B.BoxError | BoxProvisioningInvariantError> {
-  const items = yield* listFolderItems({ box, folderId: parentProviderId });
+  const items = yield* listFolderItems(box, parentProviderId);
   const children = yield* Effect.forEach(
     A.filter(items, S.is(B.FolderMini)),
-    (item) => toObservedFolderFromMini({ item, parentProviderId }),
+    (item) => toObservedFolderFromMini(item, parentProviderId),
     { concurrency: 1 }
   );
   const descendants = yield* Effect.forEach(children, (child) => scanFolderTree(box, child.providerId), {
@@ -55,11 +55,9 @@ const observeCollaborations = (box: B.Box["Service"], folders: ReadonlyArray<Box
   Effect.forEach(
     folders,
     (folder) =>
-      listFolderCollaborations({ box, folderId: folder.providerId }).pipe(
+      listFolderCollaborations(box, folder.providerId).pipe(
         Effect.flatMap((collaborations) =>
-          Effect.forEach(collaborations, (collaboration) =>
-            toObservedCollaboration({ collaboration, folderProviderId: folder.providerId })
-          )
+          Effect.forEach(collaborations, (collaboration) => toObservedCollaboration(collaboration, folder.providerId))
         )
       ),
     { concurrency: 1 }
