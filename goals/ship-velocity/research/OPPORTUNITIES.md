@@ -36,9 +36,10 @@ session/machine ids.
   (Authentication failed)`. Sanitized control-plane metadata showed that the authoritative AWS
   read-token parameter was updated on 2026-08-12, while the referenced 1Password item was last
   updated in February. No secret value or reference path was printed, copied, or stored.
-- **Would have prevented it:** make read-token rotation update the 1Password mirror in the same
-  operator workflow and finish with a read-only service canary. Reference resolvability should be
-  reported separately from successful remote-cache authentication.
+- **Would have prevented it:** add a rotation-time mirror verification and read-only service
+  canary to the operator workflow. The timestamp difference suggests mirror drift, but does not
+  prove a value mismatch or its cause. Reference resolvability should be reported separately from
+  successful remote-cache authentication.
 
 ## 2026-08-30 — scoped goal doctor invocation no longer matches the CLI
 

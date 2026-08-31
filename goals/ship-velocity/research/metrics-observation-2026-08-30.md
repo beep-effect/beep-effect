@@ -288,14 +288,18 @@ Sanitized control-plane metadata showed that the authoritative AWS read-token pa
 2026-08-12, while the referenced 1Password item was last updated in February. No secret value or
 reference path was printed, copied, or stored.
 
-Reference resolution therefore does not close the cache gate. The operator must update the
-existing 1Password mirror with the current read token, authorize the exact `op run` wrapper, and
-rerun the cross-checkout sample.
+The timestamp difference makes mirror drift the leading hypothesis. It does not prove that the
+secret values differ or that drift caused the authentication failure. Reference resolution
+therefore does not close the cache gate. The operator must verify or refresh the existing
+1Password mirror, or otherwise repair cache authentication, then authorize the exact `op run`
+wrapper and rerun the cross-checkout sample.
 
 ### Closeout state after the terminal trial
 
 The evidence-volume ruling closes the calendar-duration question, and the terminal dual proof
 closes the concurrency condition. PR #929 reached Yeet `merge-ready: yes` and merged on
-2026-08-31. The packet remains active because the stale 1Password mirror blocks a fresh remote-read
-observation from every active root. Lifecycle and P5 status remain unchanged until the operator
-updates that mirror and the sample succeeds.
+2026-08-31 as the implementation-repair PR. The packet remains active because cache authentication
+still blocks a fresh remote-read observation from every active root. Lifecycle and P5 status remain
+unchanged until authentication is repaired and the sample succeeds. PR #937 remains the final
+evidence PR and must itself reach Yeet `merge-ready: yes` after the evidence, status flip, and
+reflection land.
