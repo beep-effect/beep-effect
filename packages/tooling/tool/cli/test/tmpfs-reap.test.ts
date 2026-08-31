@@ -241,6 +241,48 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
 });
 
 describe("tmpfs reap", () => {
+  it.effect("resolves the persistent cache root through every configuration fallback", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const override = path.join(root, "override-cache");
+        const xdgCache = path.join(root, "xdg-cache");
+        const home = path.join(root, "home");
+        const tmp = path.join(root, "tmp");
+
+        expect(yield* resolveBeepCacheRoot(override)).toBe(path.resolve(override));
+        expect(
+          yield* resolveBeepCacheRoot().pipe(
+            provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_CACHE_HOME: xdgCache })))
+          )
+        ).toBe(path.resolve(xdgCache));
+        expect(
+          yield* resolveBeepCacheRoot().pipe(
+            provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_CACHE_HOME: "", HOME: home })))
+          )
+        ).toBe(path.join(path.resolve(home), ".cache"));
+        expect(
+          yield* resolveBeepCacheRoot().pipe(
+            provideScopedLayer(
+              ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_CACHE_HOME: "", HOME: "", TMPDIR: tmp }))
+            )
+          )
+        ).toBe(path.resolve(tmp));
+        expect(
+          yield* resolveBeepCacheRoot().pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({}))))
+        ).toBe(path.resolve("/tmp"));
+
+        const missingCacheReport = yield* runTmpfsReap({
+          cacheRoot: path.join(root, "missing-cache"),
+          classes: ["head-install"],
+          nowMillis: FIXTURE_NOW_MILLIS,
+          tmpRoot: root,
+        });
+        expect(missingCacheReport.candidates).toEqual([]);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("classifies worktrees, fallow caches, and scoped temporaries with the correct idleness actions", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {
@@ -662,6 +704,30 @@ describe("tmpfs reap", () => {
         }).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({}))));
         expect(unsetReport.tmpRoots).toEqual([systemTmpRoot]);
         expect(unsetReport.candidates).toHaveLength(1);
+
+        const malformedReport = yield* runTmpfsReap({
+          cacheRoot,
+          classes: ["scoped-temp"],
+          nowMillis: FIXTURE_NOW_MILLIS,
+          systemTmpRoot,
+        }).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TMPDIR: {} }))));
+        expect(malformedReport.tmpRoots).toEqual([systemTmpRoot]);
+
+        const unavailableReport = yield* runTmpfsReap({
+          cacheRoot,
+          classes: ["scoped-temp"],
+          nowMillis: FIXTURE_NOW_MILLIS,
+          systemTmpRoot,
+        }).pipe(
+          provideScopedLayer(
+            ConfigProvider.layer(
+              ConfigProvider.make(() =>
+                Effect.fail(new ConfigProvider.SourceError({ message: "configuration source unavailable" }))
+              )
+            )
+          )
+        );
+        expect(unavailableReport.tmpRoots).toEqual([systemTmpRoot]);
 
         const duplicateReport = yield* runTmpfsReap({
           cacheRoot,

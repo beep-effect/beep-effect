@@ -26,6 +26,7 @@ import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "
 const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 
 const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;
+const PRIVATE_DOCS_MODULES_SEGMENTS = [".jsdoc-loop", "generated-docs", "modules"] as const;
 
 const DOCGEN_CONFIG_SCAN_GLOBS = ["apps/**/docgen.json", "packages/**/docgen.json", "infra/docgen.json"] as const;
 const DOCGEN_CONFIG_SCAN_IGNORES = [
@@ -165,13 +166,25 @@ const packageHasDocgenConfig = Effect.fn("DocgenOperations.packageHasDocgenConfi
     .pipe(Effect.orElseSucceed(thunkFalse));
 });
 
-const packageHasGeneratedDocs = Effect.fn("DocgenOperations.packageHasGeneratedDocs")(function* (
+const packageGeneratedDocsModulesPath = Effect.fn("DocgenOperations.packageGeneratedDocsModulesPath")(function* (
   absolutePackagePath: string
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const privateDocsPath = path.join(absolutePackagePath, ...PRIVATE_DOCS_MODULES_SEGMENTS);
+  const hasPrivateDocs = yield* fs.exists(privateDocsPath).pipe(Effect.orElseSucceed(thunkFalse));
+
+  return hasPrivateDocs ? A.join(PRIVATE_DOCS_MODULES_SEGMENTS, "/") : A.join(DOCS_MODULES_SEGMENTS, "/");
+});
+
+const packageHasGeneratedDocs = Effect.fn("DocgenOperations.packageHasGeneratedDocs")(function* (
+  absolutePackagePath: string,
+  generatedDocsModulesPath: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   return yield* fs
-    .exists(path.join(absolutePackagePath, ...DOCS_MODULES_SEGMENTS))
+    .exists(path.join(absolutePackagePath, ...Str.split("/")(generatedDocsModulesPath)))
     .pipe(Effect.orElseSucceed(thunkFalse));
 });
 
@@ -323,13 +336,15 @@ export const discoverDocgenWorkspacePackages: (
     Effect.fnUntraced(function* ([name, absolutePath]) {
       const relativePath = normalizeSlashes(path.relative(repoRoot, absolutePath));
       const hasDocgenConfig = yield* packageHasDocgenConfig(absolutePath);
-      const hasGeneratedDocs = yield* packageHasGeneratedDocs(absolutePath);
+      const generatedDocsModulesPath = yield* packageGeneratedDocsModulesPath(absolutePath);
+      const hasGeneratedDocs = yield* packageHasGeneratedDocs(absolutePath, generatedDocsModulesPath);
 
       return DocgenWorkspacePackage.make({
         name,
         relativePath,
         absolutePath,
         docsOutputPath: normalizeDocsOutputPath(relativePath),
+        generatedDocsModulesPath,
         hasDocgenConfig,
         hasGeneratedDocs,
         status: computePackageStatus(hasDocgenConfig, hasGeneratedDocs),

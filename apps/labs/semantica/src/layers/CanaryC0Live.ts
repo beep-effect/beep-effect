@@ -163,7 +163,7 @@ const p95 = (timings: ReadonlyArray<number>): number =>
 
 const writeJson = Effect.fn("CanaryC0.writeJson")(function* <Type, Encoded>(
   fs: FileSystem.FileSystem,
-  schema: S.Codec<Type, Encoded, never, never>,
+  schema: S.Codec<Type, Encoded>,
   outputPath: string,
   value: Type
 ) {

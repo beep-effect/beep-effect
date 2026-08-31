@@ -1,7 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
-import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Equal, HashSet, identity, Number as N, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -606,19 +605,6 @@ const GoldFileEncodedProposerCheck = S.makeFilter(
 export const GoldFileEncoded = GoldFileEncodedDefinition.check(GoldFileEncodedProposerCheck).pipe(
   $I.annoteSchema("GoldFileEncoded", {
     description: "Persisted gold-v1 file shape containing offsets and digests but no W1 corpus text.",
-  })
-);
-
-/**
- * JSON-text boundary for persisted digest-only gold files.
- *
- * @category schemas
- * @since 0.0.0
- */
-export const GoldFileEncodedFromJsonString = S.fromJsonString(GoldFileEncoded).pipe(
-  SchemaUtils.withCodecStatics(["decodeEffect"]),
-  $I.annoteSchema("GoldFileEncodedFromJsonString", {
-    description: "JSON-text codec for persisted gold-v1 digest-only files.",
   })
 );
 

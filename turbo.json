@@ -249,7 +249,7 @@
       "cache": true,
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
-      "outputs": ["docs/**", ".beep/docgen/**"]
+      "outputs": ["docs/**", ".beep/docgen/**", ".jsdoc-loop/generated-docs/**"]
     },
     "dev": {
       "persistent": true,

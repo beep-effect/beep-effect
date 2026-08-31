@@ -43,10 +43,10 @@ export const CorpusPaperId = S.String.check(
   ])
 ).pipe(
   S.brand("CorpusPaperId"),
+  SchemaUtils.withCodecStatics(["decodeEffect"]),
   $I.annoteSchema("CorpusPaperId", {
     description: "Twelve-character lowercase hexadecimal academia corpus identifier.",
-  }),
-  SchemaUtils.withCodecStatics(["decodeEffect"])
+  })
 );
 
 /**
@@ -125,8 +125,8 @@ export class CorpusManifestRow extends S.Class<CorpusManifestRow>($I`CorpusManif
 ) {}
 
 const CorpusManifestSelectionFields = S.Struct({
-  rule: S.Literal("first-25-by-id"),
-  take: S.Literal(25),
+  rule: S.tag("first-25-by-id"),
+  take: S.tag(25),
   onDisk: NonNegativeInt,
 });
 

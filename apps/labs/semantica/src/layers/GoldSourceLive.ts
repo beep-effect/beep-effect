@@ -1,28 +1,20 @@
-import { Sha256Hex } from "@beep/schema";
-import { Crypto, Effect, FileSystem, Layer, Order, Path, Tuple } from "effect";
+import { SchemaUtils, Sha256Hex } from "@beep/schema";
+import { Crypto, Effect, FileSystem, Layer, Path, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GOLD_SUBSETS } from "@/canary/Gold";
+import { GOLD_SUBSETS, GoldArtifactSemantics } from "@/canary/Gold";
 import { contentDigest } from "@/schema/Digest";
 import { Origin } from "@/schema/Document";
 import { GoldUnavailable } from "@/schema/Errors";
-import {
-  CurrentGoldDocumentText,
-  GoldFile,
-  GoldFileEncoded,
-  GoldFileEncodedFromJsonString,
-  GoldRef,
-} from "@/schema/Gold";
-import { ModelIdentity } from "@/schema/Model";
+import { CurrentGoldDocumentText, GoldFile, GoldFileEncoded, GoldRef } from "@/schema/Gold";
 import { GoldSource } from "@/services/GoldSource";
 import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
 import type { LedgerDocumentSnapshot } from "@/schema/Ledger";
 
-const GoldRefJson = S.fromJsonString(GoldRef);
-const goldFileOrder = Order.mapInput(Order.String, (file: GoldFileEncoded) => `${file.paperId}:${file.subset}`);
-const modelIdentityEquivalence = S.toEquivalence(S.toEncoded(ModelIdentity));
+const GoldFileJson = S.fromJsonString(GoldFileEncoded).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
+const GoldRefJson = S.fromJsonString(GoldRef).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
 const sha256Equivalence = S.toEquivalence(Sha256Hex);
 
 const unavailable = (reason: GoldUnavailable["reason"], message: string): GoldUnavailable =>
@@ -42,7 +34,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("read-failed", "The gold-v1 reference is unavailable.");
     }
     return yield* fs.readFileString(referencePath).pipe(
-      Effect.flatMap(S.decodeEffect(GoldRefJson)),
+      Effect.flatMap(GoldRefJson.decodeEffect),
       Effect.mapError(() => unavailable("read-failed", "The gold-v1 reference could not be read or decoded."))
     );
   });
@@ -59,7 +51,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       return yield* unavailable("stale-reference", "The gold-v1 reference covers a missing label file.");
     }
     const file = yield* fs.readFileString(filePath).pipe(
-      Effect.flatMap(GoldFileEncodedFromJsonString.decodeEffect),
+      Effect.flatMap(GoldFileJson.decodeEffect),
       Effect.mapError(() => unavailable("read-failed", "A covered gold-v1 file could not be read or decoded."))
     );
     if (!Str.Equivalence(file.paperId, paperId) || !Str.Equivalence(file.subset, subset)) {
@@ -115,7 +107,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       );
       const files = A.sort(
         yield* Effect.forEach(jobs, ([paperId, subset]) => readCoveredFile(paperId, subset), { concurrency: 4 }),
-        goldFileOrder
+        GoldArtifactSemantics.fileOrder
       );
       const digest = yield* contentDigest(S.Array(GoldFileEncoded))(files).pipe(
         Effect.provideService(Crypto.Crypto, crypto),
@@ -123,7 +115,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       );
       if (
         !sha256Equivalence(digest, reference.digest) ||
-        A.some(files, (file) => !modelIdentityEquivalence(file.proposer, reference.proposer))
+        A.some(files, (file) => !GoldArtifactSemantics.modelIdentityEquivalence(file.proposer, reference.proposer))
       ) {
         return yield* unavailable(
           "stale-reference",
