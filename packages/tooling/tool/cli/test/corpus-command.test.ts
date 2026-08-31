@@ -48,7 +48,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
+import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -56,6 +56,7 @@ import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import * as TestClock from "effect/testing/TestClock";
 import { ChildProcess } from "effect/unstable/process";
+import type { PlatformError } from "effect";
 
 const testLayer = Layer.mergeAll(
   CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
@@ -1341,15 +1342,32 @@ const measurePreservationDenominators = Effect.fn("CorpusTest.measurePreservatio
 
 const collectorManifestJson = S.fromJsonString(CollectorManifestRecord);
 
-const waitForPathToExist = Effect.fn("CorpusTest.waitForPathToExist")(function* (
-  filePath: string
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  for (let attempt = 0; attempt < 5_000; attempt += 1) {
-    if (yield* fs.exists(filePath).pipe(Effect.orDie)) return true;
-    yield* Effect.yieldNow;
-  }
-  return false;
+const preserveWithArchiveCopyMutation = Effect.fn("CorpusTest.preserveWithArchiveCopyMutation")(function* (
+  options: RestorationPreserveOptions,
+  partialPath: string,
+  mutation: (fs: FileSystem.FileSystem) => Effect.Effect<void, PlatformError.PlatformError>
+) {
+  const baseContext = yield* Layer.build(NodeServices.layer);
+  const fs = Context.get(baseContext, FileSystem.FileSystem);
+  let mutated = false;
+  const racingFileSystem = FileSystem.FileSystem.of({
+    ...fs,
+    open: Effect.fn("CorpusTest.mutateWhenArchiveCopyOpens")(function* (target, openOptions) {
+      const file = yield* fs.open(target, openOptions);
+      if (!mutated && Str.Equivalence(target, partialPath)) {
+        mutated = true;
+        yield* mutation(fs);
+      }
+      return file;
+    }),
+  });
+  const serviceContext = yield* Layer.build(
+    CorpusCommandServiceLive.pipe(
+      Layer.fresh,
+      Layer.provide(baseContext.pipe(Context.add(FileSystem.FileSystem, racingFileSystem), Layer.succeedContext))
+    )
+  );
+  return yield* preserveRestorationArchive(options).pipe(Effect.provide(serviceContext));
 });
 
 const writePresentCollectorManifest = Effect.fn("CorpusTest.writePresentCollectorManifest")(function* (
@@ -1559,14 +1577,9 @@ describe("corpus restoration preservation", () => {
           expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
           expectedMutatedDestinationCount: NonNegativeInt.make(0),
         });
-        yield* Effect.forkChild(
-          Effect.gen(function* () {
-            const partialExists = yield* waitForPathToExist(partialPath);
-            if (!partialExists) return yield* Effect.die("Partial archive was not observable for mutation.");
-            yield* fs.rename(replacementPath, sourcePath);
-          })
+        const summary = yield* preserveWithArchiveCopyMutation(options, partialPath, (racingFs) =>
+          racingFs.rename(replacementPath, sourcePath)
         );
-        const summary = yield* preserveRestorationArchive(options);
         const verified = yield* verifyRestorationArchive(
           RestorationVerifyOptions.make({
             corpusRoot: fixture.corpusRoot,
@@ -1638,15 +1651,14 @@ describe("corpus restoration preservation", () => {
           expectedMissingRecyclePayloadCount: NonNegativeInt.make(0),
           expectedMutatedDestinationCount: NonNegativeInt.make(0),
         });
-        yield* Effect.forkChild(
-          Effect.gen(function* () {
-            const partialExists = yield* waitForPathToExist(partialPath);
-            if (!partialExists) return yield* Effect.die("Partial archive was not observable for mutation.");
-            yield* fs.rename(replacementPath, sourcePath);
-            yield* fs.writeFileString(path.join(fixture.sourceRoot, "unrelated-added.bin"), "unexpected drift");
+        const error = yield* preserveWithArchiveCopyMutation(
+          options,
+          partialPath,
+          Effect.fn("CorpusTest.mutateArchiveSourceAndAddDrift")(function* (racingFs) {
+            yield* racingFs.rename(replacementPath, sourcePath);
+            yield* racingFs.writeFileString(path.join(fixture.sourceRoot, "unrelated-added.bin"), "unexpected drift");
           })
-        );
-        const error = yield* preserveRestorationArchive(options).pipe(Effect.flip);
+        ).pipe(Effect.flip);
         const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
         const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
         const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);

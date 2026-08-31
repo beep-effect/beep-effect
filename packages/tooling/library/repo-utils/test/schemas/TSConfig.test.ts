@@ -231,6 +231,34 @@ describe("TSConfig schema", () => {
         });
       }
     });
+
+    it("decodes the TypeScript 7 target and library additions through ES2025", () => {
+      const libraries = [
+        "ES2016.Intl",
+        "ES2023.Intl",
+        "ES2025",
+        "ES2025.Collection",
+        "ES2025.Float16",
+        "ES2025.Intl",
+        "ES2025.Iterator",
+        "ES2025.Promise",
+        "ES2025.RegExp",
+        "ESNext.Date",
+        "ESNext.Float16",
+        "ESNext.Temporal",
+        "ESNext.TypedArrays",
+      ];
+      const result = decodeTSConfig({
+        compilerOptions: {
+          lib: libraries,
+          target: "ES2025",
+        },
+      });
+      const compilerOptions = O.getOrThrow(result.compilerOptions);
+
+      expect(compilerOptions.target).toEqual(O.some("es2025"));
+      expect(compilerOptions.lib).toEqual(O.some(libraries));
+    });
   });
 
   describe("validation", () => {
