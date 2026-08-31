@@ -441,4 +441,8 @@ ratifies.
   fresh complete runtime to readiness, queries the full loaded projection for p95, and records
   the process high-water RSS. Prevention: every telemetry field must name and exercise the same
   accounting boundary as its governing workload-contract row; a component proxy is not evidence
-  for a bundle-level claim.
+  for a bundle-level claim. The first corrected query probe then reported 280 ms because the
+  Oxigraph service silently constructed and reloaded a new store for every request; service-local
+  weak reuse of the immutable dataset's store reduced the same ordered query to a measured 5 ms
+  p95. Prevention: a query boundary over an already loaded dataset must not hide dataset rebuild
+  work inside every execution.

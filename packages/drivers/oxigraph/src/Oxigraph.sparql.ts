@@ -173,7 +173,14 @@ const fromOxigraphQuad = (quad: Oxigraph.Quad): Rdf.Quad =>
     graph: fromOxigraphGraph(quad.graph),
   });
 
-const makeStore = Effect.fn("Oxigraph.makeStore")(function* (request: SparqlQueryRequest) {
+const makeStore = Effect.fn("Oxigraph.makeStore")(function* (
+  request: SparqlQueryRequest,
+  stores: WeakMap<Rdf.Dataset, Oxigraph.Store>
+) {
+  const cached = O.fromNullishOr(stores.get(request.dataset));
+  if (O.isSome(cached)) {
+    return cached.value;
+  }
   const module = yield* loadOxigraphModule;
   const store = yield* Effect.try({
     try: () => new module.Store(),
@@ -190,6 +197,7 @@ const makeStore = Effect.fn("Oxigraph.makeStore")(function* (request: SparqlQuer
     { discard: true }
   );
 
+  stores.set(request.dataset, store);
   return store;
 });
 
@@ -250,8 +258,11 @@ const askResult = (result: unknown): Effect.Effect<SparqlAskResult, OxigraphSpar
     ? Effect.succeed(SparqlAskResult.make({ profile: "ask", value: result }))
     : Effect.fail(unsupportedResult("Oxigraph did not return an ASK boolean."));
 
-const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (request: SparqlQueryRequest) {
-  const store = yield* makeStore(request);
+const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (
+  request: SparqlQueryRequest,
+  stores: WeakMap<Rdf.Dataset, Oxigraph.Store>
+) {
+  const store = yield* makeStore(request, stores);
   const result = yield* executeRawQuery(store, request);
 
   return yield* Match.value(request.profile).pipe(
@@ -270,7 +281,9 @@ const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (request: Sp
  *
  * The `oxigraph` package is imported lazily during query execution so this
  * Layer can be imported by browser and worker bundles without initializing
- * WebAssembly at module scope.
+ * WebAssembly at module scope. Each Layer acquisition weakly retains one
+ * loaded store per immutable dataset instance so repeated queries do not
+ * rebuild the complete store.
  *
  * **Example** (Import the live layer)
  *
@@ -283,11 +296,14 @@ const executeSparql = Effect.fn("Oxigraph.executeSparql")(function* (request: Sp
  * @category layers
  * @since 0.0.0
  */
-export const OxigraphSparqlQueryServiceLive = Layer.succeed(
+export const OxigraphSparqlQueryServiceLive = Layer.effect(
   SparqlQueryService,
-  SparqlQueryService.of({
-    execute: Effect.fn("SparqlQueryService.execute")((request) =>
-      executeSparql(request).pipe(Effect.mapError(semanticError))
-    ),
+  Effect.sync(() => {
+    const stores = new WeakMap<Rdf.Dataset, Oxigraph.Store>();
+    return SparqlQueryService.of({
+      execute: Effect.fn("SparqlQueryService.execute")((request) =>
+        executeSparql(request, stores).pipe(Effect.mapError(semanticError))
+      ),
+    });
   })
 );
