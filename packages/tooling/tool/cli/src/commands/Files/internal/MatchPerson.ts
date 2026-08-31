@@ -5,86 +5,260 @@
  * @since 0.0.0
  */
 
-import { fileURLToPath } from "node:url";
-import { A, Str } from "@beep/utils";
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, flow, Match, MutableHashSet, Number as Num, Path, pipe } from "effect";
+import * as Bool from "effect/Boolean";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import {
   CommandJsonOutput,
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
 } from "../../../internal/cli/Json.ts";
-import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
-import { backupStagedFileTarget, canonicalizeFileTargetPath, commitStagedFileByRename } from "./FileTransaction.ts";
 import {
-  decodePersonMatchWorkerReportJson,
-  encodePersonMatchReport,
-  PersonMatchReport,
-} from "./MatchPerson.schemas.ts";
-import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { StagedFileCommitRecord } from "./FileTransaction.ts";
+  backupStagedFileTarget,
+  canonicalizeFileTargetPath,
+  commitStagedFileByRename,
+  StagedFileCommitRecord,
+} from "./FileTransaction.ts";
+import { toFilesCommandError } from "./MatchPerson.errors.ts";
+import { encodePersonMatchReport, PersonMatchModel, PersonMatchReport } from "./MatchPerson.schemas.ts";
+import { CanonicalMatchPersonInputs, PersonMatchWorkerService } from "./MatchPerson.worker-service.ts";
 import type {
   MatchPersonOptions,
+  PersonMatchBackend,
   PersonMatchDisposition,
   PersonMatchEntry,
-  PersonMatchModel,
   PersonMatchModelArtifact,
-  PersonMatchModelArtifactName,
-  PersonMatchParameters,
+  PersonMatchModelComponent,
+  PersonMatchOnnxRuntime,
+  PersonMatchPyTorchRuntime,
   PersonMatchReference,
-  PersonMatchWorkerReport,
   PersonMatchWorkerSuccess,
 } from "./MatchPerson.schemas.ts";
 
-const workerProjectDirectory = fileURLToPath(new URL("../../../../python/photo-face/", import.meta.url));
-const workerOutputBound = OutputBound.make({
-  maxChars: 268_435_456,
-  truncatedNotice: "\n[files match-person output truncated]",
-});
+const $I = $RepoCliId.create("commands/Files/internal/MatchPerson");
+
 const workerModelRuntimeName = "beep_buffalo_l_v1";
-const workerModelArtifactSha256: Readonly<Record<PersonMatchModelArtifactName, string>> = {
+const workerModelArtifactSha256: Readonly<Record<string, string>> = {
   "det_10g.onnx": "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91",
   "w600k_r50.onnx": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
 };
 const workerScoreRoundingTolerance = 0.000001;
+const adaFaceHipVersionPrefix = "7.2";
+const adaFaceRocmArchitecture = "gfx1201";
 const trustedUvRoots = ["/usr/bin", "/usr/local/bin"] as const;
+const personMatchDeviceIndexesEquivalence = S.toEquivalence(S.Array(NonNegativeInt));
+const PersonMatchSupportedImageExtension = LiteralKit(["jpg", "jpeg", "png", "webp"]).pipe(
+  $I.annoteSchema("PersonMatchSupportedImageExtension", {
+    description: "A lowercase image extension discovered by the isolated person-match worker.",
+  })
+);
+const isPersonMatchSupportedImageExtension = S.is(PersonMatchSupportedImageExtension);
+
+const adaFaceRuntimeSupportsPlatform = (platform: string, architecture: string): boolean =>
+  Str.Equivalence(platform, "linux") && Str.Equivalence(architecture, "x64");
+
+const buffaloRuntimeSupportsPlatform = (platform: string, architecture: string): boolean =>
+  Match.value(platform).pipe(
+    Match.when("linux", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
+    Match.when("darwin", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
+    Match.when("win32", () => Str.Equivalence(architecture, "x64")),
+    Match.orElse(() => false)
+  );
+
+/**
+ * Select the person-match backend default for a host.
+ *
+ * **Example** (Select a portable backend)
+ *
+ * ```ts
+ * import { defaultPersonMatchBackendForPlatform } from "./MatchPerson.ts"
+ *
+ * console.log(defaultPersonMatchBackendForPlatform("darwin", "arm64"))
+ * // "buffalo-l"
+ * ```
+ *
+ * @param platform - Node.js host platform identifier.
+ * @param architecture - Node.js host architecture identifier.
+ * @returns AdaFace on Linux x64 and Buffalo elsewhere; runtime validation rejects unsupported Buffalo hosts.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const defaultPersonMatchBackendForPlatform: {
+  (platform: string, architecture: string): PersonMatchBackend;
+  (architecture: string): (platform: string) => PersonMatchBackend;
+} = dual(
+  2,
+  (platform: string, architecture: string): PersonMatchBackend =>
+    Bool.match(adaFaceRuntimeSupportsPlatform(platform, architecture), {
+      onFalse: () => "buffalo-l",
+      onTrue: () => "adaface-kprpe",
+    })
+);
+
+/**
+ * Resolve the trusted uv executable leaf for a host platform.
+ *
+ * **Example** (Select the Windows executable)
+ *
+ * ```ts
+ * import { trustedUvExecutableNameForPlatform } from "./MatchPerson.ts"
+ *
+ * console.log(trustedUvExecutableNameForPlatform("win32"))
+ * // "uv.exe"
+ * ```
+ *
+ * @param platform - Node.js host platform identifier.
+ * @returns The platform-specific uv executable filename.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const trustedUvExecutableNameForPlatform = (platform: string): string =>
+  Match.value(platform).pipe(
+    Match.when("win32", () => "uv.exe"),
+    Match.orElse(() => "uv")
+  );
+
+/**
+ * Resolve the fixed system directories eligible for trusted uv discovery.
+ *
+ * **Example** (Avoid POSIX roots on Windows)
+ *
+ * ```ts
+ * import { trustedUvRootDirectoriesForPlatform } from "./MatchPerson.ts"
+ *
+ * console.log(trustedUvRootDirectoriesForPlatform("win32"))
+ * // []
+ * ```
+ *
+ * @param platform - Node.js host platform identifier.
+ * @returns POSIX trusted roots on non-Windows hosts and no fixed roots on Windows.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const trustedUvRootDirectoriesForPlatform = (platform: string): ReadonlyArray<string> =>
+  Bool.match(Str.Equivalence(platform, "win32"), {
+    onFalse: () => trustedUvRoots,
+    onTrue: A.empty<string>,
+  });
+
+/**
+ * Validate that the selected backend has a pinned runtime for the host.
+ *
+ * **Example** (Validate the portable backend)
+ *
+ * ```ts
+ * import { validatePersonMatchBackendPlatform } from "./MatchPerson.ts"
+ *
+ * const validation = validatePersonMatchBackendPlatform("buffalo-l", "win32", "x64")
+ * console.log(validation.pipe !== undefined)
+ * // true
+ * ```
+ *
+ * @param backend - Explicit or host-derived person-match backend.
+ * @param platform - Node.js host platform identifier.
+ * @param architecture - Node.js host architecture identifier.
+ * @returns An Effect that fails before artifact acquisition when the backend is unavailable.
+ * @category validation
+ * @since 0.0.0
+ */
+export const validatePersonMatchBackendPlatform = Effect.fn("Files.validatePersonMatchBackendPlatform")(function* (
+  backend: PersonMatchBackend,
+  platform: string,
+  architecture: string
+): Effect.fn.Return<void, FilesCommandError> {
+  const supported = Match.value(backend).pipe(
+    Match.when("buffalo-l", () => buffaloRuntimeSupportsPlatform(platform, architecture)),
+    Match.when("adaface-kprpe", () => adaFaceRuntimeSupportsPlatform(platform, architecture)),
+    Match.exhaustive
+  );
+  return yield* Bool.match(supported, {
+    onFalse: () =>
+      FilesCommandError.make({
+        message: Match.value(backend).pipe(
+          Match.when(
+            "buffalo-l",
+            () =>
+              `InsightFace Buffalo is unavailable on ${platform}/${architecture}; its pinned CPU environment ` +
+              "supports Linux x64/arm64, macOS x64/arm64, and Windows x64."
+          ),
+          Match.when(
+            "adaface-kprpe",
+            () =>
+              `AdaFace KP-RPE is unavailable on ${platform}/${architecture}; its pinned ROCm PyTorch runtime ` +
+              "supports only Linux x64. Re-run with --backend buffalo-l --compute cpu."
+          ),
+          Match.exhaustive
+        ),
+      }),
+    onTrue: () => Effect.void,
+  });
+});
 
 const approximatelyEqualWorkerScore = (left: number, right: number): boolean =>
-  Math.abs(left - right) <= workerScoreRoundingTolerance;
+  Num.max(Num.subtract(left, right), Num.subtract(right, left)) <= workerScoreRoundingTolerance;
 
-interface CanonicalMatchPersonInputs {
-  readonly cacheRoot: string;
-  readonly candidateDirectory: string;
-  readonly manifestPath: string;
-  readonly modelRoot: string;
-  readonly outputDirectory: O.Option<string>;
-  readonly referenceDirectory: string;
-  readonly uvCacheRoot: string;
-  readonly uvEnvironment: string;
-  readonly uvPath: string;
-}
+class PersonMatchCopyPlanEntry extends S.Class<PersonMatchCopyPlanEntry>($I`PersonMatchCopyPlanEntry`)(
+  {
+    sourcePath: S.NonEmptyString,
+    targetPath: S.NonEmptyString,
+  },
+  $I.annote("PersonMatchCopyPlanEntry", {
+    description: "Canonical immutable source and destination paths for one planned photo copy.",
+  })
+) {}
 
-interface PersonMatchCopyPlanEntry {
-  readonly sourcePath: string;
-  readonly targetPath: string;
-}
+class PersonMatchCommitRecord extends S.Class<PersonMatchCommitRecord>($I`PersonMatchCommitRecord`)(
+  {
+    ...StagedFileCommitRecord.fields,
+    temporaryDirectory: S.NonEmptyString,
+  },
+  $I.annote("PersonMatchCommitRecord", {
+    description: "Mutable staged-file transaction state with its owned cleanup directory.",
+  })
+) {}
 
-interface PersonMatchCommitRecord extends StagedFileCommitRecord {
-  readonly temporaryDirectory: string;
-}
+class CanonicalMatchPersonCacheChildren extends S.Class<CanonicalMatchPersonCacheChildren>(
+  $I`CanonicalMatchPersonCacheChildren`
+)(
+  {
+    modelRoot: S.NonEmptyString,
+    uvCacheRoot: S.NonEmptyString,
+    uvCpuEnvironment: S.NonEmptyString,
+    uvEnvironment: S.NonEmptyString,
+  },
+  $I.annote("CanonicalMatchPersonCacheChildren", {
+    description: "Backend-specific canonical model, uv download-cache, and isolated environment paths.",
+  })
+) {}
 
-interface CanonicalMatchPersonCacheChildren {
-  readonly modelRoot: string;
-  readonly uvCacheRoot: string;
-  readonly uvEnvironment: string;
-}
+class ValidatedWorkerReferences extends S.Class<ValidatedWorkerReferences>($I`ValidatedWorkerReferences`)(
+  {
+    acceptedCount: NonNegativeInt,
+    acceptedNames: S.Array(S.NonEmptyString),
+  },
+  $I.annote("ValidatedWorkerReferences", {
+    description: "Accepted reference count and unique names after validating worker reference evidence.",
+  })
+) {}
 
-interface ValidatedWorkerReferences {
-  readonly acceptedCount: number;
-  readonly acceptedNames: MutableHashSet.MutableHashSet<string>;
-}
+class ExpectedPersonMatchFiles extends S.Class<ExpectedPersonMatchFiles>($I`ExpectedPersonMatchFiles`)(
+  {
+    candidatePaths: S.Array(S.NonEmptyString),
+    referencePaths: S.Array(S.NonEmptyString),
+  },
+  $I.annote("ExpectedPersonMatchFiles", {
+    description: "Canonical supported candidate and reference paths expected at the worker protocol boundary.",
+  })
+) {}
+
+const expectedPersonMatchFilesEquivalence = S.toEquivalence(ExpectedPersonMatchFiles);
 
 interface MatchPersonPathOperations {
   readonly isAbsolute: (value: string) => boolean;
@@ -239,6 +413,18 @@ const readOptionalConfig = (name: string): Effect.Effect<O.Option<string>> =>
     Effect.map(flow(O.map(Str.trim), O.filter(Str.isNonEmpty)))
   );
 
+const readConfiguredHome = Effect.fn("Files.matchPersonReadConfiguredHome")(function* (): Effect.fn.Return<
+  O.Option<string>
+> {
+  const [home, userProfile] = yield* Effect.all([readOptionalConfig("HOME"), readOptionalConfig("USERPROFILE")], {
+    concurrency: 2,
+  });
+  return pipe(
+    home,
+    O.orElse(() => userProfile)
+  );
+});
+
 const canonicalizeExistingDirectory = Effect.fn("Files.matchPersonCanonicalizeDirectory")(function* (
   directory: string,
   description: string
@@ -265,7 +451,7 @@ const resolveCacheRoot = Effect.fn("Files.matchPersonResolveCacheRoot")(function
 ): Effect.fn.Return<string, FilesCommandError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const xdgCacheHome = yield* readOptionalConfig("XDG_CACHE_HOME");
-  const home = yield* readOptionalConfig("HOME");
+  const home = yield* readConfiguredHome();
   const selected = pipe(
     configured,
     O.map(path.resolve),
@@ -275,7 +461,7 @@ const resolveCacheRoot = Effect.fn("Files.matchPersonResolveCacheRoot")(function
 
   if (O.isNone(selected)) {
     return yield* FilesCommandError.make({
-      message: "Could not resolve a cache directory. Pass --cache-dir or configure XDG_CACHE_HOME/HOME.",
+      message: "Could not resolve a cache directory. Pass --cache-dir or configure XDG_CACHE_HOME/HOME/USERPROFILE.",
     });
   }
 
@@ -299,17 +485,34 @@ const canonicalizeMatchPersonCacheChild = Effect.fn("Files.canonicalizeMatchPers
 });
 
 const canonicalizeMatchPersonCacheChildren = Effect.fn("Files.canonicalizeMatchPersonCacheChildren")(function* (
-  cacheRoot: string
+  cacheRoot: string,
+  backend: MatchPersonOptions["backend"]
 ): Effect.fn.Return<CanonicalMatchPersonCacheChildren, FilesCommandError, FileSystem.FileSystem | Path.Path> {
-  return {
-    modelRoot: yield* canonicalizeMatchPersonCacheChild(cacheRoot, "insightface", "person-match model directory"),
+  const modelChild = Match.value(backend).pipe(
+    Match.when("buffalo-l", () => "insightface"),
+    Match.when("adaface-kprpe", () => "adaface-kprpe"),
+    Match.exhaustive
+  );
+  const environmentChild = Match.value(backend).pipe(
+    Match.when("buffalo-l", () => "venv-cpu-py312-v1"),
+    Match.when("adaface-kprpe", () => "venv-adaface-rocm72-py312-v1"),
+    Match.exhaustive
+  );
+  const cpuEnvironmentChild = Match.value(backend).pipe(
+    Match.when("buffalo-l", () => environmentChild),
+    Match.when("adaface-kprpe", () => "venv-adaface-cpu-py312-v1"),
+    Match.exhaustive
+  );
+  return CanonicalMatchPersonCacheChildren.make({
+    modelRoot: yield* canonicalizeMatchPersonCacheChild(cacheRoot, modelChild, "person-match model directory"),
     uvCacheRoot: yield* canonicalizeMatchPersonCacheChild(cacheRoot, "uv-cache", "person-match uv cache directory"),
-    uvEnvironment: yield* canonicalizeMatchPersonCacheChild(
+    uvCpuEnvironment: yield* canonicalizeMatchPersonCacheChild(
       cacheRoot,
-      "venv-cpu-py312-v1",
-      "person-match uv environment"
+      cpuEnvironmentChild,
+      "person-match CPU uv environment"
     ),
-  };
+    uvEnvironment: yield* canonicalizeMatchPersonCacheChild(cacheRoot, environmentChild, "person-match uv environment"),
+  });
 });
 
 const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(function* (): Effect.fn.Return<
@@ -320,7 +523,9 @@ const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(functio
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const configured = yield* readOptionalConfig("BEEP_UV_PATH");
-  const home = yield* readOptionalConfig("HOME");
+  const home = yield* readConfiguredHome();
+  const platform = yield* HostProcessPlatform;
+  const executableName = trustedUvExecutableNameForPlatform(platform);
 
   if (O.isSome(configured) && !path.isAbsolute(configured.value)) {
     return yield* FilesCommandError.make({ message: "BEEP_UV_PATH must be an absolute path to a trusted uv binary." });
@@ -329,10 +534,10 @@ const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(functio
   const candidates = O.isSome(configured)
     ? [configured.value]
     : [
-        ...A.map(trustedUvRoots, (root) => path.join(root, "uv")),
+        ...A.map(trustedUvRootDirectoriesForPlatform(platform), (root) => path.join(root, executableName)),
         ...pipe(
           home,
-          O.map((root) => [path.join(root, ".local", "bin", "uv")]),
+          O.map((root) => [path.join(root, ".local", "bin", executableName)]),
           O.getOrElse(A.empty<string>)
         ),
       ];
@@ -349,7 +554,8 @@ const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(functio
 
   return yield* FilesCommandError.make({
     message:
-      "Could not find a trusted uv binary. Install uv in /usr/bin, /usr/local/bin, or $HOME/.local/bin, or set BEEP_UV_PATH to an absolute path.",
+      "Could not find a trusted uv binary in the platform's supported install locations. " +
+      "Set BEEP_UV_PATH to an absolute path when uv is installed elsewhere.",
   });
 });
 
@@ -396,10 +602,25 @@ const preflightManifest = Effect.fn("Files.matchPersonPreflightManifest")(functi
 const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(function* (
   options: MatchPersonOptions
 ): Effect.fn.Return<CanonicalMatchPersonInputs, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const hostPlatform = yield* HostProcessPlatform;
+  const hostArchitecture = yield* HostProcessArchitecture;
+  yield* validatePersonMatchBackendPlatform(options.backend, hostPlatform, hostArchitecture);
   if (!options.acceptModelLicense) {
+    const message = Match.value(options.backend).pipe(
+      Match.when(
+        "buffalo-l",
+        () =>
+          "InsightFace buffalo_l weights are limited to non-commercial research use. Review https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md, then re-run with --accept-model-license."
+      ),
+      Match.when(
+        "adaface-kprpe",
+        () =>
+          "AdaFace/CVLFace checkpoint use is subject to the model-card and training-dataset terms at its pinned source. Review those terms and the InsightFace detector terms, then re-run with --accept-model-license."
+      ),
+      Match.exhaustive
+    );
     return yield* FilesCommandError.make({
-      message:
-        "InsightFace buffalo_l weights are limited to non-commercial research use. Review https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md, then re-run with --accept-model-license.",
+      message,
     });
   }
   yield* validateThresholds(options);
@@ -443,17 +664,23 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
       )
     );
   const canonicalCacheRoot = yield* canonicalizeExistingDirectory(cacheRoot, "person-match cache directory");
-  const cacheChildren = yield* canonicalizeMatchPersonCacheChildren(canonicalCacheRoot);
+  const cacheChildren = yield* canonicalizeMatchPersonCacheChildren(canonicalCacheRoot, options.backend);
   yield* validateMatchPersonPathIsolation(
     path,
     candidateDirectory,
     referenceDirectory,
     manifestPath,
-    [canonicalCacheRoot, cacheChildren.modelRoot, cacheChildren.uvEnvironment, cacheChildren.uvCacheRoot],
+    [
+      canonicalCacheRoot,
+      cacheChildren.modelRoot,
+      cacheChildren.uvEnvironment,
+      cacheChildren.uvCpuEnvironment,
+      cacheChildren.uvCacheRoot,
+    ],
     outputDirectory
   );
 
-  return {
+  return CanonicalMatchPersonInputs.make({
     cacheRoot: canonicalCacheRoot,
     candidateDirectory,
     manifestPath,
@@ -461,117 +688,122 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
     outputDirectory,
     referenceDirectory,
     uvCacheRoot: cacheChildren.uvCacheRoot,
+    uvCpuEnvironment: cacheChildren.uvCpuEnvironment,
     uvEnvironment: cacheChildren.uvEnvironment,
     uvPath,
-  };
+  });
 });
 
-const workerArguments = (options: MatchPersonOptions, inputs: CanonicalMatchPersonInputs): ReadonlyArray<string> => [
-  "run",
-  "--project",
-  workerProjectDirectory,
-  "--frozen",
-  "--python",
-  "3.12",
-  "--no-python-downloads",
-  "--no-dev",
-  "-m",
-  "beep_photo_face",
-  "--references",
-  inputs.referenceDirectory,
-  "--candidates",
-  inputs.candidateDirectory,
-  "--model-root",
-  inputs.modelRoot,
-  "--detection-threshold",
-  `${options.detectionThreshold}`,
-  "--match-threshold",
-  `${options.matchThreshold}`,
-  "--review-threshold",
-  `${options.reviewThreshold}`,
-  "--min-face-area-pct",
-  `${options.minFaceAreaPct}`,
-  ...(options.recursive ? ["--recursive"] : []),
-  "--accept-model-license",
-];
+const discoverSupportedPersonMatchFiles: (
+  root: string,
+  directory: string,
+  recursive: boolean
+) => Effect.Effect<ReadonlyArray<string>, FilesCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "Files.discoverSupportedPersonMatchFiles"
+)(function* (root, directory, recursive) {
+  const fs = yield* FileSystem.FileSystem;
+  const names = yield* fs
+    .readDirectory(directory)
+    .pipe(
+      Effect.mapError((cause) =>
+        formatPlatformError("Failed to discover person-match image inputs", directory, { cause })
+      )
+    );
+  const discovered = yield* Effect.forEach(
+    A.sort(names, Str.Order),
+    (name) => discoverSupportedPersonMatchEntry(root, directory, name, recursive),
+    { concurrency: 1 }
+  );
+  return A.sort(A.flatten(discovered), Str.Order);
+});
 
-const workerFailureMessage = (report: PersonMatchWorkerReport, stderr: string, exitCode: number): string => {
-  if (!report.ok) return `Person-match worker failed [${report.error.code}]: ${report.error.message}`;
-  const diagnostic = Str.trim(stderr);
-  return Str.isNonEmpty(diagnostic)
-    ? `Person-match worker exited with code ${exitCode}: ${diagnostic}`
-    : `Person-match worker exited with code ${exitCode}.`;
+const isContainedPersonMatchSourcePath = (
+  path: Pick<MatchPersonPathOperations, "isAbsolute" | "relative" | "sep">,
+  root: string,
+  sourcePath: string
+): boolean => {
+  const relativePath = path.relative(root, sourcePath);
+  return (
+    !path.isAbsolute(relativePath) &&
+    !Str.startsWith(`..${path.sep}`)(relativePath) &&
+    !Str.Equivalence(relativePath, "..")
+  );
 };
 
-const decodeWorkerExecution = Effect.fn("Files.decodeMatchPersonWorkerExecution")(function* (
-  stdout: string,
-  stderr: string,
-  exitCode: number,
-  truncated: boolean
-): Effect.fn.Return<PersonMatchWorkerSuccess, FilesCommandError> {
-  if (truncated) {
-    return yield* FilesCommandError.make({
-      message: "Person-match worker output exceeded the 256 MiB safety bound; split the scan into smaller batches.",
-    });
-  }
+const supportedPersonMatchSourcePath = (
+  path: Path.Path,
+  root: string,
+  sourcePath: string,
+  name: string
+): O.Option<string> => {
+  const extension = pipe(path.extname(name), Str.replace(/^\./u, ""), Str.toLowerCase);
+  return pipe(
+    sourcePath,
+    O.liftPredicate(() => isPersonMatchSupportedImageExtension(extension)),
+    O.filter(() => isContainedPersonMatchSourcePath(path, root, sourcePath))
+  );
+};
 
-  const decoded = yield* decodePersonMatchWorkerReportJson(stdout, { onExcessProperty: "error" }).pipe(Effect.option);
-  if (O.isNone(decoded)) {
-    const diagnostic = Str.trim(stderr);
-    return yield* FilesCommandError.make({
-      message: Str.isNonEmpty(diagnostic)
-        ? `Person-match worker returned invalid JSON: ${diagnostic}`
-        : "Person-match worker returned invalid or empty JSON.",
-    });
-  }
-  if (exitCode !== 0 || !decoded.value.ok) {
-    return yield* FilesCommandError.make({
-      message: workerFailureMessage(decoded.value, stderr, exitCode),
-    });
-  }
-  return decoded.value;
-});
-
-const validateUniqueRecursiveReferenceNames = Effect.fn("Files.validateUniqueRecursiveReferenceNames")(function* (
-  references: ReadonlyArray<PersonMatchReference>,
+const discoverSupportedPersonMatchEntry: (
+  root: string,
+  directory: string,
+  name: string,
   recursive: boolean
-): Effect.fn.Return<void, FilesCommandError> {
-  if (!recursive) return;
-  const acceptedReferenceNames = MutableHashSet.empty<string>();
-  for (const reference of references) {
-    if (!reference.accepted) continue;
-    if (MutableHashSet.has(acceptedReferenceNames, reference.sourceName)) {
-      return yield* FilesCommandError.make({
-        message: `Recursive person-match references contain duplicate accepted file names: "${reference.sourceName}". Rename one reference so face evidence remains unambiguous.`,
-      });
-    }
-    MutableHashSet.add(acceptedReferenceNames, reference.sourceName);
-  }
+) => Effect.Effect<ReadonlyArray<string>, FilesCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "Files.discoverSupportedPersonMatchEntry"
+)(function* (root, directory, name, recursive) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const sourcePath = path.join(directory, name);
+  const isSymbolicLink = yield* fs.readLink(sourcePath).pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+  if (isSymbolicLink) return A.empty<string>();
+
+  const stat = yield* fs.stat(sourcePath).pipe(Effect.option);
+  return yield* O.match(stat, {
+    onNone: () => Effect.succeed(A.empty<string>()),
+    onSome: (info) =>
+      Match.value(info.type).pipe(
+        Match.when("Directory", () =>
+          Bool.match(recursive, {
+            onFalse: () => Effect.succeed(A.empty<string>()),
+            onTrue: () => discoverSupportedPersonMatchFiles(root, sourcePath, recursive),
+          })
+        ),
+        Match.when("File", () =>
+          Effect.succeed(A.fromOption(supportedPersonMatchSourcePath(path, root, sourcePath, name)))
+        ),
+        Match.orElse(() => Effect.succeed(A.empty<string>()))
+      ),
+  });
 });
 
-const runWorker = Effect.fn("Files.runMatchPersonWorker")(function* (
-  options: MatchPersonOptions,
-  inputs: CanonicalMatchPersonInputs
-): Effect.fn.Return<PersonMatchWorkerSuccess, FilesCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* runCapturedStreams({
-    command: inputs.uvPath,
-    args: workerArguments(options, inputs),
-    cwd: workerProjectDirectory,
-    extendEnv: true,
-    env: {
-      NO_COLOR: "1",
-      PYTHONUTF8: "1",
-      UV_CACHE_DIR: inputs.uvCacheRoot,
-      UV_NO_PROGRESS: "1",
-      UV_PROJECT_ENVIRONMENT: inputs.uvEnvironment,
-    },
-    bound: workerOutputBound,
-    trim: true,
-  }).pipe(FilesCommandError.mapError("Failed to start the local person-match worker"));
+const discoverExpectedPersonMatchFiles = Effect.fn("Files.discoverExpectedPersonMatchFiles")(function* (
+  inputs: CanonicalMatchPersonInputs,
+  recursive: boolean
+): Effect.fn.Return<ExpectedPersonMatchFiles, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const [candidatePaths, referencePaths] = yield* Effect.all(
+    [
+      discoverSupportedPersonMatchFiles(inputs.candidateDirectory, inputs.candidateDirectory, recursive),
+      discoverSupportedPersonMatchFiles(inputs.referenceDirectory, inputs.referenceDirectory, recursive),
+    ],
+    { concurrency: 2 }
+  );
+  return ExpectedPersonMatchFiles.make({ candidatePaths, referencePaths });
+});
 
-  const worker = yield* decodeWorkerExecution(result.stdout, result.stderr, result.exitCode, result.truncated);
-  yield* validateUniqueRecursiveReferenceNames(worker.references, options.recursive);
-  return worker;
+const validateDiscoveredReferenceImages = Effect.fn("Files.validateDiscoveredReferenceImages")(function* (
+  expected: ExpectedPersonMatchFiles
+): Effect.fn.Return<void, FilesCommandError> {
+  return yield* A.match(expected.referencePaths, {
+    onEmpty: () =>
+      FilesCommandError.make({
+        message: "Reference directory contains no supported jpg, jpeg, png, or webp images.",
+      }),
+    onNonEmpty: () => Effect.void,
+  });
 });
 
 const materializationCategory = (disposition: PersonMatchDisposition): O.Option<string> =>
@@ -597,39 +829,111 @@ const safeRelativePath = (
     : O.some(normalized);
 };
 
-const validateWorkerParameters = Effect.fn("Files.validatePersonMatchWorkerParameters")(function* (
-  parameters: PersonMatchParameters,
-  options: MatchPersonOptions
-): Effect.fn.Return<void, FilesCommandError> {
-  if (
-    parameters.detectionThreshold !== options.detectionThreshold ||
-    parameters.matchThreshold !== options.matchThreshold ||
-    parameters.reviewThreshold !== options.reviewThreshold ||
-    parameters.minFaceAreaPct !== options.minFaceAreaPct ||
-    parameters.recursive !== options.recursive
-  ) {
-    return yield* FilesCommandError.make({
-      message: "Person-match worker reported parameters that do not match the requested scan.",
-    });
-  }
-});
+class ExpectedPersonMatchComponent extends S.Class<ExpectedPersonMatchComponent>($I`ExpectedPersonMatchComponent`)(
+  {
+    role: S.Literals(["detector", "aligner", "recognizer"]),
+    name: S.NonEmptyString,
+    revision: S.NonEmptyString,
+    source: S.NonEmptyString,
+    licenseNotice: S.NonEmptyString,
+    artifactName: S.NonEmptyString,
+    artifactPath: S.NonEmptyString,
+    artifactSha256: S.NonEmptyString,
+    artifactSizeBytes: S.Option(S.Finite),
+  },
+  $I.annote("ExpectedPersonMatchComponent", {
+    description: "Exact component and artifact provenance expected from one person-match backend.",
+  })
+) {}
+
+const insightFaceSource = "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip";
+const insightFaceLicenseNotice =
+  "InsightFace pretrained-model terms: https://github.com/deepinsight/insightface/blob/master/server/LICENSING.md";
+const cvlFaceLicenseNotice =
+  "CVLFace code is MIT-licensed; checkpoint use is also subject to the training-dataset and model-card terms at the pinned source.";
+const adaFaceAlignerSource =
+  "https://huggingface.co/minchul/cvlface_DFA_mobilenet/resolve/8317e6dda53d91e7074979923144c2cc08906a33/model.safetensors";
+const adaFaceRecognizerSource =
+  "https://huggingface.co/minchul/cvlface_adaface_vit_base_kprpe_webface12m/resolve/daefd5012d369588bd214fbaf4cc6b1d286e7066/model.safetensors";
+
+const expectedDetector = (path: Path.Path, modelRoot: string): ExpectedPersonMatchComponent =>
+  ExpectedPersonMatchComponent.make({
+    role: "detector",
+    name: "insightface-det_10g",
+    revision: "v0.7",
+    source: insightFaceSource,
+    licenseNotice: insightFaceLicenseNotice,
+    artifactName: "det_10g.onnx",
+    artifactPath: path.join(modelRoot, "models", workerModelRuntimeName, "det_10g.onnx"),
+    artifactSha256: workerModelArtifactSha256["det_10g.onnx"] ?? "",
+    artifactSizeBytes: O.some(16_923_827),
+  });
+
+const expectedBuffaloRecognizer = (path: Path.Path, modelRoot: string): ExpectedPersonMatchComponent =>
+  ExpectedPersonMatchComponent.make({
+    role: "recognizer",
+    name: "insightface-w600k_r50",
+    revision: "v0.7",
+    source: insightFaceSource,
+    licenseNotice: insightFaceLicenseNotice,
+    artifactName: "w600k_r50.onnx",
+    artifactPath: path.join(modelRoot, "models", workerModelRuntimeName, "w600k_r50.onnx"),
+    artifactSha256: workerModelArtifactSha256["w600k_r50.onnx"] ?? "",
+    artifactSizeBytes: O.some(174_383_860),
+  });
+
+const expectedAdaFaceAligner = (path: Path.Path, modelRoot: string): ExpectedPersonMatchComponent =>
+  ExpectedPersonMatchComponent.make({
+    role: "aligner",
+    name: "cvlface_DFA_mobilenet",
+    revision: "8317e6dda53d91e7074979923144c2cc08906a33",
+    source: adaFaceAlignerSource,
+    licenseNotice: cvlFaceLicenseNotice,
+    artifactName: "model.safetensors",
+    artifactPath: path.join(modelRoot, "pinned", "aligner", "model.safetensors"),
+    artifactSha256: "80b6e922e4c76c10d5e24061fe47cd96112d18689bf5ae7e34af52e641c18c4a",
+    artifactSizeBytes: O.some(2_007_980),
+  });
+
+const expectedAdaFaceRecognizer = (path: Path.Path, modelRoot: string): ExpectedPersonMatchComponent =>
+  ExpectedPersonMatchComponent.make({
+    role: "recognizer",
+    name: "cvlface_adaface_vit_base_kprpe_webface12m",
+    revision: "daefd5012d369588bd214fbaf4cc6b1d286e7066",
+    source: adaFaceRecognizerSource,
+    licenseNotice: cvlFaceLicenseNotice,
+    artifactName: "model.safetensors",
+    artifactPath: path.join(modelRoot, "pinned", "recognizer", "model.safetensors"),
+    artifactSha256: "99d16ed4aac0fdf0fcc82526b9b70703f3ec8c3041bf1bf44bd22751536e65db",
+    artifactSizeBytes: O.some(460_344_344),
+  });
+
+const expectedWorkerComponents = (
+  model: PersonMatchModel,
+  modelRoot: string,
+  path: Path.Path
+): ReadonlyArray<ExpectedPersonMatchComponent> =>
+  Match.value(model.backend).pipe(
+    Match.when("buffalo-l", () => [expectedDetector(path, modelRoot), expectedBuffaloRecognizer(path, modelRoot)]),
+    Match.when("adaface-kprpe", () => [
+      expectedDetector(path, modelRoot),
+      expectedAdaFaceAligner(path, modelRoot),
+      expectedAdaFaceRecognizer(path, modelRoot),
+    ]),
+    Match.exhaustive
+  );
 
 const validateWorkerModelArtifact = Effect.fn("Files.validatePersonMatchWorkerModelArtifact")(function* (
   artifact: PersonMatchModelArtifact,
-  modelRoot: string,
-  artifactNames: MutableHashSet.MutableHashSet<string>
+  expected: ExpectedPersonMatchComponent
 ): Effect.fn.Return<void, FilesCommandError, Path.Path> {
   const path = yield* Path.Path;
-  if (MutableHashSet.has(artifactNames, artifact.name)) {
-    return yield* FilesCommandError.make({
-      message: `Person-match worker reported duplicate model artifact provenance for "${artifact.name}".`,
-    });
-  }
-  MutableHashSet.add(artifactNames, artifact.name);
-  const expectedArtifactPath = path.join(modelRoot, "models", workerModelRuntimeName, artifact.name);
   if (
-    path.resolve(artifact.path) !== expectedArtifactPath ||
-    artifact.sha256 !== workerModelArtifactSha256[artifact.name]
+    !Str.Equivalence(artifact.name, expected.artifactName) ||
+    !Str.Equivalence(path.resolve(artifact.path), expected.artifactPath) ||
+    !Str.Equivalence(artifact.sha256, expected.artifactSha256) ||
+    artifact.sizeBytes <= 0 ||
+    O.exists(expected.artifactSizeBytes, (sizeBytes) => !Num.Equivalence(artifact.sizeBytes, sizeBytes))
   ) {
     return yield* FilesCommandError.make({
       message: `Person-match worker reported unexpected model artifact provenance for "${artifact.name}".`,
@@ -637,38 +941,199 @@ const validateWorkerModelArtifact = Effect.fn("Files.validatePersonMatchWorkerMo
   }
 });
 
-const validateWorkerModel = Effect.fn("Files.validatePersonMatchWorkerModel")(function* (
-  model: PersonMatchModel,
-  modelRoot: string
+const validateWorkerModelComponent = Effect.fn("Files.validatePersonMatchWorkerModelComponent")(function* (
+  component: PersonMatchModelComponent,
+  expected: ExpectedPersonMatchComponent
 ): Effect.fn.Return<void, FilesCommandError, Path.Path> {
-  const path = yield* Path.Path;
-  if (path.resolve(model.root) !== modelRoot) {
-    return yield* FilesCommandError.make({
-      message: "Person-match worker reported a model root outside the selected cache.",
-    });
-  }
-  const artifactNames = MutableHashSet.empty<string>();
-  yield* Effect.forEach(
-    model.artifacts,
-    (artifact) => validateWorkerModelArtifact(artifact, modelRoot, artifactNames),
-    { concurrency: 1, discard: true }
-  );
   if (
-    A.length(model.artifacts) !== 2 ||
-    !MutableHashSet.has(artifactNames, "det_10g.onnx") ||
-    !MutableHashSet.has(artifactNames, "w600k_r50.onnx")
+    component.role !== expected.role ||
+    !Str.Equivalence(component.name, expected.name) ||
+    !Str.Equivalence(component.revision, expected.revision) ||
+    !Str.Equivalence(component.source, expected.source) ||
+    !Str.Equivalence(component.licenseNotice, expected.licenseNotice) ||
+    A.length(component.artifacts) !== 1
   ) {
     return yield* FilesCommandError.make({
-      message: "Person-match worker did not report the exact pinned detector and recognizer artifacts.",
+      message: `Person-match worker reported unexpected ${expected.role} component provenance.`,
+    });
+  }
+  const artifact = component.artifacts[0];
+  if (artifact === undefined) {
+    return yield* FilesCommandError.make({
+      message: `Person-match worker omitted the pinned ${expected.role} artifact.`,
+    });
+  }
+  yield* validateWorkerModelArtifact(artifact, expected);
+});
+
+const validateBuffaloWorkerRuntime = Effect.fn("Files.validateBuffaloPersonMatchWorkerRuntime")(function* (
+  runtime: PersonMatchOnnxRuntime
+): Effect.fn.Return<void, FilesCommandError> {
+  if (runtime.framework !== "onnxruntime" || A.isReadonlyArrayNonEmpty(runtime.warnings)) {
+    return yield* FilesCommandError.make({
+      message: "Buffalo model runtime provenance is not the exact pinned CPU runtime.",
     });
   }
 });
 
-const validateWorkerReference = Effect.fn("Files.validatePersonMatchWorkerReference")(function* (
+const isPinnedAdaFaceRocmRuntime = (runtime: PersonMatchPyTorchRuntime): boolean =>
+  runtime.distribution === "rocm72" &&
+  O.exists(runtime.hipVersion, Str.startsWith(adaFaceHipVersionPrefix)) &&
+  A.length(runtime.devices) === 1 &&
+  A.every(runtime.devices, (device) => Str.Equivalence(device.architecture, adaFaceRocmArchitecture));
+
+const adaFaceRuntimeUsesRequestedDevices = (
+  runtime: PersonMatchPyTorchRuntime,
+  requestedDevices: MatchPersonOptions["devices"]
+): boolean =>
+  !O.exists(
+    requestedDevices,
+    (requested) =>
+      !personMatchDeviceIndexesEquivalence(
+        A.map(runtime.devices, (device) => device.index),
+        requested
+      )
+  );
+
+const validateAdaFaceRocmRuntime = Effect.fn("Files.validateAdaFaceRocmPersonMatchWorkerRuntime")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  requestedDevices: MatchPersonOptions["devices"]
+): Effect.fn.Return<void, FilesCommandError> {
+  if (!isPinnedAdaFaceRocmRuntime(runtime)) {
+    return yield* FilesCommandError.make({
+      message: "AdaFace ROCm runtime requires the pinned HIP 7.2 family and one selected gfx1201 device.",
+    });
+  }
+  if (!adaFaceRuntimeUsesRequestedDevices(runtime, requestedDevices)) {
+    return yield* FilesCommandError.make({
+      message: "AdaFace runtime did not select the explicitly requested ROCm device.",
+    });
+  }
+});
+
+const validateAdaFaceRuntimeDevices = (
+  runtime: PersonMatchPyTorchRuntime,
+  requestedDevices: MatchPersonOptions["devices"]
+): Effect.Effect<void, FilesCommandError> =>
+  Match.value(runtime.actualCompute).pipe(
+    Match.when("rocm", () => validateAdaFaceRocmRuntime(runtime, requestedDevices)),
+    Match.when("cpu", () =>
+      Bool.match(A.isReadonlyArrayNonEmpty(runtime.devices), {
+        onFalse: () => Effect.void,
+        onTrue: () => FilesCommandError.make({ message: "AdaFace CPU runtime reported a selected ROCm device." }),
+      })
+    ),
+    Match.exhaustive
+  );
+
+const adaFaceRuntimeHonorsComputePolicy = (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): boolean =>
+  Match.value(compute).pipe(
+    Match.when("auto", () => true),
+    Match.when("rocm", () => runtime.actualCompute === "rocm"),
+    Match.when("cpu", () => runtime.actualCompute === "cpu"),
+    Match.exhaustive
+  );
+
+const validateAdaFaceComputePolicy = Effect.fn("Files.validateAdaFacePersonMatchComputePolicy")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): Effect.fn.Return<void, FilesCommandError> {
+  if (!adaFaceRuntimeHonorsComputePolicy(runtime, compute)) {
+    return yield* FilesCommandError.make({ message: "AdaFace runtime did not honor the explicit compute policy." });
+  }
+});
+
+const hasSingleRocmFallbackWarning = (runtime: PersonMatchPyTorchRuntime): boolean =>
+  A.length(runtime.warnings) === 1 &&
+  O.exists(A.head(runtime.warnings), (warning) => warning.code === "rocm-fallback-to-cpu");
+
+const hasCoherentAdaFaceRuntimeWarnings = (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): boolean =>
+  Match.value(compute).pipe(
+    Match.when("auto", () =>
+      Bool.match(runtime.actualCompute === "cpu", {
+        onFalse: () => A.isReadonlyArrayEmpty(runtime.warnings),
+        onTrue: () => hasSingleRocmFallbackWarning(runtime),
+      })
+    ),
+    Match.orElse(() => A.isReadonlyArrayEmpty(runtime.warnings))
+  );
+
+const validateAdaFaceRuntimeWarnings = Effect.fn("Files.validateAdaFacePersonMatchRuntimeWarnings")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): Effect.fn.Return<void, FilesCommandError> {
+  if (!hasCoherentAdaFaceRuntimeWarnings(runtime, compute)) {
+    return yield* FilesCommandError.make({
+      message: "AdaFace runtime reported incoherent compute fallback provenance.",
+    });
+  }
+});
+
+const validateAdaFaceWorkerRuntime = Effect.fn("Files.validateAdaFacePersonMatchWorkerRuntime")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, FilesCommandError> {
+  yield* validateAdaFaceRuntimeDevices(runtime, options.devices);
+  yield* validateAdaFaceComputePolicy(runtime, options.compute);
+  yield* validateAdaFaceRuntimeWarnings(runtime, options.compute);
+});
+
+const validateWorkerRuntime = Effect.fn("Files.validatePersonMatchWorkerRuntime")(function* (
+  model: PersonMatchModel,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, FilesCommandError> {
+  yield* PersonMatchModel.match({
+    "buffalo-l": (buffalo) => validateBuffaloWorkerRuntime(buffalo.runtime),
+    "adaface-kprpe": (adaFace) => validateAdaFaceWorkerRuntime(adaFace.runtime, options),
+  })(model);
+});
+
+const validateWorkerModel = Effect.fn("Files.validatePersonMatchWorkerModel")(function* (
+  model: PersonMatchModel,
+  modelRoot: string,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, FilesCommandError, Path.Path> {
+  const path = yield* Path.Path;
+  if (!Str.Equivalence(path.resolve(model.root), modelRoot) || model.backend !== options.backend) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker reported a model root or backend outside the selected cache.",
+    });
+  }
+  yield* validateWorkerRuntime(model, options);
+  const expected = expectedWorkerComponents(model, modelRoot, path);
+  if (A.length(model.components) !== A.length(expected)) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker did not report the exact pinned model component set.",
+    });
+  }
+  yield* Effect.forEach(
+    expected,
+    (expectedComponent) =>
+      O.match(
+        A.findFirst(model.components, (component) => component.role === expectedComponent.role),
+        {
+          onNone: () =>
+            FilesCommandError.make({
+              message: `Person-match worker omitted the pinned ${expectedComponent.role} component.`,
+            }),
+          onSome: (component) => validateWorkerModelComponent(component, expectedComponent),
+        }
+      ),
+    { concurrency: 1, discard: true }
+  );
+});
+
+const validateWorkerReferencePath = Effect.fn("Files.validatePersonMatchWorkerReferencePath")(function* (
   reference: PersonMatchReference,
   referenceDirectory: string,
   referencePaths: MutableHashSet.MutableHashSet<string>
-): Effect.fn.Return<boolean, FilesCommandError, Path.Path> {
+): Effect.fn.Return<void, FilesCommandError, Path.Path> {
   const path = yield* Path.Path;
   const referencePath = path.resolve(reference.sourcePath);
   if (
@@ -681,20 +1146,45 @@ const validateWorkerReference = Effect.fn("Files.validatePersonMatchWorkerRefere
     });
   }
   MutableHashSet.add(referencePaths, referencePath);
-  if (reference.accepted) {
-    if (reference.faceCount !== 1 || reference.detectionScore === undefined || reference.reason !== undefined) {
-      return yield* FilesCommandError.make({
-        message: `Person-match worker returned inconsistent accepted reference evidence for "${reference.sourcePath}".`,
-      });
-    }
-    return true;
+});
+
+const validateAcceptedWorkerReference = Effect.fn("Files.validateAcceptedPersonMatchWorkerReference")(function* (
+  reference: PersonMatchReference
+): Effect.fn.Return<boolean, FilesCommandError> {
+  if (reference.faceCount !== 1 || reference.detectionScore === undefined || reference.reason !== undefined) {
+    return yield* FilesCommandError.make({
+      message: `Person-match worker returned inconsistent accepted reference evidence for "${reference.sourcePath}".`,
+    });
   }
+  return true;
+});
+
+const validateRejectedWorkerReference = Effect.fn("Files.validateRejectedPersonMatchWorkerReference")(function* (
+  reference: PersonMatchReference
+): Effect.fn.Return<boolean, FilesCommandError> {
   if (reference.reason === undefined) {
     return yield* FilesCommandError.make({
       message: `Person-match worker omitted the rejection reason for reference "${reference.sourcePath}".`,
     });
   }
+  if (reference.reason === "aligner-confidence-failed" && reference.faceCount !== 0) {
+    return yield* FilesCommandError.make({
+      message: `Person-match worker returned incoherent aligner rejection evidence for reference "${reference.sourcePath}".`,
+    });
+  }
   return false;
+});
+
+const validateWorkerReference = Effect.fn("Files.validatePersonMatchWorkerReference")(function* (
+  reference: PersonMatchReference,
+  referenceDirectory: string,
+  referencePaths: MutableHashSet.MutableHashSet<string>
+): Effect.fn.Return<boolean, FilesCommandError, Path.Path> {
+  yield* validateWorkerReferencePath(reference, referenceDirectory, referencePaths);
+  return yield* Bool.match(reference.accepted, {
+    onFalse: () => validateRejectedWorkerReference(reference),
+    onTrue: () => validateAcceptedWorkerReference(reference),
+  });
 });
 
 const validateWorkerReferences = Effect.fn("Files.validatePersonMatchWorkerReferences")(function* (
@@ -710,7 +1200,10 @@ const validateWorkerReferences = Effect.fn("Files.validatePersonMatchWorkerRefer
     acceptedCount += 1;
     MutableHashSet.add(acceptedNames, reference.sourceName);
   }
-  return { acceptedCount, acceptedNames };
+  return ValidatedWorkerReferences.make({
+    acceptedCount: NonNegativeInt.make(acceptedCount),
+    acceptedNames: A.fromIterable(acceptedNames),
+  });
 });
 
 const validateWorkerEntryPath = Effect.fn("Files.validatePersonMatchWorkerEntryPath")(function* (
@@ -744,11 +1237,11 @@ const validateWorkerEntryPath = Effect.fn("Files.validatePersonMatchWorkerEntryP
 
 const maximumValidatedFaceScore = Effect.fn("Files.maximumValidatedPersonMatchFaceScore")(function* (
   entry: PersonMatchEntry,
-  acceptedReferenceNames: MutableHashSet.MutableHashSet<string>
+  acceptedReferenceNames: ReadonlyArray<string>
 ): Effect.fn.Return<number, FilesCommandError> {
   let maximumMatchScore = -1;
   for (const face of entry.faces) {
-    if (!MutableHashSet.has(acceptedReferenceNames, face.bestReferenceName)) {
+    if (!A.contains(acceptedReferenceNames, face.bestReferenceName)) {
       return yield* FilesCommandError.make({
         message: `Person-match worker referenced an unaccepted identity source for "${entry.relativePath}".`,
       });
@@ -773,11 +1266,12 @@ const isWorkerDispositionCoherent = (
   const couldMeetReviewThreshold = maximumMatchScore >= options.reviewThreshold - workerScoreRoundingTolerance;
   const couldMissReviewThreshold = maximumMatchScore <= options.reviewThreshold + workerScoreRoundingTolerance;
   const hasQualityFlags = A.some(entry.faces, (face) => A.isReadonlyArrayNonEmpty(face.qualityFlags));
+  const hasPartialAlignerRejection = entry.reason === "aligner-confidence-failed";
   return Match.value(entry.disposition).pipe(
     Match.when("solo-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && !hasQualityFlags),
     Match.when("low-quality-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && hasQualityFlags),
     Match.when("group-match", () => entry.faceCount > 1 && couldMeetMatchThreshold),
-    Match.when("review", () => !mustMeetMatchThreshold && couldMeetReviewThreshold),
+    Match.when("review", () => hasPartialAlignerRejection || (!mustMeetMatchThreshold && couldMeetReviewThreshold)),
     Match.when("no-match", () => couldMissReviewThreshold),
     Match.when("no-face", () => false),
     Match.when("unreadable", () => false),
@@ -810,10 +1304,13 @@ const validateWorkerEntryFaceShape = Effect.fn("Files.validatePersonMatchWorkerE
 const validateWorkerEntryReason = Effect.fn("Files.validatePersonMatchWorkerEntryReason")(function* (
   entry: PersonMatchEntry
 ): Effect.fn.Return<void, FilesCommandError> {
-  if (
-    (entry.disposition === "unreadable" && entry.reason !== "image-decode-failed") ||
-    (entry.disposition !== "unreadable" && entry.reason !== undefined)
-  ) {
+  const coherent = Match.value(entry.disposition).pipe(
+    Match.when("unreadable", () => entry.reason === "image-decode-failed"),
+    Match.when("no-face", () => entry.reason === undefined || entry.reason === "aligner-confidence-failed"),
+    Match.when("review", () => entry.reason === undefined || entry.reason === "aligner-confidence-failed"),
+    Match.orElse(() => entry.reason === undefined)
+  );
+  if (!coherent) {
     return yield* FilesCommandError.make({
       message: `Person-match worker returned an incoherent candidate reason for "${entry.relativePath}".`,
     });
@@ -845,7 +1342,7 @@ const validateWorkerEntryDisposition = Effect.fn("Files.validatePersonMatchWorke
 
 const validateWorkerEntryEvidence = Effect.fn("Files.validatePersonMatchWorkerEntryEvidence")(function* (
   entry: PersonMatchEntry,
-  acceptedReferenceNames: MutableHashSet.MutableHashSet<string>,
+  acceptedReferenceNames: ReadonlyArray<string>,
   options: MatchPersonOptions
 ): Effect.fn.Return<void, FilesCommandError> {
   const hasNoComparableFace = hasNoComparableWorkerFace(entry);
@@ -860,7 +1357,7 @@ const validateWorkerEntryEvidence = Effect.fn("Files.validatePersonMatchWorkerEn
 const validateWorkerEntry = Effect.fn("Files.validatePersonMatchWorkerEntry")(function* (
   entry: PersonMatchEntry,
   inputs: CanonicalMatchPersonInputs,
-  acceptedReferenceNames: MutableHashSet.MutableHashSet<string>,
+  acceptedReferenceNames: ReadonlyArray<string>,
   sourcePaths: MutableHashSet.MutableHashSet<string>,
   relativePaths: MutableHashSet.MutableHashSet<string>,
   options: MatchPersonOptions
@@ -898,13 +1395,34 @@ const validateWorkerSummary = Effect.fn("Files.validatePersonMatchWorkerSummary"
   }
 });
 
+const validateWorkerCompleteness = Effect.fn("Files.validatePersonMatchWorkerCompleteness")(function* (
+  worker: PersonMatchWorkerSuccess,
+  expected: ExpectedPersonMatchFiles
+): Effect.fn.Return<void, FilesCommandError> {
+  const reported = ExpectedPersonMatchFiles.make({
+    candidatePaths: A.sort(
+      A.map(worker.entries, (entry) => entry.sourcePath),
+      Str.Order
+    ),
+    referencePaths: A.sort(
+      A.map(worker.references, (reference) => reference.sourcePath),
+      Str.Order
+    ),
+  });
+  if (!expectedPersonMatchFilesEquivalence(expected, reported)) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker did not report every eligible candidate and reference image exactly once.",
+    });
+  }
+});
+
 const validateWorkerSemantics = Effect.fn("Files.validatePersonMatchWorkerSemantics")(function* (
   worker: PersonMatchWorkerSuccess,
   inputs: CanonicalMatchPersonInputs,
+  expected: ExpectedPersonMatchFiles,
   options: MatchPersonOptions
 ): Effect.fn.Return<void, FilesCommandError, Path.Path> {
-  yield* validateWorkerParameters(worker.parameters, options);
-  yield* validateWorkerModel(worker.model, inputs.modelRoot);
+  yield* validateWorkerModel(worker.model, inputs.modelRoot, options);
   const references = yield* validateWorkerReferences(worker.references, inputs.referenceDirectory);
   const sourcePaths = MutableHashSet.empty<string>();
   const relativePaths = MutableHashSet.empty<string>();
@@ -914,6 +1432,7 @@ const validateWorkerSemantics = Effect.fn("Files.validatePersonMatchWorkerSemant
     { concurrency: 1, discard: true }
   );
   yield* validateWorkerSummary(worker, references.acceptedCount);
+  yield* validateWorkerCompleteness(worker, expected);
 });
 
 const resolveCopyPlanEntry = Effect.fn("Files.resolvePersonMatchCopyPlanEntry")(function* (
@@ -957,7 +1476,7 @@ const resolveCopyPlanEntry = Effect.fn("Files.resolvePersonMatchCopyPlanEntry")(
       message: `Refusing symlinked or aliased person-match output: "${requestedTargetPath}"`,
     });
   }
-  return O.some({ sourcePath, targetPath });
+  return O.some(PersonMatchCopyPlanEntry.make({ sourcePath, targetPath }));
 });
 
 const preflightCopyPlanEntry = Effect.fn("Files.preflightPersonMatchCopyPlanEntry")(function* (
@@ -1146,7 +1665,7 @@ const stageCopy = Effect.fn("Files.stagePersonMatchCopy")(function* (
         });
       }
 
-      return {
+      return PersonMatchCommitRecord.make({
         backupPath: path.join(temporaryDirectory, ".previous-output"),
         backedUp: false,
         committed: false,
@@ -1154,7 +1673,7 @@ const stageCopy = Effect.fn("Files.stagePersonMatchCopy")(function* (
         stagedPath,
         targetPath: entry.targetPath,
         temporaryDirectory,
-      };
+      });
     }),
     () => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
   );
@@ -1188,7 +1707,7 @@ const stageManifest = Effect.fn("Files.stagePersonMatchManifest")(function* (
             formatPlatformError("Failed to write staged person-match manifest", stagedPath, { cause })
           )
         );
-      return {
+      return PersonMatchCommitRecord.make({
         backupPath: path.join(temporaryDirectory, ".previous-manifest"),
         backedUp: false,
         committed: false,
@@ -1196,7 +1715,7 @@ const stageManifest = Effect.fn("Files.stagePersonMatchManifest")(function* (
         stagedPath,
         targetPath: report.manifestPath,
         temporaryDirectory,
-      };
+      });
     }),
     () => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
   );
@@ -1397,17 +1916,32 @@ export const runMatchPerson = Effect.fn("Files.runMatchPerson")(function* (
 ): Effect.fn.Return<
   PersonMatchReport,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | PersonMatchWorkerService
 > {
   const inputs = yield* validateMatchPersonInputs(options);
   if (!options.json) {
+    const modelName = Match.value(options.backend).pipe(
+      Match.when("buffalo-l", () => "local buffalo_l"),
+      Match.when("adaface-kprpe", () => "pinned AdaFace ViT-Base KP-RPE"),
+      Match.exhaustive
+    );
     yield* Console.log(
-      `files match-person: loading local buffalo_l models and scanning "${inputs.candidateDirectory}" against "${inputs.referenceDirectory}".`
+      `files match-person: loading ${modelName} models and scanning "${inputs.candidateDirectory}" against "${inputs.referenceDirectory}".`
     );
   }
 
-  const worker = yield* runWorker(options, inputs);
-  yield* validateWorkerSemantics(worker, inputs, options);
+  const expectedBefore = yield* discoverExpectedPersonMatchFiles(inputs, options.recursive);
+  yield* validateDiscoveredReferenceImages(expectedBefore);
+  const workerService = yield* PersonMatchWorkerService;
+  const worker = yield* workerService.run(options, inputs).pipe(Effect.mapError(toFilesCommandError));
+  const expectedAfter = yield* discoverExpectedPersonMatchFiles(inputs, options.recursive);
+  if (!expectedPersonMatchFilesEquivalence(expectedBefore, expectedAfter)) {
+    return yield* FilesCommandError.make({
+      message:
+        "Eligible candidate or reference images changed while person matching was running; no report was written.",
+    });
+  }
+  yield* validateWorkerSemantics(worker, inputs, expectedBefore, options);
   if (worker.summary.acceptedReferenceCount === 0) {
     return yield* FilesCommandError.make({
       message: "Person-match worker did not accept any single-face reference images.",
@@ -1419,7 +1953,7 @@ export const runMatchPerson = Effect.fn("Files.runMatchPerson")(function* (
     : A.empty<PersonMatchCopyPlanEntry>();
 
   const report = PersonMatchReport.make({
-    schemaVersion: "beep.files.match-person.v1",
+    schemaVersion: "beep.files.match-person.v2",
     ok: true,
     model: worker.model,
     parameters: worker.parameters,

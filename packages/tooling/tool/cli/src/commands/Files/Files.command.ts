@@ -5,9 +5,13 @@
  * @since 0.0.0
  */
 
+import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import { Effect, Match } from "effect";
+import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
+import { FilesCommandError } from "./Files.errors.ts";
 import {
   ArchivePoorCandidatesOptions,
   CreateCaptionFilesOptions,
@@ -19,6 +23,8 @@ import {
   ImageCurationOptions,
   MatchPersonOptions,
   NormalizeFilesOptions,
+  PersonMatchDeviceIndexesFromCsv,
+  PersonMatchThresholdProfile,
   ProcessFilesOptions,
 } from "./Files.schemas.ts";
 import {
@@ -38,7 +44,8 @@ import {
   sortAndRenameFiles,
   stripMetadataFiles,
 } from "./Files.service.ts";
-import type { FilesCommandError } from "./Files.errors.ts";
+import { defaultPersonMatchBackendForPlatform } from "./internal/MatchPerson.ts";
+import type { PersonMatchBackend } from "./Files.schemas.ts";
 import type { FilesCommandService } from "./Files.service.ts";
 
 const runFilesProgram = <A>(
@@ -111,8 +118,33 @@ const matchPersonOutDirFlag = Flag.directory("out-dir").pipe(
   Flag.optional
 );
 const matchPersonCacheDirFlag = Flag.directory("cache-dir").pipe(
-  Flag.withDescription("Optional cache root for the isolated Python environment and InsightFace models"),
+  Flag.withDescription("Optional cache root for isolated Python environments and pinned face-recognition models"),
   Flag.optional
+);
+const matchPersonBackendFlag = Flag.choiceWithValue("backend", [
+  ["buffalo-l", "buffalo-l"],
+  ["adaface-kprpe", "adaface-kprpe"],
+]).pipe(
+  Flag.withDescription(
+    "Recognition backend: AdaFace on Linux x64; Buffalo CPU on Linux x64/arm64, macOS x64/arm64, or Windows x64"
+  ),
+  Flag.optional
+);
+const matchPersonComputeFlag = Flag.choiceWithValue("compute", [
+  ["auto", "auto"],
+  ["cpu", "cpu"],
+  ["rocm", "rocm"],
+]).pipe(
+  Flag.withDefault("auto"),
+  Flag.withDescription("Compute policy: prefer ROCm when available, require CPU, or require ROCm")
+);
+const matchPersonDevicesFlag = Flag.string("devices").pipe(
+  Flag.withDescription("Optional single ROCm device index, for example 0"),
+  Flag.optional
+);
+const matchPersonBatchSizeFlag = Flag.integer("batch-size").pipe(
+  Flag.withDefault(32),
+  Flag.withDescription("Positive face-embedding inference batch size")
 );
 const archiveDirFlag = Flag.directory("archive-dir").pipe(
   Flag.withDescription("Directory that receives archived poor image candidates")
@@ -218,7 +250,7 @@ const matchPersonRecursiveFlag = Flag.boolean("recursive").pipe(
 );
 const matchPersonAcceptModelLicenseFlag = Flag.boolean("accept-model-license").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Accept InsightFace's non-commercial research terms for the buffalo_l weights")
+  Flag.withDescription("Accept the selected model and training-dataset license notices")
 );
 const captionTextFlag = Flag.string("caption").pipe(
   Flag.withDefault(""),
@@ -331,25 +363,75 @@ const minFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
   Flag.withDescription("Flag detected faces whose primary face box area is below this image percentage")
 );
 const matchPersonDetectionThresholdFlag = Flag.float("detection-threshold").pipe(
-  Flag.withDefault(0.6),
-  Flag.withDescription("Minimum SCRFD face detection confidence between 0 and 1")
+  Flag.withDescription("Override the backend profile's minimum face-detection confidence between 0 and 1"),
+  Flag.optional
 );
 const matchPersonMatchThresholdFlag = Flag.float("match-threshold").pipe(
-  Flag.withDefault(0.5),
-  Flag.withDescription("Minimum target-person cosine similarity between 0 and 1")
+  Flag.withDescription("Override the backend profile's minimum target-person cosine similarity between 0 and 1"),
+  Flag.optional
 );
 const matchPersonReviewThresholdFlag = Flag.float("review-threshold").pipe(
-  Flag.withDefault(0.35),
-  Flag.withDescription("Lower cosine-similarity boundary for identity review")
+  Flag.withDescription("Override the backend profile's lower cosine-similarity boundary for identity review"),
+  Flag.optional
 );
 const matchPersonMinFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
-  Flag.withDefault(1),
-  Flag.withDescription("Flag matched faces below this percentage of the full image area")
+  Flag.withDescription("Override the backend profile's minimum matched-face percentage of the full image area"),
+  Flag.optional
 );
 const faceEdgeMarginPctFlag = Flag.float("edge-margin-pct").pipe(
   Flag.withDefault(2),
   Flag.withDescription("Flag detected faces whose primary face box is within this percent of an image edge")
 );
+
+const buffaloMatchPersonThresholdProfile = PersonMatchThresholdProfile.make({
+  detectionThreshold: 0.6,
+  matchThreshold: 0.5,
+  reviewThreshold: 0.35,
+  minFaceAreaPct: 1,
+});
+
+const adaFaceMatchPersonThresholdProfile = PersonMatchThresholdProfile.make({
+  detectionThreshold: 0.6,
+  matchThreshold: 0.5,
+  reviewThreshold: 0.35,
+  minFaceAreaPct: 1,
+});
+
+const matchPersonThresholdProfileFor = Match.type<PersonMatchBackend>().pipe(
+  Match.when("buffalo-l", () => buffaloMatchPersonThresholdProfile),
+  Match.when("adaface-kprpe", () => adaFaceMatchPersonThresholdProfile),
+  Match.exhaustive
+);
+
+const resolveMatchPersonThresholdProfile = (
+  backend: PersonMatchBackend,
+  detectionThreshold: O.Option<number>,
+  matchThreshold: O.Option<number>,
+  reviewThreshold: O.Option<number>,
+  minFaceAreaPct: O.Option<number>
+): PersonMatchThresholdProfile => {
+  const defaults = matchPersonThresholdProfileFor(backend);
+  return PersonMatchThresholdProfile.make({
+    detectionThreshold: O.getOrElse(detectionThreshold, () => defaults.detectionThreshold),
+    matchThreshold: O.getOrElse(matchThreshold, () => defaults.matchThreshold),
+    reviewThreshold: O.getOrElse(reviewThreshold, () => defaults.reviewThreshold),
+    minFaceAreaPct: O.getOrElse(minFaceAreaPct, () => defaults.minFaceAreaPct),
+  });
+};
+
+const decodeMatchPersonDevices = (
+  devices: O.Option<string>
+): Effect.Effect<O.Option<PersonMatchDeviceIndexesFromCsv>, FilesCommandError> =>
+  O.match(devices, {
+    onNone: () => Effect.succeed(O.none<PersonMatchDeviceIndexesFromCsv>()),
+    onSome: (value) =>
+      S.decodeEffect(PersonMatchDeviceIndexesFromCsv)(value).pipe(
+        Effect.map(O.some),
+        FilesCommandError.mapError(
+          `Invalid --devices value "${value}"; expected exactly one non-negative device index such as 0.`
+        )
+      ),
+  });
 
 const filesAuditImagesCommand = Command.make(
   "audit-images",
@@ -578,8 +660,12 @@ const filesMatchPersonCommand = Command.make(
   "match-person",
   {
     acceptModelLicense: matchPersonAcceptModelLicenseFlag,
+    backend: matchPersonBackendFlag,
+    batchSize: matchPersonBatchSizeFlag,
     cacheDir: matchPersonCacheDirFlag,
+    compute: matchPersonComputeFlag,
     detectionThreshold: matchPersonDetectionThresholdFlag,
+    devices: matchPersonDevicesFlag,
     dir: matchPersonDirFlag,
     json: jsonFlag,
     manifest: matchPersonManifestFlag,
@@ -593,8 +679,12 @@ const filesMatchPersonCommand = Command.make(
   },
   Effect.fn(function* ({
     acceptModelLicense,
+    backend,
+    batchSize,
     cacheDir,
+    compute,
     detectionThreshold,
+    devices: deviceCsv,
     dir,
     json,
     manifest,
@@ -606,28 +696,46 @@ const filesMatchPersonCommand = Command.make(
     references,
     reviewThreshold,
   }) {
-    yield* runFilesProgram(
-      matchPerson(
-        MatchPersonOptions.make({
-          acceptModelLicense,
-          cacheDir,
-          detectionThreshold,
-          dir,
-          json,
-          manifest,
-          matchThreshold,
-          minFaceAreaPct,
-          outDir,
-          overwrite,
-          recursive,
-          references,
-          reviewThreshold,
-        })
-      )
+    const hostPlatform = yield* HostProcessPlatform;
+    const hostArchitecture = yield* HostProcessArchitecture;
+    const resolvedBackend = O.getOrElse(backend, () =>
+      defaultPersonMatchBackendForPlatform(hostPlatform, hostArchitecture)
     );
+    const devices = yield* decodeMatchPersonDevices(deviceCsv);
+    const thresholds = resolveMatchPersonThresholdProfile(
+      resolvedBackend,
+      detectionThreshold,
+      matchThreshold,
+      reviewThreshold,
+      minFaceAreaPct
+    );
+    const thresholdSource = A.some([detectionThreshold, matchThreshold, reviewThreshold, minFaceAreaPct], O.isSome)
+      ? "explicit"
+      : "calibrated-default";
+    const options = yield* S.decodeEffect(MatchPersonOptions)({
+      acceptModelLicense,
+      backend: resolvedBackend,
+      batchSize,
+      cacheDir,
+      compute,
+      detectionThreshold: thresholds.detectionThreshold,
+      devices,
+      dir,
+      json,
+      manifest,
+      matchThreshold: thresholds.matchThreshold,
+      minFaceAreaPct: thresholds.minFaceAreaPct,
+      outDir,
+      overwrite,
+      recursive,
+      references,
+      reviewThreshold: thresholds.reviewThreshold,
+      thresholdSource,
+    }).pipe(FilesCommandError.mapError("Invalid match-person options."));
+    yield* runFilesProgram(matchPerson(options));
   })
 ).pipe(
-  Command.withDescription("Match one trusted person across a local photo collection with InsightFace buffalo_l"),
+  Command.withDescription("Match one trusted person across a local photo collection with a pinned local backend"),
   Command.provide(FilesCommandServiceLive)
 );
 

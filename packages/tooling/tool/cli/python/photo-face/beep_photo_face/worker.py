@@ -18,9 +18,38 @@ import urllib.request
 import zipfile
 from collections import Counter
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, BinaryIO, Iterator
+
+from .backends.base import WorkerArguments, WorkerError
+from .pipeline import load_selected_backend, parameters_payload
+from .quality import (
+    calculate_face_area_pct,
+    calculate_quality_flags,
+    clip_box,
+    is_side_face,
+)
+from .scoring import (
+    MatchScores,
+    classify_disposition,
+    normalize_embedding,
+    normalized_centroid,
+    score_embedding,
+)
+
+__all__ = [
+    "MatchScores",
+    "WorkerArguments",
+    "WorkerError",
+    "calculate_face_area_pct",
+    "calculate_quality_flags",
+    "classify_disposition",
+    "clip_box",
+    "is_side_face",
+    "normalize_embedding",
+    "normalized_centroid",
+    "score_embedding",
+]
 
 # OpenCV reads this limit during module initialization and rejects oversized
 # image headers before allocating the full decoded pixel buffer.
@@ -33,7 +62,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-SCHEMA_VERSION = "beep.files.match-person.worker.v1"
+SCHEMA_VERSION = "beep.files.match-person.worker.v2"
 MODEL_NAME = "buffalo_l"
 MODEL_RUNTIME_NAME = "beep_buffalo_l_v1"
 MODEL_ARTIFACT_NAMES = ("det_10g.onnx", "w600k_r50.onnx")
@@ -56,219 +85,11 @@ MODEL_LOCK_RETRY_SECONDS = 0.1
 ALLOWED_MODULES = ("detection", "recognition")
 PROVIDERS = ("CPUExecutionProvider",)
 SUPPORTED_EXTENSIONS = frozenset({".jpg", ".jpeg", ".png", ".webp"})
-BLUR_VARIANCE_THRESHOLD = 45.0
-DARK_MEAN_THRESHOLD = 45.0
-BRIGHT_MEAN_THRESHOLD = 220.0
-
-
-class WorkerError(Exception):
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
-        self.message = message
 
 
 class WorkerArgumentParser(argparse.ArgumentParser):
     def error(self, message: str) -> None:
         raise WorkerError("invalid-arguments", message)
-
-
-@dataclass(frozen=True)
-class WorkerArguments:
-    source_dir: Path
-    reference_dir: Path
-    model_root: Path
-    detection_threshold: float
-    match_threshold: float
-    review_threshold: float
-    min_face_area_pct: float
-    recursive: bool
-    accept_model_license: bool
-
-
-@dataclass(frozen=True)
-class MatchScores:
-    match_score: float
-    centroid_score: float
-    top3_median_score: float
-    best_reference_score: float
-    best_reference_name: str
-
-
-def normalize_embedding(
-    embedding: Sequence[float] | NDArray[np.floating[Any]],
-) -> NDArray[np.float32]:
-    vector = np.asarray(embedding, dtype=np.float32).reshape(-1)
-    magnitude = float(np.linalg.norm(vector))
-    if not math.isfinite(magnitude) or magnitude <= 1e-12:
-        raise ValueError("face embedding has zero or non-finite magnitude")
-    return vector / magnitude
-
-
-def normalized_centroid(
-    reference_embeddings: NDArray[np.float32],
-) -> NDArray[np.float32]:
-    if reference_embeddings.ndim != 2 or reference_embeddings.shape[0] == 0:
-        raise ValueError("at least one reference embedding is required")
-    return normalize_embedding(np.mean(reference_embeddings, axis=0, dtype=np.float32))
-
-
-def score_embedding(
-    embedding: Sequence[float] | NDArray[np.floating[Any]],
-    reference_embeddings: NDArray[np.float32],
-    reference_centroid: NDArray[np.float32],
-    reference_names: Sequence[str],
-) -> MatchScores:
-    candidate = normalize_embedding(embedding)
-    if reference_embeddings.ndim != 2 or reference_embeddings.shape[0] == 0:
-        raise ValueError("at least one reference embedding is required")
-    if reference_embeddings.shape[0] != len(reference_names):
-        raise ValueError("reference names and embeddings must have equal lengths")
-    if reference_embeddings.shape[1] != candidate.shape[0]:
-        raise ValueError("candidate and reference embedding dimensions differ")
-
-    similarities = reference_embeddings @ candidate
-    best_index = int(np.argmax(similarities))
-    descending = np.sort(similarities)[::-1]
-    top3_median = float(np.median(descending[:3]))
-    centroid_score = float(np.dot(reference_centroid, candidate))
-    best_reference_score = float(similarities[best_index])
-    return MatchScores(
-        match_score=max(centroid_score, top3_median),
-        centroid_score=centroid_score,
-        top3_median_score=top3_median,
-        best_reference_score=best_reference_score,
-        best_reference_name=reference_names[best_index],
-    )
-
-
-def classify_disposition(
-    face_scores: Sequence[float],
-    quality_flags_by_face: Sequence[Sequence[str]],
-    match_threshold: float,
-    review_threshold: float,
-) -> str:
-    if len(face_scores) != len(quality_flags_by_face):
-        raise ValueError("face scores and quality flags must have equal lengths")
-    if not face_scores:
-        return "no-face"
-
-    matching_indices = [
-        index for index, score in enumerate(face_scores) if score >= match_threshold
-    ]
-    if matching_indices:
-        if len(face_scores) > 1:
-            return "group-match"
-        solo_flags = set(quality_flags_by_face[matching_indices[0]])
-        if solo_flags:
-            return "low-quality-match"
-        return "solo-match"
-
-    if max(face_scores) >= review_threshold:
-        return "review"
-    return "no-match"
-
-
-def calculate_face_area_pct(
-    box: Sequence[float], image_width: int, image_height: int
-) -> float:
-    x1, y1, x2, y2 = (float(value) for value in box)
-    clipped_x1 = min(max(x1, 0.0), float(image_width))
-    clipped_y1 = min(max(y1, 0.0), float(image_height))
-    clipped_x2 = min(max(x2, 0.0), float(image_width))
-    clipped_y2 = min(max(y2, 0.0), float(image_height))
-    face_area = max(0.0, clipped_x2 - clipped_x1) * max(0.0, clipped_y2 - clipped_y1)
-    image_area = float(image_width * image_height)
-    return 0.0 if image_area <= 0.0 else (face_area / image_area) * 100.0
-
-
-def clip_box(
-    box: Sequence[float], image_width: int, image_height: int
-) -> tuple[float, float, float, float]:
-    x1, y1, x2, y2 = (float(value) for value in box)
-    return (
-        min(max(x1, 0.0), float(image_width)),
-        min(max(y1, 0.0), float(image_height)),
-        min(max(x2, 0.0), float(image_width)),
-        min(max(y2, 0.0), float(image_height)),
-    )
-
-
-def is_side_face(
-    landmarks: Sequence[Sequence[float]] | NDArray[np.floating[Any]],
-) -> bool:
-    points = np.asarray(landmarks, dtype=np.float64)
-    if points.shape != (5, 2) or not np.all(np.isfinite(points)):
-        return False
-
-    left_eye, right_eye = points[:2]
-    eye_vector = right_eye - left_eye
-    interocular_distance = float(np.linalg.norm(eye_vector))
-    if interocular_distance <= 1e-6:
-        return False
-
-    angle = -math.atan2(float(eye_vector[1]), float(eye_vector[0]))
-    cosine = math.cos(angle)
-    sine = math.sin(angle)
-    rotation = np.array(((cosine, -sine), (sine, cosine)), dtype=np.float64)
-    eye_midpoint = (left_eye + right_eye) / 2.0
-    aligned = (points - eye_midpoint) @ rotation.T
-
-    (
-        aligned_left_eye,
-        aligned_right_eye,
-        aligned_nose,
-        aligned_left_mouth,
-        aligned_right_mouth,
-    ) = aligned
-    eye_span = abs(float(aligned_right_eye[0] - aligned_left_eye[0]))
-    if eye_span <= 1e-6:
-        return False
-
-    aligned_eye_midpoint_x = float((aligned_left_eye[0] + aligned_right_eye[0]) / 2.0)
-    aligned_mouth_midpoint_x = float(
-        (aligned_left_mouth[0] + aligned_right_mouth[0]) / 2.0
-    )
-    facial_axis_x = (aligned_eye_midpoint_x + aligned_mouth_midpoint_x) / 2.0
-    nose_axis_offset = abs(float(aligned_nose[0]) - facial_axis_x) / eye_span
-
-    nose_to_left_eye = abs(float(aligned_nose[0] - aligned_left_eye[0]))
-    nose_to_right_eye = abs(float(aligned_right_eye[0] - aligned_nose[0]))
-    larger_eye_distance = max(nose_to_left_eye, nose_to_right_eye)
-    eye_symmetry = (
-        min(nose_to_left_eye, nose_to_right_eye) / larger_eye_distance
-        if larger_eye_distance > 1e-6
-        else 1.0
-    )
-    return nose_axis_offset > 0.18 or eye_symmetry < 0.38
-
-
-def calculate_quality_flags(
-    image: NDArray[np.uint8],
-    box: Sequence[float],
-    landmarks: NDArray[np.float32],
-    min_face_area_pct: float,
-    align_face: Callable[..., NDArray[np.uint8]],
-) -> tuple[list[str], float]:
-    image_height, image_width = image.shape[:2]
-    area_pct = calculate_face_area_pct(box, image_width, image_height)
-    flags: list[str] = []
-    if area_pct < min_face_area_pct:
-        flags.append("face-too-small")
-
-    aligned_face = align_face(image, landmark=landmarks, image_size=112)
-    grayscale = cv2.cvtColor(aligned_face, cv2.COLOR_BGR2GRAY)
-    laplacian_variance = float(cv2.Laplacian(grayscale, cv2.CV_64F).var())
-    brightness_mean = float(grayscale.mean())
-    if laplacian_variance < BLUR_VARIANCE_THRESHOLD:
-        flags.append("blurry")
-    if brightness_mean < DARK_MEAN_THRESHOLD:
-        flags.append("too-dark")
-    if brightness_mean > BRIGHT_MEAN_THRESHOLD:
-        flags.append("too-bright")
-    if is_side_face(landmarks):
-        flags.append("side-face")
-    return flags, area_pct
 
 
 def discover_images(directory: Path, recursive: bool) -> list[Path]:
@@ -309,7 +130,7 @@ def sha256_file(path: Path) -> str:
 def parse_arguments(argv: Sequence[str] | None = None) -> WorkerArguments:
     parser = WorkerArgumentParser(
         prog="python -m beep_photo_face",
-        description="Match one person against local photos with InsightFace buffalo_l.",
+        description="Match one person against local photos with a pinned local backend.",
     )
     parser.add_argument(
         "--candidates", "--source-dir", dest="source_dir", required=True, type=Path
@@ -322,6 +143,25 @@ def parse_arguments(argv: Sequence[str] | None = None) -> WorkerArguments:
         type=Path,
     )
     parser.add_argument("--model-root", required=True, type=Path)
+    parser.add_argument(
+        "--backend",
+        choices=("buffalo-l", "adaface-kprpe"),
+        default="buffalo-l",
+    )
+    parser.add_argument("--compute", choices=("auto", "cpu", "rocm"), default="auto")
+    parser.add_argument(
+        "--devices",
+        help="Optional single ROCm device ordinal; inference uses at most one GPU.",
+    )
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument(
+        "--threshold-source",
+        choices=("calibrated-default", "explicit"),
+        default="calibrated-default",
+    )
+    parser.add_argument("--detector-path", type=Path)
+    parser.add_argument("--aligner-path", type=Path)
+    parser.add_argument("--recognizer-path", type=Path)
     parser.add_argument(
         "--detection-threshold",
         "--det-threshold",
@@ -340,8 +180,8 @@ def parse_arguments(argv: Sequence[str] | None = None) -> WorkerArguments:
         action=argparse.BooleanOptionalAction,
         default=False,
         help=(
-            "Confirm acceptance of the InsightFace pretrained-model licensing terms before "
-            "the worker downloads buffalo_l."
+            "Acknowledge that the caller reviewed the selected checkpoints' model and "
+            "training-dataset terms; the flag does not grant or alter any rights."
         ),
     )
     namespace = parser.parse_args(argv)
@@ -363,6 +203,56 @@ def parse_arguments(argv: Sequence[str] | None = None) -> WorkerArguments:
     ):
         raise WorkerError(
             "invalid-arguments", "--min-face-area-pct must be between 0 and 100"
+        )
+    if namespace.batch_size <= 0:
+        raise WorkerError("invalid-arguments", "--batch-size must be greater than zero")
+    devices: tuple[int, ...] = ()
+    if namespace.devices is not None:
+        value = namespace.devices.strip()
+        if not value or "," in value:
+            raise WorkerError(
+                "invalid-arguments",
+                "--devices must contain exactly one non-negative integer ordinal",
+            )
+        try:
+            ordinal = int(value)
+        except ValueError as error:
+            raise WorkerError(
+                "invalid-arguments",
+                "--devices must contain exactly one non-negative integer ordinal",
+            ) from error
+        if ordinal < 0:
+            raise WorkerError(
+                "invalid-arguments",
+                "--devices must contain exactly one non-negative integer ordinal",
+            )
+        devices = (ordinal,)
+    if namespace.compute == "cpu" and devices:
+        raise WorkerError(
+            "invalid-arguments", "--devices cannot be used with --compute cpu"
+        )
+    if namespace.backend == "buffalo-l" and namespace.compute == "rocm":
+        raise WorkerError("invalid-arguments", "buffalo-l supports only CPU inference")
+    if namespace.backend == "buffalo-l" and devices:
+        raise WorkerError(
+            "invalid-arguments", "--devices is supported only by adaface-kprpe"
+        )
+    supplied_paths = (
+        namespace.detector_path,
+        namespace.aligner_path,
+        namespace.recognizer_path,
+    )
+    if (namespace.aligner_path is None) != (namespace.recognizer_path is None):
+        raise WorkerError(
+            "invalid-arguments",
+            "--aligner-path and --recognizer-path must be supplied together",
+        )
+    if namespace.backend == "buffalo-l" and any(
+        path is not None for path in supplied_paths
+    ):
+        raise WorkerError(
+            "invalid-arguments",
+            "explicit component paths are supported only by adaface-kprpe",
         )
 
     source_dir = namespace.source_dir.expanduser().resolve()
@@ -388,6 +278,26 @@ def parse_arguments(argv: Sequence[str] | None = None) -> WorkerArguments:
         min_face_area_pct=namespace.min_face_area_pct,
         recursive=namespace.recursive,
         accept_model_license=namespace.accept_model_license,
+        backend=namespace.backend,
+        compute=namespace.compute,
+        devices=devices,
+        batch_size=namespace.batch_size,
+        threshold_source=namespace.threshold_source,
+        detector_path=(
+            namespace.detector_path.expanduser().absolute()
+            if namespace.detector_path is not None
+            else None
+        ),
+        aligner_path=(
+            namespace.aligner_path.expanduser().absolute()
+            if namespace.aligner_path is not None
+            else None
+        ),
+        recognizer_path=(
+            namespace.recognizer_path.expanduser().absolute()
+            if namespace.recognizer_path is not None
+            else None
+        ),
     )
 
 
@@ -663,8 +573,9 @@ def ensure_model_available(arguments: WorkerArguments) -> list[Path]:
         raise WorkerError(
             "model-license-not-accepted",
             (
-                "buffalo_l is not installed. Pass --accept-model-license only after accepting "
-                "the InsightFace pretrained-model licensing terms; no model was downloaded."
+                "buffalo_l is not installed. Pass --accept-model-license only after reviewing "
+                "the InsightFace pretrained-model terms. The flag records acknowledgment "
+                "only and does not grant or alter rights; no model was downloaded."
             ),
         )
 
@@ -804,7 +715,39 @@ def collect_references(
             entries.append(entry)
             continue
 
-        faces = sorted_faces(analysis, image)
+        try:
+            faces = sorted_faces(analysis, image)
+        except WorkerError as error:
+            if error.code != "aligner-confidence-failed":
+                raise
+            print(
+                f"[photo-face] {error.code}: {path.name}: {error.message}",
+                file=sys.stderr,
+            )
+            entry["reason"] = "aligner-confidence-failed"
+            entries.append(entry)
+            continue
+        aligner_rejections = [
+            face
+            for face in faces
+            if getattr(face, "embedding_reason", None) == "aligner-confidence-failed"
+        ]
+        if aligner_rejections:
+            minimum = min(
+                float(getattr(face, "aligner_confidence", 0.0))
+                for face in aligner_rejections
+            )
+            print(
+                (
+                    f"[photo-face] aligner-confidence-failed: {path.name}: "
+                    f"rejected {len(aligner_rejections)}/{len(faces)} detected faces; "
+                    f"minimum={minimum:.6f}"
+                ),
+                file=sys.stderr,
+            )
+            entry["reason"] = "aligner-confidence-failed"
+            entries.append(entry)
+            continue
         entry["faceCount"] = len(faces)
         if len(faces) == 1:
             entry["detectionScore"] = round_number(float(faces[0].det_score))
@@ -825,6 +768,19 @@ def collect_references(
                 names.append(path.name)
         entries.append(entry)
     return entries, embeddings, names
+
+
+def validate_unique_recursive_reference_names(
+    reference_names: Sequence[str], recursive: bool
+) -> None:
+    if recursive and len(set(reference_names)) != len(reference_names):
+        raise WorkerError(
+            "invalid-arguments",
+            (
+                "Recursive person-match references contain duplicate accepted file names. "
+                "Rename references so face evidence remains unambiguous."
+            ),
+        )
 
 
 def candidate_entry(
@@ -852,12 +808,58 @@ def candidate_entry(
             "reason": "image-decode-failed",
         }
 
-    detected_faces = sorted_faces(analysis, image)
+    try:
+        detected_faces = sorted_faces(analysis, image)
+    except WorkerError as error:
+        if error.code != "aligner-confidence-failed":
+            raise
+        print(
+            f"[photo-face] {error.code}: {path.name}: {error.message}",
+            file=sys.stderr,
+        )
+        return {
+            **base,
+            "disposition": "no-face",
+            "faceCount": 0,
+            "faces": [],
+            "reason": "aligner-confidence-failed",
+        }
+    aligner_rejections = [
+        face
+        for face in detected_faces
+        if getattr(face, "embedding_reason", None) == "aligner-confidence-failed"
+    ]
+    comparable_faces = [
+        face
+        for face in detected_faces
+        if getattr(face, "embedding_reason", None) != "aligner-confidence-failed"
+    ]
+    if aligner_rejections:
+        minimum = min(
+            float(getattr(face, "aligner_confidence", 0.0))
+            for face in aligner_rejections
+        )
+        print(
+            (
+                f"[photo-face] aligner-confidence-failed: {path.name}: rejected "
+                f"{len(aligner_rejections)}/{len(detected_faces)} detected faces; "
+                f"minimum={minimum:.6f}"
+            ),
+            file=sys.stderr,
+        )
+        if not comparable_faces:
+            return {
+                **base,
+                "disposition": "no-face",
+                "faceCount": 0,
+                "faces": [],
+                "reason": "aligner-confidence-failed",
+            }
     image_height, image_width = image.shape[:2]
     face_entries: list[dict[str, Any]] = []
     scores: list[float] = []
     quality_flags_by_face: list[list[str]] = []
-    for face in detected_faces:
+    for face in comparable_faces:
         if face.embedding is None:
             raise WorkerError(
                 "missing-embedding", f"recognition produced no embedding for {path}"
@@ -902,11 +904,15 @@ def candidate_entry(
         scores.append(result.match_score)
         quality_flags_by_face.append(flags)
 
-    disposition = classify_disposition(
-        scores,
-        quality_flags_by_face,
-        arguments.match_threshold,
-        arguments.review_threshold,
+    disposition = (
+        "review"
+        if aligner_rejections
+        else classify_disposition(
+            scores,
+            quality_flags_by_face,
+            arguments.match_threshold,
+            arguments.review_threshold,
+        )
     )
     entry = {
         **base,
@@ -916,6 +922,8 @@ def candidate_entry(
     }
     if scores:
         entry["bestScore"] = round_number(max(scores))
+    if aligner_rejections:
+        entry["reason"] = "aligner-confidence-failed"
     return entry
 
 
@@ -947,11 +955,27 @@ def run_worker(arguments: WorkerArguments, started_at: float) -> dict[str, Any]:
             "reference directory contains no supported jpg, jpeg, png, or webp images",
         )
 
-    artifacts = ensure_model_available(arguments)
-    analysis, package_version, align_face = load_face_analysis(arguments, artifacts)
+    if not arguments.accept_model_license:
+        raise WorkerError(
+            "model-license-not-accepted",
+            (
+                "Pass --accept-model-license only after reviewing the selected checkpoints' "
+                "model and training-dataset terms. The flag records acknowledgment only and "
+                "does not grant or alter rights; no model was loaded."
+            ),
+        )
+
+    loaded = load_selected_backend(
+        arguments,
+        ensure_model_available,
+        load_face_analysis,
+    )
+    analysis = loaded.analysis
+    align_face = loaded.align_face
     references, reference_vectors, reference_names = collect_references(
         analysis, reference_paths
     )
+    validate_unique_recursive_reference_names(reference_names, arguments.recursive)
     if not reference_vectors:
         raise WorkerError(
             "no-accepted-references",
@@ -980,24 +1004,8 @@ def run_worker(arguments: WorkerArguments, started_at: float) -> dict[str, Any]:
     return {
         "schemaVersion": SCHEMA_VERSION,
         "ok": True,
-        "model": {
-            "name": MODEL_NAME,
-            "packageVersion": package_version,
-            "providers": list(PROVIDERS),
-            "allowedModules": list(ALLOWED_MODULES),
-            "root": str(arguments.model_root),
-            "artifacts": [
-                {"name": path.name, "path": str(path), "sha256": sha256_file(path)}
-                for path in artifacts
-            ],
-        },
-        "parameters": {
-            "detectionThreshold": arguments.detection_threshold,
-            "matchThreshold": arguments.match_threshold,
-            "reviewThreshold": arguments.review_threshold,
-            "minFaceAreaPct": arguments.min_face_area_pct,
-            "recursive": arguments.recursive,
-        },
+        "model": loaded.model,
+        "parameters": parameters_payload(arguments, loaded.selection),
         "references": references,
         "entries": entries,
         "summary": build_summary(references, entries),
