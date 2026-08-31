@@ -154,17 +154,30 @@ const makeFakeClient = (overrides: FakeBoxClientOverrides = {}): FakeBoxClient =
 const resolveEmptyEntries = (..._args: ReadonlyArray<unknown>): Promise<unknown> => Promise.resolve({ entries: [] });
 
 const provisioningClient = {
+  files: {
+    getFileById: (..._args: ReadonlyArray<unknown>) => Promise.resolve(fileFull),
+  },
   folderMetadata: {
     getFolderMetadata: resolveEmptyEntries,
   },
+  folders: {
+    getFolderById: (..._args: ReadonlyArray<unknown>) =>
+      Promise.resolve({ id: "folder-id", name: "Fixture folder", type: "folder" }),
+    getFolderItems: resolveEmptyEntries,
+  },
   listCollaborations: {
+    getCollaborations: resolveEmptyEntries,
+    getFileCollaborations: resolveEmptyEntries,
     getFolderCollaborations: resolveEmptyEntries,
+    getGroupCollaborations: resolveEmptyEntries,
   },
   metadataCascadePolicies: {
     getMetadataCascadePolicies: resolveEmptyEntries,
   },
   metadataTemplates: {
     getEnterpriseMetadataTemplates: resolveEmptyEntries,
+    getGlobalMetadataTemplates: resolveEmptyEntries,
+    getMetadataTemplatesByInstanceId: resolveEmptyEntries,
   },
   retentionPolicies: {
     getRetentionPolicies: resolveEmptyEntries,
@@ -181,6 +194,9 @@ const provisioningClient = {
   userCollaborations: {
     getCollaborationById: (..._args: ReadonlyArray<unknown>) =>
       Promise.resolve({ id: "collaboration-id", type: "collaboration" }),
+  },
+  users: {
+    getUsers: resolveEmptyEntries,
   },
   webhooks: {
     getWebhooks: resolveEmptyEntries,
@@ -491,17 +507,39 @@ describe("@beep/box", () => {
       "decodes every Box provisioning discovery surface",
       Effect.fnUntraced(function* () {
         const box = yield* B.Box;
+        const file = yield* box.files.getFileById(B.FilesGetFileByIdPayload.make({ fileId: "file-id" }));
+        const folder = yield* box.folders.getFolderById(B.FoldersGetFolderByIdPayload.make({ folderId: "folder-id" }));
+        const folderItems = yield* box.folders.getFolderItems(
+          B.FoldersGetFolderItemsPayload.make({ folderId: "folder-id" })
+        );
         const folderMetadata = yield* box.folderMetadata.getFolderMetadata(
           B.FolderMetadataGetFolderMetadataPayload.make({ folderId: "folder-id" })
         );
         const folderCollaborations = yield* box.listCollaborations.getFolderCollaborations(
           B.ListCollaborationsGetFolderCollaborationsPayload.make({ folderId: "folder-id" })
         );
+        const pendingCollaborations = yield* box.listCollaborations.getCollaborations(
+          B.ListCollaborationsGetCollaborationsPayload.make({ queryParams: { status: "pending" } })
+        );
+        const fileCollaborations = yield* box.listCollaborations.getFileCollaborations(
+          B.ListCollaborationsGetFileCollaborationsPayload.make({ fileId: "file-id" })
+        );
+        const groupCollaborations = yield* box.listCollaborations.getGroupCollaborations(
+          B.ListCollaborationsGetGroupCollaborationsPayload.make({ groupId: "group-id" })
+        );
         const cascadePolicies = yield* box.metadataCascadePolicies.getMetadataCascadePolicies(
           B.MetadataCascadePoliciesGetMetadataCascadePoliciesPayload.make({ queryParams: { folderId: "folder-id" } })
         );
         const metadataTemplates = yield* box.metadataTemplates.getEnterpriseMetadataTemplates(
           B.MetadataTemplatesGetEnterpriseMetadataTemplatesPayload.make({})
+        );
+        const globalMetadataTemplates = yield* box.metadataTemplates.getGlobalMetadataTemplates(
+          B.MetadataTemplatesGetGlobalMetadataTemplatesPayload.make({})
+        );
+        const instanceMetadataTemplates = yield* box.metadataTemplates.getMetadataTemplatesByInstanceId(
+          B.MetadataTemplatesGetMetadataTemplatesByInstanceIdPayload.make({
+            queryParams: { metadataInstanceId: "instance-id" },
+          })
         );
         const retentionPolicies = yield* box.retentionPolicies.getRetentionPolicies(
           B.RetentionPoliciesGetRetentionPoliciesPayload.make({})
@@ -516,17 +554,27 @@ describe("@beep/box", () => {
         const collaboration = yield* box.userCollaborations.getCollaborationById(
           B.UserCollaborationsGetCollaborationByIdPayload.make({ collaborationId: "collaboration-id" })
         );
+        const users = yield* box.users.getUsers(B.UsersGetUsersPayload.make({}));
         const webhooks = yield* box.webhooks.getWebhooks(B.WebhooksGetWebhooksPayload.make({}));
 
+        expect(file).toBeInstanceOf(B.FileFull);
+        expect(folder).toBeInstanceOf(B.FolderFull);
+        expect(folderItems).toBeInstanceOf(B.Items);
         expect(folderMetadata).toBeInstanceOf(B.Metadatas);
         expect(folderCollaborations).toBeInstanceOf(B.Collaborations);
+        expect(pendingCollaborations).toBeInstanceOf(B.CollaborationsOffsetPaginated);
+        expect(fileCollaborations).toBeInstanceOf(B.Collaborations);
+        expect(groupCollaborations).toBeInstanceOf(B.CollaborationsOffsetPaginated);
         expect(cascadePolicies).toBeInstanceOf(B.MetadataCascadePolicies);
         expect(metadataTemplates).toBeInstanceOf(B.MetadataTemplates);
+        expect(globalMetadataTemplates).toBeInstanceOf(B.MetadataTemplates);
+        expect(instanceMetadataTemplates).toBeInstanceOf(B.MetadataTemplates);
         expect(retentionPolicies).toBeInstanceOf(B.RetentionPolicies);
         expect(retentionAssignments).toBeInstanceOf(B.RetentionPolicyAssignments);
         expect(signRequests).toBeInstanceOf(B.SignRequests);
         expect(signTemplates).toBeInstanceOf(B.SignTemplates);
         expect(collaboration).toBeInstanceOf(B.Collaboration);
+        expect(users).toBeInstanceOf(B.Users);
         expect(webhooks).toBeInstanceOf(B.Webhooks);
       })
     );
