@@ -475,7 +475,8 @@ ratifies.
   exact-head Property Laws lane failed in `corpus-preservation.test.ts` after truncating a fixture
   to `destFreeBytes + 1`; on that runner the subsequent source census tried to hash the enormous
   sparse file and returned `PreservationArchiveIoError` before the expected capacity error. The
-  destination-capacity law is already covered by the direct validator and by deterministic
-  injected capacity probes before and during copy. Fix: remove the host-sized sparse-file case and
-  retain those bounded behavior tests. Prevention: tests must inject capacity readings instead of
-  allocating or sizing fixtures from live runner resources.
+  destination-capacity law is covered by the direct validator and by deterministic injected
+  capacity probes before and during copy. Fix: replace the host-sized sparse-file case with an
+  explicit destination-free-space validator witness and retain the bounded integration probes.
+  Prevention: tests must inject capacity readings instead of allocating or sizing fixtures from
+  live runner resources.

@@ -143,6 +143,20 @@ describe("T7 corpus preservation", () => {
       );
       expect(rootMismatch._tag).toBe("PreservationPreflightUnapprovedError");
 
+      const destinationFreeExceeded = yield* validateRefreshedCapacityForTesting(
+        "/approved",
+        "/approved",
+        4,
+        5,
+        3
+      ).pipe(Effect.flip);
+      expect(destinationFreeExceeded._tag).toBe("PreservationCeilingExceededError");
+      if (destinationFreeExceeded._tag === "PreservationCeilingExceededError") {
+        expect(destinationFreeExceeded.ceilingBytes).toBe(3);
+        expect(destinationFreeExceeded.measuredBytes).toBe(4);
+      }
+      yield* validateRefreshedCapacityForTesting("/approved", "/approved", 4, 5, 4);
+
       const destinationExceeded = yield* validateCopyTimeCapacityForTesting(4, 4, 5, 3).pipe(Effect.flip);
       expect(destinationExceeded._tag).toBe("PreservationCeilingExceededError");
       if (destinationExceeded._tag === "PreservationCeilingExceededError") {
