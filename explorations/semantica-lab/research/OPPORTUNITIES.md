@@ -450,3 +450,11 @@ ratifies.
   expected digest now comes from the original in-memory C1 snapshot, while the killed child first
   commits a durable ledger checkpoint. Prevention: crash evidence needs an independent pre-crash
   oracle and must mutate the durability boundary in the process that is actually killed.
+
+- **2026-08-31 — An unrelated scheduler coverage floor failed two exact-head C2 runs.** The
+  hosted coverage lane repeatedly reported `QualityScheduler.ts` statements `91.44 < 91.66` and
+  branches `86.07 < 86.7`, although the C2 branch did not change that source. The missing case was
+  an installed-memory ceiling that clamps a five-token request to two tokens while still
+  satisfying the hard floor. Fix: a focused scheduler test now exercises the clamp and verifies
+  its admitted journal weight. Prevention: admission policy branches added to the monotonic floor
+  need a behavior-level test for each distinct machine-envelope outcome before ratification.
