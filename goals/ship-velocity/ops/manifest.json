@@ -5,13 +5,13 @@
     "title": "Ship Velocity",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-27",
+    "updated": "2026-08-30",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ship-velocity",
   "lifecycle": "active",
-  "statusNote": "P0-P4 and the P5 engineering backlog are complete. The 2026-08-27 closeout implements hook-driven backpressure and dead-owner takeover, full local/hosted parity planning and proof reuse, weighted admission with RSS telemetry, cache warming and first-touch evidence, ignored local portfolio projections, contention-family serialization, goals-only required-check skips, and the live stacked-PR and merge-queue evaluations. The initiative remains active because its representative post-merge observation week cannot begin until the final implementation PR lands; research/metrics-closeout.md owns that explicit gate.",
-  "mission": "Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guarantees the 17 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
+  "statusNote": "P0-P4 and the P5 engineering backlog are complete. On 2026-08-30 the operator accepted the observed 24-hour production volume in place of the original seven-day duration proxy. Operator PR #921 later superseded A4 by removing the published-PR ownership lease, watcher, takeover, and mutation fence; the packet does not count that scope replacement as takeover success. Current backpressure, parity, and hot-file receipts satisfy the authorized sample. Two independent same-origin full proofs overlapped for 48 minutes 49.201 seconds and both completed every lane at exit 0, satisfying the concurrency condition. The initiative remains active because an authorized 1Password session is required for the cross-checkout remote-read observation and the final closeout PR has not reached Yeet merge-ready status. research/metrics-closeout.md owns these explicit gates.",
+  "mission": "Agents ship correct code faster: sub-minute failure backpressure into an active session with a hard P0 Stop gate, local verify that near-guarantees the 17 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -23,7 +23,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until a representative week shows: backpressure p95 under 60s to an attached session (under 5 minutes with takeover), the parity ledger records zero recurring locally-catchable required-check failures, every sibling checkout reads the remote cache, at least two concurrent verifies run under admission without OOM, hot-file conflicts no longer force PR rework, and the final PR is driven to mergeable via yeet.",
+    "statement": "Not achieved until representative production evidence shows: backpressure reaches an active session within 60 seconds and unacknowledged P0 work blocks Stop, the parity ledger records zero recurring locally-catchable required-check failures, every sibling checkout reads the remote cache, at least two concurrent verifies run under admission without OOM, hot-file conflicts no longer force PR rework, and the final PR is driven to mergeable via yeet. On 2026-08-30 the operator authorized the observed 24-hour event volume as representative in place of the original seven-day duration proxy. Operator PR #921 separately superseded the automatic takeover condition by removing published-PR ownership state; no takeover success is claimed.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -99,7 +99,7 @@
   ],
   "stopConditions": [
     "Any backpressure enforcement (hook deny, Stop veto, poison-pill) deadlocks a session or checkout - severity gates and waives must ship with the enforcement, never after.",
-    "Admission/auto-heal/takeover would mutate state it cannot attribute (foreign lease, malformed lock, baseline regeneration) - fail loud and stop.",
+    "Admission or auto-heal would mutate state it cannot attribute (foreign lease, malformed lock, baseline regeneration) - fail loud and stop.",
     "PR remote-cache reads (C2), the INDEX end-state change (E2), or path-filtered required checks (E6) proceed without their recorded operator decision note.",
     "A parity change weakens a security lane (gitleaks pinning, OSV, fork isolation) to make local green easier."
   ]

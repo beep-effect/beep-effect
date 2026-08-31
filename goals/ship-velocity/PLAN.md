@@ -109,9 +109,12 @@ the C5 metric correction and the new C7 item below.
   workstation profile while the scheduler controls heavyweight proof concurrency. Scheduler
   leases retain starttime-fenced reaping, heartbeat, memory-floor, and quarantine behavior from
   PR #870; Yeet adds per-step peak-RSS receipts for later cap decisions.
-- ~~A4 dead-owner takeover (needs D1 leases).~~ The installed user watcher polls every 30 seconds,
-  treats a lease as stale at 240 seconds, CAS-fences zombies, prefers resume, and otherwise opens
-  an isolated incident worktree. The resulting worst-case detection bound is 270 seconds.
+- ~~A4 dead-owner takeover (needs D1 leases).~~ Superseded by the operator's PR #921 on
+  2026-08-30. The earlier watcher, 240-second stale threshold, and 270-second detection bound are
+  retained as historical implementation evidence. Current `main` intentionally removes the
+  published-PR lease, watcher, automatic takeover, and mutation fence while retaining P0 inbox
+  context and the hard Stop/SubagentStop gate. A dead harness can no longer strand a checkout
+  behind an ownership lease; no automatic under-five-minute fixer claim remains.
 - ~~C2 PR remote reads (post decision).~~ The recorded decision permits read-only cache access on
   same-repository pull requests; forks stay local-only.
 - ~~C3 warm capability; C4 correctness inputs; C5 hit-rate dashboard + key de-fragmentation; C6
@@ -139,6 +142,11 @@ the C5 metric correction and the new C7 item below.
   non-cancelled main-push success rate is 65.4%, below the 80% gate, and workflows have no
   `merge_group` coverage. Queue stays off; strict required checks stay false. See
   `research/merge-queue-evaluation.md`.
-- **Metrics observation gate remains open.** Implementation receipts and the post-merge sampling
-  protocol are in `research/metrics-closeout.md`. The representative week cannot begin until this
-  PR lands, so the initiative remains active and no target is claimed from synthetic evidence.
+- **Metrics observation gate remains open.** On 2026-08-30 the operator accepted the observed
+  24-hour event volume in place of the original seven-day duration proxy. PR #921 later
+  superseded A4; it is recorded as an operator scope replacement rather than counted as takeover
+  success. Current backpressure, parity, and hot-file receipts satisfy the authorized sample. Two
+  independent same-origin full proofs overlapped for 48 minutes 49.201 seconds and both completed
+  every lane at exit 0. An authorized 1Password session is required for the cross-checkout
+  remote-read observation, and the final closeout PR must reach Yeet `merge-ready: yes`; see
+  `research/metrics-closeout.md`.

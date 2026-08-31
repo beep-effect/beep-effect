@@ -4,6 +4,102 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids.
 
+## 2026-08-30 — scoped goal doctor invocation no longer matches the CLI
+
+- **Doing:** validating the packet after merging current `origin/main` into PR #929.
+- **Evidence:** `bun run beep goals doctor goals/ship-velocity` exited with `Unexpected positional
+  argument: "goals/ship-velocity"`; the supported repo-wide `bun run beep goals doctor` then
+  checked 168 packets with zero blocking or advisory findings.
+- **Would have prevented it:** document the repo-wide-only command contract, or accept an optional
+  packet path when operators need scoped validation.
+
+## 2026-08-30 — same-checkout proofs could race shared verdict artifacts
+
+- **Doing:** closing PR #929 after current-version same-origin proofs became weighted-capacity
+  peers.
+- **Evidence:** hosted review found that two tickets for the same checkout could both admit when
+  tokens fit. Those commands share branch-scoped `state.json` and `verdict.json` artifacts, so a
+  later success could overwrite a concurrent failure even though sibling checkouts are safe to
+  overlap.
+- **Would have prevented it:** include checkout identity in the admission exclusion tests while
+  preserving same-origin concurrency across distinct roots.
+
+## 2026-08-30 — duplicate dotenv assignments made blank repair destructive
+
+- **Doing:** reviewing the reference-only helper used to prepare the final remote-cache sample.
+- **Evidence:** the helper inspected the first assignment but rewrote every matching line when
+  that first value was blank. If a later assignment was configured and effective for a consumer,
+  blank repair silently replaced it.
+- **Would have prevented it:** reject duplicate cache names before any `.env` mutation and test
+  that the original file remains byte-for-byte unchanged.
+
+## 2026-08-30 — the packet's scheduler probe no longer matches the CLI
+
+- **Doing:** following the goal packet's required lane-contention probe before package
+  verification.
+- **Evidence:** `bun run beep quality scheduler status` exited before the chained verification
+  because the current command requires `--json`. The packet still names the flagless form.
+- **Would have prevented it:** keep the packet instruction synchronized with the CLI usage
+  contract, or retain a compact human-readable default for `scheduler status`.
+
+## 2026-08-30 — fallback coverage omitted cross-origin contenders
+
+- **Doing:** closing the final PR after the proof-lock retirement and same-origin concurrency
+  changes reached hosted review.
+- **Evidence:** Greptile's P1 review on PR #929 found that the below-envelope fallback path was
+  derived from each repository origin. Two heavyweight proofs for different origins could
+  therefore bypass machine-wide serialization. The existing fallback test used one origin twice.
+- **Would have prevented it:** assert that distinct origin lock paths contend for one fixed
+  machine-wide fallback lock whenever weighted admission is unavailable.
+
+## 2026-08-30 — the first repair attempt left no terminal command receipt
+
+- **Doing:** running the canonical `beep yeet repair` before publishing the replacement closeout
+  branch.
+- **Evidence:** the observation handle disappeared while the first attempt was running the 952-file
+  test-source typecheck. A process-table audit found no surviving process rooted in this checkout;
+  the two live typechecks belonged to other checkouts. Yeet had no verdict or closeout artifact,
+  and the worktree remained unchanged, so that attempt ended without a durable exit record. A
+  fresh retry later recorded terminal success; it does not supply the missing first-attempt receipt.
+- **Would have prevented it:** persist a phase-level terminal attempt row independently of the
+  calling transport, or attach repair to a run scope whose finalizer records interruption after
+  the client handle disappears.
+
+## 2026-08-30 — post-merge closeout work outlived its published branch
+
+- **Doing:** resuming the final ship-velocity closeout and checking whether its accumulated local
+  implementation was already durable on a remote branch or `main`.
+- **Evidence:** the checkout still tracked the branch used by merged PR #895, while its current
+  head was 13 commits ahead of `origin/main`; no remote ref contained that head. The work was
+  locally committed and recoverable, but was not protected by an open PR or remote branch.
+- **Would have prevented it:** after a PR merges, require continued packet work to move to a fresh
+  closeout branch before accepting another commit, and make Yeet warn when a local head advances
+  on the branch of an already-merged PR.
+
+## 2026-08-30 — a same-checkout proof started while the closeout was still being edited
+
+- **Doing:** recording the missing-remote-branch receipt while another agent process prepared the
+  same checkout for full verification.
+- **Evidence:** the full proof started 54 seconds before the ledger edit. The proof later reported
+  a dirty worktree while running its affected lanes, even though it had captured the earlier tree
+  at admission. The scheduler coordinated machine capacity but did not reserve the checkout for
+  edits.
+- **Would have prevented it:** add a per-checkout edit/proof ownership check before admission, or
+  require the proof runner to verify the worktree fingerprint before each affected planning wave
+  and stop as soon as it changes.
+
+## 2026-08-30 — the fixed cache sample drifted from the live fleet
+
+- **Doing:** resolving the exact checkout set for the final authenticated remote-read sample.
+- **Evidence:** the packet's post-repair sample contains 11 fully provisioned roots. An earlier
+  fleet scan classified seven roots as live, only two of which appeared in that sample. The final
+  preparation scan at `2026-08-31T02:45:59Z` classified 16 roots as live; four appeared in the
+  historical sample, 12 did not, and nine needed one or more missing cache-reference fields
+  provisioned before authentication. The packet still called the historical 11 roots active.
+- **Would have prevented it:** store the sampled root identities with the observation receipt and
+  recompute a named live-fleet delta before closeout, instead of carrying an unlabeled root count
+  forward as current state.
+
 ## 2026-08-30 — local publish proof changed base after the PR preview was fixed
 
 - **Doing:** running the exact-commit full proof after Yeet created PR #892 early to avoid more
@@ -51,9 +147,10 @@ session/machine ids.
 ## 2026-08-30 — fleet snapshot is too large for observation sampling
 
 - **Doing:** selecting active sibling checkouts for the representative-week cache sample.
-- **Evidence:** `bun run beep worktree fleet --json` emitted 32,786 characters for 78 checkouts,
-  including full policy-movement path lists. The captured output truncated before it provided a
-  usable active-checkout summary.
+- **Evidence:** `bun run beep worktree fleet --json` originally emitted 32,786 characters for 78
+  checkouts, including full policy-movement path lists. At closeout it exceeded the command
+  transport's 131,072-byte capture limit for 91 checkouts, and the JSON was cut mid-string. The
+  bounded text renderer plus an `awk` liveness filter was required to recover the 16 live roots.
 - **Would have prevented it:** add a compact mode or liveness filter that returns checkout path,
   branch, liveness, and dirty count without the policy path inventory.
 
@@ -86,6 +183,17 @@ session/machine ids.
   the result. No secret values or raw 1Password data were inspected.
 - **Would have prevented it:** make worktree bootstrap provision the read-only reference posture,
   reject present-but-blank fields, and run the sanitized dry plan before the first cacheable task.
+
+## 2026-08-30 — package-scoped coverage used the slow default worker profile
+
+- **Doing:** repairing the one introduced per-file coverage regression found by the baseline audit,
+  using the documented package-scoped ratchet instead of rerunning coverage for all 135 packages.
+- **Evidence:** `bun run coverage -- --filter=@beep/repo-cli --summarize` passed the ratchet but
+  took 10m53s to run 143 files and 2,702 tests. The full coverage fallback had completed the same
+  repo-cli suite in 5m49s with an explicit two-worker cap.
+- **Would have prevented it:** make scoped coverage reuse the weighted full lane's worker policy,
+  or print the selected Vitest worker profile so package-only verification does not become slower
+  than its full-shard counterpart.
 
 ## 2026-08-27 — C2 workflow posture outran credential provisioning
 
@@ -830,3 +938,218 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   `Unrecognized flag: --staged-only`; only the publish command exposes that isolation mode.
 - What would have prevented it: support the same staged-only worktree protection on `yeet verify`,
   or have it delegate to the publish isolation boundary without committing or pushing.
+
+## 2026-08-30 — The installed PR watcher observed only one checkout
+
+- What was happening: validating the automatic dead-owner takeover gate found the user service
+  disabled and its generated unit pinned to the checkout that happened to install it.
+- Evidence: the unit carried one `BEEP_YEET_WATCH_ROOTS` value, so leases created in sibling
+  checkouts and nested worktrees were outside the 30-second scan even after enabling the service.
+  A generic recursive repair peaked at 548.6 MiB; layout-bounded discovery still took 7.01 seconds
+  while waiting on fresh-lease mutexes. The final freshness prefilter reduced a full scan to 0.21
+  seconds and 3.7 MiB while retaining the locked stale-candidate recheck.
+- What would have prevented it: install the shared projects root and enumerate live leases only in
+  the sanctioned sibling-checkout and `*-worktrees/*` layouts. A generic recursive `find`, even
+  depth-bounded, traverses enough task scratch state to waste CPU and emit disappearance races.
+
+## 2026-08-30 — Remote-cache provisioning could not repair incomplete checkouts
+
+- What was happening: applying the sanctioned read-only cache template to active roots left six
+  older `.env` files local-only because `TURBO_TEAM` existed but was blank.
+- Evidence: the helper reported every existing name as unchanged; a metadata-only validation then
+  found five newly created complete quads and six incomplete existing quads with blank team fields.
+  Its documented dry-run command also targeted a nonexistent `quality check` subcommand.
+- What would have prevented it: distinguish valid existing values from blank placeholders, offer a
+  reference-preserving repair mode, and keep the verification example covered by a CLI smoke test.
+
+## 2026-08-30 — The scheduler contract makes the dual-verify gate unreachable
+
+- What was happening: two clean current-main `yeet verify` processes were submitted together to
+  prove the packet's required overlapping full-proof acceptance case.
+- Evidence: after a 58-minute upstream wait, `beep-effect7` acquired a three-token full-proof lease
+  with seven tokens still free, but `beep-effect6` remained queued. `QualityScheduler.ts` marks a
+  ticket skippable whenever any live lease has the same `originKey`, and `Handler.ts` also retains
+  the exclusive per-origin proof lock. Every sibling checkout of this repository has the same
+  origin key, so weighted capacity can never admit the required overlap. The admitted proof passed
+  every lane and released normally with a 32,089,321,472-byte peak; the next same-origin waiter was
+  admitted immediately after release, confirming serialization rather than capacity pressure.
+- What would have prevented it: make the scheduler the single current-version authority and design
+  an explicit shared/migrated legacy-lock protocol, or change the completion gate by an operator
+  decision. Removing either guard alone would only move the serialization boundary or weaken
+  mixed-version safety.
+- Resolution: current tickets and leases now carry an origin-coordination protocol. Legacy entries
+  decode distinctly, and same-origin legacy state drains first; the first current contender then
+  atomically installs a persistent v4 retirement marker that old clients fail closed against.
+  Current siblings share the weighted scheduler, while below-envelope hosts retain a separate
+  exclusive fallback lock. After the first closeout review, the focused scheduler/coordinator
+  suites pass 56 tests and the full Yeet unit file passes 132 tests; a live dual-full-proof receipt
+  remains the final runtime acceptance check.
+
+## 2026-08-30 — mixed-version review found a current-first ticket deadlock
+
+- What was happening: the required closeout reviewer panel modeled both queue orders for the
+  additive scheduler protocol instead of only the already-tested legacy-lease drain.
+- Evidence: an older current ticket treated any younger same-origin legacy ticket as a migration
+  owner, but the prior-version selector saw that older current ticket as unblocked. Each therefore
+  waited for the other to leave the queue. The same review found that non-`NotFound` coordinator
+  read failures were converted into apparent absence on the mandatory retirement path.
+- What would have prevented it: pin both legacy-first and current-first ticket orders before the
+  rollout implementation is accepted, and reuse the typed read boundary for every coordination
+  file observation rather than collapsing platform failures into absence.
+
+## 2026-08-30 — post-merge package verification repeated ignored projection drift
+
+- What was happening: running the required repo-cli package verification immediately after merging
+  current main.
+- Evidence: 2,702 tests passed and the only test failure compared a freshly generated goals index
+  with this checkout's ignored pre-merge `goals/INDEX.md`; the merge had changed three packet
+  lifecycles. The earlier receipt in this ledger describes the same failure class.
+- What would have prevented it: regenerate ignored packet projections in the post-merge hook, or
+  isolate the determinism fixture from checkout-local generated state.
+
+## 2026-08-30 — Package verification inherits a private temporary root
+
+- What was happening: the required `@beep/repo-cli` package verification failed 2 of 2,701 tests
+  after 442 seconds even though the touched scheduler and Yeet suites were green.
+- Evidence: both failures were unchanged AgentEffectiveness command fixtures. The default temporary
+  directory was below the private home path, so the production privacy guard correctly refused the
+  generated annotation and Phoenix-sync artifacts. Running the exact eight-test file with
+  `TMPDIR=/tmp` passed 8/8 without changing the guard or fixture assertions.
+- What would have prevented it: make the package verifier provide a public, disposable temporary
+  root to tests that intentionally exercise repository-path validation, or make those fixtures
+  request that root explicitly instead of inheriting the launching shell's home-scoped default.
+
+## 2026-08-30 — Yeet repair starts heavyweight feedback after a failed cheap gate
+
+- What was happening: the closeout repair was run while other admitted full proofs were queued,
+  with the expectation that its collected cheap-gate failure would stop before heavyweight work.
+- Evidence: `fallow:audit` reported three introduced blockers, but the same repair continued into
+  full repo docgen, affected build/check/lint, and the complete 2,701-test repo-cli suite. Those
+  feedback lanes passed, but they ran outside a scheduler lease while another full proof was live.
+- What would have prevented it: stop repair feedback before heavyweight lanes whenever the
+  collected cheap-gate wave is red, or admit the feedback phase through the same weighted
+  scheduler used by full verification.
+
+## 2026-08-30 — Concurrent linked-worktree verifies raced during origin refresh
+
+- What was happening: launching the repaired live dual-proof trial from two clean detached
+  worktrees at the same commit.
+- Evidence: both Yeet processes refreshed `origin/main` during startup. One completed the fetch and
+  joined the scheduler queue; the other exited before admission because its quiet Git fetch could
+  not update the shared linked-worktree ref concurrently. No quality lane ran in the failed
+  process, and retrying after the first refresh completed avoided the collision.
+- What would have prevented it: serialize origin refresh through the repository's shared Git
+  common directory, or make a ref-lock collision retry with bounded backoff before Yeet treats the
+  refresh as a terminal command failure.
+
+The same linked-worktree setup later exposed a second isolation gap. A root `node_modules` symlink
+did not supply the worktree-local `infra/node_modules/@pulumi/gharunners` output created by the
+install hook, so the 951-file TypeScript test gate failed in `infra`. Disposable full checkouts
+with independent Git metadata and their own frozen install avoid both defects. A reusable proof
+worktree provisioner should install the complete workspace instead of linking only root packages.
+
+## 2026-08-30 — Full aggregate exposed inherited coverage-baseline drift
+
+- What was happening: the final `TMPDIR=/tmp bun run audit:github quality` acceptance proof passed
+  all 20 build, lint, policy, type, unit, and integration lanes, but stopped at the coverage ratchet.
+- Evidence: five rows were below their recorded floors in `PrLease.ts` and `TmpfsReap.ts`. Both
+  implementation files are byte-identical to current `origin/main`; the gap was missing path
+  coverage, not a source regression introduced by this branch.
+- What would have prevented it: require the coverage ratchet on the exact merge head before main
+  advances, and land any baseline-affecting test changes with the implementation whose paths they
+  cover. This branch restores the floors with focused regression tests instead of lowering them.
+
+## 2026-08-30 — Durable admission rows omit the protocol and terminal memory receipt
+
+- What was happening: extracting the terminal evidence for two same-origin full proofs admitted
+  under `scheduler-origin-concurrency/v1`.
+- Evidence: live scheduler status identified both current-protocol leases and their overlap. The
+  durable admission journal recorded admitted and released rows, but the rows do not carry
+  `coordinationProtocol`, and the first successful release omitted `memoryPeakBytes` even though
+  its Yeet verdict recorded peak RSS for both heavyweight steps. Establishing the receipt required
+  correlating ephemeral status, journal timestamps, terminal exit, and the branch-local verdict.
+- What would have prevented it: include the coordination protocol in both journal event variants
+  and copy the verdict or scheduler peak into every terminal release row, then expose a bounded
+  closeout query that joins the records by nonce.
+
+## 2026-08-30 — A queued Yeet verify disappeared without a terminal attempt receipt
+
+- What was happening: the final closeout `beep yeet verify` waited behind a live same-origin
+  legacy proof and reached position one, but its client process exited before admission after more
+  than 22 minutes in the queue.
+- Evidence: scheduler status showed the holder still heartbeating in an active run scope, with no
+  dead or quarantined state. The closeout ticket then disappeared, no new verdict was written, and
+  `attempts.ndjson` retained an `attempt-started` row without a matching `attempt-finished` row.
+- What would have prevented it: make queued attempts reconnectable, or ensure every client exit
+  writes a terminal cancellation receipt before its ticket is removed. A durable reason should
+  distinguish operator interruption, signal exit, lost observer, and scheduler rejection.
+## 2026-08-30 — The root test wrapper treated focused file paths as Turbo task names
+
+- **Doing:** validating the Yeet merge resolution against four focused repo-cli test files.
+- **Evidence:** `bun run test packages/tooling/tool/cli/test/yeet.test.ts ...` forwarded each file
+  path after `turbo run test`; Turbo rejected them as missing tasks before Vitest ran.
+- **Would have prevented it:** route file arguments to the owning package's Vitest command, or
+  reject unsupported positional paths before constructing the Turbo invocation.
+
+## 2026-08-30 — A detached pre-commit observer stranded Lefthook after its child exited
+
+- **Doing:** committing the packet reconciliation after the focused merge tests and goal checks
+  passed.
+- **Evidence:** the command observer ended after gitleaks passed and Lefthook announced `typos`.
+  Git, the pre-commit shell, and Lefthook then remained asleep for nearly six minutes with no
+  `typos` child. After terminating only that orphaned process tree, the exact `typos` command
+  completed in 0.25 seconds at exit 0.
+- **Would have prevented it:** preserve and return the live command handle whenever capture
+  yields, and make Lefthook finalize a parallel command when its child has already exited.
+
+## 2026-08-30 — The machine-wide fallback inherited a PID-only liveness check
+
+- **Doing:** closing the exact-head Greptile review after moving below-envelope proofs from
+  per-origin fallback paths to one machine-wide lock.
+- **Evidence:** the shared lock still used the legacy v3 owner schema and considered any live
+  process with the recorded PID to be its owner. If the proof exited without cleanup and Linux
+  recycled that PID, every repository origin could remain queued behind the unrelated process.
+- **Would have prevented it:** require every newly written process-owned coordination record to
+  carry `/proc/<pid>/stat` start time and reuse the scheduler's PID-plus-start-time liveness helper
+  before broadening a lock from per-origin to machine-wide scope.
+
+## 2026-08-31 — The PID-reuse repair assumed readable Linux procfs
+
+- **Doing:** closing the next exact-head Greptile review after adding process-start fencing to the
+  machine-wide fallback lock.
+- **Evidence:** the lock refused every new owner when `/proc/<pid>/stat` was unavailable. That was
+  safe against PID reuse but disabled below-envelope full proofs on macOS, Windows, and Linux
+  environments without readable procfs.
+- **Would have prevented it:** model process identity as a platform capability from the first
+  repair—procfs on Linux, a stable `ps` start representation on Unix, and process start ticks on
+  Windows—and test the non-procfs acquisition path before publishing the review fix.
+
+## 2026-08-31 — Two CI lanes failed before they could test the branch
+
+- **Doing:** monitoring the exact PR head after the portable process-identity repair.
+- **Evidence:** Property Laws stopped during `bun install` when cached `keytar` fell back to a
+  source build on a hosted runner without `libsecret-1`. The exact local property lane then passed
+  2,743 tests. Coverage Regression stopped when its self-hosted runner lost communication with
+  GitHub, before the lane produced a coverage result.
+- **Would have prevented it:** provision native build prerequisites before restoring dependency
+  caches, and retry a job automatically when GitHub reports that its runner lost communication.
+
+## 2026-08-31 — Package verification omitted the coverage ratchet
+
+- **Doing:** monitoring the exact PR head after the portable process-identity repair passed the
+  repo-cli package audit, package docgen, and aggregate cheap gates.
+- **Evidence:** the hosted Coverage Regression lane was the first completed proof to report that
+  `ProofState.ts` had fallen below its recorded branch, function, line, and statement floors.
+  Package verification had passed without exercising the package's coverage script.
+- **Would have prevented it:** include affected coverage in the package verification profile for
+  source changes, or require publishers to run the scoped coverage ratchet before entering the
+  heavyweight publish queue.
+
+## 2026-08-31 — Goal doctor has no packet-scoped form
+
+- **Doing:** validating the ship-velocity packet after adding its coverage-gate friction receipt.
+- **Evidence:** `bun run beep goals doctor ship-velocity` exited before validation with
+  `Unexpected positional argument: "ship-velocity"`; the command accepts only a repository-wide
+  scan.
+- **Would have prevented it:** accept an optional packet slug, or print the repository-wide form
+  in the error so a focused closeout does not need a failed discovery call.
