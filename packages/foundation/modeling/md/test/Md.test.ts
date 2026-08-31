@@ -335,7 +335,9 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       Md.footnoteDef("container", [Md.footnoteDef("duplicate", "Nested definition")]),
       Md.admonition("note", [Md.footnoteDef("duplicate", "Nested admonition")]),
     ]);
-    const duplicateIssues = documentSafetyIssues(document).filter(S.is(DuplicateFootnoteDefinitionSafetyViolation));
+    const issues = documentSafetyIssues(document);
+    const duplicateIssues = issues.filter(S.is(DuplicateFootnoteDefinitionSafetyViolation));
+    const projectionIssues = issues.filter(S.is(HtmlProjectionSafetyViolation));
 
     expect(duplicateIssues).toMatchObject([
       { identifier: "duplicate", path: ["children", 0, "identifier"] },
@@ -346,6 +348,8 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       { identifier: "duplicate", path: ["children", 2, "children", 0, "identifier"] },
       { identifier: "duplicate", path: ["children", 3, "children", 0, "identifier"] },
     ]);
+    expect(projectionIssues).toHaveLength(duplicateIssues.length);
+    expect(projectionIssues.every((issue) => issue.rule === "duplicateId")).toBe(true);
     expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
 
     const unique = refineSafeDocument(Md.make([Md.footnoteDef("first", "One"), Md.footnoteDef("second", "Two")]));
