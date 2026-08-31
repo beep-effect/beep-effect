@@ -53,8 +53,9 @@ describe("process identity liveness", () => {
       const fs = yield* FileSystem.FileSystem;
       const withoutProcfs = FileSystem.FileSystem.of({
         ...fs,
-        readFileString: (target, encoding) =>
-          Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding),
+        readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) =>
+          Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding)
+        ),
       });
       const identity = yield* processStartIdentityForPid(process.pid).pipe(
         Effect.provideService(FileSystem.FileSystem, withoutProcfs)

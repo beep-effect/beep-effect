@@ -1123,3 +1123,13 @@ worktree provisioner should install the complete workspace instead of linking on
 - **Would have prevented it:** model process identity as a platform capability from the first
   repair—procfs on Linux, a stable `ps` start representation on Unix, and process start ticks on
   Windows—and test the non-procfs acquisition path before publishing the review fix.
+
+## 2026-08-31 — Two CI lanes failed before they could test the branch
+
+- **Doing:** monitoring the exact PR head after the portable process-identity repair.
+- **Evidence:** Property Laws stopped during `bun install` when cached `keytar` fell back to a
+  source build on a hosted runner without `libsecret-1`. The exact local property lane then passed
+  2,743 tests. Coverage Regression stopped when its self-hosted runner lost communication with
+  GitHub, before the lane produced a coverage result.
+- **Would have prevented it:** provision native build prerequisites before restoring dependency
+  caches, and retry a job automatically when GitHub reports that its runner lost communication.
