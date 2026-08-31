@@ -69,6 +69,7 @@ import {
   decodeSafeDocument,
   decodeSafeDocumentUnsafe,
   documentSafetyIssues,
+  HtmlProjectionSafetyViolation,
   refineSafeDocument,
   SafeDocument,
 } from "@beep/md/Md.safe";
@@ -364,6 +365,23 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       }),
       fcRuns(100)
     ));
+
+  it("rejects a heading outline that the safe HTML projection cannot render", () => {
+    const document = Md.make([Md.h2(""), Md.h5("")]);
+    const projectionIssues = documentSafetyIssues(document).filter(S.is(HtmlProjectionSafetyViolation));
+
+    expect(projectionIssues).toMatchObject([
+      {
+        _tag: "HtmlProjection",
+        path: ["children.1"],
+        rule: "headingOutline",
+      },
+    ]);
+    expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
+    expect(Result.isFailure(decodeSafeDocument(Result.getOrThrow(S.encodeUnknownResult(Document)(document))))).toBe(
+      true
+    );
+  });
 
   it("renders every schema-derived SafeDocument without failing", () =>
     fc.assert(

@@ -4,13 +4,16 @@
  * The general {@link Document} schema remains lossless persistence truth.
  * `SafeDocument` is the narrower RPC/editor boundary: it rejects trusted raw
  * nodes, URL destinations outside the canonical user-content policies,
- * duplicate footnote definitions, and strings that cannot reach the safe HTML
- * serializer while retaining the exact same encoded JSON representation.
+ * duplicate footnote definitions, strings that cannot reach the safe HTML
+ * serializer, and structures whose direct HTML projection is non-conforming,
+ * while retaining the exact same encoded JSON representation.
  *
  * @packageDocumentation \@beep/md/Md.safe
  * @since 0.0.0
  */
 
+import { Html } from "@beep/html";
+import { HtmlConformanceIssue, HtmlConformanceRule } from "@beep/html/Html.conformance";
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -272,6 +275,37 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
 ) {}
 
 /**
+ * An HTML conformance issue produced by the canonical Markdown projection.
+ *
+ * **Example** (Use HtmlProjectionSafetyViolation)
+ *
+ * ```ts import.meta.vitest name="Use HtmlProjectionSafetyViolation"
+ * import { HtmlProjectionSafetyViolation } from "@beep/md/Md.safe"
+ *
+ * const issue = HtmlProjectionSafetyViolation.make({
+ *   path: ["children.1"],
+ *   rule: "headingOutline",
+ *   message: "The projected heading skips an outline level",
+ * })
+ * issue._tag // => "HtmlProjection"
+ * ```
+ *
+ * @invariant Every instance describes a hard author-conformance failure returned by the canonical `Document.toHtml` projection.
+ * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for the mandatory heading-level progression rule.
+ * @category errors
+ * @since 0.0.0
+ */
+export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionSafetyViolation>(
+  $I`HtmlProjectionSafetyViolation`
+)(
+  "HtmlProjection",
+  HtmlConformanceIssue.fields,
+  $I.annoteError<HtmlProjectionSafetyViolation>("HtmlProjectionSafetyViolation", {
+    description: "Path-located HTML conformance issue produced by the canonical Markdown projection.",
+  })
+) {}
+
+/**
  * Structured safety issue returned before a document crosses an editor or RPC
  * trust boundary.
  *
@@ -290,6 +324,7 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
  */
 export const DocumentSafetyViolation = S.Union([
   DuplicateFootnoteDefinitionSafetyViolation,
+  HtmlProjectionSafetyViolation,
   RawNodeSafetyViolation,
   ScalarSafetyViolation,
   UrlSafetyViolation,
@@ -573,8 +608,22 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
     )
   );
 
+const htmlProjectionSafetyIssues = flow(
+  Document.toHtml,
+  Html.Conformant.issues,
+  A.filter((issue) => !HtmlConformanceRule.is.duplicateId(issue.rule)),
+  A.map((issue) =>
+    HtmlProjectionSafetyViolation.make({
+      path: issue.path,
+      rule: issue.rule,
+      message: issue.message,
+    })
+  )
+);
+
 /**
- * Returns every path-located user-content safety violation.
+ * Returns every path-located user-content safety or hard HTML-projection
+ * violation.
  *
  * **Example** (Use documentSafetyIssues)
  *
@@ -591,6 +640,7 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
 export const documentSafetyIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> => [
   ...pipeChildren(document.children, (block, index) => blockSafetyIssues(block, ["children", index])),
   ...duplicateFootnoteDefinitionIssues(document),
+  ...htmlProjectionSafetyIssues(document),
 ];
 
 /**
@@ -624,8 +674,10 @@ const SafeDocumentCheck = S.makeFilter<Document>(
   {
     identifier: $I`SafeDocumentCheck`,
     title: "Safe Markdown Document",
-    description: "A document without trusted raw content, unsafe URLs, duplicate footnotes, or invalid scalars.",
-    message: "Document contains trusted raw content, an unsafe URL, duplicate footnotes, or an invalid scalar string.",
+    description:
+      "A document without trusted raw content, unsafe URLs, duplicate footnotes, invalid scalars, or HTML projection issues.",
+    message:
+      "Document contains trusted raw content, an unsafe URL, duplicate footnotes, an invalid scalar string, or an HTML projection issue.",
   }
 );
 
@@ -644,6 +696,8 @@ const SafeDocumentCheck = S.makeFilter<Document>(
  * Result.isSuccess(result) // => true
  * ```
  *
+ * @invariant Every admitted document projects through {@link Document.toHtml} to an HTML fragment with no hard author-conformance issues.
+ * @see {@link https://html.spec.whatwg.org/multipage/sections.html#headings-and-outlines | WHATWG HTML headings and outlines} for one cross-block structural invariant enforced by the projection check.
  * @category validation
  * @since 0.0.0
  */
