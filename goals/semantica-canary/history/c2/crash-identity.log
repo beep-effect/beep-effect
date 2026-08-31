@@ -1,0 +1,7 @@
+2026-08-31 C2 crash-identity probe
+command: bunx vitest run test/Reasoning.test.ts
+checkpoint: ledger-committed
+signal: SIGKILL
+restart processes: 2
+result: PASS - both fresh-process RDF rebuild digests were equal SHA-256 values
+test: rebuilds an identical projection after SIGKILL at the ledger checkpoint

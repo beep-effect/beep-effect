@@ -1,0 +1,328 @@
+{
+  "cases": [
+    {
+      "asserted": [
+        {
+          "object": "<urn:C>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#domain>",
+          "subject": "<urn:p>"
+        },
+        {
+          "object": "<urn:o>",
+          "predicate": "<urn:p>",
+          "subject": "<urn:s>"
+        }
+      ],
+      "expectedDerived": [
+        {
+          "object": "<urn:C>",
+          "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+          "subject": "<urn:s>"
+        }
+      ],
+      "id": "rdfs2-domain",
+      "proofs": [
+        {
+          "conclusion": {
+            "object": "<urn:C>",
+            "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "subject": "<urn:s>"
+          },
+          "eyeProofDigest": "2afa01232e9808d81cce57f58c0feaf3d7e443fa5c5f3d3b2aa210c3dccbfcde",
+          "premises": [
+            {
+              "object": "<urn:C>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#domain>",
+              "subject": "<urn:p>"
+            },
+            {
+              "object": "<urn:o>",
+              "predicate": "<urn:p>",
+              "subject": "<urn:s>"
+            }
+          ],
+          "rule": "rdfs2"
+        }
+      ]
+    },
+    {
+      "asserted": [
+        {
+          "object": "<urn:C>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#range>",
+          "subject": "<urn:p>"
+        },
+        {
+          "object": "<urn:o>",
+          "predicate": "<urn:p>",
+          "subject": "<urn:s>"
+        }
+      ],
+      "expectedDerived": [
+        {
+          "object": "<urn:C>",
+          "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+          "subject": "<urn:o>"
+        }
+      ],
+      "id": "rdfs3-range",
+      "proofs": [
+        {
+          "conclusion": {
+            "object": "<urn:C>",
+            "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "subject": "<urn:o>"
+          },
+          "eyeProofDigest": "28112f69e5ec6d700901b2207cdb99f3cc80db57c1d31fa46166f836c97d2298",
+          "premises": [
+            {
+              "object": "<urn:C>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#range>",
+              "subject": "<urn:p>"
+            },
+            {
+              "object": "<urn:o>",
+              "predicate": "<urn:p>",
+              "subject": "<urn:s>"
+            }
+          ],
+          "rule": "rdfs3"
+        }
+      ]
+    },
+    {
+      "asserted": [
+        {
+          "object": "<urn:q>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+          "subject": "<urn:p>"
+        },
+        {
+          "object": "<urn:r>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+          "subject": "<urn:q>"
+        }
+      ],
+      "expectedDerived": [
+        {
+          "object": "<urn:r>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+          "subject": "<urn:p>"
+        }
+      ],
+      "id": "rdfs5-subproperty",
+      "proofs": [
+        {
+          "conclusion": {
+            "object": "<urn:r>",
+            "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+            "subject": "<urn:p>"
+          },
+          "eyeProofDigest": "ff921759308b3effac5f5e659fe2c542a351cf6a43cd71a6060393b54551243a",
+          "premises": [
+            {
+              "object": "<urn:q>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+              "subject": "<urn:p>"
+            },
+            {
+              "object": "<urn:r>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+              "subject": "<urn:q>"
+            }
+          ],
+          "rule": "rdfs5"
+        }
+      ]
+    },
+    {
+      "asserted": [
+        {
+          "object": "<urn:q>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+          "subject": "<urn:p>"
+        },
+        {
+          "object": "<urn:o>",
+          "predicate": "<urn:p>",
+          "subject": "<urn:s>"
+        }
+      ],
+      "expectedDerived": [
+        {
+          "object": "<urn:o>",
+          "predicate": "<urn:q>",
+          "subject": "<urn:s>"
+        }
+      ],
+      "id": "rdfs7-property",
+      "proofs": [
+        {
+          "conclusion": {
+            "object": "<urn:o>",
+            "predicate": "<urn:q>",
+            "subject": "<urn:s>"
+          },
+          "eyeProofDigest": "67a48754bb467704c260db630647b2196400885090f0ee41eda7074a1c0a3120",
+          "premises": [
+            {
+              "object": "<urn:q>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>",
+              "subject": "<urn:p>"
+            },
+            {
+              "object": "<urn:o>",
+              "predicate": "<urn:p>",
+              "subject": "<urn:s>"
+            }
+          ],
+          "rule": "rdfs7"
+        }
+      ]
+    },
+    {
+      "asserted": [
+        {
+          "object": "<urn:D>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+          "subject": "<urn:C>"
+        },
+        {
+          "object": "<urn:C>",
+          "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+          "subject": "<urn:s>"
+        }
+      ],
+      "expectedDerived": [
+        {
+          "object": "<urn:D>",
+          "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+          "subject": "<urn:s>"
+        }
+      ],
+      "id": "rdfs9-subclass",
+      "proofs": [
+        {
+          "conclusion": {
+            "object": "<urn:D>",
+            "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+            "subject": "<urn:s>"
+          },
+          "eyeProofDigest": "3d28de286291e54200b7ffdb1fb3ce6e5fc2e2d976fd4e7106945eee3a824cce",
+          "premises": [
+            {
+              "object": "<urn:D>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+              "subject": "<urn:C>"
+            },
+            {
+              "object": "<urn:C>",
+              "predicate": "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
+              "subject": "<urn:s>"
+            }
+          ],
+          "rule": "rdfs9"
+        }
+      ]
+    },
+    {
+      "asserted": [
+        {
+          "object": "<urn:D>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+          "subject": "<urn:C>"
+        },
+        {
+          "object": "<urn:E>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+          "subject": "<urn:D>"
+        }
+      ],
+      "expectedDerived": [
+        {
+          "object": "<urn:E>",
+          "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+          "subject": "<urn:C>"
+        }
+      ],
+      "id": "rdfs11-subclass",
+      "proofs": [
+        {
+          "conclusion": {
+            "object": "<urn:E>",
+            "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+            "subject": "<urn:C>"
+          },
+          "eyeProofDigest": "9ec0d91984f4941075e9b5a969bf97e26edee02318fbb3c0cde869f245a9b772",
+          "premises": [
+            {
+              "object": "<urn:D>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+              "subject": "<urn:C>"
+            },
+            {
+              "object": "<urn:E>",
+              "predicate": "<http://www.w3.org/2000/01/rdf-schema#subClassOf>",
+              "subject": "<urn:D>"
+            }
+          ],
+          "rule": "rdfs11"
+        }
+      ]
+    },
+    {
+      "asserted": [
+        {
+          "object": "<urn:b>",
+          "predicate": "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
+          "subject": "<urn:a>"
+        },
+        {
+          "object": "<urn:c>",
+          "predicate": "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
+          "subject": "<urn:b>"
+        }
+      ],
+      "expectedDerived": [
+        {
+          "object": "<urn:c>",
+          "predicate": "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
+          "subject": "<urn:a>"
+        }
+      ],
+      "id": "skos-broader-transitive",
+      "proofs": [
+        {
+          "conclusion": {
+            "object": "<urn:c>",
+            "predicate": "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
+            "subject": "<urn:a>"
+          },
+          "eyeProofDigest": "aa83e593b23bde4efaa6287250e69a3205b290a21bd8e443f2d4d30b89eb2bb2",
+          "premises": [
+            {
+              "object": "<urn:b>",
+              "predicate": "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
+              "subject": "<urn:a>"
+            },
+            {
+              "object": "<urn:c>",
+              "predicate": "<http://www.w3.org/2004/02/skos/core#broaderTransitive>",
+              "subject": "<urn:b>"
+            }
+          ],
+          "rule": "skos-broader-transitive"
+        }
+      ]
+    }
+  ],
+  "oracle": {
+    "engine": "EYE",
+    "eyeVersion": "11.24.5",
+    "package": "eyereasoner",
+    "packageVersion": "21.1.18",
+    "restricted": true
+  },
+  "rulesSha256": "ec59d1e900e7ec3c0863fd17ef40efe1ca84ae598c48c3f631792ca8f175e1a9",
+  "schemaVersion": "g-entailment-rdfs/v1"
+}

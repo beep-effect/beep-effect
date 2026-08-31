@@ -91,6 +91,11 @@ const makeRdfProjection = Effect.fn("RdfProjection.make")(function* () {
         return {
           dataset: Rdf.makeDataset(sorted),
           serializedQuads: A.map(sorted, Rdf.serializeQuad),
+          serializedTriples: A.map(sorted, (quad) => ({
+            object: Rdf.serializeTerm(quad.object),
+            predicate: Rdf.serializeTerm(quad.predicate),
+            subject: Rdf.serializeTerm(quad.subject),
+          })),
         };
       })
     ),

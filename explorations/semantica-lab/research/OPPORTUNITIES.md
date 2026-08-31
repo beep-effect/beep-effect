@@ -408,3 +408,27 @@ ratifies.
   unstaged and publish C1 from a clean owning worktree. Prevention: simultaneous agents must own
   separate sibling worktrees even when their intended files appear disjoint; shared checkouts
   make attribution and exact-head quality evidence unstable.
+
+- **2026-08-31 — The C1-to-C2 clean-worktree handoff hit two avoidable Git and install traps.**
+  `git fetch --prune origin main:refs/remotes/origin/main` deleted the local tracking ref before
+  failing to recreate it with `unable to resolve reference`; a normal configured `git fetch
+  origin` restored the ref at the merged C1 commit. The new worktree then lacked workspace links,
+  so `bun run beep architecture` failed with `Cannot find module '@beep/utils'`. Disposition:
+  install the committed lockfile in the clean worktree before running repo tooling. Prevention:
+  use the configured fetch refspec instead of combining prune with an explicit destination, and
+  make the sibling-worktree bootstrap path install or link dependencies before its first command.
+
+- **2026-08-31 — The architecture touch rule names an incomplete command.** The required
+  `bun run beep architecture` invocation printed only `architecture commands: create, add, plan,
+  apply, check`; attempting the apparent validation form, `architecture check`, then required a
+  plan file that does not exist for a hand-authored lab-local concept. No architecture validation
+  ran, although the normal lab check, lint, and tests remained available. Prevention: make the
+  touch table name the concrete discovery or validation invocation for an existing package, or
+  have the bare command run the applicable read-only check.
+
+- **2026-08-31 — The advertised F1-only canary selection cannot satisfy its own hosted
+  coverage schema.** A C2 integration smoke using `canary c2 --selection f1` stopped in the
+  inherited C0 evaluator with `No covered document supports structure-span-f1:hosted`; the
+  ratified `f1+w1` R2 selection passed with zero unexpected degradation. Prevention: either
+  make every advertised selection construct a satisfiable metric set or reject unsupported
+  stage/selection pairs during CLI decoding, before provider and ledger work begins.

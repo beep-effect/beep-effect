@@ -8,6 +8,7 @@ import { CorpusManifestBuilderLive } from "@/corpus/ManifestBuilder";
 import { F1CatalogLive } from "@/fixtures/F1";
 import { CanaryC0Live } from "@/layers/CanaryC0Live";
 import { CanaryC1Live } from "@/layers/CanaryC1Live";
+import { CanaryC2Live } from "@/layers/CanaryC2Live";
 import { CanonicalizerLive } from "@/layers/CanonicalizerLive";
 import { ChunkerLive } from "@/layers/ChunkerLive";
 import { DocumentSourceLive } from "@/layers/DocumentSourceLive";
@@ -16,6 +17,7 @@ import { AnthropicExtractionProviderLive } from "@/layers/LanguageModelLive";
 import { ParserLive } from "@/layers/ParserLive";
 import { ProviderCacheLive } from "@/layers/ProviderCacheLive";
 import { RdfProjectionLive } from "@/layers/RdfProjectionLive";
+import { ReasonerLive } from "@/layers/ReasonerLive";
 import { VectorProjectionLive } from "@/layers/VectorProjectionLive";
 import { LabConfig, LabConfigLive } from "@/runtime/Config";
 
@@ -93,6 +95,10 @@ const C1CanaryLive = CanaryC1Live(OpenAiEmbeddingProviderLive).pipe(
   )
 );
 
+const C2CanaryLive = CanaryC2Live.pipe(
+  Layer.provide(Layer.mergeAll(InfrastructureLive, C1CanaryLive, RdfServiceLive, ReasonerLive))
+);
+
 /**
  * Bun runtime services, environment-decoded lab configuration, C0 input
  * services, and stderr logging.
@@ -114,5 +120,6 @@ export const RuntimeLayer = Layer.mergeAll(
   P1ServicesLive,
   C0InputServicesLive,
   C0CanaryLive,
-  C1CanaryLive
+  C1CanaryLive,
+  C2CanaryLive
 );

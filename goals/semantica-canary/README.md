@@ -50,14 +50,17 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-P3 C1 is complete. The first-probe projection candidate passed the committed G
-kNN and SPARQL expectations, alternate-dimension keying, rebuild identity, and
-the full-W1 R2 gate live and replay. The full reports were byte-identical; all
-25 W1 papers plus F1 projected without unexpected degradation. The retry was
-never used. P4 C2 waits for this C1 evidence PR to become merge-ready and land.
+P4 C2 is complete. The first valid combined candidate passed all seven
+restricted-EYE oracle cases, per-event rule validation, the real
+commit/SIGKILL/restart projection probe, both Tier-L bars, and the full-W1 R2
+gate live and replay. The 34-document reports were byte-identical with zero
+unexpected degradation; the retry was never used. P5 closes the packet with
+the atlas disposition, reflection, evidence audit, and final state flip.
 
 ## Latest evidence
 
+[`history/p4-c2-r2.md`](./history/p4-c2-r2.md) records the C2 oracle, crash,
+Tier-L, full-W1 live/replay gate, and Reasoning verdict.
 [`history/p3-c1-r2.md`](./history/p3-c1-r2.md) records the C1 G-projection,
 rebuild-identity, full-W1 live/replay gate, and resulting family verdicts.
 [`history/p2-c0-r2.md`](./history/p2-c0-r2.md) records the C0 full-W1 gate.
