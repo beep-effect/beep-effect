@@ -12,12 +12,11 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegativeInt, NonNegNum } from "@beep/schema/Number";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { Effect } from "effect";
+import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import type * as AST from "effect/SchemaAST";
 

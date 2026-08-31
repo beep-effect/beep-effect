@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, flow, Match, MutableHashSet, Number as Num, Path, pipe } from "effect";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -25,15 +26,16 @@ import {
   StagedFileCommitRecord,
 } from "./FileTransaction.ts";
 import { toFilesCommandError } from "./MatchPerson.errors.ts";
-import { encodePersonMatchReport, PersonMatchReport } from "./MatchPerson.schemas.ts";
+import { encodePersonMatchReport, PersonMatchModel, PersonMatchReport } from "./MatchPerson.schemas.ts";
 import { CanonicalMatchPersonInputs, PersonMatchWorkerService } from "./MatchPerson.worker-service.ts";
 import type {
   MatchPersonOptions,
   PersonMatchDisposition,
   PersonMatchEntry,
-  PersonMatchModel,
   PersonMatchModelArtifact,
   PersonMatchModelComponent,
+  PersonMatchOnnxRuntime,
+  PersonMatchPyTorchRuntime,
   PersonMatchReference,
   PersonMatchWorkerSuccess,
 } from "./MatchPerson.schemas.ts";
@@ -522,7 +524,6 @@ const discoverSupportedPersonMatchFiles: (
   "Files.discoverSupportedPersonMatchFiles"
 )(function* (root, directory, recursive) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const names = yield* fs
     .readDirectory(directory)
     .pipe(
@@ -530,31 +531,75 @@ const discoverSupportedPersonMatchFiles: (
         formatPlatformError("Failed to discover person-match image inputs", directory, { cause })
       )
     );
-  let discovered = A.empty<string>();
-  for (const name of A.sort(names, Str.Order)) {
-    const sourcePath = path.join(directory, name);
-    const isSymbolicLink = yield* fs.readLink(sourcePath).pipe(
-      Effect.as(true),
-      Effect.orElseSucceed(() => false)
-    );
-    if (isSymbolicLink) continue;
-    const stat = yield* fs.stat(sourcePath).pipe(Effect.option);
-    if (O.isNone(stat)) continue;
-    if (stat.value.type === "Directory") {
-      if (!recursive) continue;
-      discovered = A.appendAll(discovered, yield* discoverSupportedPersonMatchFiles(root, sourcePath, recursive));
-      continue;
-    }
-    if (stat.value.type !== "File") continue;
-    const extension = pipe(path.extname(name), Str.replace(/^\./u, ""), Str.toLowerCase);
-    if (!isPersonMatchSupportedImageExtension(extension)) continue;
-    const relativePath = path.relative(root, sourcePath);
-    if (path.isAbsolute(relativePath) || Str.startsWith(`..${path.sep}`)(relativePath) || relativePath === "..") {
-      continue;
-    }
-    discovered = A.append(discovered, sourcePath);
-  }
-  return A.sort(discovered, Str.Order);
+  const discovered = yield* Effect.forEach(
+    A.sort(names, Str.Order),
+    (name) => discoverSupportedPersonMatchEntry(root, directory, name, recursive),
+    { concurrency: 1 }
+  );
+  return A.sort(A.flatten(discovered), Str.Order);
+});
+
+const isContainedPersonMatchSourcePath = (
+  path: Pick<MatchPersonPathOperations, "isAbsolute" | "relative" | "sep">,
+  root: string,
+  sourcePath: string
+): boolean => {
+  const relativePath = path.relative(root, sourcePath);
+  return (
+    !path.isAbsolute(relativePath) &&
+    !Str.startsWith(`..${path.sep}`)(relativePath) &&
+    !Str.Equivalence(relativePath, "..")
+  );
+};
+
+const supportedPersonMatchSourcePath = (
+  path: Path.Path,
+  root: string,
+  sourcePath: string,
+  name: string
+): O.Option<string> => {
+  const extension = pipe(path.extname(name), Str.replace(/^\./u, ""), Str.toLowerCase);
+  return pipe(
+    sourcePath,
+    O.liftPredicate(() => isPersonMatchSupportedImageExtension(extension)),
+    O.filter(() => isContainedPersonMatchSourcePath(path, root, sourcePath))
+  );
+};
+
+const discoverSupportedPersonMatchEntry: (
+  root: string,
+  directory: string,
+  name: string,
+  recursive: boolean
+) => Effect.Effect<ReadonlyArray<string>, FilesCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "Files.discoverSupportedPersonMatchEntry"
+)(function* (root, directory, name, recursive) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const sourcePath = path.join(directory, name);
+  const isSymbolicLink = yield* fs.readLink(sourcePath).pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+  if (isSymbolicLink) return A.empty<string>();
+
+  const stat = yield* fs.stat(sourcePath).pipe(Effect.option);
+  return yield* O.match(stat, {
+    onNone: () => Effect.succeed(A.empty<string>()),
+    onSome: (info) =>
+      Match.value(info.type).pipe(
+        Match.when("Directory", () =>
+          Bool.match(recursive, {
+            onFalse: () => Effect.succeed(A.empty<string>()),
+            onTrue: () => discoverSupportedPersonMatchFiles(root, sourcePath, recursive),
+          })
+        ),
+        Match.when("File", () =>
+          Effect.succeed(A.fromOption(supportedPersonMatchSourcePath(path, root, sourcePath, name)))
+        ),
+        Match.orElse(() => Effect.succeed(A.empty<string>()))
+      ),
+  });
 });
 
 const discoverExpectedPersonMatchFiles = Effect.fn("Files.discoverExpectedPersonMatchFiles")(function* (
@@ -731,63 +776,131 @@ const validateWorkerModelComponent = Effect.fn("Files.validatePersonMatchWorkerM
   yield* validateWorkerModelArtifact(artifact, expected);
 });
 
-const validateWorkerRuntime = Effect.fn("Files.validatePersonMatchWorkerRuntime")(function* (
-  model: PersonMatchModel,
-  options: MatchPersonOptions
+const validateBuffaloWorkerRuntime = Effect.fn("Files.validateBuffaloPersonMatchWorkerRuntime")(function* (
+  runtime: PersonMatchOnnxRuntime
 ): Effect.fn.Return<void, FilesCommandError> {
-  if (model.backend === "buffalo-l") {
-    if (model.runtime.framework !== "onnxruntime" || A.isReadonlyArrayNonEmpty(model.runtime.warnings)) {
-      return yield* FilesCommandError.make({
-        message: "Buffalo model runtime provenance is not the exact pinned CPU runtime.",
-      });
-    }
-    return;
+  if (runtime.framework !== "onnxruntime" || A.isReadonlyArrayNonEmpty(runtime.warnings)) {
+    return yield* FilesCommandError.make({
+      message: "Buffalo model runtime provenance is not the exact pinned CPU runtime.",
+    });
   }
-  if (model.runtime.actualCompute === "rocm") {
-    if (
-      O.isNone(model.runtime.hipVersion) ||
-      !Str.startsWith(adaFaceHipVersionPrefix)(model.runtime.hipVersion.value) ||
-      A.length(model.runtime.devices) !== 1 ||
-      A.some(model.runtime.devices, (device) => !Str.Equivalence(device.architecture, adaFaceRocmArchitecture))
-    ) {
-      return yield* FilesCommandError.make({
-        message: "AdaFace ROCm runtime requires the pinned HIP 7.2 family and one selected gfx1201 device.",
-      });
-    }
-    if (
-      O.exists(
-        options.devices,
-        (requested) =>
-          !personMatchDeviceIndexesEquivalence(
-            A.map(model.runtime.devices, (device) => device.index),
-            requested
-          )
+});
+
+const isPinnedAdaFaceRocmRuntime = (runtime: PersonMatchPyTorchRuntime): boolean =>
+  O.exists(runtime.hipVersion, Str.startsWith(adaFaceHipVersionPrefix)) &&
+  A.length(runtime.devices) === 1 &&
+  A.every(runtime.devices, (device) => Str.Equivalence(device.architecture, adaFaceRocmArchitecture));
+
+const adaFaceRuntimeUsesRequestedDevices = (
+  runtime: PersonMatchPyTorchRuntime,
+  requestedDevices: MatchPersonOptions["devices"]
+): boolean =>
+  !O.exists(
+    requestedDevices,
+    (requested) =>
+      !personMatchDeviceIndexesEquivalence(
+        A.map(runtime.devices, (device) => device.index),
+        requested
       )
-    ) {
-      return yield* FilesCommandError.make({
-        message: "AdaFace runtime did not select the explicitly requested ROCm device.",
-      });
-    }
-  } else if (A.isReadonlyArrayNonEmpty(model.runtime.devices)) {
-    return yield* FilesCommandError.make({ message: "AdaFace CPU runtime reported a selected ROCm device." });
+  );
+
+const validateAdaFaceRocmRuntime = Effect.fn("Files.validateAdaFaceRocmPersonMatchWorkerRuntime")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  requestedDevices: MatchPersonOptions["devices"]
+): Effect.fn.Return<void, FilesCommandError> {
+  if (!isPinnedAdaFaceRocmRuntime(runtime)) {
+    return yield* FilesCommandError.make({
+      message: "AdaFace ROCm runtime requires the pinned HIP 7.2 family and one selected gfx1201 device.",
+    });
   }
-  if (
-    (options.compute === "rocm" && model.runtime.actualCompute !== "rocm") ||
-    (options.compute === "cpu" && model.runtime.actualCompute !== "cpu")
-  ) {
+  if (!adaFaceRuntimeUsesRequestedDevices(runtime, requestedDevices)) {
+    return yield* FilesCommandError.make({
+      message: "AdaFace runtime did not select the explicitly requested ROCm device.",
+    });
+  }
+});
+
+const validateAdaFaceRuntimeDevices = (
+  runtime: PersonMatchPyTorchRuntime,
+  requestedDevices: MatchPersonOptions["devices"]
+): Effect.Effect<void, FilesCommandError> =>
+  Match.value(runtime.actualCompute).pipe(
+    Match.when("rocm", () => validateAdaFaceRocmRuntime(runtime, requestedDevices)),
+    Match.when("cpu", () =>
+      Bool.match(A.isReadonlyArrayNonEmpty(runtime.devices), {
+        onFalse: () => Effect.void,
+        onTrue: () => FilesCommandError.make({ message: "AdaFace CPU runtime reported a selected ROCm device." }),
+      })
+    ),
+    Match.exhaustive
+  );
+
+const adaFaceRuntimeHonorsComputePolicy = (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): boolean =>
+  Match.value(compute).pipe(
+    Match.when("auto", () => true),
+    Match.when("rocm", () => runtime.actualCompute === "rocm"),
+    Match.when("cpu", () => runtime.actualCompute === "cpu"),
+    Match.exhaustive
+  );
+
+const validateAdaFaceComputePolicy = Effect.fn("Files.validateAdaFacePersonMatchComputePolicy")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): Effect.fn.Return<void, FilesCommandError> {
+  if (!adaFaceRuntimeHonorsComputePolicy(runtime, compute)) {
     return yield* FilesCommandError.make({ message: "AdaFace runtime did not honor the explicit compute policy." });
   }
-  const warnings = model.runtime.warnings;
-  if (
-    (options.compute === "auto" &&
-      model.runtime.actualCompute === "cpu" &&
-      (A.length(warnings) !== 1 || warnings[0]?.code !== "rocm-fallback-to-cpu")) ||
-    ((options.compute !== "auto" || model.runtime.actualCompute === "rocm") && A.isReadonlyArrayNonEmpty(warnings))
-  ) {
+});
+
+const hasSingleRocmFallbackWarning = (runtime: PersonMatchPyTorchRuntime): boolean =>
+  A.length(runtime.warnings) === 1 &&
+  O.exists(A.head(runtime.warnings), (warning) => warning.code === "rocm-fallback-to-cpu");
+
+const hasCoherentAdaFaceRuntimeWarnings = (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): boolean =>
+  Match.value(compute).pipe(
+    Match.when("auto", () =>
+      Bool.match(runtime.actualCompute === "cpu", {
+        onFalse: () => A.isReadonlyArrayEmpty(runtime.warnings),
+        onTrue: () => hasSingleRocmFallbackWarning(runtime),
+      })
+    ),
+    Match.orElse(() => A.isReadonlyArrayEmpty(runtime.warnings))
+  );
+
+const validateAdaFaceRuntimeWarnings = Effect.fn("Files.validateAdaFacePersonMatchRuntimeWarnings")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  compute: MatchPersonOptions["compute"]
+): Effect.fn.Return<void, FilesCommandError> {
+  if (!hasCoherentAdaFaceRuntimeWarnings(runtime, compute)) {
     return yield* FilesCommandError.make({
       message: "AdaFace runtime reported incoherent compute fallback provenance.",
     });
   }
+});
+
+const validateAdaFaceWorkerRuntime = Effect.fn("Files.validateAdaFacePersonMatchWorkerRuntime")(function* (
+  runtime: PersonMatchPyTorchRuntime,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, FilesCommandError> {
+  yield* validateAdaFaceRuntimeDevices(runtime, options.devices);
+  yield* validateAdaFaceComputePolicy(runtime, options.compute);
+  yield* validateAdaFaceRuntimeWarnings(runtime, options.compute);
+});
+
+const validateWorkerRuntime = Effect.fn("Files.validatePersonMatchWorkerRuntime")(function* (
+  model: PersonMatchModel,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, FilesCommandError> {
+  yield* PersonMatchModel.match({
+    "buffalo-l": (buffalo) => validateBuffaloWorkerRuntime(buffalo.runtime),
+    "adaface-kprpe": (adaFace) => validateAdaFaceWorkerRuntime(adaFace.runtime, options),
+  })(model);
 });
 
 const validateWorkerModel = Effect.fn("Files.validatePersonMatchWorkerModel")(function* (
@@ -825,11 +938,11 @@ const validateWorkerModel = Effect.fn("Files.validatePersonMatchWorkerModel")(fu
   );
 });
 
-const validateWorkerReference = Effect.fn("Files.validatePersonMatchWorkerReference")(function* (
+const validateWorkerReferencePath = Effect.fn("Files.validatePersonMatchWorkerReferencePath")(function* (
   reference: PersonMatchReference,
   referenceDirectory: string,
   referencePaths: MutableHashSet.MutableHashSet<string>
-): Effect.fn.Return<boolean, FilesCommandError, Path.Path> {
+): Effect.fn.Return<void, FilesCommandError, Path.Path> {
   const path = yield* Path.Path;
   const referencePath = path.resolve(reference.sourcePath);
   if (
@@ -842,14 +955,22 @@ const validateWorkerReference = Effect.fn("Files.validatePersonMatchWorkerRefere
     });
   }
   MutableHashSet.add(referencePaths, referencePath);
-  if (reference.accepted) {
-    if (reference.faceCount !== 1 || reference.detectionScore === undefined || reference.reason !== undefined) {
-      return yield* FilesCommandError.make({
-        message: `Person-match worker returned inconsistent accepted reference evidence for "${reference.sourcePath}".`,
-      });
-    }
-    return true;
+});
+
+const validateAcceptedWorkerReference = Effect.fn("Files.validateAcceptedPersonMatchWorkerReference")(function* (
+  reference: PersonMatchReference
+): Effect.fn.Return<boolean, FilesCommandError> {
+  if (reference.faceCount !== 1 || reference.detectionScore === undefined || reference.reason !== undefined) {
+    return yield* FilesCommandError.make({
+      message: `Person-match worker returned inconsistent accepted reference evidence for "${reference.sourcePath}".`,
+    });
   }
+  return true;
+});
+
+const validateRejectedWorkerReference = Effect.fn("Files.validateRejectedPersonMatchWorkerReference")(function* (
+  reference: PersonMatchReference
+): Effect.fn.Return<boolean, FilesCommandError> {
   if (reference.reason === undefined) {
     return yield* FilesCommandError.make({
       message: `Person-match worker omitted the rejection reason for reference "${reference.sourcePath}".`,
@@ -861,6 +982,18 @@ const validateWorkerReference = Effect.fn("Files.validatePersonMatchWorkerRefere
     });
   }
   return false;
+});
+
+const validateWorkerReference = Effect.fn("Files.validatePersonMatchWorkerReference")(function* (
+  reference: PersonMatchReference,
+  referenceDirectory: string,
+  referencePaths: MutableHashSet.MutableHashSet<string>
+): Effect.fn.Return<boolean, FilesCommandError, Path.Path> {
+  yield* validateWorkerReferencePath(reference, referenceDirectory, referencePaths);
+  return yield* Bool.match(reference.accepted, {
+    onFalse: () => validateRejectedWorkerReference(reference),
+    onTrue: () => validateAcceptedWorkerReference(reference),
+  });
 });
 
 const validateWorkerReferences = Effect.fn("Files.validatePersonMatchWorkerReferences")(function* (

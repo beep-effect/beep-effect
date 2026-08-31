@@ -11,25 +11,25 @@ import { NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, FileSystem, flow, Layer, Match, Number as Num, Path } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
-import {
-  MatchPersonConfigError,
-  MatchPersonLicenseError,
-  MatchPersonModelAcquisitionError,
-  MatchPersonModelIntegrityError,
-  MatchPersonPathError,
-  MatchPersonProcessError,
-  MatchPersonProtocolError,
-  MatchPersonRuntimeError,
-  MatchPersonSemanticError,
-} from "./MatchPerson.errors.ts";
+import { MatchPersonError } from "./MatchPerson.errors.ts";
 import { prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "./MatchPerson.model-store.ts";
 import { decodePersonMatchWorkerReportJson } from "./MatchPerson.schemas.ts";
 import type * as Crypto from "effect/Crypto";
 import type { HttpClient } from "effect/unstable/http";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { PersonMatchWorkerServiceError } from "./MatchPerson.errors.ts";
+import type {
+  MatchPersonConfigError,
+  MatchPersonLicenseError,
+  MatchPersonModelAcquisitionError,
+  MatchPersonModelIntegrityError,
+  MatchPersonPathError,
+  MatchPersonRuntimeError,
+  MatchPersonSemanticError,
+  PersonMatchWorkerServiceError,
+} from "./MatchPerson.errors.ts";
 import type { PreparedAdaFaceArtifacts } from "./MatchPerson.model-store.ts";
 import type { MatchPersonOptions, PersonMatchWorkerReport, PersonMatchWorkerSuccess } from "./MatchPerson.schemas.ts";
 
@@ -138,55 +138,17 @@ type WorkerServiceRequirements =
   | HttpClient.HttpClient
   | ChildProcessSpawner.ChildProcessSpawner;
 
-const configError = (message: string, cause?: unknown): MatchPersonConfigError =>
-  MatchPersonConfigError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const pathError = (message: string, cause?: unknown): MatchPersonPathError =>
-  MatchPersonPathError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const licenseError = (message: string): MatchPersonLicenseError => MatchPersonLicenseError.make({ message });
-
-const acquisitionError = (message: string, cause?: unknown): MatchPersonModelAcquisitionError =>
-  MatchPersonModelAcquisitionError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const integrityError = (message: string, cause?: unknown): MatchPersonModelIntegrityError =>
-  MatchPersonModelIntegrityError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const runtimeError = (message: string, cause?: unknown): MatchPersonRuntimeError =>
-  MatchPersonRuntimeError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const processError = (message: string, cause?: unknown): MatchPersonProcessError =>
-  MatchPersonProcessError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const protocolError = (message: string, cause?: unknown): MatchPersonProtocolError =>
-  MatchPersonProtocolError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const semanticError = (message: string, cause?: unknown): MatchPersonSemanticError =>
-  MatchPersonSemanticError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
+const {
+  config: configError,
+  license: licenseError,
+  modelAcquisition: acquisitionError,
+  modelIntegrity: integrityError,
+  path: pathError,
+  process: processError,
+  protocol: protocolError,
+  runtime: runtimeError,
+  semantic: semanticError,
+} = MatchPersonError;
 
 const readOptionalConfig = (name: string): Effect.Effect<O.Option<string>, MatchPersonConfigError> =>
   Config.option(Config.string(name)).pipe(
@@ -452,53 +414,99 @@ const decodeWorkerExecution = Effect.fn("Files.PersonMatchWorker.decodeExecution
   return report;
 });
 
-const validateWorkerEnvelope = Effect.fn("Files.PersonMatchWorker.validateEnvelope")(function* (
+const requestedParametersMatch = (worker: PersonMatchWorkerSuccess, options: MatchPersonOptions): boolean => {
+  const parameters = worker.parameters;
+  return A.every(
+    [
+      parameters.backend === options.backend,
+      parameters.compute === options.compute,
+      Num.Equivalence(parameters.batchSize, options.batchSize),
+      parameters.precision === "fp32",
+      parameters.thresholdSource === options.thresholdSource,
+      Num.Equivalence(parameters.detectionThreshold, options.detectionThreshold),
+      Num.Equivalence(parameters.matchThreshold, options.matchThreshold),
+      Num.Equivalence(parameters.reviewThreshold, options.reviewThreshold),
+      Num.Equivalence(parameters.minFaceAreaPct, options.minFaceAreaPct),
+      parameters.recursive === options.recursive,
+    ],
+    P.isTruthy
+  );
+};
+
+const validateRequestedParameters = Effect.fn("Files.PersonMatchWorker.validateRequestedParameters")(function* (
+  worker: PersonMatchWorkerSuccess,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, MatchPersonSemanticError> {
+  if (!requestedParametersMatch(worker, options)) {
+    return yield* semanticError("Person-match worker reported parameters that do not match the requested scan.");
+  }
+});
+
+const validateRequestedModel = Effect.fn("Files.PersonMatchWorker.validateRequestedModel")(function* (
   worker: PersonMatchWorkerSuccess,
   options: MatchPersonOptions,
   inputs: CanonicalMatchPersonInputs
-): Effect.fn.Return<void, MatchPersonRuntimeError | MatchPersonSemanticError, Path.Path> {
+): Effect.fn.Return<void, MatchPersonSemanticError, Path.Path> {
   const path = yield* Path.Path;
-  const parameters = worker.parameters;
-  const runtime = worker.model.runtime;
-  if (
-    parameters.backend !== options.backend ||
-    parameters.compute !== options.compute ||
-    !Num.Equivalence(parameters.batchSize, options.batchSize) ||
-    parameters.precision !== "fp32" ||
-    parameters.thresholdSource !== options.thresholdSource ||
-    !Num.Equivalence(parameters.detectionThreshold, options.detectionThreshold) ||
-    !Num.Equivalence(parameters.matchThreshold, options.matchThreshold) ||
-    !Num.Equivalence(parameters.reviewThreshold, options.reviewThreshold) ||
-    !Num.Equivalence(parameters.minFaceAreaPct, options.minFaceAreaPct) ||
-    parameters.recursive !== options.recursive
-  ) {
-    return yield* semanticError("Person-match worker reported parameters that do not match the requested scan.");
-  }
   if (worker.model.backend !== options.backend || !Str.Equivalence(path.resolve(worker.model.root), inputs.modelRoot)) {
     return yield* semanticError("Person-match worker reported a backend or model root outside the selected cache.");
   }
-  if (runtime.actualCompute !== parameters.actualCompute || runtime.precision !== parameters.precision) {
-    return yield* semanticError("Person-match worker reported inconsistent runtime and parameter provenance.");
+});
+
+const validateRuntimeParameterEvidence = Effect.fn("Files.PersonMatchWorker.validateRuntimeParameterEvidence")(
+  function* (worker: PersonMatchWorkerSuccess): Effect.fn.Return<void, MatchPersonSemanticError> {
+    const parameters = worker.parameters;
+    const runtime = worker.model.runtime;
+    if (runtime.actualCompute !== parameters.actualCompute || runtime.precision !== parameters.precision) {
+      return yield* semanticError("Person-match worker reported inconsistent runtime and parameter provenance.");
+    }
+    const runtimeDevices = A.map(runtime.devices, (device) => device.index);
+    if (!deviceIndexesEquivalence(runtimeDevices, parameters.devices)) {
+      return yield* semanticError("Person-match worker reported inconsistent runtime device ordinals.");
+    }
+    if (
+      A.length(A.dedupe(runtimeDevices)) !== A.length(runtimeDevices) ||
+      A.length(A.dedupe(parameters.devices)) !== A.length(parameters.devices)
+    ) {
+      return yield* semanticError("Person-match worker reported duplicate runtime device ordinals.");
+    }
   }
-  const runtimeDevices = A.map(runtime.devices, (device) => device.index);
-  if (!deviceIndexesEquivalence(runtimeDevices, parameters.devices)) {
-    return yield* semanticError("Person-match worker reported inconsistent runtime device ordinals.");
+);
+
+const validateRequestedWorkerEvidence = Effect.fn("Files.PersonMatchWorker.validateRequestedEvidence")(function* (
+  worker: PersonMatchWorkerSuccess,
+  options: MatchPersonOptions,
+  inputs: CanonicalMatchPersonInputs
+): Effect.fn.Return<void, MatchPersonSemanticError, Path.Path> {
+  yield* validateRequestedParameters(worker, options);
+  yield* validateRequestedModel(worker, options, inputs);
+  yield* validateRuntimeParameterEvidence(worker);
+});
+
+const validateRequestedDeviceSelection = Effect.fn("Files.PersonMatchWorker.validateRequestedDeviceSelection")(
+  function* (
+    worker: PersonMatchWorkerSuccess,
+    options: MatchPersonOptions
+  ): Effect.fn.Return<void, MatchPersonRuntimeError | MatchPersonSemanticError> {
+    const parameters = worker.parameters;
+    if (
+      parameters.actualCompute === "rocm" &&
+      O.exists(options.devices, (requested) => !deviceIndexesEquivalence(parameters.devices, requested))
+    ) {
+      return yield* runtimeError("Person-match worker did not select the explicitly requested ROCm device.");
+    }
+    if (parameters.actualCompute === "cpu" && A.isReadonlyArrayNonEmpty(parameters.devices)) {
+      return yield* semanticError("Person-match worker reported GPU devices for CPU inference.");
+    }
   }
-  if (
-    A.length(A.dedupe(runtimeDevices)) !== A.length(runtimeDevices) ||
-    A.length(A.dedupe(parameters.devices)) !== A.length(parameters.devices)
-  ) {
-    return yield* semanticError("Person-match worker reported duplicate runtime device ordinals.");
-  }
-  if (
-    parameters.actualCompute === "rocm" &&
-    O.exists(options.devices, (requested) => !deviceIndexesEquivalence(parameters.devices, requested))
-  ) {
-    return yield* runtimeError("Person-match worker did not select the explicitly requested ROCm device.");
-  }
-  if (parameters.actualCompute === "cpu" && A.isReadonlyArrayNonEmpty(parameters.devices)) {
-    return yield* semanticError("Person-match worker reported GPU devices for CPU inference.");
-  }
+);
+
+const validateExplicitComputePolicy = Effect.fn("Files.PersonMatchWorker.validateExplicitComputePolicy")(function* (
+  worker: PersonMatchWorkerSuccess,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, MatchPersonRuntimeError> {
+  const parameters = worker.parameters;
+  const runtime = worker.model.runtime;
   if (options.compute === "rocm" && parameters.actualCompute !== "rocm") {
     return yield* runtimeError("Person-match worker silently substituted CPU for explicitly requested ROCm inference.");
   }
@@ -508,16 +516,50 @@ const validateWorkerEnvelope = Effect.fn("Files.PersonMatchWorker.validateEnvelo
   if (options.compute !== "auto" && A.isReadonlyArrayNonEmpty(runtime.warnings)) {
     return yield* runtimeError("Person-match worker reported a compute fallback for an explicit compute policy.");
   }
-  if (options.backend === "buffalo-l") {
-    if (
-      parameters.actualCompute !== "cpu" ||
-      runtime.framework !== "onnxruntime" ||
-      A.isReadonlyArrayNonEmpty(runtime.warnings)
-    ) {
-      return yield* runtimeError("The Buffalo backend reported an unexpected non-CPU ONNX runtime.");
-    }
-    return;
+});
+
+const validateWorkerComputeSelection = Effect.fn("Files.PersonMatchWorker.validateComputeSelection")(function* (
+  worker: PersonMatchWorkerSuccess,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, MatchPersonRuntimeError | MatchPersonSemanticError> {
+  yield* validateRequestedDeviceSelection(worker, options);
+  yield* validateExplicitComputePolicy(worker, options);
+});
+
+const validateBuffaloRuntime = Effect.fn("Files.PersonMatchWorker.validateBuffaloRuntime")(function* (
+  worker: PersonMatchWorkerSuccess
+): Effect.fn.Return<void, MatchPersonRuntimeError> {
+  const parameters = worker.parameters;
+  const runtime = worker.model.runtime;
+  if (
+    parameters.actualCompute !== "cpu" ||
+    runtime.framework !== "onnxruntime" ||
+    A.isReadonlyArrayNonEmpty(runtime.warnings)
+  ) {
+    return yield* runtimeError("The Buffalo backend reported an unexpected non-CPU ONNX runtime.");
   }
+});
+
+const validateAdaFaceRocmRuntime = Effect.fn("Files.PersonMatchWorker.validateAdaFaceRocmRuntime")(function* (
+  worker: PersonMatchWorkerSuccess
+): Effect.fn.Return<void, MatchPersonRuntimeError> {
+  const runtime = worker.model.runtime;
+  if (runtime.actualCompute !== "rocm") return;
+  if (O.isNone(runtime.hipVersion) || !Str.startsWith(adaFaceHipVersionPrefix)(runtime.hipVersion.value)) {
+    return yield* runtimeError("The AdaFace ROCm runtime did not report the pinned HIP 7.2 family.");
+  }
+  if (
+    A.length(runtime.devices) !== 1 ||
+    A.some(runtime.devices, (device) => !Str.Equivalence(device.architecture, adaFaceRocmArchitecture))
+  ) {
+    return yield* runtimeError("The AdaFace ROCm runtime requires exactly one selected gfx1201 device.");
+  }
+});
+
+const validateAdaFaceFramework = Effect.fn("Files.PersonMatchWorker.validateAdaFaceFramework")(function* (
+  worker: PersonMatchWorkerSuccess
+): Effect.fn.Return<void, MatchPersonRuntimeError> {
+  const runtime = worker.model.runtime;
   if (runtime.framework !== "pytorch") {
     return yield* runtimeError("The AdaFace backend reported an unexpected non-PyTorch runtime.");
   }
@@ -526,25 +568,53 @@ const validateWorkerEnvelope = Effect.fn("Files.PersonMatchWorker.validateEnvelo
       `The AdaFace backend did not report the pinned PyTorch runtime ${adaFaceRuntimePackageVersion}.`
     );
   }
-  if (runtime.actualCompute === "rocm") {
-    if (O.isNone(runtime.hipVersion) || !Str.startsWith(adaFaceHipVersionPrefix)(runtime.hipVersion.value)) {
-      return yield* runtimeError("The AdaFace ROCm runtime did not report the pinned HIP 7.2 family.");
-    }
+});
+
+const validateAdaFaceWarningProvenance = Effect.fn("Files.PersonMatchWorker.validateAdaFaceWarningProvenance")(
+  function* (
+    worker: PersonMatchWorkerSuccess,
+    options: MatchPersonOptions
+  ): Effect.fn.Return<void, MatchPersonRuntimeError> {
+    const runtime = worker.model.runtime;
     if (
-      A.length(runtime.devices) !== 1 ||
-      A.some(runtime.devices, (device) => !Str.Equivalence(device.architecture, adaFaceRocmArchitecture))
+      (options.compute === "auto" &&
+        runtime.actualCompute === "cpu" &&
+        (A.length(runtime.warnings) !== 1 || runtime.warnings[0]?.code !== "rocm-fallback-to-cpu")) ||
+      ((options.compute !== "auto" || runtime.actualCompute === "rocm") && A.isReadonlyArrayNonEmpty(runtime.warnings))
     ) {
-      return yield* runtimeError("The AdaFace ROCm runtime requires exactly one selected gfx1201 device.");
+      return yield* runtimeError("The AdaFace backend reported incoherent compute-fallback provenance.");
     }
   }
-  if (
-    (options.compute === "auto" &&
-      runtime.actualCompute === "cpu" &&
-      (A.length(runtime.warnings) !== 1 || runtime.warnings[0]?.code !== "rocm-fallback-to-cpu")) ||
-    ((options.compute !== "auto" || runtime.actualCompute === "rocm") && A.isReadonlyArrayNonEmpty(runtime.warnings))
-  ) {
-    return yield* runtimeError("The AdaFace backend reported incoherent compute-fallback provenance.");
-  }
+);
+
+const validateAdaFaceRuntime = Effect.fn("Files.PersonMatchWorker.validateAdaFaceRuntime")(function* (
+  worker: PersonMatchWorkerSuccess,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, MatchPersonRuntimeError> {
+  yield* validateAdaFaceFramework(worker);
+  yield* validateAdaFaceRocmRuntime(worker);
+  yield* validateAdaFaceWarningProvenance(worker, options);
+});
+
+const validateBackendRuntime = Effect.fn("Files.PersonMatchWorker.validateBackendRuntime")(function* (
+  worker: PersonMatchWorkerSuccess,
+  options: MatchPersonOptions
+): Effect.fn.Return<void, MatchPersonRuntimeError> {
+  return yield* Match.value(options.backend).pipe(
+    Match.when("buffalo-l", () => validateBuffaloRuntime(worker)),
+    Match.when("adaface-kprpe", () => validateAdaFaceRuntime(worker, options)),
+    Match.exhaustive
+  );
+});
+
+const validateWorkerEnvelope = Effect.fn("Files.PersonMatchWorker.validateEnvelope")(function* (
+  worker: PersonMatchWorkerSuccess,
+  options: MatchPersonOptions,
+  inputs: CanonicalMatchPersonInputs
+): Effect.fn.Return<void, MatchPersonRuntimeError | MatchPersonSemanticError, Path.Path> {
+  yield* validateRequestedWorkerEvidence(worker, options, inputs);
+  yield* validateWorkerComputeSelection(worker, options);
+  yield* validateBackendRuntime(worker, options);
 });
 
 const validateUniqueRecursiveReferenceNames = Effect.fn("Files.PersonMatchWorker.validateReferenceNames")(function* (

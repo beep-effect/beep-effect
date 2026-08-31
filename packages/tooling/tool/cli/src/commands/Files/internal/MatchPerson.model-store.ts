@@ -10,13 +10,13 @@ import { LiteralKit, NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Duration, Effect, Encoding, FileSystem, Match, Number as Num, Path, Schedule, Stream } from "effect";
-import * as Crypto from "effect/Crypto";
+import { Crypto, Duration, Effect, Encoding, FileSystem, Match, Number as Num, Path, Schedule, Stream } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { HttpClient, HttpClientError, HttpClientRequest } from "effect/unstable/http";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
-import { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";
+import { MatchPersonError } from "./MatchPerson.errors.ts";
+import type { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";
 import type { PersonMatchModel, PersonMatchModelArtifact } from "./MatchPerson.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.model-store");
@@ -148,17 +148,7 @@ export class PreparedAdaFaceArtifacts extends S.Class<PreparedAdaFaceArtifacts>(
 
 type ModelStoreRequirements = FileSystem.FileSystem | Path.Path | Crypto.Crypto | HttpClient.HttpClient;
 
-const acquisitionError = (message: string, cause?: unknown): MatchPersonModelAcquisitionError =>
-  MatchPersonModelAcquisitionError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
-
-const integrityError = (message: string, cause?: unknown): MatchPersonModelIntegrityError =>
-  MatchPersonModelIntegrityError.make({
-    message,
-    ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
-  });
+const { modelAcquisition: acquisitionError, modelIntegrity: integrityError } = MatchPersonError;
 
 const httpFailureDetail = (cause: unknown): string => {
   if (!HttpClientError.isHttpClientError(cause)) {
@@ -169,7 +159,7 @@ const httpFailureDetail = (cause: unknown): string => {
 };
 
 const isRetryableHttpFailure = (cause: unknown): boolean =>
-  HttpClientError.isHttpClientError(cause) && RetryableHttpFailureReason.is(cause.reason._tag);
+  HttpClientError.isHttpClientError(cause) && S.is(RetryableHttpFailureReason)(cause.reason._tag);
 
 const isRetryableModelDownloadFailure = (
   cause: MatchPersonModelAcquisitionError | MatchPersonModelIntegrityError
@@ -201,6 +191,16 @@ const inspectArtifact = Effect.fn("Files.PersonMatchModelStore.inspectArtifact")
   });
 });
 
+const validateObservedArtifact = Effect.fn("Files.PersonMatchModelStore.validateObservedArtifact")(function* (
+  artifact: PinnedModelArtifact,
+  observed: ObservedArtifact,
+  mismatchMessage: string
+): Effect.fn.Return<void, MatchPersonModelIntegrityError> {
+  if (!Num.Equivalence(observed.sizeBytes, artifact.sizeBytes) || !Str.Equivalence(observed.sha256, artifact.sha256)) {
+    return yield* integrityError(mismatchMessage);
+  }
+});
+
 const validateArtifactPath = Effect.fn("Files.PersonMatchModelStore.validateArtifactPath")(function* (
   artifact: PinnedModelArtifact,
   filePath: string
@@ -215,11 +215,11 @@ const validateArtifactPath = Effect.fn("Files.PersonMatchModelStore.validateArti
     return yield* integrityError(`Refusing a symlinked or aliased model artifact: "${resolved}".`);
   }
   const observed = yield* inspectArtifact(canonical);
-  if (!Num.Equivalence(observed.sizeBytes, artifact.sizeBytes) || !Str.Equivalence(observed.sha256, artifact.sha256)) {
-    return yield* integrityError(
-      `Model artifact integrity mismatch for ${artifact.component}: expected ${artifact.sizeBytes} bytes and SHA-256 ${artifact.sha256}.`
-    );
-  }
+  yield* validateObservedArtifact(
+    artifact,
+    observed,
+    `Model artifact integrity mismatch for ${artifact.component}: expected ${artifact.sizeBytes} bytes and SHA-256 ${artifact.sha256}.`
+  );
 });
 
 const expectedInstalledArtifacts = (
@@ -406,7 +406,8 @@ const downloadArtifactRangeAttempt = Effect.fn("Files.PersonMatchModelStore.down
       `Pinned ${artifact.component} model artifact byte range ${start}-${end} returned an invalid Content-Range header.`
     );
   }
-  if (!Str.Equivalence(response.headers["content-length"] ?? "", `${expectedSizeBytes}`)) {
+  const contentLength = response.headers["content-length"];
+  if (contentLength !== undefined && !Str.Equivalence(contentLength, `${expectedSizeBytes}`)) {
     return yield* integrityError(
       `Pinned ${artifact.component} model artifact byte range ${start}-${end} returned an invalid Content-Length header.`
     );
@@ -539,14 +540,11 @@ const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact
         })
       );
       const observed = yield* downloadArtifactAttempt(artifact, stagedPath, rangePath, client);
-      if (
-        !Num.Equivalence(observed.sizeBytes, artifact.sizeBytes) ||
-        !Str.Equivalence(observed.sha256, artifact.sha256)
-      ) {
-        return yield* integrityError(
-          `Downloaded ${artifact.component} model artifact failed integrity validation: expected ${artifact.sizeBytes} bytes and SHA-256 ${artifact.sha256}.`
-        );
-      }
+      yield* validateObservedArtifact(
+        artifact,
+        observed,
+        `Downloaded ${artifact.component} model artifact failed integrity validation: expected ${artifact.sizeBytes} bytes and SHA-256 ${artifact.sha256}.`
+      );
       yield* fs
         .rename(stagedPath, targetPath)
         .pipe(

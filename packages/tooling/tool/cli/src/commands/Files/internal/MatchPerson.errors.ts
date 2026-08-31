@@ -18,6 +18,16 @@ const failureFields = {
   cause: S.optionalKey(S.Defect({ includeStack: true })),
 };
 
+const failureConstructorFields = (message: string, cause?: unknown) => ({
+  message,
+  ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
+});
+
+const errorConstructor =
+  <E>(owner: { readonly make: (fields: ReturnType<typeof failureConstructorFields>) => E }) =>
+  (message: string, cause?: unknown): E =>
+    owner.make(failureConstructorFields(message, cause));
+
 /**
  * Typed refusal of invalid person-match configuration.
  *
@@ -264,6 +274,35 @@ export class MatchPersonMaterializationError extends S.TaggedError<MatchPersonMa
     description: "Failure to stage, verify, commit, or roll back person-match output copies and the manifest.",
   })
 ) {}
+
+/**
+ * Shared constructors for the private person-match typed error family.
+ *
+ * **Example** (Construct an integrity failure)
+ *
+ * ```ts
+ * import { MatchPersonError } from "./MatchPerson.errors.ts"
+ *
+ * const error = MatchPersonError.modelIntegrity("Recognizer bytes failed verification.")
+ * console.log(error._tag)
+ * ```
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
+export const MatchPersonError = {
+  config: errorConstructor(MatchPersonConfigError),
+  license: errorConstructor(MatchPersonLicenseError),
+  materialization: errorConstructor(MatchPersonMaterializationError),
+  modelAcquisition: errorConstructor(MatchPersonModelAcquisitionError),
+  modelIntegrity: errorConstructor(MatchPersonModelIntegrityError),
+  path: errorConstructor(MatchPersonPathError),
+  process: errorConstructor(MatchPersonProcessError),
+  protocol: errorConstructor(MatchPersonProtocolError),
+  runtime: errorConstructor(MatchPersonRuntimeError),
+  semantic: errorConstructor(MatchPersonSemanticError),
+};
 
 /**
  * Closed error channel returned by the private worker service.

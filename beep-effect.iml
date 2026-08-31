@@ -152,7 +152,6 @@
       <excludeFolder url="file://$MODULE_DIR$/explorations/oppold-corpus-overhaul" />
       <excludeFolder url="file://$MODULE_DIR$/explorations/typed-agent-skill-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/tools/skillopt/.venv" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/tooling/tool/cli/python/photo-face/.venv" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />
