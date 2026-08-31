@@ -10,6 +10,7 @@ import * as O from "@beep/utils/Option";
 import { Match } from "effect";
 import * as S from "effect/Schema";
 import { FilesCommandError } from "../Files.errors.ts";
+import { PersonMatchWorkerErrorCode } from "./MatchPerson.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.errors");
 
@@ -170,7 +171,10 @@ export class MatchPersonModelIntegrityError extends S.TaggedError<MatchPersonMod
  */
 export class MatchPersonRuntimeError extends S.TaggedError<MatchPersonRuntimeError>($I`MatchPersonRuntimeError`)(
   "MatchPersonRuntimeError",
-  failureFields,
+  {
+    ...failureFields,
+    workerCode: S.optionalKey(PersonMatchWorkerErrorCode),
+  },
   $I.annoteError<MatchPersonRuntimeError>("MatchPersonRuntimeError", {
     description: "Unsupported CPU or ROCm runtime selection, device selection, framework, or compute fallback.",
   })
@@ -301,6 +305,8 @@ export const MatchPersonError = {
   process: errorConstructor(MatchPersonProcessError),
   protocol: errorConstructor(MatchPersonProtocolError),
   runtime: errorConstructor(MatchPersonRuntimeError),
+  runtimeFromWorker: (workerCode: PersonMatchWorkerErrorCode, message: string) =>
+    MatchPersonRuntimeError.make({ message, workerCode }),
   semantic: errorConstructor(MatchPersonSemanticError),
 };
 

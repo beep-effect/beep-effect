@@ -226,6 +226,35 @@ export const PersonMatchFramework = LiteralKit(["onnxruntime", "pytorch"]).pipe(
 export type PersonMatchFramework = typeof PersonMatchFramework.Type;
 
 /**
+ * Enumerates the pinned PyTorch wheel families available to AdaFace.
+ *
+ * **Example** (Check a runtime distribution)
+ *
+ * ```ts
+ * import { PersonMatchPyTorchDistribution } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PersonMatchPyTorchDistribution.is("cpu"))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersonMatchPyTorchDistribution = LiteralKit(["rocm72", "cpu"]).pipe(
+  $I.annoteSchema("PersonMatchPyTorchDistribution", {
+    description: "The exact ROCm or CPU PyTorch wheel family selected for AdaFace inference.",
+  })
+);
+
+/**
+ * A pinned PyTorch wheel family available to AdaFace.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersonMatchPyTorchDistribution = typeof PersonMatchPyTorchDistribution.Type;
+
+/**
  * Enumerates non-fatal runtime warnings emitted during compute selection.
  *
  * **Example** (Check a runtime warning code)
@@ -477,6 +506,7 @@ export const PersonMatchWorkerErrorCode = LiteralKit([
   "unexpected-model-artifact",
   "unexpected-execution-provider",
   "unsupported-platform",
+  "pytorch-runtime-load-failed",
   "runtime-dependency-missing",
   "rocm-unavailable",
   "device-probe-failed",
@@ -859,9 +889,10 @@ export class PersonMatchOnnxRuntime extends S.Class<PersonMatchOnnxRuntime>($I`P
  *
  * **Details**
  *
- * The pinned wheel distribution is `2.9.1+rocm7.2.0.lw.git7e1940d4`, while
- * `torch.__version__` reports `2.9.1+rocm7.2.0.git7e1940d4`. Runtime provenance
- * records the latter value exactly.
+ * The pinned ROCm wheel distribution is `2.9.1+rocm7.2.0.lw.git7e1940d4`,
+ * while `torch.__version__` reports `2.9.1+rocm7.2.0.git7e1940d4`. The CPU
+ * fallback reports `2.9.1+cpu`. Runtime provenance records the selected wheel
+ * family and reported version exactly.
  *
  * **Example** (Create CPU PyTorch runtime provenance)
  *
@@ -869,7 +900,8 @@ export class PersonMatchOnnxRuntime extends S.Class<PersonMatchOnnxRuntime>($I`P
  * import { PersonMatchPyTorchRuntime } from "@beep/repo-cli/commands/Files"
  *
  * const runtime = PersonMatchPyTorchRuntime.make({
- *   packageVersion: "2.9.1+rocm7.2.0.git7e1940d4",
+ *   distribution: "cpu",
+ *   packageVersion: "2.9.1+cpu",
  *   actualCompute: "cpu",
  *   precision: "fp32",
  *   devices: [],
@@ -886,6 +918,7 @@ export class PersonMatchOnnxRuntime extends S.Class<PersonMatchOnnxRuntime>($I`P
 export class PersonMatchPyTorchRuntime extends S.Class<PersonMatchPyTorchRuntime>($I`PersonMatchPyTorchRuntime`)(
   {
     framework: S.tag("pytorch"),
+    distribution: PersonMatchPyTorchDistribution,
     packageVersion: S.NonEmptyString,
     hipVersion: S.OptionFromOptionalKey(S.NonEmptyString),
     actualCompute: PersonMatchActualCompute,
@@ -966,7 +999,8 @@ export class PersonMatchBuffaloModel extends S.Class<PersonMatchBuffaloModel>($I
  *   codeRevision: "308142aa50adf2e187711354f7524635d3414f1e",
  *   runtime: {
  *     framework: "pytorch",
- *     packageVersion: "2.9.1+rocm7.2.0.git7e1940d4",
+ *     distribution: "cpu",
+ *     packageVersion: "2.9.1+cpu",
  *     actualCompute: "cpu",
  *     precision: "fp32",
  *     devices: [],

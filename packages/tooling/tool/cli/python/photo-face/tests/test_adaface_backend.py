@@ -539,9 +539,60 @@ def test_auto_compute_falls_back_to_cpu_with_structured_warning() -> None:
     assert selection.warnings == (
         {
             "code": "rocm-fallback-to-cpu",
-            "message": "ROCm was unavailable, so AdaFace inference fell back to CPU.",
+            "message": (
+                "ROCm was unavailable, so AdaFace inference selected the pinned "
+                "CPU PyTorch distribution."
+            ),
         },
     )
+
+
+def test_auto_compute_requires_cpu_distribution_when_rocm_is_unavailable() -> None:
+    fake_torch = SimpleNamespace(
+        version=SimpleNamespace(hip="7.2"),
+        cuda=SimpleNamespace(is_available=lambda: False),
+    )
+    arguments = SimpleNamespace(compute="auto", devices=())
+
+    with pytest.raises(WorkerError) as raised:
+        adaface.resolve_compute(fake_torch, arguments)
+
+    assert raised.value.code == "rocm-unavailable"
+
+
+@pytest.mark.parametrize(
+    "load_error", [ImportError("missing"), OSError("native load failed")]
+)
+def test_pytorch_loader_failures_have_a_dedicated_code(
+    monkeypatch: pytest.MonkeyPatch, load_error: Exception
+) -> None:
+    def import_module(name: str) -> object:
+        if name == "torch":
+            raise load_error
+        return object()
+
+    monkeypatch.setattr(adaface.importlib, "import_module", import_module)
+
+    with pytest.raises(WorkerError) as raised:
+        adaface._import_adaface_dependencies()
+
+    assert raised.value.code == "pytorch-runtime-load-failed"
+
+
+def test_safetensors_loader_failure_is_not_a_pytorch_bootstrap_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def import_module(name: str) -> object:
+        if name == "torch":
+            return object()
+        raise ImportError("missing safetensors")
+
+    monkeypatch.setattr(adaface.importlib, "import_module", import_module)
+
+    with pytest.raises(WorkerError) as raised:
+        adaface._import_adaface_dependencies()
+
+    assert raised.value.code == "runtime-dependency-missing"
 
 
 def test_explicit_rocm_unavailability_is_typed() -> None:
@@ -607,17 +658,25 @@ def test_run_worker_selects_adaface_backend_and_emits_v2_protocol(
         batch_size=4,
         threshold_source="calibrated-default",
     )
+    fallback_warning = {
+        "code": "rocm-fallback-to-cpu",
+        "message": (
+            "ROCm was unavailable, so AdaFace inference selected the pinned "
+            "CPU PyTorch distribution."
+        ),
+    }
     model_payload = {
         "backend": "adaface-kprpe",
         "name": adaface.MODEL_NAME,
         "codeRevision": adaface.CODE_REVISION,
         "runtime": {
             "framework": "pytorch",
-            "packageVersion": "2.9.1+rocm7.2.0.git7e1940d4",
+            "distribution": "cpu",
+            "packageVersion": "2.9.1+cpu",
             "actualCompute": "cpu",
             "precision": "fp32",
             "devices": [],
-            "warnings": [],
+            "warnings": [fallback_warning],
         },
         "root": str(model_root),
         "components": [],
@@ -629,7 +688,7 @@ def test_run_worker_selects_adaface_backend_and_emits_v2_protocol(
             analysis=object(),
             align_face=object(),
             model=model_payload,
-            selection=RuntimeSelection("auto", "cpu", (), ()),
+            selection=RuntimeSelection("auto", "cpu", (), (), (fallback_warning,)),
         ),
     )
     monkeypatch.setattr(

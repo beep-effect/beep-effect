@@ -7,7 +7,7 @@
 
 import { fileURLToPath } from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, FileSystem, flow, Layer, Match, Number as Num, Path } from "effect";
@@ -34,6 +34,7 @@ import type { PreparedAdaFaceArtifacts } from "./MatchPerson.model-store.ts";
 import type {
   MatchPersonOptions,
   PersonMatchModel,
+  PersonMatchWorkerErrorCode,
   PersonMatchWorkerReport,
   PersonMatchWorkerSuccess,
 } from "./MatchPerson.schemas.ts";
@@ -45,7 +46,8 @@ const workerOutputBound = OutputBound.make({
   maxChars: 268_435_456,
   truncatedNotice: "\n[files match-person output truncated]",
 });
-const adaFaceRuntimePackageVersion = "2.9.1+rocm7.2.0.git7e1940d4";
+const adaFaceCpuRuntimePackageVersion = "2.9.1+cpu";
+const adaFaceRocmRuntimePackageVersion = "2.9.1+rocm7.2.0.git7e1940d4";
 const adaFaceHipVersionPrefix = "7.2";
 const adaFaceRocmArchitecture = "gfx1201";
 const rocmLibraryPathConfigName = "BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH";
@@ -53,6 +55,8 @@ const localRocmLibraryDirectorySegments = ["rocm-libs", "hipsparselt-7.2.4-1.1",
 const hipSparseLtSoname = "libhipsparselt.so.0";
 const hipSparseLtVersionedName = "libhipsparselt.so.0.2";
 const deviceIndexesEquivalence = S.toEquivalence(S.Array(NonNegativeInt));
+const PersonMatchWorkerEnvironment = LiteralKit(["primary", "cpu"]);
+type PersonMatchWorkerEnvironment = typeof PersonMatchWorkerEnvironment.Type;
 
 /**
  * Canonical paths and isolated caches supplied to one worker execution.
@@ -71,6 +75,7 @@ const deviceIndexesEquivalence = S.toEquivalence(S.Array(NonNegativeInt));
  *   outputDirectory: O.none(),
  *   referenceDirectory: "/photos/references",
  *   uvCacheRoot: "/cache/photo-face/uv-cache",
+ *   uvCpuEnvironment: "/cache/photo-face/venv-adaface-cpu-py312-v1",
  *   uvEnvironment: "/cache/photo-face/venv-adaface-rocm72-py312-v1",
  *   uvPath: "/usr/bin/uv"
  * })
@@ -90,6 +95,7 @@ export class CanonicalMatchPersonInputs extends S.Class<CanonicalMatchPersonInpu
     outputDirectory: S.Option(S.NonEmptyString),
     referenceDirectory: S.NonEmptyString,
     uvCacheRoot: S.NonEmptyString,
+    uvCpuEnvironment: S.NonEmptyString,
     uvEnvironment: S.NonEmptyString,
     uvPath: S.NonEmptyString,
   },
@@ -180,6 +186,7 @@ const {
   process: processError,
   protocol: protocolError,
   runtime: runtimeError,
+  runtimeFromWorker,
   semantic: semanticError,
 } = MatchPersonError;
 
@@ -250,13 +257,14 @@ const canonicalizeRocmLibraryDirectory = Effect.fn("Files.PersonMatchWorker.cano
 
 const resolveWorkerLibraryPath = Effect.fn("Files.PersonMatchWorker.resolveLibraryPath")(function* (
   options: MatchPersonOptions,
-  inputs: CanonicalMatchPersonInputs
+  inputs: CanonicalMatchPersonInputs,
+  environment: PersonMatchWorkerEnvironment
 ): Effect.fn.Return<
   O.Option<string>,
   MatchPersonConfigError | MatchPersonPathError,
   FileSystem.FileSystem | Path.Path
 > {
-  if (options.backend === "buffalo-l") return O.none();
+  if (options.backend === "buffalo-l" || environment === "cpu") return O.none();
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const configured = yield* readOptionalConfig(rocmLibraryPathConfigName);
@@ -350,12 +358,17 @@ const backendWorkerArguments = (
 const workerArguments = (
   options: MatchPersonOptions,
   inputs: CanonicalMatchPersonInputs,
-  artifacts: O.Option<PreparedAdaFaceArtifacts>
+  artifacts: O.Option<PreparedAdaFaceArtifacts>,
+  environment: PersonMatchWorkerEnvironment
 ): ReadonlyArray<string> => [
   "run",
   "--project",
   workerProjectDirectory,
-  ...(options.backend === "adaface-kprpe" ? ["--extra", "adaface"] : []),
+  ...Match.value(options.backend).pipe(
+    Match.when("buffalo-l", A.empty<string>),
+    Match.when("adaface-kprpe", () => ["--extra", environment === "cpu" ? "adaface-cpu" : "adaface"]),
+    Match.exhaustive
+  ),
   "--frozen",
   "--python",
   "3.12",
@@ -396,6 +409,7 @@ const workerFailureError = (report: PersonMatchWorkerReport): PersonMatchWorkerS
     return protocolError("Person-match worker reported success on a failed process exit.");
   }
   const message = `Person-match worker failed [${report.error.code}]: ${report.error.message}`;
+  const workerRuntimeError = () => runtimeFromWorker(report.error.code, message);
   return Match.value(report.error.code).pipe(
     Match.when("model-acquisition-incomplete", () => acquisitionError(message)),
     Match.when("model-acquisition-failed", () => acquisitionError(message)),
@@ -403,11 +417,12 @@ const workerFailureError = (report: PersonMatchWorkerReport): PersonMatchWorkerS
     Match.when("model-module-missing", () => integrityError(message)),
     Match.when("model-state-mismatch", () => integrityError(message)),
     Match.when("unexpected-model-artifact", () => integrityError(message)),
-    Match.when("unexpected-execution-provider", () => runtimeError(message)),
-    Match.when("unsupported-platform", () => runtimeError(message)),
-    Match.when("runtime-dependency-missing", () => runtimeError(message)),
-    Match.when("rocm-unavailable", () => runtimeError(message)),
-    Match.when("device-probe-failed", () => runtimeError(message)),
+    Match.when("unexpected-execution-provider", workerRuntimeError),
+    Match.when("unsupported-platform", workerRuntimeError),
+    Match.when("pytorch-runtime-load-failed", workerRuntimeError),
+    Match.when("runtime-dependency-missing", workerRuntimeError),
+    Match.when("rocm-unavailable", workerRuntimeError),
+    Match.when("device-probe-failed", workerRuntimeError),
     Match.orElse(() => protocolError(message))
   );
 };
@@ -578,6 +593,9 @@ const validateAdaFaceRocmRuntime = Effect.fn("Files.PersonMatchWorker.validateAd
 ): Effect.fn.Return<void, MatchPersonRuntimeError> {
   const runtime = worker.model.runtime;
   if (runtime.actualCompute !== "rocm") return;
+  if (runtime.distribution !== "rocm72") {
+    return yield* runtimeError("The AdaFace backend cannot report ROCm compute from the pinned CPU distribution.");
+  }
   if (O.isNone(runtime.hipVersion) || !Str.startsWith(adaFaceHipVersionPrefix)(runtime.hipVersion.value)) {
     return yield* runtimeError("The AdaFace ROCm runtime did not report the pinned HIP 7.2 family.");
   }
@@ -596,10 +614,21 @@ const validateAdaFaceFramework = Effect.fn("Files.PersonMatchWorker.validateAdaF
   if (runtime.framework !== "pytorch") {
     return yield* runtimeError("The AdaFace backend reported an unexpected non-PyTorch runtime.");
   }
-  if (!Str.Equivalence(runtime.packageVersion, adaFaceRuntimePackageVersion)) {
+  const expectedVersion = Match.value(runtime.distribution).pipe(
+    Match.when("rocm72", () => adaFaceRocmRuntimePackageVersion),
+    Match.when("cpu", () => adaFaceCpuRuntimePackageVersion),
+    Match.exhaustive
+  );
+  if (!Str.Equivalence(runtime.packageVersion, expectedVersion)) {
     return yield* runtimeError(
-      `The AdaFace backend did not report the pinned PyTorch runtime ${adaFaceRuntimePackageVersion}.`
+      `The AdaFace backend did not report the pinned ${runtime.distribution} PyTorch runtime ${expectedVersion}.`
     );
+  }
+  if (runtime.distribution === "rocm72" && runtime.actualCompute !== "rocm") {
+    return yield* runtimeError("The AdaFace ROCm distribution reported non-ROCm compute provenance.");
+  }
+  if (runtime.distribution === "cpu" && (runtime.actualCompute !== "cpu" || O.isSome(runtime.hipVersion))) {
+    return yield* runtimeError("The AdaFace CPU distribution reported incoherent HIP or compute provenance.");
   }
 });
 
@@ -664,16 +693,26 @@ const validateUniqueRecursiveReferenceNames = Effect.fn("Files.PersonMatchWorker
   }
 });
 
-const runWorker = Effect.fn("Files.PersonMatchWorker.run")(function* (
+const workerLibraryEnvironment = (
+  environment: PersonMatchWorkerEnvironment,
+  workerLibraryPath: O.Option<string>
+): Readonly<Record<string, string | undefined>> =>
+  Match.value(environment).pipe(
+    Match.when("primary", () => O.getSomesStruct({ LD_LIBRARY_PATH: workerLibraryPath })),
+    Match.when("cpu", () => ({ LD_LIBRARY_PATH: undefined })),
+    Match.exhaustive
+  );
+
+const runWorkerAttempt = Effect.fn("Files.PersonMatchWorker.runAttempt")(function* (
   options: MatchPersonOptions,
-  inputs: CanonicalMatchPersonInputs
+  inputs: CanonicalMatchPersonInputs,
+  artifacts: O.Option<PreparedAdaFaceArtifacts>,
+  environment: PersonMatchWorkerEnvironment
 ): Effect.fn.Return<PersonMatchWorkerSuccess, PersonMatchWorkerServiceError, WorkerServiceRequirements> {
-  yield* validateRuntimeRequest(options);
-  const workerLibraryPath = yield* resolveWorkerLibraryPath(options, inputs);
-  const artifacts = yield* prepareBackendArtifacts(options, inputs);
+  const workerLibraryPath = yield* resolveWorkerLibraryPath(options, inputs, environment);
   const result = yield* runCapturedStreams({
     command: inputs.uvPath,
-    args: workerArguments(options, inputs, artifacts),
+    args: workerArguments(options, inputs, artifacts, environment),
     cwd: workerProjectDirectory,
     extendEnv: true,
     env: {
@@ -681,8 +720,8 @@ const runWorker = Effect.fn("Files.PersonMatchWorker.run")(function* (
       PYTHONUTF8: "1",
       UV_CACHE_DIR: inputs.uvCacheRoot,
       UV_NO_PROGRESS: "1",
-      UV_PROJECT_ENVIRONMENT: inputs.uvEnvironment,
-      ...O.getSomesStruct({ LD_LIBRARY_PATH: workerLibraryPath }),
+      UV_PROJECT_ENVIRONMENT: environment === "cpu" ? inputs.uvCpuEnvironment : inputs.uvEnvironment,
+      ...workerLibraryEnvironment(environment, workerLibraryPath),
     },
     bound: workerOutputBound,
     trim: true,
@@ -693,6 +732,63 @@ const runWorker = Effect.fn("Files.PersonMatchWorker.run")(function* (
   yield* verifyModelArtifacts(worker.model, inputs.modelRoot);
   yield* validateUniqueRecursiveReferenceNames(worker, options.recursive);
   return worker;
+});
+
+const initialWorkerEnvironment = (options: MatchPersonOptions): PersonMatchWorkerEnvironment =>
+  Match.value(options.backend).pipe(
+    Match.when("buffalo-l", () => "primary" as const),
+    Match.when("adaface-kprpe", () => (options.compute === "cpu" ? "cpu" : "primary")),
+    Match.exhaustive
+  );
+
+const shouldRetryAdaFaceOnCpu = (
+  options: MatchPersonOptions,
+  environment: PersonMatchWorkerEnvironment,
+  workerCode: PersonMatchWorkerErrorCode | undefined
+): boolean =>
+  options.backend === "adaface-kprpe" &&
+  options.compute === "auto" &&
+  environment === "primary" &&
+  (workerCode === "pytorch-runtime-load-failed" ||
+    workerCode === "rocm-unavailable" ||
+    workerCode === "device-probe-failed");
+
+/**
+ * Exposes the runtime-attempt policy to package tests without making it part of the command API.
+ *
+ * **Example** (Inspect the policy)
+ *
+ * ```ts
+ * import { PersonMatchWorkerPolicyForTest } from "@beep/repo-cli/test/Files"
+ *
+ * console.log(typeof PersonMatchWorkerPolicyForTest.initialEnvironment)
+ * // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const PersonMatchWorkerPolicyForTest = {
+  initialEnvironment: initialWorkerEnvironment,
+  shouldRetryAdaFaceOnCpu,
+  workerLibraryEnvironment,
+};
+
+const runWorker = Effect.fn("Files.PersonMatchWorker.run")(function* (
+  options: MatchPersonOptions,
+  inputs: CanonicalMatchPersonInputs
+): Effect.fn.Return<PersonMatchWorkerSuccess, PersonMatchWorkerServiceError, WorkerServiceRequirements> {
+  yield* validateRuntimeRequest(options);
+  const artifacts = yield* prepareBackendArtifacts(options, inputs);
+  const environment = initialWorkerEnvironment(options);
+  return yield* runWorkerAttempt(options, inputs, artifacts, environment).pipe(
+    Effect.catchTag("MatchPersonRuntimeError", (error) =>
+      shouldRetryAdaFaceOnCpu(options, environment, error.workerCode)
+        ? runWorkerAttempt(options, inputs, artifacts, "cpu")
+        : Effect.fail(error)
+    )
+  );
 });
 
 const makePersonMatchWorkerService = Effect.fn("Files.PersonMatchWorkerService.make")(function* () {

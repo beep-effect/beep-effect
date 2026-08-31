@@ -1535,6 +1535,7 @@ describe("files command", { concurrent: false }, () => {
       codeRevision: "308142aa50adf2e187711354f7524635d3414f1e",
       runtime: {
         framework: "pytorch",
+        distribution: "rocm72",
         packageVersion: "2.9.1+rocm7.2.0.git7e1940d4",
         hipVersion: "7.2.26015-fc0010cf6a",
         actualCompute: "rocm",

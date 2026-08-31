@@ -99,13 +99,19 @@ RECOGNIZER = ArtifactDescriptor(
 def _import_adaface_dependencies() -> tuple[Any, Any]:
     try:
         torch = importlib.import_module("torch")
+    except (ImportError, OSError) as error:
+        raise WorkerError(
+            "pytorch-runtime-load-failed",
+            f"The pinned PyTorch runtime could not be loaded: {error}",
+        ) from error
+    try:
         safetensors_torch = importlib.import_module("safetensors.torch")
-    except ImportError as error:
+    except (ImportError, OSError) as error:
         raise WorkerError(
             "runtime-dependency-missing",
             (
-                "AdaFace requires the pinned optional 'adaface' environment with "
-                f"PyTorch and safetensors installed: {error}"
+                "AdaFace requires its pinned optional environment with "
+                f"safetensors installed: {error}"
             ),
         ) from error
     return torch, safetensors_torch
@@ -185,7 +191,7 @@ def resolve_compute(torch: Any, arguments: WorkerArguments) -> RuntimeSelection:
         cuda_available = bool(torch.cuda.is_available())
     except Exception:  # noqa: BLE001 - dependency boundary
         cuda_available = False
-    if not hip_version or not cuda_available:
+    if not hip_version:
         if arguments.compute == "rocm":
             raise WorkerError(
                 "rocm-unavailable",
@@ -200,33 +206,20 @@ def resolve_compute(torch: Any, arguments: WorkerArguments) -> RuntimeSelection:
                 {
                     "code": "rocm-fallback-to-cpu",
                     "message": (
-                        "ROCm was unavailable, so AdaFace inference fell back to CPU."
+                        "ROCm was unavailable, so AdaFace inference selected the "
+                        "pinned CPU PyTorch distribution."
                     ),
                 },
             ),
+        )
+    if not cuda_available:
+        raise WorkerError(
+            "rocm-unavailable",
+            "the pinned ROCm PyTorch runtime does not report an available HIP device",
         )
 
     ordinal = arguments.devices[0] if arguments.devices else 0
-    try:
-        runtime_device = _probe_device(torch, ordinal)
-    except WorkerError as error:
-        if arguments.compute == "rocm":
-            raise
-        return RuntimeSelection(
-            "auto",
-            "cpu",
-            (),
-            (),
-            (
-                {
-                    "code": "rocm-fallback-to-cpu",
-                    "message": (
-                        f"ROCm device {ordinal} failed its probe, so AdaFace fell "
-                        f"back to CPU: {error.message}"
-                    ),
-                },
-            ),
-        )
+    runtime_device = _probe_device(torch, ordinal)
     return RuntimeSelection(
         arguments.compute,
         "rocm",
@@ -888,15 +881,16 @@ def load_backend(arguments: WorkerArguments, detector_fallback: Any) -> LoadedBa
         device=device,
         batch_size=arguments.batch_size,
     )
+    hip_version = getattr(getattr(torch, "version", None), "hip", None)
     runtime: dict[str, Any] = {
         "framework": "pytorch",
+        "distribution": "rocm72" if hip_version else "cpu",
         "packageVersion": str(torch.__version__),
         "actualCompute": selection.actual_compute,
         "precision": "fp32",
         "devices": list(selection.runtime_devices),
         "warnings": list(selection.warnings),
     }
-    hip_version = getattr(getattr(torch, "version", None), "hip", None)
     if selection.actual_compute == "rocm" and hip_version:
         runtime["hipVersion"] = str(hip_version)
     model = {

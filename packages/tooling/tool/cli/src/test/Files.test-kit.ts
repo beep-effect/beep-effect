@@ -13,4 +13,7 @@ export {
   trustedUvRootDirectoriesForPlatform,
   validatePersonMatchBackendPlatform,
 } from "../commands/Files/internal/MatchPerson.ts";
-export { PersonMatchModelArtifactVerifier } from "../commands/Files/internal/MatchPerson.worker-service.ts";
+export {
+  PersonMatchModelArtifactVerifier,
+  PersonMatchWorkerPolicyForTest,
+} from "../commands/Files/internal/MatchPerson.worker-service.ts";

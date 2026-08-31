@@ -1,11 +1,30 @@
 import {
   defaultPersonMatchBackendForPlatform,
+  MatchPersonOptions,
+  PersonMatchWorkerPolicyForTest,
   trustedUvExecutableNameForPlatform,
   trustedUvRootDirectoriesForPlatform,
   validatePersonMatchBackendPlatform,
 } from "@beep/repo-cli/test/Files";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
+
+const makePersonMatchOptions = (
+  backend: "buffalo-l" | "adaface-kprpe",
+  compute: "auto" | "cpu" | "rocm"
+): MatchPersonOptions =>
+  MatchPersonOptions.make({
+    backend,
+    compute,
+    detectionThreshold: 0.5,
+    dir: "/photos/mixed",
+    manifest: "/reports/matches.json",
+    matchThreshold: 0.45,
+    minFaceAreaPct: 2,
+    references: "/photos/references",
+    reviewThreshold: 0.35,
+  });
 
 describe("person-match backend portability", () => {
   it("keeps AdaFace as the Linux x64 default", () => {
@@ -17,6 +36,51 @@ describe("person-match backend portability", () => {
     expect(defaultPersonMatchBackendForPlatform("darwin", "x64")).toBe("buffalo-l");
     expect(defaultPersonMatchBackendForPlatform("win32", "x64")).toBe("buffalo-l");
     expect(defaultPersonMatchBackendForPlatform("linux", "arm64")).toBe("buffalo-l");
+  });
+
+  it("selects isolated CPU and ROCm environments from the compute policy", () => {
+    expect(PersonMatchWorkerPolicyForTest.initialEnvironment(makePersonMatchOptions("buffalo-l", "auto"))).toBe(
+      "primary"
+    );
+    expect(PersonMatchWorkerPolicyForTest.initialEnvironment(makePersonMatchOptions("adaface-kprpe", "auto"))).toBe(
+      "primary"
+    );
+    expect(PersonMatchWorkerPolicyForTest.initialEnvironment(makePersonMatchOptions("adaface-kprpe", "rocm"))).toBe(
+      "primary"
+    );
+    expect(PersonMatchWorkerPolicyForTest.initialEnvironment(makePersonMatchOptions("adaface-kprpe", "cpu"))).toBe(
+      "cpu"
+    );
+  });
+
+  it("retries only automatic AdaFace compute failures that can be served by the CPU distribution", () => {
+    const automatic = makePersonMatchOptions("adaface-kprpe", "auto");
+    const explicitRocm = makePersonMatchOptions("adaface-kprpe", "rocm");
+
+    expect(
+      PersonMatchWorkerPolicyForTest.shouldRetryAdaFaceOnCpu(automatic, "primary", "pytorch-runtime-load-failed")
+    ).toBe(true);
+    expect(PersonMatchWorkerPolicyForTest.shouldRetryAdaFaceOnCpu(automatic, "primary", "rocm-unavailable")).toBe(true);
+    expect(PersonMatchWorkerPolicyForTest.shouldRetryAdaFaceOnCpu(automatic, "primary", "device-probe-failed")).toBe(
+      true
+    );
+    expect(
+      PersonMatchWorkerPolicyForTest.shouldRetryAdaFaceOnCpu(automatic, "primary", "runtime-dependency-missing")
+    ).toBe(false);
+    expect(
+      PersonMatchWorkerPolicyForTest.shouldRetryAdaFaceOnCpu(explicitRocm, "primary", "pytorch-runtime-load-failed")
+    ).toBe(false);
+    expect(PersonMatchWorkerPolicyForTest.shouldRetryAdaFaceOnCpu(automatic, "cpu", "rocm-unavailable")).toBe(false);
+  });
+
+  it("removes ROCm loader paths only from the CPU attempt", () => {
+    expect(PersonMatchWorkerPolicyForTest.workerLibraryEnvironment("primary", O.none())).toStrictEqual({});
+    expect(PersonMatchWorkerPolicyForTest.workerLibraryEnvironment("primary", O.some("/opt/rocm/lib"))).toStrictEqual({
+      LD_LIBRARY_PATH: "/opt/rocm/lib",
+    });
+    expect(PersonMatchWorkerPolicyForTest.workerLibraryEnvironment("cpu", O.none())).toStrictEqual({
+      LD_LIBRARY_PATH: undefined,
+    });
   });
 
   it("uses the native uv executable name on Windows", () => {

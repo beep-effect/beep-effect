@@ -28,10 +28,10 @@ uv run --project packages/tooling/tool/cli/python/photo-face \
   --accept-model-license
 ```
 
-AdaFace is isolated behind an optional Linux x64 environment so an ordinary
-Buffalo run does not install the 1.6 GB ROCm PyTorch wheel. It uses only pinned
-`safetensors` weights and the vendored fixed inference graph; remote Python code
-is never loaded.
+AdaFace is isolated behind mutually exclusive Linux x64 ROCm and CPU
+environments, so an ordinary Buffalo run installs neither PyTorch wheel. Both
+AdaFace environments use the same pinned `safetensors` weights and vendored
+fixed inference graph; remote Python code is never loaded.
 
 The pinned AMD wheel dynamically links ROCm's `libhipsparselt.so.0`. On
 CachyOS, install the matching `hipsparselt` package. For
@@ -40,16 +40,23 @@ preferred override: set it to one directory containing the compatible native
 library, not a colon-separated list. The repo CLI prepends that directory to
 the worker's library search path. When invoking this Python worker directly,
 supply the library directory together with the matching system
-`/opt/rocm/lib` through the parent process's `LD_LIBRARY_PATH`. A missing
-library is returned as the typed `runtime-dependency-missing` failure.
+`/opt/rocm/lib` through the parent process's `LD_LIBRARY_PATH`. A PyTorch native
+loader failure is returned as the typed `pytorch-runtime-load-failed` failure.
 
-The repo CLI defaults to AdaFace on Linux x64. Linux arm64, macOS x64/arm64,
-and Windows x64 default to Buffalo CPU. Other host/architecture pairs fail
-before cache or model acquisition because the frozen environment has no
-complete wheel set for them. Explicit AdaFace selection outside Linux x64
-fails at the same preflight boundary. This complete AdaFace example requires
-ROCm device 0 and writes only the requested manifest; add `--out-dir` when
-non-destructive accepted/review copies are also wanted:
+The repo CLI defaults to AdaFace on Linux x64. With `--compute auto`, it tries
+the pinned ROCm environment first and retries the same AdaFace model once in a
+separate pinned CPU environment when PyTorch cannot load ROCm or the selected
+device fails its probe. The first automatic run can therefore create both
+environments. CPU AdaFace preserves the recognition model and thresholds but
+is substantially slower. `--compute cpu` selects the CPU environment directly;
+`--compute rocm` is fail-closed and never retries.
+
+Linux arm64, macOS x64/arm64, and Windows x64 default to Buffalo CPU. Other
+host/architecture pairs fail before cache or model acquisition because the
+frozen environment has no complete wheel set for them. Explicit AdaFace
+selection outside Linux x64 fails at the same preflight boundary. This complete
+AdaFace example requires ROCm device 0 and writes only the requested manifest;
+add `--out-dir` when non-destructive accepted/review copies are also wanted:
 
 ```sh
 BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH=/path/to/compatible/rocm/lib \
@@ -78,12 +85,28 @@ image is forced to `review`. Both cases carry the durable
 after any alignment rejection. This avoids both discarding a valid group and
 auto-accepting an ambiguously detected group.
 
+Direct worker invocation selects exactly one environment and does not perform
+the repo CLI's two-environment retry. Run the ROCm distribution explicitly:
+
 ```sh
 LD_LIBRARY_PATH=/path/to/compatible/rocm/lib:/opt/rocm/lib \
   uv run --project packages/tooling/tool/cli/python/photo-face \
   --frozen --python 3.12 --extra adaface -m beep_photo_face \
   --backend adaface-kprpe \
-  --compute auto \
+  --compute rocm \
+  --references /path/to/references \
+  --candidates /path/to/candidates \
+  --model-root /path/to/model-cache \
+  --accept-model-license
+```
+
+Or run the pinned CPU distribution directly:
+
+```sh
+uv run --project packages/tooling/tool/cli/python/photo-face \
+  --frozen --python 3.12 --extra adaface-cpu -m beep_photo_face \
+  --backend adaface-kprpe \
+  --compute cpu \
   --references /path/to/references \
   --candidates /path/to/candidates \
   --model-root /path/to/model-cache \

@@ -230,6 +230,7 @@ class CanonicalMatchPersonCacheChildren extends S.Class<CanonicalMatchPersonCach
   {
     modelRoot: S.NonEmptyString,
     uvCacheRoot: S.NonEmptyString,
+    uvCpuEnvironment: S.NonEmptyString,
     uvEnvironment: S.NonEmptyString,
   },
   $I.annote("CanonicalMatchPersonCacheChildren", {
@@ -497,9 +498,19 @@ const canonicalizeMatchPersonCacheChildren = Effect.fn("Files.canonicalizeMatchP
     Match.when("adaface-kprpe", () => "venv-adaface-rocm72-py312-v1"),
     Match.exhaustive
   );
+  const cpuEnvironmentChild = Match.value(backend).pipe(
+    Match.when("buffalo-l", () => environmentChild),
+    Match.when("adaface-kprpe", () => "venv-adaface-cpu-py312-v1"),
+    Match.exhaustive
+  );
   return CanonicalMatchPersonCacheChildren.make({
     modelRoot: yield* canonicalizeMatchPersonCacheChild(cacheRoot, modelChild, "person-match model directory"),
     uvCacheRoot: yield* canonicalizeMatchPersonCacheChild(cacheRoot, "uv-cache", "person-match uv cache directory"),
+    uvCpuEnvironment: yield* canonicalizeMatchPersonCacheChild(
+      cacheRoot,
+      cpuEnvironmentChild,
+      "person-match CPU uv environment"
+    ),
     uvEnvironment: yield* canonicalizeMatchPersonCacheChild(cacheRoot, environmentChild, "person-match uv environment"),
   });
 });
@@ -659,7 +670,13 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
     candidateDirectory,
     referenceDirectory,
     manifestPath,
-    [canonicalCacheRoot, cacheChildren.modelRoot, cacheChildren.uvEnvironment, cacheChildren.uvCacheRoot],
+    [
+      canonicalCacheRoot,
+      cacheChildren.modelRoot,
+      cacheChildren.uvEnvironment,
+      cacheChildren.uvCpuEnvironment,
+      cacheChildren.uvCacheRoot,
+    ],
     outputDirectory
   );
 
@@ -671,6 +688,7 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
     outputDirectory,
     referenceDirectory,
     uvCacheRoot: cacheChildren.uvCacheRoot,
+    uvCpuEnvironment: cacheChildren.uvCpuEnvironment,
     uvEnvironment: cacheChildren.uvEnvironment,
     uvPath,
   });
@@ -959,6 +977,7 @@ const validateBuffaloWorkerRuntime = Effect.fn("Files.validateBuffaloPersonMatch
 });
 
 const isPinnedAdaFaceRocmRuntime = (runtime: PersonMatchPyTorchRuntime): boolean =>
+  runtime.distribution === "rocm72" &&
   O.exists(runtime.hipVersion, Str.startsWith(adaFaceHipVersionPrefix)) &&
   A.length(runtime.devices) === 1 &&
   A.every(runtime.devices, (device) => Str.Equivalence(device.architecture, adaFaceRocmArchitecture));
