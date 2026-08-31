@@ -1,5 +1,5 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { Encoding, Equal, HashSet, Number as N, Order, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -43,6 +43,7 @@ export const CorpusPaperId = S.String.check(
   ])
 ).pipe(
   S.brand("CorpusPaperId"),
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("CorpusPaperId", {
     description: "Twelve-character lowercase hexadecimal academia corpus identifier.",
   })
@@ -124,8 +125,8 @@ export class CorpusManifestRow extends S.Class<CorpusManifestRow>($I`CorpusManif
 ) {}
 
 const CorpusManifestSelectionFields = S.Struct({
-  rule: S.Literal("first-25-by-id"),
-  take: S.Literal(25),
+  rule: S.tag("first-25-by-id"),
+  take: S.tag(25),
   onDisk: NonNegativeInt,
 });
 

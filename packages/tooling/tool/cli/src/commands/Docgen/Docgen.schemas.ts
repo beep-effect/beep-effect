@@ -155,6 +155,7 @@ export class DocgenWorkspacePackage extends S.Class<DocgenWorkspacePackage>($I`D
     relativePath: S.String,
     absolutePath: S.String,
     docsOutputPath: S.String,
+    generatedDocsModulesPath: S.String.pipe(SchemaUtils.withKeyDefaults("docs/modules")),
     hasDocgenConfig: S.Boolean,
     hasGeneratedDocs: S.Boolean,
     status: DocgenPackageStatus,
