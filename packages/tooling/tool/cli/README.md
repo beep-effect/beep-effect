@@ -243,10 +243,13 @@ into nested directories.
 
 Find photos containing one target person using a trusted directory of
 single-person reference photos. Matching stays on the workstation and never
-writes raw face embeddings to disk. The default backend combines InsightFace's
-`det_10g` face detector with DFA MobileNet alignment and CVLFace AdaFace
-ViT-Base KP-RPE recognition. An explicit `--backend buffalo-l --compute cpu`
-fallback uses the older InsightFace detector and ArcFace recognizer.
+writes raw face embeddings to disk. On Linux x64, the default backend combines
+InsightFace's `det_10g` face detector with DFA MobileNet alignment and CVLFace
+AdaFace ViT-Base KP-RPE recognition. Linux arm64, macOS x64/arm64, and Windows
+x64 hosts default to the InsightFace Buffalo CPU backend. Other host/architecture
+pairs, including Windows arm64, fail before cache or model acquisition because
+the frozen environment has no complete wheel set for them. Explicit AdaFace
+selection outside Linux x64 fails at the same preflight boundary.
 
 ```bash
 bun run beep files match-person \
@@ -267,8 +270,8 @@ and [InsightFace detector](https://github.com/deepinsight/insightface/blob/maste
 terms before passing `--accept-model-license`. The flag records the caller's
 confirmation; it does not grant or change a license.
 
-The first AdaFace run creates a pinned Python 3.12 environment and downloads
-the hash-verified aligner and recognizer into
+On Linux x64, the first AdaFace run creates a pinned Python 3.12 environment
+and downloads the hash-verified aligner and recognizer into
 `${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`. The AMD runtime also needs a
 compatible `libhipsparselt.so.0`. Install the matching ROCm `hipsparselt`
 package, or set `BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH` to the one directory that

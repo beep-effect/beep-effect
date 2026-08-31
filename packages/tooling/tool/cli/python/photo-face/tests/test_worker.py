@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+from dataclasses import replace
 import errno
 import hashlib
 import json
@@ -642,3 +643,66 @@ def test_run_worker_emits_success_report_shape(
     assert report["entries"][0]["relativePath"] == "candidate.jpg"
     assert report["elapsedSeconds"] >= 0.0
     assert "embedding" not in json.dumps(report).casefold()
+
+
+def test_run_worker_rejects_duplicate_recursive_reference_names_before_candidates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    arguments = replace(make_worker_arguments(tmp_path), recursive=True)
+    first_reference = arguments.reference_dir / "first" / "reference.jpg"
+    second_reference = arguments.reference_dir / "second" / "reference.jpg"
+    candidate_path = arguments.source_dir / "candidate.jpg"
+    first_reference.parent.mkdir()
+    second_reference.parent.mkdir()
+    first_reference.touch()
+    second_reference.touch()
+    candidate_path.touch()
+    detector_path = tmp_path / "det_10g.onnx"
+    recognizer_path = tmp_path / "w600k_r50.onnx"
+    detector_path.write_bytes(b"detector")
+    recognizer_path.write_bytes(b"recognizer")
+
+    monkeypatch.setattr(
+        worker,
+        "ensure_model_available",
+        lambda _arguments: [detector_path, recognizer_path],
+    )
+    monkeypatch.setattr(
+        worker,
+        "load_face_analysis",
+        lambda _arguments, _artifacts: (object(), "1.0.1", object()),
+    )
+    monkeypatch.setattr(
+        worker,
+        "collect_references",
+        lambda _analysis, _paths: (
+            [
+                {
+                    "sourceName": path.name,
+                    "sourcePath": str(path),
+                    "accepted": True,
+                    "faceCount": 1,
+                }
+                for path in (first_reference, second_reference)
+            ],
+            [
+                np.array([1.0, 0.0], dtype=np.float32),
+                np.array([1.0, 0.0], dtype=np.float32),
+            ],
+            [first_reference.name, second_reference.name],
+        ),
+    )
+
+    def candidate_must_not_be_scanned(*_args: object) -> dict[str, object]:
+        raise AssertionError("candidate scan must not start")
+
+    monkeypatch.setattr(worker, "candidate_entry", candidate_must_not_be_scanned)
+
+    with pytest.raises(WorkerError) as raised:
+        run_worker(arguments, time.perf_counter())
+
+    assert raised.value.code == "invalid-arguments"
+    assert raised.value.message == (
+        "Recursive person-match references contain duplicate accepted file names. "
+        "Rename references so face evidence remains unambiguous."
+    )

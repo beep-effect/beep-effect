@@ -28,8 +28,8 @@ uv run --project packages/tooling/tool/cli/python/photo-face \
   --accept-model-license
 ```
 
-AdaFace is isolated behind an optional environment so an ordinary Buffalo run
-does not install the 1.6 GB ROCm PyTorch wheel. It uses only pinned
+AdaFace is isolated behind an optional Linux x64 environment so an ordinary
+Buffalo run does not install the 1.6 GB ROCm PyTorch wheel. It uses only pinned
 `safetensors` weights and the vendored fixed inference graph; remote Python code
 is never loaded.
 
@@ -43,9 +43,13 @@ supply the library directory together with the matching system
 `/opt/rocm/lib` through the parent process's `LD_LIBRARY_PATH`. A missing
 library is returned as the typed `runtime-dependency-missing` failure.
 
-The repo CLI defaults to AdaFace. This complete example requires ROCm device 0
-and writes only the requested manifest; add `--out-dir` when non-destructive
-accepted/review copies are also wanted:
+The repo CLI defaults to AdaFace on Linux x64. Linux arm64, macOS x64/arm64,
+and Windows x64 default to Buffalo CPU. Other host/architecture pairs fail
+before cache or model acquisition because the frozen environment has no
+complete wheel set for them. Explicit AdaFace selection outside Linux x64
+fails at the same preflight boundary. This complete AdaFace example requires
+ROCm device 0 and writes only the requested manifest; add `--out-dir` when
+non-destructive accepted/review copies are also wanted:
 
 ```sh
 BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH=/path/to/compatible/rocm/lib \

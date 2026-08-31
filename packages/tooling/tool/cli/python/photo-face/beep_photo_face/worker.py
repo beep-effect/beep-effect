@@ -770,6 +770,19 @@ def collect_references(
     return entries, embeddings, names
 
 
+def validate_unique_recursive_reference_names(
+    reference_names: Sequence[str], recursive: bool
+) -> None:
+    if recursive and len(set(reference_names)) != len(reference_names):
+        raise WorkerError(
+            "invalid-arguments",
+            (
+                "Recursive person-match references contain duplicate accepted file names. "
+                "Rename references so face evidence remains unambiguous."
+            ),
+        )
+
+
 def candidate_entry(
     analysis: Any,
     path: Path,
@@ -962,6 +975,7 @@ def run_worker(arguments: WorkerArguments, started_at: float) -> dict[str, Any]:
     references, reference_vectors, reference_names = collect_references(
         analysis, reference_paths
     )
+    validate_unique_recursive_reference_names(reference_names, arguments.recursive)
     if not reference_vectors:
         raise WorkerError(
             "no-accepted-references",

@@ -1687,6 +1687,7 @@ describe("files command", { concurrent: false }, () => {
           const workerMarkerPath = path.join(tmpDir, "worker-started");
           yield* fs.makeDirectory(candidateDir, { recursive: true });
           yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* fs.writeFileString(path.join(referenceDir, "reference.jpg"), "reference");
           yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
 
           const message = yield* withEnvVar(
@@ -1714,6 +1715,48 @@ describe("files command", { concurrent: false }, () => {
       )
     )
   );
+
+  it("rejects an empty reference directory before AdaFace acquisition or worker startup", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const candidateDir = path.join(tmpDir, "candidates");
+          const referenceDir = path.join(tmpDir, "references");
+          const cacheDir = path.join(tmpDir, "cache");
+          const manifestPath = path.join(tmpDir, "person-match.json");
+          const uvPath = path.join(tmpDir, "uv");
+          const workerMarkerPath = path.join(tmpDir, "worker-started");
+          yield* fs.makeDirectory(candidateDir, { recursive: true });
+          yield* fs.makeDirectory(referenceDir, { recursive: true });
+          yield* fs.writeFileString(path.join(candidateDir, "candidate.jpg"), "candidate");
+          yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
+
+          const message = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              manifestPath,
+              "--accept-model-license",
+            ])
+          );
+
+          expect(message).toContain("Reference directory contains no supported");
+          expect(yield* fs.exists(workerMarkerPath)).toBe(false);
+          expect(yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"))).toBe(false);
+          expect(yield* fs.exists(manifestPath)).toBe(false);
+        })
+      )
+    ));
 
   it("resolves Buffalo thresholds and requires an exact v2 worker parameter echo", () =>
     Effect.runPromise(

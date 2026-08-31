@@ -667,6 +667,7 @@ export type PersonMatchDeviceIndexesFromCsv = typeof PersonMatchDeviceIndexesFro
  *   dir: "/photos",
  *   references: "/references",
  *   manifest: "/reports/person-match.json",
+ *   backend: "adaface-kprpe",
  *   recursive: true,
  *   detectionThreshold: 0.6,
  *   matchThreshold: 0.5,
@@ -691,7 +692,7 @@ export class MatchPersonOptions extends S.Class<MatchPersonOptions>($I`MatchPers
     manifest: S.NonEmptyString,
     outDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     cacheDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
-    backend: PersonMatchBackend.pipe(S.withConstructorDefault(Effect.succeed("adaface-kprpe"))),
+    backend: PersonMatchBackend,
     compute: PersonMatchComputePolicy.pipe(S.withConstructorDefault(Effect.succeed("auto"))),
     devices: S.Option(PersonMatchRequestedDeviceIndexes).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<typeof PersonMatchRequestedDeviceIndexes.Type>()))

@@ -7,4 +7,10 @@
 
 export * from "../commands/Files/index.ts";
 export { acquirePinnedPersonMatchArtifactForTest } from "../commands/Files/internal/MatchPerson.model-store.ts";
+export {
+  defaultPersonMatchBackendForPlatform,
+  trustedUvExecutableNameForPlatform,
+  trustedUvRootDirectoriesForPlatform,
+  validatePersonMatchBackendPlatform,
+} from "../commands/Files/internal/MatchPerson.ts";
 export { PersonMatchModelArtifactVerifier } from "../commands/Files/internal/MatchPerson.worker-service.ts";

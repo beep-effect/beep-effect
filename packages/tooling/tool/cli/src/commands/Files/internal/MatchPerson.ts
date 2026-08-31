@@ -7,9 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import { A, Str } from "@beep/utils";
+import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, flow, Match, MutableHashSet, Number as Num, Path, pipe } from "effect";
 import * as Bool from "effect/Boolean";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -30,6 +31,7 @@ import { encodePersonMatchReport, PersonMatchModel, PersonMatchReport } from "./
 import { CanonicalMatchPersonInputs, PersonMatchWorkerService } from "./MatchPerson.worker-service.ts";
 import type {
   MatchPersonOptions,
+  PersonMatchBackend,
   PersonMatchDisposition,
   PersonMatchEntry,
   PersonMatchModelArtifact,
@@ -58,6 +60,150 @@ const PersonMatchSupportedImageExtension = LiteralKit(["jpg", "jpeg", "png", "we
   })
 );
 const isPersonMatchSupportedImageExtension = S.is(PersonMatchSupportedImageExtension);
+
+const adaFaceRuntimeSupportsPlatform = (platform: string, architecture: string): boolean =>
+  Str.Equivalence(platform, "linux") && Str.Equivalence(architecture, "x64");
+
+const buffaloRuntimeSupportsPlatform = (platform: string, architecture: string): boolean =>
+  Match.value(platform).pipe(
+    Match.when("linux", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
+    Match.when("darwin", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
+    Match.when("win32", () => Str.Equivalence(architecture, "x64")),
+    Match.orElse(() => false)
+  );
+
+/**
+ * Select the strongest person-match backend whose pinned runtime supports the host.
+ *
+ * **Example** (Select a portable backend)
+ *
+ * ```ts
+ * import { defaultPersonMatchBackendForPlatform } from "./MatchPerson.ts"
+ *
+ * console.log(defaultPersonMatchBackendForPlatform("darwin", "arm64"))
+ * // "buffalo-l"
+ * ```
+ *
+ * @param platform - Node.js host platform identifier.
+ * @param architecture - Node.js host architecture identifier.
+ * @returns AdaFace on Linux x64 and the portable Buffalo CPU backend elsewhere.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const defaultPersonMatchBackendForPlatform: {
+  (platform: string, architecture: string): PersonMatchBackend;
+  (architecture: string): (platform: string) => PersonMatchBackend;
+} = dual(
+  2,
+  (platform: string, architecture: string): PersonMatchBackend =>
+    Bool.match(adaFaceRuntimeSupportsPlatform(platform, architecture), {
+      onFalse: () => "buffalo-l",
+      onTrue: () => "adaface-kprpe",
+    })
+);
+
+/**
+ * Resolve the trusted uv executable leaf for a host platform.
+ *
+ * **Example** (Select the Windows executable)
+ *
+ * ```ts
+ * import { trustedUvExecutableNameForPlatform } from "./MatchPerson.ts"
+ *
+ * console.log(trustedUvExecutableNameForPlatform("win32"))
+ * // "uv.exe"
+ * ```
+ *
+ * @param platform - Node.js host platform identifier.
+ * @returns The platform-specific uv executable filename.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const trustedUvExecutableNameForPlatform = (platform: string): string =>
+  Match.value(platform).pipe(
+    Match.when("win32", () => "uv.exe"),
+    Match.orElse(() => "uv")
+  );
+
+/**
+ * Resolve the fixed system directories eligible for trusted uv discovery.
+ *
+ * **Example** (Avoid POSIX roots on Windows)
+ *
+ * ```ts
+ * import { trustedUvRootDirectoriesForPlatform } from "./MatchPerson.ts"
+ *
+ * console.log(trustedUvRootDirectoriesForPlatform("win32"))
+ * // []
+ * ```
+ *
+ * @param platform - Node.js host platform identifier.
+ * @returns POSIX trusted roots on non-Windows hosts and no fixed roots on Windows.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const trustedUvRootDirectoriesForPlatform = (platform: string): ReadonlyArray<string> =>
+  Bool.match(Str.Equivalence(platform, "win32"), {
+    onFalse: () => trustedUvRoots,
+    onTrue: A.empty<string>,
+  });
+
+/**
+ * Validate that the selected backend has a pinned runtime for the host.
+ *
+ * **Example** (Validate the portable backend)
+ *
+ * ```ts
+ * import { validatePersonMatchBackendPlatform } from "./MatchPerson.ts"
+ *
+ * const validation = validatePersonMatchBackendPlatform("buffalo-l", "win32", "x64")
+ * console.log(validation.pipe !== undefined)
+ * // true
+ * ```
+ *
+ * @param backend - Explicit or host-derived person-match backend.
+ * @param platform - Node.js host platform identifier.
+ * @param architecture - Node.js host architecture identifier.
+ * @returns An Effect that fails before artifact acquisition when the backend is unavailable.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const validatePersonMatchBackendPlatform = Effect.fn("Files.validatePersonMatchBackendPlatform")(function* (
+  backend: PersonMatchBackend,
+  platform: string,
+  architecture: string
+): Effect.fn.Return<void, FilesCommandError> {
+  const supported = Match.value(backend).pipe(
+    Match.when("buffalo-l", () => buffaloRuntimeSupportsPlatform(platform, architecture)),
+    Match.when("adaface-kprpe", () => adaFaceRuntimeSupportsPlatform(platform, architecture)),
+    Match.exhaustive
+  );
+  return yield* Bool.match(supported, {
+    onFalse: () =>
+      FilesCommandError.make({
+        message: Match.value(backend).pipe(
+          Match.when(
+            "buffalo-l",
+            () =>
+              `InsightFace Buffalo is unavailable on ${platform}/${architecture}; its pinned CPU environment ` +
+              "supports Linux x64/arm64, macOS x64/arm64, and Windows x64."
+          ),
+          Match.when(
+            "adaface-kprpe",
+            () =>
+              `AdaFace KP-RPE is unavailable on ${platform}/${architecture}; its pinned ROCm PyTorch runtime ` +
+              "supports only Linux x64. Re-run with --backend buffalo-l --compute cpu."
+          ),
+          Match.exhaustive
+        ),
+      }),
+    onTrue: () => Effect.void,
+  });
+});
 
 const approximatelyEqualWorkerScore = (left: number, right: number): boolean =>
   Num.max(Num.subtract(left, right), Num.subtract(right, left)) <= workerScoreRoundingTolerance;
@@ -270,6 +416,18 @@ const readOptionalConfig = (name: string): Effect.Effect<O.Option<string>> =>
     Effect.map(flow(O.map(Str.trim), O.filter(Str.isNonEmpty)))
   );
 
+const readConfiguredHome = Effect.fn("Files.matchPersonReadConfiguredHome")(function* (): Effect.fn.Return<
+  O.Option<string>
+> {
+  const [home, userProfile] = yield* Effect.all([readOptionalConfig("HOME"), readOptionalConfig("USERPROFILE")], {
+    concurrency: 2,
+  });
+  return pipe(
+    home,
+    O.orElse(() => userProfile)
+  );
+});
+
 const canonicalizeExistingDirectory = Effect.fn("Files.matchPersonCanonicalizeDirectory")(function* (
   directory: string,
   description: string
@@ -296,7 +454,7 @@ const resolveCacheRoot = Effect.fn("Files.matchPersonResolveCacheRoot")(function
 ): Effect.fn.Return<string, FilesCommandError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const xdgCacheHome = yield* readOptionalConfig("XDG_CACHE_HOME");
-  const home = yield* readOptionalConfig("HOME");
+  const home = yield* readConfiguredHome();
   const selected = pipe(
     configured,
     O.map(path.resolve),
@@ -306,7 +464,7 @@ const resolveCacheRoot = Effect.fn("Files.matchPersonResolveCacheRoot")(function
 
   if (O.isNone(selected)) {
     return yield* FilesCommandError.make({
-      message: "Could not resolve a cache directory. Pass --cache-dir or configure XDG_CACHE_HOME/HOME.",
+      message: "Could not resolve a cache directory. Pass --cache-dir or configure XDG_CACHE_HOME/HOME/USERPROFILE.",
     });
   }
 
@@ -358,7 +516,9 @@ const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(functio
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const configured = yield* readOptionalConfig("BEEP_UV_PATH");
-  const home = yield* readOptionalConfig("HOME");
+  const home = yield* readConfiguredHome();
+  const platform = yield* HostProcessPlatform;
+  const executableName = trustedUvExecutableNameForPlatform(platform);
 
   if (O.isSome(configured) && !path.isAbsolute(configured.value)) {
     return yield* FilesCommandError.make({ message: "BEEP_UV_PATH must be an absolute path to a trusted uv binary." });
@@ -367,10 +527,10 @@ const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(functio
   const candidates = O.isSome(configured)
     ? [configured.value]
     : [
-        ...A.map(trustedUvRoots, (root) => path.join(root, "uv")),
+        ...A.map(trustedUvRootDirectoriesForPlatform(platform), (root) => path.join(root, executableName)),
         ...pipe(
           home,
-          O.map((root) => [path.join(root, ".local", "bin", "uv")]),
+          O.map((root) => [path.join(root, ".local", "bin", executableName)]),
           O.getOrElse(A.empty<string>)
         ),
       ];
@@ -387,7 +547,8 @@ const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(functio
 
   return yield* FilesCommandError.make({
     message:
-      "Could not find a trusted uv binary. Install uv in /usr/bin, /usr/local/bin, or $HOME/.local/bin, or set BEEP_UV_PATH to an absolute path.",
+      "Could not find a trusted uv binary in the platform's supported install locations. " +
+      "Set BEEP_UV_PATH to an absolute path when uv is installed elsewhere.",
   });
 });
 
@@ -434,6 +595,9 @@ const preflightManifest = Effect.fn("Files.matchPersonPreflightManifest")(functi
 const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(function* (
   options: MatchPersonOptions
 ): Effect.fn.Return<CanonicalMatchPersonInputs, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const hostPlatform = yield* HostProcessPlatform;
+  const hostArchitecture = yield* HostProcessArchitecture;
+  yield* validatePersonMatchBackendPlatform(options.backend, hostPlatform, hostArchitecture);
   if (!options.acceptModelLicense) {
     const message = Match.value(options.backend).pipe(
       Match.when(
@@ -614,6 +778,18 @@ const discoverExpectedPersonMatchFiles = Effect.fn("Files.discoverExpectedPerson
     { concurrency: 2 }
   );
   return ExpectedPersonMatchFiles.make({ candidatePaths, referencePaths });
+});
+
+const validateDiscoveredReferenceImages = Effect.fn("Files.validateDiscoveredReferenceImages")(function* (
+  expected: ExpectedPersonMatchFiles
+): Effect.fn.Return<void, FilesCommandError> {
+  return yield* A.match(expected.referencePaths, {
+    onEmpty: () =>
+      FilesCommandError.make({
+        message: "Reference directory contains no supported jpg, jpeg, png, or webp images.",
+      }),
+    onNonEmpty: () => Effect.void,
+  });
 });
 
 const materializationCategory = (disposition: PersonMatchDisposition): O.Option<string> =>
@@ -1740,6 +1916,7 @@ export const runMatchPerson = Effect.fn("Files.runMatchPerson")(function* (
   }
 
   const expectedBefore = yield* discoverExpectedPersonMatchFiles(inputs, options.recursive);
+  yield* validateDiscoveredReferenceImages(expectedBefore);
   const workerService = yield* PersonMatchWorkerService;
   const worker = yield* workerService.run(options, inputs).pipe(Effect.mapError(toFilesCommandError));
   const expectedAfter = yield* discoverExpectedPersonMatchFiles(inputs, options.recursive);

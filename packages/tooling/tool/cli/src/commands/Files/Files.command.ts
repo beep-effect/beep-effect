@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Match } from "effect";
 import * as A from "effect/Array";
@@ -43,6 +44,7 @@ import {
   sortAndRenameFiles,
   stripMetadataFiles,
 } from "./Files.service.ts";
+import { defaultPersonMatchBackendForPlatform } from "./internal/MatchPerson.ts";
 import type { PersonMatchBackend } from "./Files.schemas.ts";
 import type { FilesCommandService } from "./Files.service.ts";
 
@@ -123,10 +125,10 @@ const matchPersonBackendFlag = Flag.choiceWithValue("backend", [
   ["buffalo-l", "buffalo-l"],
   ["adaface-kprpe", "adaface-kprpe"],
 ]).pipe(
-  Flag.withDefault("adaface-kprpe"),
   Flag.withDescription(
-    "Recognition backend: calibrated AdaFace ViT-Base KP-RPE or explicit InsightFace Buffalo fallback"
-  )
+    "Recognition backend: AdaFace on Linux x64; Buffalo CPU on Linux x64/arm64, macOS x64/arm64, or Windows x64"
+  ),
+  Flag.optional
 );
 const matchPersonComputeFlag = Flag.choiceWithValue("compute", [
   ["auto", "auto"],
@@ -694,9 +696,14 @@ const filesMatchPersonCommand = Command.make(
     references,
     reviewThreshold,
   }) {
+    const hostPlatform = yield* HostProcessPlatform;
+    const hostArchitecture = yield* HostProcessArchitecture;
+    const resolvedBackend = O.getOrElse(backend, () =>
+      defaultPersonMatchBackendForPlatform(hostPlatform, hostArchitecture)
+    );
     const devices = yield* decodeMatchPersonDevices(deviceCsv);
     const thresholds = resolveMatchPersonThresholdProfile(
-      backend,
+      resolvedBackend,
       detectionThreshold,
       matchThreshold,
       reviewThreshold,
@@ -707,7 +714,7 @@ const filesMatchPersonCommand = Command.make(
       : "calibrated-default";
     const options = yield* S.decodeEffect(MatchPersonOptions)({
       acceptModelLicense,
-      backend,
+      backend: resolvedBackend,
       batchSize,
       cacheDir,
       compute,
