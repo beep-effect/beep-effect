@@ -446,10 +446,14 @@ ratifies.
   reuse of the immutable dataset's store reduced the same ordered query to a measured 5 ms
   p95. Prevention: a query boundary over an already loaded dataset must not hide dataset rebuild
   work inside every execution. Follow-up review also found that both recovery digests came from
-  the persisted representation and that the killed child had not itself committed data. Fix: the
-  expected digest now comes from the original in-memory C1 snapshot, while the killed child first
-  commits a durable ledger checkpoint. Prevention: crash evidence needs an independent pre-crash
-  oracle and must mutate the durability boundary in the process that is actually killed.
+  the persisted representation and that the killed child had not itself committed data. The first
+  repair added a durable checkpoint, but a fresh review correctly showed that metadata was absent
+  from the recovered RDF projection and could still pass without projection-relevant recovery.
+  Final fix: an isolated crash ledger starts empty; the killed child transaction commits one real,
+  non-empty extraction batch; the parent independently projects that expected batch; recovery must
+  differ from the empty projection and remain stable across another restart. The metadata-only
+  checkpoint API was removed. Prevention: crash evidence needs an independent pre-crash oracle and
+  must mutate state consumed by recovery in the process that is actually killed.
 
 - **2026-08-31 — An unrelated scheduler coverage floor failed two exact-head C2 runs.** The
   hosted coverage lane repeatedly reported `QualityScheduler.ts` statements `91.44 < 91.66` and

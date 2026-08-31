@@ -45,6 +45,7 @@ const inline = (value: string): string => `base64:${Buffer.from(value).toString(
 const n3 = (value: RdfTriple): string => `${value.subject} ${value.predicate} ${value.object}.`;
 const normalizeProof = (proof: string): string =>
   `${Str.trim(Str.replace(/https:\/\/eyereasoner\.github\.io\/\.well-known\/genid\/[^#>]+#/gu, "urn:eye:proof#")(proof))}\n`;
+const CrashFixture = S.Struct({ event: S.String, outcome: S.String });
 
 describe("C2 declarative reasoner", () => {
   it("executes all six rho-df rules plus SKOS transitivity and validates every event", () =>
@@ -128,7 +129,7 @@ describe("C2 declarative reasoner", () => {
     ));
 
   it(
-    "rebuilds an identical projection after SIGKILL at the ledger checkpoint",
+    "recovers projection-relevant state committed before SIGKILL",
     () =>
       Effect.runPromise(
         withBunServices(
@@ -137,14 +138,15 @@ describe("C2 declarative reasoner", () => {
               const fs = yield* FileSystem.FileSystem;
               const ledgerRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-c2-crash-" });
               const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-              const seedOutput = yield* processSpawner.string(
-                ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "seed", ledgerRoot], {
-                  cwd: process.cwd(),
-                  stderr: "pipe",
-                  stdout: "pipe",
-                })
-              );
-              expect(seedOutput).toContain("ledger-committed");
+              const fixture = yield* processSpawner
+                .string(
+                  ChildProcess.make("bun", ["run", "test/helpers/CrashProbeChild.ts", "fixture"], {
+                    cwd: process.cwd(),
+                    stderr: "pipe",
+                    stdout: "pipe",
+                  })
+                )
+                .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(CrashFixture))));
               const recover = processSpawner
                 .string(
                   ChildProcess.make(
@@ -154,21 +156,32 @@ describe("C2 declarative reasoner", () => {
                   )
                 )
                 .pipe(Effect.timeout("30 seconds"), Effect.map(Str.trim));
-              const first = yield* recover;
+              const emptyDigest = yield* recover;
               const crash = yield* ChildProcess.make(
                 "bun",
-                ["run", "src/canary/RuntimeProbeChild.ts", "crash", ledgerRoot, Str.repeat(64)("c"), "replay"],
+                [
+                  "run",
+                  "src/canary/RuntimeProbeChild.ts",
+                  "crash",
+                  ledgerRoot,
+                  Str.repeat(64)("c"),
+                  "replay",
+                  fixture.outcome,
+                  fixture.event,
+                ],
                 { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
               );
               const [crashOutput, crashExit] = yield* Effect.all(
                 [Stream.mkString(Stream.decodeText(crash.stdout)), Effect.exit(crash.exitCode)],
                 { concurrency: "unbounded" }
               ).pipe(Effect.timeout("30 seconds"));
-              expect(crashOutput).toContain("ledger-committed");
+              expect(crashOutput).toContain("projection-state-committed");
               expect(Exit.isFailure(crashExit)).toBe(true);
-              const second = yield* recover;
-              expect(S.is(Sha256Hex)(first)).toBe(true);
-              expect(second).toBe(first);
+              const recoveredDigest = yield* recover;
+              const repeatedDigest = yield* recover;
+              expect(S.is(Sha256Hex)(recoveredDigest)).toBe(true);
+              expect(recoveredDigest).not.toBe(emptyDigest);
+              expect(repeatedDigest).toBe(recoveredDigest);
             })
           )
         )

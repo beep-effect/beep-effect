@@ -9,11 +9,13 @@ import { RdfProjectionLive } from "@/layers/RdfProjectionLive";
 import { LabConfigLive, RuntimeMode } from "@/runtime/Config";
 import { RuntimeLayer } from "@/runtime/Layer";
 import { contentDigestSync } from "@/schema/Digest";
+import { ExtractOutcome } from "@/schema/Evidence";
 import { RunId } from "@/schema/Ids";
+import { ProvenanceEvent } from "@/schema/Provenance";
 import { Ledger } from "@/services/Ledger";
 import { RdfProjection } from "@/services/RdfProjection";
 
-const [probeMode, ledgerRoot, encodedRunId, encodedRuntimeMode] = A.drop(process.argv, 2);
+const [probeMode, ledgerRoot, encodedRunId, encodedRuntimeMode, encodedOutcome, encodedEvent] = A.drop(process.argv, 2);
 
 if (probeMode === "bundle") {
   await Effect.runPromise(Effect.scoped(Layer.build(RuntimeLayer)));
@@ -38,8 +40,16 @@ if (probeMode === "bundle") {
     Effect.scoped(Layer.build(services).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
   if (probeMode === "crash") {
-    await Effect.runPromise(provideServices(Ledger.pipe(Effect.flatMap((ledger) => ledger.commitCheckpoint))));
-    await Bun.write(Bun.stdout, "ledger-committed\n");
+    if (encodedOutcome === undefined || encodedEvent === undefined) {
+      process.stderr.write("Crash mode requires an extraction outcome and provenance event.\n");
+      process.exit(2);
+    }
+    const outcome = S.decodeSync(S.fromJsonString(ExtractOutcome))(encodedOutcome);
+    const event = S.decodeSync(S.fromJsonString(ProvenanceEvent))(encodedEvent);
+    await Effect.runPromise(
+      provideServices(Ledger.pipe(Effect.flatMap((ledger) => ledger.appendBatch(outcome, [event]))))
+    );
+    await Bun.write(Bun.stdout, "projection-state-committed\n");
     process.kill(process.pid, "SIGKILL");
   } else {
     const digest = await Effect.runPromise(

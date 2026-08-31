@@ -84,7 +84,6 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
         sql`CREATE TABLE IF NOT EXISTS batches (id TEXT PRIMARY KEY, document TEXT NOT NULL, lane TEXT NOT NULL, digest TEXT NOT NULL, payload TEXT NOT NULL)`,
         sql`CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, digest TEXT NOT NULL, payload TEXT NOT NULL, recorded_at BIGINT NOT NULL)`,
         sql`CREATE TABLE IF NOT EXISTS conflicts (id TEXT PRIMARY KEY, left_claim TEXT NOT NULL, right_claim TEXT NOT NULL, digest TEXT NOT NULL, payload TEXT NOT NULL)`,
-        sql`CREATE TABLE IF NOT EXISTS checkpoints (run TEXT PRIMARY KEY, generation BIGINT NOT NULL)`,
       ],
       { concurrency: 1, discard: true }
     )
@@ -195,14 +194,6 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
       });
       return yield* recoverSql(sql.withTransaction(transaction));
     }),
-
-    commitCheckpoint: recoverSql(
-      sql.withTransaction(
-        sql`INSERT INTO checkpoints (run, generation)
-            VALUES (${runId}, 1)
-            ON CONFLICT (run) DO UPDATE SET generation = checkpoints.generation + 1`.pipe(Effect.asVoid)
-      )
-    ),
 
     read: Effect.fn("Ledger.read")(function* (requestedRun) {
       if (!Str.Equivalence(requestedRun, runId)) {

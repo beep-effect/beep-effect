@@ -1,59 +1,96 @@
-// fallow-ignore-file unused-file -- spawned crash-probe process entry resolved by path at runtime
-import { NonNegativeInt } from "@beep/schema";
-import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Result } from "effect";
+// fallow-ignore-file unused-file -- spawned crash-probe fixture entry resolved by path at runtime
+import { Confidence } from "@beep/epistemic-domain";
+import {
+  SourceTextDigest,
+  SourceTextExtractor,
+  SourceTextIdentity,
+  TextAnchor,
+  TextAnchorVerificationReceipt,
+} from "@beep/provenance";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
+import { Option, Result } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { F1FixtureId } from "@/fixtures/F1";
-import { LedgerLive } from "@/layers/LedgerLive";
-import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
-import { DocumentId, RunId } from "@/schema/Ids";
+import { ClaimBody, EvidenceBatch, EvidenceClaim, ExtractOutcome, makeBatchId, makeClaimId } from "@/schema/Evidence";
+import { ChunkId, DocumentId } from "@/schema/Ids";
+import { ModelIdentity } from "@/schema/Model";
 import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
-import { ParseOutcome } from "@/schema/Text";
-import { Ledger } from "@/services/Ledger";
 
-const [mode, ledgerRoot] = A.drop(process.argv, 2);
-if (mode !== "seed" || ledgerRoot === undefined) {
-  process.stderr.write("Expected seed and a ledger root.\n");
+const [mode] = A.drop(process.argv, 2);
+if (mode !== "fixture") {
+  process.stderr.write("Expected fixture mode.\n");
   process.exit(2);
 }
 
-const runId = RunId.make(Str.repeat(64)("c"));
-const documentId = DocumentId.make(Str.repeat(64)("d"));
-const body = EventBody.cases.Ingested.make({ document: documentId, kind: "Ingested" });
-const event = ProvenanceEvent.make({
+const document = DocumentId.make(Str.repeat(64)("d"));
+const chunk = ChunkId.make(Str.repeat(64)("e"));
+const model = ModelIdentity.make({
+  artifactHash: Sha256Hex.make(Str.repeat(64)("f")),
+  name: "crash-probe-extractor",
+  provider: "anthropic",
+  revision: "crash-probe-v1",
+  taskType: "extraction",
+});
+const anchor = TextAnchor.make({
+  endChar: NonNegativeInt.make(6),
+  quote: "Effect",
+  startChar: NonNegativeInt.make(0),
+});
+const body = ClaimBody.cases.Entity.make({
+  cluster: Option.none(),
+  endChar: anchor.endChar,
+  entityType: "software",
+  kind: "Entity",
+  label: "Effect",
+  quote: anchor.quote,
+  startChar: anchor.startChar,
+});
+const claim = EvidenceClaim.make({
   body,
-  id: Result.getOrThrow(makeProvenanceEventId({ body, prev: O.none() })),
-  prev: O.none(),
-});
-const document = SourceDocument.make({
-  acquired: event.id,
-  bytes: NonNegativeInt.make(7),
-  id: documentId,
-  mediaType: "text/markdown",
-  origin: Origin.cases.Fixture.make({
-    declared: FixtureDeclaration.make({ degradedKind: O.some("invalid-utf8"), expectation: "degraded" }),
-    fixtureId: F1FixtureId.make("md-invalid-utf8"),
-    kind: "Fixture",
-    relativePath: "documents/md-invalid-utf8.md",
+  cacheKey: Option.none(),
+  chunk,
+  confidence: Confidence.make(1),
+  document,
+  id: Result.getOrThrow(makeClaimId({ body, chunk, document, method: "hosted-langextract", model })),
+  method: "hosted-langextract",
+  model,
+  receipt: TextAnchorVerificationReceipt.make({
+    anchor,
+    source: SourceTextIdentity.make({
+      extractor: SourceTextExtractor.make({ name: "identity-utf8", version: "1" }),
+      locator: PosixPath.make("documents/crash-probe.md"),
+      normalizationVersion: "raw/1",
+      scopeRef: "semantica-canary",
+      sourceDigest: SourceTextDigest.make(`sha256:${document}`),
+      sourceRef: document,
+      textDigest: SourceTextDigest.make(`sha256:${Str.repeat(64)("a")}`),
+    }),
   }),
-  sha256: documentId,
 });
-const degraded = ParseOutcome.cases.Degraded.make({
-  detail: "crash probe",
-  document: document.id,
-  kind: "invalid-utf8",
-  outcome: "Degraded",
+const batch = EvidenceBatch.make({
+  claims: [claim],
+  degraded: [],
+  document,
+  id: Result.getOrThrow(makeBatchId({ document, inputs: [chunk], method: "hosted-langextract", model })),
+  inputs: [chunk],
+  lossy: [],
+  method: "hosted-langextract",
+  model,
 });
-const ledgerLayer = LedgerLive({ ledgerRoot, mode: "replay", runId }).pipe(Layer.provide(BunServices.layer));
-const services = ledgerLayer;
-const provideServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.scoped(Layer.build(services).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+const outcome = ExtractOutcome.cases.Extracted.make({ batch, outcome: "Extracted" });
+const eventBody = EventBody.cases.Extracted.make({ batch: batch.id, kind: "Extracted", model });
+const prev = Option.none();
+const event = ProvenanceEvent.make({
+  body: eventBody,
+  id: Result.getOrThrow(makeProvenanceEventId({ body: eventBody, prev })),
+  prev,
+});
+const Fixture = S.Struct({ event: S.String, outcome: S.String });
+const fixture = S.encodeSync(S.fromJsonString(Fixture))({
+  event: S.encodeSync(S.fromJsonString(ProvenanceEvent))(event),
+  outcome: S.encodeSync(S.fromJsonString(ExtractOutcome))(outcome),
+});
 
-await Effect.runPromise(
-  provideServices(
-    Ledger.pipe(Effect.flatMap((ledger) => ledger.appendDocument(document, degraded, O.none(), [], [event])))
-  )
-);
-await Bun.write(Bun.stdout, "ledger-committed\n");
+process.stdout.write(`${fixture}\n`);

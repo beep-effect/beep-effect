@@ -11,7 +11,10 @@ import { p95 } from "@/layers/CanaryC0Live";
 import { LabConfig } from "@/runtime/Config";
 import { contentDigest, digestOmitting } from "@/schema/Digest";
 import { ReasoningFailed } from "@/schema/Errors";
+import { ExtractOutcome } from "@/schema/Evidence";
+import { LedgerSnapshot } from "@/schema/Ledger";
 import { SparqlExpectation } from "@/schema/Projection";
+import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
 import {
   C2EvalReport,
   CrashIdentityWitness,
@@ -35,6 +38,8 @@ const C2_STAGE = "c2";
 const expectationJson = S.fromJsonString(GEntailmentExpectation);
 const reportJson = S.fromJsonString(C2EvalReport, { space: 2 });
 const telemetryJson = S.fromJsonString(EvalRunTelemetry, { space: 2 });
+const crashOutcomeJson = S.fromJsonString(ExtractOutcome);
+const crashEventJson = S.fromJsonString(ProvenanceEvent);
 const tripleEquivalence = S.toEquivalence(S.Array(RdfTriple));
 const C2_INTERACTIVE_QUERY_LIMIT = PosInt.make(20);
 const C2_INTERACTIVE_QUERY: A.NonEmptyReadonlyArray<SparqlExpectation> = [
@@ -85,13 +90,19 @@ const runCrashProbe = Effect.fn("CanaryC2.runCrashProbe")(function* (
   ledgerRoot: string,
   runId: string,
   mode: "live" | "replay",
-  beforeCrashDigest: Sha256Hex
+  beforeCrashDigest: Sha256Hex,
+  encodedOutcome: string,
+  encodedEvent: string
 ) {
-  const crashCommand = ChildProcess.make("bun", ["run", entry, "crash", ledgerRoot, runId, mode], {
-    cwd: process.cwd(),
-    stderr: "pipe",
-    stdout: "pipe",
-  });
+  const crashCommand = ChildProcess.make(
+    "bun",
+    ["run", entry, "crash", ledgerRoot, runId, mode, encodedOutcome, encodedEvent],
+    {
+      cwd: process.cwd(),
+      stderr: "pipe",
+      stdout: "pipe",
+    }
+  );
   const [crashOutput, crashExit] = yield* Effect.scoped(
     processSpawner.spawn(crashCommand).pipe(
       Effect.flatMap((crash) =>
@@ -104,7 +115,7 @@ const runCrashProbe = Effect.fn("CanaryC2.runCrashProbe")(function* (
     Effect.timeout("30 seconds"),
     Effect.mapError(() => failed("crash-mismatch", "The ledger checkpoint process did not terminate as expected."))
   );
-  if (!Str.includes("ledger-committed")(crashOutput) || !Exit.isFailure(crashExit)) {
+  if (!Str.includes("projection-state-committed")(crashOutput) || !Exit.isFailure(crashExit)) {
     return yield* failed("crash-mismatch", "The ledger checkpoint process did not reach its SIGKILL boundary.");
   }
   const afterRestartDigest = yield* runProjectionProbe(processSpawner, entry, ledgerRoot, runId, mode);
@@ -229,17 +240,72 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         Effect.mapError(() => failed("expectation-unavailable", "The C2 expectation digest failed."))
       );
       const projection = yield* rdf.rebuild(base.snapshot);
-      const beforeCrashDigest = yield* contentDigest(S.Array(S.String))(projection.serializedQuads).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
-        Effect.mapError(() => failed("crash-mismatch", "The in-memory C1 projection digest failed."))
+      const crashBatch = yield* A.match(
+        A.getSomes(
+          A.map(base.snapshot.batches, (outcome) =>
+            ExtractOutcome.match(outcome, {
+              Degraded: () => O.none(),
+              Extracted: ({ batch }) =>
+                A.match(batch.claims, {
+                  onEmpty: () => O.none(),
+                  onNonEmpty: () => O.some(batch),
+                }),
+            })
+          )
+        ),
+        {
+          onEmpty: () =>
+            Effect.fail(failed("crash-mismatch", "C2 found no non-empty extraction batch for its crash witness.")),
+          onNonEmpty: (batches) => Effect.succeed(A.headNonEmpty(batches)),
+        }
       );
+      const crashOutcome = ExtractOutcome.cases.Extracted.make({ batch: crashBatch, outcome: "Extracted" });
+      const crashEventBody = EventBody.cases.Extracted.make({
+        batch: crashBatch.id,
+        kind: "Extracted",
+        model: crashBatch.model,
+      });
+      const crashEventPrev = O.none();
+      const crashEvent = ProvenanceEvent.make({
+        body: crashEventBody,
+        id: yield* Effect.fromResult(makeProvenanceEventId({ body: crashEventBody, prev: crashEventPrev })).pipe(
+          Effect.mapError(() => failed("crash-mismatch", "The crash witness event identity could not be built."))
+        ),
+        prev: crashEventPrev,
+      });
+      const crashSnapshot = LedgerSnapshot.make({
+        batches: [crashOutcome],
+        documents: [],
+        events: [crashEvent],
+        run: base.report.base.run.id,
+      });
+      const crashProjection = yield* rdf.rebuild(crashSnapshot);
+      const beforeCrashDigest = yield* contentDigest(S.Array(S.String))(crashProjection.serializedQuads).pipe(
+        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.mapError(() => failed("crash-mismatch", "The expected crash projection digest failed."))
+      );
+      const encodedCrashOutcome = yield* S.encodeEffect(crashOutcomeJson)(crashOutcome).pipe(
+        Effect.mapError(() => failed("crash-mismatch", "The crash extraction outcome could not be encoded."))
+      );
+      const encodedCrashEvent = yield* S.encodeEffect(crashEventJson)(crashEvent).pipe(
+        Effect.mapError(() => failed("crash-mismatch", "The crash provenance event could not be encoded."))
+      );
+      const crashLedgerRoot = path.join(config.ledgerRoot, "c2-crash-probe");
+      yield* fs
+        .remove(path.join(crashLedgerRoot, base.report.base.run.id, base.baseTelemetry.mode), {
+          force: true,
+          recursive: true,
+        })
+        .pipe(Effect.mapError(() => failed("crash-mismatch", "The prior crash-probe ledger could not be cleared.")));
       const crash = yield* runCrashProbe(
         processSpawner,
         runtimeProbeEntry,
-        config.ledgerRoot,
+        crashLedgerRoot,
         base.report.base.run.id,
         base.baseTelemetry.mode,
-        beforeCrashDigest
+        beforeCrashDigest,
+        encodedCrashOutcome,
+        encodedCrashEvent
       );
       const interactiveWitness = yield* rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
         Effect.flatMap(
