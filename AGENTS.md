@@ -5,6 +5,26 @@ Canonical rules for all coding agents. Claude Code loads this via the
 directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
 workflows in skills.
 
+## 1Password MCP
+
+- Treat the `op` CLI session and the 1Password MCP connection as separate
+  authentication surfaces. `op whoami` can succeed in the operator's terminal
+  while failing inside an agent process because `OP_SESSION_*` is shell-local.
+  An agent-side failure does not prove that the desktop app or operator shell is
+  signed out.
+- Enabling the MCP server in the 1Password desktop app does not register it with
+  every agent client. For Codex, first verify that `1password-mcp` is on `PATH`
+  and that `codex mcp get 1password` succeeds. If the registration is missing,
+  run `codex mcp add 1password -- 1password-mcp`.
+- MCP tools are fixed when an agent session starts. After adding or enabling the
+  server, start a fresh task/session and approve its desktop connection; an
+  already-running session will not hot-load the new tool. Do not respond to a
+  missing MCP tool by repeatedly asking the operator to unlock 1Password or run
+  `op signin`.
+- Never copy, print, or inject `OP_SESSION_*` values to bridge the process gap.
+  Once exposed, use the 1Password MCP tools and keep secret values inside
+  1Password.
+
 ## Code Laws
 
 - Use schema-first domain models; prefer typed errors and tagged unions.

@@ -377,3 +377,13 @@ ratifies.
   only `undefined`/`null` or `APPROVED`. Fix: normalize the empty string as absence in both paths
   and cover the CLI encoding with regressions. Prevention: boundary fixtures for optional GitHub
   fields must exercise every representation emitted by both GraphQL and `gh` JSON.
+
+- **2026-08-30 — Agent shells misreported 1Password as signed out while the operator shell was
+  authenticated.** The operator's `op whoami` succeeded, but both direct and interactive agent
+  subprocesses returned `account is not signed in`. The agent inherited no `OP_SESSION_*`, and
+  Codex had no registered `1password` MCP server even though the desktop server was enabled and
+  `1password-mcp` was installed. Fix: register the user-level server with
+  `codex mcp add 1password -- 1password-mcp`, then start a fresh agent session so its fixed MCP
+  tool surface includes the server. Prevention: agent diagnostics must distinguish operator CLI
+  auth, agent process inheritance, client MCP registration, and current-session tool exposure;
+  never infer the first from failure of another or ask the operator to repeat sign-in blindly.
