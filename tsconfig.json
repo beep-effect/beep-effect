@@ -2012,7 +2012,11 @@
       ],
       "@beep/test-utils/ConformanceLedger": [
         "./packages/tooling/test-kit/test-utils/src/ConformanceLedger/index.ts"
-      ]
+      ],
+      "@beep/box-provisioning": [
+        "./packages/drivers/box-provisioning/src/index.ts"
+      ],
+      "@beep/box-provisioning/*": ["./packages/drivers/box-provisioning/src/*"]
     }
   }
 }

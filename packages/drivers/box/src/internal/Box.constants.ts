@@ -4,4 +4,4 @@
  * @category constants
  * @since 0.0.0
  */
-export const BOX_SDK_VERSION = "10.11.1";
+export const BOX_SDK_VERSION = "10.14.0";
