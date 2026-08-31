@@ -83,6 +83,7 @@ import {
   TurboWorkspacePackage,
   tryReclaimStaleProofLockForTesting,
   tryRecoverObservedProofLockReapClaimForTesting,
+  unverifiableProofLockRefusalForTesting,
   validateMonitorGuards,
   validateOpenPullRequest,
   validateProofCoordinatorDirectoryForTesting,
@@ -2781,6 +2782,25 @@ describe("yeet publish scope helpers", () => {
     expect(proofLockDispositionForTesting(state, "dead", false)).toBe("replace-stale");
     expect(proofLockDispositionForTesting(state, "unknown", false)).toBe("refuse-unverifiable");
     expect(proofLockDispositionForTesting(O.none(), "dead", true)).toBe("refuse-legacy");
+  });
+
+  it("reports an unverifiable proof-lock owner without dropping its identity", () => {
+    const owner = YeetProofLockStateForTesting.make({
+      schemaVersion: "yeet-proof-lock/v3",
+      branch: "feature/unverifiable-owner",
+      checkoutRoot: "/repo/unverifiable-owner",
+      command: "bun run beep yeet verify",
+      pid: 12345,
+      procStart: "ps:unavailable",
+      proofTier: "full",
+      startedAt: "2026-08-31T00:00:00.000Z",
+    });
+
+    const refusal = unverifiableProofLockRefusalForTesting("/runtime/proof.lock", owner);
+
+    expect(refusal.message).toContain("Cannot verify the process identity");
+    expect(refusal.message).toContain("/repo/unverifiable-owner on feature/unverifiable-owner, pid 12345");
+    expect(refusal.file).toBe("/runtime/proof.lock");
   });
 
   it("derives one opaque machine-local proof coordinator per repository identity", () =>

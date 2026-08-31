@@ -856,6 +856,36 @@ const unverifiableProofLockRefusal = (lockPath: string, owner: YeetProofLockStat
     file: lockPath,
   });
 
+/**
+ * Build the fail-closed refusal used for a live PID whose process identity cannot be inspected.
+ *
+ * **Example** (Inspect an unverifiable-owner refusal)
+ *
+ * ```ts
+ * import { unverifiableProofLockRefusalForTesting, YeetProofLockStateForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * const owner = YeetProofLockStateForTesting.make({
+ *   branch: "feature/closeout",
+ *   checkoutRoot: "/repo",
+ *   command: "bun run beep yeet verify",
+ *   pid: 12345,
+ *   procStart: "ps:unavailable",
+ *   proofTier: "full",
+ *   schemaVersion: "yeet-proof-lock/v3",
+ *   startedAt: "2026-08-31T00:00:00.000Z"
+ * })
+ *
+ * console.log(unverifiableProofLockRefusalForTesting("/runtime/proof.lock", owner).exitCode) // 1
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const unverifiableProofLockRefusalForTesting: {
+  (owner: YeetProofLockState): (lockPath: string) => YeetCommandError;
+  (lockPath: string, owner: YeetProofLockState): YeetCommandError;
+} = dual(2, unverifiableProofLockRefusal);
+
 interface FullProofLockContention {
   readonly lease: O.Option<YeetProofLockLease>;
   readonly observed: ObservedProofLockState;
@@ -868,40 +898,36 @@ const noFullProofLockLease = (observed: ObservedProofLockState): FullProofLockCo
 
 const refuseLegacyProofLockContention = Effect.fn("Yeet.refuseLegacyProofLockContention")(function* (
   lockPath: string,
-  observed: ObservedProofLockState
+  legacyState: YeetProofLockStateV2
 ): Effect.fn.Return<FullProofLockContention, YeetCommandError> {
-  if (O.isSome(observed.legacyState)) {
-    return yield* legacyProofLockRefusal(lockPath, observed.legacyState.value);
-  }
-  return noFullProofLockLease(observed);
+  return yield* legacyProofLockRefusal(lockPath, legacyState);
 });
 
 const refuseUnverifiableProofLockContention = Effect.fn("Yeet.refuseUnverifiableProofLockContention")(function* (
   lockPath: string,
-  observed: ObservedProofLockState
+  owner: YeetProofLockState
 ): Effect.fn.Return<FullProofLockContention, YeetCommandError> {
-  if (O.isSome(observed.state)) {
-    return yield* unverifiableProofLockRefusal(lockPath, observed.state.value);
-  }
-  return noFullProofLockLease(observed);
+  return yield* unverifiableProofLockRefusal(lockPath, owner);
 });
 
 const replaceStaleProofLockContention = Effect.fn("Yeet.replaceStaleProofLockContention")(function* (
   lockPath: string,
   lockText: string,
   lease: YeetProofLockLease,
-  observed: ObservedProofLockState
+  observed: ObservedProofLockState,
+  owner: YeetProofLockState
 ): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
-  if (O.isNone(observed.state)) {
-    return noFullProofLockLease(observed);
-  }
   yield* Console.error(
-    `[yeet] reaping stale full-proof lock (pid ${observed.state.value.pid}, started ${observed.state.value.startedAt}, is no longer the recorded process identity)`
+    `[yeet] reaping stale full-proof lock (pid ${owner.pid}, started ${owner.startedAt}, is no longer the recorded process identity)`
   );
   if (yield* tryReplaceStaleProofLock(lockPath, observed.text, lockText)) {
     return { lease: O.some(lease), observed };
   }
-  return yield* refuseLegacyProofLockContention(lockPath, yield* observeProofLockState(lockPath));
+  const current = yield* observeProofLockState(lockPath);
+  return yield* O.match(current.legacyState, {
+    onNone: () => Effect.succeed(noFullProofLockLease(current)),
+    onSome: (legacyState) => refuseLegacyProofLockContention(lockPath, legacyState),
+  });
 });
 
 // The single contention ladder shared by the fail-fast and queue-style
@@ -916,10 +942,11 @@ const contendForFullProofLockCore = Effect.fn("Yeet.contendForFullProofLockCore"
   const disposition = proofLockDisposition(observed.state, observed.ownerStatus, O.isSome(observed.legacyState));
   return yield* ProofLockDisposition.$match(disposition, {
     "refuse-active": () => Effect.succeed(noFullProofLockLease(observed)),
-    "refuse-legacy": () => refuseLegacyProofLockContention(lockPath, observed),
+    "refuse-legacy": () => refuseLegacyProofLockContention(lockPath, O.getOrThrow(observed.legacyState)),
     "refuse-unreadable": () => Effect.succeed(noFullProofLockLease(observed)),
-    "refuse-unverifiable": () => refuseUnverifiableProofLockContention(lockPath, observed),
-    "replace-stale": () => replaceStaleProofLockContention(lockPath, lockText, lease, observed),
+    "refuse-unverifiable": () => refuseUnverifiableProofLockContention(lockPath, O.getOrThrow(observed.state)),
+    "replace-stale": () =>
+      replaceStaleProofLockContention(lockPath, lockText, lease, observed, O.getOrThrow(observed.state)),
   });
 });
 
