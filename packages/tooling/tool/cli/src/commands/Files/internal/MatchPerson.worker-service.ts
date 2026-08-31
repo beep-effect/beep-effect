@@ -31,7 +31,12 @@ import type {
   PersonMatchWorkerServiceError,
 } from "./MatchPerson.errors.ts";
 import type { PreparedAdaFaceArtifacts } from "./MatchPerson.model-store.ts";
-import type { MatchPersonOptions, PersonMatchWorkerReport, PersonMatchWorkerSuccess } from "./MatchPerson.schemas.ts";
+import type {
+  MatchPersonOptions,
+  PersonMatchModel,
+  PersonMatchWorkerReport,
+  PersonMatchWorkerSuccess,
+} from "./MatchPerson.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.worker-service");
 
@@ -130,6 +135,34 @@ export class PersonMatchWorkerService extends Context.Service<
   PersonMatchWorkerService,
   PersonMatchWorkerServiceShape
 >()($I`PersonMatchWorkerService`) {}
+
+/**
+ * Physical model-artifact verification used after a worker execution.
+ *
+ * The default always re-hashes the exact pinned artifacts. Package tests may
+ * replace only this reference when a process stub cannot materialize the real
+ * multi-hundred-megabyte model files.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export type PersonMatchModelArtifactVerifier = (
+  model: PersonMatchModel,
+  modelRoot: string
+) => Effect.Effect<void, MatchPersonModelIntegrityError, FileSystem.FileSystem | Path.Path>;
+
+/**
+ * Fail-closed model-artifact verifier reference.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const PersonMatchModelArtifactVerifier: Context.Reference<PersonMatchModelArtifactVerifier> = Context.Reference(
+  $I`PersonMatchModelArtifactVerifier`,
+  { defaultValue: () => verifyPersonMatchModelArtifacts }
+);
 
 type WorkerServiceRequirements =
   | FileSystem.FileSystem
@@ -656,7 +689,8 @@ const runWorker = Effect.fn("Files.PersonMatchWorker.run")(function* (
   }).pipe(Effect.mapError((cause) => processError("Failed to start the local person-match worker.", cause)));
   const worker = yield* decodeWorkerExecution(result.stdout, result.stderr, result.exitCode, result.truncated);
   yield* validateWorkerEnvelope(worker, options, inputs);
-  yield* verifyPersonMatchModelArtifacts(worker.model, inputs.modelRoot);
+  const verifyModelArtifacts = yield* PersonMatchModelArtifactVerifier;
+  yield* verifyModelArtifacts(worker.model, inputs.modelRoot);
   yield* validateUniqueRecursiveReferenceNames(worker, options.recursive);
   return worker;
 });

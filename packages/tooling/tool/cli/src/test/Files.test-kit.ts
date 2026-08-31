@@ -6,3 +6,4 @@
  */
 
 export * from "../commands/Files/index.ts";
+export { PersonMatchModelArtifactVerifier } from "../commands/Files/internal/MatchPerson.worker-service.ts";

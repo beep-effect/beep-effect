@@ -22,6 +22,7 @@ import {
   ImageCurationManifest,
   NormalizeManifest,
   PersonMatchModel,
+  PersonMatchModelArtifactVerifier,
   PersonMatchReport,
   PersonMatchWorkerReport,
   ProcessFilesOptions,
@@ -1826,7 +1827,7 @@ describe("files command", { concurrent: false }, () => {
           expect(message).toContain("reported parameters that do not match the requested scan");
           expect(yield* fs.exists(mismatchedManifestPath)).toBe(false);
         })
-      )
+      ).pipe(Effect.provideService(PersonMatchModelArtifactVerifier, () => Effect.void))
     ));
 
   it("matches a person through the local worker boundary and copies only accepted review lanes", () =>
@@ -2311,7 +2312,7 @@ describe("files command", { concurrent: false }, () => {
           expect(yield* fs.readFileString(otherPath)).toBe("other source");
           expect(yield* fs.readFileString(unreadablePath)).toBe("unreadable source");
         })
-      )
+      ).pipe(Effect.provideService(PersonMatchModelArtifactVerifier, () => Effect.void))
     ));
 
   it.each([
