@@ -1341,19 +1341,12 @@ const measurePreservationDenominators = Effect.fn("CorpusTest.measurePreservatio
 
 const collectorManifestJson = S.fromJsonString(CollectorManifestRecord);
 
-const waitForOpenProcessFile = Effect.fn("CorpusTest.waitForOpenProcessFile")(function* (
+const waitForPathToExist = Effect.fn("CorpusTest.waitForPathToExist")(function* (
   filePath: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const descriptorRoot = `/proc/${process.pid}/fd`;
   for (let attempt = 0; attempt < 5_000; attempt += 1) {
-    const descriptors = yield* fs.readDirectory(descriptorRoot).pipe(Effect.orDie);
-    const targets = yield* Effect.forEach(
-      descriptors,
-      (descriptor) => fs.readLink(`${descriptorRoot}/${descriptor}`).pipe(Effect.option),
-      { concurrency: "unbounded" }
-    );
-    if (A.some(targets, (target) => O.exists(target, (value) => value === filePath))) return true;
+    if (yield* fs.exists(filePath).pipe(Effect.orDie)) return true;
     yield* Effect.yieldNow;
   }
   return false;
@@ -1532,6 +1525,15 @@ describe("corpus restoration preservation", () => {
         const path = yield* Path.Path;
         const fixture = yield* makeRestorationFixture();
         const sourcePath = path.join(fixture.sourceRoot, "nested", "large.bin");
+        const partialPath = path.join(
+          fixture.corpusRoot,
+          "raw",
+          "synthetic-restoration",
+          "payload",
+          "tree",
+          "nested",
+          "large.bin.partial"
+        );
         const sourceBytes = new Uint8Array(2 * 1024 * 1024);
         sourceBytes.fill(0x31);
         const stableReplacement = new Uint8Array(sourceBytes.length);
@@ -1559,8 +1561,8 @@ describe("corpus restoration preservation", () => {
         });
         yield* Effect.forkChild(
           Effect.gen(function* () {
-            const sourceOpened = yield* waitForOpenProcessFile(sourcePath);
-            if (!sourceOpened) return yield* Effect.die("Preservation source was not observably open for mutation.");
+            const partialExists = yield* waitForPathToExist(partialPath);
+            if (!partialExists) return yield* Effect.die("Partial archive was not observable for mutation.");
             yield* fs.rename(replacementPath, sourcePath);
           })
         );
@@ -1602,6 +1604,15 @@ describe("corpus restoration preservation", () => {
         const path = yield* Path.Path;
         const fixture = yield* makeRestorationFixture();
         const sourcePath = path.join(fixture.sourceRoot, "nested", "large.bin");
+        const partialPath = path.join(
+          fixture.corpusRoot,
+          "raw",
+          "synthetic-restoration",
+          "payload",
+          "tree",
+          "nested",
+          "large.bin.partial"
+        );
         const sourceBytes = new Uint8Array(2 * 1024 * 1024);
         sourceBytes.fill(0x41);
         const stableReplacement = new Uint8Array(sourceBytes.length);
@@ -1629,8 +1640,8 @@ describe("corpus restoration preservation", () => {
         });
         yield* Effect.forkChild(
           Effect.gen(function* () {
-            const sourceOpened = yield* waitForOpenProcessFile(sourcePath);
-            if (!sourceOpened) return yield* Effect.die("Preservation source was not observably open for mutation.");
+            const partialExists = yield* waitForPathToExist(partialPath);
+            if (!partialExists) return yield* Effect.die("Partial archive was not observable for mutation.");
             yield* fs.rename(replacementPath, sourcePath);
             yield* fs.writeFileString(path.join(fixture.sourceRoot, "unrelated-added.bin"), "unexpected drift");
           })
