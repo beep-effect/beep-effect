@@ -457,7 +457,8 @@ export const LanguageCode = S.String.check(
     S.brand("LanguageCode"),
     $I.annoteSchema("LanguageCode", {
       description: "Two-letter lowercase language-code representation.",
-    })
+    }),
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 /**
@@ -495,7 +496,8 @@ export const ComplexityScore = UnitInterval.annotate({
 }).pipe(
   $I.annoteSchema("ComplexityScore", {
     description: "Finite normalized document-complexity score.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

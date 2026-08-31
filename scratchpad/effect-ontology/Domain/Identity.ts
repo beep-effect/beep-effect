@@ -376,7 +376,7 @@ export const GcsBucket = GcsBucketEncoded.pipe(
     documentation:
       "Provider-side availability and Google's broader close-misspelling policy must still be checked when creating the bucket.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownSync"])
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "decodeUnknownSync", "is"])
 );
 
 /**
@@ -594,7 +594,8 @@ export const GcsObject = GcsObjectEncoded.pipe(
     description: "Canonical slash-separated GCS object path derived from the provider-valid object-name schema.",
     documentation:
       "Leading, trailing, and consecutive slashes are rejected to prevent multiple textual forms of one application path.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**
@@ -652,7 +653,7 @@ export const Namespace = S.String.check(
       description:
         "Lowercase ontology namespace identifier beginning with a letter and containing letters, digits, or hyphens.",
     }),
-    SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownSync"])
+    SchemaUtils.withCodecStatics(["decodeEffect", "decodeUnknownSync", "is"])
   );
 
 /**
@@ -706,7 +707,7 @@ export const OntologyName = S.String.check(
       description:
         "Lowercase ontology name beginning with a letter and containing letters, digits, hyphens, or underscores.",
     }),
-    SchemaUtils.withCodecStatics(["decodeEffect"])
+    SchemaUtils.withCodecStatics(["decodeEffect", "is"])
   );
 
 /**
@@ -883,6 +884,7 @@ export const ChunkId = S.String.check(
       description:
         "Deterministic chunk identifier combining a 12-character document fingerprint and canonical chunk index.",
     }),
+    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromDocument: dual(2, (documentId: DocumentId, index: NonNegativeInt): typeof schema.Type =>
         schema.make(`${documentId}-chunk-${index}`)
@@ -984,7 +986,7 @@ export const BatchId = S.String.check(
       documentation:
         "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
     }),
-    SchemaUtils.withCodecStatics(["decodeEffect", "decodeOption", "decodeUnknownEffect", "decodeUnknownSync"]),
+    SchemaUtils.withCodecStatics(["decodeEffect", "decodeOption", "decodeUnknownEffect", "decodeUnknownSync", "is"]),
     withContentHashIdStatics("batch")
   );
 

@@ -300,7 +300,8 @@ export const ToolCallEnded = S.Union([ToolCallSucceeded, ToolCallInterrupted, To
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

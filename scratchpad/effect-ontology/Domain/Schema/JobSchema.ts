@@ -51,6 +51,7 @@ export const BackgroundJobId = S.String.check(
     $I.annoteSchema("BackgroundJobId", {
       description: "Compact content-derived identifier for a persisted background job.",
     }),
+    SchemaUtils.withCodecStatics(["is"]),
     withContentHashIdStatics("job")
   );
 

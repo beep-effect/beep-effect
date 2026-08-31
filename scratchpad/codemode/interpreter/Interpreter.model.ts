@@ -172,7 +172,7 @@ export const AstNode = S.StructWithRest(
   $I.annoteSchema("AstNode", {
     description: "An Acorn syntax node with a required type discriminator and optional source location.",
   }),
-  SchemaUtils.withCodecStatics(["is"])
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"])
 );
 
 /**

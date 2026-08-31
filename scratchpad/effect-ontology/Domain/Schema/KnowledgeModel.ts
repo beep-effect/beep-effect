@@ -61,6 +61,7 @@ export const ClaimId = S.String.check(
     $I.annoteSchema("ClaimId", {
       description: "Deterministic compact identifier for one extracted claim.",
     }),
+    SchemaUtils.withCodecStatics(["is"]),
     withContentHashIdStatics("claim")
   );
 
@@ -162,6 +163,7 @@ export const DerivedAssertionId = S.String.check(
     $I.annoteSchema("DerivedAssertionId", {
       description: "Deterministic compact identifier for one rule-derived assertion.",
     }),
+    SchemaUtils.withCodecStatics(["is"]),
     withContentHashIdStatics("derived")
   );
 
@@ -214,7 +216,8 @@ export const RuleId = S.String.check(
     S.brand("RuleId"),
     $I.annoteSchema("RuleId", {
       description: "Canonical lowercase identifier for a reasoning rule.",
-    })
+    }),
+    SchemaUtils.withCodecStatics(["is"])
   );
 
 /**
@@ -389,7 +392,8 @@ export const RdfObject = ObjectTerm.annotate({
 }).pipe(
   $I.annoteSchema("RdfObject", {
     description: "Canonical RDF/JS named-node, blank-node, or literal object term.",
-  })
+  }),
+  SchemaUtils.withCodecStatics(["is"])
 );
 
 /**

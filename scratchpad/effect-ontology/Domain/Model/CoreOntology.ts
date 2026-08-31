@@ -233,6 +233,7 @@ export const MentionId = S.String.check(
     $I.annoteSchema("MentionId", {
       description: "Deterministic short identifier for one document character span.",
     }),
+    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromCoordinates: Effect.fn("MentionId.fromCoordinates")(function* (
         documentId: string,
@@ -386,6 +387,7 @@ export const CanonicalEntityId = S.String.check(
     $I.annoteSchema("CanonicalEntityId", {
       description: "Stable canonical identifier for a persistent resolved entity.",
     }),
+    SchemaUtils.withCodecStatics(["is"]),
     withSeedDerivedIdStatics("CanonicalEntityId.fromSeed", "entity")
   );
 
@@ -502,6 +504,7 @@ export const EventId = S.String.check(
     $I.annoteSchema("EventId", {
       description: "Stable deterministic short identifier for a tracked event.",
     }),
+    SchemaUtils.withCodecStatics(["is"]),
     SchemaUtils.withStatics((schema) => ({
       fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
     })),

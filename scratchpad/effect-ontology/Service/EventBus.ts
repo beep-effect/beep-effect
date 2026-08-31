@@ -113,7 +113,7 @@ export const EventEntry = S.toType(OntologyEventEntry).pipe(
   $I.annoteSchema("EventEntry", {
     description: "Canonical journal event payload consumed by EventBus subscribers.",
   }),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"])
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"])
 );
 
 /**
