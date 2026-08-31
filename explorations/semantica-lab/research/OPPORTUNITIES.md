@@ -432,3 +432,13 @@ ratifies.
   ratified `f1+w1` R2 selection passed with zero unexpected degradation. Prevention: either
   make every advertised selection construct a satisfiable metric set or reject unsupported
   stage/selection pairs during CLI decoding, before provider and ledger work begins.
+
+- **2026-08-31 — The first C2 report encoded component proxies as bundle-level proof.** Hosted
+  review found that the crash witness rebuilt one in-memory snapshot twice, cold start timed only
+  a second `ReasonerLive`, p95 closed ten synthetic seed triples, and RSS sampled the final heap.
+  Those values could pass while persisted-ledger recovery or the full selected workload failed.
+  Fix: the canary now rebuilds the actual run ledger in fresh processes around a SIGKILL, times a
+  fresh complete runtime to readiness, closes the full asserted projection for p95, and records
+  the process high-water RSS. Prevention: every telemetry field must name and exercise the same
+  accounting boundary as its governing workload-contract row; a component proxy is not evidence
+  for a bundle-level claim.

@@ -1,13 +1,14 @@
 import { NonNegativeInt, PosInt, Sha256Hex } from "@beep/schema";
-import { Clock, Console, Crypto, Effect, FileSystem, Layer, Number as N, Path } from "effect";
+import { Clock, Console, Crypto, Effect, Exit, FileSystem, Layer, Number as N, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { writeJsonArtifact } from "@/canary/Artifact";
 import { CanaryOptions } from "@/canary/Command";
 import { p95 } from "@/layers/CanaryC0Live";
-import { ReasonerLive } from "@/layers/ReasonerLive";
 import { LabConfig } from "@/runtime/Config";
 import { contentDigest, digestOmitting } from "@/schema/Digest";
 import { ReasoningFailed } from "@/schema/Errors";
@@ -43,6 +44,93 @@ const statement = Effect.fn("CanaryC2.statement")(function* (triple: RdfTriple) 
   return yield* Effect.fromResult(makeRdfStatement(triple)).pipe(
     Effect.mapError(() => failed("rule-invalid", "A C2 RDF statement did not encode."))
   );
+});
+
+const runProjectionProbe = Effect.fn("CanaryC2.runProjectionProbe")(function* (
+  processSpawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
+  entry: string,
+  ledgerRoot: string,
+  runId: string,
+  mode: "live" | "replay"
+) {
+  const output = yield* processSpawner
+    .string(
+      ChildProcess.make("bun", ["run", entry, "recover", ledgerRoot, runId, mode], {
+        cwd: process.cwd(),
+        stderr: "pipe",
+        stdout: "pipe",
+      })
+    )
+    .pipe(
+      Effect.timeout("30 seconds"),
+      Effect.mapError(() => failed("crash-mismatch", "The crash probe could not rebuild the persisted ledger."))
+    );
+  return yield* S.decodeEffect(Sha256Hex)(Str.trim(output)).pipe(
+    Effect.mapError(() => failed("crash-mismatch", "The crash probe returned an invalid projection digest."))
+  );
+});
+
+const runCrashProbe = Effect.fn("CanaryC2.runCrashProbe")(function* (
+  processSpawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
+  entry: string,
+  ledgerRoot: string,
+  runId: string,
+  mode: "live" | "replay"
+) {
+  const beforeCrashDigest = yield* runProjectionProbe(processSpawner, entry, ledgerRoot, runId, mode);
+  const crashCommand = ChildProcess.make("bun", ["run", entry, "crash", ledgerRoot, runId, mode], {
+    cwd: process.cwd(),
+    stderr: "pipe",
+    stdout: "pipe",
+  });
+  const [crashOutput, crashExit] = yield* Effect.scoped(
+    processSpawner.spawn(crashCommand).pipe(
+      Effect.flatMap((crash) =>
+        Effect.all([crash.stdout.pipe(Stream.decodeText, Stream.mkString), Effect.exit(crash.exitCode)], {
+          concurrency: "unbounded",
+        })
+      )
+    )
+  ).pipe(
+    Effect.timeout("30 seconds"),
+    Effect.mapError(() => failed("crash-mismatch", "The ledger checkpoint process did not terminate as expected."))
+  );
+  if (!Str.includes("ledger-reopened")(crashOutput) || !Exit.isFailure(crashExit)) {
+    return yield* failed("crash-mismatch", "The ledger checkpoint process did not reach its SIGKILL boundary.");
+  }
+  const afterRestartDigest = yield* runProjectionProbe(processSpawner, entry, ledgerRoot, runId, mode);
+  if (!Str.Equivalence(beforeCrashDigest, afterRestartDigest)) {
+    return yield* failed("crash-mismatch", "Projection identity changed after the persisted-ledger crash checkpoint.");
+  }
+  return CrashIdentityWitness.make({
+    afterRestartDigest,
+    beforeCrashDigest,
+    checkpoint: "after-ledger-commit-before-projection",
+  });
+});
+
+const measureBundleColdStart = Effect.fn("CanaryC2.measureBundleColdStart")(function* (
+  processSpawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
+  entry: string
+) {
+  const started = yield* Clock.currentTimeMillis;
+  const output = yield* processSpawner
+    .string(
+      ChildProcess.make("bun", ["run", entry, "bundle"], {
+        cwd: process.cwd(),
+        stderr: "pipe",
+        stdout: "pipe",
+      })
+    )
+    .pipe(
+      Effect.timeout("30 seconds"),
+      Effect.mapError(() => failed("tier-l-exceeded", "The fresh complete runtime did not become ready."))
+    );
+  const ended = yield* Clock.currentTimeMillis;
+  if (!Str.includes("bundle-ready")(output)) {
+    return yield* failed("tier-l-exceeded", "The fresh complete runtime did not report readiness.");
+  }
+  return N.max(0, ended - started);
 });
 
 const seedTriples = (run: string): A.NonEmptyReadonlyArray<RdfTriple> => {
@@ -86,8 +174,10 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
   const crypto = yield* Crypto.Crypto;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const rdf = yield* RdfProjection;
   const reasoner = yield* Reasoner;
+  const runtimeProbeEntry = path.resolve(import.meta.dirname, "../canary/RuntimeProbeChild.ts");
 
   return CanaryC2.of({
     run: Effect.fn("CanaryC2.run")(function* (options) {
@@ -129,21 +219,16 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         Effect.provideService(Crypto.Crypto, crypto),
         Effect.mapError(() => failed("expectation-unavailable", "The C2 expectation digest failed."))
       );
-      const firstProjection = yield* rdf.rebuild(base.snapshot);
-      const secondProjection = yield* rdf.rebuild(base.snapshot);
-      const firstDigest = yield* contentDigest(S.Array(S.String))(firstProjection.serializedQuads).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
-        Effect.mapError(() => failed("crash-mismatch", "The pre-crash projection digest failed."))
+      const crash = yield* runCrashProbe(
+        processSpawner,
+        runtimeProbeEntry,
+        config.ledgerRoot,
+        base.report.base.run.id,
+        base.baseTelemetry.mode
       );
-      const secondDigest = yield* contentDigest(S.Array(S.String))(secondProjection.serializedQuads).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
-        Effect.mapError(() => failed("crash-mismatch", "The restart projection digest failed."))
-      );
-      if (!Str.Equivalence(firstDigest, secondDigest)) {
-        return yield* failed("crash-mismatch", "Projection identity changed across the crash checkpoint rebuild.");
-      }
+      const projection = yield* rdf.rebuild(base.snapshot);
       const projected = yield* Effect.forEach(
-        secondProjection.serializedTriples,
+        projection.serializedTriples,
         (triple) =>
           statement(
             RdfTriple.make({
@@ -171,11 +256,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         Effect.mapError(() => failed("report-invalid", "The C2 closure digest failed."))
       );
       const reasoning = ReasoningWitness.make({
-        crash: CrashIdentityWitness.make({
-          afterRestartDigest: secondDigest,
-          beforeCrashDigest: firstDigest,
-          checkpoint: "after-ledger-commit-before-projection",
-        }),
+        crash,
         gold: GEntailmentWitness.make({ expectationDigest, cases: nonEmptyGold }),
         projection: ProjectionReasoningWitness.make({
           assertedCount: PosInt.make(A.length(full.asserted)),
@@ -203,20 +284,17 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
       const report = yield* C2EvalReport.makeEffect({ ...provisional, reportDigest }).pipe(
         Effect.mapError(() => failed("report-invalid", "The C2 report violates its schema contract."))
       );
-      const coldStarted = yield* Clock.currentTimeMillis;
-      yield* Effect.scoped(Layer.build(ReasonerLive));
-      const coldEnded = yield* Clock.currentTimeMillis;
-      const timings = yield* Effect.forEach(A.replicate(seedTriples(base.report.base.run.id), 20), () =>
+      const coldStartMs = yield* measureBundleColdStart(processSpawner, runtimeProbeEntry);
+      const timings = yield* Effect.forEach(A.replicate(asserted, 20), () =>
         Clock.currentTimeMillis.pipe(
           Effect.flatMap((queryStarted) =>
-            reasoner.close(seeds).pipe(
+            reasoner.close(asserted).pipe(
               Effect.andThen(Clock.currentTimeMillis),
               Effect.map((ended) => ended - queryStarted)
             )
           )
         )
       );
-      const coldStartMs = N.max(0, coldEnded - coldStarted);
       const queryP95 = p95(timings);
       if (coldStartMs >= 5_000 || queryP95 >= 100) {
         return yield* failed("tier-l-exceeded", `Tier-L failed: cold=${coldStartMs}ms p95=${queryP95}ms.`);
@@ -230,7 +308,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         modelBytes: O.none(),
         p95Ms: NonNegativeInt.make(queryP95),
         reportDigest,
-        rssBytes: NonNegativeInt.make(process.memoryUsage().rss),
+        rssBytes: NonNegativeInt.make(N.multiply(process.resourceUsage().maxRSS, 1_024)),
         runId: base.report.base.run.id,
         schemaVersion: "eval-telemetry/v1",
         startedAt: base.baseTelemetry.startedAt,

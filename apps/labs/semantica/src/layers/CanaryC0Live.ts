@@ -162,7 +162,7 @@ const directoryBytes = Effect.fn("CanaryC0.directoryBytes")(function* (
  * console.log(p95([1, 2, 3])) // 3
  * ```
  *
- * @category telemetry
+ * @category observability
  * @since 0.0.0
  */
 export const p95 = (timings: ReadonlyArray<number>): number =>
