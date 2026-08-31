@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "semantica-relation-preview/v1",
+  "cases": [
+    {
+      "paperId": "06c93f91ef3d",
+      "cacheDigest": "5737b31d6d5095afeb0123f9feb8d6e3197f8a284b94096928abce354a0c2955"
+    },
+    {
+      "paperId": "06c93f91ef3d",
+      "cacheDigest": "6bbc2bb81a00c859ba81547fc2b04003671a0e6fd731fa9e4c9dbc6e624d3447"
+    },
+    {
+      "paperId": "057e356e94f8",
+      "cacheDigest": "0ac6007d473c64776b6cc3dbba277dd11096fa387b857381a9c98b2ba8c827e9"
+    }
+  ]
+}

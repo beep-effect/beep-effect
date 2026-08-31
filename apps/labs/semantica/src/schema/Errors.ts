@@ -32,6 +32,20 @@ const ModelRevisionPinSetting = LiteralKit(["AI_ANTHROPIC_MODEL", "SEMANTICA_XAI
   })
 );
 
+const RelationPreviewFailureReason = LiteralKit([
+  "manifest-invalid",
+  "cache-unavailable",
+  "cache-invalid",
+  "source-unavailable",
+  "parse-degraded",
+  "response-invalid",
+  "preview-floor-not-met",
+]).annotate(
+  $I.annote("RelationPreviewFailureReason", {
+    description: "Stable reason codes for the zero-spend evidence-quote preview.",
+  })
+);
+
 /**
  * Reports that a requested source document cannot be listed or read.
  *
@@ -270,5 +284,31 @@ export class C0ExecutionFailed extends S.TaggedError<C0ExecutionFailed>($I`C0Exe
   { message: S.NonEmptyString },
   $I.annoteError<C0ExecutionFailed>("C0ExecutionFailed", {
     description: "Expected failure while acquiring the selected live or replay C0 execution layers.",
+  })
+) {}
+
+/**
+ * Reports a typed failure in the zero-spend relation-candidate preview.
+ *
+ * **Example** (Create a failed preview floor)
+ *
+ * ```ts
+ * import { RelationPreviewFailed } from "@/schema/Errors"
+ *
+ * const error = RelationPreviewFailed.make({
+ *   message: "No cached response grounded a relation.",
+ *   reason: "preview-floor-not-met"
+ * })
+ * console.log(error.reason) // "preview-floor-not-met"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RelationPreviewFailed extends S.TaggedError<RelationPreviewFailed>($I`RelationPreviewFailed`)(
+  "RelationPreviewFailed",
+  { message: S.NonEmptyString, reason: RelationPreviewFailureReason },
+  $I.annoteError<RelationPreviewFailed>("RelationPreviewFailed", {
+    description: "Expected failure while validating or executing the zero-spend relation-candidate preview.",
   })
 ) {}

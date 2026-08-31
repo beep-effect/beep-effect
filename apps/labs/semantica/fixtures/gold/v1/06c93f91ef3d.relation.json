@@ -14,7 +14,7 @@
       "startChar": 116,
       "endChar": 154,
       "quoteSha256": "84c559e037ecaec0335a146a1d1cc0726f7dce91a572c8f752632fa3fffa2efd",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "affiliated with",
@@ -27,7 +27,7 @@
       "startChar": 155,
       "endChar": 193,
       "quoteSha256": "fe222a1615962521e268db22f7b4062123a6e87db688dffbf7b00297baa12184",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "affiliated with",
@@ -40,7 +40,7 @@
       "startChar": 194,
       "endChar": 236,
       "quoteSha256": "38744657294761cf5dc5e389b7f9355a9029c3f1ee44bd17e10e775716444879",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "affiliated with",
@@ -53,7 +53,7 @@
       "startChar": 237,
       "endChar": 275,
       "quoteSha256": "4d99f4dcf1b5606ba05c72cb202f944234e320748c7813bd54a0bb2e59d43436",
-      "verified": false
+      "verified": true
     },
     {
       "predicate": "affiliated with",
@@ -66,7 +66,7 @@
       "startChar": 276,
       "endChar": 303,
       "quoteSha256": "d7eafda8e9664339f75962ff91eb8ed98f5a47417c3701d6ba73c075a05e86a2",
-      "verified": false
+      "verified": true
     }
   ],
   "proposer": {
