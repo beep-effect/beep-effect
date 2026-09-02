@@ -7,11 +7,12 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { CanaryCommand, CanaryOptions, CanaryStage, StageNotImplemented } from "@/canary/Command";
+import { CanaryCommand, CanaryOptions, CanaryStage } from "@/canary/Command";
 import { LabConfig, RuntimeLayer } from "@/runtime/Layer";
-import { ProjectionFailed, ReportInvalid } from "@/schema/Errors";
+import { ProjectionFailed, ReasoningFailed, ReportInvalid } from "@/schema/Errors";
 import { CanaryC0 } from "@/services/CanaryC0";
 import { CanaryC1 } from "@/services/CanaryC1";
+import { CanaryC2 } from "@/services/CanaryC2";
 
 const runtimeFromEnv = (env: Record<string, string>) =>
   RuntimeLayer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
@@ -61,25 +62,19 @@ describe("Semantica runtime layer", () => {
 describe("Semantica canary command", () => {
   const runCanary = Command.runWith(CanaryCommand, { renderErrors: false, version: "0.0.0" });
 
-  it("fails stage c2 with StageNotImplemented", () =>
+  it("routes c2 through the injected workflow service", () =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const stage = CanaryStage.Enum.c2;
-        const error = yield* provideScopedLayer(runtimeFromEnv({}))(runCanary([stage, "--offline"]).pipe(Effect.flip));
+        const expected = ReasoningFailed.make({ message: "stub-c2-ran", reason: "event-invalid" });
+        const stub = CanaryC2.of({ run: Effect.fn("CanaryC2.stub")(() => Effect.fail(expected)) });
+        const error = yield* provideScopedLayer(runtimeFromEnv({}))(
+          runCanary(["c2", "--offline", "--out", ".beep/test-run", "--selection", "f1"]).pipe(
+            Effect.provideService(CanaryC2, stub),
+            Effect.flip
+          )
+        );
 
-        expect(error).toBeInstanceOf(StageNotImplemented);
-        expect(error).toMatchObject({
-          _tag: "StageNotImplemented",
-          message: `Canary stage ${stage} is not implemented.`,
-          options: {
-            manifest: "fixtures/w1.manifest.json",
-            offline: true,
-            out: O.none(),
-            paper: O.none(),
-            selection: "f1+w1",
-          },
-          stage,
-        });
+        expect(error).toEqual(expected);
       })
     ));
 
@@ -106,7 +101,10 @@ describe("Semantica canary command", () => {
     Effect.runPromise(
       Effect.gen(function* () {
         const expected = ProjectionFailed.make({ message: "stub-c1-ran", reason: "vector-failed" });
-        const stub = CanaryC1.of({ run: Effect.fn("CanaryC1.stub")(() => Effect.fail(expected)) });
+        const stub = CanaryC1.of({
+          run: Effect.fn("CanaryC1.stub")(() => Effect.fail(expected)),
+          runWithSnapshot: Effect.fn("CanaryC1.stubWithSnapshot")(() => Effect.fail(expected)),
+        });
         const error = yield* provideScopedLayer(runtimeFromEnv({}))(
           runCanary(["c1", "--offline", "--out", ".beep/test-run", "--selection", "f1"]).pipe(
             Effect.provideService(CanaryC1, stub),

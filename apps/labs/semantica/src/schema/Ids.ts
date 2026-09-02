@@ -339,3 +339,63 @@ export type RunId = typeof RunId.Type;
  * @since 0.0.0
  */
 export const isRunId = S.is(RunId);
+
+/**
+ * Full SHA-256 identity of one canonical RDF statement.
+ *
+ * **Example** (Construct a statement id)
+ *
+ * ```ts
+ * import { StatementId } from "@/schema/Ids"
+ *
+ * console.log(StatementId.make("6".repeat(64)).length) // 64
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const StatementId = Sha256Hex.pipe(
+  S.brand("StatementId"),
+  $I.annoteSchema("StatementId", {
+    description: "Full SHA-256 identity of one canonical subject-predicate-object statement.",
+  })
+);
+
+/**
+ * Decoded value accepted by {@link StatementId}.
+ *
+ * @see {@link StatementId} for validation and branding.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StatementId = typeof StatementId.Type;
+
+/**
+ * Full SHA-256 identity of one replay-stable inference event.
+ *
+ * **Example** (Construct an inference event id)
+ *
+ * ```ts
+ * import { InferenceEventId } from "@/schema/Ids"
+ *
+ * console.log(InferenceEventId.make("7".repeat(64)).length) // 64
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const InferenceEventId = Sha256Hex.pipe(
+  S.brand("InferenceEventId"),
+  $I.annoteSchema("InferenceEventId", {
+    description: "Full SHA-256 identity of one rule application and its proof DAG.",
+  })
+);
+
+/**
+ * Decoded value accepted by {@link InferenceEventId}.
+ *
+ * @see {@link InferenceEventId} for validation and branding.
+ * @category type-level
+ * @since 0.0.0
+ */
+type InferenceEventId = typeof InferenceEventId.Type;

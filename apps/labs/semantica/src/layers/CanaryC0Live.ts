@@ -151,7 +151,21 @@ const directoryBytes = Effect.fn("CanaryC0.directoryBytes")(function* (
   return N.sumAll(sizes);
 });
 
-const p95 = (timings: ReadonlyArray<number>): number =>
+/**
+ * Returns the nearest-rank p95 for a bounded timing sample.
+ *
+ * **Example** (Select a small-sample p95)
+ *
+ * ```ts
+ * import { p95 } from "@/layers/CanaryC0Live"
+ *
+ * console.log(p95([1, 2, 3])) // 3
+ * ```
+ *
+ * @category observability
+ * @since 0.0.0
+ */
+export const p95 = (timings: ReadonlyArray<number>): number =>
   A.match(A.sort(timings, Order.Number), {
     onEmpty: () => 0,
     onNonEmpty: (ordered) => {

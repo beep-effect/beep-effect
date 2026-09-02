@@ -17,7 +17,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | Embeddings | **pick-one** (C1, 2026-08-31): hosted `@beep/openai` `OpenAiEmbeddingModel` using `text-embedding-3-small` revision `text-embedding-3-small@2024-01-25`, content-addressed cache replay, and `DegradedEmbedding` as the only failure state. Dimension 1,536 is frozen from C1 onward. The local Snowflake/ONNX lane remains parked for a separate same-model local-runtime probe. | `park-pending-canary`; S3 (openai-compat `/embeddings` op); G6 "via the agents slice"; the sheet's provisional local Snowflake/ONNX winner |
 | Input | **pick-one** (C0, 2026-08-30): the proven C0 input stack, with `@beep/doc-text` for born-digital W1 PDFs, identity decoding for Markdown, and the lab's deterministic HTML text extraction. All 25 W1 papers parsed in R2 without the direct-`unpdf` retry; MuPDF stays parked. | `park-pending-canary`; the sheet's per-stage winners; "PDF.js/MuPDF is a tie" |
 | Spans | compose, not build: the lab's `CanonicalText` = `ResolvedSourceText` (`@beep/file-processing` `SourceText`) = `@beep/provenance` `SourceTextIdentity` + text, spans = `@beep/provenance` `TextAnchor`, C0 tripwire = `verifyTextAnchor`; raw extracted text IS canonical, normalization is locator-only, no raw→canonical loss map; lab-local NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness` (M1) | shared-schema v1.1 `CanonicalText` loss map; BRIEF rabbit hole 1 |
-| Reasoning | park-pending-canary; EYE is the C2/CI correctness oracle, not the product runtime; C2 runtime = ρdf closure (rdfs2,3,5,7,9,11 as rule values + one SKOS broader-transitivity rule), naive fixpoint, emitting InferenceEvents (S5); C2 gate = closure equality on conclusions + per-InferenceEvent rule validation, never premise-set identity (S8); G-entailment splits into `rdfs` (gates C2) and `rules` (gates the spike); NET-NEW is a dated spike with kill criteria where the v3 Rete salvage and the kernel ablate against EYE | the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
+| Reasoning | **pick-one** (C2, 2026-08-31): lab-local declarative rho-df closure (rdfs2,3,5,7,9,11 plus SKOS broader-transitivity), naive fixpoint, content-addressed `InferenceEvent` proof DAGs, and test-only restricted EYE as the independent oracle. Full-W1/F1 live and replay reports were byte-identical; the crash restart and Tier-L gates passed without retry. `G-entailment/rules`, the v3 Rete salvage, and the proof-ledger kernel remain the queued reasoning spike at `decompose`. | `park-pending-canary`; the sheet's EYE pick-one; "RDFS-lite ~13 rules" |
 | Extraction | **pick-one** (C0, 2026-08-30): the hybrid extractor contract—hosted LangExtract-shaped extraction with exact evidence-quote grounding, plus the fail-closed Wink pattern comparator and its declared unsupported losses. The candidate passed all three relation papers and full-W1 R2 without retry; the legacy relation-dropping handoff and fabricated-span adapter remain parked. | E9 `active re-entry`; `park` (S1, 2026-08-26); `park-pending-canary`; the sheet's dual verdict; BRIEF v1.0's C1 G-relation deferral |
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
@@ -701,3 +701,21 @@ Source:
   Snowflake/ONNX lane stays parked for its separate same-model runtime probe;
   it is not implied by this hosted-live/replay-offline verdict. The retry was
   not used.
+
+## 2026-08-31 (C2 pass) — Reasoning verdict
+
+Source:
+[`goals/semantica-canary/history/p4-c2-r2.md`](../../goals/semantica-canary/history/p4-c2-r2.md).
+
+- **Reasoning: `pick-one`.** The selected C2 boundary is the lab-local
+  declarative rho-df fixpoint with content-addressed `InferenceEvent` proof
+  DAGs and restricted EYE as a test-time oracle only. All seven committed
+  conclusion/proof cases passed, every event validated against its own rule,
+  the real PGlite commit/SIGKILL/fresh-process rebuild probe reproduced its
+  projection digest, and the 34-document live and replay reports were
+  byte-identical at digest
+  `2a2089eacaa7f341649b6e1d86991fda526f5d9708e9eaa1f4e9d06e0533b5d1`.
+  Live cold start was 1 ms and interactive p95 was 3 ms, clearing Tier-L; the
+  retry was not used. EYE is not a runtime dependency. `G-entailment/rules`,
+  the v3 Rete salvage, and the proof-ledger kernel remain the separately gated
+  reasoning spike and re-enter at `decompose`.

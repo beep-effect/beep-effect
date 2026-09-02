@@ -4,10 +4,10 @@
 
 Status: `active`
 
-P1-P3 are complete. C1 passed its committed G-projection expectations,
-alternate-dimension and rebuild-identity proofs, and the full-W1 R2 gate with
-byte-identical live/replay reports and no unexpected degradation. Its retry was
-never used. P4 begins after the C1 evidence PR is merge-ready and landed.
+P1-P4 are complete. C2 passed its restricted-EYE oracle, per-event rule
+validation, commit/SIGKILL/restart projection proof, Tier-L bars, and the
+full-W1 R2 gate with byte-identical live/replay reports and no unexpected
+degradation. Its retry was never used. P5 closes the retained packet.
 
 ## Phases
 
@@ -20,7 +20,7 @@ completion gate binds per phase, not only at close. Phase ids match
 | P1 Scaffold | complete | Mint the lab on its own PR, then commit F1 fixtures and the W1 manifest. | Lab passes its Labs lane; one local `cargo check` recorded; headless entry and runtime layer exist; F1 + W1 manifest committed. |
 | P2 C0 | complete | The spine, first vertical slice first, then all three G-relation papers. | Evidence-quote candidate passed the slice, relation extension, and full-W1 R2 gate; Input and Extraction verdicts written. |
 | P3 C1 | complete | Derived projections: dimension-keyed vector table and RDF rebuild-from-ledger. | G projection, alternate-dimension keying, rebuild identity, and full-W1 R2 passed; Storage and Embeddings verdicts written. |
-| P4 C2 | pending | Reasoning, crash injection, and the Tier-L bars at bundle level. | C2 pass criteria; Reasoning verdict written; all Tier-L bars green. |
+| P4 C2 | complete | Reasoning, crash injection, and the Tier-L bars at bundle level. | C2 pass criteria; Reasoning verdict written; all Tier-L bars green. |
 | P5 Close | pending | Verdicts to DECISIONS then atlas; reflection; packet state flip in the same PR. | Closeout reflection validates; final park/drop values synced to the atlas; packet `completed-retained`. |
 
 ## P1 Scaffold

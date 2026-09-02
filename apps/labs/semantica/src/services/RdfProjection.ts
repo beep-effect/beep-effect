@@ -8,9 +8,28 @@ import type { SparqlExpectation, SparqlResultWitness } from "@/schema/Projection
 
 const $I = $SemanticaId.create("services/RdfProjection");
 
+/**
+ * Canonical triple terms exposed without leaking the RDF implementation family.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+interface RdfProjectionTriple {
+  readonly object: string;
+  readonly predicate: string;
+  readonly subject: string;
+}
+
+/**
+ * Disposable RDF dataset plus canonical quad and triple projections.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 interface RdfProjectionBuild {
   readonly dataset: Rdf.Dataset;
   readonly serializedQuads: ReadonlyArray<string>;
+  readonly serializedTriples: ReadonlyArray<RdfProjectionTriple>;
 }
 
 interface RdfProjectionShape {

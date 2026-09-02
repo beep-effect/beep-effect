@@ -31,6 +31,7 @@ import { ModelIdentity } from "@/schema/Model";
 import { ParseOutcome } from "@/schema/Text";
 import { CanaryC0 } from "@/services/CanaryC0";
 import { CanaryC1 } from "@/services/CanaryC1";
+import { CanaryC2 } from "@/services/CanaryC2";
 import { Chunker } from "@/services/Chunker";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
@@ -71,6 +72,12 @@ const unusedCanaryC0 = CanaryC0.of({
 });
 const unusedCanaryC1 = CanaryC1.of({
   run: Effect.fn("CanaryC1.unused")(() => Effect.die(new Error("C1 is not used by gold command tests."))),
+  runWithSnapshot: Effect.fn("CanaryC1.unusedWithSnapshot")(() =>
+    Effect.die(new Error("C1 is not used by gold command tests."))
+  ),
+});
+const unusedCanaryC2 = CanaryC2.of({
+  run: Effect.fn("CanaryC2.unused")(() => Effect.die(new Error("C2 is not used by gold command tests."))),
 });
 
 const unusedChunker = Chunker.of({
@@ -545,6 +552,7 @@ describe("C0 gold proposer", () => {
             runCanary(["gold", "propose", "--offline", "--paper", paperId, "--subset", "entity"]).pipe(
               Effect.provideService(CanaryC0, unusedCanaryC0),
               Effect.provideService(CanaryC1, unusedCanaryC1),
+              Effect.provideService(CanaryC2, unusedCanaryC2),
               Effect.provideService(Chunker, unusedChunker),
               Effect.flip
             )

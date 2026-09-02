@@ -12,24 +12,24 @@ import type {
   ProjectionFailed,
   ReportInvalid,
 } from "@/schema/Errors";
+import type { C1ExecutionResult } from "@/schema/Execution";
 import type { C1EvalReport } from "@/schema/Projection";
 
 const $I = $SemanticaId.create("services/CanaryC1");
 
+type CanaryC1Failure =
+  | AnchorRejected
+  | C0ExecutionFailed
+  | DocumentUnavailable
+  | GoldUnavailable
+  | LedgerFailed
+  | ModelRevisionUnpinned
+  | ProjectionFailed
+  | ReportInvalid;
+
 interface CanaryC1Shape {
-  readonly run: (
-    options: CanaryOptions
-  ) => Effect.Effect<
-    C1EvalReport,
-    | AnchorRejected
-    | C0ExecutionFailed
-    | DocumentUnavailable
-    | GoldUnavailable
-    | LedgerFailed
-    | ModelRevisionUnpinned
-    | ProjectionFailed
-    | ReportInvalid
-  >;
+  readonly run: (options: CanaryOptions) => Effect.Effect<C1EvalReport, CanaryC1Failure>;
+  readonly runWithSnapshot: (options: CanaryOptions) => Effect.Effect<C1ExecutionResult, CanaryC1Failure>;
 }
 
 /**
