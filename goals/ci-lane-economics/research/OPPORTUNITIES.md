@@ -553,3 +553,17 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** keep the monitor attached while required checks
   are pending, and derive repair commands only from terminal failing required
   contexts rather than from a generic nonzero pending-check exit.
+
+## 2026-08-30 — combined post-merge fetch lost the base tracking ref
+
+- **Doing:** proving PR #930 merged before cleaning its deleted remote topic
+  ref, while refreshing `origin/main` for the ancestry check.
+- **Evidence:** a single fetch requested both the live main ref and the already
+  deleted topic ref; it stopped with `couldn't find remote ref`, after which a
+  main-only prune fetch failed with `cannot lock ref` because `origin/HEAD`
+  pointed at the now-missing `origin/main`. The configured origin fetchspec
+  restored `origin/main` to merge commit `8adba76f`, and the guarded ancestry
+  check then passed.
+- **Would have prevented it:** fetch the durable base independently from an
+  optional topic ref, confirm the topic with `ls-remote`, and prune only that
+  exact tracking ref after the base ref and merge ancestry are proven.
