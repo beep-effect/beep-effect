@@ -6,6 +6,8 @@ Reproduce from a clean repository clone with the committed compact inputs:
 python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs
 ```
 
+Embedded replay verifies both compact inputs and `economics.json` against HEAD, then checks the input bytes against `inputs/RECEIPTS.json`; use `--allow-input-drift` only for non-ratified output.
+
 Validate an available frozen corpus before replaying it:
 
 ```sh

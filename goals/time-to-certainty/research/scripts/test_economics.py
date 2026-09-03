@@ -4,6 +4,10 @@ from __future__ import annotations
 import contextlib
 import importlib.util
 import io
+import json
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +19,140 @@ SPEC = importlib.util.spec_from_file_location("economics", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 economics = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(economics)
+
+
+class EmbeddedInputValidationTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temporary.name) / "repo"
+        self.output_root = self.repo / "goals" / "time-to-certainty" / "research"
+        self.input_root = self.output_root / "inputs"
+        self.script = self.output_root / "scripts" / "economics.py"
+        self.live_snapshot = self.input_root / "live-journals.json.gz"
+        self.hosted_snapshot = self.input_root / "hosted-runs.json.gz"
+        self.input_receipts = self.input_root / "RECEIPTS.json"
+        self.economics_json = self.output_root / "economics.json"
+        self.economics_md = self.output_root / "economics.md"
+        sources = (
+            (economics.SCRIPT, self.script),
+            (economics.LIVE_SNAPSHOT, self.live_snapshot),
+            (economics.HOSTED_SNAPSHOT, self.hosted_snapshot),
+            (economics.INPUT_RECEIPTS, self.input_receipts),
+            (economics.ECONOMICS_JSON, self.economics_json),
+            (economics.ECONOMICS_MD, self.economics_md),
+        )
+        for source, destination in sources:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
+
+        self.patches = contextlib.ExitStack()
+        replacements = {
+            "SCRIPT": self.script,
+            "OUTPUT_ROOT": self.output_root,
+            "INPUT_ROOT": self.input_root,
+            "REPO_ROOT": self.repo,
+            "DEFAULT_CORPUS": self.repo / "missing-corpus",
+            "LIVE_SNAPSHOT": self.live_snapshot,
+            "HOSTED_SNAPSHOT": self.hosted_snapshot,
+            "INPUT_RECEIPTS": self.input_receipts,
+            "ECONOMICS_JSON": self.economics_json,
+            "ECONOMICS_MD": self.economics_md,
+        }
+        for name, value in replacements.items():
+            self.patches.enter_context(mock.patch.object(economics, name, value))
+
+        self.git("init", "-q")
+        self.git("add", ".")
+        self.git(
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.com",
+            "commit",
+            "-qm",
+            "fixture",
+        )
+
+    def tearDown(self) -> None:
+        self.patches.close()
+        self.temporary.cleanup()
+
+    def git(self, *args: str) -> None:
+        subprocess.run(["git", *args], cwd=self.repo, check=True, capture_output=True, text=True)
+
+    def replay(self, *args: str) -> tuple[str, str]:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with mock.patch.object(sys, "argv", [str(self.script), "--from-inputs", *args]):
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                economics.main()
+        return stdout.getvalue(), stderr.getvalue()
+
+    def drift_live_snapshot(self) -> None:
+        data = bytearray(self.live_snapshot.read_bytes())
+        data[9] = (data[9] + 1) % 256
+        self.live_snapshot.write_bytes(data)
+
+    def outputs(self) -> tuple[bytes, bytes]:
+        return self.economics_json.read_bytes(), self.economics_md.read_bytes()
+
+    def test_pristine_inputs_pass(self) -> None:
+        outputs_before = self.outputs()
+        self.replay()
+        self.assertEqual(self.outputs(), outputs_before)
+
+    def test_modified_input_fails_closed_and_names_path(self) -> None:
+        self.drift_live_snapshot()
+        outputs_before = self.outputs()
+        with self.assertRaises(SystemExit) as raised:
+            self.replay()
+        self.assertIn(
+            "goals/time-to-certainty/research/inputs/live-journals.json.gz",
+            str(raised.exception),
+        )
+        self.assertEqual(self.outputs(), outputs_before)
+
+    def test_modified_economics_fails_closed_and_names_path(self) -> None:
+        report = json.loads(self.economics_json.read_text(encoding="utf-8"))
+        report["unratifiedMutation"] = True
+        economics.write_json(self.economics_json, report)
+        outputs_before = self.outputs()
+        with self.assertRaises(SystemExit) as raised:
+            self.replay()
+        self.assertIn("goals/time-to-certainty/research/economics.json", str(raised.exception))
+        self.assertEqual(self.outputs(), outputs_before)
+
+    def test_allow_input_drift_stamps_outputs(self) -> None:
+        self.drift_live_snapshot()
+        _, stderr = self.replay("--allow-input-drift")
+        report = json.loads(self.economics_json.read_text(encoding="utf-8"))
+        markdown = self.economics_md.read_text(encoding="utf-8")
+        self.assertEqual(report["corpusValidation"], "embedded-drifted")
+        self.assertIn("NON-RATIFIED EMBEDDED INPUT DRIFT", markdown)
+        self.assertIn("--allow-input-drift", stderr)
+
+    def test_receipts_mismatch_fails_closed(self) -> None:
+        document = json.loads(self.input_receipts.read_text(encoding="utf-8"))
+        document["files"][0]["sha256_12"] = "000000000000"
+        economics.write_json(self.input_receipts, document)
+        self.git("add", self.input_receipts.relative_to(self.repo).as_posix())
+        self.git(
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.com",
+            "commit",
+            "-qm",
+            "mismatched receipt",
+        )
+        outputs_before = self.outputs()
+        with self.assertRaises(SystemExit) as raised:
+            self.replay()
+        self.assertIn(
+            "goals/time-to-certainty/research/inputs/hosted-runs.json.gz",
+            str(raised.exception),
+        )
+        self.assertEqual(self.outputs(), outputs_before)
 
 
 class CorpusValidationTest(unittest.TestCase):

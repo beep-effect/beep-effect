@@ -2,10 +2,11 @@
 """Reproduce the time-to-certainty verification-economics snapshot.
 
 The default mode reads the two committed compact gzip inputs under ../inputs/
-and rewrites economics.json and economics.md with stable ordering and
-nearest-rank percentiles. Pass --corpus to validate every replayed corpus file
-and its compact facts against the committed ratified baseline before use. A
-drifted corpus fails closed unless --allow-corpus-drift is explicit.
+after verifying their committed Git blobs and independent byte receipts, then
+rewrites economics.json and economics.md with stable ordering and nearest-rank
+percentiles. Pass --corpus to validate every replayed corpus file and its
+compact facts against the committed ratified baseline before use. Drift fails
+closed unless the matching explicit override is supplied.
 """
 
 from __future__ import annotations
@@ -45,6 +46,7 @@ DEFAULT_CORPUS_RELATIVE = (
 DEFAULT_CORPUS = REPO_ROOT / DEFAULT_CORPUS_RELATIVE
 LIVE_SNAPSHOT = INPUT_ROOT / "live-journals.json.gz"
 HOSTED_SNAPSHOT = INPUT_ROOT / "hosted-runs.json.gz"
+INPUT_RECEIPTS = INPUT_ROOT / "RECEIPTS.json"
 ECONOMICS_JSON = OUTPUT_ROOT / "economics.json"
 ECONOMICS_MD = OUTPUT_ROOT / "economics.md"
 
@@ -53,6 +55,7 @@ VERDICT_SCHEMA_V2 = "yeet-verdict/v2"
 LIVE_SCHEMA = "verification-economics-live-input/v2"
 HOSTED_SCHEMA = "verification-economics-hosted-input/v2"
 REPORT_SCHEMA = "verification-economics/v1"
+INPUT_RECEIPTS_SCHEMA = "verification-economics-input-receipts/v1"
 FROZEN_CAPTURE_AT = "2026-09-03T02:27:19.384Z"
 LOCK_SENTENCE = "Another Yeet full proof"
 COMPARABLE_MODES = {"verify", "repair", "publish"}
@@ -1501,6 +1504,11 @@ def render_economics(report: dict[str, Any]) -> str:
         "python3 goals/time-to-certainty/research/scripts/economics.py --from-inputs",
         "```",
         "",
+        (
+            "Embedded replay verifies both compact inputs and `economics.json` against HEAD, then checks the "
+            "input bytes against `inputs/RECEIPTS.json`; use `--allow-input-drift` only for non-ratified output."
+        ),
+        "",
         "Validate an available frozen corpus before replaying it:",
         "",
         "```sh",
@@ -1515,6 +1523,14 @@ def render_economics(report: dict[str, Any]) -> str:
     if report.get("corpusValidation") == "drifted":
         lines[2:2] = [
             "> **NON-RATIFIED CORPUS DRIFT:** generated with `--allow-corpus-drift`; do not use as the baseline.",
+            "",
+        ]
+    elif report.get("corpusValidation") == "embedded-drifted":
+        lines[2:2] = [
+            (
+                "> **NON-RATIFIED EMBEDDED INPUT DRIFT:** generated with `--allow-input-drift`; "
+                "do not use as the baseline."
+            ),
             "",
         ]
     lines += markdown_table(
@@ -1899,6 +1915,108 @@ def corpus_validation_error(paths: list[str]) -> str:
     return f"corpus validation failed; differing paths:\n{rendered}"
 
 
+def git_blob_drift_paths(paths: Iterable[Path]) -> list[str]:
+    differing: list[str] = []
+    for path in paths:
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        worktree = subprocess.run(
+            ["git", "hash-object", relative],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        committed = subprocess.run(
+            ["git", "rev-parse", f"HEAD:{relative}"],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if (
+            worktree.returncode != 0
+            or committed.returncode != 0
+            or worktree.stdout.strip() != committed.stdout.strip()
+        ):
+            differing.append(relative)
+    return differing
+
+
+def embedded_input_receipts() -> list[dict[str, Any]]:
+    receipts: list[dict[str, Any]] = []
+    for path in (HOSTED_SNAPSHOT, LIVE_SNAPSHOT):
+        if not path.is_file():
+            continue
+        data = path.read_bytes()
+        receipts.append(
+            {
+                "bytes": len(data),
+                "path": portable_path(path),
+                "sha256_12": sha256_12_bytes(data),
+            }
+        )
+    return receipts
+
+
+def expected_embedded_input_receipts() -> list[dict[str, Any]] | None:
+    try:
+        document = parse_json_file(INPUT_RECEIPTS)
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(document, dict) or document.get("schemaVersion") != INPUT_RECEIPTS_SCHEMA:
+        return None
+    receipts = document.get("files")
+    if not isinstance(receipts, list):
+        return None
+    normalized: list[dict[str, Any]] = []
+    for receipt in receipts:
+        if not isinstance(receipt, dict):
+            return None
+        path = receipt.get("path")
+        byte_count = receipt.get("bytes")
+        digest = receipt.get("sha256_12")
+        if (
+            not isinstance(path, str)
+            or not path
+            or type(byte_count) is not int
+            or byte_count < 0
+            or not isinstance(digest, str)
+            or re.fullmatch(r"[0-9a-f]{12}", digest) is None
+        ):
+            return None
+        normalized.append({"bytes": byte_count, "path": path, "sha256_12": digest})
+    expected_paths = {portable_path(HOSTED_SNAPSHOT), portable_path(LIVE_SNAPSHOT)}
+    if len(normalized) != len(expected_paths) or {receipt["path"] for receipt in normalized} != expected_paths:
+        return None
+    return normalized
+
+
+def embedded_input_validation_error(paths: list[str]) -> str:
+    rendered = "\n".join(f"  - {path}" for path in sorted(set(paths)))
+    return f"embedded input validation failed; differing paths:\n{rendered}"
+
+
+def validate_embedded_inputs(allow_input_drift: bool) -> str:
+    evidence_paths = (HOSTED_SNAPSHOT, LIVE_SNAPSHOT, ECONOMICS_JSON, INPUT_RECEIPTS)
+    differing_paths = git_blob_drift_paths(evidence_paths)
+    expected_receipts = expected_embedded_input_receipts()
+    if expected_receipts is None:
+        differing_paths.append(portable_path(INPUT_RECEIPTS))
+    else:
+        differing_paths.extend(differing_receipt_paths(embedded_input_receipts(), expected_receipts))
+    differing_paths = sorted(set(differing_paths))
+    if differing_paths and not allow_input_drift:
+        raise SystemExit(embedded_input_validation_error(differing_paths))
+    if differing_paths:
+        print(embedded_input_validation_error(differing_paths), file=sys.stderr)
+        print(
+            "continuing with non-ratified output because --allow-input-drift was supplied",
+            file=sys.stderr,
+        )
+        return "embedded-drifted"
+    return "embedded"
+
+
 def validate_corpus(
     corpus_root: Path,
     expected_receipts: list[dict[str, Any]],
@@ -1923,7 +2041,16 @@ def validate_corpus(
     return "validated", payloads
 
 
-def build_report(corpus_root: Path, *, corpus_requested: bool, allow_corpus_drift: bool) -> dict[str, Any]:
+def build_report(
+    corpus_root: Path,
+    *,
+    corpus_requested: bool,
+    allow_corpus_drift: bool,
+    allow_input_drift: bool = False,
+) -> dict[str, Any]:
+    embedded_validation: str | None = None
+    if not corpus_root.is_dir() and not corpus_requested:
+        embedded_validation = validate_embedded_inputs(allow_input_drift)
     if not LIVE_SNAPSHOT.is_file():
         raise SystemExit(f"missing {portable_path(LIVE_SNAPSHOT)}; run --capture-live")
     if not HOSTED_SNAPSHOT.is_file():
@@ -2026,6 +2153,8 @@ def build_report(corpus_root: Path, *, corpus_requested: bool, allow_corpus_drif
     }
     if corpus_validation == "drifted":
         report["corpusValidation"] = "drifted"
+    elif embedded_validation == "embedded-drifted":
+        report["corpusValidation"] = "embedded-drifted"
     return redact(report)
 
 
@@ -2056,6 +2185,11 @@ def main() -> None:
         help="allow a differing corpus and stamp both outputs as non-ratified",
     )
     parser.add_argument(
+        "--allow-input-drift",
+        action="store_true",
+        help="allow differing embedded replay evidence and stamp both outputs as non-ratified",
+    )
+    parser.add_argument(
         "--from-inputs",
         action="store_true",
         help="replay the committed compact gzip inputs (automatic when both inputs exist)",
@@ -2063,6 +2197,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.allow_corpus_drift and args.corpus is None:
         parser.error("--allow-corpus-drift requires --corpus <dir>")
+    if args.allow_input_drift and args.corpus is not None:
+        parser.error("--allow-input-drift cannot be combined with --corpus")
     corpus_root = args.corpus if args.corpus is not None else DEFAULT_CORPUS
     if args.capture_live:
         capture_live(corpus_root)
@@ -2079,6 +2215,7 @@ def main() -> None:
         corpus_root,
         corpus_requested=args.corpus is not None,
         allow_corpus_drift=args.allow_corpus_drift,
+        allow_input_drift=args.allow_input_drift,
     )
     write_json(ECONOMICS_JSON, report)
     ECONOMICS_MD.write_text(render_economics(report), encoding="utf-8")

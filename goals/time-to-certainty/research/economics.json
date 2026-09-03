@@ -5557,10 +5557,10 @@
         "sha256_12": "bb6c7387e24a"
       },
       {
-        "bytes": 93292,
+        "bytes": 98438,
         "kind": "reproduction-script",
         "path": "goals/time-to-certainty/research/scripts/economics.py",
-        "sha256_12": "e4e0927b5325"
+        "sha256_12": "7d316609f73e"
       }
     ]
   },
