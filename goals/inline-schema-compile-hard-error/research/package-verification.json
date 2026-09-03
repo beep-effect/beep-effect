@@ -1,582 +1,757 @@
 {
   "schemaVersion": "inline-schema-package-verification/v1",
-  "head": "39aa4149b7ab794dfa9431441593dec419307541",
-  "treeDigest": "221790cc50878d29ba5eb2053a0b14f44688e8ad6479c1eefaf5d0fc9b0848b3",
-  "startedAt": "2026-09-03T13:43:31.479Z",
-  "updatedAt": "2026-09-03T13:58:44.970Z",
+  "head": "c73b29e4ac6631616d6c759c005021708fffd31c",
+  "treeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "startedAt": "2026-09-03T17:49:39.455Z",
+  "updatedAt": "2026-09-03T18:35:21.004Z",
   "summary": {
     "expected": 106,
-    "completed": 81,
-    "passed": 80,
-    "failed": 1
+    "completed": 106,
+    "passed": 106,
+    "failed": 0
   },
   "results": [
     {
       "packageName": "@beep/acp",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 19229,
-      "output": "pkg-verify @beep/acp (./packages/drivers/acp)\n  ok audit 12.3s   ok docgen 4.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/acp"
+      "durationMillis": 22194,
+      "output": "pkg-verify @beep/acp (./packages/drivers/acp)\n  ok audit 12.8s   ok docgen 4.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/acp"
     },
     {
       "packageName": "@beep/agents-client",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 30443,
-      "output": "pkg-verify @beep/agents-client (./packages/agents/client)\n  ok audit 21.3s   ok docgen 7.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-client"
+      "durationMillis": 41095,
+      "output": "pkg-verify @beep/agents-client (./packages/agents/client)\n  ok audit 20.6s   ok docgen 6.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-client"
     },
     {
       "packageName": "@beep/agents-domain",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 16630,
-      "output": "pkg-verify @beep/agents-domain (./packages/agents/domain)\n  ok audit 8.4s   ok docgen 6.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-domain"
+      "durationMillis": 27263,
+      "output": "pkg-verify @beep/agents-domain (./packages/agents/domain)\n  ok audit 8.9s   ok docgen 6.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-domain"
     },
     {
       "packageName": "@beep/agents-server",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 19881,
-      "output": "pkg-verify @beep/agents-server (./packages/agents/server)\n  ok audit 10.7s   ok docgen 7.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-server"
+      "durationMillis": 34392,
+      "output": "pkg-verify @beep/agents-server (./packages/agents/server)\n  ok audit 11.6s   ok docgen 8.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-server"
     },
     {
       "packageName": "@beep/agents-tables",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 11811,
-      "output": "pkg-verify @beep/agents-tables (./packages/agents/tables)\n  ok audit 6.4s   ok docgen 3.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-tables"
+      "durationMillis": 27720,
+      "output": "pkg-verify @beep/agents-tables (./packages/agents/tables)\n  ok audit 9.3s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-tables"
     },
     {
       "packageName": "@beep/agents-use-cases",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 17501,
-      "output": "pkg-verify @beep/agents-use-cases (./packages/agents/use-cases)\n  ok audit 8.6s   ok docgen 7.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-use-cases"
+      "durationMillis": 38877,
+      "output": "pkg-verify @beep/agents-use-cases (./packages/agents/use-cases)\n  ok audit 12.4s   ok docgen 9.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/agents-use-cases"
     },
     {
       "packageName": "@beep/ai-provider-cli",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10592,
-      "output": "pkg-verify @beep/ai-provider-cli (./packages/drivers/ai-provider-cli)\n  ok audit 5.7s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ai-provider-cli"
+      "durationMillis": 17941,
+      "output": "pkg-verify @beep/ai-provider-cli (./packages/drivers/ai-provider-cli)\n  ok audit 8.1s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ai-provider-cli"
     },
     {
       "packageName": "@beep/ai-sync",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 12487,
-      "output": "pkg-verify @beep/ai-sync (./packages/tooling/library/ai-sync)\n  ok audit 7.5s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ai-sync"
+      "durationMillis": 19852,
+      "output": "pkg-verify @beep/ai-sync (./packages/tooling/library/ai-sync)\n  ok audit 10.6s   ok docgen 4.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ai-sync"
     },
     {
       "packageName": "@beep/anthropic",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 11346,
-      "output": "pkg-verify @beep/anthropic (./packages/drivers/anthropic)\n  ok audit 5.3s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/anthropic"
+      "durationMillis": 15442,
+      "output": "pkg-verify @beep/anthropic (./packages/drivers/anthropic)\n  ok audit 6.7s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/anthropic"
     },
     {
       "packageName": "@beep/api-transport",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10985,
-      "output": "pkg-verify @beep/api-transport (./packages/foundation/capability/api-transport)\n  ok audit 6.1s   ok docgen 2.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/api-transport"
+      "durationMillis": 16452,
+      "output": "pkg-verify @beep/api-transport (./packages/foundation/capability/api-transport)\n  ok audit 8.6s   ok docgen 3.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/api-transport"
     },
     {
       "packageName": "@beep/architecture-lab-config",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10137,
-      "output": "pkg-verify @beep/architecture-lab-config (./packages/architecture-lab/config)\n  ok audit 5.3s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-config"
+      "durationMillis": 14057,
+      "output": "pkg-verify @beep/architecture-lab-config (./packages/architecture-lab/config)\n  ok audit 7.0s   ok docgen 2.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-config"
     },
     {
       "packageName": "@beep/architecture-lab-proof",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 11299,
-      "output": "pkg-verify @beep/architecture-lab-proof (./apps/architecture-lab-proof)\n  ok audit 6.0s   ok docgen 3.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-proof"
+      "durationMillis": 13842,
+      "output": "pkg-verify @beep/architecture-lab-proof (./apps/architecture-lab-proof)\n  ok audit 6.2s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-proof"
     },
     {
       "packageName": "@beep/architecture-lab-ui",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10785,
-      "output": "pkg-verify @beep/architecture-lab-ui (./packages/architecture-lab/ui)\n  ok audit 6.0s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-ui"
+      "durationMillis": 12991,
+      "output": "pkg-verify @beep/architecture-lab-ui (./packages/architecture-lab/ui)\n  ok audit 6.0s   ok docgen 2.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-ui"
     },
     {
       "packageName": "@beep/architecture-lab-use-cases",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 12549,
-      "output": "pkg-verify @beep/architecture-lab-use-cases (./packages/architecture-lab/use-cases)\n  ok audit 7.2s   ok docgen 3.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-use-cases"
+      "durationMillis": 14698,
+      "output": "pkg-verify @beep/architecture-lab-use-cases (./packages/architecture-lab/use-cases)\n  ok audit 6.6s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/architecture-lab-use-cases"
     },
     {
       "packageName": "@beep/box",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 19459,
-      "output": "pkg-verify @beep/box (./packages/drivers/box)\n  ok audit 12.6s   ok docgen 4.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/box"
+      "durationMillis": 25397,
+      "output": "pkg-verify @beep/box (./packages/drivers/box)\n  ok audit 15.0s   ok docgen 4.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/box"
     },
     {
       "packageName": "@beep/box-provisioning",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 17387,
-      "output": "pkg-verify @beep/box-provisioning (./packages/drivers/box-provisioning)\n  ok audit 11.7s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/box-provisioning"
+      "durationMillis": 21361,
+      "output": "pkg-verify @beep/box-provisioning (./packages/drivers/box-provisioning)\n  ok audit 12.6s   ok docgen 4.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/box-provisioning"
     },
     {
       "packageName": "@beep/brand",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 11059,
-      "output": "pkg-verify @beep/brand (./packages/foundation/ui-system/brand)\n  ok audit 6.5s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/brand"
+      "durationMillis": 14285,
+      "output": "pkg-verify @beep/brand (./packages/foundation/ui-system/brand)\n  ok audit 7.2s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/brand"
     },
     {
       "packageName": "@beep/chalk",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10527,
-      "output": "pkg-verify @beep/chalk (./packages/foundation/capability/chalk)\n  ok audit 5.6s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/chalk"
+      "durationMillis": 12717,
+      "output": "pkg-verify @beep/chalk (./packages/foundation/capability/chalk)\n  ok audit 5.8s   ok docgen 3.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/chalk"
     },
     {
       "packageName": "@beep/ciops",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10666,
-      "output": "pkg-verify @beep/ciops (./apps/labs/ciops)\n  ok audit 5.6s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ciops"
+      "durationMillis": 13203,
+      "output": "pkg-verify @beep/ciops (./apps/labs/ciops)\n  ok audit 6.3s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ciops"
     },
     {
       "packageName": "@beep/colors",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 9684,
-      "output": "pkg-verify @beep/colors (./packages/foundation/capability/colors)\n  ok audit 5.0s   ok docgen 2.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/colors"
+      "durationMillis": 12123,
+      "output": "pkg-verify @beep/colors (./packages/foundation/capability/colors)\n  ok audit 5.7s   ok docgen 2.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/colors"
     },
     {
       "packageName": "@beep/db-admin",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 26328,
-      "output": "pkg-verify @beep/db-admin (./packages/_internal/db-admin)\n  ok audit 15.8s   ok docgen 8.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/db-admin"
+      "durationMillis": 44584,
+      "output": "pkg-verify @beep/db-admin (./packages/_internal/db-admin)\n  ok audit 19.5s   ok docgen 9.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/db-admin"
     },
     {
       "packageName": "@beep/discord",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10061,
-      "output": "pkg-verify @beep/discord (./packages/drivers/discord)\n  ok audit 5.4s   ok docgen 2.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/discord"
+      "durationMillis": 13077,
+      "output": "pkg-verify @beep/discord (./packages/drivers/discord)\n  ok audit 6.2s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/discord"
     },
     {
       "packageName": "@beep/doc-text",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 10967,
-      "output": "pkg-verify @beep/doc-text (./packages/drivers/doc-text)\n  ok audit 6.1s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/doc-text"
+      "durationMillis": 14248,
+      "output": "pkg-verify @beep/doc-text (./packages/drivers/doc-text)\n  ok audit 7.1s   ok docgen 3.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/doc-text"
     },
     {
       "packageName": "@beep/dock",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13034,
-      "output": "pkg-verify @beep/dock (./packages/foundation/ui-system/dock)\n  ok audit 7.3s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/dock"
+      "durationMillis": 18066,
+      "output": "pkg-verify @beep/dock (./packages/foundation/ui-system/dock)\n  ok audit 8.5s   ok docgen 5.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/dock"
     },
     {
       "packageName": "@beep/documents-domain",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14712,
-      "output": "pkg-verify @beep/documents-domain (./packages/documents/domain)\n  ok audit 6.8s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-domain"
+      "durationMillis": 19439,
+      "output": "pkg-verify @beep/documents-domain (./packages/documents/domain)\n  ok audit 9.2s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-domain"
     },
     {
       "packageName": "@beep/documents-server",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 24594,
-      "output": "pkg-verify @beep/documents-server (./packages/documents/server)\n  ok audit 12.8s   ok docgen 6.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-server"
+      "durationMillis": 28366,
+      "output": "pkg-verify @beep/documents-server (./packages/documents/server)\n  ok audit 14.5s   ok docgen 7.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-server"
     },
     {
       "packageName": "@beep/documents-tables",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14919,
-      "output": "pkg-verify @beep/documents-tables (./packages/documents/tables)\n  ok audit 6.6s   ok docgen 3.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-tables"
+      "durationMillis": 22623,
+      "output": "pkg-verify @beep/documents-tables (./packages/documents/tables)\n  ok audit 8.8s   ok docgen 8.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-tables"
     },
     {
       "packageName": "@beep/documents-use-cases",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14868,
-      "output": "pkg-verify @beep/documents-use-cases (./packages/documents/use-cases)\n  ok audit 6.8s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-use-cases"
+      "durationMillis": 33175,
+      "output": "pkg-verify @beep/documents-use-cases (./packages/documents/use-cases)\n  ok audit 20.0s   ok docgen 5.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/documents-use-cases"
     },
     {
       "packageName": "@beep/drizzle",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14773,
-      "output": "pkg-verify @beep/drizzle (./packages/drivers/drizzle)\n  ok audit 8.2s   ok docgen 2.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/drizzle"
+      "durationMillis": 18910,
+      "output": "pkg-verify @beep/drizzle (./packages/drivers/drizzle)\n  ok audit 11.0s   ok docgen 3.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/drizzle"
     },
     {
       "packageName": "@beep/editor",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 45271,
-      "output": "pkg-verify @beep/editor (./packages/foundation/ui-system/editor)\n  ok audit 25.2s   ok docgen 6.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/editor"
+      "durationMillis": 48933,
+      "output": "pkg-verify @beep/editor (./packages/foundation/ui-system/editor)\n  ok audit 25.8s   ok docgen 7.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/editor"
     },
     {
       "packageName": "@beep/epistemic-config",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14460,
-      "output": "pkg-verify @beep/epistemic-config (./packages/epistemic/config)\n  ok audit 6.4s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-config"
+      "durationMillis": 15879,
+      "output": "pkg-verify @beep/epistemic-config (./packages/epistemic/config)\n  ok audit 7.4s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-config"
     },
     {
       "packageName": "@beep/epistemic-domain",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14623,
-      "output": "pkg-verify @beep/epistemic-domain (./packages/epistemic/domain)\n  ok audit 5.9s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-domain"
+      "durationMillis": 16151,
+      "output": "pkg-verify @beep/epistemic-domain (./packages/epistemic/domain)\n  ok audit 6.9s   ok docgen 4.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-domain"
     },
     {
       "packageName": "@beep/epistemic-server",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 25811,
-      "output": "pkg-verify @beep/epistemic-server (./packages/epistemic/server)\n  ok audit 13.8s   ok docgen 5.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-server"
+      "durationMillis": 27076,
+      "output": "pkg-verify @beep/epistemic-server (./packages/epistemic/server)\n  ok audit 14.5s   ok docgen 5.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-server"
     },
     {
       "packageName": "@beep/epistemic-tables",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 17050,
-      "output": "pkg-verify @beep/epistemic-tables (./packages/epistemic/tables)\n  ok audit 7.3s   ok docgen 5.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-tables"
+      "durationMillis": 17346,
+      "output": "pkg-verify @beep/epistemic-tables (./packages/epistemic/tables)\n  ok audit 8.1s   ok docgen 4.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-tables"
     },
     {
       "packageName": "@beep/epistemic-ui",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 20047,
-      "output": "pkg-verify @beep/epistemic-ui (./packages/epistemic/ui)\n  ok audit 8.8s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-ui"
+      "durationMillis": 18639,
+      "output": "pkg-verify @beep/epistemic-ui (./packages/epistemic/ui)\n  ok audit 8.7s   ok docgen 3.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-ui"
     },
     {
       "packageName": "@beep/epistemic-use-cases",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 16665,
-      "output": "pkg-verify @beep/epistemic-use-cases (./packages/epistemic/use-cases)\n  ok audit 7.5s   ok docgen 4.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-use-cases"
+      "durationMillis": 19237,
+      "output": "pkg-verify @beep/epistemic-use-cases (./packages/epistemic/use-cases)\n  ok audit 8.7s   ok docgen 5.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/epistemic-use-cases"
     },
     {
       "packageName": "@beep/exiftool",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14766,
-      "output": "pkg-verify @beep/exiftool (./packages/drivers/exiftool)\n  ok audit 8.1s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/exiftool"
+      "durationMillis": 18613,
+      "output": "pkg-verify @beep/exiftool (./packages/drivers/exiftool)\n  ok audit 10.8s   ok docgen 3.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/exiftool"
     },
     {
       "packageName": "@beep/face-detection",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 12205,
-      "output": "pkg-verify @beep/face-detection (./packages/drivers/face-detection)\n  ok audit 5.4s   ok docgen 3.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/face-detection"
+      "durationMillis": 15565,
+      "output": "pkg-verify @beep/face-detection (./packages/drivers/face-detection)\n  ok audit 7.4s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/face-detection"
     },
     {
       "packageName": "@beep/ffmpeg",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 15346,
-      "output": "pkg-verify @beep/ffmpeg (./packages/drivers/ffmpeg)\n  ok audit 8.4s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ffmpeg"
+      "durationMillis": 26648,
+      "output": "pkg-verify @beep/ffmpeg (./packages/drivers/ffmpeg)\n  ok audit 14.9s   ok docgen 4.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ffmpeg"
     },
     {
       "packageName": "@beep/file-processing",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 12666,
-      "output": "pkg-verify @beep/file-processing (./packages/foundation/capability/file-processing)\n  ok audit 6.0s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/file-processing"
+      "durationMillis": 24660,
+      "output": "pkg-verify @beep/file-processing (./packages/foundation/capability/file-processing)\n  ok audit 12.6s   ok docgen 5.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/file-processing"
     },
     {
       "packageName": "@beep/firecrawl",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14588,
-      "output": "pkg-verify @beep/firecrawl (./packages/drivers/firecrawl)\n  ok audit 7.6s   ok docgen 3.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/firecrawl"
+      "durationMillis": 28182,
+      "output": "pkg-verify @beep/firecrawl (./packages/drivers/firecrawl)\n  ok audit 16.1s   ok docgen 5.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/firecrawl"
     },
     {
       "packageName": "@beep/gov-legal-mcp",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13520,
-      "output": "pkg-verify @beep/gov-legal-mcp (./packages/drivers/gov-legal-mcp)\n  ok audit 6.6s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/gov-legal-mcp"
+      "durationMillis": 25762,
+      "output": "pkg-verify @beep/gov-legal-mcp (./packages/drivers/gov-legal-mcp)\n  ok audit 12.9s   ok docgen 5.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/gov-legal-mcp"
     },
     {
       "packageName": "@beep/govinfo",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14751,
-      "output": "pkg-verify @beep/govinfo (./packages/drivers/govinfo)\n  ok audit 8.1s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/govinfo"
+      "durationMillis": 28626,
+      "output": "pkg-verify @beep/govinfo (./packages/drivers/govinfo)\n  ok audit 15.9s   ok docgen 5.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/govinfo"
     },
     {
       "packageName": "@beep/html",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 40890,
-      "output": "pkg-verify @beep/html (./packages/foundation/modeling/html)\n  ok audit 15.8s   ok docgen 13.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/html"
+      "durationMillis": 68516,
+      "output": "pkg-verify @beep/html (./packages/foundation/modeling/html)\n  ok audit 28.7s   ok docgen 22.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/html"
     },
     {
       "packageName": "@beep/hubspot",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 11749,
-      "output": "pkg-verify @beep/hubspot (./packages/drivers/hubspot)\n  ok audit 5.4s   ok docgen 2.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/hubspot"
+      "durationMillis": 14062,
+      "output": "pkg-verify @beep/hubspot (./packages/drivers/hubspot)\n  ok audit 6.8s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/hubspot"
     },
     {
       "packageName": "@beep/identity",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 8131,
-      "output": "pkg-verify @beep/identity (./packages/foundation/modeling/identity)\n  ok audit 3.6s   ok docgen 2.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/identity"
+      "durationMillis": 10431,
+      "output": "pkg-verify @beep/identity (./packages/foundation/modeling/identity)\n  ok audit 4.7s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/identity"
     },
     {
       "packageName": "@beep/infra",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 21186,
-      "output": "pkg-verify @beep/infra (./infra)\n  ok audit 8.0s   ok docgen 7.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/infra"
+      "durationMillis": 22564,
+      "output": "pkg-verify @beep/infra (./infra)\n  ok audit 8.7s   ok docgen 7.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/infra"
     },
     {
       "packageName": "@beep/langextract",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 17344,
-      "output": "pkg-verify @beep/langextract (./packages/foundation/capability/langextract)\n  ok audit 8.9s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/langextract"
+      "durationMillis": 18299,
+      "output": "pkg-verify @beep/langextract (./packages/foundation/capability/langextract)\n  ok audit 9.6s   ok docgen 4.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/langextract"
     },
     {
       "packageName": "@beep/law-practice-domain",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 37024,
-      "output": "pkg-verify @beep/law-practice-domain (./packages/law-practice/domain)\n  ok audit 11.2s   ok docgen 10.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-domain"
+      "durationMillis": 38900,
+      "output": "pkg-verify @beep/law-practice-domain (./packages/law-practice/domain)\n  ok audit 12.4s   ok docgen 10.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-domain"
     },
     {
       "packageName": "@beep/law-practice-server",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 51148,
-      "output": "pkg-verify @beep/law-practice-server (./packages/law-practice/server)\n  ok audit 21.9s   ok docgen 11.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-server"
+      "durationMillis": 49658,
+      "output": "pkg-verify @beep/law-practice-server (./packages/law-practice/server)\n  ok audit 21.4s   ok docgen 10.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-server"
     },
     {
       "packageName": "@beep/law-practice-tables",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 39504,
-      "output": "pkg-verify @beep/law-practice-tables (./packages/law-practice/tables)\n  ok audit 16.0s   ok docgen 7.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-tables"
+      "durationMillis": 35941,
+      "output": "pkg-verify @beep/law-practice-tables (./packages/law-practice/tables)\n  ok audit 15.1s   ok docgen 7.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-tables"
     },
     {
       "packageName": "@beep/law-practice-use-cases",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 32479,
-      "output": "pkg-verify @beep/law-practice-use-cases (./packages/law-practice/use-cases)\n  ok audit 9.7s   ok docgen 7.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-use-cases"
+      "durationMillis": 33691,
+      "output": "pkg-verify @beep/law-practice-use-cases (./packages/law-practice/use-cases)\n  ok audit 11.1s   ok docgen 7.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/law-practice-use-cases"
     },
     {
       "packageName": "@beep/lejeune-bolt-workbench",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 21641,
-      "output": "pkg-verify @beep/lejeune-bolt-workbench (./apps/labs/lejeune-bolt-workbench)\n  ok audit 15.3s   skip docgen\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/lejeune-bolt-workbench"
+      "durationMillis": 21558,
+      "output": "pkg-verify @beep/lejeune-bolt-workbench (./apps/labs/lejeune-bolt-workbench)\n  ok audit 15.4s   skip docgen\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/lejeune-bolt-workbench"
     },
     {
       "packageName": "@beep/lexical-schema",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 41940,
-      "output": "pkg-verify @beep/lexical-schema (./packages/foundation/modeling/lexical)\n  ok audit 22.3s   ok docgen 6.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/lexical-schema"
+      "durationMillis": 49822,
+      "output": "pkg-verify @beep/lexical-schema (./packages/foundation/modeling/lexical)\n  ok audit 28.3s   ok docgen 7.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/lexical-schema"
     },
     {
       "packageName": "@beep/libpff",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 17705,
-      "output": "pkg-verify @beep/libpff (./packages/drivers/libpff)\n  ok audit 10.5s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/libpff"
+      "durationMillis": 22815,
+      "output": "pkg-verify @beep/libpff (./packages/drivers/libpff)\n  ok audit 13.3s   ok docgen 4.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/libpff"
     },
     {
       "packageName": "@beep/lint-rules",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13871,
-      "output": "pkg-verify @beep/lint-rules (./packages/tooling/policy-pack/lint-rules)\n  ok audit 10.1s   skip docgen\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/lint-rules"
+      "durationMillis": 19326,
+      "output": "pkg-verify @beep/lint-rules (./packages/tooling/policy-pack/lint-rules)\n  ok audit 14.4s   skip docgen\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/lint-rules"
     },
     {
       "packageName": "@beep/m365",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 16481,
-      "output": "pkg-verify @beep/m365 (./packages/drivers/m365)\n  ok audit 8.4s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify \"@beep/m365\""
+      "durationMillis": 20651,
+      "output": "pkg-verify @beep/m365 (./packages/drivers/m365)\n  ok audit 11.0s   ok docgen 4.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify \"@beep/m365\""
     },
     {
       "packageName": "@beep/m365-mcp",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13534,
-      "output": "pkg-verify @beep/m365-mcp (./packages/drivers/m365-mcp)\n  ok audit 6.1s   ok docgen 3.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify \"@beep/m365-mcp\""
+      "durationMillis": 15357,
+      "output": "pkg-verify @beep/m365-mcp (./packages/drivers/m365-mcp)\n  ok audit 7.3s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify \"@beep/m365-mcp\""
     },
     {
       "packageName": "@beep/mcp-kit",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13390,
-      "output": "pkg-verify @beep/mcp-kit (./packages/foundation/capability/mcp-kit)\n  ok audit 6.3s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/mcp-kit"
+      "durationMillis": 14902,
+      "output": "pkg-verify @beep/mcp-kit (./packages/foundation/capability/mcp-kit)\n  ok audit 7.5s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/mcp-kit"
     },
     {
       "packageName": "@beep/md",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 19172,
-      "output": "pkg-verify @beep/md (./packages/foundation/modeling/md)\n  skip audit   ok docgen 6.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/md"
+      "durationMillis": 20389,
+      "output": "pkg-verify @beep/md (./packages/foundation/modeling/md)\n  skip audit   ok docgen 7.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/md"
     },
     {
       "packageName": "@beep/n3",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 12852,
-      "output": "pkg-verify @beep/n3 (./packages/drivers/n3)\n  ok audit 5.8s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify \"@beep/n3\""
+      "durationMillis": 14136,
+      "output": "pkg-verify @beep/n3 (./packages/drivers/n3)\n  ok audit 6.1s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify \"@beep/n3\""
     },
     {
       "packageName": "@beep/nlp",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 12978,
-      "output": "pkg-verify @beep/nlp (./packages/foundation/modeling/nlp)\n  ok audit 5.6s   ok docgen 3.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/nlp"
+      "durationMillis": 15173,
+      "output": "pkg-verify @beep/nlp (./packages/foundation/modeling/nlp)\n  ok audit 6.8s   ok docgen 3.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/nlp"
     },
     {
       "packageName": "@beep/nlp-processing",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 16264,
-      "output": "pkg-verify @beep/nlp-processing (./packages/foundation/capability/nlp-processing)\n  ok audit 6.5s   ok docgen 5.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/nlp-processing"
+      "durationMillis": 18000,
+      "output": "pkg-verify @beep/nlp-processing (./packages/foundation/capability/nlp-processing)\n  ok audit 6.9s   ok docgen 5.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/nlp-processing"
     },
     {
       "packageName": "@beep/observability",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 17266,
-      "output": "pkg-verify @beep/observability (./packages/foundation/capability/observability)\n  ok audit 9.3s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/observability"
+      "durationMillis": 17024,
+      "output": "pkg-verify @beep/observability (./packages/foundation/capability/observability)\n  ok audit 8.6s   ok docgen 4.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/observability"
     },
     {
       "packageName": "@beep/oip-web",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 33737,
-      "output": "pkg-verify @beep/oip-web (./apps/oip-web)\n  ok audit 27.6s   skip docgen\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/oip-web"
+      "durationMillis": 25665,
+      "output": "pkg-verify @beep/oip-web (./apps/oip-web)\n  ok audit 19.3s   skip docgen\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/oip-web"
     },
     {
       "packageName": "@beep/onepassword-cli",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 12274,
-      "output": "pkg-verify @beep/onepassword-cli (./packages/drivers/onepassword-cli)\n  ok audit 5.3s   ok docgen 2.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/onepassword-cli"
+      "durationMillis": 13637,
+      "output": "pkg-verify @beep/onepassword-cli (./packages/drivers/onepassword-cli)\n  ok audit 6.3s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/onepassword-cli"
     },
     {
       "packageName": "@beep/ontology",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 15619,
-      "output": "pkg-verify @beep/ontology (./packages/foundation/modeling/ontology)\n  ok audit 8.0s   ok docgen 3.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ontology"
+      "durationMillis": 15870,
+      "output": "pkg-verify @beep/ontology (./packages/foundation/modeling/ontology)\n  ok audit 7.5s   ok docgen 3.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ontology"
     },
     {
       "packageName": "@beep/ontology-server",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 18019,
-      "output": "pkg-verify @beep/ontology-server (./packages/ontology/server)\n  ok audit 7.5s   ok docgen 4.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ontology-server"
+      "durationMillis": 18889,
+      "output": "pkg-verify @beep/ontology-server (./packages/ontology/server)\n  ok audit 8.5s   ok docgen 5.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ontology-server"
     },
     {
       "packageName": "@beep/ontology-use-cases",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14965,
-      "output": "pkg-verify @beep/ontology-use-cases (./packages/ontology/use-cases)\n  ok audit 6.6s   ok docgen 3.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ontology-use-cases"
+      "durationMillis": 16960,
+      "output": "pkg-verify @beep/ontology-use-cases (./packages/ontology/use-cases)\n  ok audit 7.8s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ontology-use-cases"
     },
     {
       "packageName": "@beep/openclaw",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 18584,
-      "output": "pkg-verify @beep/openclaw (./packages/drivers/openclaw)\n  ok audit 11.6s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/openclaw"
+      "durationMillis": 20845,
+      "output": "pkg-verify @beep/openclaw (./packages/drivers/openclaw)\n  ok audit 13.3s   ok docgen 3.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/openclaw"
     },
     {
       "packageName": "@beep/pacer",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13498,
-      "output": "pkg-verify @beep/pacer (./packages/drivers/pacer)\n  ok audit 6.6s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/pacer"
+      "durationMillis": 13650,
+      "output": "pkg-verify @beep/pacer (./packages/drivers/pacer)\n  ok audit 6.9s   ok docgen 3.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/pacer"
     },
     {
       "packageName": "@beep/pandoc-ast",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 34786,
-      "output": "pkg-verify @beep/pandoc-ast (./packages/foundation/modeling/pandoc-ast)\n  ok audit 14.9s   ok docgen 6.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/pandoc-ast"
+      "durationMillis": 34089,
+      "output": "pkg-verify @beep/pandoc-ast (./packages/foundation/modeling/pandoc-ast)\n  ok audit 14.9s   ok docgen 6.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/pandoc-ast"
     },
     {
       "packageName": "@beep/phoenix",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 14218,
-      "output": "pkg-verify @beep/phoenix (./packages/drivers/phoenix)\n  ok audit 5.8s   ok docgen 3.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/phoenix"
+      "durationMillis": 13508,
+      "output": "pkg-verify @beep/phoenix (./packages/drivers/phoenix)\n  ok audit 5.9s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/phoenix"
     },
     {
       "packageName": "@beep/postgres",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 18730,
-      "output": "pkg-verify @beep/postgres (./packages/drivers/postgres)\n  ok audit 10.8s   ok docgen 4.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/postgres"
+      "durationMillis": 19389,
+      "output": "pkg-verify @beep/postgres (./packages/drivers/postgres)\n  ok audit 12.2s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/postgres"
     },
     {
       "packageName": "@beep/pretext",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13927,
-      "output": "pkg-verify @beep/pretext (./packages/drivers/pretext)\n  ok audit 7.0s   ok docgen 3.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/pretext"
+      "durationMillis": 15776,
+      "output": "pkg-verify @beep/pretext (./packages/drivers/pretext)\n  ok audit 8.5s   ok docgen 3.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/pretext"
     },
     {
       "packageName": "@beep/professional-desktop",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 59111,
-      "output": "pkg-verify @beep/professional-desktop (./apps/professional-desktop)\n  ok audit 21.3s   ok docgen 15.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/professional-desktop"
+      "durationMillis": 58174,
+      "output": "pkg-verify @beep/professional-desktop (./apps/professional-desktop)\n  ok audit 21.6s   ok docgen 14.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/professional-desktop"
     },
     {
       "packageName": "@beep/provenance",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13723,
-      "output": "pkg-verify @beep/provenance (./packages/foundation/modeling/provenance)\n  ok audit 6.4s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/provenance"
+      "durationMillis": 14711,
+      "output": "pkg-verify @beep/provenance (./packages/foundation/modeling/provenance)\n  ok audit 7.3s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/provenance"
     },
     {
       "packageName": "@beep/rdf",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 15346,
-      "output": "pkg-verify @beep/rdf (./packages/foundation/modeling/rdf)\n  ok audit 7.0s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/rdf"
+      "durationMillis": 16797,
+      "output": "pkg-verify @beep/rdf (./packages/foundation/modeling/rdf)\n  ok audit 8.4s   ok docgen 3.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/rdf"
     },
     {
       "packageName": "@beep/rdf-canonize",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 13001,
-      "output": "pkg-verify @beep/rdf-canonize (./packages/drivers/rdf-canonize)\n  ok audit 5.4s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/rdf-canonize"
+      "durationMillis": 14201,
+      "output": "pkg-verify @beep/rdf-canonize (./packages/drivers/rdf-canonize)\n  ok audit 5.9s   ok docgen 3.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/rdf-canonize"
     },
     {
       "packageName": "@beep/repo-ai-metrics",
       "ok": true,
       "exitCode": 0,
-      "durationMillis": 22598,
-      "output": "pkg-verify @beep/repo-ai-metrics (./packages/tooling/library/ai-metrics)\n  ok audit 13.2s   ok docgen 4.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/repo-ai-metrics"
+      "durationMillis": 24738,
+      "output": "pkg-verify @beep/repo-ai-metrics (./packages/tooling/library/ai-metrics)\n  ok audit 14.8s   ok docgen 4.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/repo-ai-metrics"
     },
     {
       "packageName": "@beep/repo-cli",
-      "ok": false,
-      "exitCode": 1,
-      "durationMillis": 364206,
-      "output": "pkg-verify @beep/repo-cli (./packages/tooling/tool/cli)\n  fail audit 325.6s   ok docgen 19.6s\n\n-------- audit (failed) --------\n$ bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:python && bun run beep:lint && bun run beep:lint:python\n$ tsc -p tsconfig.json && bun run babel\n$ babel dist --plugins annotate-pure-calls --out-dir dist --source-maps\nSuccessfully compiled 527 files with Babel (1662ms).\n$ tsgo -p tsconfig.check.json\n$ bunx --bun vitest run\n\n RUN  v4.1.11 ./packages/tooling/tool/cli\n\n[ERROR] 2026/09/03 08:54:38 \"beep-dev-secrets\" isn't a vault in this account. Specify the vault with its ID or name.\n[ERROR] 2026/09/03 08:54:38 \"beep-dev-secrets\" isn't a vault in this account. Specify the vault with its ID or name.\nstdout | test/quality-tasks.test.ts > quality task adapter > invalidates a lane proof when the property-test run floor increases\n[08:54:38.913] ERROR (#153): Error [AssertionError]: expected [ 'passed' ] to deeply equal [ 'reused' ]\n    at native\n    at ./packages/tooling/tool/cli/test/quality-tasks.test.ts:1070:85 {\n  actual: [ 'passed' ],\n  expected: [ 'reused' ],\n  showDiff: true,\n  operator: 'deepStrictEqual',\n  [cause]: undefined\n}\n\n@beep/xai:build: error TS2589: Type instantiation is excessively deep and possibly infinite.\nFailed:    @beep/xai#build\n@beep/ui:build: error TS2589: Type instantiation is excessively deep and possibly infinite.\nFailed:    @beep/ui#build\n@beep/xai:build: error TS2589: Type instantiation is excessively deep and possibly infinite.\nFailed:    @beep/xai#build\n@beep/xai:build: error TS2589: Type instantiation is excessively deep and possibly infinite.\nFailed:    @beep/xai#build\n ❯ test/quality-tasks.test.ts (171 tests | 1 failed) 5140ms\n     × invalidates a lane proof when the property-test run floor increases 909ms\n{\"number\":558,\"headRefName\":\"feat/yeet-monitor-hardening\",\"state\":\"OPEN\"}All checks were successful{\"number\":558,\"headRefName\":\"feat/yeet-monitor-hardening\",\"state\":\"OPEN\"}Some checks were not successful\n1 failing, 15 successfulno checks reported on the 'feat/yeet-monitor-hardening' branchAll checks were successfulPreparing worktree (new branch 'feat/demo')\nHEAD is now at 77011cd init\nPreparing worktree (new branch 'feat/demo')\nHEAD is now at 77011cd init\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  test/quality-tasks.test.ts > quality task adapter > invalidates a lane proof when the property-test run floor increases\nAssertionError: expected [ 'passed' ] to deeply equal [ 'reused' ]\n\n- Expected\n+ Received\n\n  [\n-   \"reused\",\n+   \"passed\",\n  ]\n\n ❯ test/quality-tasks.test.ts:1070:85\n    1068|\n    1069|       expect(A.map((yield* atRuns(\"100\")).report.lanes, (result) => re…\n    1070|       expect(A.map((yield* atRuns(\"100\")).report.lanes, (result) => re…\n       |                                                                                     ^\n    1071|       expect(A.map((yield* atRuns(\"400\")).report.lanes, (result) => re…\n    1072|       expect(yield* fs.readFileString(markerPath)).toBe(\"run\\nrun\\n\");\n ❯ ~effect/Effect/successCont ../../../../node_modules/effect/src/internal/effect.ts:1365:25\n ❯ runLoop ../../../../node_modules/effect/src/internal/effect.ts:655:29\n ❯ evaluate ../../../../node_modules/effect/src/internal/effect.ts:607:22\n ❯ ../../../../node_modules/effect/src/internal/effect.ts:1121:14\n ❯ doneUnsafe ../../../../node_modules/effect/src/Deferred.ts:1658:14\n ❯ ../../../../node_modules/@effect/platform-node-shared/src/NodeChildProcessSpawner.ts:352:17\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed | 145 passed (146)\n      Tests  1 failed | 2805 passed (2806)\n   Start at  08:53:09\n   Duration  315.23s (transform 6.21s, setup 15.03s, import 190.88s, tests 103.05s, environment 14ms)\n\nerror: script \"beep:test\" exited with code 1\nerror: script \"beep:audit\" exited with code 1\n\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/repo-cli\npkg-verify failed.\nerror: script \"beep\" exited with code 1\n"
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 376152,
+      "output": "pkg-verify @beep/repo-cli (./packages/tooling/tool/cli)\n  ok audit 339.0s   ok docgen 18.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/repo-cli"
+    },
+    {
+      "packageName": "@beep/repo-configs",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 18389,
+      "output": "pkg-verify @beep/repo-configs (./packages/tooling/policy-pack/repo-configs)\n  ok audit 9.8s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/repo-configs"
+    },
+    {
+      "packageName": "@beep/repo-docgen",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 31557,
+      "output": "pkg-verify @beep/repo-docgen (./packages/tooling/tool/docgen)\n  ok audit 11.9s   ok docgen 7.1s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/repo-docgen"
+    },
+    {
+      "packageName": "@beep/repo-utils",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 19133,
+      "output": "pkg-verify @beep/repo-utils (./packages/tooling/library/repo-utils)\n  ok audit 8.0s   ok docgen 6.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/repo-utils"
+    },
+    {
+      "packageName": "@beep/runpod",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 17979,
+      "output": "pkg-verify @beep/runpod (./packages/drivers/runpod)\n  ok audit 10.6s   ok docgen 3.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/runpod"
+    },
+    {
+      "packageName": "@beep/sanity",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 12680,
+      "output": "pkg-verify @beep/sanity (./packages/drivers/sanity)\n  ok audit 6.0s   ok docgen 2.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/sanity"
+    },
+    {
+      "packageName": "@beep/schema",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 17276,
+      "output": "pkg-verify @beep/schema (./packages/foundation/modeling/schema)\n  ok audit 7.4s   ok docgen 6.3s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/schema"
+    },
+    {
+      "packageName": "@beep/scratchpad",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 41407,
+      "output": "pkg-verify @beep/scratchpad (./scratchpad)\n  skip audit   ok docgen 21.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/scratchpad"
+    },
+    {
+      "packageName": "@beep/semantic-web",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 13486,
+      "output": "pkg-verify @beep/semantic-web (./packages/foundation/capability/semantic-web)\n  ok audit 6.0s   ok docgen 3.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/semantic-web"
+    },
+    {
+      "packageName": "@beep/semantica",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 23527,
+      "output": "pkg-verify @beep/semantica (./apps/labs/semantica)\n  ok audit 16.2s   skip docgen\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/semantica"
+    },
+    {
+      "packageName": "@beep/shared-domain",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 14792,
+      "output": "pkg-verify @beep/shared-domain (./packages/shared/domain)\n  ok audit 6.6s   ok docgen 4.2s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/shared-domain"
+    },
+    {
+      "packageName": "@beep/shared-use-cases",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 12670,
+      "output": "pkg-verify @beep/shared-use-cases (./packages/shared/use-cases)\n  ok audit 6.3s   ok docgen 2.7s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/shared-use-cases"
+    },
+    {
+      "packageName": "@beep/skill-contract",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 34694,
+      "output": "pkg-verify @beep/skill-contract (./packages/foundation/modeling/skill-contract)\n  ok audit 15.4s   ok docgen 7.0s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/skill-contract"
+    },
+    {
+      "packageName": "@beep/test-utils",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 14359,
+      "output": "pkg-verify @beep/test-utils (./packages/tooling/test-kit/test-utils)\n  ok audit 7.3s   ok docgen 3.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/test-utils"
+    },
+    {
+      "packageName": "@beep/tika",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 15480,
+      "output": "pkg-verify @beep/tika (./packages/drivers/tika)\n  ok audit 8.6s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/tika"
+    },
+    {
+      "packageName": "@beep/ui",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 21541,
+      "output": "pkg-verify @beep/ui (./packages/foundation/ui-system/ui)\n  ok audit 9.0s   ok docgen 7.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/ui"
+    },
+    {
+      "packageName": "@beep/uspto",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 13144,
+      "output": "pkg-verify @beep/uspto (./packages/drivers/uspto)\n  ok audit 6.6s   ok docgen 2.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/uspto"
+    },
+    {
+      "packageName": "@beep/uspto-mcp",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 14042,
+      "output": "pkg-verify @beep/uspto-mcp (./packages/drivers/uspto-mcp)\n  ok audit 6.5s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/uspto-mcp"
+    },
+    {
+      "packageName": "@beep/utils",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 8576,
+      "output": "pkg-verify @beep/utils (./packages/foundation/modeling/utils)\n  ok audit 4.0s   ok docgen 2.5s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/utils"
+    },
+    {
+      "packageName": "@beep/venice-ai",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 15522,
+      "output": "pkg-verify @beep/venice-ai (./packages/drivers/venice-ai)\n  ok audit 8.7s   ok docgen 2.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/venice-ai"
+    },
+    {
+      "packageName": "@beep/wink",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 17221,
+      "output": "pkg-verify @beep/wink (./packages/drivers/wink)\n  ok audit 8.4s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/wink"
+    },
+    {
+      "packageName": "@beep/workspace-domain",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 33933,
+      "output": "pkg-verify @beep/workspace-domain (./packages/workspace/domain)\n  ok audit 9.8s   ok docgen 6.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/workspace-domain"
+    },
+    {
+      "packageName": "@beep/workspace-server",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 37280,
+      "output": "pkg-verify @beep/workspace-server (./packages/workspace/server)\n  ok audit 14.4s   ok docgen 7.9s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/workspace-server"
+    },
+    {
+      "packageName": "@beep/workspace-tables",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 30859,
+      "output": "pkg-verify @beep/workspace-tables (./packages/workspace/tables)\n  ok audit 10.2s   ok docgen 7.4s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/workspace-tables"
+    },
+    {
+      "packageName": "@beep/workspace-use-cases",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 31764,
+      "output": "pkg-verify @beep/workspace-use-cases (./packages/workspace/use-cases)\n  ok audit 10.9s   ok docgen 6.6s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/workspace-use-cases"
+    },
+    {
+      "packageName": "@beep/xai",
+      "ok": true,
+      "exitCode": 0,
+      "durationMillis": 16104,
+      "output": "pkg-verify @beep/xai (./packages/drivers/xai)\n  ok audit 8.0s   ok docgen 3.8s\n$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/xai"
     }
   ]
 }
