@@ -33,44 +33,67 @@ unless 1Password or `op://` references are part of the request.
 - Keep tracked examples commit-safe. `.env.example` should contain placeholders,
   documentation, or secret references only; never real secret values.
 
-## Minimal Diagnosis
+## Agent Authentication (managed workstations)
 
-Before retrying a failed MCP auth loop, check only the narrow state needed for
-the current operation. For an existing `op://`-backed env file, test the exact
-wrapper operation first and suppress successful output:
+On Benjamin's managed workstations every agent invocation of the 1Password CLI
+resolves `op` from `PATH`, never the system binary by absolute path: the
+user-local PATH shim loads exactly one automation credential (a service account
+by default, or the local Connect server with `OP_AGENT_BACKEND=connect`),
+exports `OP_BIOMETRIC_UNLOCK_ENABLED=false`, and exits 78 with one stderr line
+when no agent credential exists. Desktop-app integration, `op signin`, and
+desktop MCP approval loops are human paths and are never retried by agents.
+
+Before any vault, item, or reference operation, verify the route without
+printing credential or item data:
 
 ```bash
-op --version
+command -v op
+op-doctor
+```
+
+`command -v op` must resolve to the user-local shim, not the system binary.
+On any 1Password failure,
+run `op-doctor` once and act on its count/type/mode-only output. Do not ask the
+operator to unlock the desktop app, do not run `op signin`, and do not bypass
+the shim. If the required secret operation still cannot proceed, report the
+failing doctor line and stop.
+
+## Minimal Diagnosis
+
+For an existing `op://`-backed env file, test the exact wrapper operation first
+and suppress successful output:
+
+```bash
 op run --env-file=<path> -- true >/dev/null
 ```
 
-Interpretation:
+If it succeeds, use that same lane-scoped wrapper for the real command. If it
+fails, run `op-doctor` and use only its sanitized result. Never use `--reveal`,
+shell tracing, environment dumps, or raw item JSON in transcripts; send
+verification reads to `/dev/null` or reduce them to a boolean, count, or byte
+count. Preserve `op://` references instead of resolving them into tracked
+files.
 
-- If the wrapper succeeds, use that same `op run --env-file=<path> --
-  <command>` path. It can obtain operation-scoped desktop authorization even
-  when `op whoami >/dev/null` fails; do not use `op whoami` as its gate.
-- Use `op whoami >/dev/null` only to diagnose whether the current agent process
-  has its own CLI session. Its failure does not establish that the operator or
-  the exact wrapper is unauthenticated.
-- If the exact wrapper fails, inspect only its sanitized error. Ask the user to
-  unlock or sign in through 1Password desktop only when that error identifies
-  desktop authorization as the missing step.
-- If MCP auth reports caller approval or desktop-app problems, stop repeating
-  the same MCP auth call. Use the sanitized CLI fallback only when it satisfies
-  the requested task without exposing raw values or broad metadata.
+Quota rule: the live service-account limit is 1,000 reads per hour per token,
+and a name-based `op://` reference costs three reads (a UUID reference costs
+one). A fan-out of N lanes over a template with R references can cost up to
+N x R x 3 reads. Above roughly 600 reads per hour, launch lanes on the Connect
+backend, which caches locally and is not quota'd (it covers `BEEP_SECRETS` but
+not `BEEP_CI`), or convert the template to UUID references:
+
+```bash
+env OP_AGENT_BACKEND=connect op run --env-file=<path> -- <lane command>
+```
 
 ## MCP Usage
 
-For Developer Environment tasks, authenticate once with the 1Password MCP server
-and then use its environment tools. If auth fails, do not loop. Record the
-sanitized failure and test the exact output-suppressed `op run` fallback when
-the task names an existing secret-reference-backed env file. Use other CLI
-fallbacks only when the task can be completed without raw secret values.
-
-The current agent 1Password MCP tools may not expose general vault item/field
-inspection. For vault item secret references, use the `op` fallback below only
-after the user has named the intended vault/item or explicitly requested an
-inventory.
+The official `1password-mcp` is the desktop Environments MCP: it cannot return
+secret values and is not a replacement for the service account or Connect. Use
+it only when the user explicitly requests a Developer Environments workflow and
+accepts the human desktop path. It is irrelevant to unattended agent secret
+retrieval. Tools that read `OP_SERVICE_ACCOUNT_TOKEN` or `OP_CONNECT_*`
+themselves instead of calling `op` are launched as
+`op-agent-auth exec -- <trusted-command>`.
 
 ## Secret-Reference Lookup
 
