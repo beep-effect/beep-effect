@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/time-to-certainty",
   "lifecycle": "active",
-  "statusNote": "P0 complete 2026-09-03: economics report, prior-art survey, baseline ratified (ruling 8: M1 P50 43.3 min / P95 3.95 h; M5 327 of 3,069 starts unfinished, 10.7%), ten rulings in research/decisions.md. In flight as separate PRs: A5 journal facts, B1, A4, B2, B4, C3, and the C1/C2 ledger service; B3 and A3 deferred until A5 lands. Review on PR #950 asked for portable reproduction inputs and full hosted-rerun matching in the economics script; that repair rides this PR.",
+  "statusNote": "P0 complete 2026-09-03: economics report, prior-art survey, baseline ratified (ruling 8: M1 P50 43.3 min / P95 3.95 h; M5 327 of 3,069 starts unfinished, 10.7%), ten ratified rulings plus six proposed A5 review rulings (pending ratification) in research/decisions.md. In flight as separate PRs: A5 journal facts, B1, A4, B2, B4, C3, and the C1/C2 ledger service; B3 and A3 deferred until A5 lands. Review on PR #950 asked for portable reproduction inputs and full hosted-rerun matching in the economics script; that repair rides this PR.",
   "mission": "Cut the fleet-aggregated P50/P95 time-to-certainty per verification episode by removing redundant lane executions across tiers, false-positive gate round-trips, and silent process deaths, measured before and after on the same operational proxies.",
   "executionCapable": true,
   "reflectionRequired": true,
