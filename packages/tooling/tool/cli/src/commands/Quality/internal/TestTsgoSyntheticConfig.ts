@@ -7,7 +7,23 @@
 import { A } from "@beep/utils";
 
 /**
- * @internal
+ * Static compiler fields applied to every package-owned synthetic tsgo test config.
+ *
+ * **Details**
+ *
+ * The package worker supplies the owning tsconfig, test-file list, repository root,
+ * and temporary build-info path. This template owns the invariant compiler posture.
+ *
+ * **Example** (Inspect the no-emit posture)
+ *
+ * ```ts
+ * import { testTsgoSyntheticConfigTemplate } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * if (!testTsgoSyntheticConfigTemplate.compilerOptions.noEmit) {
+ *   throw new Error("the tsgo tests lane must never emit package artifacts")
+ * }
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

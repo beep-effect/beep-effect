@@ -146,9 +146,10 @@ The repo-wide `quality test-tsgo` lane is an aggregate over the package-owned
 `package-test-typecheck` Turbo task. That task remains `cache: false`: test
 diagnostics must run for the current checkout, while Turbo still computes a
 hash from the package manifest, the package `test/**` tree and `tsconfig*.json`
-files, the root `tsconfig.base.json`, and the CLI worker plus its synthetic
-tsconfig template. Package documentation is deliberately outside that input
-set, so a README-only edit does not change the package task hash.
+files, package source directories, transitive dependency build hashes, the root
+`tsconfig.base.json`, and the CLI worker plus its synthetic tsconfig template.
+Package documentation is deliberately outside the owning package's direct
+input set, so a README-only edit does not change that package task hash.
 
 The aggregate discovers package ownership exactly as the pre-Turbo lane did,
 then invokes Turbo with `--concurrency=1`, `--continue=always`, suppressed task

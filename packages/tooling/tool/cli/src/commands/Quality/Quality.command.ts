@@ -140,6 +140,13 @@ export {
   QualityProfileDetection,
 } from "./Quality.schemas.ts";
 /**
+ * Synthetic tsgo test config fields shared by package workers.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export { testTsgoSyntheticConfigTemplate };
+/**
  * Host facts used when selecting a quality profile.
  *
  * **Example** (Run a quality command)
@@ -1645,6 +1652,13 @@ const runTestTsgoTurboTasks = Effect.fn("QualityScriptCommands.runTestTsgoTurboT
     source: "all",
     trim: true,
   }).pipe(QualityScriptCommandError.mapError(`Failed to run ${testTsgoPackageTaskName} Turbo tasks.`));
+
+  if (turbo.exitCode !== 0) {
+    return yield* QualityScriptCommandError.make({
+      message: `${testTsgoPackageTaskName} Turbo execution failed with exit code ${turbo.exitCode}.`,
+      exitCode: turbo.exitCode,
+    });
+  }
 
   return yield* readTestTsgoTurboResults(repoRoot, turbo.output, groups);
 });

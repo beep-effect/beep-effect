@@ -14,6 +14,10 @@ const $I = $RepoCliId.create("test/test-tsgo-turbo-inputs");
 
 const EXPECTED_TEST_TSGO_INPUTS: ReadonlyArray<string> = [
   "package.json",
+  "scripts/**",
+  "server/**",
+  "src/**",
+  "src-tauri/**",
   "test/**",
   "tsconfig*.json",
   "$TURBO_ROOT$/tsconfig.base.json",
@@ -44,6 +48,7 @@ const TurboConfiguration = S.Struct({
   tasks: S.Struct({
     "package-test-typecheck": S.Struct({
       cache: S.Boolean,
+      dependsOn: S.Array(S.String),
       inputs: S.Array(S.String),
     }),
   }),
@@ -129,6 +134,7 @@ describe("tsgo tests Turbo inputs", () => {
         const packageTask = turboConfiguration.tasks["package-test-typecheck"];
 
         expect(packageTask.cache).toBe(false);
+        expect(packageTask.dependsOn).toEqual(["^build"]);
         expect(packageTask.inputs).toEqual(EXPECTED_TEST_TSGO_INPUTS);
 
         yield* writeFixtureJson(root, "package.json", {
@@ -137,15 +143,27 @@ describe("tsgo tests Turbo inputs", () => {
           private: true,
           workspaces: ["packages/*"],
         });
+        yield* writeFixtureFile(root, ".gitignore", ".turbo\nnode_modules\n");
         yield* writeFixtureJson(root, "packages/test-tsgo/package.json", {
+          dependencies: { "@fixture/config": "workspace:*" },
           name: "@fixture/test-tsgo",
           private: true,
           scripts: { "package-test-typecheck": "echo test-tsgo" },
         });
+        yield* writeFixtureJson(root, "packages/config/package.json", {
+          name: "@fixture/config",
+          private: true,
+          scripts: { build: "echo build" },
+        });
         yield* writeFixtureJson(root, "turbo.json", {
           tasks: {
+            build: {
+              inputs: ["$TURBO_DEFAULT$"],
+              outputs: [],
+            },
             "package-test-typecheck": {
               cache: packageTask.cache,
+              dependsOn: packageTask.dependsOn,
               inputs: packageTask.inputs,
             },
           },
@@ -162,8 +180,10 @@ describe("tsgo tests Turbo inputs", () => {
           "export const template = true;\n"
         );
         yield* writeFixtureFile(root, "packages/test-tsgo/test/index.test.ts", "export const expected = 1;\n");
+        yield* writeFixtureFile(root, "packages/test-tsgo/src/index.ts", "export const value = 1;\n");
         yield* writeFixtureFile(root, "packages/test-tsgo/tsconfig.json", "{}\n");
         yield* writeFixtureFile(root, "packages/test-tsgo/README.md", "# Initial docs\n");
+        yield* writeFixtureFile(root, "packages/config/src/index.ts", "export const config = 1;\n");
 
         const baselineHash = yield* testTsgoHashFromSummary(root, turboBinary);
 
@@ -173,6 +193,14 @@ describe("tsgo tests Turbo inputs", () => {
         yield* writeFixtureFile(root, "packages/test-tsgo/test/index.test.ts", "export const expected = 2;\n");
         expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
         yield* writeFixtureFile(root, "packages/test-tsgo/test/index.test.ts", "export const expected = 1;\n");
+
+        yield* writeFixtureFile(root, "packages/test-tsgo/src/index.ts", "export const value = 2;\n");
+        expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+        yield* writeFixtureFile(root, "packages/test-tsgo/src/index.ts", "export const value = 1;\n");
+
+        yield* writeFixtureFile(root, "packages/config/src/index.ts", "export const config = 2;\n");
+        expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);
+        yield* writeFixtureFile(root, "packages/config/src/index.ts", "export const config = 1;\n");
 
         yield* writeFixtureFile(root, "packages/test-tsgo/tsconfig.json", '{"compilerOptions":{}}\n');
         expect(yield* testTsgoHashFromSummary(root, turboBinary)).not.toBe(baselineHash);

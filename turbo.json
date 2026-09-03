@@ -130,8 +130,13 @@
     },
     "package-test-typecheck": {
       "cache": false,
+      "dependsOn": ["^build"],
       "inputs": [
         "package.json",
+        "scripts/**",
+        "server/**",
+        "src/**",
+        "src-tauri/**",
         "test/**",
         "tsconfig*.json",
         "$TURBO_ROOT$/tsconfig.base.json",
