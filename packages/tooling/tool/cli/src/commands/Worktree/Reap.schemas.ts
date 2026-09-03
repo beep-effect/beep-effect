@@ -69,6 +69,7 @@ export const WorktreeReapSkipReason = LiteralKit([
   "dirty-tree",
   "open-pr",
   "no-pr",
+  "reused-branch",
   "too-young",
   "live-session",
   "liveness-unknown",

@@ -53,6 +53,7 @@ const addWorktree = Effect.fn("WorktreeReapTest.addWorktree")(function* (
 
 const withScratchRepo = <Value, Failure, Requirements>(
   use: (fixture: {
+    readonly mainHead: string;
     readonly repoRoot: string;
     readonly tempRoot: string;
     readonly worktreesRoot: string;
@@ -83,7 +84,8 @@ const withScratchRepo = <Value, Failure, Requirements>(
       yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repoRoot);
       yield* runCommand("git", ["remote", "add", "origin", originRoot], repoRoot);
       yield* runCommand("git", ["push", "--quiet", "--set-upstream", "origin", "main"], repoRoot);
-      return { repoRoot, tempRoot, worktreesRoot };
+      const mainHead = Str.trim(yield* runCommand("git", ["rev-parse", "HEAD"], repoRoot));
+      return { mainHead, repoRoot, tempRoot, worktreesRoot };
     }),
     use,
     Effect.fn("WorktreeReapTest.removeFixture")(function* ({ tempRoot }) {
@@ -95,15 +97,15 @@ const withScratchRepo = <Value, Failure, Requirements>(
 const candidateAt = (report: WorktreeReapReport, candidatePath: string) =>
   O.getOrThrow(A.findFirst(report.candidates, (candidate) => Str.Equivalence(candidate.path, candidatePath)));
 
-const ghResult = (number: number | undefined) => ({
+const ghResult = (number: number | undefined, headRefOid: string) => ({
   exitCode: 0,
-  output: number === undefined ? "[]" : `[{"number":${number}}]`,
+  output: number === undefined ? "[]" : `[{"number":${number},"headRefOid":"${headRefOid}"}]`,
   truncated: false,
 });
 
 type GhAnswers = Readonly<Record<string, { readonly open: number | undefined; readonly merged: number | undefined }>>;
 
-const ghStubRunner = (answers: GhAnswers, onDu?: () => ProbeStub | undefined) =>
+const ghStubRunner = (mergedHead: string, answers: GhAnswers, onDu?: () => ProbeStub | undefined) =>
   Effect.fn("WorktreeReapTest.ghStubRunner")(function* (command: string, args: ReadonlyArray<string>, cwd: string) {
     if (Str.Equivalence(command, "du")) {
       const stubbed = onDu?.();
@@ -115,14 +117,14 @@ const ghStubRunner = (answers: GhAnswers, onDu?: () => ProbeStub | undefined) =>
       return yield* runRepoCommandCapture(command, args, cwd);
     }
     const answer = answers[cwd] ?? { open: undefined, merged: undefined };
-    return ghResult(A.contains(args, "merged") ? answer.merged : answer.open);
+    return ghResult(A.contains(args, "merged") ? answer.merged : answer.open, mergedHead);
   });
 
 type ProbeStub = { readonly exitCode: number; readonly output: string; readonly truncated: boolean };
 
 describe("worktree reap", () => {
   it.effect("classifies registered worktrees and measures bytes only for clean, idle merged PRs", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -133,8 +135,14 @@ describe("worktree reap", () => {
         const noPr = yield* addWorktree(repoRoot, worktreesRoot, "no-pr");
         const young = yield* addWorktree(repoRoot, worktreesRoot, "young");
         const locked = yield* addWorktree(repoRoot, worktreesRoot, "locked");
+        const reused = yield* addWorktree(repoRoot, worktreesRoot, "reused");
         yield* runCommand("git", ["worktree", "lock", locked], repoRoot);
         yield* fs.writeFileString(path.join(dirty, "dirty.txt"), "unsaved\n");
+        // Advance the reused branch past its historically merged head: the merged PR's
+        // headRefOid stays at mainHead while this checkout's HEAD moves beyond it.
+        yield* fs.writeFileString(path.join(reused, "advance.txt"), "post-merge work\n");
+        yield* runCommand("git", ["add", "advance.txt"], reused);
+        yield* runCommand("git", ["commit", "--quiet", "-m", "advance past merged head"], reused);
 
         const nowMillis = FIXTURE_NOW_MILLIS;
         const youngHead = Str.trim(
@@ -144,12 +152,14 @@ describe("worktree reap", () => {
 
         let duCalls = 0;
         const runner = ghStubRunner(
+          mainHead,
           {
             [merged]: { open: undefined, merged: 101 },
             [dirty]: { open: undefined, merged: 102 },
             [young]: { open: undefined, merged: 103 },
             [open]: { open: 104, merged: undefined },
             [revival]: { open: 105, merged: 106 },
+            [reused]: { open: undefined, merged: 107 },
           },
           () => {
             duCalls += 1;
@@ -163,7 +173,7 @@ describe("worktree reap", () => {
 
         expect(report.applied).toBe(false);
         expect(report.schemaVersion).toBe("worktree-reap/v1");
-        expect(report.candidates).toHaveLength(7);
+        expect(report.candidates).toHaveLength(8);
         expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
         expect(O.isNone(candidateAt(report, merged).skipReason)).toBe(true);
         expect(O.isSome(candidateAt(report, merged).bytes)).toBe(true);
@@ -178,6 +188,10 @@ describe("worktree reap", () => {
         expect(O.getOrThrow(candidateAt(report, noPr).skipReason)).toBe("no-pr");
         expect(O.getOrThrow(candidateAt(report, young).skipReason)).toBe("too-young");
         expect(O.getOrThrow(candidateAt(report, locked).skipReason)).toBe("locked");
+        expect(candidateAt(report, reused).reapClass).toBe("merged-pr");
+        expect(O.getOrThrow(candidateAt(report, reused).skipReason)).toBe("reused-branch");
+        expect(O.getOrThrow(candidateAt(report, reused).prNumber)).toBe(107);
+        expect(candidateAt(report, reused).retired).toBe(false);
         expect(duCalls).toBe(1);
       })
     )
@@ -211,11 +225,11 @@ describe("worktree reap", () => {
   );
 
   it.effect("excludes both the main checkout and the invoking linked worktree", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const invoking = yield* addWorktree(repoRoot, worktreesRoot, "invoking");
         const peer = yield* addWorktree(repoRoot, worktreesRoot, "peer");
-        const runner = ghStubRunner({ [peer]: { open: undefined, merged: undefined } });
+        const runner = ghStubRunner(mainHead, { [peer]: { open: undefined, merged: undefined } });
         const report = yield* runWorktreeReap({ runCommand: runner, startFrom: invoking });
 
         expect(report.mainCheckout).toBe(repoRoot);
@@ -227,10 +241,10 @@ describe("worktree reap", () => {
   );
 
   it.effect("skips a live worktree without measuring its size", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const occupied = yield* addWorktree(repoRoot, worktreesRoot, "occupied");
-        const runner = ghStubRunner({ [occupied]: { open: undefined, merged: 401 } });
+        const runner = ghStubRunner(mainHead, { [occupied]: { open: undefined, merged: 401 } });
         const report = yield* runWorktreeReap({
           nowMillis: FIXTURE_NOW_MILLIS,
           probeLiveness: verdictProber("live"),
@@ -258,10 +272,10 @@ describe("worktree reap", () => {
   );
 
   it.effect("skips a candidate whose liveness verdict is unknown", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const merged = yield* addWorktree(repoRoot, worktreesRoot, "unknown-liveness");
-        const runner = ghStubRunner({ [merged]: { open: undefined, merged: 402 } });
+        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 402 } });
         const report = yield* runWorktreeReap({
           nowMillis: FIXTURE_NOW_MILLIS,
           probeLiveness: verdictProber("unknown"),
@@ -276,11 +290,11 @@ describe("worktree reap", () => {
   );
 
   it.effect("revalidates and archive-retires only a merged candidate, then deletes its branch", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const merged = yield* addWorktree(repoRoot, worktreesRoot, "apply-merged");
-        const runner = ghStubRunner({ [merged]: { open: undefined, merged: 201 } });
+        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 201 } });
         const report = yield* runWorktreeReap({
           apply: true,
           nowMillis: FIXTURE_NOW_MILLIS,
@@ -306,11 +320,11 @@ describe("worktree reap", () => {
   );
 
   it.effect("keeps a candidate eligible and retires it when only the size probe fails", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const merged = yield* addWorktree(repoRoot, worktreesRoot, "unmeasured");
-        const runner = ghStubRunner({ [merged]: { open: undefined, merged: 501 } }, () => ({
+        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 501 } }, () => ({
           exitCode: 1,
           output: "fixture du failure",
           truncated: false,
@@ -335,7 +349,7 @@ describe("worktree reap", () => {
   );
 
   it.effect("reports the rechecked classification when eligibility changes before retirement", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const merged = yield* addWorktree(repoRoot, worktreesRoot, "reclassified");
@@ -349,10 +363,10 @@ describe("worktree reap", () => {
             return yield* runRepoCommandCapture(command, args, cwd);
           }
           if (A.contains(args, "merged")) {
-            return ghResult(301);
+            return ghResult(301, mainHead);
           }
           openCalls += 1;
-          return ghResult(openCalls > 1 ? 305 : undefined);
+          return ghResult(openCalls > 1 ? 305 : undefined, mainHead);
         });
         const report = yield* runWorktreeReap({
           apply: true,
@@ -375,11 +389,11 @@ describe("worktree reap", () => {
   );
 
   it.effect("reports a retirement whose checkout was removed before cleanup failed", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const merged = yield* addWorktree(repoRoot, worktreesRoot, "half-retired");
-        const runner = ghStubRunner({ [merged]: { open: undefined, merged: 601 } });
+        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 601 } });
         const report = yield* runWorktreeReap({
           apply: true,
           nowMillis: FIXTURE_NOW_MILLIS,
@@ -388,6 +402,9 @@ describe("worktree reap", () => {
           startFrom: repoRoot,
         }).pipe(
           Effect.provideService(WorktreeRemovalService, {
+            hasUnpushedCommits: Effect.fnUntraced(function* () {
+              return false;
+            }),
             remove: Effect.fnUntraced(function* (request) {
               yield* fs.remove(request.targetPath, { force: true, recursive: true }).pipe(Effect.ignore);
               return yield* WorktreeCommandError.make({ message: "fixture cleanup failure" });
@@ -405,11 +422,11 @@ describe("worktree reap", () => {
   );
 
   it.effect("fails closed when retirement fails with the checkout still present", () =>
-    withScratchRepo(({ repoRoot, worktreesRoot }) =>
+    withScratchRepo(({ mainHead, repoRoot, worktreesRoot }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const merged = yield* addWorktree(repoRoot, worktreesRoot, "unremovable");
-        const runner = ghStubRunner({ [merged]: { open: undefined, merged: 602 } });
+        const runner = ghStubRunner(mainHead, { [merged]: { open: undefined, merged: 602 } });
         const report = yield* runWorktreeReap({
           apply: true,
           nowMillis: FIXTURE_NOW_MILLIS,
@@ -418,6 +435,9 @@ describe("worktree reap", () => {
           startFrom: repoRoot,
         }).pipe(
           Effect.provideService(WorktreeRemovalService, {
+            hasUnpushedCommits: Effect.fnUntraced(function* () {
+              return false;
+            }),
             remove: Effect.fnUntraced(function* () {
               return yield* WorktreeCommandError.make({ message: "fixture removal refusal" });
             }),

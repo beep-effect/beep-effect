@@ -78,6 +78,7 @@ type PrClassification = {
   readonly reapClass: WorktreeReapClass;
   readonly prNumber: O.Option<number>;
   readonly failed: boolean;
+  readonly reusedBranch: boolean;
 };
 
 type IdleReading = {
@@ -105,7 +106,7 @@ type CandidateAssessment = {
 };
 
 class GhPr extends S.Class<GhPr>($I`GhPr`)(
-  { number: S.Int },
+  { number: S.Int, headRefOid: S.String },
   $I.annote("GhPr", {
     description: "Minimal pull-request row decoded from gh pr list JSON output.",
   })
@@ -134,7 +135,7 @@ const ghPrList = Effect.fn("WorktreeReap.ghPrList")(function* (
   const output = yield* successfulOutput(
     runner,
     "gh",
-    ["pr", "list", "--head", branch, "--state", state, "--json", "number", "--limit", "1"],
+    ["pr", "list", "--head", branch, "--state", state, "--json", "number,headRefOid", "--limit", "1"],
     cwd
   );
   if (O.isNone(output)) {
@@ -146,26 +147,35 @@ const ghPrList = Effect.fn("WorktreeReap.ghPrList")(function* (
 const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   runner: ReapCommandRunner,
   cwd: string,
-  branch: string
+  branch: string,
+  head: O.Option<string>
 ): Effect.fn.Return<PrClassification, never, ChildProcessSpawner.ChildProcessSpawner> {
   // Open must win over merged: a revived branch can carry an old merged PR AND a live
   // open PR, and retiring it would delete in-flight work along with its branch.
   const open = yield* ghPrList(runner, cwd, branch, "open");
   if (O.isNone(open)) {
-    return { reapClass: "unknown", prNumber: O.none(), failed: true };
+    return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false };
   }
   const openPr = A.head(open.value);
   if (O.isSome(openPr)) {
-    return { reapClass: "open-pr", prNumber: O.some(openPr.value.number), failed: false };
+    return { reapClass: "open-pr", prNumber: O.some(openPr.value.number), failed: false, reusedBranch: false };
   }
   const merged = yield* ghPrList(runner, cwd, branch, "merged");
   if (O.isNone(merged)) {
-    return { reapClass: "unknown", prNumber: O.none(), failed: true };
+    return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false };
   }
   const mergedPr = A.head(merged.value);
   return O.match(mergedPr, {
-    onNone: (): PrClassification => ({ reapClass: "no-pr", prNumber: O.none(), failed: false }),
-    onSome: (pr): PrClassification => ({ reapClass: "merged-pr", prNumber: O.some(pr.number), failed: false }),
+    onNone: (): PrClassification => ({ reapClass: "no-pr", prNumber: O.none(), failed: false, reusedBranch: false }),
+    onSome: (pr): PrClassification => ({
+      reapClass: "merged-pr",
+      prNumber: O.some(pr.number),
+      failed: false,
+      // A historical merge only authorizes retirement of the exact snapshot it merged:
+      // a branch reused or advanced after that PR merged carries commits the PR never
+      // reviewed, so its checkout must not inherit the merged PR's retirement authority.
+      reusedBranch: !O.exists(head, (sha) => Str.Equivalence(sha, pr.headRefOid)),
+    }),
   });
 });
 
@@ -259,7 +269,7 @@ const scanProcessCwdMatches = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { probeWorktreeLiveness } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * console.log(Effect.isEffect(probeWorktreeLiveness({ targetPath: process.cwd(), idleHours: O.some(400) }))) // true
@@ -325,7 +335,7 @@ const probeEvidence = Effect.fnUntraced(function* (
   entry: WorktreeListEntry,
   branch: string
 ): Effect.fn.Return<EvidenceProbe, never, ChildProcessSpawner.ChildProcessSpawner> {
-  const pr = yield* classifyPr(ctx.runner, entry.path, branch);
+  const pr = yield* classifyPr(ctx.runner, entry.path, branch, O.fromNullishOr(entry.head));
   if (pr.failed) {
     return {
       _tag: "skipped",
@@ -373,6 +383,7 @@ const eligibilitySkipReason = (
   O.firstSomeOf([
     evidence.dirty ? O.some<WorktreeReapSkipReason>("dirty-tree") : O.none(),
     classSkipReason(evidence.pr.reapClass),
+    evidence.pr.reusedBranch ? O.some<WorktreeReapSkipReason>("reused-branch") : O.none(),
     O.exists(evidence.idleHours, (hours) => hours < Duration.toHours(idleThreshold))
       ? O.some<WorktreeReapSkipReason>("too-young")
       : O.none(),
@@ -538,7 +549,9 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  * **Details**
  *
  * The main checkout, the invoking checkout, and locked worktrees are excluded.
- * Eligibility requires a merged PR with no open PR on the branch, a clean tree,
+ * Eligibility requires a merged PR whose final head is the checkout's current
+ * HEAD (a branch reused after its merge skips as `reused-branch`), no open PR
+ * on the branch, a clean tree,
  * idleness beyond the threshold, and a dormant liveness verdict from the
  * same-uid process-cwd probe (`classifyFleetLiveness` semantics; a live or
  * unknown verdict skips the candidate). Byte measurement is reporting-only —
@@ -552,7 +565,7 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  *
  * ```ts
  * import { runWorktreeReap } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(runWorktreeReap())) // true
  * ```
