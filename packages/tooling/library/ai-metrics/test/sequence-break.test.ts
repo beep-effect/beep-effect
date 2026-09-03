@@ -433,7 +433,7 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
     )
   );
 
-  it.effect("keeps the ntfy topic and bearer token out of transport child environments", () =>
+  it.effect("keeps ntfy secrets out of child environments while delivering the token by descriptor", () =>
     Effect.scoped(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -446,6 +446,17 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
 if [ -n "\${BEEP_SEQUENCE_BREAK_NTFY_TOPIC:-}\${BEEP_SEQUENCE_BREAK_NTFY_TOKEN:-}" ]; then
   exit 97
 fi
+case " $* " in
+  *" --request POST "*)
+    header_path=""
+    for argument in "$@"; do
+      case "\${argument}" in @/dev/fd/*) header_path="\${argument#@}" ;; esac
+    done
+    [ -n "\${header_path}" ] || exit 98
+    IFS= read -r header <"\${header_path}" || exit 99
+    [ "\${header}" = "Authorization: Bearer private-token" ] || exit 100
+    ;;
+esac
 cat >/dev/null
 exit 0
 `
