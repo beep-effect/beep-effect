@@ -1723,6 +1723,58 @@ windows were holding dead surface open indefinitely. Removing on discovery keeps
 meaningful where it protects someone and stops it from parking deletions where it protects no
 one.
 
+## 2026-09-03: Top-Level bots/ Owns Authored Bot Packs; Hosted Judgment, Local Proof
+
+- **Status:** Active
+
+Decision:
+
+beep-effect adds a top-level `bots/` directory as the source of truth for
+authored bot packs. Packs live at `bots/packs/<slug>/` with `manifest.json` and
+`BOT.md`; environment-specific deployment configuration lives outside packs
+under `bots/deployments/` or `$XDG_CONFIG_HOME/beep/bots/`, and may contain only
+`op://` secret references. Runtime schemas, validation, rendering, dry-run
+behavior, timers, handoff verification, and receipts belong to a planned
+`Bots` command group in `packages/tooling/tool/cli`, following the automation
+route in `07-non-slice-families.md`. The first pack PR creates the directory;
+this decision creates no pack content.
+
+The runtime is capability-split: hosted Grok Bot discovers and judges; GitHub
+Actions senses deterministic repository and GitHub state; a local timer or
+CLIProxyAPI proxy lane verifies checkout-dependent facts and is the only
+publisher, through Yeet. Version one is proposal-only and may write reports,
+GitHub issues, and handoff artifacts. A later pack may earn local, pack-specific
+draft-PR authority after several clean deduplicated runs. Hosted connectors
+never open pull requests, and merge authority is never delegated.
+
+Public-safe hosted output crosses a GitHub-issue mailbox as a small envelope,
+numbered JSONL parts with byte counts and SHA-256 digests, and a completion
+marker. The local receiver verifies schema, part, record, and byte counts,
+digests, completion, and redaction before model or publisher use; partial
+recovery is rejected. Private records use a content-addressed local store.
+Inline base64 or gzip prompt payloads are forbidden.
+
+Bot evidence reuses `EvidenceReceipt`, `EvidenceDigest`, `EvidenceLadder`, and
+`RecoveryAttemptReceipt` from `@beep/skill-contract`. Every success, no-op,
+partial, and failure persists a receipt outside the hosted UI's 20-run window.
+The shared Bot VM receives provider OAuth only: no 1Password or publisher
+authority; approval remains required for state-changing tools; external text is
+data, not instructions; and a routine reading untrusted content must not also
+hold secrets and state-changing tools.
+
+Rationale:
+
+The 2026-08-08 `research/` decision established that a new top-level root is
+warranted when authored or generated repository truth has a distinct trust
+domain and lifecycle. Bot packs have the same need for a stable repo-owned
+source while deployment state and credentials remain environment-owned. The
+research also found hosted routines arriving 10–37 minutes late, silent
+successes, a 20-run UI window, shared-VM identity, connector uncertainty, and
+duplicate scheduled pull requests. Separating hosted judgment from local proof,
+failing closed on handoff integrity, reusing the existing receipt vocabulary,
+and withholding publisher authority address those observed failure modes. Work
+packet: `explorations/grok-bot-automation/`.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
