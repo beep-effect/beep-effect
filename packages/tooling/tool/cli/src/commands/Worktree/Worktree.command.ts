@@ -21,6 +21,7 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
+import { worktreeReapCommand } from "./Reap.command.ts";
 import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
 import { parseWorktreePorcelain, WorktreeListEntry, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
@@ -934,7 +935,7 @@ const worktreeDoctorCommand = Command.make(
  * **Details**
  *
  * Bare `worktree` prints the subcommand menu; the work lives in the `new`,
- * `remove`, `doctor`, and `fleet` subcommands.
+ * `remove`, `doctor`, `reap`, and `fleet` subcommands.
  *
  * **Example** (Build the CLI program for the group)
  *
@@ -957,10 +958,17 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
       "- bun run beep worktree new <name> [--branch <branch>]",
       "- bun run beep worktree remove <name> [--archive] [--delete-branch]",
       "- bun run beep worktree doctor",
+      "- bun run beep worktree reap [--apply] [--json] [--idle-hours <hours>]",
       "- bun run beep worktree fleet [--json]",
     ].join("\n")
   )
 ).pipe(
   Command.withDescription("Manage sibling git worktrees under the canonical worktrees root"),
-  Command.withSubcommands([worktreeNewCommand, worktreeRemoveCommand, worktreeDoctorCommand, worktreeFleetCommand])
+  Command.withSubcommands([
+    worktreeNewCommand,
+    worktreeRemoveCommand,
+    worktreeDoctorCommand,
+    worktreeReapCommand,
+    worktreeFleetCommand,
+  ])
 );
