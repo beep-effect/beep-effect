@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { opendir } from "node:fs/promises";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
@@ -726,33 +725,32 @@ const readBoundedPersonMatchDirectory = Effect.fn("Files.readBoundedPersonMatchD
 ): Effect.fn.Return<ReadonlyArray<string>, FilesCommandError> {
   const admittedEntryCount = MutableRef.get(budget.entryCount);
   const remaining = Num.subtract(budget.limit, admittedEntryCount);
-  const names = yield* Effect.tryPromise({
-    try: async (): Promise<O.Option<ReadonlyArray<string>>> => {
-      const handle = await opendir(directory);
+  const names = yield* Effect.try({
+    try: (): ReadonlyArray<string> => {
       const discovered: Array<string> = [];
-      try {
-        while (discovered.length <= remaining) {
-          const entry = await handle.read();
-          if (entry === null) return O.some(discovered);
-          discovered.push(entry.name);
-        }
-        return O.none();
-      } finally {
-        await handle.close();
+      const entries = new Bun.Glob("*").scanSync({
+        cwd: directory,
+        dot: true,
+        followSymlinks: false,
+        onlyFiles: false,
+        throwErrorOnBrokenSymlink: false,
+      });
+      for (const name of entries) {
+        discovered.push(name);
+        if (A.length(discovered) > remaining) break;
       }
+      return discovered;
     },
     catch: (cause) => formatPlatformError("Failed to discover person-match image inputs", directory, { cause }),
   });
-  return yield* O.match(names, {
-    onNone: () =>
-      FilesCommandError.make({
-        message: `${budget.label} directory entry count exceeds ${budget.limit}; split the scan into smaller batches.`,
-      }),
-    onSome: (boundedNames) => {
-      MutableRef.set(budget.entryCount, Num.sum(admittedEntryCount, A.length(boundedNames)));
-      return Effect.succeed(boundedNames);
-    },
-  });
+  if (A.length(names) > remaining) {
+    return yield* FilesCommandError.make({
+      message: `${budget.label} directory entry count exceeds ${budget.limit}; split the scan into smaller batches.`,
+    });
+  }
+
+  MutableRef.set(budget.entryCount, Num.sum(admittedEntryCount, A.length(names)));
+  return names;
 });
 
 /**
@@ -775,16 +773,17 @@ const readBoundedPersonMatchDirectory = Effect.fn("Files.readBoundedPersonMatchD
  * @category testing
  * @since 0.0.0
  */
-export const boundedPersonMatchDirectoryNamesForTesting = (
-  directory: string,
-  limit: number
-): Effect.Effect<ReadonlyArray<string>, FilesCommandError> =>
+export const boundedPersonMatchDirectoryNamesForTesting: {
+  (directory: string, limit: number): Effect.Effect<ReadonlyArray<string>, FilesCommandError>;
+  (limit: number): (directory: string) => Effect.Effect<ReadonlyArray<string>, FilesCommandError>;
+} = dual(2, (directory: string, limit: number) =>
   readBoundedPersonMatchDirectory(directory, {
     count: MutableRef.make(0),
     entryCount: MutableRef.make(0),
     label: "candidate",
     limit,
-  });
+  })
+);
 
 const discoverSupportedPersonMatchFiles: (
   root: string,

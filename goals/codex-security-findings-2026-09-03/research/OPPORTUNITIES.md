@@ -9,11 +9,15 @@
   materialize an attacker-sized input before rejecting it. The same pass found
   that individually bounded patent ranges could exceed the intended aggregate
   budget before deduplication, and that the worker JSON ceiling omitted its
-  framing newline.
+  framing newline. Exact-head CI then rejected a direct `node:fs`/`async`
+  implementation at the Effect compiler boundary and reported the corrected
+  Markdown queue helper one point above the Fallow cognitive-complexity limit.
 - **What would have prevented it:** Security-boundary reviews should separately
   account for source enumeration, intermediate staging, aggregate expansion,
   final retained output, and wire framing. Boundary tests should make data just
   beyond the decision point unreadable, not merely assert the final error.
+  Resource-bound implementations in the CLI should begin from Effect platform
+  services and be kept below the repository complexity envelope before review.
 
 ## 2026-09-03 — Runtime-root rollout prose described an older predecessor
 
