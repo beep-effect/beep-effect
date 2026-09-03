@@ -335,7 +335,7 @@ export class HtmlProjectionSafetyViolation extends S.TaggedError<HtmlProjectionS
  *
  * ```ts import.meta.vitest name="Construct a complexity violation"
  * import { DocumentComplexitySafetyViolation, MAX_SAFE_DOCUMENT_NODES } from "@beep/md/Md.safe"
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  *
  * const issue = DocumentComplexitySafetyViolation.make({
  *   maxNodes: NonNegativeInt.make(MAX_SAFE_DOCUMENT_NODES),

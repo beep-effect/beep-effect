@@ -824,3 +824,38 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** let `gh run view` honor a workspace-approved cache
   directory automatically, or make the log command stream the archive without first
   writing beneath the user cache.
+
+## 2026-09-03 — a concurrent base merge invalidated a long coverage proof
+
+- **Doing:** running the requested full `@beep/repo-cli` coverage ratchet after the
+  focused shard-repair tests passed.
+- **Evidence:** the 12-minute coverage run began on head `1e87340074`; while it was
+  active, the orchestrator committed the repair and merged current `origin/main`,
+  advancing the checkout to `26d90f4417`. The run then failed six unrelated tests
+  whose source, fixtures, and built exports came from the moving pre/post-merge graph.
+- **Would have prevented it:** hold the checkout head stable for the duration of a
+  heavyweight proof, then merge or commit only after its subprocess exits.
+
+## 2026-09-03 — concurrent coverage lanes shared a destructive reports directory
+
+- **Doing:** rerunning the requested `@beep/repo-cli` coverage ratchet against the
+  stable post-merge head.
+- **Evidence:** Vitest stopped after 73 seconds because
+  `packages/tooling/tool/cli/coverage/.tmp/coverage-4.json` disappeared, reporting
+  that something removed the coverage directory and warning against simultaneous
+  Vitest runs with the same `coverage.reportsDirectory`.
+- **Would have prevented it:** assign every admitted coverage lane a unique reports
+  directory and merge summaries afterward, or serialize coverage ownership with a
+  checkout-scoped lease.
+
+## 2026-09-03 — main's skipped intermediate push proofs exported two red ratchets
+
+- **Doing:** proving an unrelated PR after merging the latest `origin/main` burst from
+  #967 through #977.
+- **Evidence:** hosted merge-commit checks inherited both `@beep/html` coverage below
+  its committed function and line floors and one added JSDoc root-package import; the
+  burst's intermediate push runs had been skipped, so the unrelated PR had to repair
+  both regressions in-branch before its own checks could pass.
+- **Would have prevented it:** require the coverage and JSDoc ratchets to finish on the
+  exact main-bound merge commit for each burst PR, even when intermediate push runs are
+  intentionally skipped.
