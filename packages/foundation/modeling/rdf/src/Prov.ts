@@ -175,6 +175,7 @@ export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
  */
 export const ProvDateTime = ProvDateTimeEncoded.pipe(
   S.decodeTo(S.DateTimeUtcFromString),
+  SchemaUtils.withCodecStatics(["decodeResult"]),
   $I.annoteSchema("ProvDateTime", {
     description: "PROV timestamp decoded to DateTime.Utc.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
@@ -1060,6 +1061,8 @@ export class ProvBundle extends S.Class<ProvBundle>($I`ProvBundle`)(
   })
 ) {
   static readonly decodeUnknownResult = S.decodeUnknownResult(this);
+
+  static readonly is = S.is(ProvBundle);
 }
 
 /**
