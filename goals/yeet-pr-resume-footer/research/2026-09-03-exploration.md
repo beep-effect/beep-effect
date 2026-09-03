@@ -14,7 +14,7 @@ Codex-findings skill law: on re-detection the only dispositions are `Already fix
 
 ## Current code (main, `88fa371cb0`)
 
-- `packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts` (686 lines): schemas `PrProvenancePath`, `PrProvenanceBranch`, `PrProvenanceHarness` (LiteralKit `claude-code|codex|unknown`), `PrProvenance` (local), `PublicPrProvenance` (public); `tokenizeHomePath`, `findRecentClaudeSession` (mtime heuristic over `~/.claude/projects/<munged>/*.jsonl`, 6h window, wrong-session hazard documented), `resumeCommandFor`, `renderPrProvenance`, `PrProvenanceService` (Context.Service, `detect(cwd, branch)`), `detectCodexEnvironment` (`CODEX` node / `CODEX_THREAD_ID` via ConfigProvider), `detectGitPaths` (`--git-common-dir` + `--show-toplevel`), 2s timeout, unknown fallback.
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts` (686 lines): schemas `PrProvenancePath`, `PrProvenanceBranch`, `PrProvenanceHarness` (LiteralKit `claude-code|codex|unknown`), `PrProvenance` (local), `PublicPrProvenance` (public); `tokenizeHomePath`, `findRecentClaudeSession` (mtime heuristic over `the Claude projects directory/<munged>/*.jsonl`, 6h window, wrong-session hazard documented), `resumeCommandFor`, `renderPrProvenance`, `PrProvenanceService` (Context.Service, `detect(cwd, branch)`), `detectCodexEnvironment` (`CODEX` node / `CODEX_THREAD_ID` via ConfigProvider), `detectGitPaths` (`--git-common-dir` + `--show-toplevel`), 2s timeout, unknown fallback.
 - Consumer: `PullRequest.ts:205-207` renders the footer into the PR body **only at `gh pr create --body-file`** time. No later re-assertion. `GateStaleness.ts` no longer consumes provenance.
 - Tests: `test/yeet-pr-provenance.test.ts` (382 lines, 8 `it`s) via `@beep/repo-cli/test/Yeet` test-kit re-export.
 - Live footer today (PR #945): `## Provenance` with Branch + Harness + JSON twin `{schemaVersion, branch, harness}`.
@@ -25,8 +25,8 @@ Codex-findings skill law: on re-detection the only dispositions are `Already fix
 Claude Code (2.1.259 CLI; desktop entrypoint 2.1.255):
 
 - `CLAUDE_CODE_SESSION_ID=<uuid>` — exact session id. Also `CLAUDE_PID`, `CLAUDE_CODE_ENTRYPOINT=claude-desktop|cli|sdk-cli`, `CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_HOST_SESSION_ID`.
-- Codex-companion plugin adds `CODEX_COMPANION_SESSION_ID` (= Claude session id) and `CODEX_COMPANION_TRANSCRIPT_PATH=~/.claude/projects/<munged-session-home>/<id>.jsonl` (persisted via `~/.claude/session-env/<id>/`).
-- `~/.claude/sessions/<CLAUDE_PID>.json` live index: `{pid, sessionId, cwd, name, nameSource: derived|user, entrypoint, kind, startedAt, bridgeSessionId}`. Names look like `<clone>-<xx>` (derived) or `<USER_LABEL>`, `<USER_LABEL_2>` (user-named via `--name`/rename). Only exists while the process lives.
+- Codex-companion plugin adds `CODEX_COMPANION_SESSION_ID` (= Claude session id) and `CODEX_COMPANION_TRANSCRIPT_PATH=the Claude projects directory/<munged-session-home>/<id>.jsonl` (persisted via `the Claude home/session-env/<id>/`).
+- `the Claude session index/<CLAUDE_PID>.json` live index: `{pid, sessionId, cwd, name, nameSource: derived|user, entrypoint, kind, startedAt, bridgeSessionId}`. Names look like `<clone>-<xx>` (derived) or `<USER_LABEL>`, `<USER_LABEL_2>` (user-named via `--name`/rename). Only exists while the process lives.
 - Transcript metadata records (durable): `custom-title` (desktop conversation title), `agent-name`, `ai-title`, **`pr-link` `{sessionId, prNumber, prUrl, prRepository, timestamp}`**, `worktree-state`, `bridge-session`.
 - **`claude --from-pr <number|url>`** (native): resumes the session linked to a PR. The link is written by `linkSessionToPR` (transcript `pr-link`, telemetry `tengu_session_linked_to_pr`); observed for yeet-created PRs #946, #947, #950 (not #944/#945, which came from Codex). Index semantics are **last-wins per session**: session `<id>` linked #946 then #950, so `--from-pr 946` will not find it. Scope: the picker is per-project like `--resume`, so a `cd` to the session home is still needed.
 - `-n, --name <name>` sets display name; `--resume` takes a session ID (picker otherwise).
@@ -34,8 +34,8 @@ Claude Code (2.1.259 CLI; desktop entrypoint 2.1.255):
 
 Codex (`codex 0.152.1`):
 
-- `CODEX_THREAD_ID` env in Codex sessions. `codex resume <SESSION_ID|name>` — "UUID or session name; UUIDs take precedence"; picker is cwd-filtered, `--all` disables filtering. Session store `~/.codex/sessions/YYYY/MM/DD/*.jsonl` with `{id, cwd, originator, cli_version}` in the header.
-- Codex worktrees live at `~/.codex/worktrees/<hash>/<clone>` — **outside** the projects root.
+- `CODEX_THREAD_ID` env in Codex sessions. `codex resume <SESSION_ID|name>` — "UUID or session name; UUIDs take precedence"; picker is cwd-filtered, `--all` disables filtering. Session store `the Codex session store/YYYY/MM/DD/*.jsonl` with `{id, cwd, originator, cli_version}` in the header.
+- Codex worktrees live at `the Codex worktree root/<hash>/<clone>` — **outside** the projects root.
 
 ## Workstation layout
 

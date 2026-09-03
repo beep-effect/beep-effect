@@ -32,7 +32,7 @@
 ## 4. In-repo capability references
 
 - `@beep/repo-ai-metrics`: `repoPathToClaudeProjectName`, `shellQuote`, Codex
-  session-store discovery (`~/.codex/sessions`).
+  session-store discovery (`the Codex session store`).
 - `packages/tooling/tool/cli/src/internal/cli/Flags.ts`: `aiMetricsDataRootFlag`
   precedent for an XDG state root through `Config`.
 - `standards/architecture/06-configuration-boundaries.md`: env only through

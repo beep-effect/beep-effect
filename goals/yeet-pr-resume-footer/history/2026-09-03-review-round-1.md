@@ -1,7 +1,7 @@
 # 2026-09-03 — PR 1 review round 1
 
 Lanes (all Codex, Sol medium, detached with nohup + Monitor; handoffs under
-`~/.cache/beep/handoffs/pr-footer-revival/`):
+`<handoff-dir>/`):
 
 - Implementation lane: delivered the v2 footer, registry, resume, monitor
   re-assert, boundary test, changeset, skill doc, CSF-007 follow-up. Focused

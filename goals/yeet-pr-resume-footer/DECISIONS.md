@@ -17,7 +17,7 @@ every public field below must be defensible as not-a-leak, not merely low risk.
    template, env-var name, or harness resume command appears in the PR.
    Rejected: `cd "$BEEP_PROJECTS/<clone>" && …` (a path template plus a resume
    command is CSF-007's literal wording; wrong when the session home differs
-   from the work clone and for Codex worktrees under `~/.codex/worktrees`);
+   from the work clone and for Codex worktrees under `the Codex worktree root`);
    native `claude --from-pr` as the only mechanism (Claude-only; its index is
    last-wins per session, so #946 became unreachable once the same session
    opened #950). `BEEP_PROJECTS` is not introduced.
@@ -40,7 +40,7 @@ every public field below must be defensible as not-a-leak, not merely low risk.
 4. **Packet.** This goal packet graduates speed-loop OPPORTUNITIES #79; grill
    decisions live here; packet-state flips land in the same PR as the work.
 5. **`yeet resume` default = exec with live guard.** If the recorded session is
-   alive (`~/.claude/sessions/<pid>.json` with matching `sessionId` and a live
+   alive (`the Claude session index` with matching `sessionId` and a live
    `/proc/<pid>`), print window name, workspace, and pid and stop; `--force`
    overrides. Otherwise spawn the harness in the recorded session home with
    inherited stdio (`claude --resume <id>` / `codex resume <thread>`).

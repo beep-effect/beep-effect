@@ -114,4 +114,4 @@ Higher sources outrank lower sources when they conflict.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| Codex sandboxed lanes cannot write the XDG registry | `codex exec -s workspace-write` | PR 2 | Sandbox denies `~/.local/state`; append is non-fatal and mirrored to the run dir | PR 2 lane recipe adds `--add-dir <state root>` |
+| Codex sandboxed lanes cannot write the XDG registry | `codex exec -s workspace-write` | PR 2 | Sandbox denies `$XDG_STATE_HOME`; append is non-fatal and mirrored to the run dir | PR 2 lane recipe adds `--add-dir <state root>` |

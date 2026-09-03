@@ -18,7 +18,7 @@ Status: `completed-retained`
 
 `yeet link [--pr n]`, verify/repair branch-keyed ledger rows, re-assert on
 reply/closeout/merge, Codex-lane recipe `--add-dir <state root>`, Codex live
-guard via `~/.codex/cross-instance-locks`, `yeet sweep --prune-pr-sessions`.
+guard via `the Codex cross-instance lock directory`, `yeet sweep --prune-pr-sessions`.
 
 ## Closeout Checklist
 
