@@ -23,6 +23,16 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** state in the C3 ruling that run-summary hashes require a matching
   package script, and decide whether the one-time workspace-manifest migration is part of the lane.
 
+## 2026-09-03 — One shared Turbo task script amplified into 131 package releases
+
+- **Doing:** validating the package-script migration required for real per-package run-summary
+  hashes.
+- **Evidence:** `beep quality changeset-status` classified the 138 test-owning manifest edits as
+  five lab paths and 133 versioned product workspaces; after the two configured package ignores,
+  131 release-tracked packages had to be named by an in-range changeset.
+- **Would have prevented it:** seed the task script in package templates before the C3 migration,
+  or explicitly budget the one-time multi-package release in the ruling and lane handoff.
+
 ## 2026-09-03 — A chained review fix committed and pushed past a red test
 
 - **Doing:** closing a Greptile thread on the economics script by patching a validation branch,
