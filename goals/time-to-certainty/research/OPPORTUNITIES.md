@@ -84,3 +84,12 @@ session/machine ids, quote only the minimal identifying error text.
   unwrapped paragraphs as lines longer than 100 characters.
 - **Would have prevented it:** pass each short wrapped line as a separate `git commit -m` argument
   instead of encoding newlines or relying on the commit tool to wrap paragraphs.
+
+## 2026-09-03 — Noninteractive shells omitted the systemd user-bus environment
+
+- **Doing:** launching the required exact-head package and coverage proofs in detached systemd
+  user scopes.
+- **Evidence:** every launch stopped before creating a scope with `XDG_RUNTIME_DIR not defined` even
+  though the current user's runtime directory and bus socket were present.
+- **Would have prevented it:** make the proof launcher derive and export the current user's runtime
+  directory and bus address before calling `systemd-run --user`.
