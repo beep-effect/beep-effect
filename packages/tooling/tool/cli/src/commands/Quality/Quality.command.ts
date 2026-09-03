@@ -3012,9 +3012,11 @@ const schedulerProtocolCommand = Command.make(
   "protocol",
   {
     enableEvictions: Flag.boolean("enable-evictions").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Enable v2 eviction rows after every live checkout runs the preservation release")
     ),
     disableEvictions: Flag.boolean("disable-evictions").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Disable v2 eviction rows while mixed fleet revisions may still rewrite the journal")
     ),
   },
