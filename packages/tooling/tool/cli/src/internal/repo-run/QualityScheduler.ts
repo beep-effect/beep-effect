@@ -50,6 +50,7 @@ import {
   AdmissionJournalTicketEvicted,
   appendAdmissionJournalEvent,
 } from "./AdmissionJournal.ts";
+import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
 import {
   AdmissionConfig,
   AdmissionCoordinationProtocol,
@@ -60,7 +61,6 @@ import {
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
-import { RepoRunContext, TurboPlanSnapshot } from "./RepoRun.models.ts";
 import { RunScopeRecord, RunScopeStopOutcome, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
 import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
@@ -75,32 +75,7 @@ const appendAbnormalAttemptEnd = Effect.fn("QualityScheduler.appendAbnormalAttem
   reason: "lease-eviction" | "queued-submitter-death",
   attemptId: UUID
 ) {
-  const attemptJournal = yield* Effect.tryPromise({
-    // fallow-ignore-next-line circular-dependency -- lazy loading avoids the schema initialization cycle
-    try: () => import("../../commands/Yeet/internal/AttemptJournal.ts"),
-    catch: QualitySchedulerError.new("Failed to load the Yeet attempt-journal writer."),
-  });
-  const context = RepoRunContext.make({
-    repoRoot: owner.checkoutRoot,
-    cwd: owner.checkoutRoot,
-    base: "origin/main",
-    head: "HEAD",
-    branch: owner.branch,
-    packetDir: ".beep/yeet",
-    originalArgv: A.empty(),
-    turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
-  });
-  const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  yield* attemptJournal.appendYeetAttemptJournalEvent(
-    context,
-    attemptJournal.YeetAttemptTerminated.make({
-      schemaVersion: "yeet-attempt-journal/v1",
-      _tag: "attempt-terminated",
-      attemptId,
-      recordedAt,
-      reason,
-    })
-  );
+  yield* appendSchedulerAttemptTerminated(owner.checkoutRoot, owner.branch, attemptId, reason);
 });
 
 const journalAbnormalAttemptEnd = Effect.fn("QualityScheduler.journalAbnormalAttemptEnd")(function* (

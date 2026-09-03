@@ -9,11 +9,12 @@ import { createHash } from "node:crypto";
 import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, flow, Path, pipe } from "effect";
+import { Effect, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { repoRunArtifactId, repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { perUserRuntimeRoot } from "../../../internal/repo-run/RuntimeRoot.ts";
 import type { FileSystem } from "effect";
 import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
@@ -124,11 +125,7 @@ const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
  * @category utilities
  * @since 0.0.0
  */
-export const safeArtifactName: (value: string) => string = flow(
-  Str.replace(/[^a-zA-Z0-9._-]+/gu, "_"),
-  Str.replace(/^_+|_+$/gu, ""),
-  (name) => (Str.isNonEmpty(name) ? name : "repo")
-);
+export const safeArtifactName: (value: string) => string = repoRunSafeArtifactName;
 
 const artifactNameHash = (value: string): string => createHash("sha256").update(value).digest("hex").slice(0, 12);
 
@@ -216,8 +213,7 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
  * @category utilities
  * @since 0.0.0
  */
-export const runIdForContext = (context: RepoRunContext): string =>
-  `${safeArtifactName(context.branch)}-${artifactNameHash(context.branch)}`;
+export const runIdForContext = (context: RepoRunContext): string => repoRunArtifactId(context.branch);
 
 /**
  * Resolve the Yeet artifact directory for a repo run context.
