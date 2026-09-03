@@ -224,13 +224,7 @@ const retainedJournalLines = Effect.fn("AttemptTerminationJournal.retainedLines"
   const terminatedAttemptIds = oldestFirst(
     A.filter(evictableAttemptIds, (attemptId) => A.contains(terminalAttemptIds, attemptId))
   );
-  const unfinishedAttemptIds = oldestFirst(
-    A.filter(evictableAttemptIds, (attemptId) => !A.contains(terminalAttemptIds, attemptId))
-  );
-  const evictedAttemptIds = A.take(
-    A.appendAll(terminatedAttemptIds, unfinishedAttemptIds),
-    A.length(attemptIds) - RETAINED_ATTEMPTS
-  );
+  const evictedAttemptIds = A.take(terminatedAttemptIds, A.length(evictableAttemptIds) - RETAINED_ATTEMPTS);
   if (A.isReadonlyArrayEmpty(evictedAttemptIds)) {
     return lines;
   }
@@ -290,7 +284,8 @@ const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(functi
       )
     )
   );
-  const exceedsRetention = A.length(attemptIds) > RETAINED_ATTEMPTS;
+  const exceedsRetention =
+    A.length(A.filter(attemptIds, (attemptId) => !A.contains(protectedAttemptIds, attemptId))) > RETAINED_ATTEMPTS;
   if (!torn && (!retainRows || !exceedsRetention)) {
     return;
   }
@@ -537,9 +532,15 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
   const appendLocked = Effect.gen(function* () {
     const journalExists = yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false)));
     yield* journalExists ? repairTornJournal(journalPath) : Effect.void;
+    const appendedEvent = yield* decodeRetentionEvent(line).pipe(
+      Effect.mapError(QualitySchedulerError.new(`Failed to decode appended Yeet attempt ${eventTag} event.`))
+    );
     yield* appendLinesLocked(journalPath, [line]);
     const reconciledAttemptIds = yield* reconcileJournalLocked(journalPath);
-    yield* compactJournal(journalPath, reconciledAttemptIds);
+    const appendedAttemptIds = AttemptJournalRetentionEvent.guards["journal-compacted"](appendedEvent)
+      ? A.empty<UUID>()
+      : [appendedEvent.attemptId];
+    yield* compactJournal(journalPath, A.appendAll(reconciledAttemptIds, appendedAttemptIds));
   });
   yield* Effect.ensuring(appendLocked, releaseJournalFileLock(lockPath, lockToken));
 });
