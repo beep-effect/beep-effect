@@ -479,33 +479,105 @@ export const PersonMatchEntryReason = LiteralKit(["aligner-confidence-failed", "
 export type PersonMatchEntryReason = typeof PersonMatchEntryReason.Type;
 
 /**
+ * Caps the reference-image set accepted by one person-match worker request.
+ *
+ * **Example** (Inspect the reference-image limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_REFERENCE_IMAGES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_REFERENCE_IMAGES === 256)
+ * // true
+ * ```
+ *
  * @internal
  * @category constants
+ * @since 0.0.0
  */
 export const PERSON_MATCH_MAX_REFERENCE_IMAGES = 256;
 /**
+ * Caps the candidate-image set accepted by one person-match worker request.
+ *
+ * **Example** (Inspect the candidate-image limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_CANDIDATE_IMAGES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_CANDIDATE_IMAGES === 10_000)
+ * // true
+ * ```
+ *
  * @internal
  * @category constants
+ * @since 0.0.0
  */
 export const PERSON_MATCH_MAX_CANDIDATE_IMAGES = 10_000;
 /**
+ * Caps the decoded faces retained for any one image in a worker report.
+ *
+ * **Example** (Inspect the per-image face limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_FACES_PER_IMAGE } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_FACES_PER_IMAGE === 32)
+ * // true
+ * ```
+ *
  * @internal
  * @category constants
+ * @since 0.0.0
  */
 export const PERSON_MATCH_MAX_FACES_PER_IMAGE = 32;
 /**
+ * Caps the total decoded faces accepted across a complete worker report.
+ *
+ * **Example** (Inspect the aggregate face limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_REPORTED_FACES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_REPORTED_FACES === 65_536)
+ * // true
+ * ```
+ *
  * @internal
  * @category constants
+ * @since 0.0.0
  */
 export const PERSON_MATCH_MAX_REPORTED_FACES = 65_536;
 /**
+ * Caps the serialized worker report read from standard output at 64 MiB.
+ *
+ * **Example** (Inspect the report byte limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_REPORT_BYTES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_REPORT_BYTES === 64 * 1024 * 1024)
+ * // true
+ * ```
+ *
  * @internal
  * @category constants
+ * @since 0.0.0
  */
 export const PERSON_MATCH_MAX_REPORT_BYTES = 64 * 1024 * 1024;
 /**
+ * Caps diagnostic text accepted from the worker at one MiB.
+ *
+ * **Example** (Inspect the diagnostic byte limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_DIAGNOSTIC_BYTES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_DIAGNOSTIC_BYTES === 1024 * 1024)
+ * // true
+ * ```
+ *
  * @internal
  * @category constants
+ * @since 0.0.0
  */
 export const PERSON_MATCH_MAX_DIAGNOSTIC_BYTES = 1024 * 1024;
 

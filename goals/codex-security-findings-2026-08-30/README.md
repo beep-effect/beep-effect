@@ -32,9 +32,10 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P5 repo-proof` - all 11 findings are validated and assigned to five lanes.
-Ten are remediated on this branch; CSF-003 was already fixed on current main by
-#876. Focused tests are green, and package plus Yeet proof is next.
+`P9 close` - PR #902 merged all packet remediations, including the current-main
+fix from #876 for CSF-003. All 11 exact captured finding IDs are automatically
+closed, the closure evidence and reflection are recorded, and this packet is
+retained as a completed audit trail.
 
 ## Findings at a glance
 
