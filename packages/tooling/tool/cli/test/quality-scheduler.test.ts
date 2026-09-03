@@ -28,6 +28,7 @@ import {
   processIdentityStatusWithStartForTesting,
   processStartIdentityForPid,
   provideRuntimeRootForTesting,
+  publishAdmissionJournalForTesting,
   QualitySchedulerError,
   RunScopeRecord,
   RuntimeRootChoice,
@@ -801,13 +802,14 @@ describe("quality-scheduler", () => {
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
 
             expect(O.isNone(yield* fs.stat(claimPath).pipe(Effect.option))).toBe(true);
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
             expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
           })
         );
       })
     ));
 
-  it("elects one claim adopter and preserves a replacement published during tombstone cleanup", () =>
+  it("elects one claim adopter and restores a replacement published before the reclaim rename", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -840,11 +842,12 @@ describe("quality-scheduler", () => {
                 return yield* fs.link(existingPath, newPath);
               }),
               rename: Effect.fn("FileSystem.FileSystem.rename")(function* (oldPath, newPath) {
-                yield* fs.rename(oldPath, newPath);
                 if (Str.Equivalence(oldPath, lockPath) && Str.includes(".tombstone-")(newPath)) {
                   yield* Ref.update(lockTombstones, (value) => value + 1);
+                  yield* fs.remove(lockPath, { force: true });
                   yield* fs.writeFileString(lockPath, replacementGeneration);
                 }
+                yield* fs.rename(oldPath, newPath);
               }),
             });
 
@@ -860,6 +863,70 @@ describe("quality-scheduler", () => {
             expect(acquired).toStrictEqual([false, false]);
             expect(yield* Ref.get(lockTombstones)).toBe(1);
             expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
+          })
+        );
+      })
+    ));
+
+  it("retains a displaced generation when a third writer wins and fences its stale publish", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const journalPath = yield* admissionJournalPath(tempRoot.root);
+            const replacementSeedPath = path.join(tempRoot.root, "replacement-seed.lock");
+            const thirdSeedPath = path.join(tempRoot.root, "third-seed.lock");
+            const replacementToken = `${process.pid}:displaced-writer`;
+            const thirdToken = `${process.pid}:third-writer`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            expect(yield* acquireJournalFileLock(replacementSeedPath, replacementToken, 1)).toBe(true);
+            expect(yield* acquireJournalFileLock(thirdSeedPath, thirdToken, 1)).toBe(true);
+            const replacementGeneration = yield* fs.readFileString(replacementSeedPath);
+            const thirdGeneration = yield* fs.readFileString(thirdSeedPath);
+            yield* releaseAdmissionJournalLockForTesting(replacementSeedPath, replacementToken);
+            yield* releaseAdmissionJournalLockForTesting(thirdSeedPath, thirdToken);
+            yield* fs.writeFileString(lockPath, `${DEAD_PID}:abandoned-generation`);
+            const interleavedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              rename: Effect.fn("FileSystem.FileSystem.rename")(function* (oldPath, newPath) {
+                if (Str.Equivalence(oldPath, lockPath) && Str.includes(".tombstone-")(newPath)) {
+                  yield* fs.remove(lockPath, { force: true });
+                  yield* fs.writeFileString(lockPath, replacementGeneration);
+                  yield* fs.rename(lockPath, newPath);
+                  yield* fs.writeFileString(lockPath, thirdGeneration);
+                  return;
+                }
+                yield* fs.rename(oldPath, newPath);
+              }),
+            });
+
+            expect(
+              yield* acquireJournalFileLock(lockPath, `${process.pid}:reclaimer`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, interleavedFileSystem)
+              )
+            ).toBe(false);
+
+            expect(yield* fs.readFileString(lockPath)).toBe(thirdGeneration);
+            const tombstones = A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"));
+            expect(tombstones).toHaveLength(1);
+            const lockLost = yield* publishAdmissionJournalForTesting(
+              journalPath,
+              lockPath,
+              replacementToken,
+              "displaced writer must not publish\n"
+            ).pipe(Effect.flip);
+            expect(lockLost.message).toContain("was lost before publication");
+            expect(yield* fs.exists(journalPath)).toBe(false);
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(1);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, thirdToken);
+            expect(yield* acquireJournalFileLock(lockPath, `${process.pid}:recovery-contender`, 1)).toBe(false);
+            expect(yield* fs.readFileString(lockPath)).toBe(replacementGeneration);
+            expect(A.filter(yield* fs.readDirectory(tempRoot.root), Str.includes(".tombstone-"))).toHaveLength(0);
             yield* releaseAdmissionJournalLockForTesting(lockPath, replacementToken);
           })
         );

@@ -120,3 +120,13 @@ session/machine ids, quote only the minimal identifying error text.
   though the current user's runtime directory and bus socket were present.
 - **Would have prevented it:** make the proof launcher derive and export the current user's runtime
   directory and bus address before calling `systemd-run --user`.
+
+## 2026-09-03 — Path validation did not fence journal lock reclamation
+
+- **Doing:** closing A5c review on exclusive, generation-fenced admission-journal lock recovery.
+- **Evidence:** PR #993 review thread `PRRT_kwDOPbO_N86fFah3` showed that a reclaimer validated the
+  lock path and only later renamed it; a replacement generation published between those operations
+  could be moved to a tombstone and deleted.
+- **Would have prevented it:** take the lock path into a reclaimer-owned tombstone before inspecting
+  its generation, restore a displaced generation with a no-clobber hard link, and require every
+  journal publisher to revalidate its acquired lock generation at the publication boundary.

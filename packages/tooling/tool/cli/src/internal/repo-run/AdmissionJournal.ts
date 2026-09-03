@@ -17,7 +17,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Clock, Duration, Effect, Encoding, FileSystem, Number as N, Path, pipe } from "effect";
+import { Clock, Console, Duration, Effect, Encoding, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { constant, dual, flow } from "effect/Function";
@@ -449,16 +449,41 @@ const journalLockReapSidecars = (
 ): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
   pathsWithPrefix(`${lockPath}.reap-`).pipe(Effect.map(O.getOrElse(A.empty<string>)));
 
+const isJournalLockReapTombstone = Str.includes(".tombstone-");
+
+const recoverJournalLockReapTombstone = Effect.fnUntraced(function* (
+  lockPath: string,
+  tombstonePath: string
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(true)))) {
+    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+    return;
+  }
+  const restored = yield* fs.link(tombstonePath, lockPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (restored) {
+    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+    return;
+  }
+  if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(false)))) {
+    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  }
+});
+
 const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
+  const sidecars = yield* journalLockReapSidecars(lockPath);
+  const tombstones = A.filter(sidecars, isJournalLockReapTombstone);
+  yield* Effect.forEach(tombstones, (tombstonePath) => recoverJournalLockReapTombstone(lockPath, tombstonePath), {
+    discard: true,
+  });
   if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(true)))) {
     return;
   }
-  const sidecars = yield* journalLockReapSidecars(lockPath);
   yield* Effect.forEach(
-    sidecars,
+    A.filter(sidecars, (sidecar) => !isJournalLockReapTombstone(sidecar)),
     (sidecar) => fs.remove(sidecar, { force: true, recursive: true }).pipe(Effect.ignore),
     {
       discard: true,
@@ -551,28 +576,43 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const adopterToken = yield* fs.readFileString(adopterPath).pipe(Effect.option);
-  const currentToken = yield* fs.readFileString(lockPath).pipe(Effect.option);
-  const adopterInfo = yield* fs.stat(adopterPath).pipe(Effect.option);
-  const currentInfo = yield* fs.stat(lockPath).pipe(Effect.option);
-  const generationStillPublished =
-    O.exists(adopterToken, (token) => token === observedToken) &&
-    O.exists(currentToken, (token) => token === observedToken) &&
-    O.exists(adopterInfo, (claim) => O.exists(currentInfo, (current) => sameFileIdentity(claim, current)));
-  if (!generationStillPublished) {
+  if (!O.exists(adopterToken, (token) => token === observedToken)) {
     yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
     return;
   }
   const tombstonePath = journalLockReapTombstonePath(claimPath);
   const moved = yield* fs.rename(lockPath, tombstonePath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-  if (moved) {
+  if (!moved) {
+    yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
+    return;
+  }
+  const tombstoneToken = yield* fs.readFileString(tombstonePath).pipe(Effect.option);
+  const adopterInfo = yield* fs.stat(adopterPath).pipe(Effect.option);
+  const tombstoneInfo = yield* fs.stat(tombstonePath).pipe(Effect.option);
+  const reclaimedObservedGeneration =
+    O.exists(tombstoneToken, (token) => token === observedToken) &&
+    O.exists(adopterInfo, (claim) => O.exists(tombstoneInfo, (tombstone) => sameFileIdentity(claim, tombstone)));
+  if (reclaimedObservedGeneration) {
     yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  } else {
+    const restored = yield* fs
+      .link(tombstonePath, lockPath)
+      .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+    if (restored) {
+      yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+    } else {
+      yield* Console.error(
+        `[yeet] journal lock generation displaced during reclaim; recovery retained ${tombstonePath}`
+      );
+    }
   }
   yield* fs.remove(adopterPath, { force: true }).pipe(Effect.ignore);
 });
 
 // A generation-specific hard link is the immutable claim snapshot. Renaming
-// that deterministic name elects exactly one source-fenced adopter; only that
-// owner may move the validated lock inode to an adopter-owned tombstone.
+// that deterministic name elects exactly one source-fenced adopter. The winner
+// takes the published path first, then validates the tombstoned inode and
+// restores a displaced replacement without clobbering a third writer.
 const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
@@ -734,31 +774,80 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
  */
 export const releaseAdmissionJournalLockForTesting = releaseJournalFileLock;
 
+const requireJournalLockOwnership = Effect.fnUntraced(function* (
+  lockPath: string,
+  token: string
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
+  const owned = yield* O.match(content, {
+    onNone: () => Effect.succeed(false),
+    onSome: (current) => isOwnedLockGeneration(current, token),
+  });
+  if (!owned) {
+    return yield* QualitySchedulerError.make({
+      message: `Admission journal lock "${lockPath}" was lost before publication; retry the locked operation.`,
+    });
+  }
+});
+
 const publishJournalAtomic = Effect.fnUntraced(function* (
   journalPath: string,
+  lockPath: string,
+  lockToken: string,
   content: string
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const stagingPath = `${journalPath}.tmp-${process.pid}-${randomUUID()}`;
-  yield* Effect.scoped(
+  yield* Effect.ensuring(
     Effect.gen(function* () {
-      const file = yield* fs.open(stagingPath, { flag: "w" });
-      yield* file.writeAll(textEncoder.encode(content));
-      yield* file.sync;
-    })
-  ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission journal "${journalPath}".`)));
-  yield* fs
-    .rename(stagingPath, journalPath)
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission journal "${journalPath}".`)));
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const file = yield* fs.open(stagingPath, { flag: "w" });
+          yield* file.writeAll(textEncoder.encode(content));
+          yield* file.sync;
+        })
+      ).pipe(Effect.mapError(QualitySchedulerError.new(`Failed to stage admission journal "${journalPath}".`)));
+      yield* requireJournalLockOwnership(lockPath, lockToken);
+      yield* fs
+        .rename(stagingPath, journalPath)
+        .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to publish admission journal "${journalPath}".`)));
+    }),
+    fs.remove(stagingPath, { force: true }).pipe(Effect.ignore)
+  );
 });
+
+/**
+ * Test-only handle for the fenced admission-journal publication boundary.
+ *
+ * **Example** (Reference the test-only publisher)
+ *
+ * ```ts
+ * import { publishAdmissionJournalForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof publishAdmissionJournalForTesting) // "function"
+ * ```
+ *
+ * @param journalPath - Admission journal path to replace atomically.
+ * @param lockPath - Adjacent lock path whose generation fences the publish.
+ * @param lockToken - Writer token that must still own the published lock generation.
+ * @param content - Complete journal content to publish.
+ * @returns An effect that fails when the writer lost its lock generation.
+ * @category testing
+ * @since 0.0.0
+ */
+export const publishAdmissionJournalForTesting = publishJournalAtomic;
 
 const rewriteJournalLocked = Effect.fnUntraced(function* (
   journalPath: string,
+  lockPath: string,
+  lockToken: string,
   event: AdmissionJournalEvent,
   line: string,
   idempotent: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
+  yield* requireJournalLockOwnership(lockPath, lockToken);
   const text = yield* fs
     .readFileString(journalPath)
     .pipe(
@@ -809,6 +898,8 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   const retainedRecords = A.filter(records, (record, index) => index >= firstRetainedIndex || O.isNone(record.event));
   yield* publishJournalAtomic(
     journalPath,
+    lockPath,
+    lockToken,
     pipe(
       retainedRecords,
       A.map((record) => `${record.line}\n`),
@@ -868,7 +959,7 @@ const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
     });
   }
   yield* Effect.ensuring(
-    rewriteJournalLocked(journalPath, event, line, idempotent),
+    rewriteJournalLocked(journalPath, lockPath, token, event, line, idempotent),
     releaseJournalFileLock(lockPath, token)
   );
 });
