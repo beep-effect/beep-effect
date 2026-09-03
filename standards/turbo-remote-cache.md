@@ -22,9 +22,9 @@ TURBO_CACHE=local:rw,remote:r
 ```
 
 `TURBO_TOKEN` is a **1Password secret reference to the read-only token**, not a
-value. It stays a reference on disk; `op run --env-file=.env` resolves it when
-the lane spawns. The read-only token itself lives in the SSM parameter the
-`CiTurboCache` stack is configured with
+value. It stays a reference on disk; the CLI passes only the cache quad to
+`op run` when the lane spawns. The read-only token itself lives in the SSM
+parameter the `CiTurboCache` stack is configured with
 (`readOnlyTokenSsmParameterArn` in `infra/ci-runners/Pulumi.production.yaml`);
 mirror it into 1Password once and reference it from every checkout. `TURBO_API`
 and `TURBO_TEAM` are the same values CI uses (`gh variable list`).
@@ -89,13 +89,25 @@ covered by `packages/tooling/tool/cli/test/turbo-cache.test.ts`:
 | Any quad member missing or blank | `--cache=local:rw` |
 | Quad complete, any other posture (including `remote:rw`) | `--cache=local:rw` |
 
-A remote-read plan whose values are still `op://` references probes each
-reference once per CLI process and runs the lane under `op run` only when every
-reference resolves. A missing, expired, or denied 1Password session degrades to
-`--cache=local:rw` and keeps going — a cache credential never blocks quality
-work. The same fail-closed rule applies in the environment: on a *direct* turbo
-spawn, scrubbing an unresolved credential also pins `TURBO_CACHE` to local-only,
-so turbo is never asked to read a remote cache it cannot authenticate to.
+A remote-read plan whose values are still `op://` references probes the cache
+credential references once per CLI process and runs the lane under `op run`
+only when the quad resolves. The resolver receives an explicit environment
+where unresolved references survive only for `TURBO_API`, `TURBO_TOKEN`, and
+`TURBO_TEAM`; an unrelated stale reference cannot disable remote reads. A
+missing, expired, or denied cache reference degrades to `--cache=local:rw` and
+keeps going — a cache credential never blocks quality work. The same
+fail-closed rule applies in the environment: on a *direct* turbo spawn,
+scrubbing an unresolved credential also pins `TURBO_CACHE` to local-only, so
+turbo is never asked to read a remote cache it cannot authenticate to.
+
+### Separate environment health
+
+The CLI also probes all `op://` references in the checkout `.env` with output
+suppressed. When that independent health check fails, it retries references one
+at a time and prints only each failing variable name as a plan warning. It never
+prints a reference or resolved value, and its result never changes the cache
+plan; repair the named variable separately while a healthy Turbo quad continues
+to read the remote cache.
 
 That scrub deliberately does **not** apply to an `op run`-wrapped spawn.
 `op run` resolves `op://` references out of the environment it is handed, not
