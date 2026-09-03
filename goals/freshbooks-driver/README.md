@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` (closed 2026-09-03; shipped via PR #987; invoice-PDF verb deferred to a one-time operator OAuth grant)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,9 +35,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — the `@beep/freshbooks` driver is implemented and verified; driving
-the PR toward mergeable. One item remains operator-gated: the invoice-PDF
-verb's live validation needs a one-time FreshBooks OAuth grant (see below).
+P4 Close (2026-09-03): the `@beep/freshbooks` driver shipped via PR #987 and the
+closeout reflection is in `history/reflections/`. One item remains operator-gated
+and is recorded, not shipped: the invoice-PDF verb's live validation needs a
+one-time FreshBooks OAuth grant (see below).
 
 ## Latest Evidence
 
