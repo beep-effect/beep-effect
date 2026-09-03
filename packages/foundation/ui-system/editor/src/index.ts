@@ -7,4 +7,10 @@
  * @since 0.0.0
  */
 
+/**
+ * Current `@beep/editor` package version.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export { VERSION } from "./Version.ts";

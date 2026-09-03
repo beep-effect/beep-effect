@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T17:10:13.522Z
+Generated: 2026-09-03T17:09:03.926Z
 
 ## Scope
 
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 222 | 1804 | 47 | 289 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 222 | 1804 | 47 | 290 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -113,7 +113,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 26 | 126 | 0 | 31 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 57 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 469 | 4226 | 3 | 693 |
-| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 117 |
+| 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 116 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | needs-remediation | 7 | 14 | 0 | 3 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | needs-remediation | 5 | 29 | 0 | 3 |
 | 61 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 32 | 113 | 4 | 23 |
@@ -1108,6 +1108,7 @@ Export findings:
 - `src/commands/Worktree/Worktree.service.ts:196` `worktreeArchivePlan` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:316` `WorktreeRemovalService` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:370` `runWorktreeGitCapture` (const) - 1 example import violation(s)
+- `src/commands/Yeet/Yeet.command.ts:674` `yeetCommand` (const) - 1 example import violation(s)
 
 ### @beep/pglite
 
@@ -2784,7 +2785,6 @@ Export findings:
 - `src/Md.render.ts:1524` `renderHtml` (const) - 2 example import violation(s)
 - `src/Md.render.ts:1549` `renderPlainText` (const) - 2 example import violation(s)
 - `src/Md.safe.ts:79` `DocumentSafetyPathSegment` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:350` `DocumentComplexitySafetyViolation` (class) - 1 example import violation(s)
 - `src/Md.safe.ts:739` `documentSafetyIssues` (const) - 1 example import violation(s)
 - `src/Md.safe.ts:765` `inlineSafetyIssuesAtRoot` (const) - 1 example import violation(s)
 - `src/Md.safe.ts:806` `SafeInline` (const) - 1 example import violation(s)

@@ -9589,10 +9589,10 @@
     },
     "@beep/html": {
       "path": "packages/foundation/modeling/html",
-      "lines": 99.23,
+      "lines": 99.22,
       "statements": 99.29,
       "branches": 100,
-      "functions": 98.79,
+      "functions": 98.78,
       "uncovered": {
         "lines": 14,
         "statements": 14,
@@ -9614,9 +9614,9 @@
         },
         "packages/foundation/modeling/html/src/Html.conformance.ts": {
           "lines": 99.05,
-          "statements": 99.14,
+          "statements": 99.13,
           "branches": 100,
-          "functions": 98.59,
+          "functions": 98.57,
           "uncovered": {
             "lines": 6,
             "statements": 6,
@@ -9745,6 +9745,30 @@
           }
         },
         "packages/foundation/modeling/html/src/Html.srcset.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/Html.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/html/src/Version.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
