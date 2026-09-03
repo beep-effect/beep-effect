@@ -582,6 +582,7 @@ describe("quality-scheduler", () => {
         const gibRef = yield* Ref.make(50);
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
+            yield* runQualityCommand(["scheduler"]);
             yield* runQualityCommand(["scheduler", "status", "--no-json"]);
             yield* runQualityCommand(["scheduler", "status", "--json"]);
             yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
@@ -595,6 +596,7 @@ describe("quality-scheduler", () => {
             yield* runQualityCommand(["scheduler", "reap", "--apply"]);
 
             const output = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            expect(output).toContain("Quality scheduler commands:");
             expect(output).toContain("admission capacity:");
             expect(output).toContain('"capacityTokens": 8');
             expect(output).toContain("dry run — would reap:");
