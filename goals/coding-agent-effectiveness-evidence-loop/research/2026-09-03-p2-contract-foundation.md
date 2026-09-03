@@ -1,7 +1,7 @@
 # P2 telemetry-v2 contract foundation
 
 Date: 2026-09-03
-Status: first P2 milestone complete; service and emitter work remains
+Status: contract and durable service milestones complete; emitter work remains
 
 ## Decision
 
@@ -16,7 +16,28 @@ implementation is split across three public modules:
 - `ingest-manifest.ts` owns the pre-read enumeration and final coverage
   attestation.
 
-No hook or transcript emitter was wired in this milestone.
+No hook or transcript emitter was wired in these milestones.
+
+## Durable service boundary
+
+`TelemetryV2Store` is an Effect service over the validated absolute AI metrics
+data root. It writes private-mode, content-addressed JSON artifacts through the
+shared path-safety atomic writer. Artifact receipts expose only a fixed
+relative directory, a SHA-256 digest, and a byte count. Repeating identical
+input selects the same artifact path instead of creating another fact.
+
+The ingest API accepts a lazy callback. It commits `IngestEnumeration` before
+invoking that callback, which is the source-reading boundary. If reading fails,
+the denominator remains while no final manifest is created. A returned
+manifest is refused unless its enumeration id, run id, configuration, count,
+and complete subject records match the initial denominator.
+
+The flight-record API accepts `FlightRecordCompositionInput`, where semantic
+and mechanical projections remain separate and record-wide evidence tier and
+OIP taint are absent. The service derives those fields by weakest-link and
+most-restrictive propagation before it appends an accepted write event. The
+same append surface durably accepts the content-free invalid and quarantine
+variants.
 
 ## Real fixture basis
 
@@ -72,18 +93,18 @@ The first contract pass is green on the package-local lane:
 - `bun run --filter @beep/repo-ai-metrics check`
 - `bun run --filter @beep/repo-ai-metrics test -- telemetry-v2.test.ts`
   with 10 tests
-- `bun run --filter @beep/repo-ai-metrics test` with 314 tests
+- `bun run --filter @beep/repo-ai-metrics test -- telemetry-v2-store.test.ts`
+  with 6 tests
+- `bun run --filter @beep/repo-ai-metrics test` with 320 tests
 - `bun run --filter @beep/repo-ai-metrics lint`
 - `bun run --filter @beep/repo-ai-metrics docgen`
 - `bun run beep lint schema-first` with zero missing or advisory entries
 - `bun run beep quality package-verify @beep/repo-ai-metrics`
+- `bun run coverage -- --filter=@beep/repo-ai-metrics --write-baseline`
+  with 25 files and 320 tests
 - `git diff --check`
 
 ## Remaining P2 work
 
-The next milestone is the service contract. It must durably write
-`IngestEnumeration` before opening source content, compose mechanical evidence
-with the separately supplied semantic input, and append accepted, invalid, or
-quarantined write events. Claude and Codex emitters, heartbeat leases,
-tombstone reconciliation, self-report divergence, and the seven-day coverage
-gate remain open.
+Claude and Codex emitters, heartbeat leases, tombstone reconciliation,
+self-report divergence, and the seven-day coverage gate remain open.

@@ -419,6 +419,48 @@ export class FlightEvidenceReference extends S.Class<FlightEvidenceReference>($I
 ) {}
 
 /**
+ * Inputs supplied to the telemetry-v2 service when it composes a flight record.
+ *
+ * **Details**
+ *
+ * The semantic and mechanical projections remain distinct fields, while the
+ * record-wide evidence tier and OIP taint are deliberately absent. The service
+ * derives those two values from the supplied projections and evidence
+ * references, so an emitter cannot promote either one.
+ *
+ * **Example** (Inspect the structural split)
+ *
+ * ```ts
+ * import { FlightRecordCompositionInput } from "@beep/repo-ai-metrics"
+ *
+ * console.log("semantic" in FlightRecordCompositionInput.fields) // true
+ * console.log("mechanical" in FlightRecordCompositionInput.fields) // true
+ * console.log("evidenceTier" in FlightRecordCompositionInput.fields) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FlightRecordCompositionInput extends S.Class<FlightRecordCompositionInput>(
+  $I`FlightRecordCompositionInput`
+)(
+  {
+    recordId: Sha256Hex,
+    sessionId: Sha256Hex,
+    sourceKind: AiMetricsTranscriptSource,
+    attribution: FlightRecordAttribution,
+    instrumentClass: InstrumentClass,
+    config: FlightConfigAttribution,
+    semantic: FlightRecordSemantic,
+    mechanical: FlightRecordMechanical,
+    evidenceRefs: S.NonEmptyArray(FlightEvidenceReference),
+  },
+  $I.annote("FlightRecordCompositionInput", {
+    description: "Separate semantic and mechanical inputs from which the telemetry-v2 service derives a flight record.",
+  })
+) {}
+
+/**
  * Composed telemetry-v2 flight record.
  *
  * **Details**
@@ -579,6 +621,7 @@ export const FlightRecordWriteEvent = S.Union([
   SchemaUtils.withStatics((schema) => ({
     decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(schema)),
     encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(schema)),
+    makeAccepted: (record: FlightRecord): FlightRecordWriteEvent => AcceptedFlightRecordWrite.make({ record }),
   }))
 );
 

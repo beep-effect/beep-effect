@@ -277,13 +277,18 @@ disposition. P1 is complete. See
 **Contract checkpoint (2026-09-03):** the first P2 milestone is complete in
 `@beep/repo-ai-metrics`. The shared LiteralKit vocabularies, structurally split
 `FlightRecord`, distinct pre-read `IngestEnumeration`, exact final
-`IngestManifest`, content-free invalid/quarantine events, and JSON codecs are
-landed with round-trip and property coverage. The real-session fixture retains
+`IngestManifest`, content-free invalid/quarantine events, JSON codecs, and the
+durable `TelemetryV2Store` service are landed with round-trip, property, and
+filesystem coverage. The store atomically commits the initial enumeration
+before invoking the source-reading callback, rejects a final manifest whose
+subject set or run/config linkage differs, derives record-wide evidence and
+OIP fields, and makes identical writes content-addressed and idempotent. The
+real-session fixture retains
 37 privacy-safe hook events as counts and hashes only. The real workstation
 inventory accounts for all six registered source instances as `dry-run`
-without opening transcript content. P2 remains in progress for the service,
-emitters, leases, reconciliation, divergence metric, and seven-day coverage
-gate. See `research/2026-09-03-p2-contract-foundation.md`.
+without opening transcript content. P2 remains in progress for emitters,
+leases, reconciliation, divergence metric, and the seven-day coverage gate.
+See `research/2026-09-03-p2-contract-foundation.md`.
 
 ## P3 — Yeet mistrial doctrine and proof durability (audit P1.5)
 

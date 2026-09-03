@@ -20626,15 +20626,15 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 89.69,
-      "statements": 89.74,
-      "branches": 78.23,
-      "functions": 76.87,
+      "lines": 89.71,
+      "statements": 89.76,
+      "branches": 79.28,
+      "functions": 76.92,
       "uncovered": {
-        "lines": 279,
-        "statements": 286,
-        "branches": 106,
-        "functions": 240
+        "lines": 285,
+        "statements": 292,
+        "branches": 104,
+        "functions": 246
       },
       "files": {
         "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts": {
@@ -20746,15 +20746,15 @@
           }
         },
         "packages/tooling/library/ai-metrics/src/flight-record.ts": {
-          "lines": 94.28,
-          "statements": 94.44,
-          "branches": 50,
-          "functions": 83.33,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 2,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/library/ai-metrics/src/forwarder.ts": {
@@ -20982,6 +20982,18 @@
             "lines": 13,
             "statements": 13,
             "branches": 7,
+            "functions": 8
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/telemetry-v2-store.ts": {
+          "lines": 87.3,
+          "statements": 87.3,
+          "branches": 100,
+          "functions": 70.37,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 0,
             "functions": 8
           }
         },

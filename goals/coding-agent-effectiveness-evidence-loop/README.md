@@ -86,9 +86,13 @@ readout is favorable:
 7. **Telemetry-v2 contracts landed** (2026-09-03). Schema-first flight
    records now separate agent-supplied semantics from mechanical evidence, and
    ingest has distinct pre-read enumeration and final attestation contracts.
-   The first fixtures cover one real Codex session and all six current source
-   instances without retaining transcript content. P2 remains open for the
-   service, emitters, leases, reconciliation, and coverage gate.
+   The durable store writes the initial denominator before entering its
+   source-reading callback, validates the final subject set, derives
+   record-wide evidence/OIP fields, and commits hash-addressed atomic
+   artifacts. The first fixtures cover one real Codex session and all six
+   current source instances without retaining transcript content. P2 remains
+   open for emitters, leases, reconciliation, divergence, and the coverage
+   gate.
 
 The interrupted-series lower bound is `2026-09-03T09:41:33.322Z`, after a
 six-second old/new writer overlap excluded from analysis. The census through

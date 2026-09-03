@@ -233,3 +233,12 @@ export * from "./source-discovery.ts";
  * @since 0.0.0
  */
 export * from "./telemetry-v2.ts";
+/**
+ * Durable telemetry-v2 service: enumerate-before-read ingest sequencing,
+ * service-derived flight records, and content-addressed atomic artifacts.
+ * Examples live on the owning declarations in `./telemetry-v2-store.ts`.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./telemetry-v2-store.ts";
