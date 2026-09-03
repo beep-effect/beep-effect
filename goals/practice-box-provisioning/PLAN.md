@@ -2,9 +2,11 @@
 
 ## Status
 
-Status: `active` — P0 and P1 complete. P2 has passed private CCG injection and
-the read-only tenant/subject identity bootstrap; the private practice inputs,
-live dry-run, and operator-attended apply remain.
+Status: `active` — P0 and P1 complete. P2 has passed private CCG injection,
+the read-only identity bootstrap, and the pre-apply hardening (adoption
+allowlist, Box name equivalence, blocker contract, apply journal, redacted
+driver errors); the private practice inputs, 1Password CLI integration, live
+dry-run, and operator-attended apply remain.
 
 ## Phases
 

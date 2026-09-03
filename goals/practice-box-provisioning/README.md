@@ -36,13 +36,19 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-P2 Verify. The driver expansion and product-neutral reconciler package are
-locally complete. Private 1Password-backed CCG injection and the read-only
-tenant/subject identity bootstrap now pass. Live dry-run and apply still
-require the three private practice inputs and the operator present.
+P2 Verify. The pre-apply adversarial review found the merged reconciler NOT
+SAFE for a first live apply (silent exact-name adoption, case-sensitive name
+matching, a loose blocker contract, no partial receipt); the hardening is
+landed and verified. Live dry-run and apply still require the operator: the
+1Password CLI desktop integration must be enabled, the three private practice
+inputs filled, and the apply attended.
 
 ## Latest evidence
 
+- [`history/2026-09-02-p2-preapply-hardening.md`](./history/2026-09-02-p2-preapply-hardening.md)
+  records the branch re-sync, the Codex NOT SAFE verdict and Grok Box API
+  verification, the nine reconciler and driver hardening items, verification,
+  and the attended-session checklist.
 - [`history/2026-08-30-p0-preflight.md`](./history/2026-08-30-p0-preflight.md)
   records the sanitized CCG verdict, current quote table, package-home decision,
   SDK provenance, and credential-path gate.

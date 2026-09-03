@@ -9,7 +9,8 @@ import { $BoxProvisioningId } from "@beep/identity";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { BoxProviderId } from "./BoxProvisioningObserved.ts";
+import { BoxPlanName, BoxSourceRevision } from "./BoxProvisioningIntent.ts";
+import { BoxProviderId, BoxProviderRevision } from "./BoxProvisioningObserved.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningPlan");
 
@@ -65,7 +66,7 @@ export class BoxActionPrecondition extends S.Class<BoxActionPrecondition>($I`Box
   {
     state: LiteralKit(["absent", "present", "unchanged"]),
     providerId: S.OptionFromOptionalKey(BoxProviderId).pipe(SchemaUtils.withNoneDefault),
-    etag: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    etag: S.OptionFromOptionalKey(BoxProviderRevision).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("BoxActionPrecondition", {
     description: "Redacted resource presence and identity expected when an action is applied.",
@@ -91,7 +92,7 @@ export class BoxBlockedByEntitlement extends S.TaggedClass<BoxBlockedByEntitleme
   "BlockedByEntitlement",
   {
     entitlement: LiteralKit(["metadata", "retention"]),
-    planName: S.NonEmptyString,
+    planName: BoxPlanName,
   },
   $I.annote("BoxBlockedByEntitlement", {
     description: "Plan blocker identifying a Box subscription feature unavailable to the tenant.",
@@ -106,7 +107,7 @@ export class BoxBlockedByEntitlement extends S.TaggedClass<BoxBlockedByEntitleme
  * ```ts
  * import { BoxBlockedByAmbiguity } from "@beep/box-provisioning/BoxProvisioningPlan"
  *
- * const reason = BoxBlockedByAmbiguity.make({ candidateCount: 2, matchKind: "exact-name-sibling" })
+ * const reason = BoxBlockedByAmbiguity.make({ candidateCount: 2, matchKind: "provider-equivalent-name-sibling" })
  * console.log(reason.candidateCount)
  * ```
  *
@@ -116,7 +117,7 @@ export class BoxBlockedByEntitlement extends S.TaggedClass<BoxBlockedByEntitleme
 export class BoxBlockedByAmbiguity extends S.TaggedClass<BoxBlockedByAmbiguity>($I`BoxBlockedByAmbiguity`)(
   "BlockedByAmbiguity",
   {
-    matchKind: S.NonEmptyString,
+    matchKind: LiteralKit(["provider-equivalent-name-sibling", "folder-principal", "target-callback"]),
     candidateCount: S.Natural.check(S.isGreaterThan(1)),
   },
   $I.annote("BoxBlockedByAmbiguity", {
@@ -132,7 +133,7 @@ export class BoxBlockedByAmbiguity extends S.TaggedClass<BoxBlockedByAmbiguity>(
  * ```ts
  * import { BoxBlockedByPolicy } from "@beep/box-provisioning/BoxProvisioningPlan"
  *
- * const reason = BoxBlockedByPolicy.make({ policy: "no-delete-v1" })
+ * const reason = BoxBlockedByPolicy.make({ policy: "foreign-name-collision" })
  * console.log(reason.policy)
  * ```
  *
@@ -141,7 +142,18 @@ export class BoxBlockedByAmbiguity extends S.TaggedClass<BoxBlockedByAmbiguity>(
  */
 export class BoxBlockedByPolicy extends S.TaggedClass<BoxBlockedByPolicy>($I`BoxBlockedByPolicy`)(
   "BlockedByPolicy",
-  { policy: S.NonEmptyString },
+  {
+    policy: LiteralKit([
+      "foreign-name-collision",
+      "blocked-folder-dependency",
+      "metadata-mutation-out-of-scope-v1",
+      "retention-mutation-out-of-scope-v1",
+      "metadata-entitlement-assertion-conflicts-with-live-discovery",
+      "retention-entitlement-assertion-conflicts-with-live-discovery",
+      "metadata-discovery-permission-denied",
+      "retention-discovery-permission-denied",
+    ]),
+  },
   $I.annote("BoxBlockedByPolicy", {
     description: "Plan blocker identifying a reconciler safety policy that forbids a mutation.",
   })
@@ -400,7 +412,10 @@ export class BoxForeignResource extends S.Class<BoxForeignResource>($I`BoxForeig
  *
  * Logical keys, folder names, principals, and webhook addresses are represented
  * only by SHA-256 digests. A byte-identical desired and observed state produces
- * a byte-identical plan.
+ * a byte-identical plan. External-collaborator counts are declarations made by
+ * the intent author; inventory does not independently verify that billing
+ * classification. The create count is the declared-external subset whose
+ * reviewed action is `Create`.
  *
  * **Example** (Inspect the plan schema)
  *
@@ -416,7 +431,7 @@ export class BoxForeignResource extends S.Class<BoxForeignResource>($I`BoxForeig
 export class BoxProvisioningPlan extends S.Class<BoxProvisioningPlan>($I`BoxProvisioningPlan`)(
   {
     version: S.Literal("box-provisioning-plan/v1").pipe(SchemaUtils.withConstantDefault("box-provisioning-plan/v1")),
-    sourceRevision: S.NonEmptyString,
+    sourceRevision: BoxSourceRevision,
     expectedEnterpriseId: BoxProviderId,
     subjectId: BoxProviderId,
     rootFolderId: BoxProviderId,
@@ -427,7 +442,8 @@ export class BoxProvisioningPlan extends S.Class<BoxProvisioningPlan>($I`BoxProv
     foreignResources: S.Array(BoxForeignResource),
     blockerCount: S.Natural,
     destructiveCount: S.Natural,
-    externalCollaboratorCount: S.Natural,
+    declaredExternalCollaboratorCount: S.Natural,
+    declaredExternalCollaboratorCreateCount: S.Natural,
   },
   $I.annote("BoxProvisioningPlan", {
     description: "Redacted deterministic dry-run plan sealed by desired, live-state, and plan digests.",
