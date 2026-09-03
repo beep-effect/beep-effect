@@ -28,6 +28,12 @@ const sessionLeaseSchemaVersion = "telemetry-v2/session-lease/v1";
 const sessionLeaseExpiryCandidateSchemaVersion = "telemetry-v2/session-lease-expiry-candidate/v1";
 const sessionLeaseTombstoneSchemaVersion = "telemetry-v2/session-lease-tombstone/v1";
 
+const withJsonEffectStatics = <Schema extends S.Top>(schema: Schema) =>
+  SchemaUtils.withStatics(schema, (self) => ({
+    decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(self)),
+    encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(self)),
+  }));
+
 /**
  * Strictly attributed wait that keeps a live session from being tombstoned.
  *
@@ -266,10 +272,7 @@ export const SessionLeaseEvent = S.Union([
   $I.annoteSchema("SessionLeaseEvent", {
     description: "Start, renewal, exact wait transition, or terminal event for one active-session lease.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(schema)),
-    encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(schema)),
-  }))
+  withJsonEffectStatics
 );
 
 /**
@@ -359,10 +362,7 @@ export const SessionLeaseTransition = S.Union([
   $I.annoteSchema("SessionLeaseTransition", {
     description: "Active, ended, or content-free quarantined session-lease transition.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(schema)),
-    encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(schema)),
-  }))
+  withJsonEffectStatics
 );
 
 /**
@@ -721,10 +721,7 @@ export const SessionLeaseReconciliation = S.Union([
   $I.annoteSchema("SessionLeaseReconciliation", {
     description: "Explicit tombstone decision retaining every veto as a bounded deferral reason.",
   }),
-  SchemaUtils.withStatics((schema) => ({
-    decodeJsonEffect: S.decodeUnknownEffect(S.fromJsonString(schema)),
-    encodeJsonEffect: S.encodeUnknownEffect(S.fromJsonString(schema)),
-  }))
+  withJsonEffectStatics
 );
 
 /**
