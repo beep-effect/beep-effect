@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-03T19:44:45.062Z
+Generated: 2026-09-03T20:25:14.249Z
 
 ## Scope
 
@@ -15,15 +15,15 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 116 |
 | publicModules | 3005 |
-| publicExports | 21284 |
+| publicExports | 21286 |
 | openModules | 370 |
-| openExports | 3488 |
+| openExports | 3451 |
 | missingExportExamples | 4 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3769 |
+| exampleImportFindings | 3731 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3768 |
+| no-root-package-import | 3730 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1819 | 47 | 286 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 223 | 1820 | 47 | 286 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 86 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -122,7 +122,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 64 | `@beep/todox` | `apps/todox` | clean | 2 | 3 | 0 | 0 |
 | 65 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 8 | 56 | 0 | 15 |
 | 66 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 28 | 214 | 6 | 118 |
-| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 28 | 462 | 0 | 81 |
+| 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 28 | 463 | 0 | 81 |
 | 68 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 69 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 34 | 3 | 7 |
 | 70 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 40 | 4 | 8 |
@@ -138,7 +138,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 80 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 8 |
 | 81 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 80 |
 | 82 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 29 | 0 | 10 |
-| 83 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 58 | 200 | 25 | 37 |
+| 83 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 58 | 200 | 25 | 0 |
 | 84 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 54 | 236 | 8 | 18 |
 | 85 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 93 | 0 | 0 |
 | 86 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 64 | 0 | 10 |
@@ -1020,8 +1020,8 @@ Export findings:
 - `src/commands/Quality/ChangesetGraph.ts:384` `changesetPackageReferencesFromText` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:1238` `collectAuditDiffInputForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/FallowQuality.command.ts:2376` `qualityFallowCommand` (const) - 1 example import violation(s)
-- `src/commands/Quality/Quality.command.ts:665` `runBunAudit` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:791` `devQualityStepsForTesting` (const) - 1 example import violation(s)
+- `src/commands/Quality/Quality.command.ts:731` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:857` `devQualityStepsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:105` `selectOsvIgnoreIdsForAudit` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.osv-ignore.ts:154` `activeOsvIgnoreIdsForTesting` (const) - 1 example import violation(s)
 - `src/commands/Quality/Quality.render.ts:71` `printQualityProfileConfig` (const) - 1 example import violation(s)
@@ -3135,8 +3135,8 @@ Export findings:
 - `src/scorecard.ts:1709` `aiMetricsWeeklyReportToJson` (const) - 1 example import violation(s)
 - `src/source-discovery.ts:619` `discoverAiMetricsSources` (const) - 1 example import violation(s)
 - `src/source-discovery.ts:691` `sourceDiscoveryToJson` (const) - 1 example import violation(s)
-- `src/telemetry-v2-store.ts:216` `TelemetryV2StoreShape` (interface) - 1 example import violation(s)
-- `src/telemetry-v2-store.ts:405` `TelemetryV2Store` (class) - 1 example import violation(s)
+- `src/telemetry-v2-store.ts:221` `TelemetryV2StoreShape` (interface) - 1 example import violation(s)
+- `src/telemetry-v2-store.ts:442` `TelemetryV2Store` (class) - 1 example import violation(s)
 
 ### @beep/tika
 
@@ -3638,45 +3638,6 @@ Module findings:
 - `src/transport/IpcSpikePanel.tsx:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/transport/TauriIpcSocket.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/workspace/dock.atoms.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/chat/ChatOrchestrator.ts:1136` `makeChatOperations` (const) - 1 example import violation(s)
-- `src/chat/ChatOrchestrator.ts:1188` `ChatHandlersLive` (const) - 1 example import violation(s)
-- `src/chat/UsagePricing.ts:112` `approximateCostUsdMicros` (const) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:44` `UsageRecordSinkShape` (interface) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:67` `UsageRecordSink` (class) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:91` `makeInMemoryUsageRecordSink` (const) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:125` `UsageRecordSinkInMemory` (const) - 1 example import violation(s)
-- `src/chat/UsageRecordSink.ts:196` `UsageRecordSinkDrizzle` (const) - 1 example import violation(s)
-- `src/chat/ui/ComposerPolicy.ts:276` `composerDocumentFromEditorState` (const) - 2 example import violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1022` `seedContradictionQaFixtures` (const) - 1 example import violation(s)
-- `src/contradiction/ContradictionQaSeed.ts:1126` `ContradictionQaSeedLive` (const) - 1 example import violation(s)
-- `src/intake/DocumentIntakeOrchestrator.ts:97` `WorkspaceVaultHandlersLive` (const) - 1 example import violation(s)
-- `src/intake/DocumentIntakeOrchestrator.ts:130` `DocumentIntakeHandlersLive` (const) - 1 example import violation(s)
-- `src/intake/Intake.atoms.ts:332` `DocumentIntakeState` (class) - 1 example import violation(s)
-- `src/intake/VaultDirectoryPickerOrchestrator.ts:127` `VaultDirectoryPickerHandlersLive` (const) - 1 example import violation(s)
-- `src/ontology/OntologyOrchestrator.ts:207` `OntologyHandlersLive` (const) - 1 example import violation(s)
-- `src/ontology/OntologyWorkspaceSeed.ts:73` `seedPizzaTutorial` (const) - 1 example import violation(s)
-- `src/ontology/OntologyWorkspaceSeed.ts:130` `OntologyWorkspaceSeedLive` (const) - 1 example import violation(s)
-- `src/runtime/Layer.ts:342` `RuntimeLive` (const) - 1 example import violation(s)
-- `src/runtime/Layer.ts:378` `RuntimeTest` (const) - 1 example import violation(s)
-- `src/runtime/Migrations.ts:120` `migrateProfessionalDesktopDatabase` (const) - 1 example import violation(s)
-- `src/runtime/Migrations.ts:168` `migrateOnBoot` (const) - 1 example import violation(s)
-- `src/runtime/Observability.ts:116` `ObservabilityLive` (const) - 1 example import violation(s)
-- `src/runtime/Pglite.ts:171` `markCompatibleChatDbDataDir` (const) - 1 example import violation(s)
-- `src/runtime/Pglite.ts:249` `ensureCompatibleChatDbDataDir` (const) - 1 example import violation(s)
-- `src/runtime/Pglite.ts:397` `PgliteDrizzleLive` (const) - 1 example import violation(s)
-- `src/runtime/ProfessionalAtomRuntime.ts:52` `ProfessionalStorageLive` (const) - 1 example import violation(s)
-- `src/runtime/RendererObservabilityConfig.ts:45` `RendererObservabilityConfig` (class) - 1 example import violation(s)
-- `src/sync/DmsMirrorDisconnected.ts:49` `DmsMirrorDisconnectedLayer` (const) - 1 example import violation(s)
-- `src/sync/DmsMirrorDisconnected.ts:80` `DmsMirrorAvailabilityDisconnectedLayer` (const) - 1 example import violation(s)
-- `src/sync/VaultSyncOrchestrator.ts:77` `VaultSyncHandlersLive` (const) - 1 example import violation(s)
-- `src/theme/Theme.atoms.ts:63` `migrateWorkbenchThemeMode` (const) - 1 example import violation(s)
-- `src/transport/DesktopHttpProtocol.ts:36` `makeDesktopHttpProtocolLive` (const) - 1 example import violation(s)
-- `src/transport/IpcChatClient.ts:33` `IpcChatProtocolLive` (const) - 1 example import violation(s)
-- `src/transport/TauriIpcSocket.ts:501` `TauriIpcSocketLive` (const) - 1 example import violation(s)
-- `src/workspace/dock.atoms.ts:377` `makeResetDockSnapshotAtom` (const) - 1 example import violation(s)
-- `src/workspace/dock.atoms.ts:542` `dockPersistenceBindingAtom` (const) - 1 example import violation(s)
 
 ### @beep/epistemic-domain
 

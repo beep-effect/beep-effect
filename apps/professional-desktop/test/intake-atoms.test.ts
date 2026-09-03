@@ -2,9 +2,13 @@ import { DocumentIntakeActionError } from "@beep/documents-use-cases/public";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { WorkspaceVaultActionError, WorkspaceVaultConfig } from "@beep/workspace-use-cases/public";
 import { it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Layer, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import { afterEach, describe, expect, vi } from "vitest";
 import {

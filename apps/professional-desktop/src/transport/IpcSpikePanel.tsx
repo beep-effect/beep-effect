@@ -17,10 +17,12 @@
 "use client";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
-import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability/CauseRedaction";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { RpcClient } from "effect/unstable/rpc";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";

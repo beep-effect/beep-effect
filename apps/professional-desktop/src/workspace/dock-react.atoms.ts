@@ -5,12 +5,11 @@
  * @category atoms
  * @since 0.0.0
  */
-
-import { O } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import { Atom } from "effect/unstable/reactivity";
-import type { GroupId } from "@beep/dock";
-import type { DockviewAdapterApi } from "@beep/dock-react";
+import type { GroupId } from "@beep/dock/Dock.ids";
+import type { DockviewAdapterApi } from "@beep/dock-react/DockReact.types";
 import type { DesktopDockGraph } from "./dock.atoms.ts";
 
 const bridgedDockAtoms = Atom.family((graph: DesktopDockGraph) =>

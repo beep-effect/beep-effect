@@ -24,8 +24,10 @@ import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@ef
 import { it } from "@effect/vitest";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { Deferred, Effect, Result } from "effect";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
@@ -203,9 +205,9 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
       const onAttach = vi.fn((files: ReadonlyArray<File>): void | Promise<void> => {
         const filename = files[0]?.name;
-        if (filename === "first.png") return runPromise(Deferred.await(firstPort));
+        if (filename === "first.png") return firstPort.pipe(Deferred.await, runPromise);
         if (filename === "second.png") {
-          return runPromise(Deferred.await(secondPort)).then(() => {
+          return secondPort.pipe(Deferred.await, runPromise).then(() => {
             secondSettled();
           });
         }
@@ -286,7 +288,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {
         runSync(Deferred.succeed(firstRevoke, undefined));
       });
-      const onAttach = vi.fn(() => runPromise(Deferred.await(port)));
+      const onAttach = vi.fn(() => port.pipe(Deferred.await, runPromise));
       const mounted = (showComposer: boolean) => (
         <RegistryContext.Provider value={registry}>
           <CaptureRuntimeKeeper />
@@ -408,7 +410,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const scheduler = makeControlledScheduler();
       const editor = createEditor({ namespace: "attachment-rapid-remount" });
       const onAttach = vi.fn((files: ReadonlyArray<File>): void | Promise<void> =>
-        files[0]?.name === "rapid-remount.png" ? runPromise(Deferred.await(port)) : undefined
+        files[0]?.name === "rapid-remount.png" ? port.pipe(Deferred.await, runPromise) : undefined
       );
       const registry = AtomRegistry.make({
         defaultIdleTTL: 20,
@@ -483,8 +485,8 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const firstPort = yield* Deferred.make<void, Error>();
       const secondPort = yield* Deferred.make<void>();
       const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
-      const firstAttach = vi.fn(() => runPromise(Deferred.await(firstPort)));
-      const secondAttach = vi.fn(() => runPromise(Deferred.await(secondPort)));
+      const firstAttach = vi.fn(() => firstPort.pipe(Deferred.await, runPromise));
+      const secondAttach = vi.fn(() => secondPort.pipe(Deferred.await, runPromise));
       vi.spyOn(URL, "createObjectURL")
         .mockReturnValueOnce("blob:first-composer")
         .mockReturnValueOnce("blob:second-composer");
@@ -575,7 +577,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const lookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
       const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
-      const source = vi.fn<MentionSource>(() => runPromise(Deferred.await(lookup)));
+      const source = vi.fn<MentionSource>(() => lookup.pipe(Deferred.await, runPromise));
       const onSend = vi.fn(() => true);
       render(
         <ChatComposer namespace="pending-mention-input" mentionSource={source} mountConfig={{ onSend }}>
@@ -661,7 +663,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const secondLookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
       const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
       const source = vi.fn<MentionSource>((query) =>
-        runPromise(Deferred.await(query === "ab" ? secondLookup : firstLookup))
+        (query === "ab" ? secondLookup : firstLookup).pipe(Deferred.await, runPromise)
       );
       render(
         <ChatComposer namespace="mention-latest-wins" mentionSource={source}>
@@ -693,7 +695,7 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const lookup = yield* Deferred.make<ReadonlyArray<MentionOption>>();
       const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
       const scheduler = makeControlledScheduler();
-      const source = vi.fn<MentionSource>(() => runPromise(Deferred.await(lookup)));
+      const source = vi.fn<MentionSource>(() => lookup.pipe(Deferred.await, runPromise));
       const decodedAfterUnmount = vi.fn(() => "late");
       const disconnectObserver = vi.spyOn(MutationObserver.prototype, "disconnect");
       const removeWindowListener = vi.spyOn(window, "removeEventListener");

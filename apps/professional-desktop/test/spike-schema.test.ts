@@ -1,7 +1,8 @@
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { CosmosSpikeProbeContract, CosmosSpikeSize, CosmosSpikeStatus } from "@/spikes/CosmosSpike";

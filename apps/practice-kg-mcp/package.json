@@ -29,7 +29,8 @@
     "package:mcpb": "bun run src/package.ts",
     "package:mcpb:linux": "bun run src/package.ts --target linux-x64",
     "smoke:compiled": "bun run package:mcpb:linux && bun run src/smoke.ts",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "bin": {
     "practice-kg-build": "./src/build.ts",
