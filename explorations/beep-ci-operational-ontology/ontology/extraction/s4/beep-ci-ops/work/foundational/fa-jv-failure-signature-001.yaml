@@ -1,0 +1,20 @@
+id: "fa:jv-failure-signature:001"
+hypothesis_ref: "dh:jv-failure-signature:001"
+identity_card_ref: "ic:jv-failure-signature:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "FailureSignature is an occurrence-bound mode of each failure rather than repeatable classification information."
+    still_viable: false
+  - label: "The paired classification is best left as a contextual fact rather than reified as an individual."
+    still_viable: true
+  - label: "The signature is identical to the verification failure that bears it."
+    still_viable: false
+strongest_counterexample: >-
+  Arbitrarily many distinct failures can share the same failedStepId and
+  failureKind, and CQ-013 ranks those shared tuples; an occurrence-bound mode
+  cannot provide the repeatable grouping grain the decision requires.
+verdict: analyzed

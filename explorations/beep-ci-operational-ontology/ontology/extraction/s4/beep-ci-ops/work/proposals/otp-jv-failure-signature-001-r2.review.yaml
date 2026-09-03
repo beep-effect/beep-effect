@@ -1,0 +1,46 @@
+target: "otp:jv-failure-signature:001"
+target_sha256: "653f674fd57ecffc5f747cbae3482d71888f6392f1d90fd19907290d76d5a449"
+chain_sha256: "bc102d551812324981d1f5c424bac4cb1857935442d111ca4d48ac1b5c86b8a4"
+seat: ontoclean-adversary
+verdict: PASS
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: >-
+    The revised proposal asserts no parents, so no proposed is-a edge or
+    inherited identity criterion is present to test.
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: failure-signature-grain-conflict
+    counterexample: >-
+      Failures in different attempts can share failedStepId and failureKind.
+      The revised criterion deliberately treats the governed tuple as repeatable
+      classification content and excludes occurrence identity, so it groups the
+      pair without identifying the distinct failure occurrences.
+    outcome: survived
+  - surface: warrant
+    rule: direct-cq-warrant
+    counterexample: >-
+      Removing FailureSignature leaves CQ-013 with no individual on which to
+      aggregate attributed delay or from which to select the cheapest surfacing
+      lane. The CQ requires the term rather than merely mentioning a failure code.
+    outcome: survived
+  - surface: null_discriminator
+    rule: classification-content-not-result-carrier
+    counterexample: >-
+      Two result carriers can use different field encodings yet preserve the
+      same governed failed-step and failure-kind meanings, while equal strings
+      under different vocabulary versions need not be one signature. The
+      revised identity therefore concerns classification content, not DTO shape.
+    outcome: survived
+rival_models_still_viable:
+  - "An unreified contextual classification fact rather than an individual."
+evidence:
+  - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+  - "so:sha256:a439f4ee4315fe978323f80c502d712289fd590fe8655c5050162bf65b9827b7"
+  - "CQ-013"

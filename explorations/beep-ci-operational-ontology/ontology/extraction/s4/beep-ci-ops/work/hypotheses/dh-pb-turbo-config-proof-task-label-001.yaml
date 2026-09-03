@@ -1,0 +1,25 @@
+id: "dh:pb-turbo-config-proof-task-label:001"
+observation_refs:
+  - "po:sha256:7dbc9b18d0c87cf2b98ab60d4772cfff79439d03472f1e69861549be226c3d25"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo-config-proof task-name vocabulary"
+  description: "A possible lexical vocabulary of task names used by a Turbo configuration proof."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification-lane identifier vocabulary"
+    representation_status: lexical_alias
+    plausibility: weak
+  - label: "LiteralKit-backed source type"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The export declaration shows a LiteralKit constructor over an unseen values constant. It supplies no task members, executions, scopes, or results, and being a named type is not a discriminator."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.96
+  use_for_acceptance: false

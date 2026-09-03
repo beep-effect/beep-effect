@@ -1,0 +1,10 @@
+id: po:sha256:dc9a66cefc65a79ca47ae516814a18982de127089bfaefc12aafaadbec8ae3ce
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts
+source_span:
+  start_line: 777
+  end_line: 806
+quote: LiteralKit(["preflight", "heavy", "test", "documentation"])
+epistemic_status: quoted_prose

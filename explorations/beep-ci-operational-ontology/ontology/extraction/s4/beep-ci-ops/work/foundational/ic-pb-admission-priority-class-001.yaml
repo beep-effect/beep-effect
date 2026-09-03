@@ -1,0 +1,33 @@
+id: "ic:pb-admission-priority-class:001"
+hypothesis_ref: "dh:pb-admission-priority-class:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "Unresolved for the governed AdmissionPriorityClass vocabulary: verify and publish membership is observed, but no authoritative registry, version lineage, or cross-planner governance decides whether repeated domains are one information object or faithful copies."
+  reidentification_key:
+    - "vocabulary authority and version lineage"
+    - "verify and publish member meanings"
+    - "cross-planner registry and revision policy"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: "One governed classification domain whose members share an authority, ordering interpretation, and revision boundary, if such a shared registry exists."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "separately copied verify-and-publish domains in each planner"
+    - "policy-borne classification rules without a reified scheme"
+    - "request-borne role tokens classified by the vocabulary"
+  existential_dependencies:
+    - "an admission policy that gives verify and publish their ordering meanings"
+    - "at least one faithful declaration or registry carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "superseded under an authoritative vocabulary revision"
+    - "withdrawn from its admission-policy applicability scope"
+counterexamples:
+  - description: "Many distinct requests carry the same verify or publish member while aging changes effective rank without changing recorded class; neither request continuity nor enum spelling identifies the vocabulary object."
+status: proposed

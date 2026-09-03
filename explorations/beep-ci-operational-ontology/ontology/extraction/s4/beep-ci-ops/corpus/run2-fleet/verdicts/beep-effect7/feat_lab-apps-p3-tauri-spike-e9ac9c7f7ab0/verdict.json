@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/lab-apps-p3-tauri-spike",
+  "committed": false,
+  "createdAt": "2026-08-17T14:30:14.221Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 437.068255,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 116578.378047,
+      "exitCode": 1,
+      "repairCommand": "Rerun `bun run beep quality github-checks nix` and inspect the Nix error."
+    }
+  ],
+  "message": "yeet monitor failed.\nSame-SHA rerun decision: same-SHA red detected for Storybook; rerun one job with `gh run rerun --job <databaseId>`, never `--failed`.\nRun: gh run view 32039140806 --json jobs --jq '.jobs[] | select(.conclusion == \"failure\") | [.databaseId, .name] | @tsv'",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_lab-apps-p3-tauri-spike-e9ac9c7f7ab0",
+  "attemptId": "8f5b5db7-152e-42eb-a668-01c7f092f847",
+  "startedAt": "2026-08-17T14:28:14.047Z",
+  "endedAt": "2026-08-17T14:30:14.221Z",
+  "elapsedMs": 120174,
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

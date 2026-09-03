@@ -1,0 +1,18 @@
+id: fa:pa-yeet-verification-workflow-alt:001
+hypothesis_ref: dh:pa-yeet-verification-workflow:001
+identity_card_ref: ic:pa-yeet-verification-workflow-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: not_applicable
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: Yeet verification process (the unfolding of a run)
+  still_viable: true
+- label: CLI planner implementation with no procedure content
+  still_viable: false
+strongest_counterexample: The sources jointly prescribe a procedure. The live rivalry is spec
+  versus the process type of running Yeet, not versus a single CLI session.
+verdict: analyzed
+needed_evidence: An observation that Yeet-the-procedure is versioned and cited independently
+  of any run, versus only run occurrences being counted as 'yeet'.

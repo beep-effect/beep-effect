@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/skillopt-training-pilot",
+  "committed": false,
+  "createdAt": "2026-07-07T00:35:30.695Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish --reuse-verified found stale proof state:\n  - diff fingerprint changed\nRun `bun run beep yeet verify` against the exact current worktree before retrying.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_skillopt-training-pilot-2b400eba1d77",
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+}

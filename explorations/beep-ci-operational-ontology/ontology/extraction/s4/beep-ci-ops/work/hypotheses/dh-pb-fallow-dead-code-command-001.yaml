@@ -1,0 +1,25 @@
+id: "dh:pb-fallow-dead-code-command:001"
+observation_refs:
+  - "po:sha256:96fbbdc8ad369517a7b3bdbb6bcc66e097757de50a05a32f0406c30ebd15f5e0"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Fallow dead-code verification command"
+  description: "A possible verification-procedure specification represented by a bunx fallow dead-code command string."
+representation_status: lexical_alias
+alternatives:
+  - label: "inventory command string"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "script verification lane"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The inventory contains a command spelling, but no evidence that it is an admitted verification lane, that it executed, what scope it checked, or what result it produced. A stored command template remains sufficient."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.43
+  use_for_acceptance: false

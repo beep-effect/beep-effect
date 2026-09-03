@@ -1,0 +1,52 @@
+target: "otp:pa-turbo-task-specification:001"
+target_sha256: "95d24fe668cb425bd1560f56f83d9662c4197dafffe9e5c1f8c80dc06337c2e4"
+chain_sha256: "e960202c7b19ad1cc7f49d36411cfc1f122088711e189cbabe3af79d700b7a8c"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address cq-term-not-required by reconciling CQ-002's queried
+    ciops:WorkUnit class with the proposed ciops:WorkUnitSpecification IRI in
+    the ratified CQ suite, or cite a Must/Should CQ that actually requires the
+    latter term.
+attacks:
+  - surface: identity
+    rule: identifier-is-not-identity
+    counterexample: >-
+      Two repositories may both contain a task named build while prescribing
+      different inputs and dependencies, and two executions of one task remain
+      distinct; the criterion survives because it uses semantic content and
+      repository interpretation rather than the task key or a run id.
+    outcome: survived
+  - surface: warrant
+    rule: cq-term-not-required
+    counterexample: >-
+      CQ-002 queries individuals typed ciops:WorkUnit and never mentions or
+      entails ciops:WorkUnitSpecification. An A-Box of opaque WorkUnit
+      individuals with admissibleFor and executesLane relations can answer the
+      CQ without this differently named class.
+    outcome: landed
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A formatting-only turbo.json clone could repeat the task keys, but once
+      the entries prescribe inputs, upstream dependencies, persistence, and
+      completion behavior they carry repeatable work content; changing the
+      carrier does not eliminate that information object.
+    outcome: survived
+rival_models_still_viable:
+  - "A verification-lane procedure is distinct from its Turbo specification."
+  - "A concrete turbo.json entry token is distinct from its repeatable content."
+evidence:
+  - "po:sha256:19da9053dc578ecea6995d45a9c23ea09f1f36b02e3969bb13b3c08a6a3c981f"
+  - "po:sha256:3e1c6cd48f541482c5471d901e96c829dd47de787108d7ee9cc4fec91966eb97"
+  - "po:sha256:4fc13f1c056d4666ad83f3944408c9437bbcc0eebd583f907ec05449b5730594"
+  - "CQ-002"

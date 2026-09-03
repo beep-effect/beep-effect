@@ -1,0 +1,10 @@
+id: po:sha256:791eb630990d1ccf3749beb107492a8fe86754bdf930b2b6ba762e2b725a23af
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/fallow.boundaries.provenance.schema.json
+source_span:
+  start_line: 27
+  end_line: 44
+quote: '"generatedConfigRef": { "const": "standards/fallow.boundaries.generated.jsonc" }'
+epistemic_status: quoted_prose

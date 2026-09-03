@@ -1,0 +1,9 @@
+id: rat:46
+proposal_ref: otp:pc-token-capacity-policy:001
+proposal_sha256: d5e5ff8013497abd8b0b5b467f7aa9fc98a4eb0ca590fbde977f6cdeafa63ab2
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the token-capacity policy as AdmissionPolicy content under CQ-010's direct reads.

@@ -1,0 +1,436 @@
+proposals:
+- id: otp:jv-actual-wall-duration:001
+  file: work/proposals/otp-jv-actual-wall-duration-001.yaml
+  state: WITHDRAWN
+  latest_round: 3
+  latest_verdict: INDETERMINATE
+  label: recorded wall-duration measurement
+  category: information_object
+  dispute:
+  evidence_quote: 'Round 3 concedes the remaining warrant defect: CQ-007 reads materialized duration data properties directly and does not require a reified RecordedWallDurationMeasurement individual. The class is withdrawn from run-2 admission pending the named post-run decision evidence.'
+- id: otp:jv-actual-wall-duration:002
+  file: work/proposals/otp-jv-actual-wall-duration-002.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: wall-duration measurement record
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 conceded the issued-carrier proposal as unresolved; the demonstrated attacks are answered by withdrawal pending the named run-3 issuance, custody, and decision evidence.
+- id: otp:jv-admission-lifecycle:001
+  file: work/proposals/otp-jv-admission-lifecycle-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: admission lifecycle
+  category: process
+  dispute:
+  evidence_quote: Run-2 sitting 1 struck the cross-journal attack and conceded the process proposal as unresolved because neither process continuity nor a decision need is established by the present records.
+- id: otp:jv-failure-signature:001
+  file: work/proposals/otp-jv-failure-signature-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: failure signature
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:jv-lane-diagnostic-comparison:001
+  file: work/proposals/otp-jv-lane-diagnostic-comparison-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: lane diagnostic comparison
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 struck the carrier-only attack and conceded the standalone comparison helper as unresolved pending joined execution identities and a decision CQ.
+- id: otp:jv-merge-readiness-assessment:001
+  file: work/proposals/otp-jv-merge-readiness-assessment-001.yaml
+  state: FLAGGED-SUBMIT
+  latest_round: 2
+  latest_verdict: PASS
+  label: verification evidence
+  category: information_object
+  dispute:
+  evidence_quote: Authoritative generation, issuance, custody, copy, correction, and claim-realization provenance across heterogeneous VerificationEvidence instances is required to decide content versus carrier identity.
+- id: otp:jv-verification-attempt:001
+  file: work/proposals/otp-jv-verification-attempt-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: verification attempt
+  category: information_object
+  dispute:
+    primary: information_object
+    alternative: process
+  evidence_quote:
+- id: otp:jv-verification-step-execution:001
+  file: work/proposals/otp-jv-verification-step-execution-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: work unit execution
+  category: unresolved
+  dispute:
+    primary: unresolved
+    alternative: information_object
+  evidence_quote: Run-2 sitting 1 struck the already-answered not-run attack and conceded the execution-process proposal as unresolved because the surviving status record lacks the required parent and execution boundaries.
+- id: otp:ov-has-scope:001
+  file: work/proposals/otp-ov-has-scope-001.yaml
+  state: WITHDRAWN
+  latest_round: 3
+  latest_verdict: INDETERMINATE
+  label: has scope
+  category: none
+  dispute:
+    primary: none
+    alternative: quality
+  evidence_quote: 'ROUND-3 CONCESSION — the ScheduleStep-to-Scope relation is withdrawn from run-2 admission until requirements reconciles the pinned query with the S7 SeatRequest/step projection. Run-3 evidence required: the CQ-020 wording amendment (WorkUnit -> SeatRequest ordering) queued for the post-run CQ revision, together with an executable query and emitted facts that make the ScheduleStep scope association decision-bearing.'
+- id: otp:ov-has-step:001
+  file: work/proposals/otp-ov-has-step-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: has step
+  category: none
+  dispute:
+  evidence_quote:
+- id: otp:ov-schedule-step:001
+  file: work/proposals/otp-ov-schedule-step-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: schedule step
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 conceded the ScheduleStep content-versus-carrier boundary as unresolved pending the named run-3 provenance evidence.
+- id: otp:ov-schedules-seat-request:001
+  file: work/proposals/otp-ov-schedules-seat-request-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: schedules seat request
+  category: none
+  dispute:
+  evidence_quote: Run-2 sitting 1 struck the carrier-only attack and conceded this provisional relation as unresolved until a decision CQ requires the SeatRequest target.
+- id: otp:ov-step-index:001
+  file: work/proposals/otp-ov-step-index-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: step index
+  category: none
+  dispute:
+    primary: none
+    alternative: quality
+  evidence_quote:
+- id: otp:pa-admission-lease-lifecycle:001
+  file: work/proposals/otp-pa-admission-lease-lifecycle-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: admission lease lifecycle
+  category: process
+  dispute:
+    primary: process
+    alternative: relator
+  evidence_quote: Run-2 sitting 1 conceded the lease-relator, carrier-lineage, and lifecycle-process boundary as unresolved pending joined provenance and an independently warranted decision need.
+- id: otp:pa-admission-request:001
+  file: work/proposals/otp-pa-admission-request-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: seat request
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pa-docgen-work-unit:001
+  file: work/proposals/otp-pa-docgen-work-unit-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: docgen affected work unit
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pa-fallow-audit-evidence:001
+  file: work/proposals/otp-pa-fallow-audit-evidence-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: verification evidence
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 struck the exact-reuse warrant attack and conceded the unsupported composite Fallow evidence package as unresolved pending a provenance-bearing result join.
+- id: otp:pa-fallow-audit-evidence:002
+  file: work/proposals/otp-pa-fallow-audit-evidence-002.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: Fallow audit lane
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pa-fallow-audit-evidence:003
+  file: work/proposals/otp-pa-fallow-audit-evidence-003.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: verification result artifact
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 conceded the separate Fallow result artifact as unresolved because the corpus supplies neither its producing-execution join nor an independent decision need.
+- id: otp:pa-package-dependency-closure:001
+  file: work/proposals/otp-pa-package-dependency-closure-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: depends on transitively
+  category: none
+  dispute:
+    primary: none
+    alternative: relator
+  evidence_quote:
+- id: otp:pa-projection-conformance-evidence:001
+  file: work/proposals/otp-pa-projection-conformance-evidence-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: verification evidence
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 conceded the composite projection-evidence package as unresolved pending a contract that joins its independently variable suite, build, inputs, execution, result, custody, and limits.
+- id: otp:pa-projection-conformance-evidence:002
+  file: work/proposals/otp-pa-projection-conformance-evidence-002.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: projection conformance test specification
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 struck the carrier-only attack and conceded the separate property-suite term as unresolved pending independent governance and a decision CQ that requires it.
+- id: otp:pa-projection-conformance-evidence:003
+  file: work/proposals/otp-pa-projection-conformance-evidence-003.yaml
+  state: NEEDS-ATTENTION
+  latest_round: 1
+  latest_verdict: FAIL
+  label: verification result artifact
+  category: information_object
+  dispute:
+  evidence_quote: Run-2 sitting 1 struck the carrier-only attack and conceded the separate replay-result term as unresolved pending execution, issuance, custody, and decision provenance.
+- id: otp:pa-projection-contract:001
+  file: work/proposals/otp-pa-projection-contract-001.yaml
+  state: WITHDRAWN
+  latest_round: 3
+  latest_verdict: INDETERMINATE
+  label: admission projection specification
+  category: information_object
+  dispute:
+  evidence_quote: Round 3 concedes that the manifest-pinned CQ-020 can be answered from its WorkUnit-shaped schedule A-Box without an AdmissionProjectionSpecification individual. The consolidated contract term is withdrawn from run-2 admission rather than laundering that gap through an unnecessary support edge.
+- id: otp:pa-projection-limitation-report:001
+  file: work/proposals/otp-pa-projection-limitation-report-001.yaml
+  state: FLAGGED-SUBMIT
+  latest_round: 3
+  latest_verdict: PASS
+  label: verification result artifact
+  category: information_object
+  dispute:
+  evidence_quote: Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity. A separate limitation-report term additionally requires independent issuance and a Must/Should CQ that consumes it apart from the containing result.
+- id: otp:pa-turbo-task-specification:001
+  file: work/proposals/otp-pa-turbo-task-specification-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: work unit specification
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pa-turbo-task-specification:002
+  file: work/proposals/otp-pa-turbo-task-specification-002.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: verification lane
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pa-workspace-package:001
+  file: work/proposals/otp-pa-workspace-package-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: package reference
+  category: unresolved
+  dispute:
+    primary: unresolved
+    alternative: kind
+  evidence_quote: Run-2 sitting 1 conceded workspace-package lineage as unresolved pending the named run-3 continuity policy and provenance evidence.
+- id: otp:pa-yeet-verification-workflow:001
+  file: work/proposals/otp-pa-yeet-verification-workflow-001.yaml
+  state: FLAGGED-SUBMIT
+  latest_round: 3
+  latest_verdict: PASS
+  label: verification plan specification
+  category: information_object
+  dispute:
+  evidence_quote: An authoritative identity contract across heterogeneous verification plans must define content, contextual-copy, replacement, and revision identity. A separate Yeet specialization additionally requires governed authority and version lineage deciding whether cheap-gates, review-fix, and monitor are one plan or coordinated subplans, plus a Must/Should CQ requiring it.
+- id: otp:pb-admission-capacity-state:001
+  file: work/proposals/otp-pb-admission-capacity-state-001.yaml
+  state: WITHDRAWN
+  latest_round: 3
+  latest_verdict: INDETERMINATE
+  label: admission snapshot
+  category: information_object
+  dispute:
+    primary: information_object
+    alternative: quality
+  evidence_quote: Round 3 concedes that CQ-010 reads chargeAtAdmissionTokens and capacityAtAdmissionTokens from the SeatGrant and does not require an AdmissionSnapshot individual. The snapshot proposal is withdrawn rather than disguising that missing necessity as a support edge.
+- id: otp:pb-admission-policy:001
+  file: work/proposals/otp-pb-admission-policy-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: admission policy
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pb-admission-priority-aging:001
+  file: work/proposals/otp-pb-admission-priority-aging-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: admission policy
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pb-admission-priority-class:001
+  file: work/proposals/otp-pb-admission-priority-class-001.yaml
+  state: FLAGGED-SUBMIT
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: admission priority class
+  category: information_object
+  dispute:
+    primary: information_object
+    alternative: quality
+  evidence_quote: Run-3 evidence must identify the authoritative priority-class registry, version and revision lineage, membership-change rules, and whether planner versions share one governed domain or issue semantically distinct copies.
+- id: otp:pb-docgen-affected-scope:001
+  file: work/proposals/otp-pb-docgen-affected-scope-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: docgen affected scope
+  category: unresolved
+  dispute:
+    primary: unresolved
+    alternative: situation
+  evidence_quote: Run-2 sitting 1 conceded the docgen-specific extensional-scope candidate as unresolved pending a pinned selection result and a decision CQ that requires the specialization.
+- id: otp:pb-docgen-affected-scope:002
+  file: work/proposals/otp-pb-docgen-affected-scope-002.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: docgen affected scope specification
+  category: unresolved
+  dispute:
+    primary: unresolved
+    alternative: situation
+  evidence_quote: Run-2 sitting 1 conceded the docgen selection-rule candidate as unresolved pending independent rule authority, lineage, and a decision CQ requiring the specification.
+- id: otp:pb-package-dependency:001
+  file: work/proposals/otp-pb-package-dependency-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: depends on
+  category: none
+  dispute:
+    primary: none
+    alternative: relator
+  evidence_quote:
+- id: otp:pb-planned-lane-status:001
+  file: work/proposals/otp-pb-planned-lane-status-001.yaml
+  state: FLAGGED-SUBMIT
+  latest_round: 3
+  latest_verdict: PASS
+  label: verification result artifact
+  category: information_object
+  dispute:
+  evidence_quote: Authoritative result formation, issuance, producer, custody, copy, correction, and revocation provenance across heterogeneous VerificationResultArtifact records is required to choose content, record-token, or carrier-lineage identity. A separate planned-lane-status term additionally requires retained issuance, parent-attempt and execution joins, and a Must/Should CQ that consumes it separately.
+- id: otp:pb-resolved-cache-posture:001
+  file: work/proposals/otp-pb-resolved-cache-posture-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: cache posture
+  category: information_object
+  dispute:
+    primary: information_object
+    alternative: mode
+  evidence_quote:
+- id: otp:pb-review-fix-class-cap:001
+  file: work/proposals/otp-pb-review-fix-class-cap-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: admission policy
+  category: information_object
+  dispute:
+  evidence_quote:
+- id: otp:pb-schedule-projection-specification:001
+  file: work/proposals/otp-pb-schedule-projection-specification-001.yaml
+  state: WITHDRAWN
+  latest_round: 3
+  latest_verdict: INDETERMINATE
+  label: admission projection specification
+  category: information_object
+  dispute:
+  evidence_quote: Round 3 concedes that the manifest-pinned CQ-020 can be answered from its WorkUnit-shaped schedule A-Box without an AdmissionProjectionSpecification individual. This co-denoting chain is withdrawn with the canonical contract rather than receiving a cosmetic support edge.
+- id: otp:pb-scheduler-process-owner:001
+  file: work/proposals/otp-pb-scheduler-process-owner-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 3
+  latest_verdict: PASS
+  label: agent
+  category: role
+  dispute:
+    primary: role
+    alternative: kind
+  evidence_quote:
+- id: otp:pb-verification-evidence-receipt:001
+  file: work/proposals/otp-pb-verification-evidence-receipt-001.yaml
+  state: FLAGGED-SUBMIT
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: verification evidence
+  category: information_object
+  dispute:
+  evidence_quote: Run-3 must provide authoritative claim-formation and realization rules plus issuance, producer, custody, copy, retention, correction, and revocation provenance across heterogeneous VerificationEvidence records.
+- id: otp:pb-yeet-proof-tier:001
+  file: work/proposals/otp-pb-yeet-proof-tier-001.yaml
+  state: WITHDRAWN
+  latest_round: 2
+  latest_verdict: INDETERMINATE
+  label: Yeet proof-planning tier
+  category: information_object
+  dispute:
+    primary: information_object
+    alternative: quality
+  evidence_quote: Run-2 sitting 1 struck the carrier-only attack and conceded the implementation-usefulness helper as unresolved pending classification governance and a decision CQ.
+- id: otp:pc-projection-contract:001
+  file: work/proposals/otp-pc-projection-contract-001.yaml
+  state: WITHDRAWN
+  latest_round: 3
+  latest_verdict: INDETERMINATE
+  label: admission projection specification
+  category: information_object
+  dispute:
+  evidence_quote: Round 3 concedes that the manifest-pinned CQ-020 can be answered from its WorkUnit-shaped schedule A-Box without an AdmissionProjectionSpecification individual. This co-denoting chain is withdrawn with the canonical contract rather than receiving a cosmetic support edge.
+- id: otp:pc-token-capacity-policy:001
+  file: work/proposals/otp-pc-token-capacity-policy-001.yaml
+  state: RATIFY-CANDIDATE
+  latest_round: 2
+  latest_verdict: PASS
+  label: admission policy
+  category: information_object
+  dispute:
+  evidence_quote:

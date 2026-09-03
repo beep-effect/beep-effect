@@ -1,0 +1,21 @@
+id: "fa:pb-admission-priority-class:001"
+hypothesis_ref: "dh:pb-admission-priority-class:001"
+identity_card_ref: "ic:pb-admission-priority-class:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "Each planner carries a distinct copy of the verify-and-publish domain rather than one governed vocabulary object."
+    still_viable: true
+  - label: "The policy contains classification rules without an independently reified scheme."
+    still_viable: true
+  - label: "Each value denotes a request-borne role token rather than a vocabulary member."
+    still_viable: false
+strongest_counterexample: "A verify request keeps its recorded class when aging makes its effective rank publish-equivalent, while many requests share that member; the data support a controlled domain but not its authority, rigidity, or cross-planner identity."
+verdict: explicitly_deferred
+needed_evidence: >-
+  An authoritative vocabulary registry with version and revision lineage,
+  member-governance rules, and cross-planner reuse or copy provenance is
+  required to settle AdmissionPriorityClass identity and rigidity.

@@ -1,0 +1,31 @@
+id: "dh:ov-step-index:001"
+observation_refs:
+  - "po:sha256:14e01baa9a4fa23873722680039d098e43c3e0f315d5f6805159154577794e06"
+  - "po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2"
+cq_warrants: ["CQ-020"]
+proposed_referent:
+  label: "schedule-step ordinal position"
+  description: >-
+    The ordinal position occupied by a ScheduleStep within a
+    ScheduleProposal's ordered step sequence.
+representation_status: domain_referent
+alternatives:
+  - label: "Array offset selected by the projection implementation"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "Successor ordering relation encoded as an integer"
+    representation_status: domain_referent
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    Numeric indexing is one representation choice, but the observations make
+    the order of proposal steps part of the projection's replay-tested content.
+  discriminator: >-
+    Each ScheduleProposal is specified to contain ordered steps, each
+    ScheduleStep carries stepIndex, and differential replay compares projected
+    admission order with deployed grant order; ordinal position can therefore
+    be correct or incorrect independently of its serialization.
+epistemic_status: proposed
+confidence: {value: 0.91, use_for_acceptance: false}

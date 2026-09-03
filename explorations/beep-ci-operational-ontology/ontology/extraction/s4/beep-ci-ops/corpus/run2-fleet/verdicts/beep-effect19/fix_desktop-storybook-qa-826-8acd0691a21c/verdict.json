@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/desktop-storybook-qa-826",
+  "committed": false,
+  "createdAt": "2026-08-27T06:57:16.129Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_desktop-storybook-qa-826-8acd0691a21c",
+  "attemptId": "f34c180a-d02f-46dc-808b-e43580d71154",
+  "startedAt": "2026-08-27T06:57:11.534Z",
+  "endedAt": "2026-08-27T06:57:16.129Z",
+  "elapsedMs": 4595,
+  "indexPath": "<fleet>/beep-effect19/.beep/yeet/quality-issue-index.json"
+}

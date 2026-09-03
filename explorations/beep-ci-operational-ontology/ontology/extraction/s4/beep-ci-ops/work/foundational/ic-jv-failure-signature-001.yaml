@@ -1,0 +1,42 @@
+id: "ic:jv-failure-signature:001"
+hypothesis_ref: "dh:jv-failure-signature:001"
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two FailureSignature information objects are the same when they preserve
+    the same failed-step and failure-kind meanings under one governed
+    vocabulary version and provenance lineage; occurrence identity is not part
+    of the criterion because the signature groups distinct failures.
+  reidentification_key:
+    - "failed-step identifier and governed meaning"
+    - "failure-kind identifier and governed meaning"
+    - "classification-vocabulary authority, version, and provenance"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One repeatable classification tuple whose two coordinates share one
+    vocabulary and provenance context across the failures it groups.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "mode: an occurrence-bound classification inhering in each failure"
+    - "situation: the state of affairs in which a failure has both classifications"
+    - "none: a contextual binary classification fact without reification"
+  existential_dependencies:
+    - "The failure-kind and step vocabulary used by the classification"
+    - "At least one faithful carrier or classification assertion"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a semantic change to either coordinate or vocabulary"
+    - "withdrawn by the classification authority"
+counterexamples:
+  - description: >-
+      Two independent attempts can both fail at full:01-pre-push with
+      failureKind step-exit and therefore share one repeatable signature even
+      though the failure occurrences remain distinct.
+status: proposed

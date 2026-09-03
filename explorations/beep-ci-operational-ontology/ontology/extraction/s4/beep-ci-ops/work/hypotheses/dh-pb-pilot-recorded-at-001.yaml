@@ -1,0 +1,24 @@
+id: "dh:pb-pilot-recorded-at:001"
+observation_refs:
+  - "po:sha256:8ff37f20dbb435de792af26bf58ce5cb5737b180cb70e4f83ce965f6f3f0a4b2"
+cq_warrants: []
+proposed_referent:
+  label: "pilot-inventory recording date"
+  description: "A date metadata value attached to a Fallow pilot inventory."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "inventory snapshot instant"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "document metadata field"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A recordedAt key and date do not establish whether the date is creation time, observation time, publication time, or a manually maintained label. No in-scope operational event is identified."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.93
+  use_for_acceptance: false

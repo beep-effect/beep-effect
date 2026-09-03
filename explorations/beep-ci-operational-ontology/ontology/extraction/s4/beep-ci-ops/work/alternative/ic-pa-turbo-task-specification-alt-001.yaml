@@ -1,0 +1,35 @@
+id: ic:pa-turbo-task-specification-alt:001
+hypothesis_ref: dh:pa-turbo-task-specification:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two Turbo task specifications are the same iff they prescribe the same
+    named repository work with the same input surface, upstream dependency, and persistence
+    behavior. The labels build, test:property, transit, codegen, and similar are reidentification
+    evidence of distinct specs, never one shared individual. A run of a task is not the spec.
+  reidentification_key:
+  - task name (evidence)
+  - dependsOn (evidence)
+  - inputs (evidence)
+  - persistent (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one named task prescription with its input, dependency, and persistence configuration
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - kind
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: 'dependsOn: [^build] on the build task specifies a constraint of the spec;
+    identifying the spec with one turbo.json object would make reformatting the file a new
+    task.'
+- description: 'persistent: false distinguishes execution behavior of the spec from a long-running
+    process; treating a running storybook as the spec would merge specification and execution.'
+status: proposed

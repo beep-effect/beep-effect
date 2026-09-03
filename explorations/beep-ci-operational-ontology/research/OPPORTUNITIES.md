@@ -58,3 +58,58 @@
 - **Prevention:** Biome `files.includes` now excludes the packet's `adapters/` and `runs/`
   trees (this change); frozen evidence must always ship with a formatter exemption in the same
   PR that freezes it, since a digest lock can only detect corruption, not stop a write sweep.
+
+## 2026-09-02: the #902 adapter sandbox fails closed on any busy desktop session
+
+- **Work:** auditor run-2 launch — smoke-testing the new
+  `run_adapter_sandbox.sh` (PR #902) before building adapter v1.1.0 against it.
+- **Evidence:** every invocation died with `bwrap: Creating new namespace failed:
+  Resource temporarily unavailable` while bare `bwrap --unshare-all` succeeded.
+  Bisecting the runner's five prlimit bounds isolated `--nproc=64`: RLIMIT_NPROC
+  is charged against the invoking UID's host-wide task count (about 10,800 tasks
+  on a loaded desktop), so wrapping bwrap in `prlimit --nproc=64` can never
+  clone. The runner had only ever been exercised where the UID ran few tasks.
+- **Cost:** the fail-closed design blocked the entire observe stage; roughly an
+  hour of diagnosis before any run-2 adapter work could start.
+- **Prevention:** apply resource limits INSIDE the sandbox's fresh user
+  namespace (the fix: `resource_limits` array wrapping the adapter command,
+  `exec bwrap` directly), where the per-user task count restarts at the
+  sandbox's own processes; and smoke-test any fail-closed sandbox wrapper on a
+  session at realistic load before shipping it, since per-UID rlimits are
+  environment-dependent in a way per-process limits are not.
+
+## 2026-09-03: yeet cannot plan archival-scale packet branches
+
+- **Work:** publishing the auditor run-2 close (PR #957) through
+  `bun run beep yeet publish --start-pr-early`.
+- **Evidence:** the plan stage died with `git diff --name-only -z <base>..HEAD
+  output exceeded the repo-run capture limit.` — `repoRunOutputBound.maxChars`
+  is 512 KiB, and this branch's changed-path list (fleet corpus plus the
+  run-1 archive relocations, roughly five thousand paths) exceeds it.
+- **Cost:** the canonical publish path is unusable for exactly the class of PR
+  this packet produces every run (run 1's #889 at three thousand files slid
+  under the same bound); fell back to manual `gh pr create` plus
+  `yeet monitor`, the #889 precedent.
+- **Prevention:** stream or chunk the changed-path enumeration in the yeet
+  planner instead of a single bounded capture (or raise the bound for
+  `--name-only -z` specifically, whose output is inherently proportional to
+  repo churn, not misbehavior).
+
+## 2026-09-03: fleet-corpus host-path scan missed the system temp root
+
+- **Work:** repairing PR #957 after its hosted Lint Policy lane rejected the
+  pinned run-2 fleet corpus.
+- **Evidence:** `bun run beep knowledge refs --check` found three live
+  system-temp lock-path observations in captured verdicts even though `MANIFEST.yaml`
+  recorded `host_path_scan: PASS`. The generator derived its replacement prefix
+  from the session temp root under the portable home convention, while its byte
+  scan rejected operator-home paths only, so system-temp strings escaped both
+  controls.
+- **Cost:** Lint Policy failed after the ontology run had closed, and the repair
+  had to re-redact 20 raw payloads, regenerate two affected scalar projections,
+  and rebuild the digest manifest rather than changing the three surfaced
+  verdicts alone.
+- **Prevention:** redact the explicit system temporary-directory prefix and
+  make the corpus byte scan fail on both operator-home and system-temp anchors;
+  keep a regression case where the process temp root differs from the system
+  temp root.

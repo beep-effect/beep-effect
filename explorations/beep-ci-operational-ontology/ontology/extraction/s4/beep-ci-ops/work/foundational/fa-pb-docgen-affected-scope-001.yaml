@@ -1,0 +1,18 @@
+id: "fa:pb-docgen-affected-scope:001"
+hypothesis_ref: "dh:pb-docgen-affected-scope:001"
+identity_card_ref: "ic:pb-docgen-affected-scope:001"
+tests:
+  spec_vs_execution: unresolved
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Affected scope is the extensional selection situation produced for one documentation verification run."
+    still_viable: true
+  - label: "Affected scope is a repeatable information-object specification interpreted against a repository snapshot."
+    still_viable: true
+  - label: "The phrase denotes only a command optimization flag with no operational selection referent."
+    still_viable: false
+strongest_counterexample: "A reusable range rule can be unchanged while two invocations select different dirty files, and two distinct rules can select the same files; the quote therefore does not identify specification and extension as one thing."
+verdict: explicitly_deferred
+needed_evidence: "A run artifact must pin base, head, dirty-state snapshot, and selected membership while the scope contract states whether AffectedScope denotes that run-specific extension or the reusable selection specification."

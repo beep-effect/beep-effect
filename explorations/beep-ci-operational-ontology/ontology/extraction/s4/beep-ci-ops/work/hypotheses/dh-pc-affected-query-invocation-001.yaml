@@ -1,0 +1,29 @@
+id: "dh:pc-affected-query-invocation:001"
+observation_refs:
+  - "po:sha256:d61df0706849331476446a427e6b69b913b73bb1af6ab4e514d6cb1ede7eefe4"
+cq_warrants:
+  - "CQ-004"
+  - "CQ-019"
+proposed_referent:
+  label: "affected-query invocation phrase"
+  description: >-
+    The phrase turbo query affected as a possible lexical alias for an
+    affected-set computation.
+representation_status: lexical_alias
+alternatives:
+  - label: "CLI command string"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "affected-set computation specification"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    A command phrase alone provides no inputs, affected outcome, failure mode,
+    package set, or provenance edge. It can be explained entirely as an
+    invocation token without denoting a computation in the domain.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.75, use_for_acceptance: false}
