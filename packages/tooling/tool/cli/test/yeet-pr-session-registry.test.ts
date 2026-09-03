@@ -107,7 +107,9 @@ describe("Yeet PR session registry", () => {
         )
       );
       yield* fs.chmod(root, 0o500);
-      const error = yield* registry.append(makeRecord()).pipe(Effect.ensuring(fs.chmod(root, 0o700)), Effect.flip);
+      const error = yield* registry
+        .append(makeRecord())
+        .pipe(Effect.ensuring(Effect.orDie(fs.chmod(root, 0o700))), Effect.flip);
       assert.instanceOf(error, PrSessionRegistryError);
       expect(error.reason).toBe("denied");
     }).pipe(provideScopedLayer(PlatformLayer))
