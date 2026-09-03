@@ -26,7 +26,8 @@
     "docgen": "bunx --bun --no-install docgen",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "dependencies": {
     "@beep/codegen-kit": "workspace:^",

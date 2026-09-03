@@ -28,7 +28,8 @@
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-    "audit": "bun run --if-present beep:audit"
+    "audit": "bun run --if-present beep:audit",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package"
   },
   "exports": {
     ".": "./src/index.ts",
