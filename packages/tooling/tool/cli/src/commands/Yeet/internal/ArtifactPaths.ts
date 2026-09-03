@@ -14,9 +14,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { perUserRuntimeRoot } from "../../../internal/repo-run/index.ts";
+import { perUserRuntimeRoot } from "../../../internal/repo-run/RuntimeRoot.ts";
 import type { FileSystem } from "effect";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
 

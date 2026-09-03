@@ -13,10 +13,13 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { QualityTaskStep } from "../../internal/process/index.ts";
-import { GITHUB_CHECK_MODE_VALUES, GithubCheckMode as GithubCheckModeSchema } from "../../internal/repo-run/index.ts";
+import {
+  GITHUB_CHECK_MODE_VALUES,
+  GithubCheckMode as GithubCheckModeSchema,
+} from "../../internal/repo-run/RepoRun.proofs.ts";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
-import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/index.ts";
+import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/RepoRun.proofs.ts";
 
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
 
@@ -53,6 +56,38 @@ export const GITHUB_CHECK_RUN_REPORT_PREFIX = "[beep-github-check-run] ";
  * @since 0.0.0
  */
 export const QUALITY_TASK_LANE_RUN_REPORT_PREFIX = "[beep-quality-task-lane-run] ";
+
+/**
+ * Environment key naming the durable NDJSON side channel for wrapper lane facts.
+ *
+ * **Example** (Pass the side-channel path)
+ *
+ * ```ts
+ * import { QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV) // "BEEP_YEET_INNER_LANE_REPORT_PATH"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV = "BEEP_YEET_INNER_LANE_REPORT_PATH";
+
+/**
+ * Environment key joining a durable inner-lane report to its wrapper lane.
+ *
+ * **Example** (Pass the wrapper lane id)
+ *
+ * ```ts
+ * import { QUALITY_TASK_LANE_RUN_PARENT_ID_ENV } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(QUALITY_TASK_LANE_RUN_PARENT_ID_ENV) // "BEEP_YEET_INNER_LANE_PARENT_ID"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const QUALITY_TASK_LANE_RUN_PARENT_ID_ENV = "BEEP_YEET_INNER_LANE_PARENT_ID";
 
 /**
  * Canonical quality task name.
@@ -999,6 +1034,7 @@ export class QualityTaskLaneRun extends S.Class<QualityTaskLaneRun>($I`QualityTa
 export class QualityTaskLaneRunReport extends S.Class<QualityTaskLaneRunReport>($I`QualityTaskLaneRunReport`)(
   {
     schemaVersion: S.Literal("quality-task-lane-run/v1"),
+    parentLaneId: OptionalLaneRunString,
     lanes: S.Array(QualityTaskLaneRun),
   },
   $I.annote("QualityTaskLaneRunReport", {

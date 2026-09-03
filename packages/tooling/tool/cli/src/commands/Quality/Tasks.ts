@@ -94,6 +94,8 @@ import {
   GithubCheckRunReport,
   LintPolicySubcommand,
   PackageTaskProfile,
+  QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+  QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
   QualityTaskBypassArgName,
   QualityTaskInvocation,
@@ -1706,6 +1708,33 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
 
 const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
 const qualityTaskLaneRunReportJson = JsonStringCodec(QualityTaskLaneRunReport);
+const laneReportTextEncoder = new TextEncoder();
+
+const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")(function* (
+  report: QualityTaskLaneRunReport
+) {
+  const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
+  const enriched = QualityTaskLaneRunReport.make({ ...report, parentLaneId });
+  const reportJson = yield* qualityTaskLaneRunReportJson
+    .encode(enriched)
+    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
+  yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${reportJson}`);
+  const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
+  yield* O.match(artifactPath, {
+    onNone: () => Effect.void,
+    onSome: (target) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+          const file = yield* fs.open(target, { flag: "a" });
+          yield* file.writeAll(laneReportTextEncoder.encode(`${reportJson}\n`));
+          yield* file.sync;
+        }).pipe(QualityTaskConfigurationError.mapError("Failed to write the durable quality-task lane report."))
+      ),
+  });
+});
 
 /**
  * Run local GitHub-check waves, emit their schema-backed report, and fail with
@@ -1736,10 +1765,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
     .encode(result.report)
     .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
   yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
-  const laneReportJson = yield* qualityTaskLaneRunReportJson
-    .encode(result.laneReport)
-    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
-  yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${laneReportJson}`);
+  yield* emitQualityTaskLaneRunReport(result.laneReport);
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -1768,10 +1794,7 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
   concurrency = 1
 ) {
   const result = yield* collectQualityTaskLaneRuns(label, lanes, concurrency);
-  const reportJson = yield* qualityTaskLaneRunReportJson
-    .encode(result.report)
-    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
-  yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${reportJson}`);
+  yield* emitQualityTaskLaneRunReport(result.report);
   yield* failQualityTaskFailures(label, result.failures);
 });
 

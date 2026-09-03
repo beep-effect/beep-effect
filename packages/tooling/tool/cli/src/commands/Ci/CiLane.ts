@@ -1902,8 +1902,9 @@ export const ciLocalStepsForTesting: {
  *
  * ```ts
  * import { CiLocalStepPlan, ciLocalLaneInputsForTesting, ciLocalStepsForTesting } from "@beep/repo-cli/commands/Ci"
+ * import type { CiLaneId } from "@beep/repo-cli/commands/Ci"
  *
- * const selection = ["check"] as const
+ * const selection: ReadonlyArray<CiLaneId> = ["check"]
  * const plan = CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false })
  * const inputs = ciLocalLaneInputsForTesting(selection, ciLocalStepsForTesting("/repo", selection, plan))
  * console.log(inputs[0]?.[0]) // "check"

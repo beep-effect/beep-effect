@@ -15,13 +15,14 @@ import { constant, dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { acquireJournalFileLock, releaseJournalFileLock } from "../../../internal/repo-run/index.ts";
+import { acquireJournalFileLock, releaseJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetProofTier } from "./Planner.ts";
+import { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import { YeetVerdict } from "./Verdict.ts";
 import type * as SchemaAST from "effect/SchemaAST";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournal");
 const JOURNAL_FILE_NAME = "attempts.ndjson";
@@ -33,6 +34,8 @@ const attemptInputFactFields = {
   resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 };
 
 /**
@@ -68,12 +71,12 @@ export class YeetAttemptStarted extends S.Class<YeetAttemptStarted>($I`YeetAttem
 ) {}
 
 /**
- * Legacy terminal marker embedding the exact verdict written for an attempt.
+ * Normal terminal marker embedding the exact verdict written for an attempt.
  *
  * **Details**
  *
- * Current writers emit {@link YeetAttemptTerminated}; this variant remains in
- * the union so journals written before guaranteed interruption handling decode.
+ * Successful and failed command completions use this stable event. Abnormal
+ * ends without a complete verdict use {@link YeetAttemptTerminated} instead.
  *
  * **Example** (Use YeetAttemptFinished)
  *
@@ -96,12 +99,17 @@ export class YeetAttemptFinished extends S.Class<YeetAttemptFinished>($I`YeetAtt
     ...attemptInputFactFields,
   },
   $I.annote("YeetAttemptFinished", {
-    description: "Legacy terminal marker retained for decoding compatibility with prior attempt journals.",
+    description: "Normal terminal marker embedding the exact verdict written for a completed attempt.",
   })
 ) {}
 
 /**
  * Terminal reason retained for every completed or interrupted Yeet attempt.
+ *
+ * **Details**
+ *
+ * Current writers use abnormal reasons only. `success` and `failure` remain
+ * decode-compatible with rows written by the first A5 implementation.
  *
  * **Example** (Recognize an interruption)
  *
@@ -114,14 +122,23 @@ export class YeetAttemptFinished extends S.Class<YeetAttemptFinished>($I`YeetAtt
  * @category models
  * @since 0.0.0
  */
-export const YeetAttemptTerminationReason = LiteralKit(["success", "failure", "interrupted"]).pipe(
+export const YeetAttemptTerminationReason = LiteralKit([
+  "success",
+  "failure",
+  "interrupted",
+  "signal",
+  "queued-submitter-death",
+  "lease-eviction",
+  "terminal-row-missing",
+  "unrecorded-failure",
+]).pipe(
   $I.annoteSchema("YeetAttemptTerminationReason", {
-    description: "Terminal reason retained for a completed or interrupted Yeet attempt.",
+    description: "Abnormal reason a Yeet attempt ended without an ordinary finished row.",
   })
 );
 
 /**
- * Terminal reason retained for a completed or interrupted Yeet attempt.
+ * Abnormal reason a Yeet attempt ended without an ordinary finished row.
  *
  * **Example** (Name a terminal reason)
  *
@@ -139,12 +156,13 @@ export const YeetAttemptTerminationReason = LiteralKit(["success", "failure", "i
 export type YeetAttemptTerminationReason = typeof YeetAttemptTerminationReason.Type;
 
 /**
- * Guaranteed terminal marker for a Yeet attempt, including interrupts.
+ * Abnormal terminal marker for a Yeet attempt, including interrupts.
  *
  * **Details**
  *
- * Successful and failed attempts carry their verdict; an interruption can
- * terminate before a complete verdict exists and therefore leaves it absent.
+ * Normal success and failure completions use {@link YeetAttemptFinished}. This
+ * marker records interruption, signal, queued-submitter death, lease eviction,
+ * or another path that ended before the normal verdict could be retained.
  *
  * **Example** (Reference a terminal attempt row)
  *
@@ -168,7 +186,7 @@ export class YeetAttemptTerminated extends S.Class<YeetAttemptTerminated>($I`Yee
     ...attemptInputFactFields,
   },
   $I.annote("YeetAttemptTerminated", {
-    description: "Guaranteed terminal marker for a Yeet attempt, including process interruption.",
+    description: "Abnormal terminal marker for an attempt that could not retain an ordinary finished row.",
   })
 ) {}
 

@@ -3,7 +3,7 @@
  * `<admission root>/journal.ndjson`.
  *
  * Every write serializes under `<admission root>/journal.lock`: the writer
- * reads the journal, drops undecodable records, appends its event, ring-trims
+ * reads the journal, preserves undecodable records byte-for-byte, appends its event, ring-trims
  * to the newest admitted transitions, and publishes the result with an atomic
  * temp-file rename. Scheduler correctness lives exclusively in ticket and
  * lease files; `bypassAdmission` on sub-envelope machines mints neither file
@@ -17,7 +17,7 @@ import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Clock, Console, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { Clock, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -157,7 +157,7 @@ export class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseE
   $I`AdmissionJournalLeaseEvicted`
 )(
   {
-    schemaVersion: S.Literal("yeet-admission-journal/v1"),
+    schemaVersion: S.Literal("yeet-admission-journal/v2"),
     _tag: S.Literal("admission-lease-evicted"),
     nonce: S.String,
     pid: S.Finite,
@@ -167,6 +167,74 @@ export class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseE
   },
   $I.annote("AdmissionJournalLeaseEvicted", {
     description: "Durable transition recorded after the scheduler reaps a verified dead admission lease.",
+  })
+) {}
+
+/**
+ * Why a dead scheduler ticket was evicted from the admission queue.
+ *
+ * **Example** (Recognize a queued submitter death)
+ *
+ * ```ts
+ * import { AdmissionTicketEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionTicketEvictionReason.is["queued-submitter-death"]("queued-submitter-death")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pipe(
+  $I.annoteSchema("AdmissionTicketEvictionReason", {
+    description: "Reason a dead admission ticket was evicted from the scheduler queue.",
+  })
+);
+
+/**
+ * Reason a dead admission ticket was evicted from the scheduler queue.
+ *
+ * **Example** (Name a queued submitter death)
+ *
+ * ```ts
+ * import type { AdmissionTicketEvictionReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const reason: AdmissionTicketEvictionReason = "queued-submitter-death"
+ * console.log(reason) // "queued-submitter-death"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionTicketEvictionReason = typeof AdmissionTicketEvictionReason.Type;
+
+/**
+ * Durable transition recorded after the scheduler claims a dead queue ticket.
+ *
+ * **Example** (Reference a ticket eviction transition)
+ *
+ * ```ts
+ * import { AdmissionJournalTicketEvicted } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof AdmissionJournalTicketEvicted) // "function"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicketEvicted>(
+  $I`AdmissionJournalTicketEvicted`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal/v2"),
+    _tag: S.Literal("admission-ticket-evicted"),
+    nonce: S.String,
+    pid: S.Finite,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    evictedAtMillis: S.Finite,
+    reason: AdmissionTicketEvictionReason,
+  },
+  $I.annote("AdmissionJournalTicketEvicted", {
+    description: "Durable transition recorded after the scheduler atomically claims a dead queue ticket.",
   })
 ) {}
 
@@ -188,6 +256,7 @@ export const AdmissionJournalEvent = S.Union([
   AdmissionJournalAdmitted,
   AdmissionJournalReleased,
   AdmissionJournalLeaseEvicted,
+  AdmissionJournalTicketEvicted,
 ]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("AdmissionJournalEvent", {
@@ -441,34 +510,35 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
       )
     );
   const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
-  const probed = yield* Effect.forEach(rawLines, (raw) =>
+  // Mixed fleet revisions share this journal. Preserve rows this revision does
+  // not understand byte-for-byte so an older locked rewrite cannot erase a
+  // newer protocol event before all checkouts have rolled forward.
+  const retained = yield* Effect.forEach(rawLines, (raw) =>
     decodeAdmissionJournalEvent(raw).pipe(
       Effect.option,
-      Effect.map(O.map((decoded) => ({ event: decoded, line: raw })))
+      Effect.map((decoded) => ({ event: decoded, line: raw }))
     )
   );
-  const retained = A.getSomes(probed);
-  const droppedCount = A.length(rawLines) - A.length(retained);
-  if (droppedCount > 0) {
-    yield* Console.warn(`dropped ${droppedCount} undecodable admission journal record(s) from "${journalPath}"`);
-  }
-  const records = A.append(retained, { event, line });
+  const records = A.append(retained, { event: O.some(event), line });
   const admittedIndexes = pipe(
     A.zip(
       A.map(records, (record) => record.event),
       A.range(0, A.length(records) - 1)
     ),
-    A.map(([recorded, index]) => (recorded._tag === "admission-admitted" ? O.some(index) : O.none())),
+    A.map(([recorded, index]) =>
+      O.exists(recorded, AdmissionJournalEvent.guards["admission-admitted"]) ? O.some(index) : O.none()
+    ),
     A.getSomes
   );
   const firstRetainedIndex =
     A.length(admittedIndexes) <= RETAINED_ADMISSIONS
       ? 0
       : pipe(admittedIndexes, A.takeRight(RETAINED_ADMISSIONS), A.head, O.getOrElse(constant(0)));
+  const retainedRecords = A.filter(records, (record, index) => index >= firstRetainedIndex || O.isNone(record.event));
   yield* publishJournalAtomic(
     journalPath,
     pipe(
-      A.drop(records, firstRetainedIndex),
+      retainedRecords,
       A.map((record) => `${record.line}\n`),
       A.join(Str.empty)
     )
@@ -486,7 +556,9 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * newest admitted transitions, and publishes atomically via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
  * scheduler correctness never depends on this operation, so callers treat
- * that failure as a best-effort diagnostic write.
+ * that failure as a best-effort diagnostic write. Unknown journal rows remain
+ * byte-identical across rewrites so older fleet writers cannot erase newer
+ * protocol variants during a rolling upgrade.
  *
  * **Example** (Reference the journal append entry point)
  *

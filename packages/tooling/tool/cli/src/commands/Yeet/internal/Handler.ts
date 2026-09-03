@@ -47,6 +47,11 @@ import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
 } from "../../Quality/internal/FlakeQuarantine.ts";
+import {
+  QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+  QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+  QualityTaskLaneRunReport,
+} from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
@@ -54,7 +59,12 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
   safeArtifactName,
 } from "./ArtifactPaths.ts";
-import { appendYeetAttemptJournalEvent, YeetAttemptStarted, YeetAttemptTerminated } from "./AttemptJournal.ts";
+import {
+  appendYeetAttemptJournalEvent,
+  YeetAttemptFinished,
+  YeetAttemptStarted,
+  YeetAttemptTerminated,
+} from "./AttemptJournal.ts";
 import { PrCloseoutOptions, PrCloseoutReportJson, runPrCloseout } from "./Closeout.ts";
 import {
   collectStagedPublishPaths,
@@ -133,6 +143,7 @@ import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../int
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
+import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
@@ -1309,6 +1320,27 @@ type YeetVerdictExtras = {
 // verdict may read it only after a successful pre-push proof step in the same
 // run — anything else could attach a previous run's incidents.
 const PRE_PUSH_PROOF_STEP_ID = repoProofStepDefinition("pre-push").id;
+const INNER_LANE_REPORT_FILE_NAME = "inner-lanes.ndjson";
+const decodeInnerLaneReport = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+
+const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<ReadonlyArray<QualityTaskLaneRunReport>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const reportPath = yield* runOutputPathForContext(context, INNER_LANE_REPORT_FILE_NAME);
+  if (!(yield* fs.exists(reportPath).pipe(Effect.orElseSucceed(() => false)))) {
+    return A.empty();
+  }
+  const text = yield* fs
+    .readFileString(reportPath)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to read durable inner-lane report "${reportPath}".`)));
+  const lines = pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
+  return yield* Effect.forEach(lines, (line) =>
+    decodeInnerLaneReport(line).pipe(
+      Effect.mapError(YeetCommandError.new(`Failed to decode durable inner-lane report "${reportPath}".`))
+    )
+  );
+});
 
 const readFlakeQuarantineIncidents = Effect.fn("Yeet.readFlakeQuarantineIncidents")(function* (
   repoRoot: string
@@ -1338,6 +1370,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   const path = yield* Path.Path;
   const executed = yield* Ref.get(recorder);
   const extraState = yield* Ref.get(extras);
+  const innerLaneReports = yield* readInnerLaneReports(plan.context);
   const endedAtEpochMillis = yield* Clock.currentTimeMillis;
   const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const artifactDir = yield* artifactDirForContext(plan.context);
@@ -1393,6 +1426,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
     endedAt: O.some(endedAt),
     elapsedMs: O.some(endedAtEpochMillis - startedAtEpochMillis),
     executed,
+    innerLaneReports,
     failurePolicy: options.collectAll ? "collect-all" : "fail-fast",
     flakeQuarantine,
     head: attempt.head,
@@ -1431,16 +1465,17 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   yield* writeTextFile(verdictPath, `${verdictJson}\n`);
   yield* appendYeetAttemptJournalEvent(
     plan.context,
-    YeetAttemptTerminated.make({
+    YeetAttemptFinished.make({
       schemaVersion: "yeet-attempt-journal/v1",
-      _tag: "attempt-terminated",
+      _tag: "attempt-finished",
       attemptId: attempt.attemptId,
       recordedAt: endedAt,
-      reason: outcome,
-      verdict: O.some(verdict),
+      verdict,
       resolvedHeadSha: attempt.resolvedHeadSha,
       diffFingerprint: attempt.diffFingerprint,
       proofTier: attempt.proofTier,
+      envProfile: attempt.envProfile,
+      stage: attempt.stage,
     })
   );
   yield* Console.log(`[yeet] verdict written to ${verdictPath}`);
@@ -1471,7 +1506,11 @@ const ensureAttemptTerminated = Effect.fn("Yeet.ensureAttemptTerminated")(functi
   if (yield* Ref.get(terminalWritten)) {
     return;
   }
-  const reason = Exit.isSuccess(exit) ? "success" : Cause.hasInterruptsOnly(exit.cause) ? "interrupted" : "failure";
+  const reason = Exit.isSuccess(exit)
+    ? "terminal-row-missing"
+    : Cause.hasInterruptsOnly(exit.cause)
+      ? "interrupted"
+      : "unrecorded-failure";
   const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   yield* appendYeetAttemptJournalEvent(
     context,
@@ -1485,6 +1524,8 @@ const ensureAttemptTerminated = Effect.fn("Yeet.ensureAttemptTerminated")(functi
       resolvedHeadSha: attempt.resolvedHeadSha,
       diffFingerprint: attempt.diffFingerprint,
       proofTier: attempt.proofTier,
+      envProfile: attempt.envProfile,
+      stage: attempt.stage,
     })
   ).pipe(
     Effect.tap(() => Ref.set(terminalWritten, true)),
@@ -1507,6 +1548,59 @@ const ensureAttemptTerminated = Effect.fn("Yeet.ensureAttemptTerminated")(functi
  * @since 0.0.0
  */
 export const ensureAttemptTerminatedForTesting = ensureAttemptTerminated;
+
+const attemptStageFor = (options: YeetRunOptions): ProofStage =>
+  options.merged
+    ? "merged-preview"
+    : options.mode === "repair" || options.tier === "review-fix"
+      ? "repair-loop"
+      : "pre-push";
+
+const attemptEnvProfileFor = (options: YeetRunOptions): ProofEnvProfile => (options.merged ? "pr-posture" : "local");
+
+/**
+ * Test-only stage classifier used by attempt-fact writer coverage.
+ *
+ * **Example** (Classify a merged preview)
+ *
+ * ```ts
+ * import { attemptStageForTesting, defaultYeetRunOptions } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(attemptStageForTesting(defaultYeetRunOptions({ merged: true }))) // "merged-preview"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const attemptStageForTesting = attemptStageFor;
+
+/**
+ * Test-only environment-profile classifier used by attempt-fact writer coverage.
+ *
+ * **Example** (Classify merged-preview posture)
+ *
+ * ```ts
+ * import { attemptEnvProfileForTesting, defaultYeetRunOptions } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(attemptEnvProfileForTesting(defaultYeetRunOptions({ merged: true }))) // "pr-posture"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const attemptEnvProfileForTesting = attemptEnvProfileFor;
+
+const attachInnerLaneReportSideChannel = (step: RepoPlanStep, reportPath: string): RepoPlanStep =>
+  step.id === PRE_PUSH_PROOF_STEP_ID || step.id === CI_PARITY_STEP_ID
+    ? RepoPlanStep.make({
+        ...step,
+        env: {
+          ...(step.env ?? {}),
+          [QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]: reportPath,
+          [QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]: step.id,
+        },
+      })
+    : step;
 
 const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   plan: RepoRunPlan,
@@ -1542,6 +1636,8 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
     resolvedHeadSha: O.some(resolvedHeadSha),
     diffFingerprint: O.some(diffFingerprint),
     proofTier: O.some(options.tier),
+    envProfile: O.some(attemptEnvProfileFor(options)),
+    stage: O.some(attemptStageFor(options)),
   });
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
   const extras = yield* Ref.make<YeetVerdictExtras>({
@@ -1551,10 +1647,16 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   });
   const terminalWritten = yield* Ref.make(false);
   yield* appendYeetAttemptJournalEvent(plan.context, attempt).pipe(Effect.uninterruptible);
-  const executionSteps = A.map(plan.steps, (step) =>
-    step.id === "advisory:01-fallow-feedback"
-      ? RepoPlanStep.make({ ...step, args: [...step.args, "--run-started-at", startedAt] })
-      : step
+  const fs = yield* FileSystem.FileSystem;
+  const innerLaneReportPath = yield* runOutputPathForContext(plan.context, INNER_LANE_REPORT_FILE_NAME);
+  yield* fs.remove(innerLaneReportPath, { force: true }).pipe(Effect.ignore);
+  const executionSteps = A.map(plan.steps, (originalStep) =>
+    attachInnerLaneReportSideChannel(
+      originalStep.id === "advisory:01-fallow-feedback"
+        ? RepoPlanStep.make({ ...originalStep, args: [...originalStep.args, "--run-started-at", startedAt] })
+        : originalStep,
+      innerLaneReportPath
+    )
   );
   const prepareSteps = A.filter(executionSteps, (step) => step.phase === "prepare");
   const feedbackSteps = A.filter(executionSteps, (step) => step.phase === "feedback");

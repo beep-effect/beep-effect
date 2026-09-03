@@ -5,6 +5,10 @@ import {
   ciLocalStepsForTesting,
 } from "@beep/repo-cli/commands/Ci";
 import {
+  QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+  QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+} from "@beep/repo-cli/commands/Quality";
+import {
   collectAuditDiffInputForTesting,
   fallowAuditDiffFallbackArgsForTesting,
   fallowAuditNeedsDiffFallbackForTesting,
@@ -980,6 +984,31 @@ describe("quality task adapter", () => {
             ),
           { discard: true }
         );
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("appends a schema-versioned wrapper report to the durable side channel", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          artifactPath,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            "full:02-ci-parity",
+            runQualityTaskStreamingLaneGroup("ci:local", [])
+          )
+        );
+        const lines = pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(lines).toHaveLength(1);
+        const report = yield* S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(lines[0]);
+        expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
+        expect(report.parentLaneId).toStrictEqual(O.some("full:02-ci-parity"));
+        yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 

@@ -4,8 +4,8 @@ import {
   FallowReportOk,
   FallowReportPayload,
   FindingAttributionSummary,
-  GITHUB_CHECK_RUN_REPORT_PREFIX,
-  QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
+  QualityTaskLaneRun,
+  QualityTaskLaneRunReport,
 } from "@beep/repo-cli/test/Quality";
 import { provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import {
@@ -15,7 +15,9 @@ import {
   acquireLegacyFullProofLockOrObserveAtPathForTesting,
   appendYeetAttemptJournalEvent,
   assessBaseFreshnessForTesting,
+  attemptEnvProfileForTesting,
   attemptJournalPath,
+  attemptStageForTesting,
   BuildYeetVerdictInput,
   buildQualityIssueIndex,
   buildYeetRunPlanForTesting,
@@ -497,6 +499,14 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 });
 
 describe("yeet planner", () => {
+  it("shares ProofFact stage and environment vocabularies with attempt facts", () => {
+    expect(attemptStageForTesting(defaultYeetRunOptions({ mode: "repair" }))).toBe("repair-loop");
+    expect(attemptStageForTesting(defaultYeetRunOptions())).toBe("pre-push");
+    expect(attemptStageForTesting(defaultYeetRunOptions({ merged: true }))).toBe("merged-preview");
+    expect(attemptEnvProfileForTesting(defaultYeetRunOptions())).toBe("local");
+    expect(attemptEnvProfileForTesting(defaultYeetRunOptions({ merged: true }))).toBe("pr-posture");
+  });
+
   it("keeps yeet command error optional context at the command boundary", () => {
     const emptyError = YeetCommandError.new(new Error("cause"), "failed");
     expect(emptyError.command).toBeUndefined();
@@ -2259,7 +2269,7 @@ describe("yeet attempt journal", () => {
 
           const events = yield* Effect.forEach(
             pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
-            decodeYeetAttemptJournalEvent
+            (line) => decodeYeetAttemptJournalEvent(line)
           );
           expect(events).toHaveLength(50);
           expect(A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(1);
@@ -2303,7 +2313,7 @@ describe("yeet attempt journal", () => {
 
           const journalPath = yield* attemptJournalPath(tempContext);
           const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-          const events = yield* Effect.forEach(lines, decodeYeetAttemptJournalEvent);
+          const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
           const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
           const retainedIds = A.map(starts, (event) => event.attemptId);
 
@@ -2379,7 +2389,7 @@ describe("yeet attempt journal", () => {
           journalPaths,
           Effect.fnUntraced(function* (journalPath) {
             const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-            return yield* Effect.forEach(lines, decodeYeetAttemptJournalEvent);
+            return yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
           })
         );
         const events = A.flatten(decoded);
@@ -2656,9 +2666,29 @@ describe("yeet publish scope helpers", () => {
               stepId: proofStep.id,
               commandText: "bun run beep quality github-checks pre-push",
               exitCode: 1,
-              output: `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"pre-push:secrets","stage":"diff-security","status":"passed","wave":"preflight"}]}\n[beep-cli] lint:typos: typos\nerror: misspelling found\n${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"quality:lint","stage":"repo-quality","status":"failed","wave":"heavy"},{"id":"quality:docgen","stage":"repo-quality","status":"not-run-early-stop","wave":"documentation"}]}`,
+              output: "[beep-cli] lint:typos: typos\nerror: misspelling found",
             }),
             step: proofStep,
+          }),
+        ],
+        innerLaneReports: [
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.some(proofStep.id),
+            lanes: [
+              QualityTaskLaneRun.make({
+                id: "quality:lint",
+                label: "quality:lint",
+                status: "failed",
+                inputDigest: O.none(),
+              }),
+              QualityTaskLaneRun.make({
+                id: "quality:docgen",
+                label: "quality:docgen",
+                status: "not-run-early-stop",
+                inputDigest: O.none(),
+              }),
+            ],
           }),
         ],
         head: "HEAD",
@@ -2744,7 +2774,7 @@ describe("yeet publish scope helpers", () => {
       })
     ));
 
-  it("projects wrapper lane facts into the verdict without guessing an input digest", () => {
+  it("projects durable wrapper lane facts without parsing bounded output or guessing a digest", () => {
     const wrapper = RepoPlanStep.make({
       id: "full:ci-parity",
       label: "full:ci-parity",
@@ -2756,9 +2786,22 @@ describe("yeet publish scope helpers", () => {
       mutability: "readonly",
       resume: "never",
     });
-    const report =
-      `${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}` +
-      '{"schemaVersion":"quality-task-lane-run/v1","lanes":[{"id":"check","label":"ci:check","status":"passed","startedAt":"2026-09-03T00:00:00.000Z","endedAt":"2026-09-03T00:00:01.000Z","durationMs":1000,"exitCode":0,"inputDigest":null}]}';
+    const report = QualityTaskLaneRunReport.make({
+      schemaVersion: "quality-task-lane-run/v1",
+      parentLaneId: O.some(wrapper.id),
+      lanes: [
+        QualityTaskLaneRun.make({
+          id: "check",
+          label: "ci:check",
+          status: "passed",
+          startedAt: O.some("2026-09-03T00:00:00.000Z"),
+          endedAt: O.some("2026-09-03T00:00:01.000Z"),
+          durationMs: O.some(1000),
+          exitCode: O.some(0),
+          inputDigest: O.none(),
+        }),
+      ],
+    });
     const verdict = buildYeetVerdictForTesting(
       BuildYeetVerdictInput.make({
         base: "origin/main",
@@ -2770,11 +2813,12 @@ describe("yeet publish scope helpers", () => {
               stepId: wrapper.id,
               commandText: "bun run beep ci local",
               exitCode: 0,
-              output: report,
+              output: "[beep-quality-task-lane-run] {truncated",
             }),
             step: wrapper,
           }),
         ],
+        innerLaneReports: [report],
         head: "0123456789abcdef0123456789abcdef01234567",
         message: "yeet verify succeeded.",
         mode: "verify",

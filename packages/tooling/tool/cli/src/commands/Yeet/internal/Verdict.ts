@@ -16,20 +16,13 @@ import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/RepoRun.models.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
-import {
-  GITHUB_CHECK_RUN_REPORT_PREFIX,
-  GithubCheckFailurePolicy,
-  GithubCheckRunReport,
-  QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
-  QualityTaskLaneRunReport,
-} from "../../Quality/Quality.schemas.ts";
+import { GithubCheckFailurePolicy, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import { GIT_PUSH_STEP_ID, YeetProofTier } from "./Planner.ts";
 import { knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
-import type { GithubCheckLaneRun, QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
+import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
 const OptionalVerdictString = S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
@@ -712,35 +705,6 @@ const laneFromPlanned = (step: RepoPlanStep, tier: O.Option<YeetProofTier>): Yee
     inputDigest: O.none(),
   });
 
-const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
-const qualityTaskLaneRunReportJson = JsonStringCodec(QualityTaskLaneRunReport);
-
-const githubCheckRunReportFromOutput = (output: string): O.Option<GithubCheckRunReport> =>
-  pipe(
-    Str.split("\n")(output),
-    A.findLast(Str.startsWith(GITHUB_CHECK_RUN_REPORT_PREFIX)),
-    O.flatMap((line) => githubCheckRunReportJson.decodeOption(Str.slice(GITHUB_CHECK_RUN_REPORT_PREFIX.length)(line)))
-  );
-
-const qualityTaskLaneRunReportFromOutput = (output: string): O.Option<QualityTaskLaneRunReport> =>
-  pipe(
-    Str.split("\n")(output),
-    A.findLast(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
-    O.flatMap((line) =>
-      qualityTaskLaneRunReportJson.decodeOption(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line))
-    )
-  );
-
-const laneFromGithubCheckRun = (lane: GithubCheckLaneRun, tier: O.Option<YeetProofTier>): YeetVerdictLane =>
-  YeetVerdictLane.make({
-    id: lane.id,
-    label: lane.id,
-    phase: "full",
-    status: lane.status,
-    tier,
-    inputDigest: O.none(),
-  });
-
 const laneFromQualityTaskRun = (lane: QualityTaskLaneRun, tier: O.Option<YeetProofTier>): YeetVerdictLane =>
   YeetVerdictLane.make({
     id: lane.id,
@@ -757,18 +721,15 @@ const laneFromQualityTaskRun = (lane: QualityTaskLaneRun, tier: O.Option<YeetPro
     }),
   });
 
-const innerLanesFromOutput = (output: string, tier: O.Option<YeetProofTier>): ReadonlyArray<YeetVerdictLane> =>
+const innerLanesForWrapper = (
+  reports: ReadonlyArray<QualityTaskLaneRunReport>,
+  wrapperLaneId: string,
+  tier: O.Option<YeetProofTier>
+): ReadonlyArray<YeetVerdictLane> =>
   pipe(
-    qualityTaskLaneRunReportFromOutput(output),
-    O.match({
-      onNone: () =>
-        pipe(
-          githubCheckRunReportFromOutput(output),
-          O.map((report) => A.map(report.lanes, (lane) => laneFromGithubCheckRun(lane, tier))),
-          O.getOrElse(A.empty<YeetVerdictLane>)
-        ),
-      onSome: (report) => A.map(report.lanes, (lane) => laneFromQualityTaskRun(lane, tier)),
-    })
+    reports,
+    A.filter((report) => O.exists(report.parentLaneId, (parentLaneId) => parentLaneId === wrapperLaneId)),
+    A.flatMap((report) => A.map(report.lanes, (lane) => laneFromQualityTaskRun(lane, tier)))
   );
 
 /**
@@ -791,6 +752,9 @@ export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`Bui
     endedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     elapsedMs: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     executed: S.Array(YeetExecutedStep),
+    innerLaneReports: S.Array(QualityTaskLaneRunReport).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<QualityTaskLaneRunReport>()))
+    ),
     failurePolicy: GithubCheckFailurePolicy.pipe(
       S.withConstructorDefault(Effect.succeed(GithubCheckFailurePolicy.Enum["fail-fast"]))
     ),
@@ -858,13 +822,7 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
     A.appendAll(
       pipe(
         input.executed,
-        A.flatMap((entry) =>
-          pipe(
-            O.fromUndefinedOr(entry.result.output),
-            O.map((output) => innerLanesFromOutput(output, input.proofTier)),
-            O.getOrElse(A.empty<YeetVerdictLane>)
-          )
-        )
+        A.flatMap((entry) => innerLanesForWrapper(input.innerLaneReports, entry.step.id, input.proofTier))
       )
     ),
     A.appendAll(
