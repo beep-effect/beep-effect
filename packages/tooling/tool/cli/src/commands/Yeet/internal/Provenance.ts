@@ -12,7 +12,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Config, Context, DateTime, Effect, FileSystem, Order, Path, pipe, Result } from "effect";
+import { Config, Context, DateTime, Effect, FileSystem, flow, Order, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -870,18 +870,19 @@ export const toPublicPrProvenance: {
 );
 
 const encodePublic = S.encodeUnknownResult(S.fromJsonString(PublicPrProvenance));
-const escapeHtml = (value: string): string =>
-  pipe(
-    value,
-    Str.replaceAll("&", "&amp;"),
-    Str.replaceAll("<", "&lt;"),
-    Str.replaceAll(">", "&gt;"),
-    Str.replaceAll("`", "&#96;"),
-    Str.replaceAll("\r", "&#13;"),
-    Str.replaceAll("\n", "&#10;")
-  );
-const escapeComment = (value: string): string =>
-  pipe(value, Str.replaceAll("&", "\\u0026"), Str.replaceAll("<", "\\u003c"), Str.replaceAll(">", "\\u003e"));
+const escapeHtml: (value: string) => string = flow(
+  Str.replaceAll("&", "&amp;"),
+  Str.replaceAll("<", "&lt;"),
+  Str.replaceAll(">", "&gt;"),
+  Str.replaceAll("`", "&#96;"),
+  Str.replaceAll("\r", "&#13;"),
+  Str.replaceAll("\n", "&#10;")
+);
+const escapeComment: (value: string) => string = flow(
+  Str.replaceAll("&", "\\u0026"),
+  Str.replaceAll("<", "\\u003c"),
+  Str.replaceAll(">", "\\u003e")
+);
 /**
  * Render the only public resume command fence accepted by Yeet.
  *
