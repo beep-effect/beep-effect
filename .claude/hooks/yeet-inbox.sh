@@ -178,7 +178,12 @@ render_context() {
   printf '%s' "$selected" | jq -r "$entry_label"'
     "Fix this now. The checkout has unacknowledged Yeet inbox work:\n" +
     (map("- " + detail) | join("\n")) +
-    "\nAcknowledge each row with `bun run beep yeet inbox ack <id> --fix-sha <sha>`, or use a reasoned wontfix/thread receipt."
+    "\nAcknowledge each row with exactly one form: " +
+    "`bun run beep yeet inbox ack <id> --fix-sha <sha>`; " +
+    "`bun run beep yeet inbox ack <id> --environment-only --reason \"<text>\"`; " +
+    "`bun run beep yeet inbox ack <id> --wontfix --reason \"<text>\"`; " +
+    "`bun run beep yeet inbox ack <id> --thread-url <url>`; or " +
+    "`bun run beep yeet inbox ack <id> --waive --actor <actor> --expires-at <timestamp> --shard <shard> --reason \"<text>\"`."
   '
 }
 

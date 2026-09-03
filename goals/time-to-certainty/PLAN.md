@@ -27,8 +27,11 @@ orchestrator owns schemas, contracts, and judgment.
       rows. Prerequisite for M3, M4, M5 and for the C4 shadow report (economics section G).
 - [ ] B1 package verification through the Turbo graph (upstream builds) or automatic
       environment-only attribution when no package source differs from base.
-- [ ] A4 ack ledger accepts reasons; resolution kinds distinguish fix, wontfix, environment-only.
-- [ ] B2 semantic-delta exempts git-ref-shaped spans (or lints the rule before the proof).
+- [x] A4 ack ledger contract — done 2026-09-03 (PR #966 merged as fe70e27f55): the P0 reminder and
+      the ack command agree, and the resolution vocabulary carries the environment-only kind.
+- [x] B2 semantic-delta git refs — done 2026-09-03 (PR #965 merged as 23f3e34499): spans naming an
+      existing local or remote ref (both `<name>` and `<remote>/<name>` spellings) are no longer
+      classified as broken tracked paths; the ref census parser is tested.
 - [x] B4 remote-read plan resolves only its four references; whole-file env health reported
       separately with the failing variable named — done 2026-09-03 (PR #953 merged as 484e24c2e9:
       the secret resolver receives only the cache quad, unrelated references cannot block remote
