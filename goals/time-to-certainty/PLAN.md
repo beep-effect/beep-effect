@@ -41,8 +41,8 @@ orchestrator owns schemas, contracts, and judgment.
 
 - [x] C1 ProofFact schema — done 2026-09-03 (PR #954 merged as 3e46822475): ProofEnvProfile, ProofStage,
       ProofOutcome, ProofInputSource, ProofEpoch, ProofInputDigest, ProofProvenance, ProofFact,
-      ProofMissReason, hit/miss decisions, fact/shadow ledger rows; migration from `YeetLaneProofState`
-      rides the C4 wiring PR.
+      ProofMissReason, hit/miss decisions, fact/shadow ledger rows. The `YeetLaneProofState`
+      migration is tracked as C4a below.
 - [x] C2 ProofLedger Context.Service — done 2026-09-03 (PR #954): record / recordShadow / lookup /
       expire / disagreements over an append-only per-checkout NDJSON ledger with a tolerant reader,
       key derivation and epoch collection, identity-field verification on lookup, undeclared-input
@@ -56,6 +56,10 @@ orchestrator owns schemas, contracts, and judgment.
       and identical failure rendering must survive), lint-policy (heterogeneous sublanes with
       root-wide inputs; one union glob would recreate a whole-tree hash), labs (three task-hash
       sets rather than one declared action; must keep the PR path gate and zero-labs-is-green).
+- [ ] C4a migrate the existing `YeetLaneProofState` records (command hash plus whole-tree diff
+      fingerprint, in `ProofState.ts` and `.beep/yeet/lane-proofs.json`) into ProofFact rows or
+      retire them with a receipt, so one ledger remains; deferred from C1 (PR #954) and owed
+      before shadow wiring reads either store.
 - [ ] C4 shadow mode with a disagreement report; enforcement between pre-push and merged preview
       only after zero disagreements over a ratified sample; hosted reuse recorded as a separate
       decision.
