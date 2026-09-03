@@ -1,5 +1,8 @@
 # Research friction receipts
 
+## 2026-09-03: admission eviction facts replace inferred deaths
+- V2 now journals claimed lease evictions and CI-ops folds them as releases; the next ontology run consumes the fact instead of inferring it.
+
 ## 2026-08-27: Firecrawl CLI lacks the research subcommand
 
 - **Work:** finding and verifying the papers for the R3 scheduling-formalisms lane through the

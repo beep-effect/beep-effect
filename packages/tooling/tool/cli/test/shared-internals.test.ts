@@ -393,7 +393,7 @@ describe("turboEnvOverrides", () => {
   it("scrubs unresolved references and pins the cache posture on a direct spawn", () => {
     expect(
       overridesFor(
-        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ },
+        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
         "bunx",
         ["turbo", "run", "check"]
       )
@@ -401,6 +401,7 @@ describe("turboEnvOverrides", () => {
       TURBO_UI: "false",
       TURBO_API: undefined,
       TURBO_TOKEN: undefined,
+      TURBO_TEAM: undefined,
       TURBO_CACHE: "local:rw",
     });
   });
@@ -627,7 +628,8 @@ describe("canUseTurboCacheSecretSession", () => {
           const plan = resolveTurboCachePlan(readTurboCacheEnvironment(environment), { args: [], ci: false });
           const usable = yield* canUseTurboCacheSecretSession("/repo/correct-quad", environment);
           const warnings = yield* turboEnvironmentHealthWarnings("/repo/correct-quad", environment);
-          return { plan, usable, warnings };
+          const cachedWarnings = yield* turboEnvironmentHealthWarnings("/repo/correct-quad", environment);
+          return { cachedWarnings, plan, usable, warnings };
         })
       ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
 
@@ -638,6 +640,7 @@ describe("canUseTurboCacheSecretSession", () => {
         })
       );
       expect(result.usable).toBe(true);
+      expect(result.cachedWarnings).toBe(result.warnings);
       expect(turboCachePlanArgs(result.plan)).toEqual(["--cache=local:rw,remote:r"]);
       expect(A.map(result.warnings, (warning) => warning.variableName)).toEqual(["STALE_DATABASE_URL"]);
       const warningText = renderTurboEnvironmentHealthWarning(A.head(result.warnings).pipe(O.getOrThrow));

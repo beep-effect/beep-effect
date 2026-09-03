@@ -4,9 +4,14 @@ import {
   FallowReportOk,
   FallowReportPayload,
   FindingAttributionSummary,
-  GITHUB_CHECK_RUN_REPORT_PREFIX,
+  QualityTaskLaneRun,
+  QualityTaskLaneRunReport,
 } from "@beep/repo-cli/test/Quality";
-import { provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
+import {
+  appendEncodedAttemptJournalEvent,
+  provideRuntimeRootForTesting,
+  RuntimeRootChoice,
+} from "@beep/repo-cli/test/RepoRun";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
   acquireFullProofFallbackLockOrObserveAtPathForTesting,
@@ -14,7 +19,9 @@ import {
   acquireLegacyFullProofLockOrObserveAtPathForTesting,
   appendYeetAttemptJournalEvent,
   assessBaseFreshnessForTesting,
+  attemptEnvProfileForTesting,
   attemptJournalPath,
+  attemptStageForTesting,
   BuildYeetVerdictInput,
   buildQualityIssueIndex,
   buildYeetRunPlanForTesting,
@@ -89,6 +96,7 @@ import {
   validateProofCoordinatorDirectoryForTesting,
   validatePublishBranchForTesting,
   validatePublishCommitMessageForTesting,
+  YeetAttemptJournalEvent,
   YeetAttemptStarted,
   YeetCommandError,
   YeetExecutedStep,
@@ -108,6 +116,7 @@ import {
   yeetRerunJobListingCommand,
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
+import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
@@ -494,6 +503,14 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 });
 
 describe("yeet planner", () => {
+  it("shares ProofFact stage and environment vocabularies with attempt facts", () => {
+    expect(attemptStageForTesting(defaultYeetRunOptions({ mode: "repair" }))).toBe("repair-loop");
+    expect(attemptStageForTesting(defaultYeetRunOptions())).toBe("pre-push");
+    expect(attemptStageForTesting(defaultYeetRunOptions({ merged: true }))).toBe("merged-preview");
+    expect(attemptEnvProfileForTesting(defaultYeetRunOptions())).toBe("local");
+    expect(attemptEnvProfileForTesting(defaultYeetRunOptions({ merged: true }))).toBe("pr-posture");
+  });
+
   it("keeps yeet command error optional context at the command boundary", () => {
     const emptyError = YeetCommandError.new(new Error("cause"), "failed");
     expect(emptyError.command).toBeUndefined();
@@ -2168,14 +2185,32 @@ describe("yeet attempt journal", () => {
       })
     ));
 
-  it("schema-decodes events and retains the newest 50 attempts", () =>
+  it("reports an exhausted attempt-journal lock without appending", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const journalPath = path.join(tmpDir, "attempts.ndjson");
+          yield* fs.writeFileString(`${journalPath}.lock`, `${process.pid}:live-holder`);
+
+          const failure = yield* appendEncodedAttemptJournalEvent(journalPath, "{}", "attempt-started", 1).pipe(
+            Effect.flip
+          );
+
+          expect(failure.message).toContain("stayed busy");
+        })
+      )
+    ));
+
+  it("schema-decodes events, retains 50 rows, and receipts every eviction", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           yield* Effect.forEach(
-            A.makeBy(51, (index) => index),
+            A.makeBy(60, (index) => index),
             (index) =>
               appendYeetAttemptJournalEvent(
                 tempContext,
@@ -2198,8 +2233,117 @@ describe("yeet attempt journal", () => {
           const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
 
           expect(events).toHaveLength(50);
-          expect(events[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
-          expect(events[49]?.attemptId).toBe("00000000-0000-4000-8000-000000000050");
+          const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
+          const receipts = A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"]);
+          expect(starts).toHaveLength(49);
+          expect(starts[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000011");
+          expect(starts[48]?.attemptId).toBe("00000000-0000-4000-8000-000000000059");
+          expect(receipts).toHaveLength(1);
+          expect(receipts[0]).toMatchObject({
+            evictedCount: 2,
+            oldestEvictedRecordedAt: "2026-08-04T00:00:00.000Z",
+          });
+        })
+      )
+    ));
+
+  it("compacts mixed legacy and current event shapes through the same bounded journal", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repoRoot = yield* findRepoRoot();
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const fixtureRoot = path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures");
+          const fixtureLines = pipe(
+            yield* Effect.forEach(
+              ["yeet-attempt-journal-legacy.ndjson", "yeet-attempt-journal-current.ndjson"],
+              (name) =>
+                fs
+                  .readFileString(path.join(fixtureRoot, name))
+                  .pipe(Effect.map((text) => pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty))))
+            ),
+            A.flatten
+          );
+          const seededLines = pipe(
+            A.makeBy(15, () => fixtureLines),
+            A.flatten
+          );
+          yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
+          yield* fs.writeFileString(journalPath, `${A.join(seededLines, "\n")}\n`);
+
+          yield* appendYeetAttemptJournalEvent(
+            tempContext,
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId: attemptUuid("00000000-0000-4000-8000-000000000099"),
+              runId: "post-compaction",
+              branch: "post-compaction",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "verify",
+              startedAt: "2026-09-03T00:00:03.000Z",
+            })
+          );
+
+          const events = yield* Effect.forEach(
+            pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+            (line) => decodeYeetAttemptJournalEvent(line)
+          );
+          expect(events).toHaveLength(50);
+          expect(A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(1);
+          expect(A.some(events, YeetAttemptJournalEvent.guards["attempt-finished"])).toBe(true);
+          expect(A.some(events, YeetAttemptJournalEvent.guards["attempt-terminated"])).toBe(true);
+        })
+      )
+    ));
+
+  it("serializes concurrent appenders while compacting the bounded journal", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+          const attemptStarted = (index: number) =>
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+              runId: "repo-cli-yeet",
+              branch: "repo-cli-yeet",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "verify",
+              startedAt: "2026-09-03T00:00:00.000Z",
+            });
+          yield* Effect.forEach(
+            A.makeBy(50, attemptStarted),
+            (event) => appendYeetAttemptJournalEvent(tempContext, event),
+            {
+              discard: true,
+              concurrency: 1,
+            }
+          );
+          const concurrent = A.makeBy(10, (offset) => attemptStarted(100 + offset));
+          yield* Effect.forEach(concurrent, (event) => appendYeetAttemptJournalEvent(tempContext, event), {
+            discard: true,
+            concurrency: "unbounded",
+          });
+
+          const journalPath = yield* attemptJournalPath(tempContext);
+          const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+          const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+          const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
+          const retainedIds = A.map(starts, (event) => event.attemptId);
+
+          expect(events).toHaveLength(50);
+          expect(starts).toHaveLength(49);
+          expect(A.length(A.dedupe(retainedIds))).toBe(49);
+          expect(A.every(concurrent, (event) => A.contains(retainedIds, event.attemptId))).toBe(true);
+          expect(yield* fs.exists(`${journalPath}.lock`)).toBe(false);
         })
       )
     ));
@@ -2233,10 +2377,61 @@ describe("yeet attempt journal", () => {
           const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
           const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
 
-          expect(events).toHaveLength(1);
-          expect(events[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
+          expect(events).toHaveLength(2);
+          const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
+          expect(starts[0]?.attemptId).toBe("00000000-0000-4000-8000-000000000001");
+          expect(starts[1]?.attemptId).toBe("00000000-0000-4000-8000-000000000002");
         })
       )
+    ));
+
+  it("decodes every fixture row and every live worktree attempt row", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const fixtureRoot = path.join(repoRoot, "packages/tooling/tool/cli/test/fixtures");
+        const fixturePaths = pipe(
+          yield* fs.readDirectory(fixtureRoot),
+          A.filter((name) => Str.startsWith("yeet-attempt-journal-")(name) && Str.endsWith(".ndjson")(name)),
+          A.map((name) => path.join(fixtureRoot, name))
+        );
+        const liveRoot = path.join(repoRoot, ".beep/yeet/runs");
+        const livePaths = (yield* fs.exists(liveRoot))
+          ? pipe(
+              yield* fs.readDirectory(liveRoot, { recursive: true }),
+              A.filter(Str.endsWith("attempts.ndjson")),
+              A.map((name) => path.join(liveRoot, name))
+            )
+          : A.empty<string>();
+        const journalPaths = A.appendAll(fixturePaths, livePaths);
+        expect(A.length(fixturePaths)).toBeGreaterThanOrEqual(2);
+        const decoded = yield* Effect.forEach(
+          journalPaths,
+          Effect.fnUntraced(function* (journalPath) {
+            const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            return yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+          })
+        );
+        const events = A.flatten(decoded);
+        const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
+        const legacy = pipe(
+          starts,
+          A.findFirst((event) => event.runId === "legacy-run"),
+          O.getOrThrow
+        );
+        const current = pipe(
+          starts,
+          A.findFirst((event) => event.runId === "current-run"),
+          O.getOrThrow
+        );
+        expect(legacy.resolvedHeadSha).toStrictEqual(O.none());
+        expect(legacy.diffFingerprint).toStrictEqual(O.none());
+        expect(legacy.proofTier).toStrictEqual(O.none());
+        expect(current.resolvedHeadSha).toStrictEqual(O.some("0123456789abcdef0123456789abcdef01234567"));
+        expect(current.proofTier).toStrictEqual(O.some("full"));
+      }).pipe(provideScopedLayer(PlatformLayer))
     ));
 });
 
@@ -2493,9 +2688,29 @@ describe("yeet publish scope helpers", () => {
               stepId: proofStep.id,
               commandText: "bun run beep quality github-checks pre-push",
               exitCode: 1,
-              output: `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"pre-push:secrets","stage":"diff-security","status":"passed","wave":"preflight"}]}\n[beep-cli] lint:typos: typos\nerror: misspelling found\n${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[{"id":"quality:lint","stage":"repo-quality","status":"failed","wave":"heavy"},{"id":"quality:docgen","stage":"repo-quality","status":"not-run-early-stop","wave":"documentation"}]}`,
+              output: "[beep-cli] lint:typos: typos\nerror: misspelling found",
             }),
             step: proofStep,
+          }),
+        ],
+        innerLaneReports: [
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.some(proofStep.id),
+            lanes: [
+              QualityTaskLaneRun.make({
+                id: "quality:lint",
+                label: "quality:lint",
+                status: "failed",
+                inputDigest: O.none(),
+              }),
+              QualityTaskLaneRun.make({
+                id: "quality:docgen",
+                label: "quality:docgen",
+                status: "not-run-early-stop",
+                inputDigest: O.none(),
+              }),
+            ],
           }),
         ],
         head: "HEAD",
@@ -2580,6 +2795,76 @@ describe("yeet publish scope helpers", () => {
         expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
       })
     ));
+
+  it("projects durable wrapper lane facts without parsing bounded output or guessing a digest", () => {
+    const wrapper = RepoPlanStep.make({
+      id: "full:ci-parity",
+      label: "full:ci-parity",
+      phase: "full",
+      command: "bun",
+      args: ["run", "beep", "ci", "local"],
+      cwd: "/repo",
+      scope: "repo",
+      mutability: "readonly",
+      resume: "never",
+    });
+    const report = QualityTaskLaneRunReport.make({
+      schemaVersion: "quality-task-lane-run/v1",
+      parentLaneId: O.some(wrapper.id),
+      lanes: [
+        QualityTaskLaneRun.make({
+          id: "check",
+          label: "ci:check",
+          status: "passed",
+          startedAt: O.some("2026-09-03T00:00:00.000Z"),
+          endedAt: O.some("2026-09-03T00:00:01.000Z"),
+          durationMs: O.some(1000),
+          exitCode: O.some(0),
+          inputDigest: O.none(),
+        }),
+      ],
+    });
+    const verdict = buildYeetVerdictForTesting(
+      BuildYeetVerdictInput.make({
+        base: "origin/main",
+        branch: "feature",
+        createdAt: "2026-09-03T00:00:01.000Z",
+        executed: [
+          YeetExecutedStep.make({
+            result: RepoStepRunResult.make({
+              stepId: wrapper.id,
+              commandText: "bun run beep ci local",
+              exitCode: 0,
+              output: "[beep-quality-task-lane-run] {truncated",
+            }),
+            step: wrapper,
+          }),
+        ],
+        innerLaneReports: [report],
+        head: "0123456789abcdef0123456789abcdef01234567",
+        message: "yeet verify succeeded.",
+        mode: "verify",
+        outcome: "success",
+        packetPaths: [],
+        planned: [wrapper],
+        proofTier: O.some("full"),
+        runId: "feature",
+      })
+    );
+
+    expect(verdict.lanes[1]).toMatchObject({
+      id: "check",
+      label: "ci:check",
+      phase: "full",
+      status: "passed",
+      durationMs: 1000,
+      exitCode: 0,
+    });
+    expect(verdict.lanes[1]?.tier).toStrictEqual(O.some("full"));
+    expect(verdict.lanes[1]?.startedAt).toStrictEqual(O.some("2026-09-03T00:00:00.000Z"));
+    expect(verdict.lanes[1]?.endedAt).toStrictEqual(O.some("2026-09-03T00:00:01.000Z"));
+    expect(verdict.lanes[1]?.inputDigest).toStrictEqual(O.none());
+  });
 
   it("keeps pushed false when only the publish-phase install preflight succeeded", () => {
     const preflightStep = RepoPlanStep.make({

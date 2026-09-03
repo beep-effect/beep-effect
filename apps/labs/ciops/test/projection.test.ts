@@ -41,6 +41,7 @@ import type { AdmissionPolicyParams, AdmissionWorkKind } from "@beep/ciops/proje
 const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 const journalPath =
   "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/snapshot/raw/journal.ndjson";
+const evictionFixturePath = "test/fixtures/admission-journal-v2-eviction.ndjson";
 
 const readPolicy = Effect.fn("CiOpsProjectionTest.readPolicy")(function* (): Effect.fn.Return<
   AdmissionPolicyParams,
@@ -292,6 +293,24 @@ describe("@beep/ciops S7 projection", () => {
       expect(report.evictions[0]?.evictedNonce.startsWith("1813f29f")).toBe(true);
       expect(report.evictions[0]?.weightTokens).toBe(5);
       expect(report.evictions[0]?.eventIndex).toBe(66);
+    }).pipe(provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect("decodes a v2 lease eviction fixture and folds it as a release", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const policy = yield* readPolicy();
+      const source = yield* fs
+        .readFileString(evictionFixturePath)
+        .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Unable to read the eviction fixture." })));
+      const events = yield* decodeAdmissionJournal(source);
+      const report = yield* replayAdmissionJournal(policy, events, "fixture-policy", "fixture-journal");
+
+      expect(A.map(events, (event) => event._tag)).toStrictEqual(["admission-admitted", "admission-lease-evicted"]);
+      expect(report.eventCount).toBe(2);
+      expect(report.admittedCount).toBe(1);
+      expect(report.releasedCount).toBe(1);
+      expect(report.passed).toBe(true);
     }).pipe(provideScopedLayer(BunFileSystem.layer))
   );
 
