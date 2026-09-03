@@ -79,6 +79,25 @@ describe("quality tsgo plugin profiles", () => {
     ).toEqual([]);
   });
 
+  it("accepts a separately parsed structural copy of the root profile", () => {
+    const parsedCopy = {
+      name: "@effect/language-service",
+      effectFn: ["span"],
+      diagnosticSeverity: {
+        missedPipeableOpportunity: "error",
+        missingPipeableSignature: "error",
+        correctnessRule: "error",
+      },
+    };
+
+    expect(
+      collectTsgoPluginProfileDiagnosticsForTesting({
+        basePlugin: BasePlugin,
+        configs: [["apps/example/tsconfig.json", configWithPlugins([parsedCopy])]],
+      })
+    ).toEqual([]);
+  });
+
   it("rejects a stale local profile copy", () => {
     expect(
       collectTsgoPluginProfileDiagnosticsForTesting({
@@ -113,6 +132,19 @@ describe("quality tsgo inheritance", () => {
     ).toEqual([]);
   });
 
+  it("accepts array-valued inheritance when one branch reaches the base profile", () => {
+    expect(
+      collectTsconfigInheritanceDiagnosticsForTesting([
+        ["tsconfig.base.json", {}],
+        ["tsconfig.json", { extends: "./tsconfig.base.json" }],
+        [
+          "packages/shared/example/tsconfig.json",
+          { extends: ["../../../tsconfig.external.json", "../../../tsconfig.json"] },
+        ],
+      ])
+    ).toEqual([]);
+  });
+
   it("rejects an extends chain with a missing base config", () => {
     expect(
       collectTsconfigInheritanceDiagnosticsForTesting([
@@ -136,6 +168,7 @@ describe("quality tsgo inheritance", () => {
     expect(
       collectTsconfigInheritanceDiagnosticsForTesting([
         ["packages/tooling/example/test/fixtures/project/tsconfig.json", {}],
+        ["packages/shared/example/docs/examples/tsconfig.json", {}],
         ["infra/lambda/turbo-cache/tsconfig.json", {}],
         ["infra/ci-runners/sdks/ghaRunners/tsconfig.json", {}],
       ])
