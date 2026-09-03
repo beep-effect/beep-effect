@@ -300,6 +300,11 @@ const enumChecks = (
     return [check(`${model.sql.tableName}_${snakeCase(key)}_enum_check`, sql`${column} in (${values})`)];
   });
 
+type TableProjectionOptions<M extends AnyModel> = {
+  readonly additionalExtras?: AdditionalExtras<M>;
+  readonly model: M;
+};
+
 /**
  * Projects one model class into a real, fully typed Drizzle SQLite table.
  *
@@ -334,19 +339,22 @@ const enumChecks = (
  * @category tables
  * @since 0.0.0
  */
-type TableProjectionOptions<M extends AnyModel> = {
-  readonly additionalExtras?: AdditionalExtras<M>;
-  readonly model: M;
-};
-
 export function toSqliteTable<M extends AnyModel>(model: M): TableOf<M>;
 export function toSqliteTable(model: AnyModel): unknown {
   return toSqliteTableWithOptions({ model });
 }
 
-/** @internal */
+/**
+ * @internal
+ * @category tables
+ * @since 0.0.0
+ */
 export function toSqliteTableWithOptions<M extends AnyModel>(options: TableProjectionOptions<M>): TableOf<M>;
-/** @internal */
+/**
+ * @internal
+ * @category tables
+ * @since 0.0.0
+ */
 export function toSqliteTableWithOptions(options: TableProjectionOptions<AnyModel>): unknown {
   const { additionalExtras, model } = options;
   const builders = reduce(

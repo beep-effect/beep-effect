@@ -146,31 +146,6 @@ export const FieldOnly = factory.FieldOnly;
  */
 export const FieldExcept = factory.FieldExcept;
 
-/**
- * Evolves selected variant schemas while leaving other variants unchanged.
- *
- * **When to use**
- *
- * Use to refine one or more members of an existing variant field without
- * rebuilding its complete membership map.
- *
- * **Example** (Evolve one member)
- *
- * ```ts
- * import { NullOr, String } from "effect/Schema"
- * import { VariantField, fieldEvolve } from
- *   "@beep/effect-drizzle"
- *
- * const field = VariantField({ select: String, update: String }).pipe(
- *   fieldEvolve({ update: NullOr })
- * )
- *
- * field.schemas.update // => NullOr(String)
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
 // biome-ignore lint/suspicious/noExplicitAny: Effect uses Field<any> as its invariant variant-field existential.
 type FieldEvolveInput = VariantSchema.Field<any> | Top;
 
@@ -197,6 +172,31 @@ type EvolvedField<Self extends FieldEvolveInput, Mapping extends FieldEvolveMapp
       }
 >;
 
+/**
+ * Evolves selected variant schemas while leaving other variants unchanged.
+ *
+ * **When to use**
+ *
+ * Use to refine one or more members of an existing variant field without
+ * rebuilding its complete membership map.
+ *
+ * **Example** (Evolve one member)
+ *
+ * ```ts
+ * import { NullOr, String } from "effect/Schema"
+ * import { VariantField, fieldEvolve } from
+ *   "@beep/effect-drizzle"
+ *
+ * const field = VariantField({ select: String, update: String }).pipe(
+ *   fieldEvolve({ update: NullOr })
+ * )
+ *
+ * field.schemas.update // => NullOr(String)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
 export const fieldEvolve: {
   <Self extends FieldEvolveInput, const Mapping extends FieldEvolveMapping<Self>>(
     f: Mapping

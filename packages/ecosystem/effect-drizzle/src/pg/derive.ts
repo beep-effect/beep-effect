@@ -183,6 +183,8 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   return schema;
 };
 
+type Classified = { readonly column: PgColumn.Spec; readonly nullable: boolean };
+
 /**
  * Derive `{ column, nullable }` for a field input from its encoded AST.
  * Explicit metadata should be consulted first; this is the bare-schema path
@@ -192,8 +194,6 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * @category getters
  * @since 0.0.0
  */
-type Classified = { readonly column: PgColumn.Spec; readonly nullable: boolean };
-
 export const classify: {
   (fieldName: string): (schema: Field.AnySchema) => Classified;
   (schema: Field.AnySchema, fieldName: string): Classified;

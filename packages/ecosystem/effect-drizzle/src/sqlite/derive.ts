@@ -147,6 +147,8 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
   return schema;
 };
 
+type Classified = { readonly column: SqliteColumn.Spec; readonly nullable: boolean };
+
 /**
  * Derive one SQLite descriptor and its encoded nullability.
  *
@@ -154,8 +156,6 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * @category models
  * @since 0.0.0
  */
-type Classified = { readonly column: SqliteColumn.Spec; readonly nullable: boolean };
-
 export const classify: {
   (fieldName: string): (schema: Field.AnySchema) => Classified;
   (schema: Field.AnySchema, fieldName: string): Classified;

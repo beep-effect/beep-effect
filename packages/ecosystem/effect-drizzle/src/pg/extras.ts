@@ -611,6 +611,8 @@ export const compositePrimaryKey: {
     Nodes.compositePrimaryKey({ name: validateName(name), columns })
 );
 
+type IndexOptions = { readonly using?: PgIndexMethod; readonly where?: SQL<boolean> };
+
 /**
  * Constructs a PostgreSQL index with an optional method and predicate.
  *
@@ -643,8 +645,6 @@ export const compositePrimaryKey: {
  * @category constructors
  * @since 0.0.0
  */
-type IndexOptions = { readonly using?: PgIndexMethod; readonly where?: SQL<boolean> };
-
 export const index: {
   <const Columns extends NonEmptyColumns>(
     columns: Columns & ValidateDistinctColumns<Columns>,
@@ -667,6 +667,8 @@ export const index: {
       where: options?.where,
     })
 );
+
+type UniqueIndexOptions = { readonly where?: SQL<boolean> };
 
 /**
  * Constructs a named unique index over one or more columns.
@@ -692,8 +694,6 @@ export const index: {
  * @category constructors
  * @since 0.0.0
  */
-type UniqueIndexOptions = { readonly where?: SQL<boolean> };
-
 export const uniqueIndex: {
   <const Columns extends NonEmptyColumns>(
     columns: Columns & ValidateDistinctColumns<Columns>,

@@ -451,6 +451,8 @@ export const compositePrimaryKey: {
   (name: string, columns: CompositeColumns): CompositePrimaryKey =>
     Nodes.compositePrimaryKey({ name: validateName(name), columns })
 );
+type IndexOptions = { readonly where?: SQL<boolean> };
+
 /**
  * Constructs a SQLite index with an optional partial-index predicate.
  *
@@ -476,8 +478,6 @@ export const compositePrimaryKey: {
  * @category constructors
  * @since 0.0.0
  */
-type IndexOptions = { readonly where?: SQL<boolean> };
-
 export const index: {
   <const Columns extends NonEmptyColumns>(
     columns: Columns & ValidateDistinctColumns<Columns>,
@@ -495,6 +495,8 @@ export const index: {
   (name: string, columns: NonEmptyColumns, options?: IndexOptions): Index =>
     Nodes.index({ name: validateName(name), columns, where: options?.where })
 );
+
+type UniqueIndexOptions = { readonly where?: SQL<boolean> };
 
 /**
  * Constructs a named unique index over one or more SQLite columns.
@@ -520,8 +522,6 @@ export const index: {
  * @category constructors
  * @since 0.0.0
  */
-type UniqueIndexOptions = { readonly where?: SQL<boolean> };
-
 export const uniqueIndex: {
   <const Columns extends NonEmptyColumns>(
     columns: Columns & ValidateDistinctColumns<Columns>,

@@ -44,6 +44,8 @@ const stringLiteralsFromAST = (
   return none();
 };
 
+type SchemaSelector = (schema: Field.AnySchema) => { readonly ast: AST };
+
 /**
  * Collect a finite non-empty encoded string-literal union for a dialect adapter.
  *
@@ -51,8 +53,6 @@ const stringLiteralsFromAST = (
  * @category getters
  * @since 0.0.0
  */
-type SchemaSelector = (schema: Field.AnySchema) => { readonly ast: AST };
-
 export const stringLiteralValues: {
   (selectSchemaOf: SchemaSelector): (schema: Field.AnySchema) => Option<readonly [string, ...string[]]>;
   (schema: Field.AnySchema, selectSchemaOf: SchemaSelector): Option<readonly [string, ...string[]]>;
