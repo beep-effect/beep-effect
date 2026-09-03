@@ -1,0 +1,28 @@
+id: "dh:pa-workspace-package:001"
+observation_refs:
+  - "po:sha256:08a398bab03363136254e3e9c3ed49ebb16ffd18fb94b434111d4446cdf50d69"
+  - "po:sha256:1189ec1eca4fb79695201186157334124e71372bbe906bb6119996f42b9fe842"
+  - "po:sha256:13b29fc0bebcac4b0914db214f136add0fa739ac50af65649c800b7013ccb67a"
+  - "po:sha256:1c941c2e1e41a932dfd00e48631a9dd6217c6e51fe9c681369139a8c0402ea84"
+  - "po:sha256:28e700021c9b4ba707087650a4e39ceed6540863e4d99b02af241b2b0fdbcaf8"
+  - "po:sha256:2f816bb5f468d1cc4a06de84c4a9bb8e4c9393a070c41e364f53d951cbf172e1"
+  - "po:sha256:51a827390306ccb0cf37e23d646c653fd4291f3ed346ae04e097e678a5097781"
+cq_warrants: ["CQ-004"]
+proposed_referent:
+  label: "Workspace package artifact"
+  description: "A versioned @beep workspace package that participates as a vertex in the repository dependency topology."
+representation_status: domain_referent
+alternatives:
+  - label: "Workspace package reference"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Topological-sort row"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The observations identify concrete repository artifacts that participate in ordering and workspace dependency relations required by the package-closure decision."
+  discriminator: "Several concrete @beep package names occur as vertices in a pinned topological ordering, and a package-manifest observation records a workspace dependency on @beep/identity."
+epistemic_status: proposed
+confidence: {value: 0.84, use_for_acceptance: false}

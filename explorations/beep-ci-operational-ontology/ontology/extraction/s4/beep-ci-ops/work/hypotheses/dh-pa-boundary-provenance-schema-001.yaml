@@ -1,0 +1,25 @@
+id: "dh:pa-boundary-provenance-schema:001"
+observation_refs:
+  - "po:sha256:2928ea98736b22a91fa01c6a7ea1da53528a69fb97bca710e3b47d5d8f41f870"
+  - "po:sha256:2f9ef8d6e80c52201ddaa889c48640d0defd49902d53c28dc5ecf331462609a2"
+  - "po:sha256:38891f55c44cf3045cd6625fb9da228941fb75d9ce85e80a033aa94381dc034a"
+  - "po:sha256:531a03f9b09634893599c361a8a313d76a5330c360e1b2a3779b8644380dfb2d"
+cq_warrants: ["CQ-005"]
+proposed_referent:
+  label: "Fallow boundary-provenance schema vocabulary"
+  description: "Implementation keys and enum members used to validate the provenance and configuration of boundary rules."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "Verification-evidence provenance classification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Boundary-rule source categories"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "Schema keys, an enum, and a numeric configuration value do not show that these implementation distinctions are needed in the operational ontology."
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.17, use_for_acceptance: false}

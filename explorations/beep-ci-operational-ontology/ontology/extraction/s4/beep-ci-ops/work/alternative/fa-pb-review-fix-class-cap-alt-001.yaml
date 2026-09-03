@@ -1,0 +1,19 @@
+id: fa:pb-review-fix-class-cap-alt:001
+hypothesis_ref: dh:pb-review-fix-class-cap:001
+identity_card_ref: ic:pb-review-fix-class-cap-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: situation of the active review-fix count meeting the cap
+  still_viable: true
+- label: boolean scheduler branch with no normative content
+  still_viable: false
+strongest_counterexample: The contract names reviewFixClassCap as an admission condition,
+  which is a norm. The code comparison is how the norm is applied. Situation-at-cap remains
+  viable as the world-side of the same fact.
+verdict: analyzed
+needed_evidence: An observation that the cap is versioned and cited as policy independently
+  of any blocked admission, versus only the blocked-at-cap situation being talked about.

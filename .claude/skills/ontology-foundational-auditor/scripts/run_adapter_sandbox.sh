@@ -87,6 +87,13 @@ common=(
   --chdir /repo
 )
 
+# RLIMIT_NPROC is charged against the invoking UID's task count across the whole
+# host, so applying it outside the sandbox makes bwrap's clone fail with EAGAIN on
+# any busy desktop session (thousands of tasks > 64). The limits therefore wrap the
+# adapter INSIDE the fresh user namespace, where the per-user task count restarts
+# at the sandbox's own processes and every bound is enforced as intended.
+resource_limits=(/usr/bin/prlimit --cpu=120 --as=2147483648 --fsize=268435456 --nproc=64 --nofile=256 --)
+
 case "${mode}" in
   self-check)
     golden="$(realpath -- "${target_input}")"
@@ -97,7 +104,7 @@ case "${mode}" in
         exit 65
         ;;
     esac
-    sandbox_args=("${common[@]}" --ro-bind "${golden}" /golden /usr/bin/python3 /adapter.py --self-check /golden)
+    sandbox_args=("${common[@]}" --ro-bind "${golden}" /golden "${resource_limits[@]}" /usr/bin/python3 /adapter.py --self-check /golden)
     ;;
   observe)
     output_lexical="$(realpath -ms -- "${target_input}")"
@@ -133,15 +140,9 @@ case "${mode}" in
         exit 65
         ;;
     esac
-    sandbox_args=("${common[@]}" --bind "${output}" /out /usr/bin/python3 /adapter.py --repo /repo --out /out)
+    sandbox_args=("${common[@]}" --bind "${output}" /out "${resource_limits[@]}" /usr/bin/python3 /adapter.py --repo /repo --out /out)
     ;;
   *) usage ;;
 esac
 
-exec prlimit \
-  --cpu=120 \
-  --as=2147483648 \
-  --fsize=268435456 \
-  --nproc=64 \
-  --nofile=256 \
-  -- bwrap "${sandbox_args[@]}"
+exec bwrap "${sandbox_args[@]}"

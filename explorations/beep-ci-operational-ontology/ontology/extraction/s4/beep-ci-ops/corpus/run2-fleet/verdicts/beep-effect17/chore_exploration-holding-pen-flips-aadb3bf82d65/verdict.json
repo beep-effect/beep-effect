@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/exploration-holding-pen-flips",
+  "committed": false,
+  "createdAt": "2026-08-13T19:16:20.590Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_exploration-holding-pen-flips-aadb3bf82d65",
+  "attemptId": "ed050353-d6b6-4102-8cd0-ab7dedf873a3",
+  "startedAt": "2026-08-13T19:16:17.819Z",
+  "endedAt": "2026-08-13T19:16:20.590Z",
+  "elapsedMs": 2771,
+  "indexPath": "<fleet>/beep-effect17/.beep/yeet/quality-issue-index.json"
+}

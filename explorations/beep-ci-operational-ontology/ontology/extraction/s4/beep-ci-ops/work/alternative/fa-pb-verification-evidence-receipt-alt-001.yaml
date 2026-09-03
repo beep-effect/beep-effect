@@ -1,0 +1,19 @@
+id: fa:pb-verification-evidence-receipt-alt:001
+hypothesis_ref: dh:pb-verification-evidence-receipt:001
+identity_card_ref: ic:pb-verification-evidence-receipt-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: the successful verification occurrence
+  still_viable: false
+- label: generated Markdown report with no custody or gate role
+  still_viable: false
+strongest_counterexample: Digest-locked read-only inputs used in packet gates are the discriminator
+  against an incidental report. The occurrence rival is weak because a mismatch census is
+  still a receipt.
+verdict: analyzed
+needed_evidence: None required to hold information_object; a rival would need an observation
+  that only the replay event, not the retained bytes, is what gates consume.

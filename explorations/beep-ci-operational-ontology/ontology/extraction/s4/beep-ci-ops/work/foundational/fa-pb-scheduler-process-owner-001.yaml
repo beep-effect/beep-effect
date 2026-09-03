@@ -1,0 +1,21 @@
+id: "fa:pb-scheduler-process-owner:001"
+hypothesis_ref: "dh:pb-scheduler-process-owner:001"
+identity_card_ref: "ic:pb-scheduler-process-owner:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "A separate rigid OSProcess class supplies identity to the anti-rigid Agent role."
+    still_viable: true
+  - label: "The serialized pid-and-procStart tuple is a distinct owner-coordinate information object."
+    still_viable: true
+  - label: "Agent is identical with the causally continuous operating-system process that bears admission ownership."
+    still_viable: false
+  - label: "Each owned request or grant creates a separate Agent role token even while one process owns several items."
+    still_viable: false
+  - label: "Agent is a durable coding agent that remains one individual across unrelated operating-system process lifetimes."
+    still_viable: false
+strongest_counterexample: "A process stays the same process before it owns an admission item and after ownership ends, while it can own several items during one interval; Agent therefore carries process identity as an anti-rigid owner role and is neither the bearer itself nor one token per item."
+verdict: analyzed

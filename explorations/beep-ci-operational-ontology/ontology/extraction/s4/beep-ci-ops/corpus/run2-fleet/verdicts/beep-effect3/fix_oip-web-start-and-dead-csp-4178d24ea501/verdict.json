@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "fix/oip-web-start-and-dead-csp",
+  "committed": false,
+  "createdAt": "2026-07-17T19:20:22.637Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 4251.735956,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 1679.126719,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 386.810061,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 611.14813,
+      "exitCode": 1,
+      "repairCommand": "gh pr checks --watch"
+    }
+  ],
+  "message": "yeet publish monitor phase failed.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "fix_oip-web-start-and-dead-csp-4178d24ea501",
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "72c73cf0af4782c9542d5684352cd44913bc5a19",
+    "overlappingPaths": []
+  }
+}

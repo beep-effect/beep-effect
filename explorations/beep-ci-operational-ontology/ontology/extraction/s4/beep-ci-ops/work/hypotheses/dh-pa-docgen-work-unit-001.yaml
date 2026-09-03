@@ -1,0 +1,23 @@
+id: "dh:pa-docgen-work-unit:001"
+observation_refs:
+  - "po:sha256:2f4a9d86f9018ff3add768e859f83488c2df28a9d004ef9b3e580f4c9a358668"
+  - "po:sha256:39654605207ddc525fd7a94dc32f91540979a9a0605500594d3b95445ed2dd80"
+cq_warrants: ["CQ-001", "CQ-002", "CQ-017"]
+proposed_referent:
+  label: "Docgen verification work-unit specification"
+  description: "A repeatable documentation-verification procedure whose local form is bounded to edit loops and whose full form supplies repo-wide proof."
+representation_status: information_artifact
+alternatives:
+  - label: "Docgen verification execution"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Repository command alias"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The repository law gives the two commands different verification scopes, supporting reusable work specifications rather than undifferentiated command spellings."
+  discriminator: "One observation assigns docgen:local to bounded edit loops while the other reserves full docgen for repo-wide proof, so the distinction governs verification scope."
+epistemic_status: proposed
+confidence: {value: 0.78, use_for_acceptance: false}

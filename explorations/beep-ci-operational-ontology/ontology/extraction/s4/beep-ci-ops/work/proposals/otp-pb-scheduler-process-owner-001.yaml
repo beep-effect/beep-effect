@@ -1,0 +1,74 @@
+id: "otp:pb-scheduler-process-owner:001"
+hypothesis_ref: "dh:pb-scheduler-process-owner:001"
+identity_card_ref: "ic:pb-scheduler-process-owner:001"
+foundational_status: analyzed
+term:
+  preferred_label: "agent"
+  local_name: Agent
+  proposed_iri: "https://oip.law/ontology/ci-ops#Agent"
+  owl_entity_kind: class
+definition:
+  text: >-
+    An admission-owner role borne by one causally continuous operating-system
+    process while that process owns a queued SeatRequest or active SeatGrant.
+    PID and process-start coordinates are reidentification evidence for the
+    bearer; the role can cover changing owned items without being identical to
+    that process or minting one Agent per item.
+  source:
+    - "CQ-021"
+    - "po:sha256:5f469b32b1a76b6af2b9ebbed7334996404ec4029d63bca140ebd2a796e0ba87"
+    - "po:sha256:7debc0657f601d5714b767d284e75c22c236b1da704789e970affedec30e3a1b"
+foundational:
+  ufo_category: role
+  gufo_alignment: "gufo:Role"
+ontoclean:
+  rigidity: anti_rigid
+  identity: carries
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "5803d7152b0f97919960b92f9384f8e73c40b1ca6e399a616b69a76fe5a654e6"
+    addressed:
+      - "role-token-bearer-identity-conflict"
+    disposition: >-
+      Run-2 sitting 1 restored Agent to the continuing process bearer required
+      by CQ-021; ownership changes no longer mint a new Agent individual.
+  - from_sha256: "19a78396be96c0b0d5db9420d25417e11daee04b17bc8b8f4ad0c46384ce9c64"
+    addressed:
+      - "role-bearer-collapse-on-exact-reuse"
+    disposition: >-
+      Round 3 restores the ratified anti-rigid Agent extension: Agent is the
+      admission-owner role, carries identity from its causally continuous
+      process bearer, and is neither that rigid process nor one role token per
+      owned item.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#Agent"
+      compatibility: >-
+        The ratified Agent class is the admission-owner role borne by a
+        causally continuous process. Process continuity reidentifies its bearer
+        while ownership participation supplies the anti-rigid role condition;
+        neither warrants redefining Agent as the process itself.
+operational_warrant:
+  competency_questions: ["CQ-021"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The operating-system process is rejected as identical with Agent because it
+    can exist before and after bearing the admission-owner role.
+  - >-
+    The pid-and-process-start tuple is rejected as the owner because it is a
+    serialized coordinate for a bearer, not the bearer or its role.
+open_issues:
+  - >-
+    A separately named rigid OSProcess class remains viable as the identity-
+    supplying bearer of Agent; this proposal exact-reuses only the ratified
+    anti-rigid role.
+  - >-
+    A separately named owner-coordinate information object remains viable if
+    tuple provenance becomes decision-bearing.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

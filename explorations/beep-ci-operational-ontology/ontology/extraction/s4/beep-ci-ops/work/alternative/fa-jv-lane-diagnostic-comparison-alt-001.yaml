@@ -1,0 +1,20 @@
+id: fa:jv-lane-diagnostic-comparison-alt:001
+hypothesis_ref: dh:jv-lane-diagnostic-comparison:001
+identity_card_ref: ic:jv-lane-diagnostic-comparison-alt:001
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+- label: verification-lane performance anomaly occurrence
+  still_viable: true
+- label: compiler-policy diagnostic telemetry with no comparison referent
+  still_viable: false
+strongest_counterexample: A single attempts.properties fragment carries both durations, the
+  detection instant, and the policy name; nothing shows a comparison artifact that is distinct
+  from that journal row, so record versus anomaly-event remain observationally equivalent.
+verdict: analyzed
+needed_evidence: An observation of the comparison being retained, cited, or replayed as evidence
+  independently of the attempt journal row, or of an operational response to 'the anomaly'
+  rather than to the two duration numbers.

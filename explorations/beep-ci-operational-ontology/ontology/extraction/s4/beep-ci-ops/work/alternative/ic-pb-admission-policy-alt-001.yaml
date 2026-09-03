@@ -1,0 +1,33 @@
+id: ic:pb-admission-policy-alt:001
+hypothesis_ref: dh:pb-admission-policy:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two admission policies are the same iff they prescribe the same ordering
+    and admissibility rules (capacity inequality, publish-before-verify with aging, review-fix
+    class cap, starvation bound) for pending requests. AdmissionConfig and admittedAtMillis
+    are representations of parameter values and of a decision instant, not the policy. A single
+    admission occurrence is not the policy.
+  reidentification_key:
+  - AdmissionPolicyParams / AdmissionConfig (evidence of encoding)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one normative bundle of admission ordering and admissibility rules
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - none
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: 'optional config?: AdmissionConfig is an implementation object; if that were
+    the policy, absent config would mean no policy, contradicting the contract''s binding
+    semantics.'
+- description: admittedAtMillis timestamps a decision; treating it as the policy would merge
+    specification and execution.
+status: proposed

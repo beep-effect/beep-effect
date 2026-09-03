@@ -1,0 +1,33 @@
+id: ic:pa-projection-limitation-report-alt:001
+hypothesis_ref: dh:pa-projection-limitation-report:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two limitation reports are the same iff they record the same applicability
+    caveats (substituted tie-break data, omitted skippability conditions, single-instant starvation
+    reading, unimplemented planner seam) about the same projection evidence. The impl-report
+    section is an encoding, not the criterion.
+  reidentification_key:
+  - deviations-and-caveats section (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one set of applicability limits about one body of projection evidence
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - situation
+  existential_dependencies:
+  - the projection evidence whose applicability is delimited
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: If the omitted origin-skippability conditions never affected first choice in
+    the frozen journal, reading the report as 'those conditions do not exist' would collapse
+    applicability context into world-absence (OWA/CWA).
+- description: The unimplemented planner seam is a specification gap, not a limitation of
+    the replay evidence; packing both in one individual may over-unify.
+status: proposed

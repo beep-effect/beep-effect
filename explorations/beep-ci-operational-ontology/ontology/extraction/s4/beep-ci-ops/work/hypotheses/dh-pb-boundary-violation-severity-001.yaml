@@ -1,0 +1,25 @@
+id: "dh:pb-boundary-violation-severity:001"
+observation_refs:
+  - "po:sha256:6afabfdec293f5d240216cef2ac43f92eb5b39151929383b009e99aaf42aec1c"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "boundary-violation error classification"
+  description: "A possible lexical classification of a Fallow boundary violation as an error."
+representation_status: lexical_alias
+alternatives:
+  - label: "linter severity configuration"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "verification failure kind"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "A configuration pair mapping boundary-violation to error does not show a failure occurrence, signature, verdict effect, or cheapest surfacing lane. It may be only a linter severity switch."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.48
+  use_for_acceptance: false

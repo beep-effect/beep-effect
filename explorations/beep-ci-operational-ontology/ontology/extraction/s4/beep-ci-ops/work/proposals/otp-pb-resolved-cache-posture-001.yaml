@@ -1,0 +1,64 @@
+id: "otp:pb-resolved-cache-posture:001"
+hypothesis_ref: "dh:pb-resolved-cache-posture:001"
+identity_card_ref: "ic:pb-resolved-cache-posture:001"
+foundational_status: analyzed
+term:
+  preferred_label: "cache posture"
+  local_name: CachePosture
+  proposed_iri: "https://oip.law/ontology/ci-ops#CachePosture"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A governed cache-posture specification used to classify the effective
+    local and remote cache authority of a WorkUnit execution as
+    caller-controlled, local-only, or local-write-remote-read under explicit
+    caller-override semantics.
+  source:
+    - "CQ-024"
+    - "po:sha256:91a7acb71879927b51916b77d75557bce0347d66aa15536e1cce20d776c60786"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "de447575a255e75b8dead4008fdffff4c355b36212c394b6c1b152fb9c361e66"
+    addressed:
+      - "exact-reuse-token-versus-mode-identity"
+      - "discriminator-true-of-return-value"
+    disposition: >-
+      Run-2 sitting 1 restored exact reuse to the ratified controlled
+      cache-posture specification and removed the unsupported invocation-mode
+      token.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#CachePosture"
+      compatibility: >-
+        The ratified class already covers the execution-relative cache posture
+        queried by CQ-024; the resolved invocation mode refines that same
+        referent without introducing another cache-decision IRI.
+operational_warrant:
+  competency_questions: ["CQ-024"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    An invocation-borne mode is rejected as the class referent because the
+    ratified domain governs reusable posture meanings used to classify
+    effective executions.
+  - >-
+    The function return type is rejected as the operational referent.
+open_issues:
+  - >-
+    Resolver results and invocation-borne effective modes remain possible
+    instance-level records, but they do not narrow or reidentify CachePosture.
+  - >-
+    A context situation jointly involving invocation, checkout, policy, and
+    credential availability remains a viable richer representation.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

@@ -1,0 +1,20 @@
+id: "fa:pa-package-dependency-closure:001"
+hypothesis_ref: "dh:pa-package-dependency-closure:001"
+identity_card_ref: "ic:pa-package-dependency-closure:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "Model the materialized closure assertion set as an information object in addition to the entailed relation."
+    still_viable: true
+  - label: "Treat the Datalog rule specification or its fixpoint execution as the dependency relation itself."
+    still_viable: false
+  - label: "Reify each dependency path because path provenance is decision-bearing."
+    still_viable: true
+strongest_counterexample: >-
+  One ordered package pair can be entailed through different paths and can be
+  copied into many materializations; the relation, path, closure rule,
+  computation, and result record therefore cannot share one identity.
+verdict: analyzed

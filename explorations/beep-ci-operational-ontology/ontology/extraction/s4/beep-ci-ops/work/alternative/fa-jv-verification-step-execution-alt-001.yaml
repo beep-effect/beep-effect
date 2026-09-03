@@ -1,0 +1,20 @@
+id: fa:jv-verification-step-execution-alt:001
+hypothesis_ref: dh:jv-verification-step-execution:001
+identity_card_ref: ic:jv-verification-step-execution-alt:001
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+- label: event of an actually run step (excluding not-run rows)
+  still_viable: true
+- label: Yeet pipeline bookkeeping row with no aboutness
+  still_viable: false
+strongest_counterexample: status=not-run on closeout:01-pr-context falsifies a uniform execution-occurrence
+  reading of the hypothesized referent. The covering category on the cited evidence is a status
+  record about a planned step.
+verdict: analyzed
+needed_evidence: An observation that not-run rows are excluded from the occurrence kind, or
+  that a step run is reidentified independently of the status record (for example by a process
+  handle or a distinct execution interval).

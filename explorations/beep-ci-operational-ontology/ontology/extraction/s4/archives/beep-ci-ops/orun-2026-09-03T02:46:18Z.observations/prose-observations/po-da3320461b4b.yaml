@@ -1,0 +1,15 @@
+id: po:sha256:da3320461b4b073d9079ae06ff41ef7806f46fd7c6835f65ec585b54b6319604
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 11
+  end_line: 14
+quote: '## What was built
+
+
+  The implementation follows the binding design order: schemas, service
+
+  contract, pure engine, replay, then property and integration tests.'
+epistemic_status: quoted_prose

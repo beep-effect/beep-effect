@@ -1,0 +1,27 @@
+id: "dh:pc-replay-fidelity-vocabulary:001"
+observation_refs:
+  - "po:sha256:aee915d1a2f10cd68fd37eda78a62ab37da4dfbdeee73ab0040a7e8438001ecf"
+cq_warrants: []
+proposed_referent:
+  label: "CI lane replay-fidelity vocabulary"
+  description: >-
+    The labels exact, approximate, and none as possible names for replay
+    fidelity classifications.
+representation_status: lexical_alias
+alternatives:
+  - label: "serialization-only enum values"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "qualities of replay evidence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    A three-member literal array does not show any replay occurrence, criterion
+    for exactness, or evidence object bearing one of the labels. No supplied
+    competency question requires this vocabulary.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.79, use_for_acceptance: false}

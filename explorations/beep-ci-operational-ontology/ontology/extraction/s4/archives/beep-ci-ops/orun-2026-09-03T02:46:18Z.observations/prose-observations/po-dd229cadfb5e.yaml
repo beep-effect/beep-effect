@@ -1,0 +1,10 @@
+id: po:sha256:dd229cadfb5ef5cf7d3edc5c256120433843f2bfab6d21c48ef6314a8022d88c
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 585
+  end_line: 585
+quote: 'failureKind: YeetFailureKind.pipe(S.optionalKey),'
+epistemic_status: quoted_prose

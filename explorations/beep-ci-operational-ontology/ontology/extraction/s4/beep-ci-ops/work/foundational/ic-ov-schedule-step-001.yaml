@@ -1,0 +1,47 @@
+id: "ic:ov-schedule-step:001"
+hypothesis_ref: "dh:ov-schedule-step:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: the contract supports both reusable step-prescription content
+    and proposal-embedded record tokens; equal ordinal, target, and scope fields
+    do not decide whether faithful copies or identical projections contain one
+    ScheduleStep or several.
+  reidentification_key:
+    - "ScheduleProposal identity, projection instant, and input digests"
+    - "ordinal membership, SeatRequest enqueue lineage, and Scope designation"
+    - "normalized step-content digest as supporting evidence"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One proposal-relative scheduled-content unit combining one ordinal slot,
+    one SeatRequest target, and one Scope designation under one projection
+    interpretation.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "the admission-act occurrence represented by the projected step"
+    - "an embedded record token individuated by one ScheduleProposal carrier"
+    - "a reusable step-content object shared across proposal outputs"
+    - "the S.Class instance or provisional RDF node as an implementation carrier"
+  existential_dependencies:
+    - "The ScheduleProposal of whose ordered content the step is a component"
+    - "The scheduled SeatRequest and Scope needed to interpret the content"
+    - "At least one faithful documentary or executable carrier"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "changing ordinal membership, target, scope, or proposal content creates a successor step"
+    - "the information content ceases when no faithful realization remains"
+counterexamples:
+  - description: >-
+      Two proposals generated at different projection instants can prescribe
+      the same SeatRequest, scope, and numeric position; if ScheduleStep were
+      reusable content rather than proposal-relative content, those equal
+      fields could denote one step, so the observations do not settle the
+      proposal-relative-content versus reusable-content boundary.
+status: proposed
