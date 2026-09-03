@@ -451,6 +451,18 @@ const journalLockReapSidecars = (
 
 const isJournalLockReapTombstone = Str.includes(".tombstone-");
 
+const restoreJournalLockReapTombstone = Effect.fnUntraced(function* (
+  lockPath: string,
+  tombstonePath: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const restored = yield* fs.link(tombstonePath, lockPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (restored) {
+    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  }
+  return restored;
+});
+
 const recoverJournalLockReapTombstone = Effect.fnUntraced(function* (
   lockPath: string,
   tombstonePath: string
@@ -460,9 +472,7 @@ const recoverJournalLockReapTombstone = Effect.fnUntraced(function* (
     yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
     return;
   }
-  const restored = yield* fs.link(tombstonePath, lockPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-  if (restored) {
-    yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
+  if (yield* restoreJournalLockReapTombstone(lockPath, tombstonePath)) {
     return;
   }
   if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(false)))) {
@@ -595,12 +605,7 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   if (reclaimedObservedGeneration) {
     yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
   } else {
-    const restored = yield* fs
-      .link(tombstonePath, lockPath)
-      .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-    if (restored) {
-      yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
-    } else {
+    if (!(yield* restoreJournalLockReapTombstone(lockPath, tombstonePath))) {
       yield* Console.error(
         `[yeet] journal lock generation displaced during reclaim; recovery retained ${tombstonePath}`
       );
@@ -742,15 +747,10 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   // Remove only the generation this writer created; a lock reaped and
   // replaced mid-write belongs to its new owner and stays.
-  const owned = yield* O.match(content, {
-    onNone: () => Effect.succeed(false),
-    onSome: (current) => isOwnedLockGeneration(current, token),
-  });
-  if (owned) {
+  if (yield* journalLockIsOwned(lockPath, token)) {
+    const fs = yield* FileSystem.FileSystem;
     yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
   }
 });
@@ -774,6 +774,18 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
  */
 export const releaseAdmissionJournalLockForTesting = releaseJournalFileLock;
 
+const journalLockIsOwned = Effect.fnUntraced(function* (
+  lockPath: string,
+  token: string
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
+  return yield* O.match(content, {
+    onNone: () => Effect.succeed(false),
+    onSome: (current) => isOwnedLockGeneration(current, token),
+  });
+});
+
 /**
  * Require that a caller still owns the published journal-lock generation.
  *
@@ -795,13 +807,7 @@ export const assertJournalFileLockOwned = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
-  const owned = yield* O.match(content, {
-    onNone: () => Effect.succeed(false),
-    onSome: (current) => isOwnedLockGeneration(current, token),
-  });
-  if (!owned) {
+  if (!(yield* journalLockIsOwned(lockPath, token))) {
     return yield* QualitySchedulerError.make({
       message: `Admission journal lock "${lockPath}" was lost before publication; retry the locked operation.`,
     });
