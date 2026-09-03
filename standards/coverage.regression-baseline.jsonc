@@ -20941,15 +20941,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 79.74,
+      "lines": 79.75,
       "statements": 79.54,
-      "branches": 69.39,
+      "branches": 69.4,
       "functions": 73.58,
       "uncovered": {
-        "lines": 8420,
-        "statements": 8896,
-        "branches": 4812,
-        "functions": 3298
+        "lines": 8418,
+        "statements": 8893,
+        "branches": 4810,
+        "functions": 3297
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -23533,14 +23533,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts": {
-          "lines": 92.33,
-          "statements": 91.95,
-          "branches": 79.87,
+          "lines": 92.52,
+          "statements": 92.13,
+          "branches": 80.19,
           "functions": 90.17,
           "uncovered": {
-            "lines": 41,
-            "statements": 44,
-            "branches": 62,
+            "lines": 40,
+            "statements": 43,
+            "branches": 61,
             "functions": 11
           }
         },
@@ -26833,15 +26833,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": {
-          "lines": 92.63,
-          "statements": 92.39,
-          "branches": 86.87,
-          "functions": 88.05,
+          "lines": 92.85,
+          "statements": 92.82,
+          "branches": 87.5,
+          "functions": 88.67,
           "uncovered": {
-            "lines": 33,
-            "statements": 35,
-            "branches": 21,
-            "functions": 19
+            "lines": 32,
+            "statements": 33,
+            "branches": 20,
+            "functions": 18
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts": {
