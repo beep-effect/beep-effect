@@ -110,7 +110,6 @@ const nonNegativeInteger = Schema.Finite.check(
 );
 
 // String prerelease identifiers must contain at least one non-digit:
-const isSemVer = Schema.is(SemVer);
 // all-numeric identifiers are numbers (the grammar parses them as such), so
 // requiring a non-digit keeps decode/encode round-trips canonical. Written
 // without lookahead so `Schema.toArbitrary` can derive a generator.
@@ -1031,6 +1030,8 @@ export class SemVer extends Schema.Class<SemVer>($I`SemVer`)(
     return this.toString();
   }
 }
+
+const isSemVer = Schema.is(SemVer);
 
 /**
  * Grouped bump operations returned by the {@link SemVer.bump} accessor.

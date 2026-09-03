@@ -20,6 +20,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { McpConfigError } from "../Errors.ts";
 import { HttpMcpServer, McpOAuth, McpServerConfig, StdioMcpServer } from "./Schema.ts";
+
 const isHttpMcpServer = S.is(HttpMcpServer);
 const isStdioMcpServer = S.is(StdioMcpServer);
 
@@ -128,8 +129,6 @@ export declare namespace ClaudeJsonProject {
    */
   export type Encoded = typeof ClaudeJsonProject.Encoded;
 }
-const decodeMcpJsonFileJson = S.decodeEffect(McpJsonFileJson);
-
 /**
  * Tolerant schema for the MCP-related portions of `~/.claude.json`.
  *
@@ -162,8 +161,6 @@ export class ClaudeJsonFile extends S.Class<ClaudeJsonFile>($I`ClaudeJsonFile`)(
     description: "MCP-relevant portions of Claude's user configuration file.",
   })
 ) {}
-const decodeClaudeJsonFileJson = S.decodeEffect(ClaudeJsonFileJson);
-
 /**
  * Companion types for {@link ClaudeJsonFile}.
  *
@@ -199,6 +196,9 @@ const ClaudeJsonFileJson = S.fromJsonString(ClaudeJsonFile).pipe(
     description: "JSON text codec for MCP fields in Claude's user configuration.",
   })
 );
+
+const decodeMcpJsonFileJson = S.decodeEffect(McpJsonFileJson);
+const decodeClaudeJsonFileJson = S.decodeEffect(ClaudeJsonFileJson);
 
 /**
  * Overrides used while resolving all MCP configuration scopes.
@@ -506,8 +506,7 @@ const mcpFileFromServers = (
 ): Effect.Effect<O.Option<McpJsonFile>> =>
   O.match(servers, {
     onNone: () => Effect.succeed(O.none<McpJsonFile>()),
-    onSome: (mcpServers) =>
-      withoutReservedServerNames(McpJsonFile.make({ mcpServers }), source).pipe(Effect.asSome),
+    onSome: (mcpServers) => withoutReservedServerNames(McpJsonFile.make({ mcpServers }), source).pipe(Effect.asSome),
   });
 
 /** @internal */
@@ -667,9 +666,7 @@ export const loadClaudeJson = Effect.fn("Mcp.loadClaudeJson")(function* (
 ): Effect.fn.Return<ClaudeJsonFile, McpConfigError, FileSystem.FileSystem> {
   yield* Effect.annotateCurrentSpan("mcp.claudeJsonPath", path);
   const raw = yield* readFileString(path);
-  return yield* decodeClaudeJsonFileJson(raw).pipe(
-    Effect.mapError((cause) => McpConfigError.make({ path, cause }))
-  );
+  return yield* decodeClaudeJsonFileJson(raw).pipe(Effect.mapError((cause) => McpConfigError.make({ path, cause })));
 });
 
 /** @internal */

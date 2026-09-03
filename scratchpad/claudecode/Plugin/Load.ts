@@ -35,6 +35,7 @@ import {
 } from "./Define.ts";
 import { isJsonFilePath, isMarkdownFilePath, isSkillFilePath, pathSpecs, syncManifest } from "./Layout.ts";
 import { ExperimentalSpec, PluginManifest } from "./Manifest.ts";
+
 const decodeUnknownMcpJsonFile = S.decodeUnknownEffect(McpJsonFile);
 const decodeUnknownHooksSectionSync = S.decodeUnknownSync(HooksSection);
 const encodeHooksSectionSync = S.encodeSync(HooksSection);
@@ -117,9 +118,7 @@ export class LoadedPlugin extends S.Class<LoadedPlugin>($I`LoadedPlugin`)(
 // ---------------------------------------------------------------------------
 
 const manifestFileName = "plugin.json";
-const decodePluginManifestJson = S.decodeEffect(PluginManifestJson);
 const sortStrings = Order.String;
-const decodeHooksFileJson = S.decodeEffect(HooksFileJson);
 
 const listSorted = (paths: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(paths, sortStrings);
 
@@ -171,6 +170,9 @@ const HooksFileJson = S.fromJsonString(HooksFile).pipe(
   })
 );
 
+const decodePluginManifestJson = S.decodeEffect(PluginManifestJson);
+const decodeHooksFileJson = S.decodeEffect(HooksFileJson);
+
 const missingDeclaredPath = (path: string): PluginLoadError =>
   PluginLoadError.make({
     path,
@@ -179,9 +181,7 @@ const missingDeclaredPath = (path: string): PluginLoadError =>
 
 const readStringFile = (path: string): Effect.Effect<string, PluginLoadError, FileSystem.FileSystem> =>
   readOptionalStringFile(path).pipe(
-    Effect.flatMap((maybeContent) =>
-      Effect.fromOption(maybeContent, () => missingDeclaredPath(path))
-    )
+    Effect.flatMap((maybeContent) => Effect.fromOption(maybeContent, () => missingDeclaredPath(path)))
   );
 
 const readHooksFile = (path: string): Effect.Effect<HooksSection, PluginLoadError, FileSystem.FileSystem> =>
