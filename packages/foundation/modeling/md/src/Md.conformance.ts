@@ -42,6 +42,12 @@ import {
 } from "./internal/conformance/Md.semantic-inspector.ts";
 import { Document } from "./Md.model.ts";
 
+/**
+ * Lossless conformance inspection surface re-exported from the semantic inspector.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export {
   formatMarkdownConformanceIssue,
   inspectMarkdownDocumentLosslessly,
