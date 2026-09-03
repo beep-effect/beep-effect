@@ -169,17 +169,15 @@ export const AuthRouter = HttpRouter.addAll([
     "/v1/auth/ticket",
     createTicketHandler.pipe(
       Effect.catchTag("AuthenticationError", handleAuthError),
-      Effect.catchCauseIf(
-        P.not(Cause.hasInterrupts),
-        (cause) =>
-          Effect.logError("Ticket request failed unexpectedly", { cause: Cause.pretty(cause) }).pipe(
-            Effect.as(
-              HttpServerResponse.jsonUnsafe(
-                { error: "INTERNAL_SERVER_ERROR", message: "Ticket creation failed" },
-                { status: 500 }
-              )
+      Effect.catchCauseIf(P.not(Cause.hasInterrupts), (cause) =>
+        Effect.logError("Ticket request failed unexpectedly", { cause: Cause.pretty(cause) }).pipe(
+          Effect.as(
+            HttpServerResponse.jsonUnsafe(
+              { error: "INTERNAL_SERVER_ERROR", message: "Ticket creation failed" },
+              { status: 500 }
             )
           )
+        )
       )
     )
   ),

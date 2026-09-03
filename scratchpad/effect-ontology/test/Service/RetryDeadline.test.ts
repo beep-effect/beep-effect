@@ -21,7 +21,10 @@ const retryPolicy = RetryPolicy.make({
 
 const succeedOnThirdAttempt = (attempts: Ref.Ref<number>) =>
   Ref.updateAndGet(attempts, (attempt) => attempt + 1).pipe(
-    Effect.filterOrFail(attempt => !(attempt < retryPolicy.maxAttempts), attempt => TransientFailure.make({}))
+    Effect.filterOrFail(
+      (attempt) => !(attempt < retryPolicy.maxAttempts),
+      () => TransientFailure.make({})
+    )
   );
 
 describe("RetryPolicy", () => {

@@ -2,7 +2,6 @@ import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { assert, describe, it } from "@effect/vitest";
 import { Duration, Effect, Layer, Ref } from "effect";
-import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { EntityRegistryRepository } from "../../Repository/EntityRegistry.ts";
