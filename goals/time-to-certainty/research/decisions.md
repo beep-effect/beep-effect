@@ -151,6 +151,18 @@ baseline window and as terminated thereafter. Rejected: a separate ceiling on un
 starts (can drop a start whose owner is merely unverifiable); a single total cap that never evicts
 unfinished (terminal facts still vanish whenever the unfinished count nears 50); a 24-hour grace
 period for legacy starts (protects an unlikely window at the cost of a second rule).
+Amendment 2 (Greptile review of PR #978, ratified 2026-09-03): a start that recorded an owner pid
+but no process-start identity is bounded by age, because without a start-time identity age is the
+only detector of pid reuse. Three states are distinct: a start with no owner pid recorded at all is
+a legacy start (amendment 1, `legacy-unowned-start`); a start whose recorded pid no longer exists as
+a process is closed as `owner-dead` at the next reconciliation; a start whose recorded pid still
+exists, with no start-time identity to confirm it is the same process, stays open until the start
+is older than the longest plausible attempt (24 hours from the start row's `startedAt`, the
+`attempt-started` timestamp field);
+the first reconciliation after that closes it with `attempt-terminated` reason
+`stale-unverifiable-owner` and one receipt per pass. Rejected: keeping such starts open
+indefinitely (pid reuse leaves permanent unfinished rows and M5 drifts upward); retrying identity
+discovery before the age bound (more code for the same outcome).
 
 **Ruling 18 — economics left-censors from compaction receipts.** The journal-compacted receipt keeps
 the evicted attempt ids and a monotonic cutoff: the newest `recordedAt` among every terminal attempt
