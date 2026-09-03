@@ -102,6 +102,27 @@ drift. A lane-authored test that spawned the untracked private runner was
 removed because the file does not exist in CI; the lane's single-thread
 vitest override, a sandbox workaround, was reverted.
 
+## PR #947 review round
+
+Codex Cloud review on the pushed head opened four threads (two P1, two P2);
+Greptile scored the PR 5/5 with no threads, and all 31 hosted checks passed.
+All four were fixed in a follow-up commit by a Codex Sol xhigh lane:
+
+1. Dependency revalidation no longer compares the parent's etag (Box does not
+   document whether child membership changes it), only provider id, parent id,
+   and canonical name; an etag-only change between a parent's action and a
+   dependent write no longer aborts the apply.
+2. Ownership of folders created by the apply is returned as `adoptions` on the
+   reviewed apply result and persisted by the private runner into the intent;
+   a `recover-adoptions` runner mode rebuilds the allowlist from the journal
+   after a mid-apply failure so the next dry-run plans `Noop`, not
+   `BlockedByPolicy`.
+3. Journal entries carry the reviewed plan digest and a per-attempt id;
+   recovery uses the latest attempt for a plan.
+4. `expectedEnterpriseId`, `expectedSubjectId`, and `rootFolderId` decode as
+   `BoxProviderId`, so a malformed pinned id is a schema error at the public
+   boundary rather than a later defect. The private intent still decodes.
+
 ## Verification
 
 ```text

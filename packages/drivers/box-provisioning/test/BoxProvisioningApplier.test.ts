@@ -237,7 +237,7 @@ describe("@beep/box-provisioning applier", () => {
   );
 
   it.effect(
-    "aborts a child POST when a newly created parent changes after its own action",
+    "aborts a child POST when a newly created parent is renamed after its own action",
     Effect.fnUntraced(function* () {
       let parentReadCount = 0;
       let folderPosts = 0;
@@ -270,9 +270,9 @@ describe("@beep/box-provisioning applier", () => {
           getFolderById: (folderId: string, _optionalsInput: unknown): Promise<unknown> => {
             parentReadCount += 1;
             return Promise.resolve({
-              etag: "etag-drifted-after-parent-action",
+              etag: "etag-created-parent",
               id: folderId,
-              name: "Fixture workspace",
+              name: "Renamed workspace",
               parent: { id: "0", type: "folder" },
               type: "folder",
             });
@@ -295,6 +295,80 @@ describe("@beep/box-provisioning applier", () => {
       }
       expect(parentReadCount).toBe(1);
       expect(folderPosts).toBe(1);
+    })
+  );
+
+  it.effect(
+    "allows dependent child and collaboration POSTs when only parent etags change",
+    Effect.fnUntraced(function* () {
+      const etagMutationCounts = { collaborations: 0, folders: 0, webhooks: 0 };
+      const emptyObserved = BoxObservedState.make({ ...observedFixture, folders: [] });
+      const plan = yield* planBoxProvisioning(desiredFixture, emptyObserved);
+      const etagOnlyClient = {
+        ...mutationClient,
+        folders: {
+          ...mutationClient.folders,
+          createFolder: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
+            etagMutationCounts.folders += 1;
+            return Promise.resolve(
+              etagMutationCounts.folders === 1
+                ? {
+                    etag: "etag-created-parent",
+                    id: "created-parent-id",
+                    name: "Fixture workspace",
+                    parent: { id: "0", type: "folder" },
+                    type: "folder",
+                  }
+                : {
+                    etag: "etag-created-child",
+                    id: "created-child-id",
+                    name: "Fixture child",
+                    parent: { id: "created-parent-id", type: "folder" },
+                    type: "folder",
+                  }
+            );
+          },
+          getFolderById: (folderId: string, _optionalsInput: unknown): Promise<unknown> =>
+            Promise.resolve(
+              folderId === "created-parent-id"
+                ? {
+                    etag: "etag-parent-after-dependent-write",
+                    id: folderId,
+                    name: "Fixture workspace",
+                    parent: { id: "0", type: "folder" },
+                    type: "folder",
+                  }
+                : {
+                    etag: "etag-child-after-dependent-write",
+                    id: folderId,
+                    name: "Fixture child",
+                    parent: { id: "created-parent-id", type: "folder" },
+                    type: "folder",
+                  }
+            ),
+        },
+        userCollaborations: {
+          createCollaboration: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
+            etagMutationCounts.collaborations += 1;
+            return Promise.resolve({ id: "created-collaboration-id", type: "collaboration" });
+          },
+        },
+        webhooks: {
+          ...mutationClient.webhooks,
+          createWebhook: (_requestBody: unknown, _optionalsInput: unknown): Promise<unknown> => {
+            etagMutationCounts.webhooks += 1;
+            return Promise.resolve({ id: "created-webhook-id" });
+          },
+        },
+      };
+      const EtagOnlyLayer = BoxProvisioningApplier.layer.pipe(Layer.provide(B.Box.makeLayerFromClient(etagOnlyClient)));
+
+      yield* BoxProvisioningApplier.pipe(
+        Effect.flatMap((applier) => applier.apply(desiredFixture, plan)),
+        provideScopedLayer(EtagOnlyLayer)
+      );
+
+      expect(etagMutationCounts).toEqual({ collaborations: 1, folders: 2, webhooks: 1 });
     })
   );
 });

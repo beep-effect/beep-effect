@@ -184,7 +184,7 @@ const enterpriseIdFromUser = (user: B.UserFull): Effect.Effect<BoxProviderId, Bo
 
 const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
   observe: Effect.fn("BoxProvisioningInventory.observe")(function* (desired) {
-    const rootFolderId = BoxProviderId.make(desired.rootFolderId);
+    const rootFolderId = desired.rootFolderId;
     const user = yield* box.users.getUserMe(
       B.UsersGetUserMePayload.make({
         queryParams: B.GetUserMeQueryParams.make({ fields: ["id", "enterprise"] }),

@@ -1,4 +1,5 @@
 import {
+  BoxActionApplied,
   BoxActionPrecondition,
   BoxAdoptions,
   BoxApplyJournalApplied,
@@ -116,6 +117,86 @@ describe("@beep/box-provisioning orchestration", () => {
         entitlementBlockersPreserved: true,
       });
       expect(yield* Ref.get(applyCalls)).toBe(1);
+    })
+  );
+
+  it.effect(
+    "returns every created folder adoption and replans them as Noop",
+    Effect.fnUntraced(function* () {
+      const desired = BoxDesiredState.make({
+        ...desiredFixture,
+        adoptions: BoxAdoptions.make({ entries: [] }),
+      });
+      const emptyObserved = BoxObservedState.make({
+        ...observedFixture,
+        collaborations: [],
+        folders: [],
+        webhooks: [],
+      });
+      const reviewedPlan = yield* planBoxProvisioning(desired, emptyObserved);
+      const reviewedPlanJson = yield* encodeBoxProvisioningPlan(reviewedPlan);
+      const desiredJson = yield* S.encodeEffect(BoxDesiredState)(desired);
+      const observeCount = yield* Ref.make(0);
+      const dependencies = Layer.mergeAll(
+        Layer.succeed(
+          BoxProvisioningInventory,
+          BoxProvisioningInventory.of({
+            observe: Effect.fn("BoxProvisioningInventory.observe")(() =>
+              Ref.modify(observeCount, (count) => [count === 0 ? emptyObserved : observedAfterApplyFixture, count + 1])
+            ),
+          })
+        ),
+        Layer.succeed(
+          BoxProvisioningPlanner,
+          BoxProvisioningPlanner.of({ plan: planBoxProvisioning, planWithAdoptions: planBoxProvisioning })
+        ),
+        Layer.succeed(
+          BoxProvisioningApplier,
+          BoxProvisioningApplier.of({
+            apply: Effect.fn("BoxProvisioningApplier.apply")((_appliedDesired, appliedPlan) =>
+              Effect.succeed(
+                BoxApplyReceipt.make({
+                  appliedAt: DateTime.makeUnsafe("2026-08-30T00:00:00.000Z"),
+                  outcomes: A.map(
+                    A.filter(
+                      appliedPlan.actions,
+                      (action) => action._tag === "Create" && action.resourceKind === "folder"
+                    ),
+                    (action, index) =>
+                      BoxActionApplied.make({
+                        actionKey: action.actionKey,
+                        logicalKeyDigest: action.logicalKeyDigest,
+                        providerId: BoxProviderId.make(index === 0 ? "100" : "101"),
+                        resourceKind: "folder",
+                      })
+                  ),
+                  planDigest: appliedPlan.planDigest,
+                })
+              )
+            ),
+          })
+        )
+      );
+
+      const result = yield* runProvisioning(dependencies, (service) =>
+        service.applyReviewedPlan(desiredJson, reviewedPlanJson)
+      );
+      const nextDesired = BoxDesiredState.make({ ...desired, adoptions: result.adoptions });
+      const nextPlan = yield* planBoxProvisioning(nextDesired, observedAfterApplyFixture);
+
+      expect(result.adoptions.entries).toHaveLength(2);
+      expect(A.map(result.adoptions.entries, (adoption) => adoption.logicalKey)).toEqual([
+        "folder.child",
+        "folder.workspace",
+      ]);
+      expect(A.map(nextPlan.actions, (action) => action._tag)).toEqual([
+        "Noop",
+        "Noop",
+        "Noop",
+        "Noop",
+        "Blocked",
+        "Blocked",
+      ]);
     })
   );
 

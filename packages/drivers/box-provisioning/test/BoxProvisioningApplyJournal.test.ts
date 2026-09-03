@@ -1,4 +1,5 @@
 import * as B from "@beep/box";
+import { BoxAdoptions, BoxDesiredState, recoverBoxAdoptions } from "@beep/box-provisioning";
 import { BoxProvisioningApplier, BoxProvisioningApplyJournal } from "@beep/box-provisioning/BoxProvisioningApplier";
 import { BoxObservedState } from "@beep/box-provisioning/BoxProvisioningObserved";
 import { planBoxProvisioning } from "@beep/box-provisioning/BoxProvisioningPlanner";
@@ -6,6 +7,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import { desiredFixture, observedFixture } from "./fixtures.ts";
 import type { BoxApplyJournalEntry } from "@beep/box-provisioning/BoxProvisioningReceipt";
 
@@ -83,7 +85,7 @@ const applyWithJournal = Effect.fn("BoxProvisioningApplyJournalTest.applyWithJou
     Effect.flip,
     provideScopedLayer(layer)
   );
-  return { entries: yield* Ref.get(entries), error };
+  return { entries: yield* Ref.get(entries), error, plan };
 });
 
 describe("@beep/box-provisioning apply journal", () => {
@@ -95,8 +97,15 @@ describe("@beep/box-provisioning apply journal", () => {
       expect(result.error._tag).toBe("BoxError");
       expect(A.map(result.entries, (entry) => entry.phase)).toEqual(["Started", "Applied", "Started", "Failed"]);
       expect(A.map(result.entries, (entry) => entry.sequence)).toEqual([0, 1, 2, 3]);
+      expect(A.every(result.entries, (entry) => entry.planDigest === result.plan.planDigest)).toBe(true);
+      expect(A.every(result.entries, (entry) => entry.attemptId === result.entries[0]?.attemptId)).toBe(true);
       expect(result.entries[1]?.resourceKind).toBe("folder");
       expect(result.entries[3]?.resourceKind).toBe("folder");
+      const applied = result.entries[1];
+      expect(applied?.phase).toBe("Applied");
+      if (applied?.phase === "Applied") {
+        expect(O.getOrUndefined(applied.parentProviderId)).toBe("0");
+      }
     })
   );
 
@@ -116,6 +125,43 @@ describe("@beep/box-provisioning apply journal", () => {
       ]);
       expect(A.filter(result.entries, (entry) => entry.phase === "Applied")).toHaveLength(2);
       expect(result.entries[5]?.resourceKind).toBe("collaboration");
+    })
+  );
+
+  it.effect(
+    "generates a distinct attempt id for each apply invocation",
+    Effect.fnUntraced(function* () {
+      const first = yield* applyWithJournal(2, false);
+      const second = yield* applyWithJournal(2, false);
+
+      expect(first.entries[0]?.attemptId).not.toBe(second.entries[0]?.attemptId);
+    })
+  );
+
+  it.effect(
+    "recovers exactly the folders applied before folder N fails",
+    Effect.fnUntraced(function* () {
+      const result = yield* applyWithJournal(2, false);
+      const recovered = recoverBoxAdoptions(desiredFixture, result.entries);
+
+      expect(recovered.entries).toHaveLength(1);
+      expect(recovered.entries[0]?.expectedProviderId).toBe("created-folder-1");
+      expect(recovered.entries[0]?.expectedParentProviderId).toBe("0");
+    })
+  );
+
+  it.effect(
+    "uses only the latest attempt for one plan during recovery",
+    Effect.fnUntraced(function* () {
+      const first = yield* applyWithJournal(2, false);
+      const latest = yield* applyWithJournal(1, false);
+      const desiredWithoutAdoptions = BoxDesiredState.make({
+        ...desiredFixture,
+        adoptions: BoxAdoptions.make({ entries: [] }),
+      });
+      const recovered = recoverBoxAdoptions(desiredWithoutAdoptions, A.appendAll(first.entries, latest.entries));
+
+      expect(recovered.entries).toHaveLength(0);
     })
   );
 });

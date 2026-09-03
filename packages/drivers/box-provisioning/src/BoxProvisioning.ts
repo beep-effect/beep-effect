@@ -17,7 +17,7 @@ import {
 } from "./BoxProvisioningApplier.ts";
 import { decodeBoxDesiredState, decodeBoxProvisioningPlan } from "./BoxProvisioningArtifacts.ts";
 import { BoxProvisioningDriftError, BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
-import { BoxAdoption, BoxLogicalKey } from "./BoxProvisioningIntent.ts";
+import { BoxAdoption, BoxDesiredState, BoxLogicalKey, mergeBoxAdoptions } from "./BoxProvisioningIntent.ts";
 import { BoxProvisioningInventory } from "./BoxProvisioningInventory.ts";
 import { BoxProvisioningPlanner } from "./BoxProvisioningPlanner.ts";
 import { BoxReviewedApplyResult } from "./BoxProvisioningReceipt.ts";
@@ -31,7 +31,6 @@ import type {
   BoxProvisioningSubjectMismatchError,
   BoxProvisioningTenantMismatchError,
 } from "./BoxProvisioningErrors.ts";
-import type { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 import type { BoxObservedState } from "./BoxProvisioningObserved.ts";
 import type { BoxProvisioningPlan } from "./BoxProvisioningPlan.ts";
 import type { BoxActionApplied, BoxApplyOutcome } from "./BoxProvisioningReceipt.ts";
@@ -127,9 +126,11 @@ const makeService = (
     const receipt = yield* applier.apply(desired, reviewedPlan);
     const postObserved = yield* inventory.observe(desired);
     const additionalAdoptions = yield* postApplyAdoptions(desired, postObserved, receipt);
-    const postApplyPlan = yield* planner.planWithAdoptions(desired, postObserved, additionalAdoptions);
-    const verdict = yield* validateBoxProvisioningPostApplyPlan(desired, reviewedPlan, postApplyPlan);
-    return BoxReviewedApplyResult.make({ postApplyPlan, receipt, verdict });
+    const adoptions = mergeBoxAdoptions(desired.adoptions, additionalAdoptions);
+    const adoptedDesired = BoxDesiredState.make({ ...desired, adoptions });
+    const postApplyPlan = yield* planner.planWithAdoptions(adoptedDesired, postObserved, A.empty());
+    const verdict = yield* validateBoxProvisioningPostApplyPlan(adoptedDesired, reviewedPlan, postApplyPlan);
+    return BoxReviewedApplyResult.make({ adoptions, postApplyPlan, receipt, verdict });
   });
 
   return { applyReviewedPlan, dryRun, reconcile: dryRun };

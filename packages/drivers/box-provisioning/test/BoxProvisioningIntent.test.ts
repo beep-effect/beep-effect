@@ -1,3 +1,4 @@
+import { decodeBoxDesiredState } from "@beep/box-provisioning/BoxProvisioningArtifacts";
 import {
   BoxAdoption,
   BoxAdoptions,
@@ -68,6 +69,18 @@ describe("@beep/box-provisioning intent", () => {
       const decoded = yield* S.decodeEffect(BoxDesiredState)(withoutAdoptions);
 
       expect(A.isReadonlyArrayEmpty(decoded.adoptions.entries)).toBe(true);
+    })
+  );
+  it.effect(
+    "rejects a malformed pinned provider id as a typed desired-state schema error",
+    Effect.fnUntraced(function* () {
+      const encoded = yield* S.encodeEffect(BoxDesiredState)(desiredFixture);
+      const malformed = { ...encoded, rootFolderId: "not a provider id!" };
+      const decoded = yield* Effect.option(decodeBoxDesiredState(malformed));
+      const error = yield* decodeBoxDesiredState(malformed).pipe(Effect.flip);
+
+      expect(O.isNone(decoded)).toBe(true);
+      expect(error._tag).toBe("BoxProvisioningSchemaError");
     })
   );
   it("round-trips schema-derived adoption and entitlement values", () => {

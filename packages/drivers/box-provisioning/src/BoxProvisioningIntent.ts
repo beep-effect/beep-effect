@@ -7,7 +7,7 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import { HttpsUrl, LiteralKit, SchemaUtils } from "@beep/schema";
-import { MutableHashSet } from "effect";
+import { HashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, pipe } from "effect/Function";
@@ -213,7 +213,7 @@ export class BoxAdoption extends S.Class<BoxAdoption>($I`BoxAdoption`)(
 ) {}
 
 /**
- * Versioned allowlist of observed resources that the reconciler may adopt.
+ * Versioned ownership bindings for adopted or reconciler-created Box folders.
  *
  * **Example** (Declare an empty adoption allowlist)
  *
@@ -235,9 +235,44 @@ export class BoxAdoptions extends S.Class<BoxAdoptions>($I`BoxAdoptions`)(
     entries: S.Array(BoxAdoption).pipe(SchemaUtils.withEmptyArrayDefaults<BoxAdoption>()),
   },
   $I.annote("BoxAdoptions", {
-    description: "Versioned explicit adoption authorizations for pre-existing Box resources.",
+    description: "Versioned folder ownership bindings for pre-existing and reconciler-created Box resources.",
   })
 ) {}
+
+/**
+ * Merges durable Box folder ownership bindings with deterministic replacement and ordering.
+ *
+ * **Details**
+ *
+ * At most one binding is retained per logical key. Entries from `additions`
+ * replace stale prior bindings for the same key, and the result is ordered by
+ * logical key so equivalent evidence produces byte-identical desired state.
+ *
+ * **Example** (Merge an empty ownership set)
+ *
+ * ```ts
+ * import { BoxAdoptions, mergeBoxAdoptions } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * const merged = mergeBoxAdoptions(BoxAdoptions.make({ entries: [] }), [])
+ * console.log(merged.entries.length)
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const mergeBoxAdoptions: {
+  (additions: ReadonlyArray<BoxAdoption>): (existing: BoxAdoptions) => BoxAdoptions;
+  (existing: BoxAdoptions, additions: ReadonlyArray<BoxAdoption>): BoxAdoptions;
+} = dual(2, (existing: BoxAdoptions, additions: ReadonlyArray<BoxAdoption>): BoxAdoptions => {
+  const byLogicalKey = A.reduce(
+    A.appendAll(existing.entries, additions),
+    HashMap.empty<BoxLogicalKey, BoxAdoption>(),
+    (entries, adoption) => HashMap.set(entries, adoption.logicalKey, adoption)
+  );
+  return BoxAdoptions.make({
+    entries: A.sortWith(HashMap.values(byLogicalKey), (adoption) => adoption.logicalKey, Order.String),
+  });
+});
 
 /**
  * Box plan feature availability asserted by the operator's commercial posture.
@@ -667,9 +702,9 @@ const BoxDesiredStateFields = S.Struct({
   version: S.Literal("box-provisioning/v1").pipe(SchemaUtils.withConstantDefault("box-provisioning/v1")),
   adoptions: SchemaUtils.withKeyDefaults(BoxAdoptions, BoxAdoptions.make({ entries: [] })),
   sourceRevision: BoxSourceRevision,
-  expectedEnterpriseId: S.NonEmptyString,
-  expectedSubjectId: S.NonEmptyString,
-  rootFolderId: S.NonEmptyString,
+  expectedEnterpriseId: BoxProviderId,
+  expectedSubjectId: BoxProviderId,
+  rootFolderId: BoxProviderId,
   entitlements: BoxEntitlements,
   folders: S.Array(BoxFolderIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxFolderIntent>()),
   collaborations: S.Array(BoxCollaborationIntent).pipe(SchemaUtils.withEmptyArrayDefaults<BoxCollaborationIntent>()),
@@ -696,6 +731,7 @@ const BoxDesiredStateFields = S.Struct({
  *   BoxEntitlements,
  *   BoxSourceRevision
  * } from "@beep/box-provisioning/BoxProvisioningIntent"
+ * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
  * import * as O from "effect/Option"
  *
  * const desired = BoxDesiredState.make({
@@ -708,12 +744,12 @@ const BoxDesiredStateFields = S.Struct({
  *     retention: "unavailable",
  *     signCustomIntegrationAnnualAllowance: O.none()
  *   }),
- *   expectedEnterpriseId: "enterprise-id",
- *   expectedSubjectId: "service-account-id",
+ *   expectedEnterpriseId: BoxProviderId.make("enterprise-id"),
+ *   expectedSubjectId: BoxProviderId.make("service-account-id"),
  *   folders: [],
  *   metadata: [],
  *   retention: [],
- *   rootFolderId: "0",
+ *   rootFolderId: BoxProviderId.make("0"),
  *   sourceRevision: BoxSourceRevision.make("intent-1"),
  *   webhooks: []
  * })

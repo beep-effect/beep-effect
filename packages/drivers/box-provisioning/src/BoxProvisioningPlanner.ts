@@ -444,14 +444,14 @@ export const planBoxProvisioning = Effect.fn("BoxProvisioningPlanner.plan")(func
   observed: BoxObservedState,
   additionalAdoptions: ReadonlyArray<BoxAdoption> = A.empty()
 ) {
-  const expectedEnterpriseId = BoxProviderId.make(desired.expectedEnterpriseId);
+  const expectedEnterpriseId = desired.expectedEnterpriseId;
   if (!Equal.equals(expectedEnterpriseId, observed.enterpriseId)) {
     return yield* BoxProvisioningTenantMismatchError.make({
       expectedEnterpriseId,
       actualEnterpriseId: observed.enterpriseId,
     });
   }
-  const expectedSubjectId = BoxProviderId.make(desired.expectedSubjectId);
+  const expectedSubjectId = desired.expectedSubjectId;
   if (!Equal.equals(expectedSubjectId, observed.subjectId)) {
     return yield* BoxProvisioningSubjectMismatchError.make({
       expectedSubjectId,

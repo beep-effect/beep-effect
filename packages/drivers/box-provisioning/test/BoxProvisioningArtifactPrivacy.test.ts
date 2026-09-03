@@ -1,4 +1,5 @@
 import {
+  BoxApplyAttemptId,
   BoxBlockedByAmbiguity,
   BoxBlockedByEntitlement,
   BoxBlockedByPolicy,
@@ -24,6 +25,7 @@ const rejectsEverySentinel = (schema: S.Top): boolean =>
 
 describe("@beep/box-provisioning artifact privacy schemas", () => {
   it("rejects sensitive-looking values from every plan and receipt string carrier", () => {
+    expect(rejectsEverySentinel(BoxApplyAttemptId)).toBe(true);
     expect(rejectsEverySentinel(BoxSourceRevision)).toBe(true);
     expect(rejectsEverySentinel(BoxProviderId)).toBe(true);
     expect(rejectsEverySentinel(BoxProviderRevision)).toBe(true);

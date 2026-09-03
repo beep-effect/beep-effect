@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { randomUUID } from "node:crypto";
 import * as B from "@beep/box";
 import { $BoxProvisioningId } from "@beep/identity";
 import { Sha256Hex } from "@beep/schema";
@@ -32,6 +33,7 @@ import {
   BoxActionApplied,
   BoxActionBlocked,
   BoxActionSkipped,
+  BoxApplyAttemptId,
   BoxApplyJournalApplied,
   BoxApplyJournalFailed,
   BoxApplyJournalStarted,
@@ -291,6 +293,17 @@ const readObservedFolder = Effect.fn("BoxProvisioningApplier.readObservedFolder"
     .pipe(Effect.flatMap(toObservedFolderFromFull));
 });
 
+/**
+ * Revalidates only folder identity fields that dependent writes cannot change.
+ *
+ * **Details**
+ *
+ * Provider id, parent provider id, and Box-equivalent name remain stable across
+ * child and collaboration writes. The folder etag is deliberately excluded:
+ * Box's behavior when child membership changes is unverified, so an etag change
+ * cannot safely distinguish external drift from the reconciler's own prior
+ * dependent mutation. A folder's own action precondition still checks its etag.
+ */
 const validateFolderDependency = Effect.fn("BoxProvisioningApplier.validateFolderDependency")(function* (
   box: B.Box["Service"],
   logicalKey: BoxLogicalKey,
@@ -307,10 +320,9 @@ const validateFolderDependency = Effect.fn("BoxProvisioningApplier.validateFolde
   );
   const liveIdentity = yield* readObservedFolder(box, providerId);
   if (
-    !sha256Equivalence(
-      encodedDigest(BoxObservedFolder, reviewedIdentity),
-      encodedDigest(BoxObservedFolder, liveIdentity)
-    )
+    !Equal.equals(reviewedIdentity.providerId, liveIdentity.providerId) ||
+    !Equal.equals(reviewedIdentity.parentProviderId, liveIdentity.parentProviderId) ||
+    !boxFolderNamesEquivalent(reviewedIdentity.name, liveIdentity.name)
   ) {
     return yield* invariant("action-precondition-mismatch");
   }
@@ -371,7 +383,7 @@ const createFolder = Effect.fn("BoxProvisioningApplier.createFolder")(function* 
 ) {
   const desired = yield* findDesired(desiredState.folders, action.logicalKeyDigest);
   const parentProviderId = yield* O.match(desired.parentKey, {
-    onNone: () => Effect.succeed(BoxProviderId.make(desiredState.rootFolderId)),
+    onNone: () => Effect.succeed(desiredState.rootFolderId),
     onSome: (parentKey) => resolveFolderProviderId(folderProviderIds, parentKey),
   });
   yield* validateFolderAbsent(box, parentProviderId, desired);
@@ -730,7 +742,7 @@ const makeService = (
   box: B.Box["Service"],
   journal: BoxProvisioningApplyJournal["Service"]
 ): BoxProvisioningApplierShape => ({
-  apply: Effect.fn("BoxProvisioningApplier.apply")(function* (desiredState, plan) {
+  apply: Effect.fn("BoxProvisioningApplier.apply")(function* (desiredState, plan, injectedAttemptId) {
     if (!hasValidBoxProvisioningPlanDigest(plan)) {
       return yield* invariant("invalid-plan-digest");
     }
@@ -742,6 +754,7 @@ const makeService = (
     }
     yield* validateBoxProvisioningBlockerContract(desiredState, plan, "pre-apply");
 
+    const attemptId = O.getOrElse(O.fromUndefinedOr(injectedAttemptId), () => BoxApplyAttemptId.make(randomUUID()));
     const completed = MutableHashSet.empty<Sha256Hex>();
     const folderProviderIds = MutableHashMap.empty<Sha256Hex, BoxProviderId>();
     const folderIdentities = MutableHashMap.empty<Sha256Hex, BoxObservedFolder>();
@@ -758,7 +771,9 @@ const makeService = (
       yield* journal.append(
         BoxApplyJournalStarted.make({
           actionKey: action.actionKey,
+          attemptId,
           logicalKeyDigest: action.logicalKeyDigest,
+          planDigest: plan.planDigest,
           providerId: action.precondition.providerId,
           resourceKind: action.resourceKind,
           sequence: nextSequence(),
@@ -771,8 +786,10 @@ const makeService = (
               .append(
                 BoxApplyJournalFailed.make({
                   actionKey: action.actionKey,
+                  attemptId,
                   errorTag: error._tag,
                   logicalKeyDigest: action.logicalKeyDigest,
+                  planDigest: plan.planDigest,
                   providerId: action.precondition.providerId,
                   resourceKind: action.resourceKind,
                   sequence: nextSequence(),
@@ -784,11 +801,21 @@ const makeService = (
               Match.tag("Applied", (applied) => O.some(applied.providerId)),
               Match.orElse(() => action.precondition.providerId)
             );
+            const parentProviderId =
+              action.resourceKind === "folder"
+                ? O.flatMap(
+                    MutableHashMap.get(folderIdentities, action.logicalKeyDigest),
+                    (folder) => folder.parentProviderId
+                  )
+                : O.none<BoxProviderId>();
             return journal
               .append(
                 BoxApplyJournalApplied.make({
                   actionKey: action.actionKey,
+                  attemptId,
                   logicalKeyDigest: action.logicalKeyDigest,
+                  parentProviderId,
+                  planDigest: plan.planDigest,
                   providerId,
                   resourceKind: action.resourceKind,
                   sequence: nextSequence(),
@@ -849,9 +876,11 @@ const makeService = (
  * @since 0.0.0
  */
 export interface BoxProvisioningApplierShape {
+  /** Apply a reviewed plan with an injected attempt id or a fresh UUID default. */
   readonly apply: (
     desiredState: BoxDesiredState,
-    plan: BoxProvisioningPlan
+    plan: BoxProvisioningPlan,
+    attemptId?: BoxApplyAttemptId
   ) => Effect.Effect<
     BoxApplyReceipt,
     B.BoxError | BoxProvisioningInvariantError | BoxProvisioningBlockerContractError | BoxProvisioningApplyJournalError

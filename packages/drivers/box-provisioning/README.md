@@ -74,6 +74,16 @@ identity digest (provider id, parent id, name, etag) before the POST. Provide
 counts such as `declaredExternalCollaboratorCount` come from the intent
 author's `billingImpact` declarations and are not provider-verified.
 
+Ownership of folders the apply creates is returned as `adoptions` on the
+`BoxReviewedApplyResult`, so the caller persists it into the versioned intent
+and the next reconciliation plans those folders as `Noop` instead of blocking
+them as unowned matches. Every journal entry carries the reviewed plan digest
+and an attempt id; after a mid-apply failure, the exported recovery function
+rebuilds the adoption allowlist from the latest attempt's `Applied` folder
+entries so the remaining work can resume. Dependency revalidation compares the
+parent's provider id, parent id, and canonical name, not its etag, because Box
+does not document whether child membership changes a folder's etag.
+
 ## Development checks
 
 ```bash

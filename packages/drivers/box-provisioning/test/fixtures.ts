@@ -36,9 +36,9 @@ export const desiredFixture = BoxDesiredState.make({
     ],
   }),
   sourceRevision: BoxSourceRevision.make("intent-1"),
-  expectedEnterpriseId: "enterprise-id",
-  expectedSubjectId: "service-account-id",
-  rootFolderId: "0",
+  expectedEnterpriseId: BoxProviderId.make("enterprise-id"),
+  expectedSubjectId: BoxProviderId.make("service-account-id"),
+  rootFolderId: BoxProviderId.make("0"),
   entitlements: BoxEntitlements.make({
     externalCollaboratorsRequirePaidSeats: true,
     metadata: "unavailable",
