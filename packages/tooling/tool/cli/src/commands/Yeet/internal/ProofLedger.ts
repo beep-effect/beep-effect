@@ -47,14 +47,6 @@ type LoadedProofLedger = {
   readonly rows: ReadonlyArray<ProofLedgerRow>;
 };
 
-const terminatedPortion = (text: string): string =>
-  Str.endsWith("\n")(text)
-    ? text
-    : O.match(Str.lastIndexOf("\n")(text), {
-        onNone: () => "",
-        onSome: (index) => Str.slice(0, index + 1)(text),
-      });
-
 const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
   repoRoot: string
 ): Effect.fn.Return<LoadedProofLedger, YeetCommandError, FileSystem.FileSystem | Path.Path> {
@@ -71,7 +63,10 @@ const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
       file: ledgerPath,
     });
   }
-  const lines = A.filter(Str.split(terminatedPortion(read.contents.value), "\n"), Str.isNonEmpty);
+  const contents = read.contents.value;
+  const splitLines = Str.split(contents, "\n");
+  const completeLines = Str.endsWith("\n")(contents) ? splitLines : A.dropRight(splitLines, 1);
+  const lines = A.filter(completeLines, Str.isNonEmpty);
   const rows = A.getSomes(A.map(lines, ProofLedgerRowJson.decodeOption));
   return { malformedRows: A.length(lines) - A.length(rows), rows };
 });
