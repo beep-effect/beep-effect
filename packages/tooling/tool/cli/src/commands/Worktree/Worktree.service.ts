@@ -143,23 +143,36 @@ export const worktreeArchiveRefArgs: {
 );
 
 /**
- * Build branch deletion arguments with option parsing terminated.
+ * Build an atomic compare-and-swap branch-deletion argument list.
  *
- * **Example** (Delete an archived branch)
+ * **Details**
+ *
+ * `git update-ref -d <ref> <expected>` deletes the ref only while it still
+ * equals the expected object id, under git's own ref locking. A branch that
+ * advanced after its removal was authorized therefore fails the deletion
+ * atomically instead of having its new commits orphaned — the non-atomic
+ * `git branch -D` cannot make that guarantee.
+ *
+ * **Example** (Delete an archived branch at its archived head)
  *
  * ```ts
  * import { worktreeBranchDeleteArgs } from "@beep/repo-cli/commands/Worktree"
  *
- * console.log(worktreeBranchDeleteArgs("feat/feature-x"))
- * // ["branch", "-D", "--", "feat/feature-x"]
+ * console.log(worktreeBranchDeleteArgs("feat/feature-x", "1ed08f66df016a18c6d7d56bd97aa778912cb37b")[1]) // "-d"
  * ```
  *
  * @param branch - Local branch to delete after archive removal.
- * @returns `git branch -D` arguments with an option terminator.
+ * @param head - Object id the branch must still point at for the deletion to apply.
+ * @returns `git update-ref -d` compare-and-swap arguments.
  * @category utilities
  * @since 0.0.0
  */
-export const worktreeBranchDeleteArgs = (branch: string): ReadonlyArray<string> => ["branch", "-D", "--", branch];
+export const worktreeBranchDeleteArgs = (branch: string, head: string): ReadonlyArray<string> => [
+  "update-ref",
+  "-d",
+  `refs/heads/${branch}`,
+  head,
+];
 
 /**
  * Build the deterministic archive-ref and filesystem layout for a retirement.
@@ -813,7 +826,8 @@ const pruneWorktreeMetadata = Effect.fn("WorktreeRemovalService.pruneWorktreeMet
 });
 
 const deleteArchivedBranch = Effect.fn("WorktreeRemovalService.deleteArchivedBranch")(function* (
-  request: WorktreeRemovalRequest
+  request: WorktreeRemovalRequest,
+  head: GitObjectId
 ): Effect.fn.Return<boolean, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const branch = O.filter(request.branch, () => request.deleteBranch);
   return yield* O.match(branch, {
@@ -821,8 +835,8 @@ const deleteArchivedBranch = Effect.fn("WorktreeRemovalService.deleteArchivedBra
     onSome: (branchName) =>
       runWorktreeGitCapture(
         request.mainCheckout,
-        worktreeBranchDeleteArgs(branchName),
-        `Failed to delete archived branch ${branchName}.`
+        worktreeBranchDeleteArgs(branchName, head),
+        `Failed to delete archived branch ${branchName}: it no longer points at the archived head ${head}.`
       ).pipe(Effect.as(true)),
   });
 });
@@ -867,6 +881,27 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   });
 });
 
+const assertUnchangedSinceCapture = Effect.fn("WorktreeRemovalService.assertUnchangedSinceCapture")(function* (
+  request: WorktreeRemovalRequest,
+  capturedHead: GitObjectId,
+  capturedChanges: ReadonlyArray<string>
+): Effect.fn.Return<void, WorktreeCommandError | WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  const head = yield* inspectArchiveHead(request);
+  const changes = yield* inspectRemovalChanges(
+    request.targetPath,
+    preservationErrorAdapter(
+      "inspect-residue",
+      `Failed to re-inspect ${request.targetPath} before removal.`,
+      request.targetPath
+    )
+  );
+  if (!Str.Equivalence(head, capturedHead) || !Str.Equivalence(A.join(changes, "\0"), A.join(capturedChanges, "\0"))) {
+    return yield* WorktreeCommandError.make({
+      message: `Refusing to remove ${request.targetPath}: the checkout changed while its residue was being archived.`,
+    });
+  }
+});
+
 const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedWorktree")(function* (
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<
@@ -885,9 +920,14 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // archive, removal, or branch deletion — rather than merely preserved.
   yield* assertAuthorizedHead(request, head);
   const [reason, manifest] = yield* planArchiveRemoval(request, head, A.isReadonlyArrayNonEmpty(changes));
+  // Archiving is not atomic with removal, so re-verify the checkout against exactly
+  // what was captured — same HEAD, same residue set — immediately before mutating.
+  // New commits can never be orphaned regardless: worktree removal leaves the shared
+  // object store intact, and the branch ref falls only to the compare-and-swap below.
+  yield* assertUnchangedSinceCapture(request, head, changes);
   yield* removeWorktree(request, O.isSome(manifest));
   yield* pruneWorktreeMetadata(request.mainCheckout);
-  const branchDeleted = yield* deleteArchivedBranch(request);
+  const branchDeleted = yield* deleteArchivedBranch(request, head);
   return makeRemovalReceipt(request, reason, manifest, branchDeleted);
 });
 

@@ -180,8 +180,9 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   // branch reused or advanced after that PR merged carries commits the PR never
   // reviewed. HEAD is probed live here — not taken from the scan-time listing — so the
   // pre-apply recheck re-ties authority to the checkout as it exists at removal time;
-  // the residual instant between this probe and removal is absorbed by the
-  // archive-first removal service, which preserves unpushed commits before deleting.
+  // the residual instant after this probe is fenced inside the removal service, which
+  // re-verifies the checkout against its captured state and deletes the branch ref
+  // with an atomic compare-and-swap on the authorized object id.
   const head = yield* successfulOutput(runner, "git", ["rev-parse", "HEAD"], cwd);
   return {
     reapClass: "merged-pr",
@@ -255,13 +256,29 @@ const scanProcessCwdMatches = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const names = yield* fs.readDirectory("/proc").pipe(Effect.option);
-  if (O.isNone(names)) {
+  // /proc/<pid>/cwd targets are fully resolved by the kernel, so the target must be
+  // resolved too or a symlinked ancestor would make every live checkout look idle.
+  const resolvedTarget = yield* fs.realPath(targetPath).pipe(Effect.option);
+  if (O.isNone(names) || O.isNone(resolvedTarget)) {
     return O.none();
   }
   const pids = A.filter(names.value, (name) => PID_DIRECTORY_NAME.test(name));
   const cwds = A.getSomes(yield* Effect.forEach(pids, readPidCwd));
+  // Unreadable pids are dropped, never fail-closed: measurement on a healthy host
+  // shows a permanent population of unreadable-by-construction pids — every foreign
+  // uid, plus this user's own ptrace-protected processes (systemd --user, sd-pam, the
+  // compositor, gpg-agent, every 1Password op) — so any fail-closed rule for them
+  // wedges the scan on every pass and makes retirement unreachable. The guarded
+  // population (this user's agent processes) is dumpable and observable, and the one
+  // protected kind that plausibly occupies a checkout, an op-run wrapper, spawns
+  // dumpable children that inherit and expose the same cwd to this scan.
   return O.some(
-    A.length(A.filter(cwds, (cwd) => Str.Equivalence(cwd, targetPath) || Str.startsWith(`${targetPath}/`)(cwd)))
+    A.length(
+      A.filter(
+        cwds,
+        (cwd) => Str.Equivalence(cwd, resolvedTarget.value) || Str.startsWith(`${resolvedTarget.value}/`)(cwd)
+      )
+    )
   );
 });
 
@@ -270,13 +287,15 @@ const scanProcessCwdMatches = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * Unreadable `/proc` entries (other users' daemons) do NOT mark the scan
- * incomplete, unlike the fleet-status probes — agent processes run as this
- * user, and a reading that goes unknown whenever root owns a process would
- * make retirement unreachable. Only a failure to list `/proc` at all
- * withholds the process evidence. Verdicts follow `classifyFleetLiveness`:
- * any positive evidence is live, complete negatives are dormant, anything
- * else is unknown.
+ * Unreadable `/proc` entries are dropped rather than failing the scan: every
+ * host permanently carries pids whose cwd is unreadable by construction —
+ * foreign uids and this user's own ptrace-protected processes (systemd
+ * --user, gpg-agent, every 1Password op) — so a fail-closed rule for them
+ * would make retirement unreachable on every pass. The comparison target is
+ * resolved through realPath because the kernel fully resolves cwd links.
+ * Only a failure to list `/proc` or resolve the target withholds the
+ * evidence. Verdicts follow `classifyFleetLiveness`: any positive evidence
+ * is live, complete negatives are dormant, anything else is unknown.
  *
  * **Example** (Probe the invoking process's own directory)
  *
@@ -579,9 +598,10 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
         branch: O.fromNullishOr(entry.branch),
         archive: true,
         deleteBranch: true,
-        // The removal service re-reads HEAD at removal time and refuses the removal
-        // outright when it no longer equals this merged-PR-authorized object id, so a
-        // checkout advancing after the recheck cannot lose its worktree or branch.
+        // The removal service re-reads HEAD at removal time, refuses outright when it
+        // no longer equals this merged-PR-authorized object id, and deletes the branch
+        // ref with an atomic compare-and-swap on the same id — a checkout advancing at
+        // any point up to the final ref update fails the removal instead of losing work.
         expectedHead: authorized,
       })
     )
@@ -612,8 +632,9 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  * revalidates every eligible candidate immediately before calling the shared
  * archive-first removal service with branch deletion enabled and the removal
  * request pinned to the merged PR's authorized head — the service re-reads
- * HEAD at removal time and refuses when the checkout advanced past that
- * authority — and reports a
+ * HEAD at removal time, refuses when the checkout advanced past that
+ * authority, and deletes the branch ref via an atomic compare-and-swap on the
+ * same object id — and reports a
  * retirement whose checkout was removed but whose follow-up cleanup failed as
  * retired with a loud warning instead of pretending the directory remains.
  *

@@ -176,7 +176,12 @@ describe("worktree argument builders", () => {
       head,
       "0000000000000000000000000000000000000000",
     ]);
-    expect(worktreeBranchDeleteArgs("feat/feature-x")).toEqual(["branch", "-D", "--", "feat/feature-x"]);
+    expect(worktreeBranchDeleteArgs("feat/feature-x", head)).toEqual([
+      "update-ref",
+      "-d",
+      "refs/heads/feat/feature-x",
+      head,
+    ]);
   });
 
   it.effect("builds deterministic residue paths and reasons", () =>
