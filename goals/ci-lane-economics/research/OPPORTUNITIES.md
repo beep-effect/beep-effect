@@ -717,3 +717,60 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** run the canonical operator in a profile with
   writable Git metadata, or provide an explicitly offline verification mode
   that accepts a previously refreshed base ref.
+
+## 2026-09-03 — package audit asserted a bare lint label that a live 1Password session rewrites
+
+- **Doing:** running the required `beep quality package-verify @beep/repo-cli` handoff proof
+  for the shard implementation on a workstation with a usable `op` session.
+- **Evidence:** the audit's Vitest pass failed one untouched test,
+  `keeps running repo-wide root lint policy checks after aggregate lint fails`, with
+  `expected [ 'lint (op run)' ] to deeply equal [ 'lint' ]`; the same test passed once `op`
+  was removed from `PATH`, and Yeet's own proof lanes never hit it because they run with
+  `CI=true`.
+- **Would have prevented it:** stub the secret-session predicate in the test or assert the
+  label prefix, so the audit's verdict does not depend on whether the machine holds a
+  1Password session.
+
+## 2026-09-03 — stale schema build output masqueraded as new type errors
+
+- **Doing:** running the package audit after cutting the branch from a moved `origin/main`
+  without rebuilding dependency outputs.
+- **Evidence:** `tsgo` reported `Module '"@beep/schema/Unknown"' has no exported member
+  'UnknownFromJsonString'` across untouched CLI files; a
+  `turbo run build --filter="@beep/repo-cli^..."` cleared every error in 24 seconds.
+- **Would have prevented it:** make the package audit rebuild, or at least fingerprint,
+  the dependency outputs it type-checks against, so a moved base cannot present as a
+  branch regression.
+
+## 2026-09-03 — a well-tested feature tripped a single-file coverage floor
+
+- **Doing:** adding deterministic partition proof and execution tests after the scoped
+  coverage ratchet rejected the CI lane economics repair.
+- **Evidence:** the partition feature already had table-law and workflow-shape tests, but
+  concentrating its runtime implementation in `CiLane.ts` lowered that file's committed
+  branch, function, line, and statement rows even though package-level coverage remained
+  broad.
+- **Would have prevented it:** require end-to-end execution-path tests in the same change
+  whenever a large runtime path is added to a file with a high committed per-file floor,
+  and show the projected per-file delta before pre-push.
+
+## 2026-09-03 — package verification used a sandbox-read-only uv cache
+
+- **Doing:** running the required `@beep/repo-cli` package verifier after restoring the
+  partition execution coverage row.
+- **Evidence:** build, typecheck, 2,819 tests, and docgen passed, then the Python audit
+  stopped because `uv` could not create a temporary lock beneath `~/.cache/uv`, which is
+  read-only in the managed workspace profile.
+- **Would have prevented it:** have the package verifier route `UV_CACHE_DIR` to the
+  workspace-approved temporary root when the default user cache is not writable.
+
+## 2026-09-03 — package verification hit a nondeterministic tmpfs reference probe
+
+- **Doing:** rerunning the required `@beep/repo-cli` package verifier with its Python
+  cache redirected to the writable temporary root.
+- **Evidence:** the audit's earlier 146-file run passed the tmpfs suite, but the rerun
+  observed `refCount` 0 instead of a live file-descriptor reference; the exact failing
+  test passed immediately in isolated single-worker reproduction.
+- **Would have prevented it:** make the tmpfs live-reference fixture wait for the
+  descriptor to become visible before asserting, or retry the reference census within a
+  small deterministic bound.
