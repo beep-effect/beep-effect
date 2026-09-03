@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
 import {
@@ -25,6 +25,7 @@ import {
   pipe,
 } from "effect";
 import { dual } from "effect/Function";
+import * as HM from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -83,6 +84,7 @@ import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatc
 import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.ts";
 import { runPackageVerifyCli } from "./internal/PackageVerify.ts";
 import { repoRelative } from "./internal/QualityArtifactSupport.ts";
+import { testTsgoSyntheticConfigTemplate } from "./internal/TestTsgoSyntheticConfig.ts";
 import {
   renderTurboConfigProofReport,
   renderTurboConfigProofReportJson,
@@ -140,6 +142,13 @@ export {
   QualityProfileConfig,
   QualityProfileDetection,
 } from "./Quality.schemas.ts";
+/**
+ * Synthetic tsgo test config fields shared by package workers.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export { testTsgoSyntheticConfigTemplate };
 /**
  * Host facts used when selecting a quality profile.
  *
@@ -444,6 +453,55 @@ type TsgoDiagnosticOutput = {
   readonly output: string;
 };
 
+const TestTsgoPackageResultVersion = LiteralKit(["test-tsgo-package-result/v1"]);
+
+class TestTsgoPackageManifest extends S.Class<TestTsgoPackageManifest>($I`TestTsgoPackageManifest`)(
+  {
+    name: S.String,
+    scripts: S.optionalKey(S.Record(S.String, S.String)),
+  },
+  $I.annote("TestTsgoPackageManifest", {
+    description: "Package identity needed to address one package-owned Turbo task.",
+  })
+) {}
+
+class TestTsgoPackageResultArtifact extends S.Class<TestTsgoPackageResultArtifact>($I`TestTsgoPackageResultArtifact`)(
+  {
+    schemaVersion: TestTsgoPackageResultVersion,
+    packageName: S.String,
+    output: S.String,
+    exitCode: NonNegativeInt,
+  },
+  $I.annote("TestTsgoPackageResultArtifact", {
+    description: "One package worker result consumed by the repo-wide tsgo test renderer.",
+  })
+) {}
+
+class TestTsgoTurboTaskSummary extends S.Class<TestTsgoTurboTaskSummary>($I`TestTsgoTurboTaskSummary`)(
+  {
+    taskId: S.String,
+    hash: S.String,
+  },
+  $I.annote("TestTsgoTurboTaskSummary", {
+    description: "Task identity and hash recorded by the tsgo tests Turbo run.",
+  })
+) {}
+
+class TestTsgoTurboRunSummary extends S.Class<TestTsgoTurboRunSummary>($I`TestTsgoTurboRunSummary`)(
+  { tasks: S.Array(TestTsgoTurboTaskSummary) },
+  $I.annote("TestTsgoTurboRunSummary", {
+    description: "Turbo run-summary fields consumed by the tsgo tests aggregate lane.",
+  })
+) {}
+
+const decodeTestTsgoPackageManifest = S.decodeUnknownEffect(S.fromJsonString(TestTsgoPackageManifest));
+const decodeTestTsgoPackageResultArtifact = S.decodeUnknownEffect(S.fromJsonString(TestTsgoPackageResultArtifact));
+const decodeTestTsgoTurboRunSummary = S.decodeUnknownEffect(S.fromJsonString(TestTsgoTurboRunSummary));
+
+const testTsgoPackageTaskName = "package-test-typecheck";
+const testTsgoPackageTaskScript = "beep-cli quality test-tsgo-package";
+const testTsgoPackageResultRelativePath = ".turbo/package-test-typecheck-result.json";
+
 const commandText = formatCommandLine;
 
 const normalizeExtraArgs = (args: unknown): ReadonlyArray<string> => {
@@ -464,6 +522,14 @@ const withExitCode = (label: string, command: string, args: ReadonlyArray<string
     command: commandText(command, args),
     exitCode,
   });
+
+const qualityFileContext = Effect.fn("QualityScriptCommands.qualityFileContext")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+
+  return { fs, path, repoRoot };
+});
 
 const runStep = Effect.fn("QualityScriptCommands.runStep")(function* (
   step: QualityTaskStep
@@ -1225,17 +1291,30 @@ const collectFiles = Effect.fn("QualityScriptCommands.collectFiles")(function* (
   return pipe(yield* visit(searchRoot), A.sort(Order.String));
 });
 
+const isTestTsgoFile = (normalizedPath: string, name: string): boolean =>
+  Str.includes("/test/")(normalizedPath) &&
+  !pathContainsSegment(normalizedPath, ignoredTestPathSegments) &&
+  /\.(?:cts|mts|ts|tsx)$/u.test(name);
+
+const isIgnoredTestTsgoDirectory = (normalizedPath: string, name: string): boolean =>
+  A.contains(ignoredTestDirectoryNames as ReadonlyArray<string>, name) ||
+  pathContainsSegment(normalizedPath, ignoredTestPathSegments);
+
+const collectTestTsgoFilesUnder = (searchRoot: string) =>
+  collectFiles(searchRoot, isTestTsgoFile, isIgnoredTestTsgoDirectory);
+
 type TestTsgoPackageGroup = {
+  readonly packageName: string;
   readonly packageDir: string;
   readonly tsconfigPath: string;
   readonly files: ReadonlyArray<string>;
+  readonly hasTaskScript: boolean;
 };
 
 type TestTsgoPackageResult = {
   readonly group: TestTsgoPackageGroup;
   readonly output: string;
   readonly exitCode: number;
-  readonly syntheticConfigPath: string;
 };
 
 const tsgoTestPackageLabel = (repoRoot: string, packageDir: string): string =>
@@ -1261,6 +1340,23 @@ const findOwningPackageDir = Effect.fn("QualityScriptCommands.findOwningPackageD
   }
 
   return repoRoot;
+});
+
+const collectOwnedTestTsgoFiles = Effect.fn("QualityScriptCommands.collectOwnedTestTsgoFiles")(function* (
+  repoRoot: string,
+  packageDir: string
+): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const candidates = yield* collectTestTsgoFilesUnder(packageDir);
+  const ownership = yield* Effect.forEach(
+    candidates,
+    Effect.fnUntraced(function* (filePath) {
+      const owner = yield* findOwningPackageDir(repoRoot, filePath);
+      return owner === packageDir ? O.some(filePath) : O.none<string>();
+    }),
+    { concurrency: 1 }
+  );
+
+  return A.getSomes(ownership);
 });
 
 const resolveTestTsconfigPath = Effect.fn("QualityScriptCommands.resolveTestTsconfigPath")(function* (
@@ -1289,6 +1385,8 @@ const collectTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.collectTes
   repoRoot: string,
   discoveredFiles: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<TestTsgoPackageGroup>, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const fileEntries = yield* Effect.forEach(
     discoveredFiles,
     Effect.fnUntraced(function* (filePath) {
@@ -1307,6 +1405,11 @@ const collectTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.collectTes
   return yield* Effect.forEach(
     packageDirs,
     Effect.fnUntraced(function* (packageDir) {
+      const packageManifest = yield* decodeTestTsgoPackageManifest(
+        yield* fs
+          .readFileString(path.join(packageDir, "package.json"))
+          .pipe(QualityScriptCommandError.mapError(`Failed to read ${path.join(packageDir, "package.json")}.`))
+      ).pipe(QualityScriptCommandError.mapError(`Failed to decode ${path.join(packageDir, "package.json")}.`));
       const tsconfigPath = yield* resolveTestTsconfigPath(packageDir);
       const files = pipe(
         fileEntries,
@@ -1315,9 +1418,11 @@ const collectTestTsgoPackageGroups = Effect.fn("QualityScriptCommands.collectTes
         A.sort(Order.String)
       );
       return {
+        packageName: packageManifest.name,
         packageDir,
         tsconfigPath,
         files,
+        hasTaskScript: R.has(packageManifest.scripts ?? {}, testTsgoPackageTaskName),
       } satisfies TestTsgoPackageGroup;
     }),
     { concurrency: 1 }
@@ -1339,21 +1444,13 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
   const groupLabel = tsgoTestPackageLabel(repoRoot, group.packageDir);
   const syntheticConfigPath = path.join(tempDir, `${groupLabel}.tsconfig.json`);
   const syntheticConfig = {
+    ...testTsgoSyntheticConfigTemplate,
     extends: group.tsconfigPath,
-    references: [],
     include: group.files,
-    exclude: [],
     compilerOptions: {
-      composite: false,
-      declaration: false,
-      declarationMap: false,
-      emitDeclarationOnly: false,
-      incremental: false,
-      noEmit: true,
+      ...testTsgoSyntheticConfigTemplate.compilerOptions,
       rootDir: repoRoot,
-      sourceMap: false,
       tsBuildInfoFile: path.join(tempDir, `${groupLabel}.tsbuildinfo`),
-      types: ["node", "bun"],
     },
   };
   const configText = yield* jsonStringifyPretty(syntheticConfig).pipe(
@@ -1377,8 +1474,200 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
     group,
     output: result.output,
     exitCode: result.exitCode,
-    syntheticConfigPath,
   };
+});
+
+const testTsgoPackageResultPath = (path: Path.Path, packageDir: string): string =>
+  path.join(packageDir, testTsgoPackageResultRelativePath);
+
+const writeTestTsgoPackageResult = Effect.fn("QualityScriptCommands.writeTestTsgoPackageResult")(function* (
+  result: TestTsgoPackageResult
+): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resultPath = testTsgoPackageResultPath(path, result.group.packageDir);
+  const artifact = TestTsgoPackageResultArtifact.make({
+    schemaVersion: "test-tsgo-package-result/v1",
+    packageName: result.group.packageName,
+    output: result.output,
+    exitCode: NonNegativeInt.make(result.exitCode),
+  });
+  const artifactText = yield* jsonStringifyPretty(artifact).pipe(
+    QualityScriptCommandError.mapError(`Failed to encode ${result.group.packageName} test tsgo result.`)
+  );
+
+  yield* fs
+    .makeDirectory(path.dirname(resultPath), { recursive: true })
+    .pipe(QualityScriptCommandError.mapError(`Failed to create ${path.dirname(resultPath)}.`));
+  yield* fs
+    .writeFileString(resultPath, `${artifactText}\n`)
+    .pipe(QualityScriptCommandError.mapError(`Failed to write ${resultPath}.`));
+});
+
+const runTestTsgoPackageTask = Effect.fn("QualityScriptCommands.runTestTsgoPackageTask")(function* (
+  extraArgs: unknown
+): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
+  const { fs, path, repoRoot } = yield* qualityFileContext();
+  const packageDir = path.resolve(process.cwd());
+  const files = yield* collectOwnedTestTsgoFiles(repoRoot, packageDir);
+  const groups = yield* collectTestTsgoPackageGroups(repoRoot, files);
+  const group = A.head(groups);
+
+  if (O.isNone(group)) {
+    return yield* QualityScriptCommandError.make({
+      message: `${packageDir} has no package-owned test files for ${testTsgoPackageTaskName}.`,
+      exitCode: 1,
+    });
+  }
+
+  const tempDir = path.join(repoRoot, "node_modules", ".tmp", "tsgo-test-checks");
+  yield* fs
+    .makeDirectory(tempDir, { recursive: true })
+    .pipe(QualityScriptCommandError.mapError(`Failed to create ${tempDir}.`));
+  const result = yield* runTestTsgoPackageGroup(repoRoot, tempDir, normalizeExtraArgs(extraArgs), group.value);
+  yield* writeTestTsgoPackageResult(result);
+});
+
+const testTsgoTurboArgs = (
+  groups: ReadonlyArray<TestTsgoPackageGroup>,
+  extraArgs: ReadonlyArray<string>
+): ReadonlyArray<string> => [
+  "run",
+  testTsgoPackageTaskName,
+  "--concurrency=1",
+  "--continue=always",
+  "--output-logs=none",
+  "--summarize",
+  ...A.map(groups, (group) => `--filter=${group.packageName}`),
+  ...(A.isReadonlyArrayNonEmpty(extraArgs) ? ["--", ...extraArgs] : A.empty<string>()),
+];
+
+const testTsgoTurboSummaryPath = (output: string): O.Option<string> =>
+  pipe(
+    Str.split(output, "\n"),
+    A.findFirst(Str.includes("Summary:")),
+    O.map(flow(Str.replace(/^.*Summary:\s*/u, ""), Str.trim)),
+    O.filter(Str.isNonEmpty)
+  );
+
+const readTestTsgoPackageResult = Effect.fn("QualityScriptCommands.readTestTsgoPackageResult")(function* (
+  group: TestTsgoPackageGroup
+): Effect.fn.Return<TestTsgoPackageResult, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resultPath = testTsgoPackageResultPath(path, group.packageDir);
+  const artifact = yield* fs
+    .readFileString(resultPath)
+    .pipe(
+      QualityScriptCommandError.mapError(
+        `Turbo task ${group.packageName}#${testTsgoPackageTaskName} did not write ${resultPath}.`
+      ),
+      Effect.flatMap(decodeTestTsgoPackageResultArtifact),
+      QualityScriptCommandError.mapError(`Failed to decode ${resultPath}.`)
+    );
+
+  if (artifact.packageName !== group.packageName) {
+    return yield* QualityScriptCommandError.make({
+      message: `${resultPath} belongs to ${artifact.packageName}, expected ${group.packageName}.`,
+      exitCode: 1,
+    });
+  }
+
+  return {
+    group,
+    output: artifact.output,
+    exitCode: artifact.exitCode,
+  };
+});
+
+const readTestTsgoTurboResults = Effect.fn("QualityScriptCommands.readTestTsgoTurboResults")(function* (
+  repoRoot: string,
+  turboOutput: string,
+  groups: ReadonlyArray<TestTsgoPackageGroup>
+): Effect.fn.Return<
+  ReadonlyArray<TestTsgoPackageResult>,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const summaryPathOption = testTsgoTurboSummaryPath(turboOutput);
+
+  if (O.isNone(summaryPathOption)) {
+    return yield* QualityScriptCommandError.make({
+      message: `Turbo did not report a run summary for ${testTsgoPackageTaskName}.`,
+      exitCode: 1,
+    });
+  }
+
+  const summaryPath = path.resolve(repoRoot, summaryPathOption.value);
+  const summary = yield* fs
+    .readFileString(summaryPath)
+    .pipe(
+      QualityScriptCommandError.mapError(`Failed to read ${summaryPath}.`),
+      Effect.flatMap(decodeTestTsgoTurboRunSummary),
+      QualityScriptCommandError.mapError(`Failed to decode ${summaryPath}.`)
+    );
+  const tasksById = HM.fromIterable(A.map(summary.tasks, (task) => [task.taskId, task] as const));
+
+  return yield* Effect.forEach(
+    groups,
+    Effect.fnUntraced(function* (group) {
+      const taskId = `${group.packageName}#${testTsgoPackageTaskName}`;
+      const task = HM.get(tasksById, taskId);
+
+      if (O.isNone(task) || !Str.isNonEmpty(task.value.hash)) {
+        return yield* QualityScriptCommandError.make({
+          message: `${summaryPath} has no hashed task for ${taskId}.`,
+          exitCode: 1,
+        });
+      }
+
+      return yield* readTestTsgoPackageResult(group);
+    }),
+    { concurrency: 1 }
+  );
+});
+
+const runTestTsgoTurboTasks = Effect.fn("QualityScriptCommands.runTestTsgoTurboTasks")(function* (
+  repoRoot: string,
+  groups: ReadonlyArray<TestTsgoPackageGroup>,
+  extraArgs: ReadonlyArray<string>
+): Effect.fn.Return<ReadonlyArray<TestTsgoPackageResult>, QualityScriptCommandError, QualityScriptEnvironment> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  yield* Effect.forEach(
+    groups,
+    (group) =>
+      fs
+        .remove(testTsgoPackageResultPath(path, group.packageDir), { force: true })
+        .pipe(QualityScriptCommandError.mapError(`Failed to clear ${group.packageName} test tsgo result.`)),
+    { concurrency: 1, discard: true }
+  );
+  const turbo = yield* runCaptured({
+    command: path.join(repoRoot, "node_modules", ".bin", "turbo"),
+    args: testTsgoTurboArgs(groups, extraArgs),
+    cwd: repoRoot,
+    env: {
+      FORCE_COLOR: "0",
+      NO_COLOR: "1",
+      TURBO_TELEMETRY_DISABLED: "1",
+      TURBO_UI: "stream",
+    },
+    extendEnv: true,
+    source: "all",
+    trim: true,
+  }).pipe(QualityScriptCommandError.mapError(`Failed to run ${testTsgoPackageTaskName} Turbo tasks.`));
+
+  if (turbo.exitCode !== 0) {
+    return yield* QualityScriptCommandError.make({
+      message: `${testTsgoPackageTaskName} Turbo execution failed with exit code ${turbo.exitCode}.`,
+      exitCode: turbo.exitCode,
+    });
+  }
+
+  return yield* readTestTsgoTurboResults(repoRoot, turbo.output, groups);
 });
 
 /**
@@ -1405,6 +1694,47 @@ export const collectEffectTsgoDiagnosticLines: (results: ReadonlyArray<TsgoDiagn
       )
     )
   );
+
+type TestTsgoTaskOwner = {
+  readonly packageName: string;
+  readonly hasTaskScript: boolean;
+};
+
+/**
+ * Build the actionable preflight failure for discovered packages without the Turbo worker script.
+ *
+ * **Example** (Report a missing package task)
+ *
+ * ```ts
+ * import { missingTestTsgoTaskMessageForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const message = missingTestTsgoTaskMessageForTesting([
+ *   { packageName: "@beep/example", hasTaskScript: false }
+ * ])
+ * ```
+ *
+ * @param groups - Discovered package owners and whether their manifests expose the task script.
+ * @returns The preflight failure message, or `None` when every package can run the Turbo worker.
+ * @category testing
+ * @since 0.0.0
+ */
+export const missingTestTsgoTaskMessageForTesting = (groups: ReadonlyArray<TestTsgoTaskOwner>): O.Option<string> => {
+  const missingPackageNames = pipe(
+    groups,
+    A.filter((group) => !group.hasTaskScript),
+    A.map((group) => group.packageName),
+    A.sort(Order.String)
+  );
+
+  return A.isReadonlyArrayEmpty(missingPackageNames)
+    ? O.none()
+    : O.some(
+        `[check:tsgo:tests] missing required "${testTsgoPackageTaskName}" package script for ${A.join(
+          missingPackageNames,
+          ", "
+        )}. Add "${testTsgoPackageTaskName}": "${testTsgoPackageTaskScript}" to each named package.json.`
+      );
+};
 
 const extractEffectTsgoDiagnosticsTableFragment = (readme: string): O.Option<string> => {
   const tableStart = readme.indexOf(effectTsgoDiagnosticsTableStartMarker);
@@ -1971,9 +2301,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   QualityScriptCommandError,
   QualityScriptEnvironment
 > {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const { fs, path, repoRoot } = yield* qualityFileContext();
   const readmePath = path.join(repoRoot, "node_modules", "@effect", "tsgo", "README.md");
   const tsconfigPath = path.join(repoRoot, "tsconfig.base.json");
   const rootTsconfigPath = path.join(repoRoot, "tsconfig.json");
@@ -2127,22 +2455,10 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
 export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChecks")(function* (
   extraArgs: unknown
 ): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const { fs, path, repoRoot } = yield* qualityFileContext();
   const discoveredFiles = yield* Effect.forEach(
     testSearchRoots,
-    (root) =>
-      collectFiles(
-        path.join(repoRoot, root),
-        (normalized, name) =>
-          Str.includes("/test/")(normalized) &&
-          !pathContainsSegment(normalized, ignoredTestPathSegments) &&
-          /\.(?:cts|mts|ts|tsx)$/u.test(name),
-        (normalized, name) =>
-          A.contains(ignoredTestDirectoryNames as ReadonlyArray<string>, name) ||
-          pathContainsSegment(normalized, ignoredTestPathSegments)
-      ),
+    (root) => collectTestTsgoFilesUnder(path.join(repoRoot, root)),
     { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
 
@@ -2154,20 +2470,19 @@ export const runTestTsgoChecks = Effect.fn("QualityScriptCommands.runTestTsgoChe
   const tempDir = path.join(repoRoot, "node_modules", ".tmp", "tsgo-test-checks");
   const normalizedExtraArgs = normalizeExtraArgs(extraArgs);
   const packageGroups = yield* collectTestTsgoPackageGroups(repoRoot, discoveredFiles);
+  const missingTaskMessage = missingTestTsgoTaskMessageForTesting(packageGroups);
 
-  yield* pipe(
-    fs.makeDirectory(tempDir, { recursive: true }),
-    QualityScriptCommandError.mapError(`Failed to create ${tempDir}.`)
-  );
+  if (O.isSome(missingTaskMessage)) {
+    return yield* QualityScriptCommandError.make({
+      message: missingTaskMessage.value,
+      exitCode: 1,
+    });
+  }
 
   yield* Console.log(
     `[check:tsgo:tests] checking ${A.length(discoveredFiles)} file(s) across ${A.length(packageGroups)} package(s)`
   );
-  const results = yield* Effect.forEach(
-    packageGroups,
-    (group) => runTestTsgoPackageGroup(repoRoot, tempDir, normalizedExtraArgs, group),
-    { concurrency: 1 }
-  ).pipe(
+  const results = yield* runTestTsgoTurboTasks(repoRoot, packageGroups, normalizedExtraArgs).pipe(
     Effect.ensuring(
       fs
         .remove(tempDir, {
@@ -2227,9 +2542,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
   QualityScriptCommandError,
   QualityScriptEnvironment
 > {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const { fs, path, repoRoot } = yield* qualityFileContext();
   const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
   const smokeDir = yield* fs
     .makeTempDirectory({ directory: tempRoot })
@@ -2355,11 +2668,7 @@ export const isModuleTagScannedPathForTesting =
  */
 export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDocModuleTagsCheck")(
   function* (): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const repoRoot = yield* findRepoRoot().pipe(
-      QualityScriptCommandError.mapError("Failed to locate repository root.")
-    );
+    const { fs, path, repoRoot } = yield* qualityFileContext();
     const result = yield* collectOutput(
       QualityTaskStep.make({
         label: "lint:jsdoc-module-tags:git-ls-files",
@@ -2596,6 +2905,14 @@ const testTsgoCommand = Command.make(
   },
   ({ args }) => runQualityProgram(runTestTsgoChecks(args as ReadonlyArray<string>))
 ).pipe(Command.withDescription("Run Effect tsgo diagnostics for test files"));
+
+const testTsgoPackageCommand = Command.make(
+  "test-tsgo-package",
+  {
+    args: Argument.string("args").pipe(Argument.variadic),
+  },
+  ({ args }) => runQualityProgram(runTestTsgoPackageTask(args as ReadonlyArray<string>))
+).pipe(Command.withDescription("Run one package-owned tsgo test task for the aggregate lane"));
 
 const tsgoSmokeCommand = Command.make("tsgo-smoke", {}, () => runQualityProgram(runTsgoSmokeCheck())).pipe(
   Command.withDescription("Smoke test the repo tsgo Effect diagnostics")
@@ -3238,6 +3555,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     githubChecksCommandWithSubcommands,
     bunAuditCommand,
     testTsgoCommand,
+    testTsgoPackageCommand,
     tsgoSmokeCommand,
     tsgoRulesCommand,
     jsdocModuleTagsCommand,

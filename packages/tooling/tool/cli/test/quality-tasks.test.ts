@@ -72,6 +72,7 @@ import {
   LaneProofSession,
   lintFixChangedStepForTesting,
   mergeCoverageBaselinePackagesForTesting,
+  missingTestTsgoTaskMessageForTesting,
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
   persistLaneProofs,
@@ -2051,6 +2052,24 @@ describe("quality task adapter", () => {
     ]);
 
     expect(diagnostics).toEqual(["src/example.test.ts:1:1 - warning TS90001: unsafe effect(service) usage"]);
+  });
+
+  it("names packages missing the required test tsgo Turbo script", () => {
+    expect(
+      missingTestTsgoTaskMessageForTesting([
+        { packageName: "@beep/ready", hasTaskScript: true },
+        { packageName: "@beep/zulu", hasTaskScript: false },
+        { packageName: "@beep/alpha", hasTaskScript: false },
+      ])
+    ).toEqual(
+      O.some(
+        '[check:tsgo:tests] missing required "package-test-typecheck" package script for @beep/alpha, ' +
+          '@beep/zulu. Add "package-test-typecheck": "beep-cli quality test-tsgo-package" to each named package.json.'
+      )
+    );
+    expect(missingTestTsgoTaskMessageForTesting([{ packageName: "@beep/ready", hasTaskScript: true }])).toEqual(
+      O.none()
+    );
   });
 
   it("normalizes Knip findings with stable ordering and without position fields", () =>
