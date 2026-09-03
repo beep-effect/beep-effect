@@ -5,12 +5,12 @@
     "title": "Semantica Canary",
     "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-08-30",
+    "updated": "2026-08-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-canary",
   "lifecycle": "active",
-  "statusNote": "P3 C1 passed: the first-probe projection candidate cleared committed G expectations, alternate-dimension keying, rebuild identity, and full-W1 R2 with byte-identical live/replay reports, zero unexpected degradation, and no retry. P4 starts after the C1 evidence PR lands; see history/p3-c1-r2.md.",
+  "statusNote": "P4 C2 passed: restricted-EYE oracle agreement, per-event rule validation, commit/SIGKILL/restart projection identity, Tier-L, and full-W1 R2 all cleared with byte-identical live/replay reports, zero unexpected degradation, and no retry. P5 closes the packet; see history/p4-c2-r2.md.",
   "mission": "Scaffold the headless-first Tauri lab at apps/labs/semantica and run the staged canary C0 -> C1 -> C2 over F1 + W1 under the probe breaker (S1), emitting replay-identical EvalReports; each passing stage flips its families from park-pending-canary to a verdict (B1).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -68,7 +68,7 @@
     {
       "id": "P4",
       "name": "C2",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",

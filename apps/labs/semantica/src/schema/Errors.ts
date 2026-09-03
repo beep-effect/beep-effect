@@ -62,6 +62,20 @@ const ProjectionFailureReason = LiteralKit([
   })
 );
 
+const ReasoningFailureReason = LiteralKit([
+  "crash-mismatch",
+  "event-invalid",
+  "expectation-unavailable",
+  "oracle-mismatch",
+  "report-invalid",
+  "rule-invalid",
+  "tier-l-exceeded",
+]).annotate(
+  $I.annote("ReasoningFailureReason", {
+    description: "Stable reason codes for C2 closure, proof, crash, report, and Tier-L failures.",
+  })
+);
+
 /**
  * Reports that a requested source document cannot be listed or read.
  *
@@ -352,5 +366,31 @@ export class ProjectionFailed extends S.TaggedError<ProjectionFailed>($I`Project
   { message: S.NonEmptyString, reason: ProjectionFailureReason },
   $I.annoteError<ProjectionFailed>("ProjectionFailed", {
     description: "Expected C1 failure with a stable projection or rebuild reason.",
+  })
+) {}
+
+/**
+ * Reports a fail-closed C2 reasoning, proof, crash, or Tier-L failure.
+ *
+ * **Example** (Create a closure mismatch)
+ *
+ * ```ts
+ * import { ReasoningFailed } from "@/schema/Errors"
+ *
+ * const error = ReasoningFailed.make({
+ *   message: "Runtime and oracle conclusions differ.",
+ *   reason: "oracle-mismatch"
+ * })
+ * console.log(error.reason) // "oracle-mismatch"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ReasoningFailed extends S.TaggedError<ReasoningFailed>($I`ReasoningFailed`)(
+  "ReasoningFailed",
+  { message: S.NonEmptyString, reason: ReasoningFailureReason },
+  $I.annoteError<ReasoningFailed>("ReasoningFailed", {
+    description: "Expected C2 failure with a stable rule, proof, crash, report, or budget reason.",
   })
 ) {}

@@ -1882,6 +1882,30 @@ describe("quality-scheduler", () => {
       })
     ));
 
+  it("clamps work to the installed-memory token ceiling", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(
+          gibRef,
+          (tempRoot) =>
+            Effect.gen(function* () {
+              const admissionRequest = request({ kind: "merged-preview", weightTokens: 5 });
+              yield* withQualityAdmission(admissionRequest, noAdmissionOriginGate, Effect.void, fastConfig);
+              const admitted = pipe(
+                yield* readJournalEvents(tempRoot.root),
+                A.findFirst(AdmissionJournalEvent.guards["admission-admitted"]),
+                O.getOrThrow
+              );
+
+              expect(admitted.kind).toBe(admissionRequest.kind);
+              expect(admitted.weightTokens).toBe(2);
+            }),
+          20
+        );
+      })
+    ));
+
   it("holds two full proofs at 8-token capacity but refuses a merged preview beside one", () =>
     Effect.runPromise(
       Effect.gen(function* () {
