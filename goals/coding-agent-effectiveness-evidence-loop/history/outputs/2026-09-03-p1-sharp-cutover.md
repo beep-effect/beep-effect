@@ -162,6 +162,13 @@ Active, dirty, detached, and feature-branch checkouts were left untouched;
 their rows remain valid revision-labeled controls rather than being silently
 reclassified at merge time.
 
+By `2026-09-03T14:53:43.103Z`, subsequent owner integrations had raised the
+direct-clone adoption count to 17 of 22. The five non-adopters were one archived
+Effect-v3 clone, two active dirty feature branches, one active clean feature
+branch, and one idle clean feature branch owned by another workstream. None was
+mutated by this rollout. They remain explicit controls pending a safe owned
+integration point or an evidence-backed exclusion.
+
 At `2026-09-03T14:38:50.654Z`, the post-boundary ledger held 15,501 rows:
 1,423 `desktop-ntfy-1` and 14,078 `log-only-0`. The only
 `AskUserQuestion` `PermissionRequest` was still `log-only-0`, so the sharp
@@ -169,6 +176,11 @@ human-input denominator remained zero. The canonical allowlist scan found zero
 rows with forbidden content keys. The instrument was armed, the notification
 ledger held zero files and zero rows, and the ntfy base URL, topic, and token
 were all absent from the runtime environment.
+
+A later `2026-09-03T14:50:35.999Z` census held 16,649 rows: 2,361 sharp and
+14,288 comparison. The same single comparison-population request remained the
+only `AskUserQuestion` start; the sharp denominator and notification ledger
+both remained zero.
 
 The packet launcher-size, manifest JSON, packet whitespace, goals-doctor, and
 reflection-lint checks passed after the record was updated. `goals index

@@ -69,12 +69,15 @@ configured phone transport:
    PR #973 merged at `2026-09-03T14:32:50Z`; the two existing adopters plus
    five clean, process-idle `main` clones now carry the sharp revision. Other
    active, dirty, detached, or feature-branch checkouts were not mutated.
+   Subsequent owner integrations raised adoption to 17 of 22 direct clones;
+   the other five remain explicit controls pending safe integration or
+   exclusion.
 
 The interrupted-series lower bound is `2026-09-03T09:41:33.322Z`, after a
 six-second old/new writer overlap excluded from analysis. No sharp
 `AskUserQuestion` bracket has accrued yet, so no treatment effect is claimed.
-The post-rollout census through `2026-09-03T14:38:50.654Z` contains 15,501
-rows: 1,423 `desktop-ntfy-1` and 14,078 `log-only-0`. The sole
+The post-rollout census through `2026-09-03T14:50:35.999Z` contains 16,649
+rows: 2,361 `desktop-ntfy-1` and 14,288 `log-only-0`. The sole
 `AskUserQuestion` `PermissionRequest` remains in the comparison population;
 the sharp denominator is zero. This is a staggered, revision-qualified
 intervention, not a merge-time claim of fleet-wide adoption.
