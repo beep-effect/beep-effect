@@ -136,3 +136,17 @@
   while still checking both process exit codes and propagating any transfer
   failure. Package tests for process handoffs should repeat the operation in one
   Effect test scope so leaked or non-terminating stream fibers are observable.
+
+## 2026-09-03 — A green coverage shard still missed security branches
+
+- **What I was doing:** Monitoring the replacement Coverage Regression run
+  after the quota-pipeline deadlock was repaired.
+- **Evidence:** All 2,800-plus repo-cli tests passed, but the changed-file
+  ratchet rejected uncovered late-stability, worker-evidence, and guarded
+  tmpfs-removal paths in three earlier security-batch files. Focused regressions
+  raised every affected metric above its committed floor, and a full local
+  repo-cli coverage run then passed 145 files and the package ratchet.
+- **What would have prevented it:** Every new fail-closed arm needs an explicit
+  test for the refusal path, including boundary revalidation and injected I/O
+  failure callbacks. Run the full package-scoped coverage command and inspect
+  changed-file rows before the first publish of a security batch.

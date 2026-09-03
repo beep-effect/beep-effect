@@ -813,7 +813,11 @@ describe("T7 corpus preservation", () => {
             .kind
         ).toBe("resume-discarded");
 
-        for (const race of ["unreadable", "changed"] as const) {
+        for (const [race, sourceStatTrigger] of [
+          ["unreadable", 2],
+          ["changed", 2],
+          ["late-unreadable", 3],
+        ] as const) {
           const raceDest = path.join(root, "archive", `settle-${race}.bin`);
           yield* fs.writeFile(raceDest, sourceBytes);
           let sourceStatCount = 0;
@@ -823,8 +827,8 @@ describe("T7 corpus preservation", () => {
               const info = yield* fs.stat(target);
               if (!Str.Equivalence(target, source)) return info;
               sourceStatCount += 1;
-              if (sourceStatCount !== 2) return info;
-              if (race === "unreadable") return yield* fs.stat(path.join(root, "missing-settle-source.bin"));
+              if (sourceStatCount !== sourceStatTrigger) return info;
+              if (race !== "changed") return yield* fs.stat(path.join(root, "missing-settle-source.bin"));
               return { ...info, size: FileSystem.Size(info.size + 1n) };
             }),
           });
@@ -834,7 +838,7 @@ describe("T7 corpus preservation", () => {
           );
           const racingWriter = yield* ArchiveWriter.pipe(Effect.provide(racingContext));
           expect((yield* racingWriter.archiveObject(source, raceDest, identity)).kind).toBe(
-            race === "unreadable" ? "unreadable" : "changed-during-copy"
+            race === "changed" ? "changed-during-copy" : "unreadable"
           );
         }
 
