@@ -1966,7 +1966,7 @@ describe("quality task adapter", () => {
       expect(testTsgoPlanningForTesting.packageResultPath(path, "/repo/packages/example")).toBe(
         "/repo/packages/example/.turbo/package-test-typecheck-result.json"
       );
-    }).pipe(Effect.provide(NodePath.layer))
+    }).pipe(provideScopedLayer(NodePath.layer))
   );
 
   it("normalizes Knip findings with stable ordering and without position fields", () =>
