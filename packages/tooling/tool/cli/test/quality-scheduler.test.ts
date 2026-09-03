@@ -45,7 +45,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Clock, ConfigProvider, Deferred, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import { Clock, ConfigProvider, Deferred, Effect, Encoding, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -59,6 +59,13 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 
 const DEAD_PID = 2_147_483_647;
 const JOURNALED_ATTEMPT_ID = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440020");
+const reapClaimPath = (lockPath: string, observedToken: string): string =>
+  `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
+const reapAdopterPath = (
+  claimPath: string,
+  generation: Pick<AdmissionJournalLockGeneration, "ownerToken" | "pid" | "procStart">
+): string =>
+  `${claimPath}.adopt-${generation.pid}.${Encoding.encodeBase64Url(generation.procStart)}.${Encoding.encodeBase64Url(generation.ownerToken)}`;
 
 describe("process identity liveness", () => {
   it.effect("uses a portable process identity when procfs is unavailable", () =>
@@ -908,6 +915,228 @@ describe("quality-scheduler", () => {
 
             expect(acquired).toBe(false);
             expect(yield* fs.readFileString(lockPath)).toBe(observedToken);
+          })
+        );
+      })
+    ));
+
+  it("waits for live, fresh, unreadable, and concurrently vanished claim adopters", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            const procStart = O.getOrThrow(yield* processStartIdentityForPid(process.pid));
+
+            const liveLockPath = path.join(tempRoot.root, "live-adopter.lock");
+            const liveToken = `${DEAD_PID}:live-adopter-generation`;
+            const liveClaimPath = reapClaimPath(liveLockPath, liveToken);
+            const liveAdopterPath = reapAdopterPath(
+              liveClaimPath,
+              AdmissionJournalLockGeneration.make({
+                schemaVersion: "yeet-admission-journal-lock/v1",
+                pid: process.pid,
+                procStart,
+                ownerToken: `${process.pid}:live-adopter`,
+              })
+            );
+            yield* fs.writeFileString(liveLockPath, liveToken);
+            yield* fs.writeFileString(liveAdopterPath, liveToken);
+            expect(yield* acquireJournalFileLock(liveLockPath, `${process.pid}:contender-live`, 1)).toBe(false);
+            expect(yield* fs.exists(liveLockPath)).toBe(true);
+
+            const freshLockPath = path.join(tempRoot.root, "fresh-malformed-adopter.lock");
+            const freshToken = `${DEAD_PID}:fresh-malformed-generation`;
+            yield* fs.writeFileString(freshLockPath, freshToken);
+            yield* fs.writeFileString(`${reapClaimPath(freshLockPath, freshToken)}.adopt-malformed`, freshToken);
+            expect(yield* acquireJournalFileLock(freshLockPath, `${process.pid}:contender-fresh`, 1)).toBe(false);
+            expect(yield* fs.exists(freshLockPath)).toBe(true);
+
+            const unreadableLockPath = path.join(tempRoot.root, "unreadable-adopter-directory.lock");
+            const unreadableToken = `${DEAD_PID}:unreadable-adopter-generation`;
+            yield* fs.writeFileString(unreadableLockPath, unreadableToken);
+            const unavailableDirectory = fs.readDirectory(path.join(tempRoot.root, "missing-directory"));
+            const unreadableFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readDirectory: Effect.fn("ProcessIdentityTest.readDirectory")((target) =>
+                Str.Equivalence(target, tempRoot.root) ? unavailableDirectory : fs.readDirectory(target)
+              ),
+            });
+            expect(
+              yield* acquireJournalFileLock(unreadableLockPath, `${process.pid}:contender-unreadable`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, unreadableFileSystem)
+              )
+            ).toBe(false);
+            expect(yield* fs.exists(unreadableLockPath)).toBe(true);
+
+            const vanishedLockPath = path.join(tempRoot.root, "vanished-adopter.lock");
+            const vanishedToken = `${DEAD_PID}:vanished-adopter-generation`;
+            const vanishedAdopterName = path.basename(
+              `${reapClaimPath(vanishedLockPath, vanishedToken)}.adopt-vanished`
+            );
+            yield* fs.writeFileString(vanishedLockPath, vanishedToken);
+            const vanishedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readDirectory: Effect.fn("ProcessIdentityTest.readDirectory")((target) =>
+                Str.Equivalence(target, tempRoot.root)
+                  ? fs.readDirectory(target).pipe(Effect.map((entries) => A.append(entries, vanishedAdopterName)))
+                  : fs.readDirectory(target)
+              ),
+            });
+            expect(
+              yield* acquireJournalFileLock(vanishedLockPath, `${process.pid}:contender-vanished`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, vanishedFileSystem)
+              )
+            ).toBe(false);
+            expect(yield* fs.exists(vanishedLockPath)).toBe(true);
+          })
+        );
+      })
+    ));
+
+  it("retires stale malformed and dead claim adopters", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            const agedSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
+
+            const staleLockPath = path.join(tempRoot.root, "stale-malformed-adopter.lock");
+            const staleToken = `${DEAD_PID}:stale-malformed-generation`;
+            const staleAdopterPath = `${reapClaimPath(staleLockPath, staleToken)}.adopt-not-a-number.cHJvYzpzdGFydA.b3duZXI`;
+            yield* fs.writeFileString(staleLockPath, staleToken);
+            yield* fs.writeFileString(staleAdopterPath, staleToken);
+            yield* fs.utimes(staleAdopterPath, agedSeconds, agedSeconds);
+            expect(yield* acquireJournalFileLock(staleLockPath, `${process.pid}:contender-stale`, 1)).toBe(false);
+            expect(yield* fs.exists(staleLockPath)).toBe(false);
+
+            const deadLockPath = path.join(tempRoot.root, "dead-adopter.lock");
+            const deadToken = `${DEAD_PID}:dead-adopter-generation`;
+            const deadClaimPath = reapClaimPath(deadLockPath, deadToken);
+            const deadAdopterPath = reapAdopterPath(
+              deadClaimPath,
+              AdmissionJournalLockGeneration.make({
+                schemaVersion: "yeet-admission-journal-lock/v1",
+                pid: DEAD_PID,
+                procStart: "proc:dead-start",
+                ownerToken: `${DEAD_PID}:dead-adopter`,
+              })
+            );
+            yield* fs.writeFileString(deadLockPath, deadToken);
+            yield* fs.writeFileString(deadAdopterPath, deadToken);
+            expect(yield* acquireJournalFileLock(deadLockPath, `${process.pid}:contender-dead`, 1)).toBe(false);
+            expect(yield* fs.exists(deadLockPath)).toBe(false);
+          })
+        );
+      })
+    ));
+
+  it("keeps the observed generation when claim validation or tombstoning loses its race", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+
+            const changedLockPath = path.join(tempRoot.root, "changed-before-finish.lock");
+            const changedToken = `${DEAD_PID}:changed-before-finish-generation`;
+            yield* fs.writeFileString(changedLockPath, changedToken);
+            const changedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("ProcessIdentityTest.readFileString")((target, encoding) =>
+                Str.includes(".adopt-")(target)
+                  ? Effect.succeed(`${process.pid}:different-claim-generation`)
+                  : fs.readFileString(target, encoding)
+              ),
+            });
+            expect(
+              yield* acquireJournalFileLock(changedLockPath, `${process.pid}:contender-changed`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, changedFileSystem)
+              )
+            ).toBe(false);
+            expect(yield* fs.readFileString(changedLockPath)).toBe(changedToken);
+
+            const tombstoneLockPath = path.join(tempRoot.root, "failed-tombstone.lock");
+            const tombstoneToken = `${DEAD_PID}:failed-tombstone-generation`;
+            yield* fs.writeFileString(tombstoneLockPath, tombstoneToken);
+            const failedRename = fs.rename(
+              path.join(tempRoot.root, "missing-source"),
+              path.join(tempRoot.root, "unused")
+            );
+            const tombstoneFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              rename: Effect.fn("ProcessIdentityTest.rename")((oldPath, newPath) =>
+                Str.Equivalence(oldPath, tombstoneLockPath) && Str.includes(".tombstone-")(newPath)
+                  ? failedRename
+                  : fs.rename(oldPath, newPath)
+              ),
+            });
+            expect(
+              yield* acquireJournalFileLock(tombstoneLockPath, `${process.pid}:contender-tombstone`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, tombstoneFileSystem)
+              )
+            ).toBe(false);
+            expect(yield* fs.readFileString(tombstoneLockPath)).toBe(tombstoneToken);
+          })
+        );
+      })
+    ));
+
+  it("handles unavailable generation identity, vanished contention, and absent release", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+
+            const unavailableLockPath = path.join(tempRoot.root, "unavailable-identity.lock");
+            const unavailableFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              readFileString: Effect.fn("ProcessIdentityTest.readFileString")((target, encoding) =>
+                Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding)
+              ),
+            });
+            const platform = Object.getOwnPropertyDescriptor(process, "platform");
+            Object.defineProperty(process, "platform", { configurable: true, value: "win32" });
+            try {
+              expect(
+                yield* acquireJournalFileLock(unavailableLockPath, `${process.pid}:unavailable`, 1).pipe(
+                  Effect.provideService(FileSystem.FileSystem, unavailableFileSystem)
+                )
+              ).toBe(false);
+            } finally {
+              Object.defineProperty(process, "platform", platform ?? { configurable: true, value: "linux" });
+            }
+
+            const vanishedLockPath = path.join(tempRoot.root, "vanished-contention.lock");
+            const missingSource = path.join(tempRoot.root, "missing-link-source");
+            const vanishedFileSystem = FileSystem.FileSystem.of({
+              ...fs,
+              link: Effect.fn("ProcessIdentityTest.link")((existingPath, newPath) =>
+                Str.includes(".stage-")(existingPath) ? fs.link(missingSource, newPath) : fs.link(existingPath, newPath)
+              ),
+            });
+            expect(
+              yield* acquireJournalFileLock(vanishedLockPath, `${process.pid}:vanished`, 1).pipe(
+                Effect.provideService(FileSystem.FileSystem, vanishedFileSystem)
+              )
+            ).toBe(false);
+            expect(yield* fs.exists(vanishedLockPath)).toBe(false);
+
+            yield* releaseAdmissionJournalLockForTesting(path.join(tempRoot.root, "absent-release.lock"), "absent");
           })
         );
       })

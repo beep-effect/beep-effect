@@ -21,9 +21,14 @@ import { Clock, Duration, Effect, Encoding, FileSystem, Number as N, Path, pipe 
 import * as A from "effect/Array";
 import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import {
+  isProcessPidAlive,
+  ProcessIdentityStatus,
+  processIdentityStatus,
+  processStartIdentityForPid,
+} from "./ProcessIdentity.ts";
 import { AdmissionPriority, AdmissionWorkKind, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 
@@ -372,89 +377,12 @@ export const admissionJournalPath = Effect.fn("AdmissionJournal.path")(function*
   return path.join(root, JOURNAL_FILE_NAME);
 });
 
-const parseProcStatStartTime = (stat: string): O.Option<string> =>
-  pipe(
-    Str.lastIndexOf(")")(stat),
-    O.flatMap((closeParen) =>
-      O.fromUndefinedOr(A.filter(Str.split(Str.trim(Str.slice(closeParen + 1)(stat)), /\s+/), Str.isNonEmpty)[19])
-    )
-  );
-
-const pidIsAlive = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return P.hasProperty(error, "code") && error.code === "EPERM";
-  }
-};
-
 const legacyLockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
-
-const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Option<string>> =>
-  Effect.try(() => {
-    const windows = process.platform === "win32";
-    const command = windows
-      ? [
-          "powershell.exe",
-          "-NoProfile",
-          "-NonInteractive",
-          "-Command",
-          `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToUniversalTime().Ticks`,
-        ]
-      : ["ps", "-o", "lstart=", "-p", `${pid}`];
-    const result = Bun.spawnSync({
-      cmd: command,
-      env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
-      stderr: "ignore",
-      stdout: "pipe",
-    });
-    const output = Str.trim(result.stdout.toString());
-    return result.success && Str.isNonEmpty(output) ? O.some(`${windows ? "win" : "ps"}:${output}`) : O.none<string>();
-  }).pipe(Effect.orElseSucceed(O.none<string>));
-
-const processIdentityHasKnownSource = (identity: string): boolean =>
-  Str.startsWith("proc:")(identity) || Str.startsWith("ps:")(identity) || Str.startsWith("win:")(identity);
-
-const normalizeRecordedLockIdentity = (identity: string): string =>
-  processIdentityHasKnownSource(identity) ? identity : `proc:${identity}`;
-
-const processIdentitySourcesMatch = (left: string, right: string): boolean =>
-  (Str.startsWith("proc:")(left) && Str.startsWith("proc:")(right)) ||
-  (Str.startsWith("ps:")(left) && Str.startsWith("ps:")(right)) ||
-  (Str.startsWith("win:")(left) && Str.startsWith("win:")(right));
-
-const processStartIdentityForLock = Effect.fnUntraced(function* (
-  pid: number,
-  recordedIdentity = O.none<string>()
-): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
-  const normalizedRecorded = O.map(recordedIdentity, normalizeRecordedLockIdentity);
-  if (O.exists(normalizedRecorded, (identity) => Str.startsWith("ps:")(identity) || Str.startsWith("win:")(identity))) {
-    return yield* processStartIdentityFromSystemCommand(pid);
-  }
-  const fs = yield* FileSystem.FileSystem;
-  const procStart = yield* fs
-    .readFileString(`/proc/${pid}/stat`)
-    .pipe(
-      Effect.map(parseProcStatStartTime),
-      Effect.map(O.map((identity) => `proc:${identity}`)),
-      Effect.orElseSucceed(O.none<string>)
-    );
-  return O.isSome(procStart) || O.isSome(normalizedRecorded)
-    ? procStart
-    : yield* processStartIdentityFromSystemCommand(pid);
-});
 
 const lockGenerationIsDead = Effect.fnUntraced(function* (
   generation: AdmissionJournalLockGeneration
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
-  if (!pidIsAlive(generation.pid)) {
-    return true;
-  }
-  const recorded = normalizeRecordedLockIdentity(generation.procStart);
-  return O.exists(yield* processStartIdentityForLock(generation.pid, O.some(recorded)), (current) =>
-    processIdentitySourcesMatch(recorded, current) ? current !== recorded : false
-  );
+  return ProcessIdentityStatus.is.dead(yield* processIdentityStatus(generation));
 });
 
 const isOwnedLockGeneration = Effect.fnUntraced(function* (
@@ -481,10 +409,9 @@ const decodeReapAdopterGeneration = Effect.fnUntraced(function* (
   claimPath: string
 ): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>> {
   const prefix = journalLockReapAdopterPrefix(claimPath);
-  if (!Str.startsWith(prefix)(adopterPath)) {
-    return O.none();
-  }
-  const parts = yield* decodeReapAdopterPathParts(Str.slice(prefix.length)(adopterPath)).pipe(Effect.option);
+  const parts = yield* decodeReapAdopterPathParts(Str.split(".")(Str.slice(prefix.length)(adopterPath))).pipe(
+    Effect.option
+  );
   if (O.isNone(parts)) {
     return O.none();
   }
@@ -576,7 +503,7 @@ const activeReapAdopterExists = Effect.fnUntraced(function* (
 const makeLockGeneration = Effect.fnUntraced(function* (
   token: string
 ): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>, never, FileSystem.FileSystem> {
-  const procStart = yield* processStartIdentityForLock(process.pid);
+  const procStart = yield* processStartIdentityForPid(process.pid);
   return O.map(procStart, (identity) =>
     AdmissionJournalLockGeneration.make({
       schemaVersion: "yeet-admission-journal-lock/v1",
@@ -659,12 +586,13 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   // A decoded owner that died or no longer matches its recorded process start
   // identity abandons the lock immediately. Legacy pid-only tokens remain
   // readable during rollout but cannot prove PID reuse.
-  const generation = yield* O.match(content, {
-    onNone: () => Effect.succeed(O.none<AdmissionJournalLockGeneration>()),
-    onSome: (token) => decodeLockGeneration(token).pipe(Effect.option),
-  });
+  const generation = yield* decodeLockGeneration(content.value).pipe(Effect.option);
   const ownerDead = yield* O.match(generation, {
-    onNone: () => Effect.succeed(O.exists(O.flatMap(content, legacyLockOwnerPid), (pid) => !pidIsAlive(pid))),
+    onNone: () =>
+      O.match(O.flatMap(content, legacyLockOwnerPid), {
+        onNone: () => Effect.succeed(false),
+        onSome: (pid) => isProcessPidAlive(pid).pipe(Effect.map((alive) => !alive)),
+      }),
     onSome: lockGenerationIsDead,
   });
   const outlivedBackstop = pipe(

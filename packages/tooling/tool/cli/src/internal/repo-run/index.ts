@@ -8,6 +8,7 @@
 export * from "./AdmissionJournal.ts";
 export * from "./AttemptTerminationJournal.ts";
 export * from "./GitExec.ts";
+export * from "./ProcessIdentity.ts";
 export * from "./QualityScheduler.schemas.ts";
 export * from "./QualityScheduler.ts";
 export * from "./RepoRun.executor.ts";
