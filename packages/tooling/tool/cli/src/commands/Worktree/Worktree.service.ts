@@ -167,12 +167,13 @@ export const worktreeArchiveRefArgs: {
  * @category utilities
  * @since 0.0.0
  */
-export const worktreeBranchDeleteArgs = (branch: string, head: string): ReadonlyArray<string> => [
-  "update-ref",
-  "-d",
-  `refs/heads/${branch}`,
-  head,
-];
+export const worktreeBranchDeleteArgs: {
+  (head: string): (branch: string) => ReadonlyArray<string>;
+  (branch: string, head: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (branch: string, head: string): ReadonlyArray<string> => ["update-ref", "-d", `refs/heads/${branch}`, head]
+);
 
 /**
  * Build the deterministic archive-ref and filesystem layout for a retirement.
