@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "feat/quality-gate-ratchets",
+  "committed": false,
+  "createdAt": "2026-07-06T14:06:42.241Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "publish",
+      "status": "passed",
+      "exitCode": 0
+    }
+  ],
+  "message": "yeet publish succeeded.",
+  "mode": "publish",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_quality-gate-ratchets-df96724b5932",
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "b54fbec8cff08be713cfb8c05d62610905a5ba15",
+    "overlappingPaths": []
+  }
+}

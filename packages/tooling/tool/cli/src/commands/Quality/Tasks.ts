@@ -33,8 +33,10 @@ import {
   configStringOption,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
+  renderTurboEnvironmentHealthWarning,
   turboCacheSecretSessionEnvironment,
   turboEnvExtendsAmbient,
+  turboEnvironmentHealthWarnings,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath, LABS_TURBO_EXCLUDE_FILTER } from "../../internal/cli/Labs/index.ts";
@@ -1080,9 +1082,14 @@ const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
 
+  const environmentWarnings = yield* turboEnvironmentHealthWarnings(step.cwd, Bun.env);
+  yield* Effect.forEach(environmentWarnings, flow(renderTurboEnvironmentHealthWarning, Console.warn), {
+    discard: true,
+  });
+
   // A missing, expired, or denied 1Password session degrades the lane to
   // local-only instead of failing it.
-  const canUseSecretSession = yield* canUseTurboCacheSecretSession(step.cwd);
+  const canUseSecretSession = yield* canUseTurboCacheSecretSession(step.cwd, Bun.env);
   if (!canUseSecretSession) {
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
@@ -1394,7 +1401,7 @@ const runStepWithQuarantine = Effect.fn("QualityTasks.runStepWithQuarantine")(fu
   if (step.flakeQuarantine === undefined || isCi()) {
     return yield* runStep(step).pipe(
       Effect.as(O.none<QualityTaskFailed>()),
-      Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeed(O.some(failure)))
+      Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeedSome(failure))
     );
   }
 

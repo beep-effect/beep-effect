@@ -1,0 +1,10 @@
+id: po:sha256:7a127886ce9cd789e25ca288274377e644ebfc27da768ca939e258cb40dc81cd
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
+source_span:
+  start_line: 345
+  end_line: 380
+quote: 'priority: "verify"'
+epistemic_status: quoted_prose

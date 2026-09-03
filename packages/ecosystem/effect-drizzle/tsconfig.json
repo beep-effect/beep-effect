@@ -31,10 +31,14 @@
         },
         "diagnosticSeverity": {
           "abortControllerInEffect": "error",
+          "acquireReleaseDisposable": "error",
+          "allOfMapToForEach": "error",
           "anyUnknownInErrorContext": "error",
           "asyncFunction": "error",
           "catchAllToMapError": "error",
           "catchChainToFirstSuccessOf": "error",
+          "catchConditionalRefailToCatchIf": "error",
+          "catchDieToOrDie": "error",
           "catchTagToCatchReason": "error",
           "catchToIgnore": "error",
           "catchToOrElseSucceed": "error",
@@ -55,6 +59,7 @@
           "effectMapVoid": "error",
           "effectSucceedWithVoid": "error",
           "extendsNativeError": "error",
+          "flatMapConditionalToFilterOrFail": "error",
           "flatMapToMap": "error",
           "floatingEffect": "error",
           "floatingEffectInVitest": "error",
@@ -76,18 +81,15 @@
           "lazyEffect": "error",
           "lazyPromiseInEffectSync": "error",
           "leakingRequirements": "error",
-          // Family delta (standards/architecture/14-ecosystem-packages.md
-          // Style-Law Scoping; publishing-standards ledger "effect-lsp plugin —
-          // at graduation the family needs its own plugin profile"): the two
-          // pipe-idiom style rules are off because the published DSL's
-          // deliberately data-first factory surface and named-import style
-          // conflict with them. Every correctness diagnostic stays "error".
+          "mapSomeToAsSome": "error",
+          // Family delta: the published DSL intentionally exposes data-first
+          // factory forms, so this style-only rule is the sole allowed `off`.
           "missedPipeableOpportunity": "off",
           "missingEffectContext": "error",
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",
           "missingLayerContext": "error",
-          "missingPipeableSignature": "off",
+          "missingPipeableSignature": "error",
           "missingReturnYieldStar": "error",
           "missingStarInYieldEffectGen": "error",
           "multipleCatchTag": "error",
@@ -97,10 +99,12 @@
           "newSchemaClass": "error",
           "nodeBuiltinImport": "error",
           "nonObjectEffectServiceType": "error",
+          "optionMatchToFromOption": "error",
           "outdatedApi": "error",
           "overriddenSchemaConstructor": "error",
           "preferSchemaOverJson": "error",
           "preferSchemaTypeProperty": "error",
+          "preferSucceedSomeOrNone": "error",
           "preferTypedSchemaDecoder": "error",
           "preferUnsafeConstructor": "error",
           "processEnv": "error",

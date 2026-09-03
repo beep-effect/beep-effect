@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/lab-apps-p2-labs-substrate",
+  "committed": true,
+  "createdAt": "2026-08-17T05:54:13.854Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1894.864476,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 2479.632136,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "publish",
+      "status": "passed",
+      "durationMs": 4770.566761,
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "failed",
+      "durationMs": 1015834.669286,
+      "exitCode": 1,
+      "repairCommand": "Inspect the OSV finding and rerun `bun run beep quality github-checks security`."
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish proof failed after creating the local commit. Fix the issue, then amend or reset the commit that has not yet been pushed before retrying.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_lab-apps-p2-labs-substrate-ea162ed293d7",
+  "attemptId": "95f92a8c-eb1e-4352-837b-1277abf7c6f5",
+  "startedAt": "2026-08-17T05:37:08.543Z",
+  "endedAt": "2026-08-17T05:54:13.854Z",
+  "elapsedMs": 1025311,
+  "indexPath": "<fleet>/beep-effect7/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "a4415407407f2d71fc0712bdc7e50a0ff498e2f3",
+    "overlappingPaths": []
+  },
+  "failedStepId": "full:01-pre-push",
+  "failureKind": "step-exit"
+}

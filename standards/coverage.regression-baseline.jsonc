@@ -5551,14 +5551,14 @@
     },
     "@beep/editor": {
       "path": "packages/foundation/ui-system/editor",
-      "lines": 64.18,
-      "statements": 61.55,
-      "branches": 47.32,
+      "lines": 64.25,
+      "statements": 61.62,
+      "branches": 47.7,
       "functions": 55.78,
       "uncovered": {
-        "lines": 586,
-        "statements": 707,
-        "branches": 404,
+        "lines": 584,
+        "statements": 705,
+        "branches": 398,
         "functions": 294
       },
       "files": {
@@ -5748,9 +5748,9 @@
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 60,
-            "statements": 63,
-            "branches": 51,
+            "lines": 58,
+            "statements": 61,
+            "branches": 45,
             "functions": 24
           }
         },
@@ -5788,18 +5788,6 @@
             "statements": 1,
             "branches": 0,
             "functions": 1
-          }
-        },
-        "packages/foundation/ui-system/editor/src/chat/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/foundation/ui-system/editor/src/chat/send.tsx": {
@@ -25534,6 +25522,18 @@
             "statements": 0,
             "branches": 2,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts": {
+          "lines": 86.08,
+          "statements": 86.36,
+          "branches": 78.94,
+          "functions": 72.22,
+          "uncovered": {
+            "lines": 27,
+            "statements": 27,
+            "branches": 8,
+            "functions": 20
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/index.ts": {

@@ -6,18 +6,16 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Auditor run 2 (first_run: false, prior index orun-2026-08-29T08:20:55Z.index.yaml): review the updated ontology-foundational-auditor skill on main first, then run over the extended corpus — 163 parked candidates, 76 parked ledger rows, 4 waived constraints, the VerificationLane placement obligation, the six S6-surfaced vocabulary/telemetry gaps, PLUS the S7 additions: the five provisional ciops-prov: ordering predicates + class ScheduleStep (ruling 2, sitting 1 of S7) and the replay censorship finding 'lease death is unjournaled' (phantom grant evidence in research/s7-replay-evidence.md). S5/S6/S7 are COMPLETE — do not redo them.",
-      "S8 IRI scheme: deferred per the standing pipeline; ciops-prov: namespace re-proposal rides auditor run 2."
+      "Auditor run 3 prerequisites (run 2 COMPLETE 2026-09-03, orun-2026-09-03T02:46:18Z, 21 ratifications rat-032..rat-052, gate PASSED — do not rerun): the full ordering cluster (ScheduleStep + its four relations ratify together), the deferred identity-provenance corpora, and the grant-contention + checkout-identity captures. Prior chain: runs/orun-2026-09-03T02:46:18Z.index.yaml sha12 a207a106de68. The CQ-020 amendment is APPLIED (2026-09-03, this branch: SeatRequest ordering, step-borne hasScopeTag literal, required AdmissionProjectionSpecification, S6 registry regenerated). Upstream skill follow-ups (scanner archive shelter; Python 3.13 validator fix) queued in work-run2/impl-report.md.",
+      "S8 IRI scheme: deferred per the standing pipeline; the ciops-prov: namespace re-proposal now rides run 3 with the ordering cluster."
     ],
-    "sources": [
-      "research/SOURCES.md"
-    ],
+    "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-27",
-    "updated": "2026-08-30"
+    "updated": "2026-09-02"
   }
 }

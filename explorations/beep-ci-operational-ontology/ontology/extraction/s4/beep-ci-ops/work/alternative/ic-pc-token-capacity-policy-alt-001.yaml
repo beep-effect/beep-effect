@@ -1,0 +1,35 @@
+id: ic:pc-token-capacity-policy-alt:001
+hypothesis_ref: dh:pc-token-capacity-policy:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two token-capacity policies are the same iff they prescribe the same
+    admissibility inequality that a request's token weight must fit within configured capacity
+    (activeTokenTotal + weightTokens <= capacityMaxTokens, with capacity itself min'd against
+    a configured max). Replay reconstruction of feasibility is application of that policy,
+    not a second individual. A particular feasible grant is not the policy.
+  reidentification_key:
+  - capacityMaxTokens (evidence of parameter)
+  - activeTokenTotal + weightTokens inequality (evidence of the rule)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one charge-versus-capacity admissibility rule
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+  - situation
+  - quality
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+- description: Math.min(config.capacityMaxTokens, raw) is arithmetic encoding; identifying
+    the policy with that expression would mint a new policy per recoding.
+- description: After removing unreleased charge 1813f29f, six recorded admissions became feasible
+    — that is satisfaction of the rule, not a new rule, and not proof that the world-capacity
+    quality is the hypothesized individual.
+status: proposed

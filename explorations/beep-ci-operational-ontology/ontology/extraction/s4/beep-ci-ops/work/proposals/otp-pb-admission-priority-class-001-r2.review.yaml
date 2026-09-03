@@ -1,0 +1,59 @@
+target: "otp:pb-admission-priority-class:001"
+target_sha256: "245a76a0dc8f1a77b08d7ed84c6ef626213ba8424b7366ab0ce3d66911c71ce6"
+chain_sha256: "fabced0fd3fb415699baf9e112685ec6a8d388bc64a04fbac56646ed78691f1a"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  Run-3 evidence must identify the authoritative priority-class registry,
+  version and revision lineage, membership-change rules, and whether planner
+  versions share one governed domain or issue semantically distinct copies.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: role-rigidity-unsupported
+    counterexample: >-
+      A request can retain verify or publish throughout its lifetime, so the
+      former anti-rigid request-role account lacked support. The revision
+      removes role tokens and restores the exact-reused controlled-vocabulary
+      reading; the old rigidity attack therefore no longer lands.
+    outcome: survived
+  - surface: identity
+    rule: vocabulary-identity-unresolved
+    counterexample: >-
+      Two planner versions can copy the verify and publish members while
+      assigning different governance, expansion, or revision semantics. The
+      current observations do not decide whether those copies realize one
+      enduring governed vocabulary or distinct vocabulary objects.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-021 explicitly projects each queued request's AdmissionPriorityClass
+      through hasPriorityClass. Eliminating the controlled domain would leave
+      a required answer component untyped, so the warrant survives even while
+      the domain's identity remains deferred.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-enum-dispatch
+    counterexample: >-
+      Enum dispatch defeated the former request-role claim, but the revision
+      now asserts only governed controlled-vocabulary content. A LiteralKit can
+      carry that content without reducing it to a role token, so the old null
+      no longer chooses against the revised category.
+    outcome: survived
+rival_models_still_viable:
+  - "Each planner version owns a distinct copied priority-class domain."
+  - "Verify and publish are values governed directly by AdmissionPolicy without a reified scheme."
+evidence:
+  - "po:sha256:60e90bd17b628d4d6d815cfd05ddcf88cbc2a724790b05ac88b4411619f535be"
+  - "po:sha256:6b2e1d71b18197d5aabdde8f443d63fb71885b277f825b9ad13103f0de607a29"
+  - "po:sha256:7a127886ce9cd789e25ca288274377e644ebfc27da768ca939e258cb40dc81cd"
+  - "po:sha256:a5337050b11a15f3c1b20a01228366cdf9affbd31a471c391b4d980883be0f5b"
+  - "CQ-021"

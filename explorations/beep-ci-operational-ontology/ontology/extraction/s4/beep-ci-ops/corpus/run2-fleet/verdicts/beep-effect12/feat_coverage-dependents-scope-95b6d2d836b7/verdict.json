@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/coverage-dependents-scope",
+  "committed": false,
+  "createdAt": "2026-08-25T05:00:29.166Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "feat_coverage-dependents-scope-95b6d2d836b7",
+  "attemptId": "8dae1057-ec8d-4941-97b5-2f7a604794ed",
+  "startedAt": "2026-08-25T05:00:24.903Z",
+  "endedAt": "2026-08-25T05:00:29.166Z",
+  "elapsedMs": 4263,
+  "indexPath": "<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json"
+}

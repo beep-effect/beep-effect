@@ -1,0 +1,10 @@
+id: po:sha256:4ec767a335e920a2a80204127a6c3146cded1e5eb3d748b11a87dfc4579fc735
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts
+source_span:
+  start_line: 137
+  end_line: 137
+quote: '"ts2589-no-location",'
+epistemic_status: quoted_prose

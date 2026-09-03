@@ -131,6 +131,10 @@ export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
  */
 export const isThunkUnknown = ThunkUnknown.is;
 
+type ThunkGuard<TSchema extends S.Top> = (u: unknown) => u is () => S.Schema.Type<TSchema>;
+
+type ThunkSchema<TSchema extends S.Top> = S.declare<() => S.Schema.Type<TSchema>>;
+
 /**
  * Builds a typed thunk schema from a type guard and a return-type schema
  * witness. The return schema is type-level only; validating it would require
@@ -155,19 +159,12 @@ export const isThunkUnknown = ThunkUnknown.is;
  * @since 0.0.0
  */
 export const make: {
-  <TSchema extends S.Top>(
-    guard: (u: unknown) => u is () => S.Schema.Type<TSchema>,
-    _returnSchema: TSchema
-  ): S.declare<() => S.Schema.Type<TSchema>>;
-  <TSchema extends S.Top>(
-    guard: (u: unknown) => u is () => S.Schema.Type<TSchema>
-  ): (_returnSchema: TSchema) => S.declare<() => S.Schema.Type<TSchema>>;
+  <TSchema extends S.Top>(returnSchema: TSchema): (guard: ThunkGuard<TSchema>) => ThunkSchema<TSchema>;
+  <TSchema extends S.Top>(guard: ThunkGuard<TSchema>, returnSchema: TSchema): ThunkSchema<TSchema>;
 } = dual(
   2,
-  <TSchema extends S.Top>(
-    guard: (u: unknown) => u is () => S.Schema.Type<TSchema>,
-    _returnSchema: TSchema
-  ): S.declare<() => S.Schema.Type<TSchema>> => S.declare<() => S.Schema.Type<TSchema>>(guard)
+  <TSchema extends S.Top>(guard: ThunkGuard<TSchema>, _returnSchema: TSchema): ThunkSchema<TSchema> =>
+    S.declare<() => S.Schema.Type<TSchema>>(guard)
 );
 
 /**

@@ -1,13 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import {
-  getOutputDescription,
-  getOutputFilename,
-  OutputFilename,
-  OutputType,
-  OutputTypeRegistry,
-} from "../../../Domain/Model/OutputType.ts";
+import { OutputFilename, OutputType, OutputTypeRegistry } from "../../../Domain/Model/OutputType.ts";
 
 describe("effect-ontology output artifact taxonomy", () => {
   it("derives arbitraries for output types and filenames", () => {
@@ -38,8 +32,4 @@ describe("effect-ontology output artifact taxonomy", () => {
     expect(OutputFilename.is.graphJsonld("custom-output.json")).toBe(false);
   });
 
-  it("keeps compatibility helpers delegated to schema-owned statics", () => {
-    expect(getOutputFilename("rdf-turtle")).toBe(OutputType.filename("rdf-turtle"));
-    expect(getOutputDescription("entities")).toBe(OutputType.description("entities"));
-  });
 });

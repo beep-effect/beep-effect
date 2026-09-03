@@ -1,0 +1,62 @@
+target: "otp:pa-projection-limitation-report:001"
+target_sha256: "9e83b97432becd35420af72cc8b3aa699c276ceda3c73e0b5bf21018b3b05360"
+chain_sha256: "8f0bf9ae3c1d0d77eb50b3be40741048f0d4a5a43b99f7fdb7b75b1f91fe5014"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Preserve the broad exact-reused VerificationResultArtifact definition and
+    treat the caveat section as a possible instance, component, or separately
+    deferred specialization; do not attach a limitation-report-only extension
+    to the broad reused IRI.
+attacks:
+  - surface: identity
+    rule: independent-artifact-identity-unwarranted
+    counterexample: >-
+      Moving the caveat section within impl-report.md or copying it into a
+      later report still fails to establish an independently issued artifact.
+      The revision honestly concedes this point, leaves identity unresolved,
+      and names issuance, target, authority, provenance, and lineage evidence
+      for run 3 instead of claiming that the present section settles it.
+    outcome: survived
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      An ordinary verification result that records a completed execution but
+      has no projection-applicability caveats remains a
+      VerificationResultArtifact. It fails the revised limitation-report-only
+      definition, so exact reuse would narrow the broad class despite the
+      otherwise lawful identity concession.
+    outcome: landed
+  - surface: warrant
+    rule: semantic-support-not-necessary
+    counterexample: >-
+      VerificationEvidence can carry tree, epoch, invalidation, and cache
+      applicability without a separately identified limitation-report class.
+      The revision expressly withdraws that independent admission claim and
+      names a future decision CQ as required evidence, so the concession does
+      not pretend that the current support edge proves necessity.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-report-section
+    counterexample: >-
+      The cited caveat text is already information content within an
+      identified result report. Under the sitting's strike, redescribing its
+      carrier as an implementation report section does not erase that content
+      and cannot ground a renewed failure.
+    outcome: survived
+rival_models_still_viable:
+  - "The caveats are a proper component of a larger verification result artifact."
+  - "The primary referent is an applicability situation described by the report."
+evidence:
+  - "po:sha256:37dade1cef0b41d87b0656f26afcacbbb5abd10dc718d45d7e0c966b19061610"
+  - "CQ-005"
+  - "CQ-015"

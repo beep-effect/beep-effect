@@ -49,6 +49,12 @@ export {
  * @since 0.0.0
  */
 export type { Input as FieldInput, Patched as PatchedField } from "./core/Field.ts";
+/**
+ * Public column-metadata types used to describe defaults, uniqueness, and references.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type { DefaultSqlExpr, DefaultValue, IsUniqueKey, References } from "./core/Meta.ts";
 /** Repository result and version-column types.
  * @category type-level

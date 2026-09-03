@@ -1,0 +1,29 @@
+id: "dh:pc-replay-evidence-artifact:001"
+observation_refs:
+  - "po:sha256:dea1ff947c2829fab23692186477e8f93f9d5dac947c4f59fa070576dc0edfb2"
+  - "po:sha256:f53364ecbfe8c517f16bf938fbc7d0391588f49e11f67205f35fa5204904a501"
+cq_warrants: []
+proposed_referent:
+  label: "differential replay evidence artifact"
+  description: >-
+    A generated evidence document that identifies its producer and pins the
+    frozen admission journal and event census used for replay.
+representation_status: information_artifact
+alternatives:
+  - label: "the differential replay execution evidenced by the document"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "generated report with no ontology-level evidentiary role"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The quotations establish that this is a generated, provenance-bearing
+    report, but neither cited competency question requires the report itself.
+    A frozen-input digest and event census are also fully compatible with a
+    disposable validation artifact, so the null cannot be rejected.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.93, use_for_acceptance: false}

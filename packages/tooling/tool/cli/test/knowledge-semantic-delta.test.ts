@@ -16,6 +16,7 @@ import {
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
 import {
+  gitRefSpanNamesForTesting,
   KnowledgeCommandSurface,
   makeKnowledgeArchiveOracle,
   renderKnowledgeSemanticDeltaHumanReport,
@@ -25,7 +26,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Encoding, Exit, FileSystem, Layer, Order, Path } from "effect";
+import { Crypto, Effect, Encoding, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -60,6 +61,7 @@ const COMMAND_TREE_WITHOUT_DOCTOR = JSON.stringify({
   alias: null,
   children: [{ name: "goals", alias: null, children: [] }],
 });
+const NO_GIT_REFS = HashSet.empty<string>();
 const testLayer = KnowledgeServiceLive.pipe(
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(NodeCrypto.layer)
@@ -150,12 +152,14 @@ const fixture = (
   headFiles: Readonly<Record<string, string>>,
   options: {
     readonly base?: OracleOptions;
+    readonly gitRefNames?: ReadonlyArray<string>;
     readonly head?: OracleOptions;
     readonly probePolicy?: KnowledgeProbePolicy;
     readonly renames?: ReadonlyArray<KnowledgeRename>;
   } = {}
 ): KnowledgePairedOracleInput => ({
   base: makeOracle(baseFiles, options.base),
+  gitRefNames: HashSet.fromIterable(options.gitRefNames ?? []),
   head: makeOracle(headFiles, options.head),
   probePolicy: options.probePolicy ?? "enabled",
   renames: options.renames ?? [],
@@ -244,6 +248,15 @@ const sortedKinds = (findings: ReadonlyArray<KnowledgeFinding>): ReadonlyArray<K
   );
 
 describe("knowledge semantic-delta golden paired fixtures", () => {
+  it("parses local, remote-tracking, and tag ref spellings without accepting other namespaces", () => {
+    expect(gitRefSpanNamesForTesting("refs/heads/goals/local-branch")).toEqual(["goals/local-branch"]);
+    expect(gitRefSpanNamesForTesting("refs/remotes/origin/goals/remote-branch")).toEqual([
+      "origin/goals/remote-branch",
+    ]);
+    expect(gitRefSpanNamesForTesting("refs/tags/goals/release-tag")).toEqual(["goals/release-tag"]);
+    expect(gitRefSpanNamesForTesting("refs/notes/goals/not-a-branch")).toEqual([]);
+  });
+
   it.effect("treats retired deterministic projections as virtual targets and skips index drift", () =>
     Effect.gen(function* () {
       const files = {
@@ -255,6 +268,7 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
       });
       const report = yield* scan({
         base: makeOracle(files),
+        gitRefNames: NO_GIT_REFS,
         head: {
           ...head,
           trackedEntries: A.filter(head.trackedEntries, (entry) => entry.path !== "goals/INDEX.md"),
@@ -552,6 +566,31 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
       );
       expect(introducedIds(report)).toEqual([
         yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:docs/missing.md"),
+      ]);
+    })
+  );
+
+  it.effect("a real Git ref span is exempt while a genuinely missing path remains", () =>
+    Effect.gen(function* () {
+      const branchName = "goals/time-to-certainty-kickoff";
+      const missingPath = "goals/genuinely-missing.md";
+      const report = yield* scan(
+        fixture(
+          { "docs/guide.md": "No references.\n" },
+          {
+            "docs/guide.md": `Continue branch \`${branchName}\`; repair \`${missingPath}\`.\n`,
+          },
+          {
+            gitRefNames: A.appendAll(
+              gitRefSpanNamesForTesting(`refs/heads/${branchName}`),
+              gitRefSpanNamesForTesting(`refs/remotes/origin/${missingPath}`)
+            ),
+          }
+        )
+      );
+
+      expect(introducedIds(report)).toEqual([
+        yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/genuinely-missing.md"),
       ]);
     })
   );
@@ -867,6 +906,7 @@ describe("knowledge semantic-delta probe policy", () => {
       const service = yield* KnowledgeService;
       const input = (probePolicy: KnowledgeProbePolicy): KnowledgePairedOracleInput => ({
         base: explodingProbeOracle({ "docs/guide.md": "Nothing cited.\n" }),
+        gitRefNames: NO_GIT_REFS,
         head: explodingProbeOracle({ "docs/guide.md": "Run `bun run beep goals doctro`.\n" }),
         probePolicy,
         renames: [],
@@ -1487,6 +1527,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
     headOptions: OracleOptions = {}
   ): KnowledgePairedOracleInput => ({
     base: unbootableProbeOracle(baseFiles),
+    gitRefNames: NO_GIT_REFS,
     head: makeOracle(headFiles, headOptions),
     probePolicy: "enabled",
     renames: [],
@@ -1533,6 +1574,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       // Only the index probe dies, after the command probe has already resolved an unknown command.
       const degraded = yield* scan({
         base: { ...makeOracle(baseFiles), indexBytes: Effect.fail(BOOT_FAILURE) },
+        gitRefNames: NO_GIT_REFS,
         head: makeOracle(CLEAN_BASE),
         probePolicy: "enabled",
         renames: [],
@@ -1555,6 +1597,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       const error = yield* Effect.flip(
         service.scanPair({
           base: makeOracle(CLEAN_BASE),
+          gitRefNames: NO_GIT_REFS,
           head: unbootableProbeOracle(DIRTY_HEAD),
           probePolicy: "enabled",
           renames: [],
@@ -1574,6 +1617,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       const error = yield* Effect.flip(
         service.scanPair({
           base: unbootableProbeOracle(CLEAN_BASE),
+          gitRefNames: NO_GIT_REFS,
           head: unbootableProbeOracle(CLEAN_BASE),
           probePolicy: "enabled",
           renames: [],
@@ -1603,6 +1647,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       const error = yield* Effect.flip(
         scan({
           base: makeOracle(baseFiles),
+          gitRefNames: NO_GIT_REFS,
           head,
           probePolicy: "enabled",
           renames: [],
@@ -1619,6 +1664,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
       const report = yield* scan({
         base: unbootableProbeOracle(baseFiles),
+        gitRefNames: NO_GIT_REFS,
         head: makeOracle(CLEAN_BASE),
         probePolicy: "enabled",
         renames: [],
@@ -1636,7 +1682,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         commandTree: KnowledgeCommandSurface.decodeCurrentCommandTree("not-json"),
       };
       const error = yield* Effect.flip(
-        scan({ base, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] })
+        scan({ base, gitRefNames: NO_GIT_REFS, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] })
       );
 
       assert.strictEqual(error._tag, "KnowledgeOperationalError");
@@ -1680,7 +1726,13 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         probeCommands: () => Effect.fail(unsafeFailure),
         indexBytes: Effect.fail(unsafeFailure),
       };
-      const report = yield* scan({ base, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] });
+      const report = yield* scan({
+        base,
+        gitRefNames: NO_GIT_REFS,
+        head: makeOracle(CLEAN_BASE),
+        probePolicy: "enabled",
+        renames: [],
+      });
       const json = yield* encodeKnowledgeSemanticDeltaReportJson(report);
       const human = renderKnowledgeSemanticDeltaHumanReport(report);
 

@@ -9,7 +9,19 @@ import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { findFirst } from "effect/Array";
 import { Service } from "effect/Context";
 import { formatIso, makeUnsafe, toDate } from "effect/DateTime";
-import { addFinalizer, all, exit, flip, fnUntraced, gen, map, option, orDie, sync, tryPromise } from "effect/Effect";
+import {
+  addFinalizer,
+  exit,
+  flip,
+  fnUntraced,
+  forEach,
+  gen,
+  map,
+  option,
+  orDie,
+  sync,
+  tryPromise,
+} from "effect/Effect";
 import { isSuccess } from "effect/Exit";
 import { FileSystem } from "effect/FileSystem";
 import { effect as effectLayer, provide, provideMerge, unwrap } from "effect/Layer";
@@ -447,21 +459,16 @@ layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQLite
           status: "active",
         })
       );
-      const concurrentRequests = yield* all(
-        ["Concurrent A", "Concurrent B"].map((name) =>
-          makeEffect(SqliteUser.update)({
-            id: concurrentSeed.id,
-            rowVersion: concurrentSeed.rowVersion,
-            name,
-          })
-        )
+      const concurrentRequests = yield* forEach(["Concurrent A", "Concurrent B"], (name) =>
+        makeEffect(SqliteUser.update)({
+          id: concurrentSeed.id,
+          rowVersion: concurrentSeed.rowVersion,
+          name,
+        })
       );
-      const concurrentUpdates = yield* all(
-        concurrentRequests.map((current) => exit(repository.update(current))),
-        {
-          concurrency: "unbounded",
-        }
-      );
+      const concurrentUpdates = yield* forEach(concurrentRequests, (current) => exit(repository.update(current)), {
+        concurrency: "unbounded",
+      });
 
       expect(snapshot.rowVersion).toBe(1);
       expect(winner.rowVersion).toBe(2);

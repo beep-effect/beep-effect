@@ -1,0 +1,26 @@
+id: "dh:pb-verification-evidence-receipt:001"
+observation_refs:
+  - "po:sha256:7b0afae312843e4da0ff5628da56e5201bcc40f7d0221fa8f4b92e74637b90b3"
+cq_warrants:
+  - "CQ-005"
+  - "CQ-015"
+proposed_referent:
+  label: "verification evidence receipt"
+  description: "A digest-bound information artifact recording a replay pass or mismatch census and retained as read-only evidence for a gated handoff."
+representation_status: information_artifact
+alternatives:
+  - label: "generated Markdown report"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "the successful verification occurrence"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The excerpt says the replay outcome records either pass or a mismatch census, lands as evidence, participates in gates, and is digest-locked and read-only. Those are content, custody, and applicability conditions for an evidence information object, not merely a file-format convenience."
+  discriminator: "The artifact's bytes are required to remain digest-locked and read-only while its recorded replay pass or mismatch census is carried through named gates; an incidental generated report would not retain decision-bearing validity under byte identity."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

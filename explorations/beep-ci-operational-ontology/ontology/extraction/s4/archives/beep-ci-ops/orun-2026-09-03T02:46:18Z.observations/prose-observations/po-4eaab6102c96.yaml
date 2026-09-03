@@ -1,0 +1,10 @@
+id: po:sha256:4eaab6102c962dee4fa2994903e026bdec486cbf481cac243bd9246d1502e6ca
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts
+source_span:
+  start_line: 60
+  end_line: 63
+quote: LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"])
+epistemic_status: quoted_prose

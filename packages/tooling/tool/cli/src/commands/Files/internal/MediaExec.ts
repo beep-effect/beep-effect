@@ -174,15 +174,11 @@ const probeVideoDimensions = Effect.fn("Files.probeVideoDimensions")(function* (
   );
   const stream = yield* pipe(
     A.get(output.streams, 0),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          FilesCommandError.make({
-            message: `ffprobe did not return a video stream for "${file.sourcePath}"`,
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      FilesCommandError.make({
+        message: `ffprobe did not return a video stream for "${file.sourcePath}"`,
+      })
+    )
   );
   const dimensions = MediaDimensions.make({
     height: stream.height,
@@ -210,15 +206,11 @@ export const probeMediaDimensions = Effect.fn("Files.probeMediaDimensions")(func
 > {
   const mediaKind = yield* pipe(
     file.mediaKind,
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          FilesCommandError.make({
-            message: `Cannot probe dimensions for non-media file: "${file.sourcePath}"`,
-          })
-        ),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() =>
+      FilesCommandError.make({
+        message: `Cannot probe dimensions for non-media file: "${file.sourcePath}"`,
+      })
+    )
   );
 
   if (mediaKind === "image") {

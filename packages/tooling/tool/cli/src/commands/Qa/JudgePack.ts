@@ -366,7 +366,7 @@ export const readLegacyManifest = Effect.fn("QaJudgePack.readLegacyManifest")(fu
     .readFileString(manifestPath)
     .pipe(
       Effect.flatMap(S.decodeUnknownEffect(LegacyManifestJson)),
-      Effect.map(O.some),
+      Effect.asSome,
       Effect.orElseSucceed(O.none<typeof LegacyManifest.Type>)
     );
 });
@@ -795,15 +795,11 @@ const requireVideoDuration = Effect.fn("QaJudgePack.requireVideoDuration")(funct
 ): Effect.fn.Return<number, QaCommandError, FFmpeg | Path.Path> {
   const ffmpeg = yield* FFmpeg;
   const path = yield* Path.Path;
-  const source = yield* O.match(videoPath, {
-    onNone: () =>
-      Effect.fail(
-        QaCommandError.make({
-          message: `qa judge-pack found no recorded video for round ${layout.round}; record and extract the round before packing.`,
-        })
-      ),
-    onSome: Effect.succeed,
-  });
+  const source = yield* Effect.fromOption(videoPath, () =>
+    QaCommandError.make({
+      message: `qa judge-pack found no recorded video for round ${layout.round}; record and extract the round before packing.`,
+    })
+  );
   const probe = yield* ffmpeg
     .probeVideo(ProbeVideoRequest.make({ videoPath: source }))
     .pipe(QaCommandError.mapError(`qa judge-pack could not probe the recorded video at ${source}.`));
@@ -815,16 +811,11 @@ const requireVideoDuration = Effect.fn("QaJudgePack.requireVideoDuration")(funct
 });
 
 const requireClockSync = (manifest: SessionManifest): Effect.Effect<ClockSync, QaCommandError> =>
-  O.match(manifest.clockSync, {
-    onNone: () =>
-      Effect.fail(
-        QaCommandError.make({
-          message:
-            "qa judge-pack needs a correlated clock; run `bun run beep qa extract` for this round before packing.",
-        })
-      ),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(manifest.clockSync, () =>
+    QaCommandError.make({
+      message: "qa judge-pack needs a correlated clock; run `bun run beep qa extract` for this round before packing.",
+    })
+  );
 
 /**
  * Build a round's `judge/` bundle.
@@ -861,7 +852,7 @@ export const runQaJudgePack = Effect.fn("QaJudgePack.run")(function* (
 
   const videoPath = yield* O.match(manifest.videoPath, {
     onNone: () => discoverRecordedVideo(layout.videoDir),
-    onSome: (value) => Effect.succeed(O.some(value)),
+    onSome: (value) => Effect.succeedSome(value),
   });
   const videoDurationSeconds = yield* requireVideoDuration(layout, videoPath);
 

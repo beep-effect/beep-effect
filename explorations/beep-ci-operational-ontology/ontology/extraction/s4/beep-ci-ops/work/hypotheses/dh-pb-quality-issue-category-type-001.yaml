@@ -1,0 +1,25 @@
+id: "dh:pb-quality-issue-category-type:001"
+observation_refs:
+  - "po:sha256:a0876c0e3f248b2e92b3945d162a565e2f325cfd39145c9f8f9eec5702ff9d03"
+cq_warrants:
+  - "CQ-013"
+proposed_referent:
+  label: "quality-issue category vocabulary"
+  description: "A possible vocabulary of categories for issues encountered by the Yeet command."
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "verification failure taxonomy"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "exported LiteralKit source type"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The quote ends at the LiteralKit constructor and exposes no members or classification semantics. A named exported type is expressly insufficient to distinguish a domain taxonomy from source organization."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.98
+  use_for_acceptance: false

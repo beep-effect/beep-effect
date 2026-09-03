@@ -1,0 +1,10 @@
+id: po:sha256:3fba179ba20dd910e397613882c485dcaea5256e000bfc7996aafa6f0c493c03
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts
+source_span:
+  start_line: 49
+  end_line: 55
+quote: 'reason: S.optionalKey(TurboQueryAffectedReason),'
+epistemic_status: quoted_prose

@@ -10,7 +10,7 @@ scan:
   - does not expand variable predicates or property paths
   - does not inspect SERVICE clauses or runtime-generated query text
   - matches direct triple heads and semicolon predicate continuations only
-predicate_count: 83
+predicate_count: 86
 coverage_count: 25
 predicates:
 - predicate: ciops-prov:dependsOnWorkspace
@@ -363,7 +363,25 @@ predicates:
   used_by:
   - CQ-021
   - tests/fixtures/seed.ttl
+- predicate: ciops:hasProjectionSpecification
+  status: seed-only
+  term_ref: null
+  domain: unknown
+  range: unknown
+  closure: open
+  used_by:
+  - CQ-020
+  - tests/fixtures/seed.ttl
 - predicate: ciops:hasScope
+  status: seed-only
+  term_ref: null
+  domain: unknown
+  range: unknown
+  closure: open
+  used_by:
+  - CQ-019
+  - tests/fixtures/seed.ttl
+- predicate: ciops:hasScopeTag
   status: seed-only
   term_ref: null
   domain: unknown
@@ -616,7 +634,7 @@ predicates:
   used_by:
   - POLICY.yaml
   - graphs/abox.ttl
-- predicate: ciops:schedulesWorkUnit
+- predicate: ciops:schedulesSeatRequest
   status: seed-only
   term_ref: null
   domain: unknown
@@ -626,6 +644,14 @@ predicates:
   - CQ-019
   - CQ-020
   - tests/fixtures/seed.ttl
+- predicate: ciops:schedulesWorkUnit
+  status: seed-only
+  term_ref: null
+  domain: unknown
+  range: unknown
+  closure: open
+  used_by:
+  - CQ-019
 - predicate: ciops:scopedByComputation
   status: seed-only
   term_ref: null
@@ -1089,13 +1115,15 @@ coverage:
   - predicate: ciops:requiresLane
     status: seed-only
 - cq: CQ-019
-  predicate_count: 6
+  predicate_count: 8
   ratified_count: 1
   full_predicate_set_ratified: false
   predicates:
   - ciops:hasAffectedOutcome
   - ciops:hasScope
+  - ciops:hasScopeTag
   - ciops:hasStep
+  - ciops:schedulesSeatRequest
   - ciops:schedulesWorkUnit
   - ciops:scopedByComputation
   - rdf:type
@@ -1104,31 +1132,38 @@ coverage:
     status: seed-only
   - predicate: ciops:hasScope
     status: seed-only
+  - predicate: ciops:hasScopeTag
+    status: seed-only
   - predicate: ciops:hasStep
+    status: seed-only
+  - predicate: ciops:schedulesSeatRequest
     status: seed-only
   - predicate: ciops:schedulesWorkUnit
     status: seed-only
   - predicate: ciops:scopedByComputation
     status: seed-only
 - cq: CQ-020
-  predicate_count: 6
+  predicate_count: 7
   ratified_count: 1
   full_predicate_set_ratified: false
   predicates:
   - ciops:hasCurrentProposal
-  - ciops:hasScope
+  - ciops:hasProjectionSpecification
+  - ciops:hasScopeTag
   - ciops:hasStep
-  - ciops:schedulesWorkUnit
+  - ciops:schedulesSeatRequest
   - ciops:stepIndex
   - rdf:type
   unratified:
   - predicate: ciops:hasCurrentProposal
     status: seed-only
-  - predicate: ciops:hasScope
+  - predicate: ciops:hasProjectionSpecification
+    status: seed-only
+  - predicate: ciops:hasScopeTag
     status: seed-only
   - predicate: ciops:hasStep
     status: seed-only
-  - predicate: ciops:schedulesWorkUnit
+  - predicate: ciops:schedulesSeatRequest
     status: seed-only
   - predicate: ciops:stepIndex
     status: seed-only

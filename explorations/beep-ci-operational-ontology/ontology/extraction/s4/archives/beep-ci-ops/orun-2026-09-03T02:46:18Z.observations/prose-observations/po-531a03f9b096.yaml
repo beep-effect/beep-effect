@@ -1,0 +1,10 @@
+id: po:sha256:531a03f9b09634893599c361a8a313d76a5330c360e1b2a3779b8644380dfb2d
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/fallow.boundaries.provenance.schema.json
+source_span:
+  start_line: 111
+  end_line: 125
+quote: '"ruleSourceClass": ['
+epistemic_status: quoted_prose

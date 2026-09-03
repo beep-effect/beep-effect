@@ -1,0 +1,10 @@
+id: po:sha256:55c2897fcdfe9318041fe93947653642729b7d3b83ca8f7964e83043085abeac
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1108
+  end_line: 1125
+quote: 'request: AdmissionRequest'
+epistemic_status: quoted_prose

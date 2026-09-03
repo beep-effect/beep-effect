@@ -1,0 +1,23 @@
+id: "so:sha256:258d88bf5d120ca46af4e7964a5c3a5674c5c4984b67c0f84fe8f706e979c3f6"
+schema_version: 1
+repository:
+  commit: "341cfef8b6e80d49f6cef894e9eecd5337f70e8f"
+  path: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run2-fleet/verdicts/beep-effect/research_nightly-routine-p0-docs-e277c865bfb7/verdict.properties"
+source_span:
+  start_line: 1
+  end_line: 34
+  content_sha256: "b7e5b18ac68f7613b14d956c43a53ddcfcd55c440fc8aae1a60a2be0825e96cd"
+extractor:
+  id: "adapter-journal"
+  version: "1.0.0"
+  parser: "python-stdlib-properties"
+  script: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal.py"
+symbol:
+  qualified_name: "yeet-verdict"
+  lexical_name: "yeet-verdict"
+  syntactic_kind: "properties_projection"
+observed_facts:
+  - predicate: "config_key_value"
+    object: "greptileScore=5/5"
+source_excerpt: "greptileScore=5/5"
+epistemic_status: "parser_derived"

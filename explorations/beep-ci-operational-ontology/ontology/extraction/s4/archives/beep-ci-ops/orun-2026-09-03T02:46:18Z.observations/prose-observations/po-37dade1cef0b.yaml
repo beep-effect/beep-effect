@@ -1,0 +1,17 @@
+id: po:sha256:37dade1cef0b41d87b0656f26afcacbbb5abd10dc718d45d7e0c966b19061610
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 47
+  end_line: 60
+quote: "## Deviations and caveats\n\n- `originKey` substitutes for the redacted pid component in the canonical\n\
+  \  tiebreak. The journal preserves `originKey` but not the deployed raw pid.\n- Origin-already-leased\
+  \ and blocked-on-origin-stamp skippability are not\n  modeled. Origin stamps and active-grant origin\
+  \ keys are absent from the\n  journal/ledger view. Neither condition affected any first choice in the\n\
+  \  frozen golden journal.\n- The starvation bound is interpreted at a single projection instant.\n \
+  \ Deferrals are lawful holds at that instant; temporal starvation is a\n  cross-instant property deferred\
+  \ to the lane-DAG planner seam.\n- The v2 lane-DAG planner remains an explicit typed\n  `PlannerNotImplementedError`\
+  \ seam. S7 does not implement `Graph.topo` or\n  replace the deployed scheduler."
+epistemic_status: quoted_prose

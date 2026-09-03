@@ -56,10 +56,9 @@ const getJsonlParseChunk = (): O.Option<JsonlParseChunk> => {
 };
 
 const decodeJsonlUnknown = Effect.fn("Jsonl.decodeJsonlUnknown")(function* (content: string) {
-  const parseChunk = yield* O.match(getJsonlParseChunk(), {
-    onNone: () => Effect.fail(invalidJsonlInput("Bun.JSONL.parseChunk is unavailable in the current runtime.")),
-    onSome: Effect.succeed,
-  });
+  const parseChunk = yield* Effect.fromOption(getJsonlParseChunk(), () =>
+    invalidJsonlInput("Bun.JSONL.parseChunk is unavailable in the current runtime.")
+  );
   const parsed = yield* Effect.try({
     try: () => parseChunk(content),
     catch: (cause) =>

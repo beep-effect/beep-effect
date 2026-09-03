@@ -220,10 +220,9 @@ const transformationIdentity = Effect.fn("CorpusRestoration.transformationIdenti
 });
 
 const requireMailScope = (context: TransformationRunContext): Effect.Effect<MailRestorationScope, CorpusCommandError> =>
-  O.match(context.mailScope, {
-    onNone: () => Effect.fail(transformationError("Mail evidence requires an explicit restoration scope.")),
-    onSome: Effect.succeed,
-  });
+  Effect.fromOption(context.mailScope, () =>
+    transformationError("Mail evidence requires an explicit restoration scope.")
+  );
 
 const withTransformationRunWriter = Effect.fn("CorpusRestoration.withTransformationRunWriter")(function* <A, E, R>(
   context: TransformationRunContext,
@@ -2184,13 +2183,9 @@ const mailResumeState = Effect.fn("CorpusRestoration.mailResumeState")(function*
         )
       );
       const exceptionCandidates = yield* Effect.forEach(exceptions, (record) =>
-        O.match(
+        Effect.fromOption(
           A.findFirst(candidates, (candidate) => candidate.objectId === record.objectId),
-          {
-            onNone: () =>
-              Effect.fail(transformationError(`Prior mail exception references unknown candidate ${record.objectId}.`)),
-            onSome: Effect.succeed,
-          }
+          () => transformationError(`Prior mail exception references unknown candidate ${record.objectId}.`)
         )
       );
       const exceptionInputBytes = A.reduce(exceptionCandidates, 0, (total, candidate) =>
@@ -2462,9 +2457,10 @@ const collisionAllocatedPath = (
 const sortedRecycleGroups = (
   groups: MutableHashMap.MutableHashMap<string, RecycleGroup>
 ): ReadonlyArray<RecycleGroup> =>
-  A.sort(
-    A.fromIterable(MutableHashMap.values(groups)),
-    Order.mapInput(Order.String, (group: RecycleGroup) => `${group.surfaceKey}\u0000${group.pairKey}`)
+  groups.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
+    A.sort(Order.mapInput(Order.String, (group: RecycleGroup) => `${group.surfaceKey}\u0000${group.pairKey}`))
   );
 
 type RecyclePair = {
@@ -2487,7 +2483,7 @@ const recyclePair = (group: RecycleGroup): O.Option<RecyclePair> => {
 };
 
 const sortedRecyclePairs = (groups: MutableHashMap.MutableHashMap<string, RecycleGroup>): ReadonlyArray<RecyclePair> =>
-  A.getSomes(A.map(sortedRecycleGroups(groups), recyclePair));
+  groups.pipe(sortedRecycleGroups, A.map(recyclePair), A.getSomes);
 
 const exclusiveCopyFile = Effect.fn("CorpusRestoration.exclusiveCopyFile")(function* (
   sourcePath: string,

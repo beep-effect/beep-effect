@@ -294,13 +294,18 @@ const inboxFixShaFlag = Flag.string("fix-sha").pipe(
   Flag.withDefault("")
 );
 
+const inboxEnvironmentOnlyFlag = Flag.boolean("environment-only").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Acknowledge the row as environmental rather than a repository-code defect; requires --reason")
+);
+
 const inboxWontfixFlag = Flag.boolean("wontfix").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Acknowledge the row as deliberately not fixed; requires --reason")
 );
 
 const inboxReasonFlag = Flag.string("reason").pipe(
-  Flag.withDescription("Why the row is not being fixed; only applies with --wontfix"),
+  Flag.withDescription("Why an environment-only, wontfix, or waiver resolution applies"),
   Flag.withDefault("")
 );
 
@@ -644,6 +649,7 @@ const yeetInboxAckCommand = Command.make(
   "ack",
   {
     actor: inboxActorFlag,
+    environmentOnly: inboxEnvironmentOnlyFlag,
     expiresAt: inboxExpiresAtFlag,
     fixSha: inboxFixShaFlag,
     id: inboxAckIdArgument,
@@ -654,7 +660,11 @@ const yeetInboxAckCommand = Command.make(
     wontfix: inboxWontfixFlag,
   },
   runYeetInboxAck
-).pipe(Command.withDescription("Acknowledge one inbox row with a fix, wontfix, thread, or attributed expiring waiver"));
+).pipe(
+  Command.withDescription(
+    "Acknowledge one inbox row with a fix, environment-only attribution, wontfix, thread, or attributed expiring waiver"
+  )
+);
 
 const yeetInboxAppendCommand = Command.make("append", { fromStdin: inboxRowStdinFlag }, runYeetInboxAppend).pipe(
   Command.withDescription("Append one typed failure row from stdin to the checkout's inbox")

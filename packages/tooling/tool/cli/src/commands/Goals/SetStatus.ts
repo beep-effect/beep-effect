@@ -316,10 +316,7 @@ export const loadGoalPacketManifest = Effect.fn("Goals.loadGoalPacketManifest")(
   const records = yield* listGoalPackets();
   const record = yield* pipe(
     A.findFirst(records, (candidate) => candidate.slug === slug),
-    O.match({
-      onNone: () => Effect.fail(GoalPacketNotFoundError.new(slug, `No goal packet directory "goals/${slug}".`)),
-      onSome: Effect.succeed,
-    })
+    Effect.fromOption(() => GoalPacketNotFoundError.new(slug, `No goal packet directory "goals/${slug}".`))
   );
 
   const manifestText = record.manifestText;

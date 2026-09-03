@@ -171,11 +171,15 @@ export type PathLookup = InternalPathLookup;
 export const dotGet: {
   <const P extends string>(path: P): <S extends object>(self: P extends Paths<S> ? S : never) => Get<S, P>;
   <const P extends ReadonlyArray<string>>(path: P): <S extends object>(self: S) => Get<S, P>;
+  <S extends object, const P extends string & Paths<S>>(path: P): (self: S) => Get<S, P>;
+  <S extends object, const P extends ReadonlyArray<string>>(path: P): (self: S) => Get<S, P>;
   <S extends object, const P extends string & Paths<S>>(self: S, path: P): Get<S, P>;
   <S extends object, const P extends ReadonlyArray<string>>(self: S, path: P): Get<S, P>;
 } = dual(2, <S extends object>(self: S, path: PathInput): unknown => unsafeDotGet(self, path)) as {
   <const P extends string>(path: P): <S extends object>(self: P extends Paths<S> ? S : never) => Get<S, P>;
   <const P extends ReadonlyArray<string>>(path: P): <S extends object>(self: S) => Get<S, P>;
+  <S extends object, const P extends string & Paths<S>>(path: P): (self: S) => Get<S, P>;
+  <S extends object, const P extends ReadonlyArray<string>>(path: P): (self: S) => Get<S, P>;
   <S extends object, const P extends string & Paths<S>>(self: S, path: P): Get<S, P>;
   <S extends object, const P extends ReadonlyArray<string>>(self: S, path: P): Get<S, P>;
 };
@@ -214,6 +218,8 @@ export const dotGet: {
 export const dotGetOption: {
   <const P extends string>(path: P): <S extends object>(self: P extends Paths<S> ? S : never) => O.Option<Get<S, P>>;
   <const P extends ReadonlyArray<string>>(path: P): <S extends object>(self: S) => O.Option<Get<S, P>>;
+  <S extends object, const P extends string & Paths<S>>(path: P): (self: S) => O.Option<Get<S, P>>;
+  <S extends object, const P extends ReadonlyArray<string>>(path: P): (self: S) => O.Option<Get<S, P>>;
   <S extends object, const P extends string & Paths<S>>(self: S, path: P): O.Option<Get<S, P>>;
   <S extends object, const P extends ReadonlyArray<string>>(self: S, path: P): O.Option<Get<S, P>>;
 } = dual(2, <S extends object>(self: S, path: PathInput): O.Option<unknown> => {
@@ -222,6 +228,8 @@ export const dotGetOption: {
 }) as {
   <const P extends string>(path: P): <S extends object>(self: P extends Paths<S> ? S : never) => O.Option<Get<S, P>>;
   <const P extends ReadonlyArray<string>>(path: P): <S extends object>(self: S) => O.Option<Get<S, P>>;
+  <S extends object, const P extends string & Paths<S>>(path: P): (self: S) => O.Option<Get<S, P>>;
+  <S extends object, const P extends ReadonlyArray<string>>(path: P): (self: S) => O.Option<Get<S, P>>;
   <S extends object, const P extends string & Paths<S>>(self: S, path: P): O.Option<Get<S, P>>;
   <S extends object, const P extends ReadonlyArray<string>>(self: S, path: P): O.Option<Get<S, P>>;
 };
@@ -283,14 +291,14 @@ export const mapPath: {
     f: (a: A) => B,
     options: { readonly path: P }
   ): <S extends object>(self: Get<S, P> extends A ? S : never) => MapPathResult<B>;
-  <S extends object, A, B, const P extends string & Paths<S>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+  <S extends object, A, B, const P extends string>(
+    self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): MapPathResult<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+    self: Get<S, P> extends A ? S : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): MapPathResult<B>;
 } = dual(
@@ -306,14 +314,14 @@ export const mapPath: {
     f: (a: A) => B,
     options: { readonly path: P }
   ): <S extends object>(self: Get<S, P> extends A ? S : never) => MapPathResult<B>;
-  <S extends object, A, B, const P extends string & Paths<S>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+  <S extends object, A, B, const P extends string>(
+    self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): MapPathResult<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+    self: Get<S, P> extends A ? S : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): MapPathResult<B>;
 };
@@ -361,14 +369,14 @@ export const mapPathLazy: {
     f: (a: A) => B,
     options: { readonly path: P }
   ): <S extends object>(self: Get<S, P> extends A ? S : never) => LazyArg<B>;
-  <S extends object, A, B, const P extends string & Paths<S>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+  <S extends object, A, B, const P extends string>(
+    self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): LazyArg<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+    self: Get<S, P> extends A ? S : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): LazyArg<B>;
 } = dual(
@@ -385,14 +393,14 @@ export const mapPathLazy: {
     f: (a: A) => B,
     options: { readonly path: P }
   ): <S extends object>(self: Get<S, P> extends A ? S : never) => LazyArg<B>;
-  <S extends object, A, B, const P extends string & Paths<S>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+  <S extends object, A, B, const P extends string>(
+    self: P extends Paths<S> ? (Get<S, P> extends A ? S : never) : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): LazyArg<B>;
   <S extends object, A, B, const P extends ReadonlyArray<string>>(
-    self: S,
-    f: Get<S, P> extends A ? (a: A) => B : never,
+    self: Get<S, P> extends A ? S : never,
+    f: (a: A) => B,
     options: { readonly path: P }
   ): LazyArg<B>;
 };

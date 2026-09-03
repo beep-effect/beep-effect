@@ -208,10 +208,6 @@ export type SelectedCodecStatics<Sch extends CodecSchema, Keys extends CodecStat
 type SchemaWithSelectedCodecStatics<Sch extends CodecSchema, Keys extends CodecStaticKeys> = Sch &
   SelectedCodecStatics<Sch, Keys>;
 
-type CodecStaticsTransform<Sch extends CodecSchema, Keys extends CodecStaticKeys> = (
-  self: Sch
-) => SchemaWithSelectedCodecStatics<Sch, Keys>;
-
 /**
  * Configuration error raised before selective statics are installed.
  *
@@ -424,9 +420,9 @@ function attachSelectedCodecStatics(self: CodecSchema, keys: ReadonlyArray<Codec
  * @since 0.0.0
  */
 export const withCodecStatics: {
-  <const Keys extends CodecStaticKeys, Sch extends SchemaForCodecStaticKeys<Keys>>(
+  <const Keys extends CodecStaticKeys>(
     keys: ValidCodecStaticKeys<Keys>
-  ): CodecStaticsTransform<Sch, Keys>;
+  ): <Sch extends SchemaForCodecStaticKeys<Keys>>(self: Sch) => SchemaWithSelectedCodecStatics<Sch, Keys>;
   <const Keys extends CodecStaticKeys, Sch extends SchemaForCodecStaticKeys<Keys>>(
     self: Sch,
     keys: ValidCodecStaticKeys<Keys>

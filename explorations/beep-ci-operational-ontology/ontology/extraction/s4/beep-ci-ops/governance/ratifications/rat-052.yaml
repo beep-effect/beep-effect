@@ -1,0 +1,10 @@
+id: rat:52
+proposal_ref: otp:pb-verification-evidence-receipt:001
+proposal_sha256: c93f890a065a15e6217dae2b6fad36225e27ba0f57cea11271a186749f26baa3
+decision: accept
+steward:
+  id: elpresidank
+  name: Benjamin
+decided_at: '2026-09-03T09:05:00Z'
+verbatim_decision: Accept the evidence-receipt VerificationEvidence reuse, claim-formation provenance
+  deferred as flagged.

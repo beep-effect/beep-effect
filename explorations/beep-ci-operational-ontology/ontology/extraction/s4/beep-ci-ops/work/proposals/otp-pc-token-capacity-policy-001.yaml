@@ -1,0 +1,63 @@
+id: "otp:pc-token-capacity-policy:001"
+hypothesis_ref: "dh:pc-token-capacity-policy:001"
+identity_card_ref: "ic:pc-token-capacity-policy:001"
+foundational_status: analyzed
+term:
+  preferred_label: "admission policy"
+  local_name: AdmissionPolicy
+  proposed_iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+  owl_entity_kind: class
+definition:
+  text: >-
+    A governed policy-specification information object that normatively fixes
+    admission ordering, capacity, aging, class-cap, starvation, applicability,
+    and revision semantics for queued SeatRequests.
+  source:
+    - "po:sha256:b3ea29a27a4730f094b12522a0d0c1648896c255cf538754d3bb11c7db52764f"
+    - "po:sha256:d0e190e143df1788d957dc00bbdf6faf804b7b76ae3e47e147c558e44f802424"
+    - "po:sha256:ff37ebad0eb0db7d4d93c2868963043b2d76981e6d29939abf14cb4b0e3b4899"
+foundational:
+  ufo_category: information_object
+  gufo_alignment: "gufo:Endurant"
+ontoclean:
+  rigidity: rigid
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+  - from_sha256: "82c6171ed42af85d2eea7355631b3964bd81993e2b25eb883f72339ea4f53c27"
+    addressed:
+      - "clause-is-part-not-kind"
+      - "clause-identity-lineage-unobserved"
+      - "semantic-support-not-necessary"
+      - "discriminator-true-of-replay-implementation"
+    disposition: >-
+      Run-2 sitting 1 folded the supported capacity-clause content into exact
+      reuse of the complete AdmissionPolicy, removing the invalid policy-
+      subclass edge and autonomous clause identity.
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+    - iri: "https://oip.law/ontology/ci-ops#AdmissionPolicy"
+      compatibility: >-
+        The observed token-capacity inequality is one clause of the
+        already-ratified complete AdmissionPolicy; it supplies no independently
+        governed clause lineage and is not a policy subclass.
+operational_warrant:
+  competency_questions: ["CQ-023"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    A reconstructed replay instant is rejected as the policy because it is
+    evidence about one application of the enduring rule.
+  - >-
+    The arithmetic expression is rejected as identical with the normative
+    clause because equal syntax can operate under different accounting rules.
+open_issues:
+  - >-
+    A deployed normative obligation remains a possible world-side model, but
+    the arithmetic evidence here exact-reuses the complete policy specification.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

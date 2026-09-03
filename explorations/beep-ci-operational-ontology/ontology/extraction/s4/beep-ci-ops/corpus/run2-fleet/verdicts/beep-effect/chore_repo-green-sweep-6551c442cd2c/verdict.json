@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "chore/repo-green-sweep",
+  "committed": true,
+  "createdAt": "2026-06-15T23:13:51.142Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "publish:git:push",
+      "phase": "publish",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet publish stopped because the full proof changed files after the local commit. Regenerate them, then amend or reset the commit that has not yet been pushed before retrying.\n3 path(s) across 1 top-level entry: docs\n  - docs/PROSE_TO_PROOF_CHAT.html\n  - docs/PROSE_TO_PROOF_GRAPH.html\n  - docs/PROSE_TO_PROOF_VISUALIZATION.html\nRemedy: Inspect the proof-written files; regenerate or commit them as a follow-up, then retry the publish.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_repo-green-sweep-6551c442cd2c",
+  "indexPath": "<fleet>/beep-effect/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "3ca18e9f9be242b2704060ca3ea916490b953863",
+    "overlappingPaths": []
+  }
+}

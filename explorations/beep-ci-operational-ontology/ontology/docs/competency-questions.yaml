@@ -499,6 +499,14 @@
       }
       UNION
       {
+        ?subject a ciops:ScheduleProposal ; ciops:hasStep ?taggedStep .
+        ?taggedStep ciops:schedulesSeatRequest ?seatRequest ; ciops:hasScopeTag ?scopeTag .
+        FILTER (isLiteral(?scopeTag))
+        FILTER NOT EXISTS { ?subject ciops:scopedByComputation ?c3 }
+        BIND("step-scope-provenance-gap" AS ?violation)
+      }
+      UNION
+      {
         ?subject ciops:scopedByComputation ?target .
         FILTER NOT EXISTS { ?target ciops:hasAffectedOutcome ?outcome }
         BIND("dangling-provenance-target" AS ?violation)
@@ -507,33 +515,35 @@
   expected_result: zero_rows
   required_classes: [AffectedComputation, FailOpenOutcome, VerificationEvidence, ScheduleProposal, Scope]
   required_properties: [hasAffectedOutcome, scopedByComputation, hasScope]
-  notes: "Added 2026-08-27 from R4-deep contrarian finding 3: turbo affected reasons are typed (__typename) and several are fail-open (select the whole graph). Round-1 repairs (seats A + D): (1) NL reshaped to the constraint clauses only — the fail-open INVENTORY is the diagnostic obtained by dropping the ?subject clause, not part of this test; (2) scopedByComputation DEFINED as 'trusts the affected set of' — an honest fail-open response (epoch-invalidating FullRepoScope re-verification) does NOT carry scopedByComputation and therefore stays green. APPLICATION PASS (final-grill Q2): hasScope + ScheduleProposal are ADMITTED, so seat G's CLOSED SCOPE-PROVENANCE is now EXECUTABLE — arm 1 catches any subject trusting a fail-open set; arm 2 catches a typed VerificationEvidence/ScheduleProposal whose scope is narrower than FullRepoScope with NO scopedByComputation edge (the laundering seat G proved the round-1 letter permitted). hasScope is DERIVED FROM THE SUBJECT'S WORKUNITS' SCOPES at ingestion, never from the trust edge; every AffectedComputation carries a typed outcome from the closed pair FailOpenOutcome/FailClosedOutcome (FailClosedOutcome is a semantic-support term). Arm 2's negation runs under the closed-world declaration for scopedByComputation (closed-world.yaml). The schedule half is no longer unenforced. BIND-in-UNION-arm is legal here (each BIND references only constants — the round-2 CQ-004 bug pattern needed the OUTER solution mapping; Oxigraph-verified by the suite run). ROUND-3 seat H repairs (all Oxigraph-proven): (H-01) arm 3 added — a ScheduleProposal whose STEPS schedule narrowed WorkUnits is caught even when the materialized proposal-level hasScope edge was omitted (the derived-edge laundering hole; fixture cq019-derived-scope-gap.ttl); (W-01) the NL's first clause is universal again — arm 1 deliberately catches ANY subject trusting fail-open, matching the round-2 no-type-guard disposition; (W-02) arm 4 added — a scopedByComputation edge whose target carries no typed outcome is itself a violation (dangling-provenance laundering; fixture cq019-dangling-target.ttl), running under closed hasAffectedOutcome (closed-world.yaml)."
+  notes: "Added 2026-08-27 from R4-deep contrarian finding 3: turbo affected reasons are typed (__typename) and several are fail-open (select the whole graph). Round-1 repairs (seats A + D): (1) NL reshaped to the constraint clauses only — the fail-open INVENTORY is the diagnostic obtained by dropping the ?subject clause, not part of this test; (2) scopedByComputation DEFINED as 'trusts the affected set of' — an honest fail-open response (epoch-invalidating FullRepoScope re-verification) does NOT carry scopedByComputation and therefore stays green. APPLICATION PASS (final-grill Q2): hasScope + ScheduleProposal are ADMITTED, so seat G's CLOSED SCOPE-PROVENANCE is now EXECUTABLE — arm 1 catches any subject trusting a fail-open set; arm 2 catches a typed VerificationEvidence/ScheduleProposal whose scope is narrower than FullRepoScope with NO scopedByComputation edge (the laundering seat G proved the round-1 letter permitted). hasScope is DERIVED FROM THE SUBJECT'S WORKUNITS' SCOPES at ingestion, never from the trust edge; every AffectedComputation carries a typed outcome from the closed pair FailOpenOutcome/FailClosedOutcome (FailClosedOutcome is a semantic-support term). Arm 2's negation runs under the closed-world declaration for scopedByComputation (closed-world.yaml). The schedule half is no longer unenforced. BIND-in-UNION-arm is legal here (each BIND references only constants — the round-2 CQ-004 bug pattern needed the OUTER solution mapping; Oxigraph-verified by the suite run). ROUND-3 seat H repairs (all Oxigraph-proven): (H-01) arm 3 added — a ScheduleProposal whose STEPS schedule narrowed WorkUnits is caught even when the materialized proposal-level hasScope edge was omitted (the derived-edge laundering hole; fixture cq019-derived-scope-gap.ttl); (W-01) the NL's first clause is universal again — arm 1 deliberately catches ANY subject trusting fail-open, matching the round-2 no-type-guard disposition; (W-02) arm 4 added — a scopedByComputation edge whose target carries no typed outcome is itself a violation (dangling-provenance laundering; fixture cq019-dangling-target.ttl), running under closed hasAffectedOutcome (closed-world.yaml). 2026-09-03 step-shape correction: arm 5 additionally covers a ScheduleProposal whose hasStep-reached ScheduleStep schedules a SeatRequest and carries a literal hasScopeTag but lacks scopedByComputation (fixture cq019-step-scope-gap.ttl)."
 
 - id: CQ-020
   source_use_case: UC-001
-  natural_language: "For a given episode, what ordered WorkUnit sequence does its CURRENT schedule proposal prescribe, and what scope does each step carry?"
+  natural_language: "For a given episode, what ordered SeatRequest sequence does its CURRENT schedule proposal prescribe under its governing projection specification, and what scope tag does each step carry?"
   type: relational
   priority: must_have
   sample_answer:
     - proposal: "ciops:sp-2026-08-27-1443"
+      spec: "ciops:aps-v1"
       step: "ciops:st-1"
       idx: 1
-      wu: "ciops:wu-lint-affected-from-main"
-      scope: ciops:AffectedScope
+      req: "ciops:req-lint-affected-from-main"
+      scope: "admission"
   derivation_method: direct_lookup
   sparql: |
     PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-    SELECT ?proposal ?step ?idx ?wu ?scope WHERE {
+    SELECT ?proposal ?spec ?step ?idx ?req ?scope WHERE {
       VALUES ?ep { ciops:ep-example }  # harness binds
       ?ep ciops:hasCurrentProposal ?proposal .
-      ?proposal a ciops:ScheduleProposal ; ciops:hasStep ?step .
-      ?step ciops:stepIndex ?idx ; ciops:schedulesWorkUnit ?wu .
-      ?wu ciops:hasScope ?scope .
+      ?proposal a ciops:ScheduleProposal ; ciops:hasProjectionSpecification ?spec ; ciops:hasStep ?step .
+      ?spec a ciops:AdmissionProjectionSpecification .
+      ?step ciops:stepIndex ?idx ; ciops:schedulesSeatRequest ?req ; ciops:hasScopeTag ?scope .
+      ?req a ciops:SeatRequest .
     } ORDER BY ?idx
   expected_result: non_empty
-  required_classes: [ScheduleProposal, ScheduleStep, WorkUnit, Scope, VerificationEpisode]
-  required_properties: [hasCurrentProposal, hasStep, stepIndex, schedulesWorkUnit, hasScope]
-  notes: "Final-grill Q1/Q2 admission (projection-ordering Must CQ + schedule-as-A-Box). The projection's OUTPUT becomes A-Box: an emitted ScheduleProposal records the ordered WorkUnits with per-step scope, making the schedule auditable by CQ (this query) and governable by CQ-019's closed scope-provenance. direct_lookup: ordering is COMPUTED by the deterministic S7 projection (NFR-1) and materialized; SPARQL reads it — OWL never computes the order. Round-3 seat H repair (H-03, Oxigraph-proven): the old query matched EVERY proposal ever emitted for the episode and merged their step sequences without projecting the proposal — 'current' was unqueryable. hasCurrentProposal (VerificationEpisode -> ScheduleProposal; the hasCurrentEpoch precedent) makes currency queryable; the projection re-points it when a new proposal supersedes; ?proposal is projected so no cross-proposal merge can hide. proposedFor was REMOVED (no CQ requires the inverse edge)."
+  required_classes: [ScheduleProposal, ScheduleStep, SeatRequest, VerificationEpisode, AdmissionProjectionSpecification]
+  required_properties: [hasCurrentProposal, hasProjectionSpecification, hasStep, stepIndex, schedulesSeatRequest, hasScopeTag]
+  notes: "Final-grill Q1/Q2 admission (projection-ordering Must CQ + schedule-as-A-Box). The projection's OUTPUT becomes A-Box: an emitted ScheduleProposal records the ordered WorkUnits with per-step scope, making the schedule auditable by CQ (this query) and governable by CQ-019's closed scope-provenance. direct_lookup: ordering is COMPUTED by the deterministic S7 projection (NFR-1) and materialized; SPARQL reads it — OWL never computes the order. Round-3 seat H repair (H-03, Oxigraph-proven): the old query matched EVERY proposal ever emitted for the episode and merged their step sequences without projecting the proposal — 'current' was unqueryable. hasCurrentProposal (VerificationEpisode -> ScheduleProposal; the hasCurrentEpoch precedent) makes currency queryable; the projection re-points it when a new proposal supersedes; ?proposal is projected so no cross-proposal merge can hide. proposedFor was REMOVED (no CQ requires the inverse edge). Run-2 amendment (2026-09-03, steward-sanctioned at sittings 1 and 3, applied post-merge because the run manifest pinned the suite digest): schedulesWorkUnit -> schedulesSeatRequest (the journal grounds SeatRequest identity, not WorkUnitSpecification — the admittedBy finding class); scope moved to the STEP as a literal tag matching the deployed S7 emission; the governing AdmissionProjectionSpecification is now required, licensing the run-3 re-proposal of the withdrawn ordering cluster (ScheduleStep and its relations ratify together at run 3). 2026-09-03 no-punning correction: ciops:hasScope remains the object property for Scope individuals; ciops:hasScopeTag is the step's literal tag mirroring the deployed emission; run 3 reconciles the provisional ciops-prov:hasScope spelling."
 
 - id: CQ-021
   source_use_case: UC-002

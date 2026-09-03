@@ -216,14 +216,10 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       yield* backgroundTasks.fork(
         Effect.gen(function* () {
           const state = yield* pollToBatchState(String(batchId)).pipe(
-            Effect.flatMap((current) =>
-              BatchState.isTerminal(current)
-                ? Effect.succeed(current)
-                : BatchNotTerminalError.make({
-                    batchId,
-                    status: current._tag,
-                  })
-            ),
+            Effect.filterOrElse(current => BatchState.isTerminal(current), current => BatchNotTerminalError.make({
+    batchId,
+    status: current._tag,
+})),
             Effect.retry({ times: 120, schedule: Schedule.spaced("5 seconds") })
           );
           const failed = BatchState.guards.Failed(state);

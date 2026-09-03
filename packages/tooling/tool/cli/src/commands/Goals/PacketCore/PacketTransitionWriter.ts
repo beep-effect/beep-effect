@@ -620,9 +620,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     tracePath: string,
     text: string
   ) {
-    const committed = yield* fs
-      .readFileString(tracePath)
-      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    const committed = yield* fs.readFileString(tracePath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
     if (Equal.equals(committed, O.some(text))) {
       return false;
     }

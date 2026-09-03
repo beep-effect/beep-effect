@@ -248,21 +248,19 @@ export const checkStrictDrift = Effect.fn("AiSync.checkStrictDrift")(function* (
  */
 export const assertNoStrictDrift = Effect.fn("AiSync.assertNoStrictDrift")(function* () {
   return yield* checkStrictDrift().pipe(
-    Effect.flatMap((report) =>
-      A.length(report.findings) > 0
-        ? Effect.fail(
-            AiSyncError.make({
-              message: pipe(
-                report.findings,
-                A.map(
-                  (finding) =>
-                    `${finding.sourceId}: ${O.getOrElse(finding.expectedHash, () => "missing")} -> ${finding.actualHash}`
-                ),
-                A.join("\n")
-              ),
-            })
-          )
-        : Effect.succeed(report)
+    Effect.filterOrFail(
+      (report) => !(A.length(report.findings) > 0),
+      (report) =>
+        AiSyncError.make({
+          message: pipe(
+            report.findings,
+            A.map(
+              (finding) =>
+                `${finding.sourceId}: ${O.getOrElse(finding.expectedHash, () => "missing")} -> ${finding.actualHash}`
+            ),
+            A.join("\n")
+          ),
+        })
     )
   );
 });

@@ -1,0 +1,10 @@
+id: po:sha256:56d67898f9daaa0ff3c1fb34ff05745d9a1f94cf2703726f7721d1f586f89e5f
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
+source_span:
+  start_line: 1421
+  end_line: 1421
+quote: 'yield* fs.remove(admitted.leasePath, { force: true }).pipe(Effect.ignore);'
+epistemic_status: quoted_prose
