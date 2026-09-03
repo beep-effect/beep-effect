@@ -36,20 +36,21 @@ tsserver, dev tooling), not production bundle bytes.
 
 ## Current Phase
 
-P1 Vehicle & unblocks. Next concrete action: invert
-`packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts` (it currently
-enforces the *opposite* convention and Yeet repair auto-applies it) and build
-the mapping-table-driven migration command on its scaffold.
+P2 Pilot gate. P1 completed the inverted family-scoped law, mapping-driven
+code/JSDoc/Markdown migration modes, pilot-blocking public leaves, generator
+repairs, and JSDoc root-import detection. The next action is operator approval
+of the proposed `apps/professional-desktop` pilot before measuring or writing
+pilot imports.
 
 ## Latest Evidence
 
-P0 research complete 2026-08-23: six cited reports under
-[`research/`](./research/) from a 4× codex `gpt-5.6-sol` (xhigh) + 2× grok CLI
-fan-out — enforcement census with law-flip checklist, full import census with
-a validated 84/84 + 33/33 + 60-binding mapping table, executed tooling
-evaluation (Biome/GritQL/ESLint/oxlint/tsgo/codemod), a paste-ready pilot
-measurement gate, and community/upstream evidence that the Effect core team
-itself enforces this convention in lib-land.
+P1 complete 2026-09-03: the focused law suite is green; the proposed pilot
+dry-run has zero manual reviews or parser warnings in executable and JSDoc
+modes; all new public leaves resolve under NodeNext and Bundler; every touched
+workspace package passed default package verification; the JSDoc ratchet has
+zero root-policy findings; and full repository docgen passed. The reproducible
+gross, in-scope, pilot, and authored-Markdown counts are recorded in
+[`research/p1-census-baseline.md`](./research/p1-census-baseline.md).
 
 ## Notes
 

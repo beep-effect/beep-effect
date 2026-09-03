@@ -8,13 +8,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Text } from "@beep/utils";
 import { Console, Effect } from "effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { printCommandJson } from "../../internal/cli/Json.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck } from "./AllowlistCheck.ts";
 import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
-import { EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
+import { EffectImportCorpusMode, EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
 import { FrozenGrantSetRulesOptions, runFrozenGrantSetRules } from "./FrozenGrantSet.ts";
 import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "./NoNativeRuntime.ts";
 import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.ts";
@@ -43,8 +45,25 @@ class EffectImportsCommandOptions extends S.Class<EffectImportsCommandOptions>($
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
+    candidate: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    mode: EffectImportCorpusMode.pipe(
+      S.withConstructorDefault(Effect.succeed("code" as const)),
+      S.withDecodingDefault(Effect.succeed("code" as const))
+    ),
+    enforceDocumentation: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    json: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefault(Effect.succeed(false))),
     exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
     include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefault(Effect.succeed("*"))),
+    includePrefix: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefault(Effect.succeed(""))
+    ),
   },
   $I.annote("EffectImportsCommandOptions", {
     description: "CLI options for effect import governance command.",
@@ -179,6 +198,11 @@ const includeFlag = Flag.string("include").pipe(
   Flag.withDefault("*")
 );
 
+const includePrefixFlag = Flag.string("include-prefix").pipe(
+  Flag.withDescription("Comma-separated repo-relative directory prefixes to scan"),
+  Flag.withDefault("")
+);
+
 const logTerseEffectFileGroup = Effect.fn("Laws.logTerseEffectFileGroup")(function* (
   label: string,
   files: ReadonlyArray<string>,
@@ -213,28 +237,87 @@ const lawsEffectImportsCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Fail when any rewrite is required")
     ),
+    candidate: Flag.boolean("candidate").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Dry-run an explicit include scope before promoting it; cannot be combined with --write")
+    ),
+    mode: Flag.choice("mode", EffectImportCorpusMode.Options).pipe(
+      Flag.withDefault("code"),
+      Flag.withDescription("Corpus representation to scan: executable code, JSDoc fences, or Markdown fences")
+    ),
+    enforceDocumentation: Flag.boolean("enforce-documentation").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Make JSDoc or Markdown findings blocking; reserved for the final documentation flip")
+    ),
+    json: Flag.boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit the complete migration summary as schema-shaped JSON")
+    ),
     exclude: Flag.string("exclude").pipe(
       Flag.withDescription("Comma-separated list of file paths to exclude"),
       Flag.withDefault("")
     ),
     include: includeFlag,
+    includePrefix: includePrefixFlag,
   },
-  Effect.fn(function* ({ write, check, exclude, include }) {
-    const options = EffectImportsCommandOptions.make({ write, check, exclude, include });
+  // fallow-ignore-next-line complexity -- the CLI adapter keeps flag validation, JSON/text rendering, and exit semantics in one command transaction covered by command fixtures
+  Effect.fn(function* ({ write, check, candidate, mode, enforceDocumentation, json, exclude, include, includePrefix }) {
+    const options = EffectImportsCommandOptions.make({
+      write,
+      check,
+      candidate,
+      mode,
+      enforceDocumentation,
+      json,
+      exclude,
+      include,
+      includePrefix,
+    });
+    if (options.candidate && options.write) {
+      return yield* failWithReportedExit("effect-governance-imports: --candidate is dry-run only.");
+    }
+    if (options.candidate && options.include === "*" && options.includePrefix === "") {
+      return yield* failWithReportedExit(
+        "effect-governance-imports: --candidate requires an explicit --include or --include-prefix scope."
+      );
+    }
     const summary = yield* runEffectImportRules(
       EffectImportRulesOptions.make({
         write: options.write,
         strictCheck: options.check,
+        candidate: options.candidate,
+        mode: options.mode,
+        enforceDocumentation: options.enforceDocumentation,
         excludePaths: parseExcludePaths(options.exclude),
+        includePrefixes: parseExcludePaths(options.includePrefix),
         ...includePathsOption(options.include),
       })
     );
 
-    const mode = options.write ? "write" : "dry-run";
-    yield* Console.log(`[effect-governance-imports] mode=${mode}`);
+    const operation = options.write ? "write" : "dry-run";
+    if (options.json) {
+      yield* printCommandJson(summary);
+      if (summary.strictFailure) {
+        return yield* failWithReportedExit("effect-governance-imports: check failed.");
+      }
+      return;
+    }
+
+    yield* Console.log(`[effect-governance-imports] operation=${operation}`);
+    yield* Console.log(`[effect-governance-imports] corpus=${options.mode}`);
+    yield* Console.log(`[effect-governance-imports] candidate=${options.candidate}`);
+    yield* Console.log(`[effect-governance-imports] scanned_files=${summary.scannedFiles}`);
+    yield* Console.log(`[effect-governance-imports] scanned_fences=${summary.scannedFences}`);
     yield* Console.log(`[effect-governance-imports] touched_files=${summary.touchedFiles}`);
-    yield* Console.log(`[effect-governance-imports] alias_renamed=${summary.aliasRenamed}`);
-    yield* Console.log(`[effect-governance-imports] stable_converted=${summary.stableConverted}`);
+    yield* Console.log(`[effect-governance-imports] root_imports_rewritten=${summary.rootImportsRewritten}`);
+    yield* Console.log(`[effect-governance-imports] root_exports_rewritten=${summary.rootExportsRewritten}`);
+    yield* Console.log(`[effect-governance-imports] emitted_imports=${summary.emittedImports}`);
+    yield* Console.log(`[effect-governance-imports] emitted_exports=${summary.emittedExports}`);
+    yield* Console.log(`[effect-governance-imports] manual_reviews=${summary.manualReviews.length}`);
+    yield* Console.log(`[effect-governance-imports] parser_warnings=${summary.parserWarnings.length}`);
+    for (const [moduleSpecifier, count] of R.toEntries(summary.rootSpecifierCounts)) {
+      yield* Console.log(`[effect-governance-imports] root_specifier module=${moduleSpecifier} count=${count}`);
+    }
 
     if (!options.write) {
       yield* Console.log("[effect-governance-imports] Run with --write to persist changes.");
@@ -244,11 +327,21 @@ const lawsEffectImportsCommand = Command.make(
       yield* Console.log(filePath);
     }
 
+    for (const review of summary.manualReviews) {
+      yield* Console.log(
+        `[effect-governance-imports] manual_review kind=${review.kind} file=${review.file}:${review.line} module=${review.moduleSpecifier} binding=${review.binding} reason=${review.reason}`
+      );
+    }
+
+    for (const warning of summary.parserWarnings) {
+      yield* Console.log(`[effect-governance-imports] parser_warning ${warning}`);
+    }
+
     if (summary.strictFailure) {
       return yield* failWithReportedExit("effect-governance-imports: check failed.");
     }
   })
-).pipe(Command.withDescription("Check or rewrite Effect import style rules"));
+).pipe(Command.withDescription("Check or rewrite root imports into validated per-module imports"));
 
 /**
  * CLI command for terse Effect style migration/check.

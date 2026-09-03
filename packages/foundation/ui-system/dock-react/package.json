@@ -38,6 +38,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./DockReact.types": "./src/DockReact.types.ts",
+    "./DockviewReact": "./src/DockviewReact.tsx",
     "./internal/*": "./src/internal/*.ts",
     "./package.json": "./package.json"
   },
@@ -55,6 +57,8 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./DockReact.types": "./dist/DockReact.types.js",
+      "./DockviewReact": "./dist/DockviewReact.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
