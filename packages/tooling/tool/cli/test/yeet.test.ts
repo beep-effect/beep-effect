@@ -8,11 +8,14 @@ import {
   QualityTaskLaneRunReport,
 } from "@beep/repo-cli/test/Quality";
 import {
+  acquireJournalFileLock,
   appendEncodedAttemptJournalEvent,
   processStartIdentityForPid,
   provideRuntimeRootForTesting,
   RuntimeRootChoice,
+  reconcileAttemptJournal,
   reconcileAttemptJournalsForCheckout,
+  releaseJournalFileLock,
 } from "@beep/repo-cli/test/RepoRun";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
@@ -2402,6 +2405,7 @@ describe("yeet attempt journal", () => {
           );
           yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
           yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);
+          yield* fs.writeFileString(path.join(tmpDir, ".beep", "yeet", "runs", "ignored.txt"), "ignored\n");
 
           expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(1);
           expect(yield* reconcileAttemptJournalsForCheckout(tmpDir)).toBe(0);
@@ -2421,6 +2425,28 @@ describe("yeet attempt journal", () => {
             stage: O.some("repair-loop"),
           });
           expect(A.some(terminals, (terminal) => terminal.attemptId === liveAttemptId)).toBe(false);
+        })
+      )
+    ));
+
+  it("returns zero for a missing journal and refuses a live lock generation", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const journalPath = path.join(tmpDir, "attempts.ndjson");
+          expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
+
+          yield* fs.writeFileString(journalPath, "");
+          const lockPath = `${journalPath}.lock`;
+          const lockToken = `${process.pid}:00000000-0000-4000-8000-000000000123`;
+          expect(yield* acquireJournalFileLock(lockPath, lockToken, 1)).toBe(true);
+          const error = yield* reconcileAttemptJournal(journalPath).pipe(
+            Effect.flip,
+            Effect.ensuring(releaseJournalFileLock(lockPath, lockToken))
+          );
+          expect(error.message).toContain("stayed busy; could not reconcile owners");
         })
       )
     ));

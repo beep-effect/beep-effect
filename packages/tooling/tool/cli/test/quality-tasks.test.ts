@@ -1027,6 +1027,55 @@ describe("quality task adapter", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
+  it("falls back when a lane artifact is missing or belongs to another parent", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempDir = yield* fs.makeTempDirectory();
+        const missingPath = path.join(tempDir, "missing.ndjson");
+        const foreignPath = path.join(tempDir, "foreign.ndjson");
+        const foreignReport = yield* S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.some("full:foreign-parent"),
+            lanes: [],
+          })
+        );
+        yield* fs.writeFileString(foreignPath, `${foreignReport}\n`);
+
+        yield* Effect.forEach(
+          [missingPath, foreignPath],
+          (artifactPath) =>
+            withEnvVarEffect(
+              QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+              artifactPath,
+              withEnvVarEffect(
+                QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+                "full:current-parent",
+                runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast")
+              )
+            ),
+          { discard: true }
+        );
+
+        const reportLines = pipe(
+          yield* TestConsole.logLines,
+          A.filter(isString),
+          A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
+        );
+        expect(reportLines).toHaveLength(2);
+        const reports = yield* Effect.forEach(reportLines, (line) =>
+          S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport))(
+            Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)
+          )
+        );
+        expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
+        expect(A.every(reports, (report) => O.contains(report.parentLaneId, "full:current-parent"))).toBe(true);
+        yield* fs.remove(tempDir, { recursive: true, force: true });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
   it("retains each completed inner lane when its wrapper is interrupted", () =>
     Effect.runPromise(
       Effect.gen(function* () {
