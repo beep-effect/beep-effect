@@ -1777,7 +1777,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
  *
  * ```ts
  * import { runQualityTaskStreamingLaneGroup } from "@beep/repo-cli/commands/Quality/Tasks"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(runQualityTaskStreamingLaneGroup("ci:local", []))) // true
  * ```
@@ -3116,7 +3116,7 @@ export const collectGithubCheckLaneWavesForTesting = collectGithubCheckLaneWaves
  *
  * ```ts
  * import { collectQualityTaskLaneRunsForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(collectQualityTaskLaneRunsForTesting("ci:local", []))) // true
  * ```
