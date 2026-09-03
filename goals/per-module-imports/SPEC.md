@@ -118,8 +118,10 @@ migration is gated on a measured pilot.
   raw sample and stats summary.
 - **Authority boundary:** P2 is complete with a recorded stop. D12 did not
   activate, P3 is not authorized, and no mass migration or global enforcement
-  flip may proceed. D13 still permits publishing the bounded pilot and evidence
-  to merge-ready, but never merging the pull request.
+  flip may proceed. The bounded migration remains as measurement evidence, but
+  `apps/professional-desktop` is removed from the default promoted-family
+  ratchet. D13 still permits publishing the bounded pilot and evidence to
+  merge-ready, but never merging the pull request.
 
 ## Non-Goals
 

@@ -40,7 +40,8 @@ P2 Pilot gate complete with an **inconclusive — stop** verdict. The approved
 `apps/professional-desktop` pilot passed every correctness gate, reached zero
 root imports, and was idempotent, but its one permitted symmetric extension
 produced no stable qualifying performance improvement. The strict-pass
-authority therefore did not activate P3; the packet is paused at the gate.
+authority therefore did not activate P3; the default promoted-family ratchet
+is empty again, and the packet is paused at the gate.
 
 ## Latest Evidence
 

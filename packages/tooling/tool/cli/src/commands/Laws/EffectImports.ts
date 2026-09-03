@@ -37,10 +37,10 @@ import type {
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 
-// P2 promotes only the approved pilot before either measurement state so the
-// enforcement configuration remains identical across the pair. Later families
-// join with their Biome restriction during P3; the final flip removes this list.
-const EFFECT_IMPORT_PROMOTED_FAMILY_PREFIXES = A.of("apps/professional-desktop");
+// P2 kept the approved pilot promoted across both measurement states. Its
+// inconclusive stop restores the default to an empty ratchet; a later family
+// may join only under a separately authorized rollout decision.
+const EFFECT_IMPORT_PROMOTED_FAMILY_PREFIXES = A.empty<string>();
 
 /**
  * Corpus representation scanned by the per-module import vehicle.

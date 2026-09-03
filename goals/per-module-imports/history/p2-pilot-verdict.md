@@ -95,6 +95,9 @@ valid before run then reported 10,257 files and every valid after run 10,256.
 P2 is complete with a recorded stop. P3 remains pending and unauthorized: no
 Biome warn/error ratchet, foundation-kernel batch, vertical-family migration,
 documentation mass rewrite, or global rule flip may begin from this verdict.
+The migrated source stays in the bounded pilot as auditable measurement
+evidence, while the default promoted-family ratchet returns to empty after the
+stop.
 The operator's D13 direction still authorizes publishing this bounded P2 pilot
 and evidence through Yeet with `--start-pr-early`; it does not change the gate
 classification and does not authorize merging the pull request.

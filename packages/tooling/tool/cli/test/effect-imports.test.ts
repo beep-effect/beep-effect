@@ -139,8 +139,8 @@ const demoSource = A.join(
 );
 
 describe("effect import laws", () => {
-  it("promotes only the approved P2 pilot by default", () => {
-    expect(EffectImportRulesOptions.make({}).promotedFamilyPrefixes).toEqual(["apps/professional-desktop"]);
+  it("keeps the promoted-family ratchet empty after the P2 stop", () => {
+    expect(EffectImportRulesOptions.make({}).promotedFamilyPrefixes).toEqual(A.empty<string>());
   });
 
   it("validates candidate CLI flags and renders text and JSON summaries", () =>

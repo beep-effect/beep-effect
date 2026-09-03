@@ -97,6 +97,8 @@ condition prevents P3.
   each state, no stable qualifying improvement, and no stable material
   regression. P2 evidence is recorded in
   `history/p2-pilot-verdict.md` and `history/measurements/`; P3 was not entered.
+  The pilot source remains as bounded evidence, while the default
+  promoted-family list returns to empty after the stop.
 
 ### P3 Batches & ratchet
 
