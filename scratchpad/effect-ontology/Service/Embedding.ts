@@ -285,17 +285,3 @@ export const EmbeddingServiceDefault: Layer.Layer<
   never,
   EmbeddingProvider | EmbeddingCache | MetricsService
 > = EmbeddingServiceLive;
-
-// =============================================================================
-// Legacy Compatibility
-// =============================================================================
-
-/**
- * Compatibility re-export of Nomic NLP's service and live layer; the alias
- * still binds Nomic NLP directly and bypasses the provider abstraction.
- *
- * @deprecated Use {@link EmbeddingServiceLive} with {@link EmbeddingProvider} instead of importing Nomic NLP through this module.
- * @category layers
- * @since 0.0.0
- */
-export { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts";

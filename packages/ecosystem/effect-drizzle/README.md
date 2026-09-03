@@ -1858,7 +1858,7 @@ String.pipe(columnName("legacy_name")).meta.columnName // => "legacy_name"
 declare const columnName: <const N extends string>(name: N & ValidateSqlName<N, "pg.columnName requires a lowercase SQL identifier">) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly columnName: N; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1731)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1709)
 
 ##### date
 
@@ -1968,31 +1968,6 @@ declare const defaultNow: () => <I extends Field.Input>(input: I & ValidateTimes
 ```
 
 [Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1494)
-
-##### ~~defaultSql~~
-
-Compatibility alias for `unsafeDefaultSql`.
-
-**Gotchas**
-
-The alias is equally unsafe; its older name does not communicate that boundary.
-
-**Example** (Use the compatibility alias)
-
-```ts
-import { String } from "effect/Schema"
-import { defaultSql } from "@beep/effect-drizzle/pg"
-
-String.pipe(defaultSql("current_user")).meta.hasDefault // => true
-```
-
-**Signature**
-
-```ts
-declare const defaultSql: (sql: string) => <I extends Field.Input>(input: I & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.UnsafeDefaultSql; readonly hasDefault: true; }>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1557)
 
 ##### default_
 
@@ -2129,7 +2104,7 @@ String.pipe(generated(sql<string>`lower(name)`)).meta.generated._tag // => "sqlE
 declare const generated: <Carrier>(expression: SQL<Carrier>) => <I extends Field.Input>(input: I & ValidateExpression<I, Carrier> & ValidateNotDefaulted<I> & ValidateNotVersion<I>) => Field.Patched<I, { readonly generated: Meta.GeneratedSqlExpr<Carrier>; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1671)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1649)
 
 ##### identity
 
@@ -2376,7 +2351,7 @@ Attaches a foreign-key target and referential actions to a field.
 declare const references: <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(id: Id, options?: Options & ValidateReferenceName<Options>) => <I extends Field.Input>(input: I & ValidateReferenceActions<NoInfer<I>, Options>) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id">; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1809)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1787)
 
 ##### serial
 
@@ -2649,7 +2624,7 @@ String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated._tag // => "unsafe
 declare const unsafeGeneratedSql: (sql: string) => <I extends Field.Input>(input: I & ValidateNotDefaulted<I> & ValidateNotVersion<I>) => Field.Patched<I, { readonly generated: Meta.UnsafeGeneratedSql; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1703)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1681)
 
 ##### uuid
 
@@ -2755,7 +2730,7 @@ Int.pipe(integer(), defaultValue(1), version()).meta.version // => true
 declare const version: () => <I extends Field.Input>(input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I> & ValidateVersionSchema<I> & Field.ValidateNonNullable<I, "version() forbids a nullable schema"> & ValidateNotArray<I>) => Field.Patched<I, { readonly version: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1608)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/combinators.ts#L1586)
 
 ### PostgreSQL table extras — `@beep/effect-drizzle/pg`
 
@@ -4021,7 +3996,7 @@ getTableName(assembly.tables.user) // => "user"
 declare const schema: <const Models extends ModelRecord>(models: Models & ValidateSchema<Models>) => Assembly<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L650)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L648)
 
 #### models
 
@@ -4057,7 +4032,7 @@ export interface Assembly<Models extends ModelRecord> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L315)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L313)
 
 ##### ModelRecord (interface)
 
@@ -4116,7 +4091,7 @@ type RelationsConfig<Models> = (
 ) => RelationsBuilderConfig<TablesOf<Models>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L290)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L288)
 
 #### projections
 
@@ -4141,7 +4116,7 @@ type TablesOf<Models> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L266)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L264)
 
 #### validation
 
@@ -4187,7 +4162,7 @@ type ValidateSchema<Models> = [SchemaFailures<Models>] extends [never]
   : SchemaFailures<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L247)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/pg/schema.ts#L245)
 
 ### PostgreSQL table projection — `@beep/effect-drizzle/pg`
 
@@ -5765,7 +5740,7 @@ Int.pipe(integer(), autoIncrement()).meta.identity // => "byDefault"
 declare const autoIncrement: () => <I extends Field.Input>(input: I & Field.ValidateNonNullable<I, "autoIncrement() forbids a nullable schema"> & ValidateRowidKey<I> & ValidateNotDefaulted<I> & ValidateNotGenerated<I> & ValidateNotVersion<I>) => Field.Patched<I, { readonly primaryKey: true; readonly identity: "byDefault"; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L560)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L563)
 
 ##### blob
 
@@ -5816,7 +5791,7 @@ String.pipe(columnName("display_name")).meta.columnName // => "display_name"
 declare const columnName: <const Name extends string>(name: Name & ValidateSqlName<Name, "sqlite.columnName requires a lowercase SQL identifier">) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly columnName: Name; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L902)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L883)
 
 ##### default
 
@@ -5828,7 +5803,7 @@ Named export for the SQLite literal-default combinator.
 declare const default: <const Value>(value: Value) => <I extends Field.Input>(input: I & ValidateDefaultValue<I, Value> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultValue<Value>; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L621)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L624)
 
 ##### defaultExpr
 
@@ -5861,7 +5836,7 @@ String.pipe(defaultExpr(sql<string>`lower('A')`)).meta.hasDefault // => true
 declare const defaultExpr: <Carrier>(expression: SQL<Carrier>) => <I extends Field.Input>(input: I & ValidateExpression<I, Carrier> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultSqlExpr<Carrier>; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L650)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L653)
 
 ##### defaultNow
 
@@ -5891,32 +5866,7 @@ String.pipe(text(), defaultNow()).meta.hasDefault // => true
 declare const defaultNow: () => <I extends Field.Input>(input: I & ValidateTimestampText<I> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultNow; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L686)
-
-##### ~~defaultSql~~
-
-Compatibility alias for `unsafeDefaultSql`.
-
-**Gotchas**
-
-The alias is equally unsafe; its older name does not communicate that boundary.
-
-**Example** (Use the compatibility alias)
-
-```ts
-import { String } from "effect/Schema"
-import { defaultSql } from "@beep/effect-drizzle/sqlite"
-
-String.pipe(defaultSql("lower('A')")).meta.hasDefault // => true
-```
-
-**Signature**
-
-```ts
-declare const defaultSql: (sql: string) => <I extends Field.Input>(input: I & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.UnsafeDefaultSql; readonly hasDefault: true; }>
-```
-
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L742)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L689)
 
 ##### default_
 
@@ -5945,7 +5895,7 @@ Literals(["draft", "active"]).pipe(defaultValue("draft")).meta.hasDefault // => 
 declare const default_: <const Value>(value: Value) => <I extends Field.Input>(input: I & ValidateDefaultValue<I, Value> & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.DefaultValue<Value>; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L611)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L614)
 
 ##### enum
 
@@ -5957,7 +5907,7 @@ Named export for the SQLite enum combinator.
 declare const enum: () => <I extends Field.Input>(input: I & ValidateEnum<I>) => Field.Patched<I, { readonly column: SqliteColumn.Enum<EnumValue<I>>; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L391)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L394)
 
 ##### enum_
 
@@ -5996,7 +5946,7 @@ Literals(["draft", "active"]).pipe(sqliteEnum()).meta.column?.values
 declare const enum_: () => <I extends Field.Input>(input: I & ValidateEnum<I>) => Field.Patched<I, { readonly column: SqliteColumn.Enum<EnumValue<I>>; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L375)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L378)
 
 ##### generated
 
@@ -6029,7 +5979,7 @@ String.pipe(generated(sql<string>`lower(name)`)).meta.generated._tag // => "sqlE
 declare const generated: <Carrier>(expression: SQL<Carrier>) => <I extends Field.Input>(input: I & ValidateExpression<I, Carrier> & ValidateNotDefaulted<I> & ValidateNotVersion<I>) => Field.Patched<I, { readonly generated: Meta.GeneratedSqlExpr<Carrier>; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L846)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L827)
 
 ##### index
 
@@ -6067,7 +6017,7 @@ field.meta.indexed // => { name: undefined, unique: false }
 declare const index: (options?: { readonly name?: string; }) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly indexed: { readonly name: string | undefined; readonly unique: false; }; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L479)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L482)
 
 ##### integer
 
@@ -6155,7 +6105,7 @@ String.pipe(text(), primaryKey()).meta.primaryKey // => true
 declare const primaryKey: () => <I extends Field.Input>(input: I & Field.ValidateNonNullable<I, "primaryKey() forbids a nullable schema">) => Field.Patched<I, { readonly primaryKey: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L423)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L426)
 
 ##### real
 
@@ -6188,7 +6138,7 @@ Attaches a foreign-key target and referential actions to a field.
 declare const references: <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(id: Id, options?: Options) => <I extends Field.Input>(input: I & ValidateReferenceActions<NoInfer<I>, Options>) => Field.Patched<I, { readonly references: Meta.References<Id["tableName"], "id">; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L969)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L950)
 
 ##### text
 
@@ -6239,7 +6189,7 @@ String.pipe(unique()).meta.unique // => true
 declare const unique: () => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly unique: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L445)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L448)
 
 ##### uniqueIndex
 
@@ -6277,7 +6227,7 @@ field.meta.indexed // => { name: undefined, unique: true }
 declare const uniqueIndex: (options?: { readonly name?: string; }) => <I extends Field.Input>(input: I) => Field.Patched<I, { readonly indexed: { readonly name: string | undefined; readonly unique: true; }; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L517)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L520)
 
 ##### unsafeDefaultSql
 
@@ -6306,7 +6256,7 @@ String.pipe(unsafeDefaultSql("lower('A')")).meta.hasDefault // => true
 declare const unsafeDefaultSql: (sql: string) => <I extends Field.Input>(input: I & ValidateNotGenerated<I>) => Field.Patched<I, { readonly default: Meta.UnsafeDefaultSql; readonly hasDefault: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L716)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L719)
 
 ##### unsafeGeneratedSql
 
@@ -6335,7 +6285,7 @@ String.pipe(unsafeGeneratedSql("lower(name)")).meta.generated._tag // => "unsafe
 declare const unsafeGeneratedSql: (sql: string) => <I extends Field.Input>(input: I & ValidateNotDefaulted<I> & ValidateNotVersion<I>) => Field.Patched<I, { readonly generated: Meta.UnsafeGeneratedSql; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L876)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L857)
 
 ##### version
 
@@ -6366,7 +6316,7 @@ Int.pipe(integer(), version()).meta.version // => true
 declare const version: () => <I extends Field.Input>(input: I & ValidateVersionColumn<I> & ValidateVersionCompatibility<I> & ValidateVersionSchema<I> & Field.ValidateNonNullable<I, "version() forbids a nullable schema">) => Field.Patched<I, { readonly version: true; }>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L783)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/combinators.ts#L764)
 
 ### SQLite table extras — `@beep/effect-drizzle/sqlite`
 
@@ -7429,7 +7379,7 @@ getTableName(assembly.tables.user) // => "user"
 declare const schema: <const Models extends ModelRecord>(models: Models & ValidateSchema<Models>) => Assembly<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L607)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L605)
 
 #### models
 
@@ -7462,7 +7412,7 @@ export interface Assembly<Models extends ModelRecord> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L309)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L307)
 
 ##### ModelRecord (interface)
 
@@ -7520,7 +7470,7 @@ type RelationsConfig<Models> = (
 ) => RelationsBuilderConfig<TablesOf<Models>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L285)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L283)
 
 #### projections
 
@@ -7545,7 +7495,7 @@ type TablesOf<Models> = {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L261)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L259)
 
 #### validation
 
@@ -7590,7 +7540,7 @@ type ValidateSchema<Models> = [SchemaFailures<Models>] extends [never]
   : SchemaFailures<Models>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L242)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/sqlite/schema.ts#L240)
 
 ### SQLite table projection — `@beep/effect-drizzle/sqlite`
 
@@ -8470,7 +8420,7 @@ export interface SqlTypeError<Msg extends string> {
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L205)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L207)
 
 #### models
 
@@ -8484,7 +8434,7 @@ Existential field carrier exposed through public combinator inference.
 type Any = Field<AnySchema, Meta.Meta>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L67)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L69)
 
 ##### AnySchema (type alias)
 
@@ -8492,9 +8442,10 @@ Schema forms a `@beep/effect-drizzle` field can wrap.
 
 **Gotchas**
 
-Effect's current existential is `VariantSchema.Field<any>` internally. A
-concrete config is invariant and rejects valid literal variant records, so
-this mirrors Effect's erased-field boundary rather than widening `@beep/effect-drizzle` data.
+Effect's current usable existential is `VariantSchema.Field<any>`. Its
+structural `Field.Any` marker omits `schemas` and `pipe`, while a concrete
+config is invariant and rejects valid literal variant records. This mirrors
+Effect's own erased-field boundary rather than widening `@beep/effect-drizzle` data.
 
 **Signature**
 
@@ -8502,7 +8453,7 @@ this mirrors Effect's erased-field boundary rather than widening `@beep/effect-d
 type AnySchema = Top | VariantSchema.Field<any>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L47)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L49)
 
 ##### EncodedOf (type alias)
 
@@ -8514,7 +8465,7 @@ Encoded database-facing type of an input; variant fields use `select`.
 type EncodedOf<I> = SchemaEncoded<SchemaFrom<I>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L177)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L179)
 
 ##### Field (interface)
 
@@ -8530,7 +8481,7 @@ export interface Field<out Sch extends AnySchema, out M extends Meta.Meta> exten
 }
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L55)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L57)
 
 ##### Input (type alias)
 
@@ -8542,7 +8493,7 @@ Bare schema, variant field, or existing field accepted by public combinators.
 type Input = AnySchema | Any
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L75)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L77)
 
 ##### MetaFrom (type alias)
 
@@ -8554,7 +8505,7 @@ The metadata type an input resolves to; bare schemas start at `Meta.Empty`.
 type MetaFrom<I> = I extends Field<AnySchema, infer M> ? M : Meta.Empty
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L121)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L123)
 
 ##### Patched (type alias)
 
@@ -8566,7 +8517,7 @@ Field type produced after applying a metadata patch to an input.
 type Patched<I, Patch> = Field<SchemaFrom<I>, Meta.Merge<MetaFrom<I>, Patch>>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L151)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L153)
 
 ##### SchemaFrom (type alias)
 
@@ -8578,7 +8529,7 @@ Schema type obtained by normalizing an `Input`.
 type SchemaFrom<I> = I extends Field<infer Sch, Meta.Meta> ? Sch : Extract<I, AnySchema>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L113)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L115)
 
 #### validation
 
@@ -8596,7 +8547,7 @@ type ValidateArrayElement<I> = MetaFrom<I>["column"] extends undefined
     : SqlTypeError<"pg.array element declarations must be scalar">
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L253)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L255)
 
 ##### ValidateArrayEncoded (type alias)
 
@@ -8614,7 +8565,7 @@ type ValidateArrayEncoded<I, Element, Dimensions> = [
   : SqlTypeError<"pg.array outer schema must exactly match the element carrier at the declared depth">
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L265)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L267)
 
 ##### ValidateEncoded (type alias)
 
@@ -8630,7 +8581,7 @@ type ValidateEncoded<I, Allowed, Msg> = [Exclude<EncodedOf<I>, null>] extends [
   : SqlTypeError<Msg>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L215)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L217)
 
 ##### ValidateNonNullable (type alias)
 
@@ -8646,7 +8597,7 @@ type ValidateNonNullable<I, Msg> = [EncodedOf<I>] extends [
   : SqlTypeError<Msg>
 ```
 
-[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L231)
+[Source](https://github.com/beep-effect/beep-effect/tree/main/packages/ecosystem/effect-drizzle/src/core/Field.ts#L233)
 
 ### Core: model contract — `@beep/effect-drizzle`
 
