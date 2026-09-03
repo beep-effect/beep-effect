@@ -1714,10 +1714,14 @@ needing a migration path.
 Rationale:
 
 The first real removal pass (2026-09-02) found 174 `@deprecated` tags across six workspace
-packages, none with a live consumer, some tagged since 2026-07-29. Every package sits at 0.0.0
-with no release train, so "2 minor releases or 1 quarter" never elapses and the windows were
-holding dead surface open indefinitely. Removing on discovery keeps the window rule meaningful
-where it protects someone and stops it from parking deletions where it protects no one.
+packages, none with a live consumer, some tagged since 2026-04-30. Package versions are
+changeset bumps recorded in-repo (`chore(release): version packages`), for example
+`@beep/identity` and `@beep/repo-configs` at 0.1.1; every workspace is `private: true` and no
+workflow publishes to a registry, so no version has ever reached a consumer outside this
+repository. Counted in releases, "2 minor releases or 1 quarter" therefore never elapses and the
+windows were holding dead surface open indefinitely. Removing on discovery keeps the window rule
+meaningful where it protects someone and stops it from parking deletions where it protects no
+one.
 
 ## Known Unknowns
 
