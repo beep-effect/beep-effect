@@ -365,3 +365,54 @@ dependent type graph changes, invalidate the workspace `node_modules/.tmp/*.tsbu
 state or expose a supported root command that performs an actual `tsgo -b --force`.
 The operator guidance must distinguish Turbo cache invalidation from TypeScript
 incremental-state invalidation; they are independent layers.
+
+## 2026-09-03 — the documented scheduler status route moved under `quality`
+
+Lived while resuming P1 and checking whether a baseline analysis could run
+without competing with admitted work. `bun run beep scheduler status --json`
+failed because the current CLI has no `scheduler` subcommand and rejects the
+flag. A read-only `systemctl --user list-units 'agent-run-*.scope'
+--state=running` probe still showed several live admitted scopes, so the
+backpressure was real even though the documented inspection route had drifted.
+The current repo-owned replacement was later found at
+`bun run beep quality scheduler status --json`; its structured result confirmed
+the same active leases and queued publish tickets without relying on systemd as
+the source of truth.
+
+What would have prevented it: update `AGENTS.md` and packet handoffs in the same
+change that moves the command, and include the current fully qualified route in
+the scheduler's CLI error or root help. Until then, goal executors can mistake a
+renamed command for an empty queue and either compete with live work or idle
+unnecessarily.
+
+## 2026-09-03 — architecture touch route cannot audit an added role file
+
+Lived while adding schema-owned P1 role files. The required touch route
+`bun run beep architecture` only rendered command help. The apparent validation
+subcommand `bun run beep architecture check` then failed with `Missing required
+flag: --file`; its contract validates an already-rendered architecture operation
+plan and does not accept an existing package or newly added role path. The
+available `architecture plan` flags describe a new slice/concept/domain-kind
+archetype, not an observability helper within an existing tooling package, so
+manufacturing a plan would misclassify this change.
+
+What would have prevented it: provide a read-only `architecture audit <path>`
+route for manually added roles, or narrow the touch guidance to the operations
+the plan factory can actually express and name the supported fallback for
+existing-package helper modules.
+
+## 2026-09-03 — Yeet JSON plans silently truncate at 16 KiB
+
+Lived while inspecting the canonical P1 closeout plan without starting its
+heavy feedback wave. `bun run beep yeet repair --plan --json | jq ...` failed
+with `Unfinished string at EOF at line 1, column 16384`. Two bounded follow-up
+probes confirmed that the command emitted exactly 16,384 bytes, stopped in the
+middle of a JSON string, and still exited zero. The human-readable `--plan`
+form completed and showed that repair expands into repo docgen plus broad
+build/lint/check feedback, so it remained intentionally unstarted while the
+machine-wide scheduler had live holders and queued tickets.
+
+What would have prevented it: structured plan output must either stream the
+complete JSON document or fail nonzero with explicit truncation metadata. A
+size-capped JSON prefix with exit zero is not a machine-readable plan and can
+make automation act on an incomplete affected-package universe.
