@@ -20,6 +20,20 @@ runner.
 
 Signed: **Codex, execution agent, 2026-09-03**
 
+## Implementation revision — 2026-09-03
+
+Every partitioned Turbo invocation uses `--only`, so the committed LPT bins
+execute package-qualified task ids and never re-run transitive parent tasks;
+Turbo 2.10.12 still expands `^lint` dependencies when only a generic task name
+is paired with package filters. For an affected wave, the CLI first computes
+Turbo's shaped dry-run set with `--affected`, the base conveyed through
+`TURBO_SCM_BASE`, the labs exclusion, and `--only`; it then intersects that set
+with the requested partition and executes only the intersection without
+forwarding `--affected`. Before execution, the CLI proves the complete lane
+table is a disjoint cover of the current executable task universe.
+`--partition` remains optional: bare `beep ci lane lint` and
+`beep ci lane test-unit` preserve their prior local and fleet-probe behavior.
+
 The projected effective p95 is **12m30s for Lint** and **16m30s for Test
 Unit**, leaving 7m30s and 3m30s of design margin. These are costed design
 estimates, not admission: a fresh representative week must measure the

@@ -624,3 +624,96 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** make manifest-changing packet commands update
   the deterministic goals projection atomically, or have `goals doctor`
   surface projection drift before a separate index check.
+
+## 2026-09-03 — architecture gate cannot validate a plain role-file addition
+
+- **Doing:** running the required architecture gate before adding the CI lane
+  partition-table role beside the existing lane command.
+- **Evidence:** `bun run beep architecture` only listed subcommands, while
+  `bun run beep architecture check` exited with `Missing required flag:
+  --file`; the check accepts only a previously emitted architecture operation
+  plan and has no mode for validating an ordinary role file.
+- **Would have prevented it:** document the applicable command for a plain
+  role-file addition, or add an architecture check mode that validates the
+  live source topology without requiring a generated mutation plan.
+
+## 2026-09-03 — bun test cannot initialize the Effect Vitest suite
+
+- **Doing:** running the first focused partition-table proof with the packet's
+  permitted `bun test packages/tooling/tool/cli/test/ci-lane.test.ts` command.
+- **Evidence:** Bun's test runner failed before test collection inside
+  `@vitest/runner` with `TypeError: undefined is not an object (evaluating
+  'runner.config')` at the first `@effect/vitest` layer suite.
+- **Would have prevented it:** route `@effect/vitest` files through the repo's
+  Vitest configuration by default, or make the documented Bun fallback reject
+  incompatible suites with a direct diagnostic.
+
+## 2026-09-03 — the threaded fallback conflicts with command-test cwd isolation
+
+- **Doing:** running both required focused suites with the sandbox-safe Vitest
+  thread pool after the Bun runner failed during suite initialization.
+- **Evidence:** all 58 collected CI-lane tests passed, but three pre-existing
+  command tests failed at their temporary-repository setup with
+  `process.chdir() is not supported in workers`.
+- **Would have prevented it:** make command tests pass an explicit working
+  directory instead of mutating process-wide cwd, or document a mixed proof
+  command that uses threads only for suites without cwd isolation.
+
+## 2026-09-03 — Turbo has no base flag for affected selection
+
+- **Doing:** proving all five PR-shaped partitions with the signed
+  `--affected --base origin/main` lane invocation.
+- **Evidence:** the CLI initially forwarded both shape arguments into Turbo
+  2.10.12, which rejected every dry run with `unexpected argument '--base'
+  found`; the existing lane contract carries the base to Turbo through
+  `TURBO_SCM_BASE` while forwarding only `--affected`.
+- **Would have prevented it:** distinguish the outer `beep ci lane --base`
+  flag from Turbo's environment-only base override in the implementation
+  constraint and command example.
+
+## 2026-09-03 — only does not suppress same-name task dependencies
+
+- **Doing:** running the first forced Lint partition after its 134-task union
+  proof selected the committed 67-package `lint-a` bin.
+- **Evidence:** `turbo run lint --only --filter=@beep/colors` planned seven
+  tasks, including six transitive `^lint` dependencies; the 67-filter forced
+  run expanded to 106 tasks. In contrast, `turbo run @beep/colors#lint --only`
+  planned exactly one task, and two explicit package task ids planned exactly
+  two while retaining their package filters.
+- **Would have prevented it:** make the Turbo guidance distinguish generic
+  task names from package-qualified task ids when `dependsOn: ["^lint"]` is
+  present, and include a dry-run exact-cardinality assertion in the shard spec.
+
+## 2026-09-03 — managed sandbox blocks libpff symlink targets
+
+- **Doing:** running the forced 67-package `unit-b` shard to prove its exact
+  execution set and complete the three-bin Test Unit runtime proof.
+- **Evidence:** the shard selected exactly 67 tasks, then two existing
+  `@beep/libpff` tests failed with `EROFS: read-only file system` while creating
+  symlinks whose targets were under `/var/tmp` and the external Bun install.
+- **Would have prevented it:** provide the unit-shard proof in a native runner
+  with writable test fixture targets, or make the libpff fixtures place their
+  external-target substitutes beneath the workspace-approved temp root.
+
+## 2026-09-03 — inherited schema export break blocks package verification
+
+- **Doing:** running the required `@beep/repo-cli` package verifier after the
+  focused shard contracts and runtime union proofs passed.
+- **Evidence:** docgen passed, but the audit failed because
+  `@beep/schema/Unknown` does not currently export `UnknownFromJsonString`;
+  the same diagnostic appears across many untouched repo-cli files, and the
+  pre-repair `CiLane.ts` already imported that symbol.
+- **Would have prevented it:** keep the schema package and repo-cli consumer
+  branch heads synchronized, or gate scoped work on a baseline package audit
+  before creating a new failure-inbox row for inherited compiler failures.
+
+## 2026-09-03 — managed sandbox blocks the Yeet base refresh
+
+- **Doing:** running the canonical Yeet cheap-gates tier after the focused,
+  partition, package, and workflow proofs.
+- **Evidence:** `bun run beep yeet verify --tier cheap-gates` exited 255 before
+  any quality gate because its mandatory `git fetch` could not update the
+  sandbox's read-only `.git` metadata.
+- **Would have prevented it:** run the canonical operator in a profile with
+  writable Git metadata, or provide an explicitly offline verification mode
+  that accepts a previously refreshed base ref.
