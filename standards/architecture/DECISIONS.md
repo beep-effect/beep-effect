@@ -1699,13 +1699,41 @@ non-cancelled terminal runs, or 65.4%; another 25 runs were cancelled. The activ
 that never report. The packet's explicit reliability gate is therefore unmet, and enabling the
 queue now would add synthetic-SHA CI cost before the underlying suite is reliable enough.
 
+## 2026-09-02: In-Repo Deprecations Are Removed on Discovery
+
+- **Status:** Active
+
+Decision:
+
+`@deprecated` on a repo-owned symbol that has never shipped in a release and has zero remaining
+consumers is removed in the same change that finds it, together with its dependents. The
+deprecation windows in `11-evolution-and-deprecation.md` continue to govern published and
+cross-slice surfaces only. `@deprecated` is reserved for surfaces that still have consumers
+needing a migration path.
+
+Rationale:
+
+The first real removal pass (2026-09-02) found 174 `@deprecated` tags across six workspace
+packages, none with a live consumer, some tagged since 2026-04-30. Package versions are
+changeset bumps recorded in-repo (`chore(release): version packages`), for example
+`@beep/identity` and `@beep/repo-configs` at 0.1.1; every workspace is `private: true` and no
+workflow publishes to a registry, so no version has ever reached a consumer outside this
+repository. Counted in releases, "2 minor releases or 1 quarter" therefore never elapses and the
+windows were holding dead surface open indefinitely. Removing on discovery keeps the window rule
+meaningful where it protects someone and stops it from parking deletions where it protects no
+one.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
 
 - **Testing strategy.** Doc `08-testing.md` codifies slice-isolation testing, port stubs via `Layer.mock`, fixture ownership, and contract tests between use-cases and server adapters. The doctrine has not yet been load-tested against a real refactor; first contact with a non-trivial slice may surface gaps in the fixture-ownership and contract-test rules.
 - **Cross-slice coordination.** Doc `10-cross-slice-coordination.md` codifies workflow / saga / process-manager governance, promoted event contracts in `shared/use-cases`, and the God Process Manager anti-pattern. `PromotionGate` is the first synchronous product port; the open question is how the rules hold up when a real workflow spans three or more slices with partial-failure semantics.
-- **Evolution and deprecation.** Doc `11-evolution-and-deprecation.md` codifies slice retirement, `shared/use-cases` versioning, port deprecation, and feature-flag lifetime. The deprecation-window durations and the five-step retirement procedure are unproven; the first real slice retirement will tell us whether the windows are realistic and whether the DECISIONS-entry requirement creates useful pressure or just paperwork.
+- **Evolution and deprecation.** Doc `11-evolution-and-deprecation.md` codifies slice retirement,
+  `shared/use-cases` versioning, port deprecation, and feature-flag lifetime. The window question
+  for unreleased in-repo symbols was resolved by the 2026-09-02 entry. The five-step slice
+  retirement procedure remains unproven; the first real slice retirement will tell us whether
+  the procedure creates useful pressure or just paperwork.
 - **Observability conventions.** Doc `12-observability.md` codifies span naming, attribute conventions, the logging-vs-tracing-vs-Console split, and slice boundaries as span boundaries. The open question is whether the span/attribute namespacing survives contact with a real distributed trace across three or more slices, and whether the conventions need adjustment once a tracer backend is wired up end-to-end.
 - **Error translation across boundaries.** Doc `09-errors-across-boundaries.md` codifies who translates, where translation lives, and the canonical translator function shape. The fixture proves port-to-action translation; the doctrine has not yet been exercised against a real driver-to-port adapter path. The first non-trivial adapter will tell us whether the translator placement rules are precise enough or need a worked example per boundary kind.
 - **Promotion record enforcement.** Records are required by doctrine; lint enforcement (`lint:promotion-records`) is planned but not yet implemented.

@@ -95,6 +95,15 @@ Flags past their 6-week cap should be tracked. A repo-cli command or a PR-time l
 
 A feature flag that has lived past its cap and cannot be removed indicates an unresolved product decision, not a cleanup task. Resolve the product decision first, then remove the flag.
 
+## In-repo deprecations without a release train
+
+The windows above measure time in releases and quarters because they protect published or
+cross-slice surfaces. A symbol that is deprecated inside this repository, has never shipped in a
+release, and has zero remaining consumers has nothing left to protect. Remove it in the same
+change that discovers it, together with its dependents, rather than letting the tag sit until a
+window that never elapses. `@deprecated` stays reserved for surfaces with consumers that need a
+migration path; the tag is the start of a removal, not a home.
+
 ## Coordinating retirements across slices
 
 Slice retirements affecting future `shared/use-cases` exports require notice to the owners of every consuming slice. One PR per consumer migration is the minimum coordination — the retirement does not land until the migrations land.

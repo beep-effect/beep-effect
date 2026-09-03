@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-31T09:31:22.627Z",
+  "generatedAt": "2026-09-03T02:43:26.992Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,9 +65,9 @@
     "cleanPackages": 75,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 58,
-    "publicModules": 2986,
-    "publicExports": 21138,
-    "openModules": 347,
+    "publicModules": 2985,
+    "publicExports": 21101,
+    "openModules": 346,
     "openExports": 99,
     "missingExportExamples": 4,
     "missingExportCategories": 0,
@@ -78,7 +78,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
-    "multiple-description-paragraphs": 427,
+    "multiple-description-paragraphs": 426,
     "leading-blank": 0,
     "trailing-blank": 1,
     "invalid-heading": 1,
@@ -53513,8 +53513,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.command.ts",
-          "line": 788,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-command-ts-788-filescommand",
+          "line": 896,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-command-ts-896-filescommand",
           "currentTags": [
             "@category",
             "@since"
@@ -55858,8 +55858,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-199-filescommandserviceshape",
+          "line": 203,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-203-filescommandserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -55880,8 +55880,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 314,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-314-filescommandservice",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-318-filescommandservice",
           "currentTags": [
             "@category",
             "@since"
@@ -55902,8 +55902,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 1739,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-1739-printfilesindex",
+          "line": 1743,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-1743-printfilesindex",
           "currentTags": [
             "@category",
             "@since"
@@ -55924,8 +55924,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2537,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2537-filescommandservicelive",
+          "line": 2541,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2541-filescommandservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -55946,8 +55946,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2556,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2556-auditimages",
+          "line": 2560,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2560-auditimages",
           "currentTags": [
             "@param",
             "@returns",
@@ -55970,8 +55970,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2579,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2579-archivepoorcandidates",
+          "line": 2583,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2583-archivepoorcandidates",
           "currentTags": [
             "@param",
             "@returns",
@@ -55994,8 +55994,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2602,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2602-createcaptionfiles",
+          "line": 2606,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2606-createcaptionfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -56018,8 +56018,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2625,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2625-cropbordersfiles",
+          "line": 2629,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2629-cropbordersfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -56042,8 +56042,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2648,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2648-curateimages",
+          "line": 2652,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2652-curateimages",
           "currentTags": [
             "@param",
             "@returns",
@@ -56066,8 +56066,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2671,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2671-detectbordersfiles",
+          "line": 2675,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2675-detectbordersfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -56090,8 +56090,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2694,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2694-detectfacesfiles",
+          "line": 2698,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2698-detectfacesfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -56114,8 +56114,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2722,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2722-flattenmediafiles",
+          "line": 2726,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2726-flattenmediafiles",
           "currentTags": [
             "@effects",
             "@category",
@@ -56137,8 +56137,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2751,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2751-matchperson",
+          "line": 2755,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2755-matchperson",
           "currentTags": [
             "@param",
             "@returns",
@@ -56161,8 +56161,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2774,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2774-normalizefiles",
+          "line": 2778,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2778-normalizefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -56185,8 +56185,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2798,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2798-processfiles",
+          "line": 2802,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2802-processfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -56210,8 +56210,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2824,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2824-sortandrenamefiles",
+          "line": 2828,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2828-sortandrenamefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -56234,8 +56234,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Files/Files.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-          "line": 2853,
-          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2853-stripmetadatafiles",
+          "line": 2857,
+          "anchor": "packages-tooling-tool-cli-src-commands-files-files-service-ts-2857-stripmetadatafiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -88834,9 +88834,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 36,
-        "publicModuleCount": 36,
-        "publicExportCount": 241
+        "sourceFileCount": 35,
+        "publicModuleCount": 35,
+        "publicExportCount": 210
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -88845,7 +88845,7 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 14,
+        "openModules": 13,
         "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
@@ -88858,7 +88858,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 14,
+          "multiple-description-paragraphs": 13,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -88980,13 +88980,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "exportCount": 11,
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -89326,28 +89322,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 1,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 11,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/chat/send.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/send.tsx",
           "line": 1,
@@ -89535,7 +89509,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 15,
+          "exportCount": 1,
           "remediationStatus": "resolved"
         },
         {
@@ -90143,130 +90117,15 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link editorCapabilityCatalog} from `@beep/editor/capability/catalog`.\n   * @since 0.0.0\n   */\n  editorCapabilityCatalog,\n} from \"./catalog.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/capability/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 17,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-17-export-deprecated-import-link-editorcapabilitycatalog-from-beep-editor-capability-catalog-since-0-0-0-editorcapabilitycatalog-from-catalog-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "export { CapabilityComposer, ProfileResolutionNotice } from \"./composer.tsx\";",
           "exportKind": "re-export",
           "filePath": "src/capability/index.ts",
           "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 28,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-28-export-capabilitycomposer-profileresolutionnotice-from-composer-tsx",
+          "line": 12,
+          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-12-export-capabilitycomposer-profileresolutionnotice-from-composer-tsx",
           "currentTags": [
             "@category",
             "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link CapabilityConflictError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  CapabilityConflictError,\n  /**\n   * @deprecated Import {@link DependencyCycleError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  DependencyCycleError,\n  /**\n   * @deprecated Import {@link DevelopmentOnlyCapabilityError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  DevelopmentOnlyCapabilityError,\n  /**\n   * @deprecated Import {@link IncompatibleRegistrationError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  IncompatibleRegistrationError,\n  /**\n   * @deprecated Import {@link KeybindingConflictError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  KeybindingConflictError,\n  /**\n   * @deprecated Import {@link MissingDependencyError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  MissingDependencyError,\n  /**\n   * @deprecated Import {@link ProfileResolutionError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  ProfileResolutionError,\n  /**\n   * @deprecated Import {@link UnknownCapabilityError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  UnknownCapabilityError,\n  /**\n   * @deprecated Import {@link UnknownCommandError} from `@beep/editor/capability/errors`.\n   * @since 0.0.0\n   */\n  UnknownCommandError,\n} from \"./errors.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/capability/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 35,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-35-export-deprecated-import-link-capabilityconflicterror-from-beep-editor-capability-errors-since-0-0-0-capabilityconflicterror-deprecated-import-link-dependencycycleerror-from-beep-editor-capability-errors-since-0-0-0-dependencycycleerror-deprecated-import-link-developmentonlycapabilityerror-from-beep-editor-capability-errors-since-0-0-0-developmentonlycapabilityerror-deprecated-import-link-incompatibleregistrationerror-from-beep-editor-capability-errors-since-0-0-0-incompatibleregistrationerror-deprecated-import-link-keybindingconflicterror-from-beep-editor-capability-errors-since-0-0-0-keybindingconflicterror-deprecated-import-link-missingdependencyerror-from-beep-editor-capability-errors-since-0-0-0-missingdependencyerror-deprecated-import-link-profileresolutionerror-from-beep-editor-capability-errors-since-0-0-0-profileresolutionerror-deprecated-import-link-unknowncapabilityerror-from-beep-editor-capability-errors-since-0-0-0-unknowncapabilityerror-deprecated-import-link-unknowncommanderror-from-beep-editor-capability-errors-since-0-0-0-unknowncommanderror-from-errors-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link compatibilityProfile} from `@beep/editor/capability/profiles`.\n   * @since 0.0.0\n   */\n  compatibilityProfile,\n  /**\n   * @deprecated Import {@link referenceProfiles} from `@beep/editor/capability/profiles`.\n   * @since 0.0.0\n   */\n  referenceProfiles,\n} from \"./profiles.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/capability/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 88,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-88-export-deprecated-import-link-compatibilityprofile-from-beep-editor-capability-profiles-since-0-0-0-compatibilityprofile-deprecated-import-link-referenceprofiles-from-beep-editor-capability-profiles-since-0-0-0-referenceprofiles-from-profiles-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link formatChord} from `@beep/editor/capability/projection`.\n   * @since 0.0.0\n   */\n  formatChord,\n  /**\n   * @deprecated Import {@link projectCommands} from `@beep/editor/capability/projection`.\n   * @since 0.0.0\n   */\n  projectCommands,\n  /**\n   * @deprecated Import {@link projectShortcutHelp} from `@beep/editor/capability/projection`.\n   * @since 0.0.0\n   */\n  projectShortcutHelp,\n  /**\n   * @deprecated Import {@link projectSlashItems} from `@beep/editor/capability/projection`.\n   * @since 0.0.0\n   */\n  projectSlashItems,\n  /**\n   * @deprecated Import {@link ShortcutHelpEntry} from `@beep/editor/capability/projection`.\n   * @since 0.0.0\n   */\n  ShortcutHelpEntry,\n} from \"./projection.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/capability/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 106,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-106-export-deprecated-import-link-formatchord-from-beep-editor-capability-projection-since-0-0-0-formatchord-deprecated-import-link-projectcommands-from-beep-editor-capability-projection-since-0-0-0-projectcommands-deprecated-import-link-projectshortcuthelp-from-beep-editor-capability-projection-since-0-0-0-projectshortcuthelp-deprecated-import-link-projectslashitems-from-beep-editor-capability-projection-since-0-0-0-projectslashitems-deprecated-import-link-shortcuthelpentry-from-beep-editor-capability-projection-since-0-0-0-shortcuthelpentry-from-projection-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link resolveEditorProfile} from `@beep/editor/capability/resolver`.\n   * @since 0.0.0\n   */\n  resolveEditorProfile,\n  /**\n   * @deprecated Import {@link resolveEditorProfileEffect} from `@beep/editor/capability/resolver`.\n   * @since 0.0.0\n   */\n  resolveEditorProfileEffect,\n} from \"./resolver.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/capability/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 139,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-139-export-deprecated-import-link-resolveeditorprofile-from-beep-editor-capability-resolver-since-0-0-0-resolveeditorprofile-deprecated-import-link-resolveeditorprofileeffect-from-beep-editor-capability-resolver-since-0-0-0-resolveeditorprofileeffect-from-resolver-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -90284,34 +90143,11 @@
           "exportKind": "re-export",
           "filePath": "src/capability/index.ts",
           "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 157,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-157-export-chordfromkeyboardevent-commandhandlers-detectplatform-keybindingplugin-noderegistrations-resolvedextensions-resolvednodes-resolvedtransformers-runcommand-transformerregistrations-from-runtime-tsx",
+          "line": 19,
+          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-19-export-chordfromkeyboardevent-commandhandlers-detectplatform-keybindingplugin-noderegistrations-resolvedextensions-resolvednodes-resolvedtransformers-runcommand-transformerregistrations-from-runtime-tsx",
           "currentTags": [
             "@category",
             "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link ActivationSurface} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ActivationSurface,\n  /**\n   * @deprecated Import {@link CanonicalCompatibility} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CanonicalCompatibility,\n  /**\n   * @deprecated Import {@link CapabilityCatalog} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityCatalog,\n  /**\n   * @deprecated Import {@link CapabilityCategory} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityCategory,\n  /**\n   * @deprecated Import {@link CapabilityClassification} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityClassification,\n  /**\n   * @deprecated Import {@link CapabilityDescriptor} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityDescriptor,\n  /**\n   * @deprecated Import {@link CapabilityDisposition} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityDisposition,\n  /**\n   * @deprecated Import {@link CapabilityId} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityId,\n  /**\n   * @deprecated Import {@link CapabilityMode} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityMode,\n  /**\n   * @deprecated Import {@link CapabilityRegistrations} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CapabilityRegistrations,\n  /**\n   * @deprecated Import {@link CommandDefinition} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CommandDefinition,\n  /**\n   * @deprecated Import {@link CommandId} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  CommandId,\n  /**\n   * @deprecated Import {@link EditorProfile} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  EditorProfile,\n  /**\n   * @deprecated Import {@link ExtensionKey} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ExtensionKey,\n  /**\n   * @deprecated Import {@link Keybinding} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  Keybinding,\n  /**\n   * @deprecated Import {@link KeybindingOverride} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  KeybindingOverride,\n  /**\n   * @deprecated Import {@link KeyChord} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  KeyChord,\n  /**\n   * @deprecated Import {@link KeyChordFromString} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  KeyChordFromString,\n  /**\n   * @deprecated Import {@link Modifier} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  Modifier,\n  /**\n   * @deprecated Import {@link NodeRegistrationKey} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  NodeRegistrationKey,\n  /**\n   * @deprecated Import {@link Platform} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  Platform,\n  /**\n   * @deprecated Import {@link ProfileId} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ProfileId,\n  /**\n   * @deprecated Import {@link ProfileKind} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ProfileKind,\n  /**\n   * @deprecated Import {@link ReadOnlyFallback} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ReadOnlyFallback,\n  /**\n   * @deprecated Import {@link ResolvedCapability} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ResolvedCapability,\n  /**\n   * @deprecated Import {@link ResolvedCommand} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ResolvedCommand,\n  /**\n   * @deprecated Import {@link ResolvedEditorProfile} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  ResolvedEditorProfile,\n  /**\n   * @deprecated Import {@link TransformerKey} from `@beep/editor/capability/schemas`.\n   * @since 0.0.0\n   */\n  TransformerKey,\n} from \"./schemas.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/capability/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 175,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-175-export-deprecated-import-link-activationsurface-from-beep-editor-capability-schemas-since-0-0-0-activationsurface-deprecated-import-link-canonicalcompatibility-from-beep-editor-capability-schemas-since-0-0-0-canonicalcompatibility-deprecated-import-link-capabilitycatalog-from-beep-editor-capability-schemas-since-0-0-0-capabilitycatalog-deprecated-import-link-capabilitycategory-from-beep-editor-capability-schemas-since-0-0-0-capabilitycategory-deprecated-import-link-capabilityclassification-from-beep-editor-capability-schemas-since-0-0-0-capabilityclassification-deprecated-import-link-capabilitydescriptor-from-beep-editor-capability-schemas-since-0-0-0-capabilitydescriptor-deprecated-import-link-capabilitydisposition-from-beep-editor-capability-schemas-since-0-0-0-capabilitydisposition-deprecated-import-link-capabilityid-from-beep-editor-capability-schemas-since-0-0-0-capabilityid-deprecated-import-link-capabilitymode-from-beep-editor-capability-schemas-since-0-0-0-capabilitymode-deprecated-import-link-capabilityregistrations-from-beep-editor-capability-schemas-since-0-0-0-capabilityregistrations-deprecated-import-link-commanddefinition-from-beep-editor-capability-schemas-since-0-0-0-commanddefinition-deprecated-import-link-commandid-from-beep-editor-capability-schemas-since-0-0-0-commandid-deprecated-import-link-editorprofile-from-beep-editor-capability-schemas-since-0-0-0-editorprofile-deprecated-import-link-extensionkey-from-beep-editor-capability-schemas-since-0-0-0-extensionkey-deprecated-import-link-keybinding-from-beep-editor-capability-schemas-since-0-0-0-keybinding-deprecated-import-link-keybindingoverride-from-beep-editor-capability-schemas-since-0-0-0-keybindingoverride-deprecated-import-link-keychord-from-beep-editor-capability-schemas-since-0-0-0-keychord-deprecated-import-link-keychordfromstring-from-beep-editor-capability-schemas-since-0-0-0-keychordfromstring-deprecated-import-link-modifier-from-beep-editor-capability-schemas-since-0-0-0-modifier-deprecated-import-link-noderegistrationkey-from-beep-editor-capability-schemas-since-0-0-0-noderegistrationkey-deprecated-import-link-platform-from-beep-editor-capability-schemas-since-0-0-0-platform-deprecated-import-link-profileid-from-beep-editor-capability-schemas-since-0-0-0-profileid-deprecated-import-link-profilekind-from-beep-editor-capability-schemas-since-0-0-0-profilekind-deprecated-import-link-readonlyfallback-from-beep-editor-capability-schemas-since-0-0-0-readonlyfallback-deprecated-import-link-resolvedcapability-from-beep-editor-capability-schemas-since-0-0-0-resolvedcapability-deprecated-import-link-resolvedcommand-from-beep-editor-capability-schemas-since-0-0-0-resolvedcommand-deprecated-import-link-resolvededitorprofile-from-beep-editor-capability-schemas-since-0-0-0-resolvededitorprofile-deprecated-import-link-transformerkey-from-beep-editor-capability-schemas-since-0-0-0-transformerkey-from-schemas-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -90329,8 +90165,8 @@
           "exportKind": "re-export",
           "filePath": "src/capability/index.ts",
           "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 323,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-323-export-shortcuthelp-from-shortcut-help-tsx",
+          "line": 37,
+          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-37-export-shortcuthelp-from-shortcut-help-tsx",
           "currentTags": [
             "@category",
             "@since"
@@ -90351,8 +90187,8 @@
           "exportKind": "re-export",
           "filePath": "src/capability/index.ts",
           "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 330,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-330-export-capabilitytoolbar-from-toolbar-tsx",
+          "line": 44,
+          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-44-export-capabilitytoolbar-from-toolbar-tsx",
           "currentTags": [
             "@category",
             "@since"
@@ -90373,8 +90209,8 @@
           "exportKind": "re-export",
           "filePath": "src/capability/index.ts",
           "repoPath": "packages/foundation/ui-system/editor/src/capability/index.ts",
-          "line": 337,
-          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-337-export-type-capabilitycomposerprops-from-composer-tsx",
+          "line": 51,
+          "anchor": "packages-foundation-ui-system-editor-src-capability-index-ts-51-export-type-capabilitycomposerprops-from-composer-tsx",
           "currentTags": [
             "@category",
             "@since"
@@ -92800,8 +92636,8 @@
           "exportKind": "function",
           "filePath": "src/chat/chat-composer.tsx",
           "repoPath": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
-          "line": 594,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-594-chatcomposer",
+          "line": 563,
+          "anchor": "packages-foundation-ui-system-editor-src-chat-chat-composer-tsx-563-chatcomposer",
           "currentTags": [
             "@category",
             "@since"
@@ -93245,259 +93081,6 @@
           "currentTags": [
             "@category",
             "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link anyMenuOpenAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  anyMenuOpenAtom,\n  /**\n   * @deprecated Import {@link attachmentFailureAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  attachmentFailureAtom,\n  /**\n   * @deprecated Import {@link attachmentsAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  attachmentsAtom,\n  /**\n   * @deprecated Import {@link captureAttachmentsFn} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  captureAttachmentsFn,\n  /**\n   * @deprecated Import {@link characterCountAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  characterCountAtom,\n  /**\n   * @deprecated Import {@link composerRuntime} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  composerRuntime,\n  /**\n   * @deprecated Import {@link featuresAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  featuresAtom,\n  /**\n   * @deprecated Import {@link isTypeaheadMenuVisible} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  isTypeaheadMenuVisible,\n  /**\n   * @deprecated Import {@link logEditorErrorFn} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  logEditorErrorFn,\n  /**\n   * @deprecated Import {@link maxAttachmentBytesAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  maxAttachmentBytesAtom,\n  /**\n   * @deprecated Import {@link menusOpenAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  menusOpenAtom,\n  /**\n   * @deprecated Import {@link onAttachAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  onAttachAtom,\n  /**\n   * @deprecated Import {@link onSendAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  onSendAtom,\n  /**\n   * @deprecated Import {@link removeAttachmentFn} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  removeAttachmentFn,\n  /**\n   * @deprecated Import {@link SendHandlerBox} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  type SendHandlerBox,\n  /**\n   * @deprecated Import {@link sendBlockedAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  sendBlockedAtom,\n  /**\n   * @deprecated Import {@link sendCommandBindingAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  sendCommandBindingAtom,\n  /**\n   * @deprecated Import {@link sendKeyBindingAtom} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  sendKeyBindingAtom,\n  /**\n   * @deprecated Import {@link TYPEAHEAD_MENU_ATTRIBUTE} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  TYPEAHEAD_MENU_ATTRIBUTE,\n  /**\n   * @deprecated Import {@link typeaheadActiveDescendant} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  typeaheadActiveDescendant,\n  /**\n   * @deprecated Import {@link typeaheadMenuMarker} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  typeaheadMenuMarker,\n  /**\n   * @deprecated Import {@link typeaheadOptionId} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  typeaheadOptionId,\n  /**\n   * @deprecated Import {@link unboundSend} from `@beep/editor/chat/atoms`.\n   * @since 0.0.0\n   */\n  unboundSend,\n} from \"./atoms.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 18,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-18-export-deprecated-import-link-anymenuopenatom-from-beep-editor-chat-atoms-since-0-0-0-anymenuopenatom-deprecated-import-link-attachmentfailureatom-from-beep-editor-chat-atoms-since-0-0-0-attachmentfailureatom-deprecated-import-link-attachmentsatom-from-beep-editor-chat-atoms-since-0-0-0-attachmentsatom-deprecated-import-link-captureattachmentsfn-from-beep-editor-chat-atoms-since-0-0-0-captureattachmentsfn-deprecated-import-link-charactercountatom-from-beep-editor-chat-atoms-since-0-0-0-charactercountatom-deprecated-import-link-composerruntime-from-beep-editor-chat-atoms-since-0-0-0-composerruntime-deprecated-import-link-featuresatom-from-beep-editor-chat-atoms-since-0-0-0-featuresatom-deprecated-import-link-istypeaheadmenuvisible-from-beep-editor-chat-atoms-since-0-0-0-istypeaheadmenuvisible-deprecated-import-link-logeditorerrorfn-from-beep-editor-chat-atoms-since-0-0-0-logeditorerrorfn-deprecated-import-link-maxattachmentbytesatom-from-beep-editor-chat-atoms-since-0-0-0-maxattachmentbytesatom-deprecated-import-link-menusopenatom-from-beep-editor-chat-atoms-since-0-0-0-menusopenatom-deprecated-import-link-onattachatom-from-beep-editor-chat-atoms-since-0-0-0-onattachatom-deprecated-import-link-onsendatom-from-beep-editor-chat-atoms-since-0-0-0-onsendatom-deprecated-import-link-removeattachmentfn-from-beep-editor-chat-atoms-since-0-0-0-removeattachmentfn-deprecated-import-link-sendhandlerbox-from-beep-editor-chat-atoms-since-0-0-0-type-sendhandlerbox-deprecated-import-link-sendblockedatom-from-beep-editor-chat-atoms-since-0-0-0-sendblockedatom-deprecated-import-link-sendcommandbindingatom-from-beep-editor-chat-atoms-since-0-0-0-sendcommandbindingatom-deprecated-import-link-sendkeybindingatom-from-beep-editor-chat-atoms-since-0-0-0-sendkeybindingatom-deprecated-import-link-typeahead-menu-attribute-from-beep-editor-chat-atoms-since-0-0-0-typeahead-menu-attribute-deprecated-import-link-typeaheadactivedescendant-from-beep-editor-chat-atoms-since-0-0-0-typeaheadactivedescendant-deprecated-import-link-typeaheadmenumarker-from-beep-editor-chat-atoms-since-0-0-0-typeaheadmenumarker-deprecated-import-link-typeaheadoptionid-from-beep-editor-chat-atoms-since-0-0-0-typeaheadoptionid-deprecated-import-link-unboundsend-from-beep-editor-chat-atoms-since-0-0-0-unboundsend-from-atoms-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link AttachmentFailure} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  AttachmentFailure,\n  /**\n   * @deprecated Import {@link AttachmentInvalidMimeType} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  AttachmentInvalidMimeType,\n  /**\n   * @deprecated Import {@link AttachmentPortFailed} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  AttachmentPortFailed,\n  /**\n   * @deprecated Import {@link AttachmentRejection} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  AttachmentRejection,\n  /**\n   * @deprecated Import {@link AttachmentTooLarge} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  AttachmentTooLarge,\n  /**\n   * @deprecated Import {@link ComposerAttachment} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  ComposerAttachment,\n  /**\n   * @deprecated Import {@link DEFAULT_MAX_ATTACHMENT_BYTES} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  DEFAULT_MAX_ATTACHMENT_BYTES,\n  /**\n   * @deprecated Import {@link fileToAttachment} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  fileToAttachment,\n  /**\n   * @deprecated Import {@link IMAGE_MIME_TYPES} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  IMAGE_MIME_TYPES,\n  /**\n   * @deprecated Import {@link ImageAttachmentMimeType} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  ImageAttachmentMimeType,\n  /**\n   * @deprecated Import {@link isImageAttachment} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  isImageAttachment,\n  /**\n   * @deprecated Import {@link revokeAttachment} from `@beep/editor/chat/attachment-model`.\n   * @since 0.0.0\n   */\n  revokeAttachment,\n} from \"./attachment-model.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 141,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-141-export-deprecated-import-link-attachmentfailure-from-beep-editor-chat-attachment-model-since-0-0-0-attachmentfailure-deprecated-import-link-attachmentinvalidmimetype-from-beep-editor-chat-attachment-model-since-0-0-0-attachmentinvalidmimetype-deprecated-import-link-attachmentportfailed-from-beep-editor-chat-attachment-model-since-0-0-0-attachmentportfailed-deprecated-import-link-attachmentrejection-from-beep-editor-chat-attachment-model-since-0-0-0-attachmentrejection-deprecated-import-link-attachmenttoolarge-from-beep-editor-chat-attachment-model-since-0-0-0-attachmenttoolarge-deprecated-import-link-composerattachment-from-beep-editor-chat-attachment-model-since-0-0-0-composerattachment-deprecated-import-link-default-max-attachment-bytes-from-beep-editor-chat-attachment-model-since-0-0-0-default-max-attachment-bytes-deprecated-import-link-filetoattachment-from-beep-editor-chat-attachment-model-since-0-0-0-filetoattachment-deprecated-import-link-image-mime-types-from-beep-editor-chat-attachment-model-since-0-0-0-image-mime-types-deprecated-import-link-imageattachmentmimetype-from-beep-editor-chat-attachment-model-since-0-0-0-imageattachmentmimetype-deprecated-import-link-isimageattachment-from-beep-editor-chat-attachment-model-since-0-0-0-isimageattachment-deprecated-import-link-revokeattachment-from-beep-editor-chat-attachment-model-since-0-0-0-revokeattachment-from-attachment-model-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link AttachmentChips} from `@beep/editor/chat/attachments`.\n   * @since 0.0.0\n   */\n  AttachmentChips,\n  /**\n   * @deprecated Import {@link AttachmentFailureNotice} from `@beep/editor/chat/attachments`.\n   * @since 0.0.0\n   */\n  AttachmentFailureNotice,\n  /**\n   * @deprecated Import {@link AttachmentPlugin} from `@beep/editor/chat/attachments`.\n   * @since 0.0.0\n   */\n  AttachmentPlugin,\n} from \"./attachments.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 209,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-209-export-deprecated-import-link-attachmentchips-from-beep-editor-chat-attachments-since-0-0-0-attachmentchips-deprecated-import-link-attachmentfailurenotice-from-beep-editor-chat-attachments-since-0-0-0-attachmentfailurenotice-deprecated-import-link-attachmentplugin-from-beep-editor-chat-attachments-since-0-0-0-attachmentplugin-from-attachments-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link ChatComposer} from `@beep/editor/chat/chat-composer`.\n   * @since 0.0.0\n   */\n  ChatComposer,\n  /**\n   * @deprecated Import {@link ChatComposerMountConfig} from `@beep/editor/chat/chat-composer`.\n   * @since 0.0.0\n   */\n  type ChatComposerMountConfig,\n  /**\n   * @deprecated Import {@link ChatComposerProps} from `@beep/editor/chat/chat-composer`.\n   * @since 0.0.0\n   */\n  type ChatComposerProps,\n} from \"./chat-composer.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 232,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-232-export-deprecated-import-link-chatcomposer-from-beep-editor-chat-chat-composer-since-0-0-0-chatcomposer-deprecated-import-link-chatcomposermountconfig-from-beep-editor-chat-chat-composer-since-0-0-0-type-chatcomposermountconfig-deprecated-import-link-chatcomposerprops-from-beep-editor-chat-chat-composer-since-0-0-0-type-chatcomposerprops-from-chat-composer-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import `$isInsideCodeBlock` from `@beep/editor/chat/code-fence`; see {@link ChatComposer}.\n   * @since 0.0.0\n   */\n  $isInsideCodeBlock,\n  /**\n   * @deprecated Import `$openCodeFence` from `@beep/editor/chat/code-fence`; see {@link ChatComposer}.\n   * @since 0.0.0\n   */\n  $openCodeFence,\n} from \"./code-fence.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 255,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-255-export-deprecated-import-isinsidecodeblock-from-beep-editor-chat-code-fence-see-link-chatcomposer-since-0-0-0-isinsidecodeblock-deprecated-import-opencodefence-from-beep-editor-chat-code-fence-see-link-chatcomposer-since-0-0-0-opencodefence-from-code-fence-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link SEND_MESSAGE_COMMAND} from `@beep/editor/chat/commands`.\n   * @since 0.0.0\n   */\n  SEND_MESSAGE_COMMAND,\n  /**\n   * @deprecated Import {@link STOP_MESSAGE_COMMAND} from `@beep/editor/chat/commands`.\n   * @since 0.0.0\n   */\n  STOP_MESSAGE_COMMAND,\n} from \"./commands.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 273,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-273-export-deprecated-import-link-send-message-command-from-beep-editor-chat-commands-since-0-0-0-send-message-command-deprecated-import-link-stop-message-command-from-beep-editor-chat-commands-since-0-0-0-stop-message-command-from-commands-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link AttachmentPort} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  type AttachmentPort,\n  /**\n   * @deprecated Import {@link ComposerFeatures} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  ComposerFeatures,\n  /**\n   * @deprecated Import {@link EditorEffect} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  type EditorEffect,\n  /**\n   * @deprecated Import {@link MentionOption} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  MentionOption,\n  /**\n   * @deprecated Import {@link MentionOptions} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  MentionOptions,\n  /**\n   * @deprecated Import {@link MentionSource} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  MentionSource,\n  /**\n   * @deprecated Import {@link SendOn} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  SendOn,\n  /**\n   * @deprecated Import {@link SendPort} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  type SendPort,\n  /**\n   * @deprecated Import {@link SlashItem} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  SlashItem,\n  /**\n   * @deprecated Import {@link SlashItems} from `@beep/editor/chat/config`.\n   * @since 0.0.0\n   */\n  SlashItems,\n} from \"./config.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 291,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-291-export-deprecated-import-link-attachmentport-from-beep-editor-chat-config-since-0-0-0-type-attachmentport-deprecated-import-link-composerfeatures-from-beep-editor-chat-config-since-0-0-0-composerfeatures-deprecated-import-link-editoreffect-from-beep-editor-chat-config-since-0-0-0-type-editoreffect-deprecated-import-link-mentionoption-from-beep-editor-chat-config-since-0-0-0-mentionoption-deprecated-import-link-mentionoptions-from-beep-editor-chat-config-since-0-0-0-mentionoptions-deprecated-import-link-mentionsource-from-beep-editor-chat-config-since-0-0-0-mentionsource-deprecated-import-link-sendon-from-beep-editor-chat-config-since-0-0-0-sendon-deprecated-import-link-sendport-from-beep-editor-chat-config-since-0-0-0-type-sendport-deprecated-import-link-slashitem-from-beep-editor-chat-config-since-0-0-0-slashitem-deprecated-import-link-slashitems-from-beep-editor-chat-config-since-0-0-0-slashitems-from-config-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link SendPlugin} from `@beep/editor/chat/send`.\n   * @since 0.0.0\n   */\n  SendPlugin,\n  /**\n   * @deprecated Import {@link useCharacterCount} from `@beep/editor/chat/send`.\n   * @since 0.0.0\n   */\n  useCharacterCount,\n} from \"./send.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 349,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-349-export-deprecated-import-link-sendplugin-from-beep-editor-chat-send-since-0-0-0-sendplugin-deprecated-import-link-usecharactercount-from-beep-editor-chat-send-since-0-0-0-usecharactercount-from-send-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link defaultChatSlashItems} from `@beep/editor/chat/slash-items`.\n   * @since 0.0.0\n   */\n  defaultChatSlashItems,\n} from \"./slash-items.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 367,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-367-export-deprecated-import-link-defaultchatslashitems-from-beep-editor-chat-slash-items-since-0-0-0-defaultchatslashitems-from-slash-items-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import `$selectionBlockType` from `@beep/editor/chat/toolbar`; see {@link FixedToolbarPlugin}.\n   * @since 0.0.0\n   */\n  $selectionBlockType,\n  /**\n   * @deprecated Import {@link BlockType} from `@beep/editor/chat/toolbar`.\n   * @since 0.0.0\n   */\n  BlockType,\n  /**\n   * @deprecated Import {@link FixedToolbarPlugin} from `@beep/editor/chat/toolbar`.\n   * @since 0.0.0\n   */\n  FixedToolbarPlugin,\n} from \"./toolbar.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 380,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-380-export-deprecated-import-selectionblocktype-from-beep-editor-chat-toolbar-see-link-fixedtoolbarplugin-since-0-0-0-selectionblocktype-deprecated-import-link-blocktype-from-beep-editor-chat-toolbar-since-0-0-0-blocktype-deprecated-import-link-fixedtoolbarplugin-from-beep-editor-chat-toolbar-since-0-0-0-fixedtoolbarplugin-from-toolbar-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link ComboboxAriaPlugin} from `@beep/editor/chat/typeahead`.\n   * @since 0.0.0\n   */\n  ComboboxAriaPlugin,\n  /**\n   * @deprecated Import {@link MentionPlugin} from `@beep/editor/chat/typeahead`.\n   * @since 0.0.0\n   */\n  MentionPlugin,\n  /**\n   * @deprecated Import {@link SlashPlugin} from `@beep/editor/chat/typeahead`.\n   * @since 0.0.0\n   */\n  SlashPlugin,\n  /**\n   * @deprecated Import {@link shouldOpenUpward} from `@beep/editor/chat/typeahead`.\n   * @since 0.0.0\n   */\n  shouldOpenUpward,\n  /**\n   * @deprecated Import {@link typeaheadMenuPosition} from `@beep/editor/chat/typeahead`.\n   * @since 0.0.0\n   */\n  typeaheadMenuPosition,\n} from \"./typeahead.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/chat/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/chat/index.ts",
-          "line": 403,
-          "anchor": "packages-foundation-ui-system-editor-src-chat-index-ts-403-export-deprecated-import-link-comboboxariaplugin-from-beep-editor-chat-typeahead-since-0-0-0-comboboxariaplugin-deprecated-import-link-mentionplugin-from-beep-editor-chat-typeahead-since-0-0-0-mentionplugin-deprecated-import-link-slashplugin-from-beep-editor-chat-typeahead-since-0-0-0-slashplugin-deprecated-import-link-shouldopenupward-from-beep-editor-chat-typeahead-since-0-0-0-shouldopenupward-deprecated-import-link-typeaheadmenuposition-from-beep-editor-chat-typeahead-since-0-0-0-typeaheadmenuposition-from-typeahead-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -94048,326 +93631,6 @@
           "currentTags": [
             "@category",
             "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import `$createArtifactRefNode` from `@beep/editor/artifact-ref-node`; see {@link ArtifactRefNode}.\n   * @since 0.0.0\n   */\n  $createArtifactRefNode,\n  /**\n   * @deprecated Import `$isArtifactRefNode` from `@beep/editor/artifact-ref-node`; see {@link ArtifactRefNode}.\n   * @since 0.0.0\n   */\n  $isArtifactRefNode,\n  /**\n   * @deprecated Import {@link ArtifactRefNode} from `@beep/editor/artifact-ref-node`.\n   * @since 0.0.0\n   */\n  ArtifactRefNode,\n  /**\n   * @deprecated Import {@link ArtifactRefNodeCreateInput} from `@beep/editor/artifact-ref-node`.\n   * @since 0.0.0\n   */\n  type ArtifactRefNodeCreateInput,\n  /**\n   * @deprecated Import {@link SerializedArtifactRefNode} from `@beep/editor/artifact-ref-node`.\n   * @since 0.0.0\n   */\n  type SerializedArtifactRefNode,\n} from \"./artifact-ref-node.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 33,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-33-export-deprecated-import-createartifactrefnode-from-beep-editor-artifact-ref-node-see-link-artifactrefnode-since-0-0-0-createartifactrefnode-deprecated-import-isartifactrefnode-from-beep-editor-artifact-ref-node-see-link-artifactrefnode-since-0-0-0-isartifactrefnode-deprecated-import-link-artifactrefnode-from-beep-editor-artifact-ref-node-since-0-0-0-artifactrefnode-deprecated-import-link-artifactrefnodecreateinput-from-beep-editor-artifact-ref-node-since-0-0-0-type-artifactrefnodecreateinput-deprecated-import-link-serializedartifactrefnode-from-beep-editor-artifact-ref-node-since-0-0-0-type-serializedartifactrefnode-from-artifact-ref-node-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./capability/index.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 68,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-68-export-from-capability-index-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./chat/index.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 76,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-76-export-from-chat-index-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import `$createCodeBlockNode` from `@beep/editor/code-block-node`; see {@link CodeBlockNode}.\n   * @since 0.0.0\n   */\n  $createCodeBlockNode,\n  /**\n   * @deprecated Import `$isCodeBlockNode` from `@beep/editor/code-block-node`; see {@link CodeBlockNode}.\n   * @since 0.0.0\n   */\n  $isCodeBlockNode,\n  /**\n   * @deprecated Import {@link CodeBlockNode} from `@beep/editor/code-block-node`.\n   * @since 0.0.0\n   */\n  CodeBlockNode,\n  /**\n   * @deprecated Import {@link SerializedCodeBlockNode} from `@beep/editor/code-block-node`.\n   * @since 0.0.0\n   */\n  SerializedCodeBlockNode,\n} from \"./code-block-node.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 83,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-83-export-deprecated-import-createcodeblocknode-from-beep-editor-code-block-node-see-link-codeblocknode-since-0-0-0-createcodeblocknode-deprecated-import-iscodeblocknode-from-beep-editor-code-block-node-see-link-codeblocknode-since-0-0-0-iscodeblocknode-deprecated-import-link-codeblocknode-from-beep-editor-code-block-node-since-0-0-0-codeblocknode-deprecated-import-link-serializedcodeblocknode-from-beep-editor-code-block-node-since-0-0-0-serializedcodeblocknode-from-code-block-node-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link CodeBlockView} from `@beep/editor/code-block-view`.\n   * @since 0.0.0\n   */\n  CodeBlockView,\n} from \"./code-block-view.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 111,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-111-export-deprecated-import-link-codeblockview-from-beep-editor-code-block-view-since-0-0-0-codeblockview-from-code-block-view-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link EditorComposer} from `@beep/editor/composer`.\n   * @since 0.0.0\n   */\n  EditorComposer,\n  /**\n   * @deprecated Import {@link EditorComposerProps} from `@beep/editor/composer`.\n   * @since 0.0.0\n   */\n  type EditorComposerProps,\n  /**\n   * @deprecated Import {@link EditorWireComposer} from `@beep/editor/composer`.\n   * @since 0.0.0\n   */\n  EditorWireComposer,\n  /**\n   * @deprecated Import {@link EditorWireComposerProps} from `@beep/editor/composer`.\n   * @since 0.0.0\n   */\n  type EditorWireComposerProps,\n  /**\n   * @deprecated Import {@link markdownTransformers} from `@beep/editor/composer`.\n   * @since 0.0.0\n   */\n  markdownTransformers,\n} from \"./composer.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 124,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-124-export-deprecated-import-link-editorcomposer-from-beep-editor-composer-since-0-0-0-editorcomposer-deprecated-import-link-editorcomposerprops-from-beep-editor-composer-since-0-0-0-type-editorcomposerprops-deprecated-import-link-editorwirecomposer-from-beep-editor-composer-since-0-0-0-editorwirecomposer-deprecated-import-link-editorwirecomposerprops-from-beep-editor-composer-since-0-0-0-type-editorwirecomposerprops-deprecated-import-link-markdowntransformers-from-beep-editor-composer-since-0-0-0-markdowntransformers-from-composer-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import `$createMermaidNode` from `@beep/editor/mermaid-node`; see {@link MermaidNode}.\n   * @since 0.0.0\n   */\n  $createMermaidNode,\n  /**\n   * @deprecated Import `$isMermaidNode` from `@beep/editor/mermaid-node`; see {@link MermaidNode}.\n   * @since 0.0.0\n   */\n  $isMermaidNode,\n  /**\n   * @deprecated Import {@link MermaidNode} from `@beep/editor/mermaid-node`.\n   * @since 0.0.0\n   */\n  MermaidNode,\n  /**\n   * @deprecated Import {@link SerializedMermaidNode} from `@beep/editor/mermaid-node`.\n   * @since 0.0.0\n   */\n  SerializedMermaidNode,\n} from \"./mermaid-node.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 157,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-157-export-deprecated-import-createmermaidnode-from-beep-editor-mermaid-node-see-link-mermaidnode-since-0-0-0-createmermaidnode-deprecated-import-ismermaidnode-from-beep-editor-mermaid-node-see-link-mermaidnode-since-0-0-0-ismermaidnode-deprecated-import-link-mermaidnode-from-beep-editor-mermaid-node-since-0-0-0-mermaidnode-deprecated-import-link-serializedmermaidnode-from-beep-editor-mermaid-node-since-0-0-0-serializedmermaidnode-from-mermaid-node-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link MermaidRenderError} from `@beep/editor/mermaid-view`.\n   * @since 0.0.0\n   */\n  MermaidRenderError,\n  /**\n   * @deprecated Import {@link MermaidView} from `@beep/editor/mermaid-view`.\n   * @since 0.0.0\n   */\n  MermaidView,\n} from \"./mermaid-view.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 185,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-185-export-deprecated-import-link-mermaidrendererror-from-beep-editor-mermaid-view-since-0-0-0-mermaidrendererror-deprecated-import-link-mermaidview-from-beep-editor-mermaid-view-since-0-0-0-mermaidview-from-mermaid-view-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link editorNodes} from `@beep/editor/nodes`.\n   * @since 0.0.0\n   */\n  editorNodes,\n} from \"./nodes.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 203,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-203-export-deprecated-import-link-editornodes-from-beep-editor-nodes-since-0-0-0-editornodes-from-nodes-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link decodeEditorStateForRuntime} from `@beep/editor/runtime`.\n   * @since 0.0.0\n   */\n  decodeEditorStateForRuntime,\n} from \"./runtime.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 216,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-216-export-deprecated-import-link-decodeeditorstateforruntime-from-beep-editor-runtime-since-0-0-0-decodeeditorstateforruntime-from-runtime-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link editorTheme} from `@beep/editor/theme`.\n   * @since 0.0.0\n   */\n  editorTheme,\n} from \"./theme.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 229,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-229-export-deprecated-import-link-editortheme-from-beep-editor-theme-since-0-0-0-editortheme-from-theme-ts",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link EditorCompatibilityViewer} from `@beep/editor/viewer`.\n   * @since 0.0.0\n   */\n  EditorCompatibilityViewer,\n  /**\n   * @deprecated Import {@link EditorCompatibilityViewerProps} from `@beep/editor/viewer`.\n   * @since 0.0.0\n   */\n  type EditorCompatibilityViewerProps,\n  /**\n   * @deprecated Import {@link EditorViewer} from `@beep/editor/viewer`.\n   * @since 0.0.0\n   */\n  EditorViewer,\n  /**\n   * @deprecated Import {@link EditorViewerProps} from `@beep/editor/viewer`.\n   * @since 0.0.0\n   */\n  type EditorViewerProps,\n  /**\n   * @deprecated Import {@link EditorWireViewer} from `@beep/editor/viewer`.\n   * @since 0.0.0\n   */\n  EditorWireViewer,\n  /**\n   * @deprecated Import {@link EditorWireViewerProps} from `@beep/editor/viewer`.\n   * @since 0.0.0\n   */\n  type EditorWireViewerProps,\n} from \"./viewer.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 242,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-242-export-deprecated-import-link-editorcompatibilityviewer-from-beep-editor-viewer-since-0-0-0-editorcompatibilityviewer-deprecated-import-link-editorcompatibilityviewerprops-from-beep-editor-viewer-since-0-0-0-type-editorcompatibilityviewerprops-deprecated-import-link-editorviewer-from-beep-editor-viewer-since-0-0-0-editorviewer-deprecated-import-link-editorviewerprops-from-beep-editor-viewer-since-0-0-0-type-editorviewerprops-deprecated-import-link-editorwireviewer-from-beep-editor-viewer-since-0-0-0-editorwireviewer-deprecated-import-link-editorwireviewerprops-from-beep-editor-viewer-since-0-0-0-type-editorwireviewerprops-from-viewer-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import {@link YOUTUBE_EMBED_SANDBOX} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  YOUTUBE_EMBED_SANDBOX,\n  /**\n   * @deprecated Import {@link YOUTUBE_WATCH_EVENT} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  YOUTUBE_WATCH_EVENT,\n  /**\n   * @deprecated Import {@link YouTubeEmbed} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  YouTubeEmbed,\n  /**\n   * @deprecated Import {@link YouTubeEmbedProps} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  type YouTubeEmbedProps,\n  /**\n   * @deprecated Import {@link YouTubeWatchRequest} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  YouTubeWatchRequest,\n  /**\n   * @deprecated Import {@link YouTubeWatchUrl} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  YouTubeWatchUrl,\n  /**\n   * @deprecated Import {@link youtubeEmbedUrl} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  youtubeEmbedUrl,\n  /**\n   * @deprecated Import {@link youtubeWatchUrl} from `@beep/editor/youtube-embed`.\n   * @since 0.0.0\n   */\n  youtubeWatchUrl,\n} from \"./youtube-embed.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 280,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-280-export-deprecated-import-link-youtube-embed-sandbox-from-beep-editor-youtube-embed-since-0-0-0-youtube-embed-sandbox-deprecated-import-link-youtube-watch-event-from-beep-editor-youtube-embed-since-0-0-0-youtube-watch-event-deprecated-import-link-youtubeembed-from-beep-editor-youtube-embed-since-0-0-0-youtubeembed-deprecated-import-link-youtubeembedprops-from-beep-editor-youtube-embed-since-0-0-0-type-youtubeembedprops-deprecated-import-link-youtubewatchrequest-from-beep-editor-youtube-embed-since-0-0-0-youtubewatchrequest-deprecated-import-link-youtubewatchurl-from-beep-editor-youtube-embed-since-0-0-0-youtubewatchurl-deprecated-import-link-youtubeembedurl-from-beep-editor-youtube-embed-since-0-0-0-youtubeembedurl-deprecated-import-link-youtubewatchurl-from-beep-editor-youtube-embed-since-0-0-0-youtubewatchurl-from-youtube-embed-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  /**\n   * @deprecated Import `$createYouTubeNode` from `@beep/editor/youtube-node`; see {@link YouTubeNode}.\n   * @since 0.0.0\n   */\n  $createYouTubeNode,\n  /**\n   * @deprecated Import `$isYouTubeNode` from `@beep/editor/youtube-node`; see {@link YouTubeNode}.\n   * @since 0.0.0\n   */\n  $isYouTubeNode,\n  /**\n   * @deprecated Import {@link SerializedYouTubeNode} from `@beep/editor/youtube-node`.\n   * @since 0.0.0\n   */\n  type SerializedYouTubeNode,\n  /**\n   * @deprecated Import {@link YouTubeNode} from `@beep/editor/youtube-node`.\n   * @since 0.0.0\n   */\n  YouTubeNode,\n} from \"./youtube-node.tsx\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/ui-system/editor/src/index.ts",
-          "line": 328,
-          "anchor": "packages-foundation-ui-system-editor-src-index-ts-328-export-deprecated-import-createyoutubenode-from-beep-editor-youtube-node-see-link-youtubenode-since-0-0-0-createyoutubenode-deprecated-import-isyoutubenode-from-beep-editor-youtube-node-see-link-youtubenode-since-0-0-0-isyoutubenode-deprecated-import-link-serializedyoutubenode-from-beep-editor-youtube-node-since-0-0-0-type-serializedyoutubenode-deprecated-import-link-youtubenode-from-beep-editor-youtube-node-since-0-0-0-youtubenode-from-youtube-node-tsx",
-          "currentTags": [
-            "@category",
-            "@since",
-            "@deprecated"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -160167,7 +159430,7 @@
         "srcDir": ".",
         "sourceFileCount": 477,
         "publicModuleCount": 469,
-        "publicExportCount": 4233
+        "publicExportCount": 4226
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -163592,7 +162855,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -164230,7 +163493,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 18,
+          "exportCount": 14,
           "remediationStatus": "resolved"
         },
         {
@@ -165528,7 +164791,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 6,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -209101,56 +208364,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "getOutputFilename",
-          "exportKind": "const",
-          "filePath": "effect-ontology/Domain/Model/OutputType.ts",
-          "repoPath": "scratchpad/effect-ontology/Domain/Model/OutputType.ts",
-          "line": 264,
-          "anchor": "scratchpad-effect-ontology-domain-model-outputtype-ts-264-getoutputfilename",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@deprecated",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "getOutputDescription",
-          "exportKind": "const",
-          "filePath": "effect-ontology/Domain/Model/OutputType.ts",
-          "repoPath": "scratchpad/effect-ontology/Domain/Model/OutputType.ts",
-          "line": 287,
-          "anchor": "scratchpad-effect-ontology-domain-model-outputtype-ts-287-getoutputdescription",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@deprecated",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "export * from \"./Agent.ts\";",
           "exportKind": "re-export",
           "filePath": "effect-ontology/Domain/Model/index.ts",
@@ -216417,65 +215630,15 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "generatePrompt",
-          "exportKind": "const",
-          "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
-          "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1010,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1010-generateprompt",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@deprecated",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "generateStructuredEntityPrompt",
           "exportKind": "const",
           "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1037,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1037-generatestructuredentityprompt",
+          "line": 1005,
+          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1005-generatestructuredentityprompt",
           "currentTags": [
             "@param",
             "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "generateEntityPrompt",
-          "exportKind": "const",
-          "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
-          "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1080,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1080-generateentityprompt",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@deprecated",
             "@category",
             "@since"
           ],
@@ -216495,36 +215658,11 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1113,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1113-generatestructuredrelationprompt",
+          "line": 1047,
+          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1047-generatestructuredrelationprompt",
           "currentTags": [
             "@param",
             "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "generateRelationPrompt",
-          "exportKind": "const",
-          "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
-          "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1157,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1157-generaterelationprompt",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@deprecated",
             "@category",
             "@since"
           ],
@@ -216544,36 +215682,11 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1184,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1184-generatestructuredmentionprompt",
+          "line": 1088,
+          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1088-generatestructuredmentionprompt",
           "currentTags": [
             "@param",
             "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "generateMentionPrompt",
-          "exportKind": "const",
-          "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
-          "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1219,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1219-generatementionprompt",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@deprecated",
             "@category",
             "@since"
           ],
@@ -216593,8 +215706,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1267,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1267-imagestopromptparts",
+          "line": 1145,
+          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1145-imagestopromptparts",
           "currentTags": [
             "@param",
             "@returns",
@@ -216617,8 +215730,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1304,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1304-buildmultimodalusercontent",
+          "line": 1182,
+          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1182-buildmultimodalusercontent",
           "currentTags": [
             "@param",
             "@returns",
@@ -216641,8 +215754,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1376,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1376-buildmultimodalprompt",
+          "line": 1254,
+          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1254-buildmultimodalprompt",
           "currentTags": [
             "@param",
             "@returns",
@@ -216665,8 +215778,8 @@
           "exportKind": "const",
           "filePath": "effect-ontology/Prompt/PromptGenerator.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/PromptGenerator.ts",
-          "line": 1423,
-          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1423-buildpromptfromstructured",
+          "line": 1301,
+          "anchor": "scratchpad-effect-ontology-prompt-promptgenerator-ts-1301-buildpromptfromstructured",
           "currentTags": [
             "@param",
             "@returns",
@@ -217140,12 +216253,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  buildMultimodalPrompt,\n  buildMultimodalUserContent,\n  buildPromptFromStructured,\n  ExampleMessage,\n  generateEntityPrompt,\n  generateMentionPrompt,\n  generatePrompt,\n  generateRelationPrompt,\n  generateStructuredEntityPrompt,\n  generateStructuredMentionPrompt,\n  generateStructuredPrompt,\n  generateStructuredPromptWithExamples,\n  generateStructuredRelationPrompt,\n  imagesToPromptParts,\n  OntologyPromptContext,\n  ScoredExample,\n  StructuredPrompt,\n  StructuredPromptWithExamples,\n} from \"./PromptGenerator.ts\";",
+          "symbolName": "export {\n  buildMultimodalPrompt,\n  buildMultimodalUserContent,\n  buildPromptFromStructured,\n  ExampleMessage,\n  generateStructuredEntityPrompt,\n  generateStructuredMentionPrompt,\n  generateStructuredPrompt,\n  generateStructuredPromptWithExamples,\n  generateStructuredRelationPrompt,\n  imagesToPromptParts,\n  OntologyPromptContext,\n  ScoredExample,\n  StructuredPrompt,\n  StructuredPromptWithExamples,\n} from \"./PromptGenerator.ts\";",
           "exportKind": "re-export",
           "filePath": "effect-ontology/Prompt/index.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/index.ts",
           "line": 24,
-          "anchor": "scratchpad-effect-ontology-prompt-index-ts-24-export-buildmultimodalprompt-buildmultimodalusercontent-buildpromptfromstructured-examplemessage-generateentityprompt-generatementionprompt-generateprompt-generaterelationprompt-generatestructuredentityprompt-generatestructuredmentionprompt-generatestructuredprompt-generatestructuredpromptwithexamples-generatestructuredrelationprompt-imagestopromptparts-ontologypromptcontext-scoredexample-structuredprompt-structuredpromptwithexamples-from-promptgenerator-ts",
+          "anchor": "scratchpad-effect-ontology-prompt-index-ts-24-export-buildmultimodalprompt-buildmultimodalusercontent-buildpromptfromstructured-examplemessage-generatestructuredentityprompt-generatestructuredmentionprompt-generatestructuredprompt-generatestructuredpromptwithexamples-generatestructuredrelationprompt-imagestopromptparts-ontologypromptcontext-scoredexample-structuredprompt-structuredpromptwithexamples-from-promptgenerator-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -217163,8 +216276,8 @@
           "exportKind": "re-export",
           "filePath": "effect-ontology/Prompt/index.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/index.ts",
-          "line": 44,
-          "anchor": "scratchpad-effect-ontology-prompt-index-ts-44-export-allowediriset-makeentityruleset-makementionruleset-makerelationruleset-ruleset-from-ruleset-ts",
+          "line": 40,
+          "anchor": "scratchpad-effect-ontology-prompt-index-ts-40-export-allowediriset-makeentityruleset-makementionruleset-makerelationruleset-ruleset-from-ruleset-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -217182,8 +216295,8 @@
           "exportKind": "re-export",
           "filePath": "effect-ontology/Prompt/index.ts",
           "repoPath": "scratchpad/effect-ontology/Prompt/index.ts",
-          "line": 45,
-          "anchor": "scratchpad-effect-ontology-prompt-index-ts-45-export-findrulebyid-findrulesbycategory-generatedschemaannotations-generateschemaannotations-generateschemadescription-generateschemaidentifier-generateschematitle-getfielddescription-getfieldvalidationtemplate-from-schemagenerator-ts",
+          "line": 41,
+          "anchor": "scratchpad-effect-ontology-prompt-index-ts-41-export-findrulebyid-findrulesbycategory-generatedschemaannotations-generateschemaannotations-generateschemadescription-generateschemaidentifier-generateschematitle-getfielddescription-getfieldvalidationtemplate-from-schemagenerator-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -225233,29 +224346,6 @@
           "line": 29,
           "anchor": "scratchpad-effect-ontology-service-embedding-ts-29-export-type-nomictasktype-from-nomicnlp-ts",
           "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { NomicNlpService, NomicNlpServiceLive } from \"./NomicNlp.ts\";",
-          "exportKind": "re-export",
-          "filePath": "effect-ontology/Service/Embedding.ts",
-          "repoPath": "scratchpad/effect-ontology/Service/Embedding.ts",
-          "line": 301,
-          "anchor": "scratchpad-effect-ontology-service-embedding-ts-301-export-nomicnlpservice-nomicnlpservicelive-from-nomicnlp-ts",
-          "currentTags": [
-            "@deprecated",
-            "@category",
-            "@since"
-          ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -265681,7 +264771,7 @@
         "srcDir": "src",
         "sourceFileCount": 9,
         "publicModuleCount": 9,
-        "publicExportCount": 259
+        "publicExportCount": 260
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -265886,7 +264976,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 22,
+          "exportCount": 23,
           "remediationStatus": "open"
         },
         {
@@ -269836,8 +268926,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 59,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-59-documentsafetypathsegment",
+          "line": 62,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-62-documentsafetypathsegment",
           "currentTags": [
             "@category",
             "@since"
@@ -269858,8 +268948,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 80,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-80-documentsafetypathsegment",
+          "line": 83,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-83-documentsafetypathsegment",
           "currentTags": [
             "@category",
             "@since"
@@ -269880,8 +268970,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 97,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-97-rawnodesafetyviolation",
+          "line": 100,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-100-rawnodesafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -269902,8 +268992,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 122,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-122-destinationkind",
+          "line": 125,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-125-destinationkind",
           "currentTags": [
             "@category",
             "@since"
@@ -269924,8 +269014,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 143,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-143-destinationkind",
+          "line": 146,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-146-destinationkind",
           "currentTags": [
             "@category",
             "@since"
@@ -269946,8 +269036,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 159,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-159-urlnodetag",
+          "line": 162,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-162-urlnodetag",
           "currentTags": [
             "@category",
             "@since"
@@ -269968,8 +269058,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 180,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-180-urlnodetag",
+          "line": 183,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-183-urlnodetag",
           "currentTags": [
             "@category",
             "@since"
@@ -269990,8 +269080,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 203,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-203-urlsafetyviolation",
+          "line": 206,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-206-urlsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -270012,8 +269102,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 232,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-232-scalarsafetyviolation",
+          "line": 235,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-235-scalarsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -270034,9 +269124,33 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 261,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-261-duplicatefootnotedefinitionsafetyviolation",
+          "line": 264,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-264-duplicatefootnotedefinitionsafetyviolation",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HtmlProjectionSafetyViolation",
+          "exportKind": "class",
+          "filePath": "src/Md.safe.ts",
+          "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
+          "line": 304,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-304-htmlprojectionsafetyviolation",
+          "currentTags": [
+            "@invariant",
+            "@see",
             "@category",
             "@since"
           ],
@@ -270056,8 +269170,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 291,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-291-documentsafetyviolation",
+          "line": 331,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-331-documentsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -270078,8 +269192,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 319,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-319-documentsafetyviolation",
+          "line": 360,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-360-documentsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -270100,8 +269214,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 591,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-591-documentsafetyissues",
+          "line": 645,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-645-documentsafetyissues",
           "currentTags": [
             "@category",
             "@since"
@@ -270122,8 +269236,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 611,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-611-inlinesafetyissuesatroot",
+          "line": 666,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-666-inlinesafetyissuesatroot",
           "currentTags": [
             "@category",
             "@since"
@@ -270144,8 +269258,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 650,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-650-safeinline",
+          "line": 707,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-707-safeinline",
           "currentTags": [
             "@category",
             "@since"
@@ -270166,8 +269280,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 677,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-677-safeinline",
+          "line": 734,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-734-safeinline",
           "currentTags": [
             "@category",
             "@since"
@@ -270188,9 +269302,11 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 697,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-697-safedocument",
+          "line": 756,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-756-safedocument",
           "currentTags": [
+            "@invariant",
+            "@see",
             "@category",
             "@since"
           ],
@@ -270210,8 +269326,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 724,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-724-safedocument",
+          "line": 783,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-783-safedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -270232,8 +269348,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 742,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-742-decodesafedocument",
+          "line": 801,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-801-decodesafedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -270254,8 +269370,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 763,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-763-decodesafedocumenteffect",
+          "line": 822,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-822-decodesafedocumenteffect",
           "currentTags": [
             "@category",
             "@since"
@@ -270276,8 +269392,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 782,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-782-decodesafedocumentunsafe",
+          "line": 841,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-841-decodesafedocumentunsafe",
           "currentTags": [
             "@category",
             "@since"
@@ -270298,8 +269414,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 801,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-801-refinesafedocument",
+          "line": 860,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-860-refinesafedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -299123,7 +298239,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 31,
+          "exportCount": 30,
           "remediationStatus": "resolved"
         },
         {
@@ -299233,7 +298349,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 143,
+          "exportCount": 144,
           "remediationStatus": "resolved"
         }
       ],
@@ -299965,35 +299081,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "HttpApiEncoding",
-          "exportKind": "type",
-          "filePath": "src/Id.ts",
-          "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 799,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-799-httpapiencoding",
-          "currentTags": [
-            "@deprecated",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "HttpAnnotationExtras",
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 819,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-819-httpannotationextras",
+          "line": 802,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-802-httpannotationextras",
           "currentTags": [
             "@since",
             "@category"
@@ -300014,8 +299107,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 845,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-845-identityanyannotationextras",
+          "line": 828,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-828-identityanyannotationextras",
           "currentTags": [
             "@since",
             "@category"
@@ -300036,8 +299129,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 871,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-871-identityannotation",
+          "line": 854,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-854-identityannotation",
           "currentTags": [
             "@since",
             "@category"
@@ -300058,8 +299151,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 926,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-926-identityannotationresult",
+          "line": 909,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-909-identityannotationresult",
           "currentTags": [
             "@since",
             "@category"
@@ -300080,8 +299173,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 960,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-960-annotatedschema",
+          "line": 943,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-943-annotatedschema",
           "currentTags": [
             "@since",
             "@category"
@@ -300102,8 +299195,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 977,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-977-taggedmodulerecord",
+          "line": 960,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-960-taggedmodulerecord",
           "currentTags": [
             "@since",
             "@category"
@@ -300124,8 +299217,8 @@
           "exportKind": "interface",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1040,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1040-identitycomposer",
+          "line": 1023,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1023-identitycomposer",
           "currentTags": [
             "@since",
             "@category"
@@ -300146,8 +299239,8 @@
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1647,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1647-baseidentityinput",
+          "line": 1630,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1630-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -300168,8 +299261,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1676,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1676-baseidentityinput",
+          "line": 1659,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1659-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -300190,8 +299283,8 @@
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 2192,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-2192-make",
+          "line": 2175,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-2175-make",
           "currentTags": [
             "@since",
             "@category"
@@ -301137,8 +300230,30 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 226,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-226-apidocsid",
+          "line": 232,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-232-apidocsid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "$CiopsId",
+          "exportKind": "const",
+          "filePath": "src/packages.ts",
+          "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
+          "line": 249,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-249-ciopsid",
           "currentTags": [
             "@category",
             "@since"
@@ -301159,8 +300274,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 243,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-243-lejeuneboltworkbenchid",
+          "line": 266,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-266-lejeuneboltworkbenchid",
           "currentTags": [
             "@category",
             "@since"
@@ -301181,8 +300296,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 261,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-261-semanticaid",
+          "line": 284,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-284-semanticaid",
           "currentTags": [
             "@category",
             "@since"
@@ -301203,8 +300318,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 278,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-278-trustgraphworkbenchid",
+          "line": 301,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-301-trustgraphworkbenchid",
           "currentTags": [
             "@category",
             "@since"
@@ -301225,8 +300340,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 298,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-298-dataid",
+          "line": 321,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-321-dataid",
           "currentTags": [
             "@category",
             "@since"
@@ -301247,8 +300362,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 314,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-314-identityid",
+          "line": 337,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-337-identityid",
           "currentTags": [
             "@category",
             "@since"
@@ -301269,8 +300384,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 330,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-330-schemaid",
+          "line": 353,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-353-schemaid",
           "currentTags": [
             "@category",
             "@since"
@@ -301291,8 +300406,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 346,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-346-provenanceid",
+          "line": 369,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-369-provenanceid",
           "currentTags": [
             "@category",
             "@since"
@@ -301313,8 +300428,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 362,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-362-rdfid",
+          "line": 385,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-385-rdfid",
           "currentTags": [
             "@category",
             "@since"
@@ -301335,8 +300450,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 378,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-378-ontologyid",
+          "line": 401,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-401-ontologyid",
           "currentTags": [
             "@category",
             "@since"
@@ -301357,8 +300472,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 394,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-394-semanticfoundationid",
+          "line": 417,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-417-semanticfoundationid",
           "currentTags": [
             "@category",
             "@since"
@@ -301379,8 +300494,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 410,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-410-typesid",
+          "line": 433,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-433-typesid",
           "currentTags": [
             "@category",
             "@since"
@@ -301401,8 +300516,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 426,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-426-utilsid",
+          "line": 449,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-449-utilsid",
           "currentTags": [
             "@category",
             "@since"
@@ -301423,8 +300538,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 444,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-444-uiid",
+          "line": 467,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-467-uiid",
           "currentTags": [
             "@category",
             "@since"
@@ -301445,8 +300560,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 462,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-462-repoaimetricsid",
+          "line": 485,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-485-repoaimetricsid",
           "currentTags": [
             "@category",
             "@since"
@@ -301467,8 +300582,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 478,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-478-repocliid",
+          "line": 501,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-501-repocliid",
           "currentTags": [
             "@category",
             "@since"
@@ -301489,8 +300604,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 494,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-494-repoconfigsid",
+          "line": 517,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-517-repoconfigsid",
           "currentTags": [
             "@category",
             "@since"
@@ -301511,8 +300626,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 510,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-510-repoutilsid",
+          "line": 533,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-533-repoutilsid",
           "currentTags": [
             "@category",
             "@since"
@@ -301533,8 +300648,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 526,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-526-testutilsid",
+          "line": 549,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-549-testutilsid",
           "currentTags": [
             "@category",
             "@since"
@@ -301555,8 +300670,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 544,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-544-shareddomainid",
+          "line": 567,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-567-shareddomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -301577,8 +300692,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 561,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-561-sharedusecasesid",
+          "line": 584,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-584-sharedusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -301599,8 +300714,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 577,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-577-sharedtablesid",
+          "line": 600,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-600-sharedtablesid",
           "currentTags": [
             "@category",
             "@since"
@@ -301621,8 +300736,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 593,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-593-semanticwebid",
+          "line": 616,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-616-semanticwebid",
           "currentTags": [
             "@category",
             "@since"
@@ -301643,8 +300758,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 609,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-609-nlpid",
+          "line": 632,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-632-nlpid",
           "currentTags": [
             "@category",
             "@since"
@@ -301665,8 +300780,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 625,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-625-nlpprocessingid",
+          "line": 648,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-648-nlpprocessingid",
           "currentTags": [
             "@category",
             "@since"
@@ -301687,8 +300802,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 641,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-641-langextractid",
+          "line": 664,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-664-langextractid",
           "currentTags": [
             "@category",
             "@since"
@@ -301709,8 +300824,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 657,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-657-observabilityid",
+          "line": 680,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-680-observabilityid",
           "currentTags": [
             "@category",
             "@since"
@@ -301731,8 +300846,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 673,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-673-colorsid",
+          "line": 696,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-696-colorsid",
           "currentTags": [
             "@category",
             "@since"
@@ -301753,8 +300868,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 689,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-689-chalkid",
+          "line": 712,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-712-chalkid",
           "currentTags": [
             "@category",
             "@since"
@@ -301775,8 +300890,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 705,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-705-repodocgenid",
+          "line": 728,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-728-repodocgenid",
           "currentTags": [
             "@category",
             "@since"
@@ -301797,8 +300912,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 721,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-721-infraid",
+          "line": 744,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-744-infraid",
           "currentTags": [
             "@category",
             "@since"
@@ -301819,8 +300934,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 739,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-739-workspacedomainid",
+          "line": 762,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-762-workspacedomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -301841,8 +300956,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 755,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-755-epistemicdomainid",
+          "line": 778,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-778-epistemicdomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -301863,8 +300978,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 772,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-772-epistemicusecasesid",
+          "line": 795,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-795-epistemicusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -301885,8 +301000,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 789,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-789-agentsdomainid",
+          "line": 812,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-812-agentsdomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -301907,8 +301022,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 805,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-805-agentsserverid",
+          "line": 828,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-828-agentsserverid",
           "currentTags": [
             "@category",
             "@since"
@@ -301929,8 +301044,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 821,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-821-agentsusecasesid",
+          "line": 844,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-844-agentsusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -301951,8 +301066,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 837,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-837-agentsclientid",
+          "line": 860,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-860-agentsclientid",
           "currentTags": [
             "@category",
             "@since"
@@ -301973,8 +301088,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 853,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-853-lawpracticedomainid",
+          "line": 876,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-876-lawpracticedomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -301995,8 +301110,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 871,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-871-lawpracticeusecasesid",
+          "line": 894,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-894-lawpracticeusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -302017,8 +301132,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 889,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-889-lawpracticeserverid",
+          "line": 912,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-912-lawpracticeserverid",
           "currentTags": [
             "@category",
             "@since"
@@ -302039,8 +301154,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 906,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-906-professionaldesktopid",
+          "line": 929,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-929-professionaldesktopid",
           "currentTags": [
             "@category",
             "@since"
@@ -302061,8 +301176,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 923,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-923-repopkgs",
+          "line": 946,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-946-repopkgs",
           "currentTags": [
             "@category",
             "@since"
@@ -302083,8 +301198,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 939,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-939-mdid",
+          "line": 962,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-962-mdid",
           "currentTags": [
             "@category",
             "@since"
@@ -302105,8 +301220,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 955,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-955-oipwebid",
+          "line": 978,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-978-oipwebid",
           "currentTags": [
             "@category",
             "@since"
@@ -302127,8 +301242,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 971,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-971-drizzleid",
+          "line": 994,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-994-drizzleid",
           "currentTags": [
             "@category",
             "@since"
@@ -302149,8 +301264,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 987,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-987-duckdbid",
+          "line": 1010,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1010-duckdbid",
           "currentTags": [
             "@category",
             "@since"
@@ -302171,8 +301286,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1003,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1003-facedetectionid",
+          "line": 1026,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1026-facedetectionid",
           "currentTags": [
             "@category",
             "@since"
@@ -302193,8 +301308,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1019,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1019-ffmpegid",
+          "line": 1042,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1042-ffmpegid",
           "currentTags": [
             "@category",
             "@since"
@@ -302215,8 +301330,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1035,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1035-postgresid",
+          "line": 1058,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1058-postgresid",
           "currentTags": [
             "@category",
             "@since"
@@ -302237,8 +301352,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1052,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1052-anthropicid",
+          "line": 1075,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1075-anthropicid",
           "currentTags": [
             "@category",
             "@since"
@@ -302259,8 +301374,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1068,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1068-veniceaiid",
+          "line": 1091,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1091-veniceaiid",
           "currentTags": [
             "@category",
             "@since"
@@ -302281,8 +301396,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1084,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1084-xaiid",
+          "line": 1107,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1107-xaiid",
           "currentTags": [
             "@category",
             "@since"
@@ -302303,8 +301418,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1101,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1101-acpid",
+          "line": 1124,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1124-acpid",
           "currentTags": [
             "@category",
             "@since"
@@ -302325,8 +301440,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1118,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1118-openaicompatid",
+          "line": 1141,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1141-openaicompatid",
           "currentTags": [
             "@category",
             "@since"
@@ -302347,8 +301462,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1135,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1135-workspacetablesid",
+          "line": 1158,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1158-workspacetablesid",
           "currentTags": [
             "@category",
             "@since"
@@ -302369,8 +301484,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1152,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1152-workspaceusecasesid",
+          "line": 1175,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1175-workspaceusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -302391,8 +301506,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1170,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1170-workspaceserverid",
+          "line": 1193,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1193-workspaceserverid",
           "currentTags": [
             "@category",
             "@since"
@@ -302413,8 +301528,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1187,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1187-documentsdomainid",
+          "line": 1210,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1210-documentsdomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -302435,8 +301550,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1204,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1204-documentsusecasesid",
+          "line": 1227,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1227-documentsusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -302457,8 +301572,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1222,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1222-documentsserverid",
+          "line": 1245,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1245-documentsserverid",
           "currentTags": [
             "@category",
             "@since"
@@ -302479,8 +301594,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1239,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1239-architecturelabdomainid",
+          "line": 1262,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1262-architecturelabdomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -302501,8 +301616,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1257,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1257-architecturelabusecasesid",
+          "line": 1280,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1280-architecturelabusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -302523,8 +301638,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1275,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1275-architecturelabconfigid",
+          "line": 1298,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1298-architecturelabconfigid",
           "currentTags": [
             "@category",
             "@since"
@@ -302545,8 +301660,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1293,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1293-architecturelabserverid",
+          "line": 1316,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1316-architecturelabserverid",
           "currentTags": [
             "@category",
             "@since"
@@ -302567,8 +301682,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1311,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1311-architecturelabtablesid",
+          "line": 1334,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1334-architecturelabtablesid",
           "currentTags": [
             "@category",
             "@since"
@@ -302589,8 +301704,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1329,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1329-architecturelabclientid",
+          "line": 1352,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1352-architecturelabclientid",
           "currentTags": [
             "@category",
             "@since"
@@ -302611,8 +301726,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1347,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1347-architecturelabuiid",
+          "line": 1370,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1370-architecturelabuiid",
           "currentTags": [
             "@category",
             "@since"
@@ -302633,8 +301748,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1365,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1365-architecturelabproofid",
+          "line": 1388,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1388-architecturelabproofid",
           "currentTags": [
             "@category",
             "@since"
@@ -302655,8 +301770,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1383,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1383-runpodid",
+          "line": 1406,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1406-runpodid",
           "currentTags": [
             "@category",
             "@since"
@@ -302677,8 +301792,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1400,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1400-onepasswordcliid",
+          "line": 1423,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1423-onepasswordcliid",
           "currentTags": [
             "@category",
             "@since"
@@ -302699,8 +301814,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1417,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1417-discordid",
+          "line": 1440,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1440-discordid",
           "currentTags": [
             "@category",
             "@since"
@@ -302721,8 +301836,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1434,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1434-aiprovidercliid",
+          "line": 1457,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1457-aiprovidercliid",
           "currentTags": [
             "@category",
             "@since"
@@ -302743,8 +301858,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1451,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1451-sanityid",
+          "line": 1474,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1474-sanityid",
           "currentTags": [
             "@category",
             "@since"
@@ -302765,8 +301880,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1468,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1468-hubspotid",
+          "line": 1491,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1491-hubspotid",
           "currentTags": [
             "@category",
             "@since"
@@ -302787,8 +301902,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1485,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1485-phoenixid",
+          "line": 1508,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1508-phoenixid",
           "currentTags": [
             "@category",
             "@since"
@@ -302809,8 +301924,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1502,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1502-aisyncid",
+          "line": 1525,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1525-aisyncid",
           "currentTags": [
             "@category",
             "@since"
@@ -302831,8 +301946,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1519,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1519-boxid",
+          "line": 1542,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1542-boxid",
           "currentTags": [
             "@category",
             "@since"
@@ -302853,8 +301968,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1536,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1536-nlpmcpid",
+          "line": 1559,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1559-nlpmcpid",
           "currentTags": [
             "@category",
             "@since"
@@ -302875,8 +301990,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1553,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1553-rdfcanonizeid",
+          "line": 1576,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1576-rdfcanonizeid",
           "currentTags": [
             "@category",
             "@since"
@@ -302897,8 +302012,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1570,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1570-winkid",
+          "line": 1593,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1593-winkid",
           "currentTags": [
             "@category",
             "@since"
@@ -302919,8 +302034,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1587,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1587-fileprocessingid",
+          "line": 1610,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1610-fileprocessingid",
           "currentTags": [
             "@category",
             "@since"
@@ -302941,8 +302056,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1604,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1604-tikaid",
+          "line": 1627,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1627-tikaid",
           "currentTags": [
             "@category",
             "@since"
@@ -302963,8 +302078,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1621,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1621-libpffid",
+          "line": 1644,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1644-libpffid",
           "currentTags": [
             "@category",
             "@since"
@@ -302985,8 +302100,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1638,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1638-firecrawlid",
+          "line": 1661,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1661-firecrawlid",
           "currentTags": [
             "@category",
             "@since"
@@ -303007,8 +302122,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1655,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1655-usptoid",
+          "line": 1678,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1678-usptoid",
           "currentTags": [
             "@category",
             "@since"
@@ -303029,8 +302144,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1672,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1672-lexicalschemaid",
+          "line": 1695,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1695-lexicalschemaid",
           "currentTags": [
             "@category",
             "@since"
@@ -303051,8 +302166,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1689,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1689-editorid",
+          "line": 1712,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1712-editorid",
           "currentTags": [
             "@category",
             "@since"
@@ -303073,8 +302188,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1706,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1706-scratchpadid",
+          "line": 1729,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1729-scratchpadid",
           "currentTags": [
             "@category",
             "@since"
@@ -303095,8 +302210,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1723,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1723-htmlid",
+          "line": 1746,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1746-htmlid",
           "currentTags": [
             "@category",
             "@since"
@@ -303117,8 +302232,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1740,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1740-pandocastid",
+          "line": 1763,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1763-pandocastid",
           "currentTags": [
             "@category",
             "@since"
@@ -303139,8 +302254,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1757,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1757-pgliteid",
+          "line": 1780,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1780-pgliteid",
           "currentTags": [
             "@category",
             "@since"
@@ -303161,8 +302276,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1774,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1774-m365id",
+          "line": 1797,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1797-m365id",
           "currentTags": [
             "@category",
             "@since"
@@ -303183,8 +302298,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1791,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1791-m365mcpid",
+          "line": 1814,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1814-m365mcpid",
           "currentTags": [
             "@category",
             "@since"
@@ -303205,8 +302320,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1808,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1808-govinfoid",
+          "line": 1831,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1831-govinfoid",
           "currentTags": [
             "@category",
             "@since"
@@ -303227,8 +302342,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1825,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1825-ecfrid",
+          "line": 1848,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1848-ecfrid",
           "currentTags": [
             "@category",
             "@since"
@@ -303249,8 +302364,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1842,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1842-apitransportid",
+          "line": 1865,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1865-apitransportid",
           "currentTags": [
             "@category",
             "@since"
@@ -303271,8 +302386,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1859,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1859-mcpkitid",
+          "line": 1882,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1882-mcpkitid",
           "currentTags": [
             "@category",
             "@since"
@@ -303293,8 +302408,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1876,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1876-usptomcpid",
+          "line": 1899,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1899-usptomcpid",
           "currentTags": [
             "@category",
             "@since"
@@ -303315,8 +302430,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1893,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1893-pacerid",
+          "line": 1916,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1916-pacerid",
           "currentTags": [
             "@category",
             "@since"
@@ -303337,8 +302452,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1910,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1910-fcrunsid",
+          "line": 1933,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1933-fcrunsid",
           "currentTags": [
             "@category",
             "@since"
@@ -303359,8 +302474,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1927,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1927-cosmosid",
+          "line": 1950,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1950-cosmosid",
           "currentTags": [
             "@category",
             "@since"
@@ -303381,8 +302496,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1944,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1944-dbadminid",
+          "line": 1967,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1967-dbadminid",
           "currentTags": [
             "@category",
             "@since"
@@ -303403,8 +302518,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1961,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1961-epistemicserverid",
+          "line": 1984,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1984-epistemicserverid",
           "currentTags": [
             "@category",
             "@since"
@@ -303425,8 +302540,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1978,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1978-epistemictablesid",
+          "line": 2001,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2001-epistemictablesid",
           "currentTags": [
             "@category",
             "@since"
@@ -303447,8 +302562,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 1995,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-1995-lintrulesid",
+          "line": 2018,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2018-lintrulesid",
           "currentTags": [
             "@category",
             "@since"
@@ -303469,8 +302584,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2012,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2012-n3id",
+          "line": 2035,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2035-n3id",
           "currentTags": [
             "@category",
             "@since"
@@ -303491,8 +302606,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2029,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2029-pretextid",
+          "line": 2052,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2052-pretextid",
           "currentTags": [
             "@category",
             "@since"
@@ -303513,8 +302628,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2046,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2046-graph3did",
+          "line": 2069,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2069-graph3did",
           "currentTags": [
             "@category",
             "@since"
@@ -303535,8 +302650,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2063,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2063-dockid",
+          "line": 2086,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2086-dockid",
           "currentTags": [
             "@category",
             "@since"
@@ -303557,8 +302672,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2080,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2080-dockreactid",
+          "line": 2103,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2103-dockreactid",
           "currentTags": [
             "@category",
             "@since"
@@ -303579,8 +302694,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2097,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2097-ontologyclientid",
+          "line": 2120,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2120-ontologyclientid",
           "currentTags": [
             "@category",
             "@since"
@@ -303601,8 +302716,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2114,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2114-ontologyconfigid",
+          "line": 2137,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2137-ontologyconfigid",
           "currentTags": [
             "@category",
             "@since"
@@ -303623,8 +302738,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2131,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2131-ontologydomainid",
+          "line": 2154,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2154-ontologydomainid",
           "currentTags": [
             "@category",
             "@since"
@@ -303645,8 +302760,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2148,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2148-ontologyserverid",
+          "line": 2171,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2171-ontologyserverid",
           "currentTags": [
             "@category",
             "@since"
@@ -303667,8 +302782,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2165,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2165-ontologyuiid",
+          "line": 2188,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2188-ontologyuiid",
           "currentTags": [
             "@category",
             "@since"
@@ -303689,8 +302804,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2182,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2182-ontologyusecasesid",
+          "line": 2205,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2205-ontologyusecasesid",
           "currentTags": [
             "@category",
             "@since"
@@ -303711,8 +302826,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2199,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2199-oxigraphid",
+          "line": 2222,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2222-oxigraphid",
           "currentTags": [
             "@category",
             "@since"
@@ -303733,8 +302848,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2216,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2216-shaclid",
+          "line": 2239,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2239-shaclid",
           "currentTags": [
             "@category",
             "@since"
@@ -303755,8 +302870,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2233,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2233-storybookid",
+          "line": 2256,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2256-storybookid",
           "currentTags": [
             "@category",
             "@since"
@@ -303777,8 +302892,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2250,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2250-tsgoshimid",
+          "line": 2273,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2273-tsgoshimid",
           "currentTags": [
             "@category",
             "@since"
@@ -303799,8 +302914,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2267,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2267-doctextid",
+          "line": 2290,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2290-doctextid",
           "currentTags": [
             "@category",
             "@since"
@@ -303821,8 +302936,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2284,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2284-documentstablesid",
+          "line": 2307,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2307-documentstablesid",
           "currentTags": [
             "@category",
             "@since"
@@ -303843,8 +302958,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2301,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2301-tailscaleid",
+          "line": 2324,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2324-tailscaleid",
           "currentTags": [
             "@category",
             "@since"
@@ -303865,8 +302980,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2318,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2318-agentstablesid",
+          "line": 2341,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2341-agentstablesid",
           "currentTags": [
             "@category",
             "@since"
@@ -303887,8 +303002,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2335,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2335-epistemicconfigid",
+          "line": 2358,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2358-epistemicconfigid",
           "currentTags": [
             "@category",
             "@since"
@@ -303909,8 +303024,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2352,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2352-lawpracticetablesid",
+          "line": 2375,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2375-lawpracticetablesid",
           "currentTags": [
             "@category",
             "@since"
@@ -303931,8 +303046,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2370,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2370-practicekgmcpid",
+          "line": 2393,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2393-practicekgmcpid",
           "currentTags": [
             "@category",
             "@since"
@@ -303953,8 +303068,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2387,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2387-openclawid",
+          "line": 2410,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2410-openclawid",
           "currentTags": [
             "@category",
             "@since"
@@ -303975,8 +303090,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2404,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2404-obsid",
+          "line": 2427,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2427-obsid",
           "currentTags": [
             "@category",
             "@since"
@@ -303997,8 +303112,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2421,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2421-exiftoolid",
+          "line": 2444,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2444-exiftoolid",
           "currentTags": [
             "@category",
             "@since"
@@ -304019,8 +303134,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2438,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2438-qacaptureid",
+          "line": 2461,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2461-qacaptureid",
           "currentTags": [
             "@category",
             "@since"
@@ -304041,8 +303156,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2455,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2455-govlegalmcpid",
+          "line": 2478,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2478-govlegalmcpid",
           "currentTags": [
             "@category",
             "@since"
@@ -304063,8 +303178,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2471,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2471-epistemicclientid",
+          "line": 2494,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2494-epistemicclientid",
           "currentTags": [
             "@category",
             "@since"
@@ -304085,8 +303200,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2487,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2487-epistemicuiid",
+          "line": 2510,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2510-epistemicuiid",
           "currentTags": [
             "@category",
             "@since"
@@ -304107,8 +303222,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2503,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2503-effectdrizzleid",
+          "line": 2526,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2526-effectdrizzleid",
           "currentTags": [
             "@category",
             "@since"
@@ -304129,8 +303244,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2520,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2520-skillcontractid",
+          "line": 2543,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2543-skillcontractid",
           "currentTags": [
             "@category",
             "@since"
@@ -304151,8 +303266,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2537,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2537-codegenkitid",
+          "line": 2560,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2560-codegenkitid",
           "currentTags": [
             "@category",
             "@since"
@@ -304173,8 +303288,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2554,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2554-brandid",
+          "line": 2577,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2577-brandid",
           "currentTags": [
             "@category",
             "@since"
@@ -304195,8 +303310,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2571,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2571-openaiid",
+          "line": 2594,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2594-openaiid",
           "currentTags": [
             "@category",
             "@since"
@@ -304217,8 +303332,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2588,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2588-todoxid",
+          "line": 2611,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2611-todoxid",
           "currentTags": [
             "@category",
             "@since"
@@ -304239,8 +303354,8 @@
           "exportKind": "const",
           "filePath": "src/packages.ts",
           "repoPath": "packages/foundation/modeling/identity/src/packages.ts",
-          "line": 2605,
-          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2605-boxprovisioningid",
+          "line": 2628,
+          "anchor": "packages-foundation-modeling-identity-src-packages-ts-2628-boxprovisioningid",
           "currentTags": [
             "@category",
             "@since"
@@ -340510,8 +339625,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/ComposerPolicy.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
-          "line": 235,
-          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-235-unsafedocumentmessage",
+          "line": 241,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-241-unsafedocumentmessage",
           "currentTags": [
             "@category",
             "@since"
@@ -340532,8 +339647,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/ComposerPolicy.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
-          "line": 264,
-          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-264-composerdocumentfromeditorstate",
+          "line": 270,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-270-composerdocumentfromeditorstate",
           "currentTags": [
             "@category",
             "@since"
@@ -340554,8 +339669,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/ComposerPolicy.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
-          "line": 292,
-          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-292-composersenddecision",
+          "line": 298,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-298-composersenddecision",
           "currentTags": [
             "@category",
             "@since"
@@ -340576,8 +339691,8 @@
           "exportKind": "type",
           "filePath": "src/chat/ui/ComposerPolicy.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
-          "line": 311,
-          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-311-composersenddecision",
+          "line": 317,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-317-composersenddecision",
           "currentTags": [
             "@category",
             "@since"
@@ -340598,8 +339713,8 @@
           "exportKind": "type",
           "filePath": "src/chat/ui/ComposerPolicy.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
-          "line": 332,
-          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-332-composerpolicyshape",
+          "line": 338,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-338-composerpolicyshape",
           "currentTags": [
             "@category",
             "@since"
@@ -340620,8 +339735,8 @@
           "exportKind": "const",
           "filePath": "src/chat/ui/ComposerPolicy.ts",
           "repoPath": "apps/professional-desktop/src/chat/ui/ComposerPolicy.ts",
-          "line": 387,
-          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-387-composerpolicy",
+          "line": 393,
+          "anchor": "apps-professional-desktop-src-chat-ui-composerpolicy-ts-393-composerpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -364278,8 +363393,8 @@
           "exportKind": "const",
           "filePath": "src/Oxigraph.sparql.ts",
           "repoPath": "packages/drivers/oxigraph/src/Oxigraph.sparql.ts",
-          "line": 286,
-          "anchor": "packages-drivers-oxigraph-src-oxigraph-sparql-ts-286-oxigraphsparqlqueryservicelive",
+          "line": 300,
+          "anchor": "packages-drivers-oxigraph-src-oxigraph-sparql-ts-300-oxigraphsparqlqueryservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -400914,8 +400029,8 @@
           "exportKind": "const",
           "filePath": "src/TypeScript/models/TSSyntaxKind.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
-          "line": 443,
-          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-443-tssyntaxkindcode",
+          "line": 435,
+          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-435-tssyntaxkindcode",
           "currentTags": [
             "@category",
             "@since"
@@ -400936,8 +400051,8 @@
           "exportKind": "const",
           "filePath": "src/TypeScript/models/TSSyntaxKind.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
-          "line": 468,
-          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-468-tssyntaxkind",
+          "line": 460,
+          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-460-tssyntaxkind",
           "currentTags": [
             "@category",
             "@since"
@@ -400958,8 +400073,8 @@
           "exportKind": "namespace",
           "filePath": "src/TypeScript/models/TSSyntaxKind.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
-          "line": 489,
-          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-489-tssyntaxkind",
+          "line": 481,
+          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-481-tssyntaxkind",
           "currentTags": [
             "@category",
             "@since"
@@ -400980,8 +400095,8 @@
           "exportKind": "const",
           "filePath": "src/TypeScript/models/TSSyntaxKind.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
-          "line": 520,
-          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-520-tssyntaxkindliteral",
+          "line": 512,
+          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-512-tssyntaxkindliteral",
           "currentTags": [
             "@category",
             "@since"
@@ -401002,8 +400117,8 @@
           "exportKind": "type",
           "filePath": "src/TypeScript/models/TSSyntaxKind.model.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
-          "line": 536,
-          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-536-tssyntaxkindliteral",
+          "line": 528,
+          "anchor": "packages-tooling-library-repo-utils-src-typescript-models-tssyntaxkind-model-ts-528-tssyntaxkindliteral",
           "currentTags": [
             "@category",
             "@since"
@@ -522223,8 +521338,8 @@
           "exportKind": "const",
           "filePath": "src/next/models/ImageConfig.schema.ts",
           "repoPath": "packages/tooling/policy-pack/repo-configs/src/next/models/ImageConfig.schema.ts",
-          "line": 408,
-          "anchor": "packages-tooling-policy-pack-repo-configs-src-next-models-imageconfig-schema-ts-408-imageconfig",
+          "line": 396,
+          "anchor": "packages-tooling-policy-pack-repo-configs-src-next-models-imageconfig-schema-ts-396-imageconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -522245,8 +521360,8 @@
           "exportKind": "type",
           "filePath": "src/next/models/ImageConfig.schema.ts",
           "repoPath": "packages/tooling/policy-pack/repo-configs/src/next/models/ImageConfig.schema.ts",
-          "line": 457,
-          "anchor": "packages-tooling-policy-pack-repo-configs-src-next-models-imageconfig-schema-ts-457-imageconfig",
+          "line": 444,
+          "anchor": "packages-tooling-policy-pack-repo-configs-src-next-models-imageconfig-schema-ts-444-imageconfig",
           "currentTags": [
             "@category",
             "@since"

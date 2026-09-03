@@ -110,6 +110,24 @@ those values. Those lanes are `cache: false` in `turbo.json`, so they lose no
 remote hits — and because the degradation rule applies to *every* unwrapped
 spawn, they never receive a remote posture they could not use anyway.
 
+### Reading coverage task hashes
+
+Coverage remains `cache: false`: its V8 output and ratchet result must be
+recomputed for the hosted-CI identity. Turbo still computes a task hash from
+the declared package inputs, root Vitest configuration, task definition,
+dependency graph, lockfile-derived dependency state, and declared environment.
+
+Run the lane with `--summarize`. Turbo writes one JSON document per invocation
+under `.turbo/runs/<run-id>.json`; the weighted coverage executor therefore
+writes a prebuild summary and one summary for each non-empty coverage shard.
+Read every summary created by that lane, select `tasks[]` entries whose
+`taskId` is `<package-name>#coverage`, and take that entry's `hash`. The run
+filename is an execution identifier, not an input digest. A later proof ledger
+can key each package fact by this `tasks[].hash` without enabling Turbo output
+caching. Hosted Coverage Regression already supplies `--summarize` through the
+shared `beep ci lane coverage` builder, and its workflow summary step reads all
+of the shard summaries with `beep ci append-turbo-summary --all`.
+
 ## Rules
 
 - Never put the trusted write token on a workstation. A read token that leaks
