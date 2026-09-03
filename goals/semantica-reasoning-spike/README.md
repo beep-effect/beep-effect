@@ -63,7 +63,7 @@ Use this command for execution-capable sessions:
 
 P1 Rules fixture — not started. First action: the `g-entailment-rules/v1`
 tagged family (case, expectation, witness) in `src/schema/Reasoning.ts`,
-before any case is written; then extend `scripts/generate-g-entailment.ts`
+before any case is written; then extend `apps/labs/semantica/scripts/generate-g-entailment.ts`
 under the same EYE pins for R-a, R-b, R-d and R-e. R-c waits for the storage
 spike's P-S1.
 

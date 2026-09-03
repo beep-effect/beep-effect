@@ -84,7 +84,7 @@ DECISIONS entry amends it.
 
 ## Target Surfaces
 
-- `explorations/semantica-lab/research/atlas/verdicts.json` — the NET-NEW
+- The exploration's `research/atlas/verdicts.json` — the NET-NEW
   `atlas-verdicts/v1` data file (catalog, row title, `Verdict` from the D3
   `LiteralKit`, `Beep counterpart` text, evidence = the dated `DECISIONS.md`
   entry plus the sheet section), and its schema beside it or in the lab.
@@ -125,7 +125,7 @@ Each line cites the sub-decision or law it inherits.
    live-verified on 2026-09-03; a one-catalog read precedes any write, and a
    failed read stops the lane (Close paragraph, 2026-09-03).
 7. **Homes.** Script: `apps/labs/semantica/scripts/`; data:
-   `explorations/semantica-lab/research/atlas/`; schema: `atlas-verdicts/v1`
+   the exploration's `research/atlas/` directory; schema: `atlas-verdicts/v1`
    with `Verdict` a `@beep/schema` `LiteralKit` (R3.e).
 8. **Verdict map.** Atlas rows take only `adopt | adapt | already-have | park
    | drop`; `adopt` = wrap as-is, `adapt` = wrap with changes; positive

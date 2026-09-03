@@ -56,7 +56,7 @@ Use this command for execution-capable sessions:
 P0 Access check + live baseline — not started. First action: a one-catalog
 Notion read from the operating session's own connection; then the live
 `Verdict` read across the 33 catalogs and the exact-row enumeration in
-`explorations/semantica-lab/research/atlas/verdicts.json`.
+the exploration's `research/atlas/verdicts.json`.
 
 ## Latest evidence
 

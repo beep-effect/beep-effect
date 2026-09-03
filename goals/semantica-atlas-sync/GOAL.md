@@ -25,7 +25,7 @@ the skills `SPEC.md` names.
 
 Scope:
 
-- In: `explorations/semantica-lab/research/atlas/verdicts.json` and its
+- In: the exploration's `research/atlas/verdicts.json` and its
   `atlas-verdicts/v1` schema; a render/diff script in
   `apps/labs/semantica/scripts/`; `Verdict` and `Beep counterpart` on the
   enumerated atlas rows; this packet's receipts; dated row-specific

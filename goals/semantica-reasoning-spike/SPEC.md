@@ -103,7 +103,7 @@ DECISIONS entry amends it.
   `g-entailment-rules/v1` family; `RdfsRuleId` widened to a branded rule id;
   `InferenceEngine` widened to a domain; `InferenceTruncated`; the
   statement-level conflict witness; `CanonicalProofNodeV1`; `RuleCertificate`),
-  `scripts/generate-g-entailment.ts` extended for the rules family,
+  `apps/labs/semantica/scripts/generate-g-entailment.ts` extended for the rules family,
   `fixtures/gold/v1/g-entailment-rules.{json,n3}`, `src/layers/ReasonerLive.ts`
   and the probe Layers, `test/helpers/EyeOracleChild.ts` reused unchanged, and
   the ported v3 behavioural tests as the match-semantics oracle (P3+).
@@ -207,7 +207,7 @@ Class definitions and probe gates are quoted from
       `InferenceEngine` are widened without touching rdfs/v1.
 - [ ] **P1 fixture** — `fixtures/gold/v1/g-entailment-rules.{json,n3}` holds
       twenty cases in five classes with per-case `eyeProofDigest`s, generated
-      by the extended `scripts/generate-g-entailment.ts` under the pinned EYE;
+      by the extended `apps/labs/semantica/scripts/generate-g-entailment.ts` under the pinned EYE;
       R-c carries two closures; R-d carries EYE's complete closure plus the
       declared budget; R-e carries both derivable statements; the negation gap
       is typed in the fixture.
@@ -245,7 +245,7 @@ Proof is a lab test or a CLI run, never a screenshot (A5, S4).
 | Reflection | `bun run beep lint reflection-artifacts` | Green at closeout |
 | Repo quality | `bun run beep yeet verify` | Green |
 | Lab tests | the lab's `test` script (vitest) in the Labs lane | Green per phase |
-| Fixture generation | the extended `scripts/generate-g-entailment.ts` run twice | Byte-identical output; twenty cases; pins recorded |
+| Fixture generation | the extended `apps/labs/semantica/scripts/generate-g-entailment.ts` run twice | Byte-identical output; twenty cases; pins recorded |
 | Probe gates | one lab test per probe asserting the gate above; reports and sidecars archived under `history/` | Gate holds on every fixture case |
 | Archive precondition | the `beep-effect-logos` root path and its LICENSE digest recorded under `history/` before P3 | Present; Apache-2.0 |
 | Hosted completion | `bun run beep yeet monitor` after each phase's publication | `merge-ready: yes`; zero unresolved threads |

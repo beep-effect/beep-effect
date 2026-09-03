@@ -34,7 +34,7 @@ Schema first, then the generator, then cases:
    vocabulary; `InferenceEngine` as a domain; `InferenceTruncated`; the
    statement-level conflict witness (distinct from the claim-level
    `ConflictWitness` in `src/schema/Evidence.ts`).
-2. `scripts/generate-g-entailment.ts` extended: same `EyeOracleChild`, same
+2. `apps/labs/semantica/scripts/generate-g-entailment.ts` extended: same `EyeOracleChild`, same
    pins (EYE 11.24.5 via `eyereasoner` 21.1.18, `--restricted`), per-case
    `eyeProofDigest`, twice-run byte identity.
 3. Cases, four per class, with EYE gold and lab-owned expectation separated

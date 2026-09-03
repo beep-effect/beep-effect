@@ -48,7 +48,7 @@ Schema first, then data, then the script, then the write:
    `Beep counterpart` (required for positive verdicts), evidence (dated
    `DECISIONS.md` entry + sheet section). Home: beside the data file or in the
    lab's `src/schema/`; no reusable export.
-2. `explorations/semantica-lab/research/atlas/verdicts.json` with every
+2. The exploration's `research/atlas/verdicts.json` with every
    enumerated row; the tracked-data precedent is
    `research/tracker/inventory.jsonl` (redaction law applies).
 3. `apps/labs/semantica/scripts/` render/diff script: decode the file, render

@@ -265,7 +265,7 @@ names no owner. `semantica-canary` is completed-retained and its SPEC excludes t
 (constraint 11); nothing else builds fixtures. Proposal (R2): the fixture is the spike goal's P1,
 and the three adhd first-step probes are P2–P4, each ablated against EYE on that fixture.
 
-**What exists to build on, and what does not.** `scripts/generate-g-entailment.ts` already drives
+**What exists to build on, and what does not.** `apps/labs/semantica/scripts/generate-g-entailment.ts` already drives
 the restricted EYE oracle (`test/helpers/EyeOracleChild.ts`, 64 KiB input / 1 MiB output caps)
 and writes `fixtures/gold/v1/g-entailment-rdfs.{json,n3}` (`g-entailment-rdfs/v1`, EYE 11.24.5
 via `eyereasoner` 21.1.18, per-case `eyeProofDigest`). `StatementPattern` admits variable
@@ -306,7 +306,7 @@ spikes share one tombstone law and R-c sequences after P-S1 lands.
 
 The v3 `rete` salvage enters at P3 (P-R2, whose adhd first step is beside the v3 Rete compiler) and is ablated in P4 (P-R3) as the match-engine candidate: its 46 behavioral tests are ported first as the oracle for match semantics, then rete-port vs naive fixpoint vs EYE are ablated on the rules fixture (R2.g; this sentence previously said P-R3, which is P4). **Precondition surfaced this session:** the archived `beep-effect-logos`
 root is absent from the workstation path `research/SOURCES.md` records
-(`projects/beep-effect-logos`; searched `~/YeeBois`, `~/data-home`, `~/.cache/beep` to depth 4 on
+(`projects/beep-effect-logos`; searched the workstation's projects root, data root and `~/.cache/beep` to depth 4 on
 2026-09-03); locating or restoring it is a P3 entry condition, and `research/SOURCES.md` keeps it
 reference-only until then. The spike is one S1 candidate: P1–P4 are its stage, a failed probe buys
 one redesigned candidate, a second failure parks the family.

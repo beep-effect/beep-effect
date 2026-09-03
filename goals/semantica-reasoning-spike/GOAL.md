@@ -26,7 +26,7 @@ the skills `SPEC.md` names.
 Scope:
 
 - In: `apps/labs/semantica` (the rules family in `src/schema/Reasoning.ts`,
-  the extended `scripts/generate-g-entailment.ts`, `fixtures/gold/v1/`
+  the extended `apps/labs/semantica/scripts/generate-g-entailment.ts`, `fixtures/gold/v1/`
   rules gold, probe schemas and Layers, ported `rete` tests); this packet's
   evidence; the reasoning verdict in the exploration's `DECISIONS.md`.
 - Out: every `SPEC.md` non-goal — rdfs/v1 and its seven cases, a negation

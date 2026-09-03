@@ -63,7 +63,7 @@ Every URL below appears in the exploration ledger and was fetched there.
 
 | Brick | Path | Mark |
 | --- | --- | --- |
-| Reasoning oracle (test-time) | `apps/labs/semantica/test/helpers/EyeOracleChild.ts` (`--restricted`, 64 KiB input / 1 MiB output caps) + `scripts/generate-g-entailment.ts` | reuse; extend the generator for the rules family |
+| Reasoning oracle (test-time) | `apps/labs/semantica/test/helpers/EyeOracleChild.ts` (`--restricted`, 64 KiB input / 1 MiB output caps) + `apps/labs/semantica/scripts/generate-g-entailment.ts` | reuse; extend the generator for the rules family |
 | Pinned rdfs gold | `apps/labs/semantica/fixtures/gold/v1/g-entailment-rdfs.{json,n3}` (`g-entailment-rdfs/v1`, per-case `eyeProofDigest`) | frozen; the rules family is a sibling |
 | Case-runner shapes that do not carry over | `src/schema/Reasoning.ts` `GEntailmentExpectation` (pinned to rdfs/v1), `RdfsRuleId` (seven-member LiteralKit), `InferenceEngine` (`S.Literal("semantica-rhodf/1")`) | NET-NEW `g-entailment-rules/v1`; widen rule id and engine domains |
 | Rules as data | `src/schema/Reasoning.ts` `RdfsRule`, `StatementPattern` (variable predicates admitted) | reuse for user-vocabulary production rules |
