@@ -1142,8 +1142,14 @@ export const value = 1;
  * import { consumerValue } from '@beep/consumer'
  * const fixture = 'import { Effect } from "effect"'
  * // import { value } from "@beep/foundation-demo"
+ * export { value as foundationValue } from "@beep/foundation-demo"
+ * import Foundation = require("@beep/foundation-demo")
+ * type RootProgram = import("effect").Effect<void>
+ * const loaded = import("effect")
+ * const rootName = "effect/Effect"
+ * const ignored = import(rootName)
  * console.log(fixture)
- * console.log(Effect.succeed(value + consumerValue))
+ * console.log(Effect.succeed(value + consumerValue), Foundation, loaded, ignored)
  * \`\`\`
  *
  * @category helpers
@@ -1164,13 +1170,17 @@ export const consumerValue = 1;
             (finding) => finding.rule === "no-root-package-import"
           );
 
-          expect(rootFindings).toHaveLength(2);
+          expect(rootFindings).toHaveLength(6);
           expect(rootFindings?.map((finding) => finding.detail)).toEqual([
             "Import stable public modules instead of the effect package root.",
             "Import stable public modules instead of the @beep/foundation-demo package root.",
+            "Import stable public modules instead of the @beep/foundation-demo package root.",
+            "Import stable public modules instead of the @beep/foundation-demo package root.",
+            "Import stable public modules instead of the effect package root.",
+            "Import stable public modules instead of the effect package root.",
           ]);
-          expect(consumer?.counts.exampleImportFindings).toBe(4);
-          expect(consumer?.counts.documentationRuleFindings["no-root-package-import"]).toBe(4);
+          expect(consumer?.counts.exampleImportFindings).toBe(8);
+          expect(consumer?.counts.documentationRuleFindings["no-root-package-import"]).toBe(8);
         })
       )
     ));

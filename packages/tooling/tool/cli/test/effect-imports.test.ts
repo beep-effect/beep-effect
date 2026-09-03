@@ -20,6 +20,7 @@ const testLayer = Layer.mergeAll(
   TestConsole.layer
 );
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const decodeJson = UnknownFromJsonString.decodeUnknownSync;
 const runLawsCommand = Command.runWith(lawsCommand, { version: "0.0.0" });
 
 const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
@@ -189,7 +190,7 @@ describe("effect import laws", () => {
           );
 
           expect(strictJson._tag).toBe("Failure");
-          expect(JSON.parse(A.join(jsonChunks, ""))).toMatchObject({
+          expect(decodeJson(A.join(jsonChunks, ""))).toMatchObject({
             candidate: true,
             mode: "code",
             strictFailure: true,
