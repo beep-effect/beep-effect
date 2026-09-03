@@ -355,6 +355,8 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("sanitizes link URLs at the schema boundary and keeps safe URLs fixed", () => {
+    const unsafeDataUrl = "data:text/html,\x3cscript>x\x3c/script>";
+
     expect(decodeSafeUrlSync("javascript:alert(1)")).toBe("#");
     expect(decodeSafeUrlSync("file:///tmp/beep.txt")).toBe("#");
     expect(decodeSafeUrlSync("/\n/evil.example/path")).toBe("#");
@@ -362,7 +364,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     expect(decodeSafeUrlSync("/\t/evil.example/path")).toBe("#");
     expect(decodeSafeUrlSync("https://example.com/docs")).toBe("https://example.com/docs");
     expect(decodeSafeUrlSync("docs/page")).toBe("docs/page");
-    expect(encodeSafeUrlSync(decodeSafeUrlSync("data:text/html,<script>x</script>"))).toBe("#");
+    expect(encodeSafeUrlSync(decodeSafeUrlSync(unsafeDataUrl))).toBe("#");
 
     fc.assert(
       fc.property(SafeUrlArbitrary, (url) => {

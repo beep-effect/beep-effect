@@ -230,3 +230,15 @@
   identity, using the path, rule, and symbol as the durable key while retaining
   line numbers only as evidence metadata, and preserve status/reason fields
   when a live finding matches an existing entry independent of location.
+
+## 2026-09-03 — Hoisted test codecs triggered an HTML-sink SAST heuristic
+
+- **Work:** Run the isolated Yeet verification after hoisting schema compilers
+  in the lexical model tests.
+- **Evidence:** The SAST lane classified both hoisted SafeUrl codec functions as
+  unknown HTML sinks solely because their nested call contained a literal
+  script-tag regression fixture; the same fixture passed before the compiler
+  references were named.
+- **Prevention:** Keep malicious URL fixtures runtime-identical while spelling
+  HTML delimiters with string escapes, so generic sink heuristics do not
+  obscure the boundary-sanitization assertion being tested.
