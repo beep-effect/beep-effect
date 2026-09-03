@@ -7,8 +7,10 @@ import {
   packageVerifyStepPlanForTesting,
   packageVerifyStepSpecsForTesting,
   QualityTaskStep,
+  readPackageWorkspaceForTesting,
   recordPackageVerifyInboxForTesting,
   renderPackageVerifyReportForTesting,
+  runPackageVerify,
   runPackageVerifyAtRootForTesting,
   runPackageVerifyCli,
   runPackageVerifyStepPlanForTesting,
@@ -24,7 +26,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Cause, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -62,6 +64,34 @@ const runGit = (cwd: string, args: ReadonlyArray<string>) =>
     if (result.exitCode !== 0) {
       throw new Error(`git ${A.join(args, " ")} failed: ${result.stderr.toString()}`);
     }
+  });
+
+const seedWorkspaceRepository = (
+  repoRoot: string,
+  scripts: Readonly<Record<string, string>>,
+  options: { readonly commit?: boolean } = {}
+) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const packageDir = path.join(repoRoot, "packages/demo");
+    yield* fs.makeDirectory(packageDir, { recursive: true });
+    yield* fs.writeFileString(
+      path.join(repoRoot, "package.json"),
+      yield* encodeJson({ name: "verify-root", private: true, workspaces: ["packages/*"] })
+    );
+    yield* fs.writeFileString(
+      path.join(packageDir, "package.json"),
+      yield* encodeJson({ name: "@beep/demo", private: true, scripts })
+    );
+    yield* runGit(repoRoot, ["init", "--quiet"]);
+    yield* runGit(repoRoot, ["config", "user.email", "codex@example.invalid"]);
+    yield* runGit(repoRoot, ["config", "user.name", "Codex"]);
+    if (options.commit !== false) {
+      yield* runGit(repoRoot, ["add", "."]);
+      yield* runGit(repoRoot, ["commit", "--quiet", "-m", "initial"]);
+    }
+    return packageDir;
   });
 
 const withTempDirectory = <Result, Error, Requirements>(
@@ -133,12 +163,168 @@ describe("package verify", () => {
 
           expect(result.exitCode).toBe(7);
           expect(result.output).toContain("build-failed");
+          expect(result.output).not.toContain("touch audit-ran");
           expect(yield* fs.exists(markerPath)).toBe(false);
         })
       )
     ));
 
+  it("refreshes environment-only stale upstream output before running the audit", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const distStatePath = path.join(tmpDir, "dist-state");
+          yield* fs.writeFileString(distStatePath, "stale");
+
+          const result = yield* runPackageVerifyStepPlanForTesting([
+            QualityTaskStep.make({
+              label: "audit:build-closure",
+              command: "sh",
+              args: ["-c", "printf fresh > dist-state"],
+              cwd: tmpDir,
+            }),
+            QualityTaskStep.make({
+              label: "audit",
+              command: "sh",
+              args: ["-c", 'test "$(cat dist-state)" = fresh && printf audit-ok'],
+              cwd: tmpDir,
+            }),
+          ]);
+
+          expect(result.exitCode).toBe(0);
+          expect(result.output).toContain("audit-ok");
+          expect(yield* fs.readFileString(distStatePath)).toBe("fresh");
+        })
+      )
+    ));
+
+  it("runs the audit when Turbo skips fresh upstream builds from cache", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const markerPath = path.join(tmpDir, "audit-ran");
+          const result = yield* runPackageVerifyStepPlanForTesting([
+            QualityTaskStep.make({
+              label: "audit:build-closure",
+              command: "sh",
+              args: ["-c", "printf 'cache hit, replaying logs'"],
+              cwd: tmpDir,
+            }),
+            QualityTaskStep.make({
+              label: "audit",
+              command: "sh",
+              args: ["-c", "printf audit-ran > audit-ran"],
+              cwd: tmpDir,
+            }),
+          ]);
+
+          expect(result.exitCode).toBe(0);
+          expect(result.output).toContain("cache hit, replaying logs");
+          expect(yield* fs.exists(markerPath)).toBe(true);
+        })
+      )
+    ));
+
+  it("attributes an audit failure after a successful dependency build", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const result = yield* runPackageVerifyStepPlanForTesting([
+            QualityTaskStep.make({
+              label: "audit:build-closure",
+              command: "sh",
+              args: ["-c", "printf closure-ok"],
+              cwd: tmpDir,
+            }),
+            QualityTaskStep.make({
+              label: "audit",
+              command: "sh",
+              args: ["-c", "printf audit-failed; exit 9"],
+              cwd: tmpDir,
+            }),
+          ]);
+
+          expect(result.exitCode).toBe(9);
+          expect(result.output).toContain("closure-ok");
+          expect(result.output).toContain("audit-failed");
+          expect(result.output).toContain("sh -c printf audit-failed; exit 9");
+        })
+      )
+    ));
+
+  it("maps dependency-build spawn failures to the package-verify error surface", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        runPackageVerifyStepPlanForTesting([
+          QualityTaskStep.make({
+            label: "audit:build-closure",
+            command: "missing-package-verify-command",
+            args: ["build"],
+            cwd: tmpDir,
+          }),
+        ]).pipe(
+          Effect.flip,
+          Effect.map((error) => {
+            expect(error.message).toContain("Failed to spawn missing-package-verify-command build");
+            expect(error.command).toBe("missing-package-verify-command build");
+          })
+        )
+      )
+    ));
+
   it("runs quick verification and records the repository head", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.acquireUseRelease(
+          Effect.sync(() => vi.spyOn(process, "cwd").mockReturnValue(tmpDir)),
+          () =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              yield* seedWorkspaceRepository(tmpDir, { "beep:lint": "true", "beep:check": "true" });
+
+              const report = yield* runPackageVerify({ packageName: O.some("@beep/demo"), quick: true });
+
+              expect(report.packageName).toBe("@beep/demo");
+              expect(report.headSha).toMatch(/^[0-9a-f]{40}$/u);
+              expect(A.map(report.results, (result) => result.ok)).toEqual([true, true]);
+
+              yield* fs.writeFileString(path.join(tmpDir, ".beep"), "block inbox creation");
+              yield* runPackageVerifyCli({ packageArgs: ["@beep/demo"], quick: true });
+            }),
+          (cwdSpy) => Effect.sync(() => cwdSpy.mockRestore())
+        )
+      )
+    ));
+
+  it("skips the dependency build when the package has no audit script", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          yield* seedWorkspaceRepository(tmpDir, { docgen: "true" });
+
+          const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
+            packageName: O.some("@beep/demo"),
+            quick: false,
+          });
+
+          expect(report.results).toHaveLength(2);
+          expect(report.results[0]).toMatchObject({
+            step: "audit",
+            skipped: true,
+            ok: true,
+            output: "(no beep:audit script)",
+          });
+          expect(report.results[1]).toMatchObject({ step: "docgen", skipped: false, ok: true });
+        })
+      )
+    ));
+
+  it("surfaces malformed workspace manifests", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
@@ -146,32 +332,32 @@ describe("package verify", () => {
           const path = yield* Path.Path;
           const packageDir = path.join(tmpDir, "packages/demo");
           yield* fs.makeDirectory(packageDir, { recursive: true });
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            yield* encodeJson({ name: "verify-root", private: true, workspaces: ["packages/*"] })
-          );
-          yield* fs.writeFileString(
-            path.join(packageDir, "package.json"),
-            yield* encodeJson({
-              name: "@beep/demo",
-              private: true,
-              scripts: { "beep:lint": "true", "beep:check": "true" },
-            })
-          );
-          yield* runGit(tmpDir, ["init", "--quiet"]);
-          yield* runGit(tmpDir, ["config", "user.email", "codex@example.invalid"]);
-          yield* runGit(tmpDir, ["config", "user.name", "Codex"]);
-          yield* runGit(tmpDir, ["add", "."]);
-          yield* runGit(tmpDir, ["commit", "--quiet", "-m", "initial"]);
+          yield* fs.writeFileString(path.join(packageDir, "package.json"), "{not-json");
 
-          const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
+          const error = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir).pipe(Effect.flip);
+
+          expect(error.message).toContain(`Failed to decode ${path.join(packageDir, "package.json")}`);
+
+          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name: "@beep/demo" }));
+          const workspace = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir);
+          expect(workspace.scripts).toEqual({});
+        })
+      )
+    ));
+
+  it("surfaces a missing repository HEAD after verification", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          yield* seedWorkspaceRepository(tmpDir, { "beep:lint": "true", "beep:check": "true" }, { commit: false });
+
+          const error = yield* runPackageVerifyAtRootForTesting(tmpDir, {
             packageName: O.some("@beep/demo"),
             quick: true,
-          });
+          }).pipe(Effect.flip);
 
-          expect(report.packageName).toBe("@beep/demo");
-          expect(report.headSha).toMatch(/^[0-9a-f]{40}$/u);
-          expect(A.map(report.results, (result) => result.ok)).toEqual([true, true]);
+          expect(error.message).toContain("git rev-parse HEAD failed with exit code");
+          expect(error.command).toBe("git rev-parse HEAD");
         })
       )
     ));

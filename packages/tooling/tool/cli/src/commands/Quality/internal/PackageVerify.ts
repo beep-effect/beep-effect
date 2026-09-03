@@ -845,6 +845,23 @@ export const runPackageVerifyStepPlanForTesting = runPackageVerifyStepPlan;
 export const runPackageVerifyAtRootForTesting = runPackageVerifyAtRoot;
 
 /**
+ * Read one workspace package manifest from an explicit directory.
+ *
+ * **Example** (Read a fixture workspace)
+ *
+ * ```ts
+ * import { readPackageWorkspaceForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const program = readPackageWorkspaceForTesting("@beep/demo", "/repo/packages/demo")
+ * console.log(program) // example value
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPackageWorkspaceForTesting = readPackageWorkspace;
+
+/**
  * Collect changed paths used for package verification auto-detection.
  *
  * **Example** (Collect changed file paths)
