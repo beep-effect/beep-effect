@@ -13,7 +13,7 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
@@ -32,9 +32,9 @@ const LOCK_FILE_NAME = "journal.lock";
 const RETAINED_ADMISSIONS = 200;
 const LOCK_RETRY_ATTEMPTS = 8;
 const LOCK_RETRY_DELAY_MILLIS = 25;
-// No legitimate writer holds the lock beyond one rewrite (milliseconds); the
-// backstop clears locks stranded by pid reuse or tampering without ever
-// racing a live hold.
+// No legitimate writer publishes an unparseable token. The age backstop
+// therefore applies only to malformed generations, never a parseable live
+// owner whose lock could still be released concurrently.
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
 const textEncoder = new TextEncoder();
 
@@ -341,9 +341,12 @@ const pidIsAlive = (pid: number): boolean => {
 
 const lockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
 
-// A lock replaced between the ownership read and the remove can be reaped
-// fresh; the window is one syscall pair and the cost is one competing
-// serialized writer, so the telemetry-grade journal accepts it.
+const journalLockReapClaimPath = (lockPath: string, observedToken: string): string =>
+  `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
+
+// A generation-specific hard link is both the reaper claim and an immutable
+// snapshot of the inode it observed. Only one contender can claim a given
+// generation; a delayed contender therefore cannot unlink its replacement.
 const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   lockPath: string
 ): Effect.fn.Return<void, never, FileSystem.FileSystem> {
@@ -351,22 +354,30 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   const info = yield* fs.stat(lockPath).pipe(Effect.option);
   const nowMillis = yield* Clock.currentTimeMillis;
-  // A parseable owner that died abandons its lock immediately; anything else
-  // (pid reuse, unreadable content) clears through the age backstop so a
-  // just-published generation is never misread as abandoned.
-  const ownerDead = pipe(
-    content,
-    O.flatMap(lockOwnerPid),
-    O.exists((pid) => !pidIsAlive(pid))
-  );
+  // A parseable owner that died abandons its lock immediately. Only malformed
+  // content clears through the age backstop, so a just-published or live
+  // generation is never misread as abandoned.
+  const ownerPid = O.flatMap(content, lockOwnerPid);
+  const ownerDead = O.exists(ownerPid, (pid) => !pidIsAlive(pid));
   const outlivedBackstop = pipe(
     info,
     O.flatMap((fileInfo) => fileInfo.mtime),
     O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_REUSE_BACKSTOP_MILLIS)
   );
-  if (ownerDead || outlivedBackstop) {
-    yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
+  const observedToken = O.filter(content, () => ownerDead || (O.isNone(ownerPid) && outlivedBackstop));
+  if (O.isNone(observedToken)) {
+    return;
   }
+  const claimPath = journalLockReapClaimPath(lockPath, observedToken.value);
+  const claimed = yield* fs.link(lockPath, claimPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+  if (!claimed) {
+    return;
+  }
+  const claimedToken = yield* fs.readFileString(claimPath).pipe(Effect.option);
+  yield* O.exists(claimedToken, (token) => token === observedToken.value)
+    ? fs.remove(lockPath, { force: false }).pipe(Effect.ignore)
+    : Effect.void;
+  yield* fs.remove(claimPath, { force: true }).pipe(Effect.ignore);
 });
 
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
@@ -395,8 +406,9 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
  * **Details**
  *
  * A hard link publishes the complete owner token atomically. Contenders retry
- * briefly and reclaim locks whose owning process is dead or whose age exceeds
- * the corruption backstop.
+ * briefly and reclaim a dead owner's exact observed generation. An unparseable
+ * generation can age through the corruption backstop, while a parseable live
+ * owner is never reaped by age alone.
  *
  * **Example** (Acquire a journal lock)
  *

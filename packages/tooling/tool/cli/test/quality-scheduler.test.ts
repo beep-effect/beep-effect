@@ -5,6 +5,7 @@ import {
   AdmissionJournalEvent,
   AdmissionRequest,
   AdmissionSnapshot,
+  acquireJournalFileLock,
   admissionCapacityTokensFor,
   admissionJournalPath,
   admissionStatus,
@@ -616,7 +617,7 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("fails the append under live or fresh unparseable locks and reaps dead or aged locks", () =>
+  it("fails under live or fresh malformed locks and reaps dead or aged malformed generations", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -630,6 +631,10 @@ describe("quality-scheduler", () => {
             const busy = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
             expect(busy.message).toContain("stayed busy");
             expect(yield* readJournalEvents(tempRoot.root)).toHaveLength(0);
+            const agedLiveSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
+            yield* fs.utimes(lockPath, agedLiveSeconds, agedLiveSeconds);
+            const agedLive = yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(0)).pipe(Effect.flip);
+            expect(agedLive.message).toContain("stayed busy");
             // A fresh unparseable lock is a just-published generation mid-race,
             // never insta-reaped.
             yield* fs.writeFileString(lockPath, "not-a-pid");
@@ -638,15 +643,49 @@ describe("quality-scheduler", () => {
             yield* fs.writeFileString(lockPath, `${DEAD_PID}:dead-holder`);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
-            // Pid reuse: a live owner pid with an over-age lock clears through
-            // the backstop.
-            yield* fs.writeFileString(lockPath, `${process.pid}:reused-pid`);
+            // Only a malformed generation can age through the backstop; a
+            // parseable live owner is never raced by time-based reclamation.
+            yield* fs.writeFileString(lockPath, "aged-malformed-token");
             const agedSeconds = ((yield* Clock.currentTimeMillis) - 301_000) / 1_000;
             yield* fs.utimes(lockPath, agedSeconds, agedSeconds);
             yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(2));
             expect(O.isNone(yield* fs.stat(lockPath).pipe(Effect.option))).toBe(true);
             const events = yield* readJournalEvents(tempRoot.root);
             expect(A.map(events, (event) => event.nonce)).toStrictEqual(["nonce-1", "nonce-2"]);
+          })
+        );
+      })
+    ));
+
+  it("binds concurrent stale-lock reclamation to one observed generation", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const contenderTokens = A.makeBy(16, (index) => `${process.pid}:contender-${index}`);
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, `${DEAD_PID}:abandoned-generation`);
+
+            const acquired = yield* Effect.forEach(
+              contenderTokens,
+              (token) => acquireJournalFileLock(lockPath, token, 16),
+              { concurrency: "unbounded" }
+            );
+            expect(A.filter(acquired, (value) => value)).toHaveLength(1);
+            const winnerIndex = A.findFirstIndex(acquired, (value) => value);
+            const lockToken = yield* fs.readFileString(lockPath);
+            expect(lockToken).toBe(
+              pipe(
+                winnerIndex,
+                O.flatMap((index) => A.get(contenderTokens, index)),
+                O.getOrThrow
+              )
+            );
+            yield* releaseAdmissionJournalLockForTesting(lockPath, lockToken);
           })
         );
       })
@@ -1218,8 +1257,8 @@ describe("quality-scheduler", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const checkoutRoot = path.join(path.dirname(path.dirname(tempRoot.root)), "checkout");
-            const leaseAttemptId = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440021");
-            const ticketAttemptId = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440022");
+            const leaseAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440021");
+            const ticketAttemptId = yield* S.decodeEffect(UUID)("550e8400-e29b-41d4-a716-446655440022");
             yield* fs.makeDirectory(checkoutRoot, { recursive: true });
             yield* writeFakeLease(tempRoot, {
               pid: DEAD_PID,
