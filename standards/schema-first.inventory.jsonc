@@ -828,16 +828,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "One-call formatting contract intentionally couples runtime colorizer functions with their glyph and fraction operands; it has no decode or persistence boundary."
-    },
-    {
-      "file": "packages/tooling/tool/cli/test/yeet-resume.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 43,
-      "owner": "@beep/repo-cli",
-      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     }
   ]
 }
