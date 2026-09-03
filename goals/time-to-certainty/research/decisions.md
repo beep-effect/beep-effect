@@ -87,3 +87,37 @@ proxy for order).
 **Open frontier after round 3:** the machine-wide ledger as a P3 candidate; the second enforced
 pair (pre-push to merged preview) once env profiles are in the key; the head-install preflight's
 349 failures (classify before deciding whether it is backpressure or a hygiene class).
+
+## 2026-09-03 — A5 journal-facts review rulings, round 4 (six rulings, orchestrator on PR #964 review)
+
+Inputs: the six chatgpt-codex-connector threads on PR #964 (A5 journal facts) and the C1 vocabulary
+landed in PR #954. Recorded by the orchestrator as design rulings; the operator can overturn any of
+them at the next sitting.
+
+**Ruling 11 — normal completions keep `attempt-finished`; `attempt-terminated` is abnormal only.**
+The attempt journal is a schema with consumers (the economics script, the ontology corpus ETL).
+Interrupts, signals, queued-submitter deaths, and lease evictions terminate with a LiteralKit reason;
+the economics loader accepts both tags and feeds M5 from the terminated rows. Rejected: renaming
+every completion (breaks every consumer and every frozen corpus).
+
+**Ruling 12 — inner-lane reports travel through a durable side channel, never captured stdout.**
+The wrapper writes a schema-versioned inner-lane report file under the run's artifact directory and
+the journal writer reads it; the 512 KiB stdout capture bound makes stdout parsing lossy on noisy runs.
+
+**Ruling 13 — a dead queued ticket is a terminal event.** The ticket reaper emits
+`attempt-terminated` with reason queued-submitter-death (and the admission row) before deleting the
+ticket, so a submitter killed while waiting never leaves an unfinished start.
+
+**Ruling 14 — lease eviction is an explicit journal variant, and the CI-ops projection lab folds
+it as a release.** The journal states the fact instead of leaving replay to infer it; the lab's
+schema and replay accept the variant under the v1 protocol with a fixture, and the ontology packet's
+ledger records that the eviction fact is now carried.
+
+**Ruling 15 — evictions are claimed atomically before they are emitted.** Concurrent reapers rename
+or non-forcibly unlink the lease and only the process whose claim succeeded emits the eviction, so a
+death is journaled once.
+
+**Ruling 16 — attempt facts carry stage and env profile using the C1 vocabulary.** The merged-preview
+bypass path emits no admission event, so the attempt row records `ProofStage` and `ProofEnvProfile`
+(from the ProofFact module) directly; A5 rows and ProofFacts share one vocabulary rather than a
+parallel field.
