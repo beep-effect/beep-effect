@@ -770,24 +770,17 @@ describe("partitioned CI lane execution", () => {
   );
 
   it.effect("completes a successful partition dry run without execution", () =>
-    Effect.gen(function* () {
-      yield* withPartitionShim(
-        { dryRunOutput: turboDryRunOutput("test", lanePackages("test-unit")) },
-        ({ commandLogPath }) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            yield* runCiLane(
-              "test-unit",
-              CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli" })
-            );
+    withPartitionShim({ dryRunOutput: turboDryRunOutput("test", lanePackages("test-unit")) }, ({ commandLogPath }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli" }));
 
-            const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-            expect(commands).toHaveLength(1);
-            const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-            expect(output).toContain("test-unit repo-cli: dry-run proof complete; no tasks executed");
-          })
-      );
-    }).pipe(provideScopedLayer(PartitionLaneLayer))
+        const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(commands).toHaveLength(1);
+        const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+        expect(output).toContain("test-unit repo-cli: dry-run proof complete; no tasks executed");
+      })
+    ).pipe(provideScopedLayer(PartitionLaneLayer))
   );
 
   it.effect("surfaces Turbo dry-run exits and malformed dry-run JSON as typed failures", () =>

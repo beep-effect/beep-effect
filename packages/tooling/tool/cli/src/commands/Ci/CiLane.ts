@@ -799,6 +799,102 @@ export class CiLanePartitionProof extends S.Class<CiLanePartitionProof>($I`CiLan
   })
 ) {}
 
+const proveCiLanePartitionDefinition = Effect.fn("CiLane.proveCiLanePartitionDefinition")(function* (
+  laneId: PartitionedCiLane,
+  partitionId: CiLanePartitionId,
+  lanePartitions: ReadonlyArray<CiLanePartition>,
+  table: ReadonlyArray<CiLanePartition>
+): Effect.fn.Return<CiLanePartition, CiLanePartitionError> {
+  const duplicatePartition = firstDuplicate(A.map(lanePartitions, (candidate) => candidate.id));
+  if (O.isSome(duplicatePartition)) {
+    return yield* ciLanePartitionError(
+      "duplicate-partition",
+      laneId,
+      `Partition id ${duplicatePartition.value} appears more than once in the ${laneId} table.`,
+      partitionId
+    );
+  }
+
+  const definition = yield* O.match(
+    A.findFirst(table, (candidate) => candidate.id === partitionId),
+    {
+      onNone: () =>
+        ciLanePartitionError(
+          "invalid-assignment",
+          laneId,
+          `Partition ${partitionId} is absent from the committed table.`,
+          partitionId
+        ),
+      onSome: Effect.succeed,
+    }
+  );
+
+  if (definition.lane !== laneId) {
+    return yield* ciLanePartitionError(
+      "invalid-assignment",
+      laneId,
+      `Partition ${partitionId} belongs to ${definition.lane}, not ${laneId}.`,
+      partitionId
+    );
+  }
+
+  return definition;
+});
+
+const proveCiLanePartitionCoverage = Effect.fn("CiLane.proveCiLanePartitionCoverage")(function* (
+  laneId: PartitionedCiLane,
+  partitionId: CiLanePartitionId,
+  workspacePackageNames: ReadonlyArray<string>,
+  taskPackageNames: ReadonlyArray<string>,
+  lanePartitions: ReadonlyArray<CiLanePartition>
+): Effect.fn.Return<HashSet.HashSet<string>, CiLanePartitionError> {
+  const assignedPackages = A.flatMap(lanePartitions, (candidate) => candidate.packages);
+  const duplicate = firstDuplicate(assignedPackages);
+  if (O.isSome(duplicate)) {
+    return yield* ciLanePartitionError(
+      "duplicate-package",
+      laneId,
+      `Package ${duplicate.value} appears in more than one ${laneId} partition.`,
+      partitionId
+    );
+  }
+
+  const workspacePackages = HashSet.fromIterable(workspacePackageNames);
+  const taskPackages = HashSet.fromIterable(taskPackageNames);
+  const assignedPackageSet = HashSet.fromIterable(assignedPackages);
+  const staleWorkspacePackage = A.findFirst(assignedPackages, (name) => !HashSet.has(workspacePackages, name));
+  if (O.isSome(staleWorkspacePackage)) {
+    return yield* ciLanePartitionError(
+      "stale-package",
+      laneId,
+      `Package ${staleWorkspacePackage.value} is assigned but absent from the workspace.`,
+      partitionId
+    );
+  }
+
+  const staleTaskPackage = A.findFirst(assignedPackages, (name) => !HashSet.has(taskPackages, name));
+  if (O.isSome(staleTaskPackage)) {
+    return yield* ciLanePartitionError(
+      "stale-package",
+      laneId,
+      `Package ${staleTaskPackage.value} is assigned but has no executable ${laneId} task.`,
+      partitionId
+    );
+  }
+
+  const missingTaskPackage = A.findFirst(taskPackageNames, (name) => !HashSet.has(assignedPackageSet, name));
+  if (O.isSome(missingTaskPackage)) {
+    return yield* ciLanePartitionError(
+      "missing-package",
+      laneId,
+      `Package ${missingTaskPackage.value} has an executable ${laneId} task but no deterministic placement.`,
+      partitionId
+    );
+  }
+
+  return assignedPackageSet;
+});
+
 /**
  * Prove complete, disjoint partition coverage and select one partition's tasks.
  *
@@ -846,82 +942,14 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ): Effect.fn.Return<CiLanePartitionProof, CiLanePartitionError> {
   const lanePartitions = A.filter(table, (candidate) => candidate.lane === laneId);
-  const duplicatePartition = firstDuplicate(A.map(lanePartitions, (candidate) => candidate.id));
-  if (O.isSome(duplicatePartition)) {
-    return yield* ciLanePartitionError(
-      "duplicate-partition",
-      laneId,
-      `Partition id ${duplicatePartition.value} appears more than once in the ${laneId} table.`,
-      partitionId
-    );
-  }
-
-  const definition = yield* O.match(
-    A.findFirst(table, (candidate) => candidate.id === partitionId),
-    {
-      onNone: () =>
-        ciLanePartitionError(
-          "invalid-assignment",
-          laneId,
-          `Partition ${partitionId} is absent from the committed table.`,
-          partitionId
-        ),
-      onSome: Effect.succeed,
-    }
+  const definition = yield* proveCiLanePartitionDefinition(laneId, partitionId, lanePartitions, table);
+  const assignedPackageSet = yield* proveCiLanePartitionCoverage(
+    laneId,
+    partitionId,
+    workspacePackageNames,
+    taskPackageNames,
+    lanePartitions
   );
-
-  if (definition.lane !== laneId) {
-    return yield* ciLanePartitionError(
-      "invalid-assignment",
-      laneId,
-      `Partition ${partitionId} belongs to ${definition.lane}, not ${laneId}.`,
-      partitionId
-    );
-  }
-
-  const assignedPackages = A.flatMap(lanePartitions, (candidate) => candidate.packages);
-  const duplicate = firstDuplicate(assignedPackages);
-  if (O.isSome(duplicate)) {
-    return yield* ciLanePartitionError(
-      "duplicate-package",
-      laneId,
-      `Package ${duplicate.value} appears in more than one ${laneId} partition.`,
-      partitionId
-    );
-  }
-
-  const workspacePackages = HashSet.fromIterable(workspacePackageNames);
-  const taskPackages = HashSet.fromIterable(taskPackageNames);
-  const assignedPackageSet = HashSet.fromIterable(assignedPackages);
-  const staleWorkspacePackage = A.findFirst(assignedPackages, (name) => !HashSet.has(workspacePackages, name));
-  if (O.isSome(staleWorkspacePackage)) {
-    return yield* ciLanePartitionError(
-      "stale-package",
-      laneId,
-      `Package ${staleWorkspacePackage.value} is assigned but absent from the workspace.`,
-      partitionId
-    );
-  }
-
-  const staleTaskPackage = A.findFirst(assignedPackages, (name) => !HashSet.has(taskPackages, name));
-  if (O.isSome(staleTaskPackage)) {
-    return yield* ciLanePartitionError(
-      "stale-package",
-      laneId,
-      `Package ${staleTaskPackage.value} is assigned but has no executable ${laneId} task.`,
-      partitionId
-    );
-  }
-
-  const missingTaskPackage = A.findFirst(taskPackageNames, (name) => !HashSet.has(assignedPackageSet, name));
-  if (O.isSome(missingTaskPackage)) {
-    return yield* ciLanePartitionError(
-      "missing-package",
-      laneId,
-      `Package ${missingTaskPackage.value} has an executable ${laneId} task but no deterministic placement.`,
-      partitionId
-    );
-  }
 
   const selectedPackages = HashSet.fromIterable(selectedTaskPackageNames);
   const unknownSelectedPackage = A.findFirst(
