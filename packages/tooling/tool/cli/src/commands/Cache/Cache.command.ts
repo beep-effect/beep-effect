@@ -255,7 +255,7 @@ export const runCacheWarmForTesting = runCacheWarmWith;
  *
  * ```ts
  * import { runCacheWarmLaneForTesting } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const exit = Effect.runSync(
  *   Effect.exit(runCacheWarmLaneForTesting(".")(["bun", "-e", "process.exit(7)"]))

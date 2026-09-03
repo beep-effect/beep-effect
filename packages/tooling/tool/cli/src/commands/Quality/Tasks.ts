@@ -1842,7 +1842,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
  *
  * ```ts
  * import { runQualityTaskStreamingLaneGroup } from "@beep/repo-cli/commands/Quality/Tasks"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(runQualityTaskStreamingLaneGroup("ci:local", []))) // true
  * ```
@@ -2361,6 +2361,15 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
         files
       ),
       ...scopedLawStep(repoRoot, "lint:effect-imports", "effect-imports", ["--check"], files),
+      // Standalone Markdown is invisible to Biome and the JSDoc inventory. Keep this
+      // full authored-corpus pass advisory until the final per-module import flip.
+      repoCliStep(repoRoot, "lint:effect-imports-markdown", [
+        "laws",
+        "effect-imports",
+        "--mode",
+        "markdown",
+        "--check",
+      ]),
       repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
       repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
       // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
@@ -3172,7 +3181,7 @@ export const collectGithubCheckLaneWavesForTesting = collectGithubCheckLaneWaves
  *
  * ```ts
  * import { collectQualityTaskLaneRunsForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(collectQualityTaskLaneRunsForTesting("ci:local", []))) // true
  * ```

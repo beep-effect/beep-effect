@@ -24,7 +24,8 @@ const resolveWith = (environment: Readonly<Record<string, string>>) =>
 describe("per-user runtime root", () => {
   it("uses a stable user-writable Windows base without consulting TEMP", () => {
     expect(canonicalRuntimeRootForTesting("win32", "C:\\Users\\alice")).toBe("C:\\Users\\alice\\.beep\\runtime");
-    expect(canonicalRuntimeRootForTesting("linux", "/home/alice")).toBe("/tmp");
+    expect(canonicalRuntimeRootForTesting("linux", "/home/alice")).toBe("/home/alice/.beep/runtime");
+    expect(canonicalRuntimeRootForTesting("darwin", "/Users/alice/")).toBe("/Users/alice/.beep/runtime");
   });
 
   it.effect("uses one invariant host root across launcher environment variants", () =>

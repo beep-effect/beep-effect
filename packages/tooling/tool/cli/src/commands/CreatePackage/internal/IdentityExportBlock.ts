@@ -57,7 +57,7 @@ export const typedIdentityExportBlock = (packageName: string): string => {
     " * **Example** (Make package ID)",
     " *",
     ` * ${fence}ts import.meta.vitest name="Make package ID"`,
-    ` * import { ${accessorName} } from "@beep/identity"`,
+    ` * import { ${accessorName} } from "@beep/identity/packages"`,
     " *",
     ` * const id = ${accessorName}.make("${exampleName}")`,
     " * console.log(id)",

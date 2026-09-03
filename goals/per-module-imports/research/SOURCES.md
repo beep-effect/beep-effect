@@ -19,6 +19,7 @@ executed tooling sandbox live under `.beep/research/per-module-imports/`
 | `research/lint-tool-landscape.md` | Lint/autofix tool landscape | grok CLI (web) | Landscape ranking; barrel-tool survey (all emit the wrong target form); Atlassian wave template | corroborating landscape |
 | `research/assets/ts-morph-prototype.ts` | 125-line executed codemod prototype | codex Sol xhigh | Namespace/named split, alias + type-only preservation, idempotence | prior art for the P1 command |
 | `research/assets/biome-*.jsonc` | Executed Biome configs | codex Sol xhigh | Exact-path ban, per-name patterns, warn→error family override | shapes for the P3 rule |
+| `research/p1-census-baseline.md` | P1 executable census baseline | Codex goal execution | Historical gross reconciliation, live family-sized structured scans, manual-review inventory, and zero-review pilot proof | P1 delivery evidence |
 
 ## 2. Upstream repositories & licenses
 

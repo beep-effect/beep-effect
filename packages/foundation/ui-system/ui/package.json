@@ -91,6 +91,7 @@
   "exports": {
     "./package.json": "./package.json",
     ".": "./src/index.ts",
+    "./Version": "./src/Version.ts",
     "./themes": "./src/themes/index.ts",
     "./themes/theme-provider": "./src/themes/theme-provider.tsx",
     "./themes/theme-init-script": "./src/themes/theme-init-script.tsx",
@@ -106,10 +107,38 @@
     "./hooks/*": "./src/hooks/*.ts",
     "./lib/*": "./src/lib/*.ts"
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      "./package.json": "./package.json",
+      ".": "./dist/index.js",
+      "./Version": "./dist/Version.js",
+      "./themes": "./dist/themes/index.js",
+      "./themes/theme-provider": "./dist/themes/theme-provider.js",
+      "./themes/theme-init-script": "./dist/themes/theme-init-script.js",
+      "./themes/*": "./dist/themes/*.js",
+      "./styles/globals.css": "./src/styles/globals.css",
+      "./postcss.config": "./postcss.config.mjs",
+      "./components/*": "./dist/components/*.js",
+      "./components/blocks/editor-00/editor": "./dist/components/blocks/editor-00/editor.js",
+      "./components/blocks/editor-00/nodes": "./dist/components/blocks/editor-00/nodes.js",
+      "./components/editor/editor-ui/content-editable": "./dist/components/editor/editor-ui/content-editable.js",
+      "./components/editor/themes/editor-theme": "./dist/components/editor/themes/editor-theme.js",
+      "./components/ui/*": "./dist/components/ui/*.js",
+      "./hooks/*": "./dist/hooks/*.js",
+      "./lib/*": "./dist/lib/*.js"
+    }
+  },
   "files": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/**/*.css"
+    "src/**/*.css",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "postcss.config.mjs"
   ],
   "repository": {
     "type": "git",

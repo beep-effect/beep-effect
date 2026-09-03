@@ -38,8 +38,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 is in progress. All three instrument steps are done, and the instrument is
-live and verified in production; the phase is now waiting on baseline wall-clock:
+P1 is in progress. The fixed baseline is closed, the sharp notifier revision is
+merged, the guarded fleet rollout is dispositioned, and the first treatment
+readout is favorable; the phase is now waiting on a safely configured phone
+transport:
 
 1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
    distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
@@ -49,16 +51,55 @@ live and verified in production; the phase is now waiting on baseline wall-clock
 3. **Writer landed** (2026-08-05) — `.claude/hooks/hook-pulse.sh` emits the
    rows for nine registered hook events, with the privacy whitelist applied
    in the writer (amendment 6) and a kill switch that disarms the instrument
-   before any parsing. `notifierRev` is `log-only-0`: notifications stay
-   **off** by design.
+   before any parsing.
+4. **Baseline closed** (2026-09-03) — the fixed seven-day `log-only-0` window
+   contains 63,598 eligible rows across 113 sessions and 80 closed
+   `AskUserQuestion` waits: p50 37.464 s, p90 13 min 19.489 s, p95 22 min
+   40.934 s, max 1 h 25 min 29.275 s. Strict matching guessed no brackets,
+   found zero duplicates, and observed zero `ExitPlanMode` events. The recorded
+   decision targets the sampled `AskUserQuestion` tail and keeps plan approval
+   explicitly unmeasured.
+5. **Sharp sequence breaker merged and rollout dispositioned** (2026-09-03) —
+   `desktop-ntfy-1` is stamped by every locally configured Claude and Codex
+   pulse. The worker notifies only a strictly attributed open
+   `PermissionRequest`, rechecks exact closure before two escalation rungs, and
+   atomically damps duplicates per session/target. Desktop delivery was
+   accepted by the live Plasma bus. A shared schema-owned `op`/`gh`/`network`
+   circuit breaker turns retries into labeled skips across both agent adapters.
+   PR #973 merged at `2026-09-03T14:32:50Z`; the two existing adopters plus
+   five clean, process-idle `main` clones now carry the sharp revision. Other
+   active, dirty, detached, or feature-branch checkouts were not mutated.
+   Subsequent owner integrations raised adoption to 19 of 22 direct clones.
+   The other three are explicitly excluded from the current rollout
+   denominator: an Effect-v3 archive, protected live dirty work on open PR
+   #982, and a clean inactive feature checkout with no PR or observed liveness
+   signal. Their revision-labelled rows remain controls, and each re-enters the
+   rollout decision on integration or reactivation.
+6. **First sharp readout recorded** (2026-09-03) — eight treatment
+   `AskUserQuestion` starts yielded seven exact-ID closures and one honest
+   `SessionEnd` tombstone, with zero guessed or ambiguous joins. Closed waits
+   had p50 7.439 s versus the fixed baseline p50 of 37.464 s, an early
+   descriptive reduction of 30.025 s / 80.1%. The treatment is retained, but
+   the small, mode-shifted sample is not promoted to an unqualified causal
+   claim.
 
-**The ~1 week log-only baseline is running**, open since
-`2026-08-06T13:12:30Z`, target close on or after `2026-08-13T13:12:30Z`. This is
-wall-clock, not work: the instrument-before-treat method in
-[`PLAN.md`](./PLAN.md) requires a baseline before any wait treatment, so nothing
-downstream (notifications, escalation ladder, the P8 paired trial) can start
-until it accrues, and turning any of them on mid-window destroys it.
-`notifierRev` stays `log-only-0` throughout.
+The interrupted-series lower bound is `2026-09-03T09:41:33.322Z`, after a
+six-second old/new writer overlap excluded from analysis. The census through
+`2026-09-03T17:04:13.599Z` contains 17,735 rows: 3,298
+`desktop-ntfy-1` and 14,437 `log-only-0`. The strict two-hop replay found eight
+sharp and one comparison `AskUserQuestion` starts; notification evidence
+records two accepted initial desktop sends, storm damping for six same-session
+retries, and exact-bracket suppression of a resolved reminder. This remains a
+staggered, revision-qualified intervention, not a merge-time claim of
+fleet-wide adoption.
+Phone delivery also remains explicitly unconfigured: the one permitted agent
+credential diagnostic failed before any 1Password inventory or reference could
+be returned. P1 therefore remains current, and P2 stays gated. Full evidence
+is in
+[`research/2026-09-03-p1-baseline-close.md`](./research/2026-09-03-p1-baseline-close.md),
+[`research/2026-09-03-p1-first-treatment-readout.md`](./research/2026-09-03-p1-first-treatment-readout.md),
+and
+[`history/outputs/2026-09-03-p1-sharp-cutover.md`](./history/outputs/2026-09-03-p1-sharp-cutover.md).
 
 **P0 (storage cutover + identity registry) completed 2026-08-07** in parallel,
 as PLAN.md permitted: the 20G canonical store moved atomically to
@@ -87,21 +128,25 @@ validated), payload shapes hold. Then the two blockers were cleared:
    cut over globally at `2026-08-06T13:12:20Z`. Pre-cutover rows are verification
    data in a different pseudonym namespace and are not baseline data.
 
-**Open risk — sampling power: checkpoint executed 2026-08-10, risk confirmed.**
+**Sampling decision — checkpoint closed 2026-09-03.**
 The mid-window check
 ([`research/2026-08-10-p1-sampling-power-checkpoint.md`](./research/2026-08-10-p1-sampling-power-checkpoint.md))
 found **zero `ExitPlanMode` rows in any hook event** at ~day 4 — plan mode is
 simply not part of the operator's in-window working style, so this window
-cannot produce a plan-approval p95. What it is producing: a defensible
+could not produce a plan-approval p95. It did produce a defensible
 `AskUserQuestion` wait distribution (n = 35, 100% bracket closure, p50 59 s,
 p95 ≈ 26.6 min, strongly bimodal), stratified 31/36 `bypassPermissions` on the
-`PermissionRequest` row. The instrument was not touched. The re-scope decision
-(baseline deliverable and P8 target) is deliberately deferred to the
-window-close analysis on or after 2026-08-13 — the three options are enumerated
-in the checkpoint note.
+`PermissionRequest` row. The fixed-window close expanded that denominator to 80
+closed waits and adopted checkpoint option 3: treat the observed human-input
+tail now; require a separately labeled induced or organic protocol before any
+future plan-approval claim.
 
 ## Latest Evidence
 
+[`research/2026-09-03-p1-baseline-close.md`](./research/2026-09-03-p1-baseline-close.md)
+and
+[`history/outputs/2026-09-03-p1-sharp-cutover.md`](./history/outputs/2026-09-03-p1-sharp-cutover.md)
+are the current P1 evidence. The original semantics proof remains in
 [`research/2026-08-01-p1-hook-semantics-spike.md`](./research/2026-08-01-p1-hook-semantics-spike.md),
 ledger committed at
 [`history/evidence/2026-08-01-hook-pulse-spike.ndjson`](./history/evidence/2026-08-01-hook-pulse-spike.ndjson)

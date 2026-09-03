@@ -132,6 +132,18 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-03 (twentieth stint): UPSTREAM SKILL FOLLOW-UPS APPLIED — validator
+  v14. Both engine defects run 2 queued in `work-run2/impl-report.md` are
+  discharged in the vendored skill: the scanner now treats `runs/` as a
+  rotation ledger (record-prefixed files there are a LOUD violation instead
+  of silently-absorbed live evidence — the defect that forced run 2's ad-hoc
+  archive relocation), the rotation recipe archives per-run records at the
+  sibling shelter `../archives/<root-name>/` this packet already uses, and
+  `safe_join` resolves strict-first so symlink-loop confinement stays
+  fail-closed on Python 3.13+ (the 3.12 runtime pin is LIFTED — self-test
+  green on 3.12/3.13/3.14, 157 families). v13→v14 output proven
+  byte-identical over this packet's live post-rotation tree; run 3 pins the
+  v14 digest at its own pin commit. Frozen run-2 bytes untouched.
 - 2026-09-03 (nineteenth stint): CQ-020 AMENDMENT APPLIED (PR #963). The
   steward-sanctioned post-run-2 amendment landed once the pinned run merged:
   SeatRequest ordering (`schedulesSeatRequest`), the required governing

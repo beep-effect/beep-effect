@@ -479,6 +479,109 @@ export const PersonMatchEntryReason = LiteralKit(["aligner-confidence-failed", "
 export type PersonMatchEntryReason = typeof PersonMatchEntryReason.Type;
 
 /**
+ * Caps the reference-image set accepted by one person-match worker request.
+ *
+ * **Example** (Inspect the reference-image limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_REFERENCE_IMAGES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_REFERENCE_IMAGES === 256)
+ * // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const PERSON_MATCH_MAX_REFERENCE_IMAGES = 256;
+/**
+ * Caps the candidate-image set accepted by one person-match worker request.
+ *
+ * **Example** (Inspect the candidate-image limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_CANDIDATE_IMAGES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_CANDIDATE_IMAGES === 10_000)
+ * // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const PERSON_MATCH_MAX_CANDIDATE_IMAGES = 10_000;
+/**
+ * Caps the decoded faces retained for any one image in a worker report.
+ *
+ * **Example** (Inspect the per-image face limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_FACES_PER_IMAGE } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_FACES_PER_IMAGE === 32)
+ * // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const PERSON_MATCH_MAX_FACES_PER_IMAGE = 32;
+/**
+ * Caps the total decoded faces accepted across a complete worker report.
+ *
+ * **Example** (Inspect the aggregate face limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_REPORTED_FACES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_REPORTED_FACES === 65_536)
+ * // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const PERSON_MATCH_MAX_REPORTED_FACES = 65_536;
+/**
+ * Caps the serialized worker report read from standard output at 64 MiB.
+ *
+ * **Example** (Inspect the report byte limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_REPORT_BYTES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_REPORT_BYTES === 64 * 1024 * 1024)
+ * // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const PERSON_MATCH_MAX_REPORT_BYTES = 64 * 1024 * 1024;
+/**
+ * Caps diagnostic text accepted from the worker at one MiB.
+ *
+ * **Example** (Inspect the diagnostic byte limit)
+ *
+ * ```ts
+ * import { PERSON_MATCH_MAX_DIAGNOSTIC_BYTES } from "@beep/repo-cli/commands/Files"
+ *
+ * console.log(PERSON_MATCH_MAX_DIAGNOSTIC_BYTES === 1024 * 1024)
+ * // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const PERSON_MATCH_MAX_DIAGNOSTIC_BYTES = 1024 * 1024;
+
+/**
  * Enumerates stable error codes emitted by the local matching worker.
  *
  * **Example** (Check a worker error code)
@@ -515,6 +618,8 @@ export const PersonMatchWorkerErrorCode = LiteralKit([
   "missing-landmarks",
   "no-reference-images",
   "no-accepted-references",
+  "input-limit-exceeded",
+  "report-limit-exceeded",
   "worker-failed",
 ]).pipe(
   $I.annoteSchema("PersonMatchWorkerErrorCode", {
@@ -1274,7 +1379,7 @@ export class PersonMatchEntry extends S.Class<PersonMatchEntry>($I`PersonMatchEn
     disposition: PersonMatchDisposition,
     faceCount: NonNegativeInt,
     bestScore: S.optionalKey(PersonMatchSimilarityScore),
-    faces: S.Array(PersonMatchFace),
+    faces: S.Array(PersonMatchFace).check(S.isMaxLength(PERSON_MATCH_MAX_FACES_PER_IMAGE)),
     reason: S.optionalKey(PersonMatchEntryReason),
   },
   $I.annote("PersonMatchEntry", {
@@ -1363,6 +1468,43 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
 ) {}
 
 /**
+ * Echoes the immutable limits enforced by both sides of the private worker protocol.
+ *
+ * **Example** (Create the worker limits)
+ *
+ * ```ts
+ * import { PersonMatchWorkerLimits } from "@beep/repo-cli/commands/Files"
+ *
+ * const limits = PersonMatchWorkerLimits.make({
+ *   referenceImages: 256,
+ *   candidateImages: 10_000,
+ *   facesPerImage: 32,
+ *   reportedFaces: 65_536,
+ *   reportBytes: 67_108_864,
+ *   diagnosticBytes: 1_048_576,
+ * })
+ * console.log(limits.facesPerImage)
+ * // 32
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchWorkerLimits extends S.Class<PersonMatchWorkerLimits>($I`PersonMatchWorkerLimits`)(
+  {
+    referenceImages: S.Literal(PERSON_MATCH_MAX_REFERENCE_IMAGES),
+    candidateImages: S.Literal(PERSON_MATCH_MAX_CANDIDATE_IMAGES),
+    facesPerImage: S.Literal(PERSON_MATCH_MAX_FACES_PER_IMAGE),
+    reportedFaces: S.Literal(PERSON_MATCH_MAX_REPORTED_FACES),
+    reportBytes: S.Literal(PERSON_MATCH_MAX_REPORT_BYTES),
+    diagnosticBytes: S.Literal(PERSON_MATCH_MAX_DIAGNOSTIC_BYTES),
+  },
+  $I.annote("PersonMatchWorkerLimits", {
+    description: "Immutable image, face, JSON, and diagnostic limits enforced by the person-match worker protocol.",
+  })
+) {}
+
+/**
  * Defines a successful response from the local person-matching Python worker.
  *
  * **Example** (Validate an empty worker success)
@@ -1373,8 +1515,16 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
  * import * as S from "effect/Schema"
  *
  * const report = {
- *   schemaVersion: "beep.files.match-person.worker.v2",
+ *   schemaVersion: "beep.files.match-person.worker.v3",
  *   ok: true,
+ *   limits: {
+ *     referenceImages: 256,
+ *     candidateImages: 10_000,
+ *     facesPerImage: 32,
+ *     reportedFaces: 65_536,
+ *     reportBytes: 67_108_864,
+ *     diagnosticBytes: 1_048_576,
+ *   },
  *   model: {
  *     backend: "buffalo-l",
  *     name: "buffalo_l",
@@ -1435,12 +1585,13 @@ export class PersonMatchWorkerError extends S.Class<PersonMatchWorkerError>($I`P
  */
 export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>($I`PersonMatchWorkerSuccess`)(
   {
-    schemaVersion: S.Literal("beep.files.match-person.worker.v2"),
+    schemaVersion: S.Literal("beep.files.match-person.worker.v3"),
     ok: S.Literal(true),
+    limits: PersonMatchWorkerLimits,
     model: PersonMatchModel,
     parameters: PersonMatchParameters,
-    references: S.Array(PersonMatchReference),
-    entries: S.Array(PersonMatchEntry),
+    references: S.Array(PersonMatchReference).check(S.isMaxLength(PERSON_MATCH_MAX_REFERENCE_IMAGES)),
+    entries: S.Array(PersonMatchEntry).check(S.isMaxLength(PERSON_MATCH_MAX_CANDIDATE_IMAGES)),
     summary: PersonMatchSummary,
     elapsedSeconds: NonNegNum,
   },
@@ -1460,8 +1611,16 @@ export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>(
  * import * as S from "effect/Schema"
  *
  * const failure = S.decodeUnknownOption(PersonMatchWorkerFailure)({
- *   schemaVersion: "beep.files.match-person.worker.v2",
+ *   schemaVersion: "beep.files.match-person.worker.v3",
  *   ok: false,
+ *   limits: {
+ *     referenceImages: 256,
+ *     candidateImages: 10_000,
+ *     facesPerImage: 32,
+ *     reportedFaces: 65_536,
+ *     reportBytes: 67_108_864,
+ *     diagnosticBytes: 1_048_576,
+ *   },
  *   error: {
  *     code: "model-module-missing",
  *     message: "Unable to load the configured face-recognition model.",
@@ -1478,8 +1637,9 @@ export class PersonMatchWorkerSuccess extends S.Class<PersonMatchWorkerSuccess>(
  */
 export class PersonMatchWorkerFailure extends S.Class<PersonMatchWorkerFailure>($I`PersonMatchWorkerFailure`)(
   {
-    schemaVersion: S.Literal("beep.files.match-person.worker.v2"),
+    schemaVersion: S.Literal("beep.files.match-person.worker.v3"),
     ok: S.Literal(false),
+    limits: PersonMatchWorkerLimits,
     error: PersonMatchWorkerError,
     elapsedSeconds: NonNegNum,
   },
@@ -1499,8 +1659,16 @@ export class PersonMatchWorkerFailure extends S.Class<PersonMatchWorkerFailure>(
  * import * as S from "effect/Schema"
  *
  * const report = S.decodeUnknownOption(PersonMatchWorkerReport)({
- *   schemaVersion: "beep.files.match-person.worker.v2",
+ *   schemaVersion: "beep.files.match-person.worker.v3",
  *   ok: false,
+ *   limits: {
+ *     referenceImages: 256,
+ *     candidateImages: 10_000,
+ *     facesPerImage: 32,
+ *     reportedFaces: 65_536,
+ *     reportBytes: 67_108_864,
+ *     diagnosticBytes: 1_048_576,
+ *   },
  *   error: { code: "no-reference-images", message: "No reference images were found." },
  *   elapsedSeconds: 0,
  * })
@@ -1607,8 +1775,8 @@ export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatch
     ok: S.Literal(true),
     model: PersonMatchModel,
     parameters: PersonMatchParameters,
-    references: S.Array(PersonMatchReference),
-    entries: S.Array(PersonMatchEntry),
+    references: S.Array(PersonMatchReference).check(S.isMaxLength(PERSON_MATCH_MAX_REFERENCE_IMAGES)),
+    entries: S.Array(PersonMatchEntry).check(S.isMaxLength(PERSON_MATCH_MAX_CANDIDATE_IMAGES)),
     summary: PersonMatchSummary,
     elapsedSeconds: NonNegNum,
     manifestPath: S.NonEmptyString,
@@ -1630,7 +1798,7 @@ export class PersonMatchReport extends S.Class<PersonMatchReport>($I`PersonMatch
  * import { Effect } from "effect"
  *
  * const decoded = decodePersonMatchWorkerReportJson(
- *   '{"schemaVersion":"beep.files.match-person.worker.v2","ok":false,"error":{"code":"no-reference-images","message":"No reference images were found."},"elapsedSeconds":0}'
+ *   '{"schemaVersion":"beep.files.match-person.worker.v3","ok":false,"limits":{"referenceImages":256,"candidateImages":10000,"facesPerImage":32,"reportedFaces":65536,"reportBytes":67108864,"diagnosticBytes":1048576},"error":{"code":"no-reference-images","message":"No reference images were found."},"elapsedSeconds":0}'
  * )
  *
  * console.log(Effect.isEffect(decoded))
