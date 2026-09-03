@@ -507,7 +507,11 @@ the pre-commit Biome check over the single touched source file, likewise made
 no terminal progress while the host reported more than 190 processes in
 uninterruptible I/O wait. The completed package verifier, type check, unit
 tests, and parallel integration tests were retained as local evidence; the
-stalled processes were stopped before publishing to exact-head CI.
+stalled processes were stopped before publishing to exact-head CI. After the
+host restarted, the same dependency-aware docgen run completed 26 packages in
+1 minute 28 seconds and the package-filtered lint, check, test, and build lanes
+returned normally, attributing the earlier wait to host health rather than the
+repository change.
 
 What would have prevented it: emit phase-level liveness while orchestration is
 waiting, including the awaited resource or operation, and apply a bounded
