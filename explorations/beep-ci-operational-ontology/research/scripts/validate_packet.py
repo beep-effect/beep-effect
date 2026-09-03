@@ -301,7 +301,11 @@ if _args.s6:
             continue
         if row.get("predicates") != scanned:
             blocker(f"{cid}: coverage predicate set disagrees with the mechanical gate scan")
-        ratified_count = sum(1 for predicate in scanned if registry[predicate].get("status") == "ratified")
+        ratified_count = sum(
+            1
+            for predicate in scanned
+            if registry.get(predicate, {}).get("status") == "ratified"
+        )
         if row.get("predicate_count") != len(scanned) or row.get("ratified_count") != ratified_count:
             blocker(f"{cid}: coverage counts drifted from registry statuses")
         if bool(row.get("full_predicate_set_ratified")) != (ratified_count == len(scanned)):
