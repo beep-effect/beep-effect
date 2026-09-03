@@ -1,0 +1,24 @@
+id: "dh:pa-projection-conformance-evidence:001"
+observation_refs:
+  - "po:sha256:059c20e6b0972ff269acf52884fea9e75f4fc5144fac7728dbac333221866181"
+  - "po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57"
+  - "po:sha256:2338c92205c5fc08e5e18d149e7aabca98b83589cf5984e6b83fa81b2401a98c"
+cq_warrants: ["CQ-010", "CQ-020", "CQ-021"]
+proposed_referent:
+  label: "Admission-projection conformance evidence"
+  description: "A verification information artifact reporting differential replay results and the determinism, admissibility, totality, priority, and replay obligations tested for the projection."
+representation_status: information_artifact
+alternatives:
+  - label: "Differential replay execution"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Implementation test-suite description"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The records make checkable claims about frozen operational events and projection choices, giving the artifact evidential content."
+  discriminator: "The reports state that 41 recorded admissions matched the projection's first prescribed choice and enumerate replay, admissibility, totality, and determinism checks over frozen bytes."
+epistemic_status: proposed
+confidence: {value: 0.9, use_for_acceptance: false}

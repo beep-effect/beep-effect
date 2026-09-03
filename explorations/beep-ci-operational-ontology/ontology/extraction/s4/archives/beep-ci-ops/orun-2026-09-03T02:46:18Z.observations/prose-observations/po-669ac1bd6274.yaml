@@ -1,0 +1,10 @@
+id: po:sha256:669ac1bd6274ee1851c836dd9730f2ae14dcf8843ffea88e4f170949778249d3
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: standards/ARCHITECTURE.md
+source_span:
+  start_line: 189
+  end_line: 194
+quote: Arrows point from the importing package to the imported package.
+epistemic_status: quoted_prose

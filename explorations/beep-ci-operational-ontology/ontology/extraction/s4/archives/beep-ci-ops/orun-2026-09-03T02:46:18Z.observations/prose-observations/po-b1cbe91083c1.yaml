@@ -1,0 +1,15 @@
+id: po:sha256:b1cbe91083c18b42a9ae71e57fae891011faef64106cac386edcbd4f781349fe
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/extraction/s7/work-s7/impl-report.md
+source_span:
+  start_line: 93
+  end_line: 96
+quote: '## PR #936 review amendments
+
+
+  Codex review raised six P1 findings; all were judged valid and landed as a
+
+  follow-up wave:'
+epistemic_status: quoted_prose

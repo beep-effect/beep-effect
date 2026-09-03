@@ -1,0 +1,10 @@
+id: po:sha256:bfb348d69a15cdfa639fa1bb2df386ecf17dddb3e2a68efd172f7a06ec96e705
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/internal/process/StepExec.ts
+source_span:
+  start_line: 191
+  end_line: 194
+quote: LiteralKit(["ts2589-no-location"])
+epistemic_status: quoted_prose

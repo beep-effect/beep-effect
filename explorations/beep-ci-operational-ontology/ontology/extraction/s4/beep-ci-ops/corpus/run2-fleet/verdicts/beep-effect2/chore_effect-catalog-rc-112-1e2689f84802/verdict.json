@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "chore/effect-catalog-rc-112",
+  "committed": false,
+  "createdAt": "2026-08-25T19:04:55.276Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_effect-catalog-rc-112-1e2689f84802",
+  "attemptId": "46e21180-7e5a-4c14-9132-1effadf3fb98",
+  "startedAt": "2026-08-25T19:04:50.688Z",
+  "endedAt": "2026-08-25T19:04:55.276Z",
+  "elapsedMs": 4588,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json"
+}

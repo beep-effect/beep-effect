@@ -245,6 +245,35 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
 });
 
 /**
+ * Resolve the checkout-scoped append-only proof ledger path.
+ *
+ * **Details**
+ *
+ * The ledger shares Yeet's `.beep/yeet` artifact root but is not scoped to a
+ * branch or run because proof facts describe inputs and epochs, not Git refs.
+ *
+ * **Example** (Resolve a checkout ledger)
+ *
+ * ```ts
+ * import { proofLedgerPathForCheckout } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(proofLedgerPathForCheckout("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - Checkout root that owns the proof history.
+ * @returns Path to `.beep/yeet/proof-ledger.ndjson` in that checkout.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofLedgerPathForCheckout = Effect.fn("Yeet.proofLedgerPathForCheckout")(function* (
+  repoRoot: string
+): Effect.fn.Return<string, never, Path.Path> {
+  const path = yield* Path.Path;
+  return path.join(repoRoot, ".beep", "yeet", "proof-ledger.ndjson");
+});
+
+/**
  * Resolve a file path inside the current Yeet run directory.
  *
  * **Example** (Resolve run artifact file path)

@@ -1,0 +1,57 @@
+target: "otp:pb-verification-evidence-receipt:001"
+target_sha256: "c93f890a065a15e6217dae2b6fad36225e27ba0f57cea11271a186749f26baa3"
+chain_sha256: "fd4d2d8257fe85d0c93b8139a595de9a00b9e42afa4bb7e7f1df9c38c8103a92"
+seat: ontoclean-adversary
+verdict: INDETERMINATE
+needed_evidence: >-
+  Run-3 must provide authoritative claim-formation and realization rules plus
+  issuance, producer, custody, copy, retention, correction, and revocation
+  provenance across heterogeneous VerificationEvidence records.
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The revised proposal asserts no candidate is-a edge."
+revision_requests: []
+attacks:
+  - surface: identity
+    rule: exact-reuse-extension-narrowing
+    counterexample: >-
+      Hosted-check evidence can justify a conclusion without being an S7 replay
+      receipt. The revision now defines VerificationEvidence broadly and says
+      digest-bound receipts are only instances, so that record remains inside
+      the reused extension and the former narrowing attack no longer lands.
+    outcome: survived
+  - surface: identity
+    rule: claim-content-carrier-identity-unresolved
+    counterexample: >-
+      Two separately issued files can carry byte-equal claims and provenance,
+      while one abstract evidence claim can have several faithful carriers.
+      Without issuance, custody, correction, and revocation semantics, the
+      proposal cannot decide which pairs are identical.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-005 ranges directly over VerificationEvidence records whose validity
+      is assessed, and CQ-015 asks whether a given proof transfers across a
+      cache epoch. Both require the broad evidence bearer despite the unresolved
+      content-versus-carrier identity boundary.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-false-in-null-world
+    counterexample: >-
+      A generated file can be incidental, but immutable claim content bound to
+      a subject, tree, epoch, policy, and evidence context is consumed by the
+      cited decision gates. That aboutness defeats a no-evidence null while
+      remaining neutral between abstract claim and issued carrier identity.
+    outcome: survived
+rival_models_still_viable:
+  - "VerificationEvidence primarily identifies abstract claim content."
+  - "Each issued and provenance-bound evidence carrier supplies token identity."
+evidence:
+  - "po:sha256:7b0afae312843e4da0ff5628da56e5201bcc40f7d0221fa8f4b92e74637b90b3"
+  - "CQ-005"
+  - "CQ-015"

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "explore/lejeune-bolt-agentic-demo",
+  "committed": false,
+  "createdAt": "2026-08-26T07:34:09.842Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "passed",
+      "durationMs": 338.920126,
+      "exitCode": 0
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "failed",
+      "durationMs": 742.390844,
+      "exitCode": 1,
+      "repairCommand": "Rerun `bun run beep quality github-checks nix` and inspect the Nix error."
+    }
+  ],
+  "message": "yeet monitor failed.",
+  "mode": "monitor",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "explore_lejeune-bolt-agentic-demo-18a53c56060e",
+  "attemptId": "ffdcc8f6-7ff3-4e97-a989-6996ba69e3d2",
+  "startedAt": "2026-08-26T07:34:05.881Z",
+  "endedAt": "2026-08-26T07:34:09.842Z",
+  "elapsedMs": 3961,
+  "indexPath": "<fleet>/beep-effect19/.beep/yeet/quality-issue-index.json",
+  "failedStepId": "monitor:02-pr-checks-watch",
+  "failureKind": "step-exit"
+}

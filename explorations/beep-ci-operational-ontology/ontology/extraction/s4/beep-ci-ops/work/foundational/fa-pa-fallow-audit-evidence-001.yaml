@@ -1,0 +1,20 @@
+id: "fa:pa-fallow-audit-evidence:001"
+hypothesis_ref: "dh:pa-fallow-audit-evidence:001"
+identity_card_ref: "ic:pa-fallow-audit-evidence:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The observations denote a separately identified composite evidence bundle joining specification and result."
+    still_viable: false
+  - label: "A separately issued result record is warranted in addition to the reusable lane specification."
+    still_viable: true
+  - label: "The zero count directly denotes a timeless boundary-conformance fact."
+    still_viable: false
+strongest_counterexample: >-
+  The same governed new-only audit prescription can run over different bases
+  and trees and produce different counts; execution and result variation does
+  not vary the FallowAuditLane specification's identity.
+verdict: analyzed

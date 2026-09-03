@@ -1,0 +1,51 @@
+id: "otp:pa-package-dependency-closure:001"
+hypothesis_ref: "dh:pa-package-dependency-closure:001"
+identity_card_ref: "ic:pa-package-dependency-closure:001"
+foundational_status: analyzed
+term:
+  preferred_label: "depends on transitively"
+  local_name: dependsOnTransitive
+  proposed_iri: "https://oip.law/ontology/ci-ops#dependsOnTransitive"
+  owl_entity_kind: object_property
+definition:
+  text: >-
+    A context-indexed package relation that holds from one workspace package
+    to another exactly when the latter is reachable from the former by the
+    declared Datalog fixpoint over direct dependency edges in one pinned graph.
+  source:
+    - "CQ-004"
+    - "po:sha256:04efe14c9b36df094bcd5670eb7ef97147f4158a69a833ebc0b997361225a6b0"
+    - "po:sha256:346503bf0ecc7e2531c623fe8377aaeee72b6e7bcaea94fb9db2c17d5e7536bc"
+foundational:
+  ufo_category: none
+  gufo_alignment: ""
+ontoclean:
+  rigidity: rigid
+  identity: none
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions: ["CQ-004"]
+  semantic_support_for: []
+alternatives_rejected:
+  - >-
+    The query-spelling null is rejected because the sources define and apply a
+    Datalog closure semantics between concrete package variables.
+  - >-
+    The rule specification and a particular fixpoint execution are rejected
+    as identical to the relation they compute.
+open_issues:
+  - >-
+    Steward must decide whether materialized closure assertion sets also need
+    an information-object term distinct from this entailed relation.
+  - >-
+    Path reification remains viable only if path-level provenance becomes
+    decision-bearing; CQ-004 currently asks only for reachable packages.
+revision_requests: []
+review: {foundational_agent: pending, adversarial_agent: pending, steward: pending}
+status: proposed

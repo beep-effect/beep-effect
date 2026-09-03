@@ -1,0 +1,38 @@
+id: ic:pa-package-dependency-closure-alt:001
+hypothesis_ref: dh:pa-package-dependency-closure:001
+identity:
+  supplies_identity: true
+  identity_criterion: Two transitive-dependence relators are the same iff they are the same
+    reachability mediation from the same importer package to the same imported package in
+    the same dependency graph snapshot. The Datalog fixpoint is a definition of membership
+    in that relation, not an identity provider. A later graph with an added or removed edge
+    is a different snapshot.
+  reidentification_key:
+  - dependsOnTransitive (evidence)
+  - importer/imported package pair (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one directed reachability from one package to one package in one graph snapshot
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+  - none
+  - situation
+  existential_dependencies:
+  - the importer package
+  - the imported package
+  - the direct dependsOn edges
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: If dependsOnTransitive is only a query predicate, there is no individual at
+    all — query-is-definition. The CQ quotation '?pkg ciops:dependsOnTransitive ?touched'
+    is exactly that shape.
+- description: A package that ceases to reach another package still exists; the relator ceases.
+    Treating the importer as the closure would be role-as-kind.
+status: proposed

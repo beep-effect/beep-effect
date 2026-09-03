@@ -1,0 +1,35 @@
+id: ic:pb-scheduler-process-owner-alt:001
+hypothesis_ref: dh:pb-scheduler-process-owner:001
+identity:
+  supplies_identity: true
+  identity_criterion: 'Two scheduler process-owners are the same kind-individual iff they
+    are the same operating-system process instantiation — the same running program image from
+    one start instant. PID reuse is exactly the counterexample that forces this criterion:
+    numeric pid plus procStart is reidentification evidence rather than the criterion, and
+    pid alone is never enough.'
+  reidentification_key:
+  - pid (evidence, insufficient alone)
+  - procStart (evidence)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: one OS process instantiation from one start instant
+  dependence: none
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+  - information_object
+  - process
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+  - process exit
+counterexamples:
+- description: Two successive processes sharing a numeric pid would be collapsed by a pid-only
+    criterion; the quote 'identify the owner across pid reuse' is that counterexample.
+- description: A serialized owner-key tuple can encode the same owner; the tuple is information,
+    the owner is the process. Collapsing them is artifact/referent merge.
+status: proposed

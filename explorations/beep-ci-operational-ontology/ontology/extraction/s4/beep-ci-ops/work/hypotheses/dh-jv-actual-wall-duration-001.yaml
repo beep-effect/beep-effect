@@ -1,0 +1,35 @@
+id: "dh:jv-actual-wall-duration:001"
+observation_refs:
+  - "so:sha256:1081a3f10108fba5826e74ade5a53a90ae027969e1857cbfe67f1ef919a6931f"
+  - "so:sha256:2a207d4986630e8590f790457dabe07ffeecdb9b2bfa79cf254c6bce508a2998"
+  - "so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3"
+  - "so:sha256:c509f4a98184260243c9b13f2cc0d46bbe7783f07518144c48d9e58d47617b73"
+cq_warrants: ["CQ-007", "CQ-025"]
+proposed_referent:
+  label: "Recorded wall-duration measurement"
+  description: >-
+    A serialized millisecond duration associated with a lane or task execution
+    or, for an elapsed value, with a whole verification attempt; the cited
+    observations do not by themselves settle the measurement granularity.
+representation_status: information_artifact
+alternatives:
+  - label: "Temporal quality of a verification execution"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "Instrumentation timer output"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: >-
+    Run-specific measured durations are evidence for time decomposition and
+    actual-versus-estimated cost calibration, although their execution scope
+    remains to be analyzed.
+  discriminator: >-
+    The cited observations contain concrete nonzero duration and elapsed
+    measurements, including standalone and lane-rerun values and exact start
+    and end instants; a timer representation alone would not record those
+    particular measurements.
+epistemic_status: proposed
+confidence: {value: 0.89, use_for_acceptance: false}

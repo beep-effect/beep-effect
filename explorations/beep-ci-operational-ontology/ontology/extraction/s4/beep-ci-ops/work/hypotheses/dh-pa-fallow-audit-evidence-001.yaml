@@ -1,0 +1,23 @@
+id: "dh:pa-fallow-audit-evidence:001"
+observation_refs:
+  - "po:sha256:03faca9bdbda493f0d75b6c88c6bc46fe48dd8968d87259b3f201dddbd862bd9"
+  - "po:sha256:0a135a5a3d645935fc24eab144d7671ed544ad71da23212db9ef611b5f251560"
+cq_warrants: ["CQ-001", "CQ-005"]
+proposed_referent:
+  label: "Fallow boundary-audit evidence"
+  description: "An information artifact pairing a repository-boundary audit procedure with its reported boundary-violation count."
+representation_status: information_artifact
+alternatives:
+  - label: "Fallow audit work-unit specification"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "Inventory configuration fields"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The paired observations express a verification procedure and an asserted outcome that can serve as operational evidence."
+  discriminator: "One observation gives the exact origin/main new-only audit command and the other records a zero boundary-violation result, linking procedure to reported outcome."
+epistemic_status: proposed
+confidence: {value: 0.7, use_for_acceptance: false}

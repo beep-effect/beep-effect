@@ -1,0 +1,30 @@
+id: "dh:pb-yeet-proof-tier:001"
+observation_refs:
+  - "po:sha256:8b0e7ebacbadd3d0a21df787d0070763c9151c438e5ad68ef69454c6bea0aca1"
+  - "po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195"
+  - "po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50"
+cq_warrants:
+  - "CQ-001"
+  - "CQ-002"
+  - "CQ-006"
+  - "CQ-017"
+proposed_referent:
+  label: "Yeet proof-planning tier"
+  description: "An operational planning classification whose full, cheap-gates, and review-fix values select different Yeet proof plans; it is not thereby an assurance tier."
+representation_status: domain_referent
+alternatives:
+  - label: "planner dispatch vocabulary"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "assurance tier"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: true
+  rationale: "The LiteralKit alone would not suffice, but the cheap-gates branch maps that value to a lane sequence and a later observation constructs a cheap-gates proof step. The values therefore classify operational proof plans, while the supplied scope explicitly keeps this vocabulary distinct from assurance tiers."
+  discriminator: "Selecting the quoted cheap-gates value expands to named status and GitHub-check lane sequences and is then passed into a planned proof step; that change in prescribed verification work would be false if the tier values were inert serialization labels."
+epistemic_status: proposed
+confidence:
+  value: 0.9
+  use_for_acceptance: false

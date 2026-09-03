@@ -1,0 +1,55 @@
+target: "otp:pb-resolved-cache-posture:001"
+target_sha256: "de447575a255e75b8dead4008fdffff4c355b36212c394b6c1b152fb9c361e66"
+chain_sha256: "6af4757ea2d4eeb3a2bb75e68b9783ca2cc10aa572075760774577b2b1ace6eb"
+seat: ontoclean-adversary
+verdict: FAIL
+needed_evidence: ""
+surfaces:
+  taxonomy: no_surface
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons:
+  taxonomy: "The proposal asserts no candidate is-a edge."
+revision_requests:
+  - >-
+    Address exact-reuse-token-versus-mode-identity by aligning with the
+    ratified CachePosture literal-domain semantics, where LocalOnly and its
+    peers are reusable members, or mint a separately warranted
+    invocation-borne mode class without claiming exact reuse.
+  - >-
+    Address discriminator-true-of-return-value with observations showing a
+    mode particular borne by an execution independently of the returned cache
+    plan value; otherwise leave the information-object/null rival live.
+attacks:
+  - surface: identity
+    rule: exact-reuse-token-versus-mode-identity
+    counterexample: >-
+      Two executions can both have the ratified shared LocalOnly posture
+      member, while the proposal says they bear two different mode tokens
+      identified by invocation and interval. One reused CachePosture IRI
+      cannot simultaneously identify reusable literal members and those
+      per-invocation particulars without an explicit type/token split.
+    outcome: landed
+  - surface: warrant
+    rule: decision-cq-requires-term
+    counterexample: >-
+      CQ-024 explicitly asks which CachePosture each WorkUnitExecution ran
+      under and therefore requires the class or controlled domain represented
+      by that name.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-return-value
+    counterexample: >-
+      A pure function can resolve a cache-plan DTO once per Turbo invocation,
+      return different values for two invocations, and still create no
+      invocation-borne mode particular. The single comment observation is
+      true in that implementation-only world.
+    outcome: landed
+rival_models_still_viable:
+  - "CachePosture is a controlled value domain with shared literal members."
+  - "The resolved decision is a cache-plan information object."
+  - "The execution context is a reified situation rather than an intrinsic mode."
+evidence:
+  - "po:sha256:91a7acb71879927b51916b77d75557bce0347d66aa15536e1cce20d776c60786"
+  - "CQ-024"

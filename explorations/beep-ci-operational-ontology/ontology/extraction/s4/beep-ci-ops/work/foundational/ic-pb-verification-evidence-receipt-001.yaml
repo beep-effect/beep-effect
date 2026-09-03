@@ -1,0 +1,32 @@
+id: "ic:pb-verification-evidence-receipt:001"
+hypothesis_ref: "dh:pb-verification-evidence-receipt:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "Unresolved for the broad exact-reused VerificationEvidence extension: the corpus does not decide whether repeatable claim content, each authoritative issuance, or custody-tracked carrier lineage supplies identity across heterogeneous evidence kinds."
+  reidentification_key:
+    - "subject, tree, epoch, policy, and evidence context"
+    - "claim content and producing act"
+    - "issuance, producer, custody, copy, correction, and revocation lineage"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: "Broad evidence unity is unresolved between one claim-content object and one provenance-bound issued record or carrier realizing that content."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "repeatable verification-claim content realized by multiple carriers"
+    - "each authoritatively issued evidence record token"
+    - "a custody-tracked physical or digital carrier lineage"
+  existential_dependencies:
+    - "a producing act and at least one faithful carrier"
+    - "an evidence vocabulary and applicability context"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "superseded, corrected, revoked, or left without a faithful carrier"
+counterexamples:
+  - description: "A hosted-check record and replay receipt both instantiate VerificationEvidence but follow different production and custody practices, while equal claim content can be copied or separately issued; a replay-specific criterion cannot govern the broad class."
+status: proposed

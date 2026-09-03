@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "docs/typed-agent-skill-contracts-graduation",
+  "committed": false,
+  "createdAt": "2026-08-24T07:53:18.687Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "docs_typed-agent-skill-contracts-graduation-2ef1fa77c683",
+  "attemptId": "14a7ea5a-3e98-4e39-a281-f4b807120536",
+  "startedAt": "2026-08-24T07:53:14.024Z",
+  "endedAt": "2026-08-24T07:53:18.687Z",
+  "elapsedMs": 4663,
+  "indexPath": "<fleet>/beep-effect16/.beep/yeet/quality-issue-index.json"
+}

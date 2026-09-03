@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "yeet-verdict/v1",
+  "base": "origin/main",
+  "branch": "chore/extraction-rung-yeet-contract",
+  "committed": false,
+  "createdAt": "2026-06-18T20:10:45.450Z",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet PR closeout failed with 8 issue(s).",
+  "mode": "closeout",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "chore_extraction-rung-yeet-contract-3fb2bbf0adba",
+  "indexPath": "<fleet>/beep-effect3/.beep/yeet/quality-issue-index.json"
+}

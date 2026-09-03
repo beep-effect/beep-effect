@@ -1,0 +1,10 @@
+id: po:sha256:59e3f07184abaf7f8075745f636d111ccdf14c2c058c5b08adb59b9745033ac0
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
+source_span:
+  start_line: 156
+  end_line: 156
+quote: 'durationMs: S.optionalKey(S.Finite),'
+epistemic_status: quoted_prose

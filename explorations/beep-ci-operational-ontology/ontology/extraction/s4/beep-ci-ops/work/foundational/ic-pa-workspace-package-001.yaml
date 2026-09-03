@@ -1,0 +1,46 @@
+id: "ic:pa-workspace-package:001"
+hypothesis_ref: "dh:pa-workspace-package:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Unresolved: workspace-package sameness could follow a maintained package
+    project through repository revisions, immutable versioned package content,
+    or package-designating information content; an @beep name, manifest path,
+    topological ordinal, or dependency field is evidence and never sufficient.
+  reidentification_key:
+    - "repository and workspace context"
+    - "package-project lineage or immutable versioned content, once selected"
+    - "manifest boundary, name history, and content digest as supporting evidence"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    The evidence does not decide whether one package is a continuing software
+    artifact, one immutable version, a workspace-relative role of another
+    artifact, or information that designates such a bearer.
+  dependence: relational
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - "kind: a continuing software-package artifact with project lineage"
+    - "information_object: an immutable versioned package content unit"
+    - "role: a software artifact functioning as a package in this workspace"
+    - "information_object: a workspace-package reference or name"
+  existential_dependencies:
+    - "A repository and workspace interpretation"
+    - "A manifest or other package-boundary declaration"
+    - "Identity governance for rename, fork, recreation, and version transitions"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "removed from the workspace under the role model"
+    - "superseded by another version under the immutable-content model"
+    - "project lineage terminated under the continuing-artifact model"
+counterexamples:
+  - description: >-
+      A package can be renamed while its code lineage continues, copied into a
+      fork under the same @beep name, or deleted and recreated later with that
+      name; name equality and bearer continuity therefore diverge.
+status: proposed

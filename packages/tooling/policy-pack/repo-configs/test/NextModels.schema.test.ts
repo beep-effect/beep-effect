@@ -231,7 +231,6 @@ describe("Next image schemas", () => {
                     loader: "default",
                     path: "/_next/image",
                     loaderFile: "",
-                    domains: [],
                     disableStaticImages: false,
                     minimumCacheTTL: 0,
                     formats: ["image/webp"],

@@ -1,0 +1,22 @@
+id: po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md
+source_span:
+  start_line: 38
+  end_line: 57
+quote: "## 2. Rulings (sitting 1 — summary; DECISIONS.md is authoritative)\n\n1. **Layered scope**: v1\
+  \ = deterministic admission-order projection; the\n   service contract carries an explicit lane-DAG\
+  \ planner seam (`Graph.topo`\n   territory) that v1 declares but does not implement.\n2. **Provisional\
+  \ ordering vocabulary**: emitted nodes typed with ratified\n   `ciops:` classes; ordering predicates\
+  \ (`hasCurrentProposal`, `hasStep`,\n   `stepIndex`, `schedulesWorkUnit`, `hasScope`) and class `ScheduleStep`\n\
+  \   emitted in the provisional `ciops-prov:` named graph (S6 census precedent:\n   open closure, excluded\
+  \ from negation/typing). These terms join the run-2\n   re-proposal queue.\n3. **Landing zone**: new\
+  \ labs app `apps/labs/ciops` via\n   `bun run beep create-package` — schemas, `Context.Service` contract,\n\
+  \   engine, and property tests all incubate there, off the required turbo\n   graphs. Proven pieces\
+  \ graduate later (`packages/ontology/domain`, then\n   repo-cli/yeet).\n4. **Differential replay gates\
+  \ v1**: a Must property replays the pinned\n   golden journal and requires the projected admission order\
+  \ to reproduce the\n   deployed scheduler's actual grant order. Mismatches are semantic findings\n \
+  \  → run-2 evidence."
+epistemic_status: quoted_prose

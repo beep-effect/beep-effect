@@ -1047,9 +1047,6 @@
   "@beep/ui/themes/theme-provider": [
     "./packages/foundation/ui-system/ui/src/themes/theme-provider.tsx"
   ],
-  "@beep/editor/chat": [
-    "./packages/foundation/ui-system/editor/src/chat/index.ts"
-  ],
   "@beep/schema/ContinentCode": [
     "./packages/foundation/modeling/schema/src/ContinentCode.ts"
   ],

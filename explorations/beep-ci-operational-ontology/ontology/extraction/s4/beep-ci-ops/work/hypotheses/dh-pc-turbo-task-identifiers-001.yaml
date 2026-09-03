@@ -1,0 +1,36 @@
+id: "dh:pc-turbo-task-identifiers:001"
+observation_refs:
+  - "po:sha256:ab9766633fb5027d7c640e014021d43c1b1be6e17dfff5627165686d39da61b0"
+  - "po:sha256:ad12ed8a56e6c3759204df111d51cb81b2fe1c428ef94ce4b199724b43204028"
+  - "po:sha256:bde087f98cc217a882d0f5836997ae35fd037d601fae87d4dfb60f422c805852"
+  - "po:sha256:d9eda1c640883d4b056abf114a0a2482b0fff4170ccd6462c26a9772ec0f9c59"
+  - "po:sha256:dab9bf23eee42dd005eff5c5613e511c31d50a15e5035287bb23e28dcef51c53"
+  - "po:sha256:dd059b85c10ae22f4f42ddb87e4cdf088caab8081758fb803180a4c8bbbb9f31"
+  - "po:sha256:e9488393e12d332f49a9c4f54ac2e521ab56cb9d7a078c2196608599b4dcd87e"
+  - "po:sha256:f8ed741ad70c5bb5a2e89afd526ded84f977270652d48985e8c5d0a33458344a"
+cq_warrants:
+  - "CQ-001"
+proposed_referent:
+  label: "Turbo task identifier vocabulary"
+  description: >-
+    Configuration keys that may serve as lexical aliases for verification
+    lanes or lane variants in the operational domain.
+representation_status: lexical_alias
+alternatives:
+  - label: "Turbo configuration routing keys"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "distinct operational verification lane specifications"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    Each observation quotes only a Turbo configuration key. The records do
+    not establish whether the keys denote separate lanes, aliases, runnable
+    task specifications, or convenience variants, so configuration structure
+    remains a complete explanation.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.76, use_for_acceptance: false}

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "feat/practice-office-provisioning-graduate",
+  "committed": true,
+  "createdAt": "2026-08-30T22:03:38.190Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "advisory:01-fallow-feedback",
+      "label": "fallow-advisory-feedback",
+      "phase": "feedback",
+      "status": "passed",
+      "durationMs": 1759.056817,
+      "peakRssKb": 506236,
+      "exitCode": 0
+    },
+    {
+      "id": "commit:01-git-commit",
+      "label": "commit:git:commit",
+      "phase": "commit",
+      "status": "passed",
+      "durationMs": 2665.366357,
+      "peakRssKb": 5113224,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:00-head-install-preflight",
+      "label": "publish:head-install-preflight",
+      "phase": "early-publish",
+      "status": "passed",
+      "durationMs": 11446.503511,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:01-git-push",
+      "label": "early-publish:git:push",
+      "phase": "early-publish",
+      "status": "passed",
+      "durationMs": 1587.605355,
+      "peakRssKb": 52212,
+      "exitCode": 0
+    },
+    {
+      "id": "publish:02-pr-create",
+      "label": "publish:pr-create",
+      "phase": "early-publish",
+      "status": "passed",
+      "exitCode": 0
+    },
+    {
+      "id": "full:00-cheap-gates",
+      "label": "full:cheap-gates",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "full:01-pre-push",
+      "label": "full:pre-push",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "full:02-ci-parity",
+      "label": "full:ci-parity",
+      "phase": "full",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:01-pr-context",
+      "label": "monitor:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "monitor:02-pr-checks-watch",
+      "label": "monitor:pr-checks:watch",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "Another Yeet full proof for this repository is active.\nThe machine-local coordinator prevents sibling checkouts from overlapping Docker, Bun-cache, and Turbo work. Wait for it to finish, run the cheap/review-fix tier, or remove <tmp>/beep-yeet-proof-locks-2a2145724d1c-uid-1000/4cc31eeb4dec.lock only after confirming its owner is gone.",
+  "mode": "publish",
+  "outcome": "failure",
+  "packetPaths": [],
+  "pushed": true,
+  "runId": "feat_practice-office-provisioning-graduate-1519398a7af5",
+  "attemptId": "3038a3bc-bb10-46a5-8104-f5f34b0c7cd6",
+  "startedAt": "2026-08-30T22:02:02.091Z",
+  "endedAt": "2026-08-30T22:03:38.190Z",
+  "elapsedMs": 96099,
+  "indexPath": "<fleet>/beep-effect2/.beep/yeet/quality-issue-index.json",
+  "baseFreshness": {
+    "behindCount": 0,
+    "mergeBase": "dc96a769321d099282f89e568523286709c89368",
+    "overlappingPaths": []
+  },
+  "failedStepId": "full:00-cheap-gates",
+  "failureKind": "handler-error"
+}

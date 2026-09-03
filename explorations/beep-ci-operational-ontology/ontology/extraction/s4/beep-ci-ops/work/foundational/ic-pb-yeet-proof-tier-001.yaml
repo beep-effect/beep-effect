@@ -1,0 +1,34 @@
+id: "ic:pb-yeet-proof-tier:001"
+hypothesis_ref: "dh:pb-yeet-proof-tier:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: "Unresolved: the observed LiteralKit members and expansion behavior do not decide whether planners share one governed classification scheme, copy separate domains, or attach plan-borne classifications under distinct authority and version lineages."
+  reidentification_key:
+    - "planner-policy authority and version"
+    - "full, cheap-gates, and review-fix member semantics"
+    - "contextual member-to-plan expansion rules"
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: "One governed classification scheme whose members select proof-plan specifications without identifying assurance tiers, obligations, or lane executions."
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "an anti-rigid planning role or mode borne by a WorkUnit specification"
+    - "rigid subkinds of proof-plan specification"
+    - "an AssuranceTier taxonomy"
+    - "a compile-time dispatch vocabulary only"
+  existential_dependencies:
+    - "the Yeet planner policy and its lane-selection vocabulary"
+    - "at least one faithful carrier and the planning context used for expansion"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - "superseded by a change to member or expansion semantics"
+    - "withdrawn from the Yeet planning policy"
+counterexamples:
+  - description: "The same cheap-gates token can expand to context-dependent lane instances, and those executions can fail without changing the classification scheme or establishing an AssuranceTier."
+status: proposed

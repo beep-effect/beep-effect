@@ -1,0 +1,10 @@
+id: po:sha256:6afabfdec293f5d240216cef2ac43f92eb5b39151929383b009e99aaf42aec1c
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: .fallowrc.jsonc
+source_span:
+  start_line: 455
+  end_line: 455
+quote: '"boundary-violation": "error"'
+epistemic_status: quoted_prose

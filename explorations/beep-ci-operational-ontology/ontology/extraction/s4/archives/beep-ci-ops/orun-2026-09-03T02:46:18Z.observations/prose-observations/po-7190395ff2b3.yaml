@@ -1,0 +1,10 @@
+id: po:sha256:7190395ff2b3c00428185ea21e0bca4027554317884ce7ba8f4e04ddbdef9969
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Yeet/internal/AttemptJournal.ts
+source_span:
+  start_line: 24
+  end_line: 25
+quote: const RETAINED_ATTEMPTS = 50;
+epistemic_status: quoted_prose

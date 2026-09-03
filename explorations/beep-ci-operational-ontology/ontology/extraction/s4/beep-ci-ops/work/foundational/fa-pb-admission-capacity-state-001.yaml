@@ -1,0 +1,21 @@
+id: "fa:pb-admission-capacity-state:001"
+hypothesis_ref: "dh:pb-admission-capacity-state:001"
+identity_card_ref: "ic:pb-admission-capacity-state:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "The referent is the live admission-state situation, and AdmissionSnapshot is only its information projection."
+    still_viable: true
+  - label: "AdmissionSnapshot is extensional recorded content rather than an independently reidentified capture token."
+    still_viable: true
+  - label: "The referent is only the reusable arithmetic helper that derives capacity."
+    still_viable: false
+strongest_counterexample: "Repeated reads can return the same recorded values while being distinct capture occurrences, and the corpus does not correlate either read to the immediately pre-grant decision; value equality supplies neither token identity nor the CQ-010 join."
+verdict: explicitly_deferred
+needed_evidence: >-
+  Capture-act and observation-instant provenance, machine and policy scope, and
+  an authoritative correlation to the immediately pre-grant admission record
+  are required to decide snapshot token identity and the CQ-010 join.

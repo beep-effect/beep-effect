@@ -1,0 +1,10 @@
+id: po:sha256:aa44e6bb67ce87538b7feddce7e285430ae2030bffbb5ac280905f9945b507c8
+schema_version: 1
+repository:
+  commit: 341cfef8b6e80d49f6cef894e9eecd5337f70e8f
+  path: packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts
+source_span:
+  start_line: 26
+  end_line: 26
+quote: const TURBO_CONFIG_PROOF_TASK_VALUES = ["build", "check", "lint", "test", "docgen"] as const;
+epistemic_status: quoted_prose

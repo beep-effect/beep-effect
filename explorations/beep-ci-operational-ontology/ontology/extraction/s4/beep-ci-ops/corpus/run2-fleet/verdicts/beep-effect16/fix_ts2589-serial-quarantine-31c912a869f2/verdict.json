@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "yeet-verdict/v2",
+  "base": "origin/main",
+  "branch": "fix/ts2589-serial-quarantine",
+  "committed": false,
+  "createdAt": "2026-08-26T06:36:34.723Z",
+  "failurePolicy": "fail-fast",
+  "head": "HEAD",
+  "lanes": [
+    {
+      "id": "closeout:01-pr-context",
+      "label": "closeout:pr-context",
+      "phase": "monitor",
+      "status": "not-run"
+    },
+    {
+      "id": "closeout:02-review-gates",
+      "label": "closeout:review-gates",
+      "phase": "monitor",
+      "status": "not-run"
+    }
+  ],
+  "message": "yeet closeout succeeded.",
+  "mode": "closeout",
+  "outcome": "success",
+  "packetPaths": [],
+  "pushed": false,
+  "runId": "fix_ts2589-serial-quarantine-31c912a869f2",
+  "attemptId": "5ccefd94-7992-4ba6-bbcf-84d4a6110397",
+  "startedAt": "2026-08-26T06:36:30.859Z",
+  "endedAt": "2026-08-26T06:36:34.723Z",
+  "elapsedMs": 3864,
+  "indexPath": "<fleet>/beep-effect16/.beep/yeet/quality-issue-index.json"
+}

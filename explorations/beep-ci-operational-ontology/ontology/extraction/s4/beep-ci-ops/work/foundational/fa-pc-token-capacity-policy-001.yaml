@@ -1,0 +1,17 @@
+id: "fa:pc-token-capacity-policy:001"
+hypothesis_ref: "dh:pc-token-capacity-policy:001"
+identity_card_ref: "ic:pc-token-capacity-policy:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: true
+rival_models:
+  - label: "A deployed admission-policy regime is a normative mode or situation distinct from the specification that describes it."
+    still_viable: true
+  - label: "Each reconstructed replay instant is the capacity policy rather than a situation used as evidence about compliance."
+    still_viable: false
+  - label: "The Math.min expression or inequality procedure is itself the normative policy."
+    still_viable: false
+strongest_counterexample: "Replay changed when active-charge context changed although the inequality did not, and distinct policies can share that inequality while differing elsewhere; neither one computation nor one clause identifies the complete policy."
+verdict: analyzed

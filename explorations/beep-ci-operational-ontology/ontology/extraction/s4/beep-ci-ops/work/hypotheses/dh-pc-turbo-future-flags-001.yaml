@@ -1,0 +1,24 @@
+id: "dh:pc-turbo-future-flags:001"
+observation_refs:
+  - "po:sha256:c7bc3b9cb2d7825925bb16a87a40a38b7d5d950cdcfa1da548b36eee348fbc52"
+cq_warrants: []
+proposed_referent:
+  label: "Turbo futureFlags configuration block"
+  description: >-
+    A structural configuration key with no supplied values or operational
+    semantics.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "versioned build-system behavior specification"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    Only the opening key of a configuration object is quoted. With no member,
+    value, affected task, or behavior, there is no observation-backed basis
+    for a domain interpretation.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.95, use_for_acceptance: false}

@@ -19,7 +19,7 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { Config, ConfigProvider, Effect, flow, MutableHashMap, pipe } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, flow, MutableHashMap, Path, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
@@ -31,6 +31,7 @@ import {
   TurboCacheEnvName,
   TurboCacheMode,
   TurboCacheSecretEnvName,
+  TurboEnvironmentHealthWarning,
   turboCacheValueSourceFor,
 } from "./TurboCache.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -237,7 +238,8 @@ export const booleanEnvValue: {
 });
 
 /**
- * Whether a value is an unresolved 1Password secret reference (`op://...`).
+ * Whether a value contains an unresolved 1Password secret reference
+ * (`op://...`).
  *
  * **Example** (Detect unresolved op references)
  *
@@ -245,16 +247,17 @@ export const booleanEnvValue: {
  * import { isUnresolvedSecretReference } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
  * console.log(isUnresolvedSecretReference("op://vault/item/field"))
+ * console.log(isUnresolvedSecretReference("postgres://user:op://vault/item/password@host/db"))
  * console.log(isUnresolvedSecretReference("postgres://localhost"))
  * ```
  *
  * @param value - The candidate value.
- * @returns Whether the value is a still-unresolved `op://` reference.
+ * @returns Whether the value contains a still-unresolved `op://` reference.
  * @category configuration
  * @since 0.0.0
  */
 export const isUnresolvedSecretReference = (value: string | undefined): boolean =>
-  value !== undefined && Str.startsWith("op://")(value);
+  value !== undefined && Str.includes("op://")(value);
 
 const OP_RUN_ARGUMENT_SEPARATOR = "--";
 
@@ -282,6 +285,39 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
   );
 
 const isTurboCacheSecretEnvName = S.is(TurboCacheSecretEnvName);
+
+const environmentWithoutSecretReferences = (
+  environment: Readonly<Record<string, string | undefined>>
+): Record<string, string> =>
+  R.filter(environment, (value): value is string => value !== undefined && !isUnresolvedSecretReference(value));
+
+const ENV_FILE_ASSIGNMENT_NAME = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/u;
+
+const envFileAssignmentName = (line: string): O.Option<string> =>
+  pipe(
+    Str.match(ENV_FILE_ASSIGNMENT_NAME)(line),
+    O.flatMap((match) => O.fromUndefinedOr(match[1]))
+  );
+
+const envFileSecretReferenceEntries = Effect.fn("EnvConfig.envFileSecretReferenceEntries")(function* (
+  contents: string
+) {
+  const provider = ConfigProvider.fromDotEnvContents(contents, { preserveEmptyStrings: true });
+  const variableNames = pipe(Str.split(contents, "\n"), A.map(envFileAssignmentName), A.getSomes, A.dedupe);
+  const entries = yield* Effect.forEach(variableNames, (variableName) =>
+    provider.load([variableName]).pipe(
+      Effect.orDie,
+      Effect.map((node) =>
+        O.fromUndefinedOr(node).pipe(
+          O.flatMap((loaded) => O.fromUndefinedOr(loaded.value)),
+          O.filter(isUnresolvedSecretReference),
+          O.map((value) => Tuple.make(variableName, value))
+        )
+      )
+    )
+  );
+  return A.getSomes(entries);
+});
 
 /**
  * Remove unrelated `op://` references from a Turbo secret-session environment.
@@ -318,6 +354,143 @@ export const turboCacheSecretSessionEnvironment = (
     (value, name): value is string =>
       value !== undefined && (!isUnresolvedSecretReference(value) || isTurboCacheSecretEnvName(name))
   );
+
+const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(function* (
+  repoRoot: string,
+  environment: Record<string, string>,
+  args: ReadonlyArray<string> = ["run", "--", "true"]
+): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const exitCode = yield* runToExit({
+    command: "op",
+    args,
+    cwd: repoRoot,
+    env: environment,
+    extendEnv: false,
+    stdio: "ignore",
+  }).pipe(Effect.orElseSucceed(() => 1));
+  return exitCode === 0;
+});
+
+const turboEnvironmentHealthVerdicts = MutableHashMap.empty<string, ReadonlyArray<TurboEnvironmentHealthWarning>>();
+
+/**
+ * Check every 1Password reference in the checkout `.env` without exposing its
+ * reference or resolved value.
+ *
+ * **Details**
+ *
+ * The first output-suppressed probe runs the exact whole-file `op run` health
+ * check. On a failure, each reference assignment parsed from that file is
+ * retried in isolation so the returned warning can name the failing variable
+ * without carrying its value. Results are cached by repository root for the
+ * life of the CLI process. A checkout without `.env` has no warnings.
+ *
+ * This diagnostic is independent of cache readiness. A warning for an
+ * unrelated variable never changes the Turbo cache plan.
+ *
+ * **Example** (Build an environment-health check)
+ *
+ * ```ts
+ * import { turboEnvironmentHealthWarnings } from "@beep/repo-cli/test/SharedInternals"
+ * import { Effect } from "effect"
+ *
+ * const check = turboEnvironmentHealthWarnings("/repo", {
+ *   TURBO_TOKEN: "op://fixture-vault/turbo/token",
+ *   STALE_SERVICE_TOKEN: "op://fixture-vault/service/missing"
+ * })
+ * console.log(Effect.isEffect(check))
+ * ```
+ *
+ * @param repoRoot - Working directory used for the 1Password probes.
+ * @param environment - Ambient environment used only for non-reference process configuration.
+ * @returns Named warnings for references that cannot be resolved.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironmentHealthWarnings")(function* (
+  repoRoot: string,
+  environment: Readonly<Record<string, string | undefined>>
+): Effect.fn.Return<
+  ReadonlyArray<TurboEnvironmentHealthWarning>,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const cached = MutableHashMap.get(turboEnvironmentHealthVerdicts, repoRoot);
+  if (O.isSome(cached)) return cached.value;
+
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const envFilePath = path.join(repoRoot, ".env");
+  const envFileExists = yield* fs.exists(envFilePath).pipe(Effect.orElseSucceed(() => false));
+  if (!envFileExists) {
+    const warnings = A.empty<TurboEnvironmentHealthWarning>();
+    MutableHashMap.set(turboEnvironmentHealthVerdicts, repoRoot, warnings);
+    return warnings;
+  }
+
+  const contents = yield* fs.readFileString(envFilePath).pipe(Effect.orElseSucceed(() => ""));
+  const references = yield* envFileSecretReferenceEntries(contents);
+  if (A.isReadonlyArrayEmpty(references)) {
+    const warnings = A.empty<TurboEnvironmentHealthWarning>();
+    MutableHashMap.set(turboEnvironmentHealthVerdicts, repoRoot, warnings);
+    return warnings;
+  }
+
+  const secretFreeEnvironment = environmentWithoutSecretReferences(environment);
+  const healthy = yield* secretReferenceProbe(repoRoot, secretFreeEnvironment, [
+    "run",
+    `--env-file=${envFilePath}`,
+    "--",
+    "true",
+  ]);
+  if (healthy) {
+    const warnings = A.empty<TurboEnvironmentHealthWarning>();
+    MutableHashMap.set(turboEnvironmentHealthVerdicts, repoRoot, warnings);
+    return warnings;
+  }
+
+  const isolated = yield* Effect.forEach(
+    references,
+    ([variableName, reference]) =>
+      secretReferenceProbe(repoRoot, { ...secretFreeEnvironment, [variableName]: reference }).pipe(
+        Effect.map((usable) => (usable ? O.none() : O.some(TurboEnvironmentHealthWarning.make({ variableName }))))
+      ),
+    { concurrency: 4 }
+  );
+  const warnings = A.getSomes(isolated);
+  MutableHashMap.set(turboEnvironmentHealthVerdicts, repoRoot, warnings);
+  return warnings;
+});
+
+/**
+ * Render one value-suppressed environment-health warning for plan output.
+ *
+ * **Details**
+ *
+ * Only the failing variable name is interpolated. The cache quad is called out
+ * explicitly so operators know an unrelated warning did not disable remote
+ * reads.
+ *
+ * **Example** (Render a named warning)
+ *
+ * ```ts
+ * import {
+ *   renderTurboEnvironmentHealthWarning,
+ *   TurboEnvironmentHealthWarning
+ * } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const warning = TurboEnvironmentHealthWarning.make({ variableName: "STALE_SERVICE_TOKEN" })
+ * console.log(renderTurboEnvironmentHealthWarning(warning))
+ * ```
+ *
+ * @param warning - Named reference-resolution warning.
+ * @returns A warning line that contains no reference or resolved value.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderTurboEnvironmentHealthWarning = (warning: TurboEnvironmentHealthWarning): string =>
+  `[beep-cli] turbo cache plan warning: ${warning.variableName} has an unavailable 1Password reference; ` +
+  "cache readiness uses only TURBO_API, TURBO_TOKEN, TURBO_TEAM, and TURBO_CACHE";
 
 /**
  * Decide whether a Turbo spawn may inherit the ambient process environment.
@@ -511,6 +684,7 @@ const turboSecretSessionVerdicts = MutableHashMap.empty<string, boolean>();
 /** Clear process-local Turbo secret-session probes for isolated tests. */
 export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
   MutableHashMap.clear(turboSecretSessionVerdicts);
+  MutableHashMap.clear(turboEnvironmentHealthVerdicts);
 };
 
 /**
@@ -518,9 +692,11 @@ export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
  *
  * **Details**
  *
- * Returns `false` under CI or when `op whoami` does not succeed. The caller has
- * already established that the ambient Turbo configuration contains an
- * unresolved reference.
+ * Returns `false` under CI or when the cache quad cannot resolve in an
+ * output-suppressed `op run`. The probe receives an explicit environment where
+ * unresolved references survive only for the Turbo cache credentials, so an
+ * unrelated stale reference cannot disable remote reads. The caller has already
+ * established that the Turbo configuration contains an unresolved reference.
  *
  * **Example** (Check local env Effect)
  *
@@ -531,13 +707,15 @@ export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
  * console.log(Effect.isEffect(canUseTurboCacheSecretSession("/repo")))
  * ```
  *
- * @param repoRoot - Working directory used for the 1Password identity check.
+ * @param repoRoot - Working directory used for the 1Password reference check.
+ * @param environment - Loaded checkout environment; defaults to the current process environment.
  * @returns Whether local 1Password reference resolution is available.
  * @category execution
  * @since 0.0.0
  */
 export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCacheSecretSession")(function* (
-  repoRoot: string
+  repoRoot: string,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env
 ): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner> {
   const ci = yield* configStringOption("CI");
   if (
@@ -553,25 +731,7 @@ export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCac
   const cached = MutableHashMap.get(turboSecretSessionVerdicts, cacheKey);
   if (O.isSome(cached)) return cached.value;
 
-  const whoamiExitCode = yield* runToExit({ command: "op", args: ["whoami"], cwd: repoRoot, stdio: "ignore" }).pipe(
-    Effect.orElseSucceed(() => 1)
-  );
-  if (whoamiExitCode !== 0) {
-    MutableHashMap.set(turboSecretSessionVerdicts, cacheKey, false);
-    return false;
-  }
-
-  // `op whoami` proves only that the desktop/CLI session is alive. Resolve
-  // every `op://` value in the environment through a no-output child so a
-  // stale item or field reference degrades the lane before the real Turbo
-  // command is wrapped. No resolved value is printed or returned.
-  const referenceProbeExitCode = yield* runToExit({
-    command: "op",
-    args: ["run", "--", "/usr/bin/true"],
-    cwd: repoRoot,
-    stdio: "ignore",
-  }).pipe(Effect.orElseSucceed(() => 1));
-  const usable = referenceProbeExitCode === 0;
+  const usable = yield* secretReferenceProbe(repoRoot, turboCacheSecretSessionEnvironment(environment));
   MutableHashMap.set(turboSecretSessionVerdicts, cacheKey, usable);
   return usable;
 });
