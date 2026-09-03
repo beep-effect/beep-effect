@@ -338,33 +338,42 @@ const canonicalDirectory = Effect.fnUntraced(function* (
     : O.none();
 });
 
+const cwdWithin = (path: Path.Path, candidatePath: string, cwd: string): boolean => {
+  const relative = path.relative(candidatePath, cwd);
+  return Str.isEmpty(relative) || (!path.isAbsolute(relative) && !Str.startsWith(`..${path.sep}`)(relative));
+};
+
 const procCwdProbe = Effect.fnUntraced(function* (
   candidatePath: string
 ): Effect.fn.Return<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const listing = yield* Effect.result(fs.readDirectory(PROC_ROOT));
-  if (Result.isFailure(listing)) {
+  // /proc/<pid>/cwd targets are fully resolved by the kernel, so the candidate must be
+  // resolved too or a symlinked HOME would make every live directory look idle.
+  const resolvedCandidate = yield* fs.realPath(candidatePath).pipe(Effect.option);
+  if (Result.isFailure(listing) || O.isNone(resolvedCandidate)) {
     return O.none();
   }
-  const readings = yield* Effect.forEach(
-    A.filter(listing.success, isProcPidName),
-    Effect.fnUntraced(function* (pid) {
-      return yield* Effect.result(fs.readLink(path.join(PROC_ROOT, pid, "cwd")));
-    }),
-    { concurrency: 16 }
+  const cwds = A.getSomes(
+    yield* Effect.forEach(
+      A.filter(listing.success, isProcPidName),
+      Effect.fnUntraced(function* (pid) {
+        return yield* fs.readLink(path.join(PROC_ROOT, pid, "cwd")).pipe(Effect.option);
+      }),
+      { concurrency: 16 }
+    )
   );
-  // Individual unreadable pids are EXPECTED on a real host — other users' daemons,
-  // kernel threads, processes exiting mid-scan — and must not withhold the verdict, or
-  // the probe fails closed on every pass and retirement becomes unreachable. Residue
-  // under $HOME belongs to this user, whose own processes are always readable; only a
-  // failure to list /proc at all makes the census meaningless.
-  return O.some(
-    A.some(A.getSuccesses(readings), (cwd) => {
-      const relative = path.relative(candidatePath, cwd);
-      return Str.isEmpty(relative) || (!path.isAbsolute(relative) && !Str.startsWith(`..${path.sep}`)(relative));
-    })
-  );
+  // Unreadable pids are dropped, never fail-closed: measurement on a healthy host
+  // shows a permanent population of unreadable-by-construction pids — every foreign
+  // uid, plus this user's own ptrace-protected processes (systemd --user, sd-pam, the
+  // compositor, gpg-agent, every 1Password op) — so any fail-closed rule for them
+  // wedges the probe on every pass and makes retirement unreachable. The guarded
+  // population (this user's agent processes working in this user's residue) is
+  // dumpable and observable, and the one protected kind that plausibly occupies a
+  // candidate, an op-run wrapper, spawns dumpable children that inherit and expose
+  // the same cwd to this probe.
+  return O.some(A.some(cwds, (cwd) => cwdWithin(path, resolvedCandidate.value, cwd)));
 });
 
 const canonicalDirectoryShape = Effect.fnUntraced(function* (
