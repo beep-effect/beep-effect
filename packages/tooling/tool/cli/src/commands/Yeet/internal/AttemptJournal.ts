@@ -16,10 +16,9 @@ import {
   YeetAttemptJournalCompacted,
   YeetAttemptTerminationReason,
 } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
+import { attemptInputFactFields } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
-import { YeetProofTier } from "./Planner.ts";
-import { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import { YeetVerdict } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -29,14 +28,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournal");
 const JOURNAL_FILE_NAME = "attempts.ndjson";
 
 export { YeetAttemptJournalCompacted, YeetAttemptTerminationReason };
-
-const attemptInputFactFields = {
-  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-};
 
 /**
  * A durable marker written immediately before a Yeet attempt executes.

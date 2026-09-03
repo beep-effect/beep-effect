@@ -205,6 +205,28 @@ export const ProofStage = LiteralKit(["repair-loop", "pre-push", "merged-preview
 export type ProofStage = typeof ProofStage.Type;
 
 /**
+ * Shared schema fields for immutable facts recorded at attempt start.
+ *
+ * **Example** (Reuse the fact field group)
+ *
+ * ```ts
+ * import { attemptInputFactFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log("resolvedHeadSha" in attemptInputFactFields) // true
+ * ```
+ *
+ * @category schema-building-blocks
+ * @since 0.0.0
+ */
+export const attemptInputFactFields = {
+  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+};
+
+/**
  * Token weight for each admission kind, in 5 GiB token units (SPEC D1).
  *
  * The publish weight covers only the post-proof mutation phase; a publish's
@@ -235,11 +257,7 @@ export const admissionTokenWeight = (kind: AdmissionWorkKind): number =>
 
 const admissionOwnerFields = {
   attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ...attemptInputFactFields,
   pid: S.Finite,
   procStart: S.String,
   kind: AdmissionWorkKind,
@@ -454,11 +472,7 @@ export class AdmissionConfig extends S.Class<AdmissionConfig>($I`AdmissionConfig
 export class AdmissionRequest extends S.Class<AdmissionRequest>($I`AdmissionRequest`)(
   {
     attemptId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ...attemptInputFactFields,
     kind: AdmissionWorkKind,
     weightTokens: S.Finite,
     priority: AdmissionPriority,

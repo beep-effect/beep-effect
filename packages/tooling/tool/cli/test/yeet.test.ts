@@ -2398,7 +2398,7 @@ describe("yeet attempt journal", () => {
           const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
           const lines = yield* Effect.forEach(
             [started(deadAttemptId, DEAD_PID, "fake-dead-owner"), started(liveAttemptId, process.pid, ownerProcStart)],
-            encodeStarted
+            (event) => encodeStarted(event)
           );
           yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
           yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);

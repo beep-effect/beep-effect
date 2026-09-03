@@ -17,7 +17,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { acquireJournalFileLock, releaseJournalFileLock } from "./AdmissionJournal.ts";
 import { ProcessIdentityStatus, processIdentityStatus } from "./ProcessIdentity.ts";
-import { ProofEnvProfile, ProofStage, QualitySchedulerError, YeetProofTier } from "./QualityScheduler.schemas.ts";
+import { attemptInputFactFields, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { repoRunArtifactId } from "./RepoRunArtifacts.ts";
 import type { UUID } from "@beep/schema/String";
 import type { YeetAdmissionLease, YeetAdmissionTicket } from "./QualityScheduler.schemas.ts";
@@ -115,11 +115,7 @@ const AttemptJournalRetentionEvent = S.Union([
     startedAt: S.String,
     ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ...attemptInputFactFields,
   }),
   S.TaggedStruct("attempt-finished", {
     schemaVersion: S.Literal("yeet-attempt-journal/v1"),
@@ -141,11 +137,7 @@ const SchedulerAttemptTerminated = S.TaggedStruct("attempt-terminated", {
   attemptId: UUIDSchema,
   recordedAt: S.String,
   reason: YeetAttemptTerminationReason,
-  resolvedHeadSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  stage: ProofStage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ...attemptInputFactFields,
 });
 
 const decodeRetentionEvent = S.decodeUnknownEffect(S.fromJsonString(AttemptJournalRetentionEvent));
