@@ -53,12 +53,12 @@
     {
       "id": "P0",
       "name": "Measure and ratify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Hygiene",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

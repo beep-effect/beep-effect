@@ -5,7 +5,7 @@ focused PR through Yeet unless the operator bundles a phase. Packet phase flips 
 their implementation truth. Heavy lanes run on Codex (Sol, high effort); web research on Grok; the
 orchestrator owns schemas, contracts, and judgment.
 
-## P0 — Measure and ratify
+## P0 — Measure and ratify — COMPLETE 2026-09-03
 
 - [x] A1 economics report — done 2026-09-03 (Codex measurement lane): `research/economics.md`,
       `research/economics.json` (2,115 input receipts), `research/scripts/economics.py`.
@@ -18,7 +18,7 @@ orchestrator owns schemas, contracts, and judgment.
       open: script-lane migration order (now data-driven: coverage first), machine-wide ledger as
       P3 candidate, second enforced pair.
 
-## P1 — Journal facts, then hygiene (independent small PRs, Codex lanes in sibling worktrees)
+## P1 — Journal facts, then hygiene — IN PROGRESS (independent small PRs, Codex lanes in sibling worktrees)
 
 - [ ] A5 journal facts: every attempt row carries the tree fingerprint and tier; the pre-push and
       merged-preview wrappers journal each inner lane (id, tier, start, end, duration, input digest
