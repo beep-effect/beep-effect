@@ -8,7 +8,7 @@
 "use client";
 
 import { ClientObservabilityLive } from "@beep/agents-client";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 
@@ -41,8 +41,7 @@ export const professionalBrowserRuntime = professionalAtomRuntimeFactory(Layer.e
  *
  * ```ts
  * import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ProfessionalStorageLive)) // true
  * ```
  *

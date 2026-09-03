@@ -18,9 +18,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { A, O, P, pipe, Str } from "@beep/utils";
-import { Result } from "effect";
-
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
+import * as Str from "@beep/utils/Str";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 /**
  * Whether the sidecar selected stdin/stdout IPC transport.
  *

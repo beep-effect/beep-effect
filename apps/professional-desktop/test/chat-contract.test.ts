@@ -15,11 +15,18 @@ import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/te
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Fiber, Layer, Metric, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import { decodeWorkspaceId, userDocument, userParagraphDocument } from "@/chat/ChatFixtures";
@@ -311,7 +318,7 @@ describe("@beep/professional-desktop chat contract", () => {
         )
       );
 
-      const fiber = yield* Effect.forkChild(Stream.runDrain(parked));
+      const fiber = yield* parked.pipe(Stream.runDrain, Effect.forkChild);
       yield* Deferred.await(firstBlockSeen);
       yield* Fiber.interrupt(fiber);
 
@@ -417,12 +424,12 @@ describe("@beep/professional-desktop chat contract", () => {
       });
       const operations = yield* makeChatOperations(gatedStore, kernel, sink);
       const thread = yield* operations.createThread(decodeWorkspaceId(1), "Committed assistant");
-      const send = yield* Effect.forkChild(
-        Stream.runDrain(operations.sendMessage(thread.id, userDocument("Keep the answer"), "assistant-committed"))
-      );
+      const send = yield* operations
+        .sendMessage(thread.id, userDocument("Keep the answer"), "assistant-committed")
+        .pipe(Stream.runDrain, Effect.forkChild);
 
       yield* Deferred.await(assistantCommitted);
-      const interrupt = yield* Effect.forkChild(Fiber.interrupt(send));
+      const interrupt = yield* send.pipe(Fiber.interrupt, Effect.forkChild);
       yield* Effect.yieldNow;
       yield* Deferred.succeed(releaseAssistantAppend, undefined);
       yield* Fiber.join(interrupt);
@@ -526,11 +533,15 @@ describe("@beep/professional-desktop chat contract", () => {
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "Concurrent");
 
-      const first = yield* Effect.forkChild(Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"))));
+      const first = yield* operations
+        .sendMessage(thread.id, userDocument("ALPHA"))
+        .pipe(Stream.runDrain, Effect.forkChild);
       // Wait until the first turn is inside the kernel (holding the thread).
       yield* Effect.repeat(Ref.get(histories), { until: (all) => all.length === 1 });
 
-      const second = yield* Effect.forkChild(Stream.runDrain(operations.sendMessage(thread.id, userDocument("BRAVO"))));
+      const second = yield* operations
+        .sendMessage(thread.id, userDocument("BRAVO"))
+        .pipe(Stream.runDrain, Effect.forkChild);
       // Give the second turn every chance to barge in ahead of the first.
       yield* Effect.yieldNow;
       yield* Effect.yieldNow;
@@ -569,15 +580,15 @@ describe("@beep/professional-desktop chat contract", () => {
       });
       const operations = yield* makeChatOperations(store, kernel, sink);
       const thread = yield* operations.createThread(decodeWorkspaceId(1), "Two windows");
-      const first = yield* Effect.forkChild(
-        Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"), "window-a"))
-      );
+      const first = yield* operations
+        .sendMessage(thread.id, userDocument("ALPHA"), "window-a")
+        .pipe(Stream.runDrain, Effect.forkChild);
       yield* Deferred.await(enteredKernel);
-      const queued = yield* Effect.forkChild(
-        Stream.runDrain(operations.sendMessage(thread.id, userDocument("BRAVO"), "window-b"))
-      );
+      const queued = yield* operations
+        .sendMessage(thread.id, userDocument("BRAVO"), "window-b")
+        .pipe(Stream.runDrain, Effect.forkChild);
       yield* Effect.yieldNow;
-      const interrupt = yield* Effect.forkChild(Fiber.interrupt(queued));
+      const interrupt = yield* queued.pipe(Fiber.interrupt, Effect.forkChild);
       yield* Deferred.succeed(release, undefined);
       yield* Fiber.join(first);
       yield* Fiber.join(interrupt);

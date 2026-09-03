@@ -4,13 +4,16 @@
  */
 import { referenceProfiles } from "@beep/editor/capability/profiles";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema";
+import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema/Lexical.codec";
 import * as Md from "@beep/md/Md.model";
-import { Effect, pipe, Result, SchemaIssue } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { Atom } from "effect/unstable/reactivity";
-import type { SerializedEditorState } from "@beep/lexical-schema";
+import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 
 const text = (value: string) => Md.Text.make({ value });
 const $I = $ProfessionalDesktopId.create("editor-proof/EditorProof.atoms");

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,20 +36,21 @@ tsserver, dev tooling), not production bundle bytes.
 
 ## Current Phase
 
-P2 Pilot gate. P1 completed the inverted family-scoped law, mapping-driven
-code/JSDoc/Markdown migration modes, pilot-blocking public leaves, generator
-repairs, and JSDoc root-import detection. The next action is operator approval
-of the proposed `apps/professional-desktop` pilot before measuring or writing
-pilot imports.
+P2 Pilot gate complete with an **inconclusive — stop** verdict. The approved
+`apps/professional-desktop` pilot passed every correctness gate, reached zero
+root imports, and was idempotent, but its one permitted symmetric extension
+produced no stable qualifying performance improvement. The strict-pass
+authority therefore did not activate P3; the default promoted-family ratchet
+is empty again, and the packet is paused at the gate.
 
 ## Latest Evidence
 
-P1 complete 2026-09-03: the focused law suite is green; the proposed pilot
-dry-run has zero manual reviews or parser warnings in executable and JSDoc
-modes; all new public leaves resolve under NodeNext and Bundler; every touched
-workspace package passed default package verification; the JSDoc ratchet has
-zero root-policy findings; and full repository docgen passed. The reproducible
-gross, in-scope, pilot, and authored-Markdown counts are recorded in
+P2 complete 2026-09-03: 15 valid source-tsgo and Vitest samples per state, 7
+cold route samples, and 5 deterministic builds produced no decisive win and
+no stable material regression. The full threshold math and stop decision are
+recorded in [`history/p2-pilot-verdict.md`](./history/p2-pilot-verdict.md),
+with auditable raw samples under
+[`history/measurements/`](./history/measurements/). P1 evidence remains in
 [`research/p1-census-baseline.md`](./research/p1-census-baseline.md).
 
 ## Notes
