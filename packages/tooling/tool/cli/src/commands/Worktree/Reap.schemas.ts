@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Worktree/Reap.schemas");
@@ -70,7 +70,6 @@ export const WorktreeReapSkipReason = LiteralKit([
   "no-pr",
   "too-young",
   "size-probe-failed",
-  "eligibility-changed",
   "retirement-failed",
 ]).pipe(
   $I.annoteSchema("WorktreeReapSkipReason", {

@@ -11,11 +11,17 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
-import { A, O, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, Path } from "effect";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonEmptyTrimmedStr } from "@beep/schema/String";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import * as Bool from "effect/Boolean";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";

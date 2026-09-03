@@ -94,6 +94,7 @@ describe("worktree reap", () => {
         const merged = yield* addWorktree(repoRoot, worktreesRoot, "merged");
         const dirty = yield* addWorktree(repoRoot, worktreesRoot, "dirty");
         const open = yield* addWorktree(repoRoot, worktreesRoot, "open");
+        const revival = yield* addWorktree(repoRoot, worktreesRoot, "revival");
         const noPr = yield* addWorktree(repoRoot, worktreesRoot, "no-pr");
         const young = yield* addWorktree(repoRoot, worktreesRoot, "young");
         yield* fs.writeFileString(path.join(dirty, "dirty.txt"), "unsaved\n");
@@ -121,6 +122,7 @@ describe("worktree reap", () => {
           if (Str.Equivalence(cwd, dirty)) return ghResult(mergedQuery ? 102 : undefined);
           if (Str.Equivalence(cwd, young)) return ghResult(mergedQuery ? 103 : undefined);
           if (Str.Equivalence(cwd, open)) return ghResult(mergedQuery ? undefined : 104);
+          if (Str.Equivalence(cwd, revival)) return ghResult(mergedQuery ? 106 : 105);
           return ghResult(undefined);
         });
 
@@ -128,7 +130,7 @@ describe("worktree reap", () => {
 
         expect(report.applied).toBe(false);
         expect(report.schemaVersion).toBe("worktree-reap/v1");
-        expect(report.candidates).toHaveLength(5);
+        expect(report.candidates).toHaveLength(6);
         expect(candidateAt(report, merged)).toMatchObject({ reapClass: "merged-pr", retired: false });
         expect(O.isNone(candidateAt(report, merged).skipReason)).toBe(true);
         expect(O.isSome(candidateAt(report, merged).bytes)).toBe(true);
@@ -136,6 +138,9 @@ describe("worktree reap", () => {
         expect(O.getOrThrow(candidateAt(report, dirty).skipReason)).toBe("dirty-tree");
         expect(candidateAt(report, open).reapClass).toBe("open-pr");
         expect(O.getOrThrow(candidateAt(report, open).skipReason)).toBe("open-pr");
+        expect(candidateAt(report, revival).reapClass).toBe("open-pr");
+        expect(O.getOrThrow(candidateAt(report, revival).skipReason)).toBe("open-pr");
+        expect(O.getOrThrow(candidateAt(report, revival).prNumber)).toBe(105);
         expect(candidateAt(report, noPr).reapClass).toBe("no-pr");
         expect(O.getOrThrow(candidateAt(report, noPr).skipReason)).toBe("no-pr");
         expect(O.getOrThrow(candidateAt(report, young).skipReason)).toBe("too-young");

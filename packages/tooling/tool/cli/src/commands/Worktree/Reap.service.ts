@@ -7,9 +7,20 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NonEmptyTrimmedStr } from "@beep/schema";
-import { A, O, Str } from "@beep/utils";
-import { Clock, DateTime, Duration, Effect, FileSystem, Match, Number as N, Path, pipe, Result } from "effect";
+import { NonEmptyTrimmedStr } from "@beep/schema/String";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
@@ -104,22 +115,24 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   cwd: string,
   branch: string
 ): Effect.fn.Return<PrClassification, never, ChildProcessSpawner.ChildProcessSpawner> {
-  const merged = yield* ghPrList(runner, cwd, branch, "merged");
-  if (O.isNone(merged)) {
-    return { reapClass: "unknown", prNumber: O.none(), failed: true };
-  }
-  const mergedPr = A.head(merged.value);
-  if (O.isSome(mergedPr)) {
-    return { reapClass: "merged-pr", prNumber: O.some(mergedPr.value.number), failed: false };
-  }
+  // Open must win over merged: a revived branch can carry an old merged PR AND a live
+  // open PR, and retiring it would delete in-flight work along with its branch.
   const open = yield* ghPrList(runner, cwd, branch, "open");
   if (O.isNone(open)) {
     return { reapClass: "unknown", prNumber: O.none(), failed: true };
   }
   const openPr = A.head(open.value);
-  return O.match(openPr, {
+  if (O.isSome(openPr)) {
+    return { reapClass: "open-pr", prNumber: O.some(openPr.value.number), failed: false };
+  }
+  const merged = yield* ghPrList(runner, cwd, branch, "merged");
+  if (O.isNone(merged)) {
+    return { reapClass: "unknown", prNumber: O.none(), failed: true };
+  }
+  const mergedPr = A.head(merged.value);
+  return O.match(mergedPr, {
     onNone: (): PrClassification => ({ reapClass: "no-pr", prNumber: O.none(), failed: false }),
-    onSome: (pr): PrClassification => ({ reapClass: "open-pr", prNumber: O.some(pr.number), failed: false }),
+    onSome: (pr): PrClassification => ({ reapClass: "merged-pr", prNumber: O.some(pr.number), failed: false }),
   });
 });
 
@@ -157,7 +170,7 @@ const readIdleHours = Effect.fn("WorktreeReap.readIdleHours")(function* (
   }
   const newestMillis = N.max(commitSeconds.value * 1_000, headMtime.value);
   const age = Duration.millis(N.max(0, nowMillis - newestMillis));
-  return { hours: O.some(Duration.toHours(age)), failed: false };
+  return { hours: O.some(age.pipe(Duration.toHours)), failed: false };
 });
 
 const measureBytes = Effect.fn("WorktreeReap.measureBytes")(function* (

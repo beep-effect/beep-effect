@@ -5,8 +5,10 @@
  * @since 0.0.0
  */
 
-import { A, O } from "@beep/utils";
-import { Console, Effect } from "effect";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
