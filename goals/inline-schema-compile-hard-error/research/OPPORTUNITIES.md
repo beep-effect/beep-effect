@@ -204,3 +204,29 @@
 - **Prevention:** Make codemod safety analysis require declaration-order
   dominance in addition to module scope, and classify unresolved or later
   schema dependencies as manual rather than emitting an eager compiler const.
+
+## 2026-09-03 — Frozen dependency state can misreport diagnostic inventory drift
+
+- **Work:** Run the canonical Yeet repair after merging the latest mainline
+  diagnostic policy.
+- **Evidence:** `beep quality tsgo-rules` reported eight configured rules as
+  unexpected while the lockfile required `@effect/tsgo` 0.39.1 and the
+  installed package was still 0.35.0. A frozen install upgraded the package,
+  after which the same gate verified all 103 installed rules.
+- **Prevention:** Refresh dependencies from the frozen lockfile after merging a
+  dependency-version change and before comparing installed tool inventories to
+  checked-in configuration.
+
+## 2026-09-03 — Schema-first reconciliation erased exception decisions
+
+- **Work:** Run the schema-first gate after the repository-wide compiler-hoist
+  migration.
+- **Evidence:** The live and tracked inventory totals both remained 88, but 12
+  entries appeared missing and 16 appeared stale because line-based advisory
+  locations moved with the hoists. The canonical `--write` reconciliation then
+  downgraded the 12 surviving justified exceptions to generic advisories and
+  replaced their documented reasons.
+- **Prevention:** Give schema-first inventory findings a location-independent
+  identity, using the path, rule, and symbol as the durable key while retaining
+  line numbers only as evidence metadata, and preserve status/reason fields
+  when a live finding matches an existing entry independent of location.

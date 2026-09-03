@@ -130,9 +130,5 @@ const decodeUnknownXmlTextToUnknown = S.decodeUnknownEffect(XmlTextToUnknown);
  */
 export const decodeXmlTextAs = <Schema extends S.Top>(schema: Schema) => {
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
-    return yield* decodeTargetSchema(input);
-  });
-
-  return flow(decodeUnknownXmlTextToUnknown, Effect.flatMap(decodeTarget));
+  return flow(decodeUnknownXmlTextToUnknown, Effect.flatMap(decodeTargetSchema));
 };

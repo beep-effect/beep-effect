@@ -139,9 +139,5 @@ const decodeUnknownJsoncTextToUnknown = S.decodeUnknownEffect(JsoncTextToUnknown
  */
 export const decodeJsoncTextAs = <Schema extends S.Top>(schema: Schema) => {
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
-  const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
-    return yield* decodeTargetSchema(input);
-  });
-
-  return flow(decodeUnknownJsoncTextToUnknown, Effect.flatMap(decodeTarget));
+  return flow(decodeUnknownJsoncTextToUnknown, Effect.flatMap(decodeTargetSchema));
 };

@@ -6,7 +6,7 @@
  * @since 0.1.0
  */
 
-import { thunkFalse, thunkTrue } from "@beep/utils/thunk";
+import { thunkFalse } from "@beep/utils/thunk";
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";
@@ -157,10 +157,7 @@ export default defineRule({
               (expression) => expression.type !== "Identifier" && expression.type !== "MemberExpression"
             )
           ) {
-            return O.match(asSchemaMethodCall(firstArg), {
-              onNone: thunkTrue,
-              onSome: () => isNestedStaticSchemaCall(firstArg),
-            });
+            return O.isNone(asSchemaMethodCall(firstArg)) || isNestedStaticSchemaCall(firstArg);
           }
           return isStaticSchemaReference(firstArg);
         },

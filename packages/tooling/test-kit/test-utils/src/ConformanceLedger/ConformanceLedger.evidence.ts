@@ -58,12 +58,10 @@ const declaredTestIds = (file: string, contents: string): ReadonlyArray<string> 
     A.map((title) => `${file}#${titleSlug(title)}`)
   );
 
-const runtimeValidators = (enforcement: ReadonlyArray<Conformance.InvariantEnforcement>): ReadonlyArray<string> =>
-  pipe(
-    enforcement,
-    A.filter(Conformance.InvariantEnforcement.guards.runtime),
-    A.map(({ validator }) => validator)
-  );
+const runtimeValidators: (enforcement: ReadonlyArray<Conformance.InvariantEnforcement>) => ReadonlyArray<string> = flow(
+  A.filter(Conformance.InvariantEnforcement.guards.runtime),
+  A.map(({ validator }) => validator)
+);
 
 const testSourceFor = (
   sources: ReadonlyArray<readonly [file: string, contents: string]>,
