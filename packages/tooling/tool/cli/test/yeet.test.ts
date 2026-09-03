@@ -2210,6 +2210,25 @@ describe("yeet attempt journal", () => {
       )
     ));
 
+  it("appends a compaction receipt without reserving an attempt retention slot", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const journalPath = path.join(tmpDir, "attempts.ndjson");
+          const receipt =
+            '{"schemaVersion":"yeet-attempt-journal/v1","_tag":"journal-compacted","recordedAt":"2026-09-03T00:00:01.000Z","evictedCount":2,"oldestEvictedRecordedAt":"2026-09-03T00:00:00.000Z"}';
+
+          yield* appendEncodedAttemptJournalEvent(journalPath, receipt, "journal-compacted");
+
+          const text = yield* fs.readFileString(journalPath);
+          const event = yield* decodeYeetAttemptJournalEvent(Str.trim(text));
+          expect(event).toMatchObject({ _tag: "journal-compacted", evictedCount: 2 });
+        })
+      )
+    ));
+
   it("schema-decodes unfinished events without evicting their immutable starts", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
@@ -2275,7 +2294,10 @@ describe("yeet attempt journal", () => {
           });
           const oldestAttemptId = pipe(starts, A.head, O.getOrThrow).attemptId;
           yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
-          yield* fs.writeFileString(journalPath, `${A.join(yield* Effect.forEach(starts, encodeStarted), "\n")}\n`);
+          yield* fs.writeFileString(
+            journalPath,
+            `${A.join(yield* Effect.forEach(starts, (started) => encodeStarted(started)), "\n")}\n`
+          );
 
           yield* appendYeetAttemptJournalEvent(
             tempContext,
@@ -2290,7 +2312,7 @@ describe("yeet attempt journal", () => {
 
           const events = yield* Effect.forEach(
             pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
-            decodeYeetAttemptJournalEvent
+            (line) => decodeYeetAttemptJournalEvent(line)
           );
           const oldestAttemptRows = A.filter(
             events,
@@ -2799,7 +2821,7 @@ describe("yeet attempt journal", () => {
           expect(yield* reconcileAttemptJournal(journalPath)).toBe(0);
           const events = yield* Effect.forEach(
             pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
-            decodeYeetAttemptJournalEvent
+            (line) => decodeYeetAttemptJournalEvent(line)
           );
           const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
           expect(retainedStarts).toHaveLength(55);
