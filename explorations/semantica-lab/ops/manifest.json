@@ -3,9 +3,13 @@
   "exploration": {
     "slug": "semantica-lab",
     "title": "Semantica Port Atlas & Lab",
-    "status": "graduated",
-    "stage": "graduate",
-    "openQuestions": [],
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [
+      "MAP Sequencing 5: the C2 pass fired semantica-storage-inversion; what bounded spike proves delete and compaction semantics for the append-only provenance ledger?",
+      "MAP Sequencing 5: the C2 pass satisfied one of semantica-reasoning-spike's two preconditions; the G-entailment/rules fixture is still uncommitted. What bounded spike should build that fixture and test the queued reasoning candidates?",
+      "O3/M4: the passed canary unblocked row-level adopt/adapt/already-have atlas values (DECISIONS Atlas writes row), which is the atlas-edit need that re-enters semantica-atlas-sync; what bounded D5 render/diff sync writes them from the schema-validated IR?"
+    ],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/semantica-canary", "goals/openai-driver"],
@@ -13,6 +17,6 @@
       "supersededBy": null
     },
     "created": "2026-08-24",
-    "updated": "2026-08-31"
+    "updated": "2026-09-02"
   }
 }

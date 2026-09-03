@@ -43,6 +43,24 @@ assignments fail before the file is modified because their effective value may
 differ across dotenv consumers. It refuses a `TURBO_TOKEN_REF` that is not an
 `op://` reference, so a resolved secret cannot be written to disk by accident.
 
+### Rotating or correcting the token reference
+
+A resolving secret reference proves only that 1Password can supply a value; it
+does not prove that the cache service authorizes that value. The canonical
+workstation credential is the infra-vault read-only item that is the SSM source.
+Correct an older reference by opting into replacement explicitly:
+
+```sh
+TURBO_TOKEN_REPLACE=1 \
+TURBO_API=<endpoint> TURBO_TEAM=<team-slug> TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
+  bash scripts/enable-turbo-remote-reads.sh
+```
+
+Replacement rewrites `TURBO_TOKEN` only when its current value differs from the
+supplied reference. The helper reports an existing reference by vault and item,
+or reports `raw value (not shown)` for a resolved value; it never prints the
+value. The default mode continues to leave every nonblank assignment alone.
+
 Verify without executing a lane:
 
 ```sh

@@ -7,15 +7,13 @@
 
 import * as B from "@beep/box";
 import { $BoxProvisioningId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
-import { Context, Effect, Layer, pipe } from "effect";
+import { Context, Effect, Equal, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
 import {
   BoxDiscoveryAvailable,
-  BoxDiscoveryBlocked,
   BoxDiscoveryPermissionBlocked,
   BoxObservedState,
   BoxProviderId,
@@ -29,7 +27,7 @@ import {
   toObservedCollaboration,
   toObservedFolderFromMini,
 } from "./internal/live.ts";
-import type { BoxDesiredState, BoxEntitlementAvailability } from "./BoxProvisioningIntent.ts";
+import type { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 import type { BoxDiscovery, BoxDiscoveryKind, BoxObservedFolder } from "./BoxProvisioningObserved.ts";
 import type { MarkerPage } from "./internal/live.ts";
 
@@ -63,27 +61,15 @@ const observeCollaborations = (box: B.Box["Service"], folders: ReadonlyArray<Box
     { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
 
-const PermissionErrorCode = LiteralKit(["access_denied_insufficient_permissions", "insufficient_scope"]);
-
-const forbiddenDiscovery = (
-  kind: "metadata" | "retention",
-  assertedAvailability: BoxEntitlementAvailability,
-  code: O.Option<string>
-): BoxDiscovery =>
-  O.exists(code, S.is(PermissionErrorCode)) || assertedAvailability === "available"
-    ? BoxDiscoveryPermissionBlocked.make({ code, kind, status: 403 })
-    : BoxDiscoveryBlocked.make({ kind, status: 403 });
-
 const entitlementDiscovery = (
   kind: "metadata" | "retention",
-  assertedAvailability: BoxEntitlementAvailability,
   count: Effect.Effect<number, B.BoxError>
 ): Effect.Effect<BoxDiscovery, B.BoxError> =>
   count.pipe(
     Effect.map((value) => BoxDiscoveryAvailable.make({ count: value, kind })),
     Effect.catchTag("BoxError", (error) => {
       if (O.contains(error.status, 403)) {
-        return Effect.succeed(forbiddenDiscovery(kind, assertedAvailability, error.code));
+        return Effect.succeed(BoxDiscoveryPermissionBlocked.make({ code: error.code, kind, status: 403 }));
       }
       return Effect.fail(error);
     })
@@ -94,15 +80,18 @@ const countOptionalEntries = (entries: ReadonlyArray<unknown> | null | undefined
 
 const observeMetadata = (
   box: B.Box["Service"],
-  rootFolderId: BoxProviderId,
-  assertedAvailability: BoxEntitlementAvailability
-): Effect.Effect<BoxDiscovery, B.BoxError> =>
-  entitlementDiscovery(
+  rootFolderId: BoxProviderId
+): Effect.Effect<BoxDiscovery, B.BoxError> => {
+  const folderMetadataCount = Equal.equals(rootFolderId, BoxProviderId.make("0"))
+    ? Effect.succeed(0)
+    : box.folderMetadata
+        .getFolderMetadata(B.FolderMetadataGetFolderMetadataPayload.make({ folderId: rootFolderId }))
+        .pipe(Effect.map((metadata) => countOptionalEntries(metadata.entries)));
+  return entitlementDiscovery(
     "metadata",
-    assertedAvailability,
     Effect.all(
       [
-        box.folderMetadata.getFolderMetadata(B.FolderMetadataGetFolderMetadataPayload.make({ folderId: rootFolderId })),
+        folderMetadataCount,
         box.metadataCascadePolicies.getMetadataCascadePolicies(
           B.MetadataCascadePoliciesGetMetadataCascadePoliciesPayload.make({
             queryParams: { folderId: rootFolderId },
@@ -124,7 +113,7 @@ const observeMetadata = (
       Effect.map(([folderMetadata, cascadePolicies, enterpriseTemplates, globalTemplates]) =>
         A.reduce(
           [
-            countOptionalEntries(folderMetadata.entries),
+            folderMetadata,
             countOptionalEntries(cascadePolicies.entries),
             A.length(enterpriseTemplates),
             A.length(globalTemplates),
@@ -135,14 +124,11 @@ const observeMetadata = (
       )
     )
   );
+};
 
-const observeRetention = (
-  box: B.Box["Service"],
-  assertedAvailability: BoxEntitlementAvailability
-): Effect.Effect<BoxDiscovery, B.BoxError> =>
+const observeRetention = (box: B.Box["Service"]): Effect.Effect<BoxDiscovery, B.BoxError> =>
   entitlementDiscovery(
     "retention",
-    assertedAvailability,
     collectMarkerPages<B.RetentionPolicy, B.BoxError>((marker) =>
       box.retentionPolicies.getRetentionPolicies(
         B.RetentionPoliciesGetRetentionPoliciesPayload.make({ queryParams: markerQuery(marker) })
@@ -198,7 +184,7 @@ const enterpriseIdFromUser = (user: B.UserFull): Effect.Effect<BoxProviderId, Bo
 
 const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
   observe: Effect.fn("BoxProvisioningInventory.observe")(function* (desired) {
-    const rootFolderId = BoxProviderId.make(desired.rootFolderId);
+    const rootFolderId = desired.rootFolderId;
     const user = yield* box.users.getUserMe(
       B.UsersGetUserMePayload.make({
         queryParams: B.GetUserMeQueryParams.make({ fields: ["id", "enterprise"] }),
@@ -210,8 +196,8 @@ const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
       [
         observeCollaborations(box, folders),
         listObservedWebhooks(box),
-        observeMetadata(box, rootFolderId, desired.entitlements.metadata),
-        observeRetention(box, desired.entitlements.retention),
+        observeMetadata(box, rootFolderId),
+        observeRetention(box),
         observeSignRequests(box),
         observeSignTemplates(box),
       ],
@@ -250,9 +236,12 @@ export interface BoxProvisioningInventoryShape {
  * **Details**
  *
  * Folder, collaboration, webhook, retention, and Sign listings follow marker
- * pagination. Metadata and retention 403 responses distinguish missing scopes
- * from asserted subscription blockers; every other driver error remains in
- * the Effect error channel. The service exposes no write verb.
+ * pagination. List-endpoint success, emptiness, and undocumented 403 responses
+ * are not entitlement proof: every 403 is retained as a permission blocker and
+ * the planner uses declared entitlements. Inventory does not request folder
+ * metadata for root folder `0`, because Box documents that operation as
+ * forbidden on the root. Every other driver error remains in the Effect error
+ * channel. The service exposes no write verb.
  *
  * **Example** (Build the inventory layer from Box)
  *
@@ -264,6 +253,9 @@ export interface BoxProvisioningInventoryShape {
  * console.log(Box)
  * ```
  *
+ * @see {@link https://developer.box.com/reference/get-folders-id-metadata} for the root-folder restriction.
+ * @see {@link https://developer.box.com/reference/get-retention-policies} for documented list response statuses.
+ * @see {@link https://developer.box.com/reference/get-metadata-templates-enterprise} for documented list response statuses.
  * @category services
  * @since 0.0.0
  */
