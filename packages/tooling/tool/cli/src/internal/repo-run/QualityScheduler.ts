@@ -1055,9 +1055,38 @@ const ticketOrder = (nowMillis: number, config: AdmissionConfig): Order.Order<Ye
   pipe(
     Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => effectivePriorityRank(ticket, nowMillis, config)),
     Order.combine(Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => ticket.enqueuedAtMillis)),
-    Order.combine(Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => ticket.pid)),
     Order.combine(Order.mapInput(Order.String, (ticket: YeetAdmissionTicket) => ticket.nonce))
   );
+
+/**
+ * Orders admission tickets by effective rank, enqueue instant, and nonce.
+ *
+ * The nonce is the durable lifecycle identity and supplies a stable final
+ * tie-break when separate writers enqueue within the same clock tick.
+ *
+ * **Example** (Reference the admission ticket order)
+ *
+ * ```ts
+ * import { orderAdmissionTicketsForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof orderAdmissionTicketsForTesting) // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const orderAdmissionTicketsForTesting: {
+  (
+    nowMillis: number,
+    config: AdmissionConfig
+  ): (tickets: ReadonlyArray<YeetAdmissionTicket>) => ReadonlyArray<YeetAdmissionTicket>;
+  (
+    tickets: ReadonlyArray<YeetAdmissionTicket>,
+    nowMillis: number,
+    config: AdmissionConfig
+  ): ReadonlyArray<YeetAdmissionTicket>;
+} = dual(3, (tickets, nowMillis, config) => A.sort(tickets, ticketOrder(nowMillis, config)));
 
 const activeTokenTotal = (state: LiveAdmissionState): number =>
   A.reduce(state.leases, 0, (total, { lease }) => total + lease.weightTokens);
