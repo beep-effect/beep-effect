@@ -4,6 +4,25 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids, quote only the minimal identifying error text.
 
+## 2026-09-03 — The tsgo task handoff named the policy lint as the synthetic-config executor
+
+- **Doing:** designing the C3 tsgo-tests Turbo seam from the named implementation and routing files.
+- **Evidence:** the handoff named `commands/Lint/PackageTestTypecheck.ts`, but the scanner that writes
+  synthetic tsconfigs and aggregates tsgo results lives in `commands/Quality/Quality.command.ts`;
+  `package-test-typecheck` is the separate blind-spot baseline lint.
+- **Would have prevented it:** name both surfaces explicitly in the lane brief: the
+  `quality test-tsgo` execution command and the `package-test-typecheck` policy/hash-task identity.
+
+## 2026-09-03 — Turbo omits configured tasks that have no package script from run summaries
+
+- **Doing:** proving that a centrally declared per-package task could supply the ledger's required
+  `.turbo/runs/<run-id>.json` `tasks[].hash` without editing every test-owning package manifest.
+- **Evidence:** `turbo run transit --filter=@beep/types --dry=json` reported a hash for the configured
+  task, while the same real run with `--summarize` wrote an empty `tasks` array and warned that no
+  package had a matching task.
+- **Would have prevented it:** state in the C3 ruling that run-summary hashes require a matching
+  package script, and decide whether the one-time workspace-manifest migration is part of the lane.
+
 ## 2026-09-03 — A chained review fix committed and pushed past a red test
 
 - **Doing:** closing a Greptile thread on the economics script by patching a validation branch,

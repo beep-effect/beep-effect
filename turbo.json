@@ -128,6 +128,18 @@
         "!.beep/**"
       ]
     },
+    "package-test-typecheck": {
+      "cache": false,
+      "inputs": [
+        "package.json",
+        "test/**",
+        "tsconfig*.json",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts"
+      ],
+      "outputs": [".turbo/package-test-typecheck-result.json"]
+    },
     "test:property": {
       "env": ["BEEP_FC_NUM_RUNS", "BEEP_FC_SEED"],
       "inputs": [
