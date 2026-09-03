@@ -210,6 +210,10 @@ const authorizedGet = (
     const response = yield* client
       .execute(request)
       .pipe(Effect.mapError((cause) => FreshbooksError.fromReason("transport", { cause, resource, url })));
+    // Non-2xx (including a short-burst 429 with Retry-After) surfaces as a typed
+    // error carrying the status; retry/backoff and reconciliation belong to the
+    // consuming reconciler rather than every read verb, so the caller can
+    // observe and schedule the retry with the server-provided delay.
     if (response.status < 200 || response.status >= 300) {
       return yield* FreshbooksError.fromReason("response status", { resource, status: response.status, url });
     }

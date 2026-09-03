@@ -26,7 +26,7 @@ const layer = Freshbooks.makeLayer(
 const program = Effect.gen(function* () {
   const freshbooks = yield* Freshbooks
   const identity = yield* freshbooks.getIdentity
-  return identity.businessMemberships
+  return identity.business_memberships
 })
 ```
 

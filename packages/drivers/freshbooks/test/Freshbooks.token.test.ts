@@ -99,6 +99,14 @@ const expiredToken = FreshbooksStoredToken.make({
   expiresAt: 0,
 });
 
+// A token valid far into the future: `accessToken` reuses it, but an explicit
+// `refresh` must still rotate it (revoked-before-expiry recovery).
+const freshToken = FreshbooksStoredToken.make({
+  accessToken: Redacted.make("access-0"),
+  refreshToken: Redacted.make("refresh-0"),
+  expiresAt: 4_102_444_800_000,
+});
+
 const AuthLayer = (
   initial: FreshbooksStoredToken
 ): Layer.Layer<FreshbooksAuth | FreshbooksTokenStore | TokenServer, FreshbooksError> =>
@@ -194,6 +202,25 @@ describe("@beep/freshbooks token rotation", () => {
             expect(error.value.reason).toBe("token refresh");
           }
         }
+      })
+    );
+  });
+
+  layer(AuthLayer(freshToken))((it) => {
+    it.effect(
+      "forces a rotation on explicit refresh even when the stored token is still fresh",
+      Effect.fnUntraced(function* () {
+        const auth = yield* FreshbooksAuth;
+        const server = yield* TokenServer;
+
+        // accessToken reuses the fresh token without a network refresh.
+        yield* auth.accessToken;
+        expect(yield* server.refreshCount).toBe(0);
+
+        // An explicit refresh rotates it anyway (revoked-before-expiry case).
+        const rotated = yield* auth.refresh;
+        expect(yield* server.refreshCount).toBe(1);
+        expect(Redacted.value(rotated)).toBe("access-1");
       })
     );
   });

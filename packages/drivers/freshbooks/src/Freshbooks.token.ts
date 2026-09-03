@@ -284,6 +284,7 @@ const callTokenEndpoint = (
     const request = yield* pipe(
       HttpClientRequest.post(url),
       HttpClientRequest.accept("application/json"),
+      HttpClientRequest.setHeaders(config.headers),
       (base) =>
         HttpClientRequest.bodyJson(base, {
           client_id: config.clientId,
@@ -356,10 +357,24 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
     const now = yield* Clock.currentTimeMillis;
     const response = yield* callTokenEndpoint(client, config, grant);
     const stored = toStored(response, now);
-    yield* store.write(stored);
+    // A write failure here is a stranded rotation: FreshBooks has already
+    // consumed the old single-use refresh token and issued this replacement,
+    // so a persistence failure means the new token is lost and the caller must
+    // re-authorize. Surface it as `token refresh` regardless of the store's own
+    // failure reason so callers do not retry the now-invalid credential.
+    yield* store
+      .write(stored)
+      .pipe(
+        Effect.mapError((error) =>
+          FreshbooksError.fromReason("token refresh", { cause: error, resource: "oauth/token/persist" })
+        )
+      );
     return stored;
   });
 
+  // Refresh-if-stale, used by `accessToken`: re-reads the store inside the
+  // critical section so queued fibers observe a token another owner already
+  // rotated and skip the network call.
   const refreshLocked: Effect.Effect<FreshbooksStoredToken, FreshbooksError> = permit.withPermit(
     Effect.gen(function* () {
       const now = yield* Clock.currentTimeMillis;
@@ -370,6 +385,19 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
           isFresh(token, now)
             ? Effect.succeed(token)
             : rotate({ grant_type: "refresh_token", refresh_token: Redacted.value(token.refreshToken) }),
+      });
+    })
+  );
+
+  // Force a rotation regardless of recorded expiry, for the revoked/rejected
+  // token case where the stored token still looks fresh. Serialized through the
+  // same one-permit owner.
+  const forceRefresh: Effect.Effect<FreshbooksStoredToken, FreshbooksError> = permit.withPermit(
+    Effect.gen(function* () {
+      const current = yield* store.read;
+      return yield* O.match(current, {
+        onNone: FreshbooksError.failEffectFromReasonThunk("token refresh"),
+        onSome: (token) => rotate({ grant_type: "refresh_token", refresh_token: Redacted.value(token.refreshToken) }),
       });
     })
   );
@@ -386,7 +414,7 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
 
   return {
     accessToken,
-    refresh: Effect.map(refreshLocked, (token) => token.accessToken),
+    refresh: Effect.map(forceRefresh, (token) => token.accessToken),
     exchangeCode: (code) => permit.withPermit(rotate({ grant_type: "authorization_code", code })),
     authorizeUrl: (state) =>
       `${config.authUrl}/oauth/authorize/?response_type=code&redirect_uri=${encodeURIComponent(config.redirectUri)}&client_id=${config.clientId}${

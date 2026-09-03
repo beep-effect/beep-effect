@@ -22,6 +22,32 @@ import * as S from "effect/Schema";
 const $I = $FreshbooksId.create("Freshbooks.config");
 const normalizeFreshbooksBaseUrl = Str.replace(/\/+$/, "");
 const isFreshbooksUrl = (value: unknown): value is string => P.isString(value) && URLStr.is(value);
+// FreshBooks requires an exact-match HTTPS redirect URI with no query string
+// (CAPTURE addenda / AGENTS §OAuth mechanics). Enforce https + no-query +
+// no-fragment at decode so an invalid callback is rejected on config resolution
+// rather than only when FreshBooks refuses the authorization exchange.
+const isHttpsNoQueryRedirect = (value: unknown): value is string => {
+  if (!P.isString(value)) {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.search === "" && url.hash === "";
+  } catch {
+    return false;
+  }
+};
+const FreshbooksRedirectUri = S.NonEmptyString.check(
+  S.makeFilter(isHttpsNoQueryRedirect, {
+    message: "FreshBooks redirect URI must be an exact-match HTTPS URL with no query string or fragment.",
+  })
+).pipe(
+  $I.annoteSchema("FreshbooksRedirectUri", {
+    description: "Exact-match HTTPS redirect URI (no query or fragment) registered for the OAuth application.",
+    toArbitrary: () => (fc) =>
+      fc.constantFrom("https://localhost:8443/callback", "https://app.example.com/oauth/callback"),
+  })
+);
 
 /**
  * Default FreshBooks REST API base URL.
@@ -265,8 +291,8 @@ export class FreshbooksConfigInput extends S.Class<FreshbooksConfigInput>($I`Fre
     clientSecret: S.String.pipe(S.RedactedFromValue).annotateKey({
       description: "Redacted FreshBooks OAuth application client secret.",
     }),
-    redirectUri: FreshbooksUrl.annotateKey({
-      description: "Exact-match HTTPS redirect URI registered for the OAuth application.",
+    redirectUri: FreshbooksRedirectUri.annotateKey({
+      description: "Exact-match HTTPS redirect URI (no query or fragment) registered for the OAuth application.",
     }),
     apiUrl: FreshbooksBaseUrl.pipe(SchemaUtils.withKeyDefaults(FRESHBOOKS_API_URL)).annotateKey({
       description: "Base URL for FreshBooks REST API requests.",
