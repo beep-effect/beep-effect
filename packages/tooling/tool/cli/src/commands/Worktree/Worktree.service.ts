@@ -3,19 +3,19 @@
  *
  * Archive mode makes the target commit reachable through a create-only ref,
  * writes tracked and untracked residue outside the checkout, and only then
- * allows forced Git removal. Legacy removal keeps its existing refusal and
- * `--force` behavior.
+ * allows the required Git removal. Plain removal keeps its existing refusal
+ * when the target has uncommitted changes.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, Str } from "@beep/utils";
-import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path } from "effect";
+import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -29,9 +29,11 @@ import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } f
 import {
   WorktreeArchivePlan,
   WorktreeRemovalReceipt,
+  WorktreeRepositoryHash,
   WorktreeResidueManifest,
   WorktreeResidueReason,
 } from "./Worktree.schemas.ts";
+import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { WorktreeRemovalRequest, WorktreeResidueReason as WorktreeResidueReasonType } from "./Worktree.schemas.ts";
@@ -39,6 +41,9 @@ import type { WorktreeRemovalRequest, WorktreeResidueReason as WorktreeResidueRe
 const $I = $RepoCliId.create("commands/Worktree/Worktree.service");
 
 const RESIDUE_ROOT_ENV = "BEEP_WORKTREE_RESIDUE_ROOT";
+const ARCHIVE_REF_REPLACEMENT_BYTE = 45;
+const textDecoder = new TextDecoder();
+const textEncoder = new TextEncoder();
 
 const GitCountFromString = S.FiniteFromString.pipe(
   S.decodeTo(NonNegativeInt),
@@ -50,12 +55,14 @@ const GitCountFromString = S.FiniteFromString.pipe(
 const decodeGitCount = S.decodeUnknownEffect(GitCountFromString);
 const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
 const decodeIsoString = S.decodeUnknownEffect(ISOStr);
+const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
+const decodeWorktreeRepositoryHash = S.decodeUnknownEffect(WorktreeRepositoryHash);
 const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueManifest, { space: 2 }));
 
 /**
- * Build the `git worktree remove` argument vector, optionally forced.
+ * Build the `git worktree remove` argument vector after optional preservation.
  *
- * **Example** (Forced removal carries an extra flag)
+ * **Example** (Preserved residue permits dirty removal)
  *
  * ```ts
  * import { worktreeRemoveArgs } from "@beep/repo-cli/commands/Worktree"
@@ -66,18 +73,18 @@ const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueMan
  * ```
  *
  * @param targetPath - Absolute path of the worktree to remove.
- * @param force - Whether to pass `--force` so removal ignores dirty state.
+ * @param allowDirtyRemoval - Whether preservation completed so Git may remove dirty state.
  * @returns The `git` argument vector (excluding the `git` executable).
  * @category utilities
  * @since 0.0.0
  */
 export const worktreeRemoveArgs: {
-  (force: boolean): (targetPath: string) => ReadonlyArray<string>;
-  (targetPath: string, force: boolean): ReadonlyArray<string>;
+  (allowDirtyRemoval: boolean): (targetPath: string) => ReadonlyArray<string>;
+  (targetPath: string, allowDirtyRemoval: boolean): ReadonlyArray<string>;
 } = dual(
   2,
-  (targetPath: string, force: boolean): ReadonlyArray<string> =>
-    force ? ["worktree", "remove", "--force", targetPath] : ["worktree", "remove", targetPath]
+  (targetPath: string, allowDirtyRemoval: boolean): ReadonlyArray<string> =>
+    allowDirtyRemoval ? ["worktree", "remove", "--force", targetPath] : ["worktree", "remove", targetPath]
 );
 
 /**
@@ -162,11 +169,18 @@ export const worktreeBranchDeleteArgs = (branch: string): ReadonlyArray<string> 
  * **Example** (Plan residue paths)
  *
  * ```ts
- * import { worktreeArchivePlan } from "@beep/repo-cli/commands/Worktree"
+ * import { WorktreeRepositoryHash, worktreeArchivePlan } from "@beep/repo-cli/commands/Worktree"
  * import { Effect, Path } from "effect"
  *
  * const program = Effect.map(Path.Path, (path) =>
- *   worktreeArchivePlan(path, "/cache", "beep-effect", "feature-x", "20260902-123456")
+ *   worktreeArchivePlan(
+ *     path,
+ *     "/cache",
+ *     "beep-effect",
+ *     WorktreeRepositoryHash.make("0123456789ab"),
+ *     "feature-x",
+ *     "20260902-123456"
+ *   )
  * )
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -174,6 +188,7 @@ export const worktreeBranchDeleteArgs = (branch: string): ReadonlyArray<string> 
  * @param path - Platform path service used to build native filesystem paths.
  * @param residueBaseRoot - Configured base directory for all worktree residue.
  * @param repoBasename - Basename of the repository's main checkout.
+ * @param repositoryHash - First 12 hex digits of the absolute main-checkout identity hash.
  * @param name - Managed worktree name.
  * @param stamp - UTC `YYYYMMDD-HHMMSS` retirement stamp.
  * @returns The archive ref, residue directory, and artifact paths.
@@ -181,23 +196,61 @@ export const worktreeBranchDeleteArgs = (branch: string): ReadonlyArray<string> 
  * @since 0.0.0
  */
 export const worktreeArchivePlan: {
-  (path: Path.Path, residueBaseRoot: string, repoBasename: string, name: string, stamp: string): WorktreeArchivePlan;
+  (
+    path: Path.Path,
+    residueBaseRoot: string,
+    repoBasename: string,
+    repositoryHash: WorktreeRepositoryHash,
+    name: string,
+    stamp: string
+  ): WorktreeArchivePlan;
   (
     residueBaseRoot: string,
     repoBasename: string,
+    repositoryHash: WorktreeRepositoryHash,
     name: string,
     stamp: string
   ): (path: Path.Path) => WorktreeArchivePlan;
-} = dual(5, (path: Path.Path, residueBaseRoot: string, repoBasename: string, name: string, stamp: string) => {
-  const residueRoot = path.join(residueBaseRoot, repoBasename, `${name}-${stamp}`);
-  return WorktreeArchivePlan.make({
-    archiveRef: `refs/archive/worktrees/${name}/${stamp}`,
-    residueRoot,
-    patchPath: path.join(residueRoot, "tracked.patch"),
-    untrackedRoot: path.join(residueRoot, "untracked"),
-    manifestPath: path.join(residueRoot, "manifest.json"),
-  });
-});
+} = dual(
+  6,
+  (
+    path: Path.Path,
+    residueBaseRoot: string,
+    repoBasename: string,
+    repositoryHash: WorktreeRepositoryHash,
+    name: string,
+    stamp: string
+  ) => {
+    const bytes = textEncoder.encode(name);
+    const encodedBytes = Uint8Array.from(
+      A.map(A.fromIterable(bytes), (byte) => {
+        const digit = byte >= 48 && byte <= 57;
+        const uppercase = byte >= 65 && byte <= 90;
+        const lowercase = byte >= 97 && byte <= 122;
+        return digit || uppercase || lowercase || byte === 45 || byte === 46 || byte === 95
+          ? byte
+          : ARCHIVE_REF_REPLACEMENT_BYTE;
+      })
+    );
+    const sanitizedName = pipe(
+      textDecoder.decode(encodedBytes),
+      Str.replaceAll(/-+/gu, "-"),
+      Str.replaceAll(/\.{2,}/gu, "-"),
+      Str.replaceAll(/-+/gu, "-"),
+      Str.replaceAll(/^[.-]+|[.-]+$/gu, "")
+    );
+    const nonEmptyName = Str.isEmpty(sanitizedName) ? "worktree" : sanitizedName;
+    const refName = Str.endsWith(".lock")(nonEmptyName) ? `${nonEmptyName}-worktree` : nonEmptyName;
+    const residueRoot = path.join(residueBaseRoot, `${repoBasename}-${repositoryHash}`, `${name}-${stamp}`);
+    return WorktreeArchivePlan.make({
+      archiveRef: `refs/archive/worktrees/${refName}/${stamp}`,
+      residueRoot,
+      patchPath: path.join(residueRoot, "tracked.patch"),
+      untrackedRoot: path.join(residueRoot, "untracked"),
+      manifestPath: path.join(residueRoot, "manifest.json"),
+    });
+  }
+);
 
 const residueReasonMatcher = Match.type<{ readonly dirty: boolean; readonly unpushed: boolean }>().pipe(
   Match.when({ dirty: true, unpushed: true }, () => WorktreeResidueReason.Enum["dirty+unpushed"]),
@@ -276,7 +329,11 @@ export class WorktreeRemovalService extends Context.Service<WorktreeRemovalServi
   $I`WorktreeRemovalService`
 ) {}
 
-type WorktreeRemovalServiceRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type WorktreeRemovalServiceRequirements =
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 const commandErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
   onSpawnFailure: (commandLine) => WorktreeCommandError.new(failMessage, { command: commandLine }),
@@ -419,11 +476,17 @@ const archiveStamp = (dateTime: DateTime.DateTime): string => {
   return `${DateTime.getPartUtc(dateTime, "year")}${pad("month")}${pad("day")}-${pad("hour")}${pad("minute")}${pad("second")}`;
 };
 
-const residueBaseRoot = Effect.fn("WorktreeRemovalService.residueBaseRoot")(function* (): Effect.fn.Return<
-  string,
-  WorktreePreservationError,
-  Path.Path
-> {
+const pathIsEqualOrWithin = (path: Path.Path, root: string, candidate: string): boolean => {
+  const relative = path.relative(path.resolve(root), path.resolve(candidate));
+  return (
+    Str.isEmpty(relative) ||
+    (!path.isAbsolute(relative) && !Str.Equivalence(relative, "..") && !Str.startsWith(`..${path.sep}`)(relative))
+  );
+};
+
+const residueBaseRoot = Effect.fn("WorktreeRemovalService.residueBaseRoot")(function* (
+  targetPath: string
+): Effect.fn.Return<string, WorktreePreservationError, Path.Path> {
   const path = yield* Path.Path;
   const configured = yield* Config.option(Config.string(RESIDUE_ROOT_ENV)).pipe(
     Effect.mapError((cause) =>
@@ -431,29 +494,40 @@ const residueBaseRoot = Effect.fn("WorktreeRemovalService.residueBaseRoot")(func
     )
   );
   const explicit = O.filter(configured, Str.isNonEmpty);
+  let root: string;
   if (O.isSome(explicit)) {
-    return path.resolve(explicit.value);
+    root = path.resolve(explicit.value);
+  } else {
+    const configuredHome = yield* Config.option(Config.string("HOME")).pipe(
+      Effect.mapError((cause) =>
+        WorktreePreservationError.new("resolve-residue-root", "HOME is required for the default residue root.", {
+          cause,
+        })
+      )
+    );
+    const home = O.filter(configuredHome, Str.isNonEmpty);
+    if (O.isNone(home)) {
+      return yield* WorktreePreservationError.new(
+        "resolve-residue-root",
+        "HOME is required for the default residue root."
+      );
+    }
+    root = path.join(path.resolve(home.value), ".cache", "beep", "worktree-residue");
   }
-  const configuredHome = yield* Config.option(Config.string("HOME")).pipe(
-    Effect.mapError((cause) =>
-      WorktreePreservationError.new("resolve-residue-root", "HOME is required for the default residue root.", {
-        cause,
-      })
-    )
-  );
-  const home = O.filter(configuredHome, Str.isNonEmpty);
-  if (O.isNone(home)) {
+
+  if (pathIsEqualOrWithin(path, targetPath, root)) {
     return yield* WorktreePreservationError.new(
       "resolve-residue-root",
-      "HOME is required for the default residue root."
+      `Refused residue root inside the retiring worktree: ${root}. Choose a path outside ${path.resolve(targetPath)}.`,
+      { path: root }
     );
   }
-  return path.join(path.resolve(home.value), ".cache", "beep", "worktree-residue");
+  return root;
 });
 
 const isContainedRelativePath = (path: Path.Path, root: string, candidate: string): boolean => {
   const relative = path.relative(root, candidate);
-  return Str.isNonEmpty(relative) && !Str.startsWith("..")(relative) && !path.isAbsolute(relative);
+  return Str.isNonEmpty(relative) && pathIsEqualOrWithin(path, root, candidate);
 };
 
 const copyUntrackedFiles = Effect.fn("WorktreeRemovalService.copyUntrackedFiles")(function* (
@@ -497,12 +571,9 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
   head: GitObjectId,
   reason: WorktreeResidueReasonType,
   trackedPatch: string,
-  untrackedFiles: ReadonlyArray<string>
-): Effect.fn.Return<
-  WorktreeResidueManifest,
-  WorktreePreservationError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
+  untrackedFiles: ReadonlyArray<string>,
+  baseRoot: string
+): Effect.fn.Return<WorktreeResidueManifest, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const now = yield* DateTime.now;
@@ -511,15 +582,38 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
       WorktreePreservationError.new("prepare-residue", "Current time was not a valid ISO timestamp.", { cause })
     )
   );
-  const baseRoot = yield* residueBaseRoot();
+  const mainCheckout = path.resolve(request.mainCheckout);
+  const repositoryDigest = yield* decodeSha256HexFromBytes(textEncoder.encode(mainCheckout)).pipe(
+    Effect.mapError((cause) =>
+      WorktreePreservationError.new("prepare-residue", "Could not hash the repository identity.", {
+        cause,
+        path: mainCheckout,
+      })
+    )
+  );
+  const repositoryHash = yield* decodeWorktreeRepositoryHash(Str.slice(0, 12)(repositoryDigest)).pipe(
+    Effect.mapError((cause) =>
+      WorktreePreservationError.new("prepare-residue", "Could not derive the short repository identity.", {
+        cause,
+        path: mainCheckout,
+      })
+    )
+  );
   const plan = worktreeArchivePlan(
     path,
     baseRoot,
-    path.basename(request.mainCheckout),
+    path.basename(mainCheckout),
+    repositoryHash,
     request.name,
     archiveStamp(now)
   );
 
+  yield* runPreservationCommand(
+    request.mainCheckout,
+    ["check-ref-format", plan.archiveRef],
+    "create-archive-ref",
+    `Archive ref ${plan.archiveRef} was not accepted by git check-ref-format.`
+  );
   yield* runPreservationCommand(
     request.mainCheckout,
     worktreeArchiveRefArgs(plan.archiveRef, head),
@@ -554,6 +648,7 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
     head,
     archivedAt,
     archiveRef: plan.archiveRef,
+    repositoryHash,
     patchPath,
     untrackedFiles,
     residueRoot: plan.residueRoot,
@@ -607,9 +702,46 @@ const inspectRemovalChanges = Effect.fn("WorktreeRemovalService.inspectRemovalCh
   targetPath: string,
   adapter: GitCommandErrorAdapter<Error>
 ): Effect.fn.Return<ReadonlyArray<string>, Error, ChildProcessSpawner.ChildProcessSpawner> {
-  const statusArgs = ["status", "--porcelain", "--untracked-files=all"];
+  const statusArgs = ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"];
   const statusOutput = yield* runGitOutput(targetPath, statusArgs, adapter);
   return A.filter(Str.split(statusOutput, "\n"), Str.isNonEmpty);
+});
+
+const assertNoDirtySubmodules = Effect.fn("WorktreeRemovalService.assertNoDirtySubmodules")(function* (
+  request: WorktreeRemovalRequest
+): Effect.fn.Return<void, WorktreePreservationError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+  const path = yield* Path.Path;
+  yield* runPreservationCommand(
+    request.targetPath,
+    ["submodule", "status", "--recursive"],
+    "inspect-submodules",
+    "Failed to inspect recursive submodule state.",
+    request.targetPath
+  );
+  const dirtySubmoduleOutput = yield* runGitRawOutput(
+    request.targetPath,
+    [
+      "submodule",
+      "foreach",
+      "--quiet",
+      "--recursive",
+      'status=$(git status --porcelain --untracked-files=all --ignore-submodules=all) || exit $?; test -z "$status" || printf "%s\\0" "$displaypath"',
+    ],
+    preservationErrorAdapter(
+      "inspect-submodules",
+      "Failed to inspect initialized submodules for uncommitted work.",
+      request.targetPath
+    )
+  );
+  const dirtySubmodule = A.head(A.filter(Str.split(dirtySubmoduleOutput, "\0"), Str.isNonEmpty));
+  if (O.isSome(dirtySubmodule)) {
+    const submodulePath = path.join(request.targetPath, dirtySubmodule.value);
+    return yield* WorktreePreservationError.new(
+      "inspect-submodules",
+      `Submodule ${dirtySubmodule.value} has uncommitted work; commit or clean it before retrying archive retirement.`,
+      { path: submodulePath }
+    );
+  }
 });
 
 const inspectArchiveHead = Effect.fn("WorktreeRemovalService.inspectArchiveHead")(function* (
@@ -634,11 +766,8 @@ const captureAndPreserveResidue = Effect.fn("WorktreeRemovalService.captureAndPr
   request: WorktreeRemovalRequest,
   head: GitObjectId,
   reason: WorktreeResidueReasonType
-): Effect.fn.Return<
-  WorktreeResidueManifest,
-  WorktreePreservationError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<WorktreeResidueManifest, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
+  const baseRoot = yield* residueBaseRoot(request.targetPath);
   const trackedPatch = yield* runGitRawOutput(
     request.targetPath,
     ["diff", "--binary", "HEAD", "--"],
@@ -648,7 +777,7 @@ const captureAndPreserveResidue = Effect.fn("WorktreeRemovalService.captureAndPr
     request.targetPath,
     preservationErrorAdapter("inspect-residue", "Failed to list untracked worktree residue.", request.targetPath)
   );
-  return yield* preserveResidue(request, head, reason, trackedPatch, untrackedFiles);
+  return yield* preserveResidue(request, head, reason, trackedPatch, untrackedFiles, baseRoot);
 });
 
 const preserveArchiveResidue = Effect.fn("WorktreeRemovalService.preserveArchiveResidue")(function* (
@@ -656,11 +785,7 @@ const preserveArchiveResidue = Effect.fn("WorktreeRemovalService.preserveArchive
   head: GitObjectId,
   reason: WorktreeResidueReasonType,
   needsPreservation: boolean
-): Effect.fn.Return<
-  O.Option<WorktreeResidueManifest>,
-  WorktreePreservationError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<O.Option<WorktreeResidueManifest>, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
   return yield* Bool.match(needsPreservation, {
     onFalse: () => Effect.succeed(O.none<WorktreeResidueManifest>()),
     onTrue: () => captureAndPreserveResidue(request, head, reason).pipe(Effect.map(O.some)),
@@ -684,11 +809,11 @@ const planArchiveRemoval = Effect.fn("WorktreeRemovalService.planArchiveRemoval"
 
 const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(function* (
   request: WorktreeRemovalRequest,
-  force: boolean
+  allowDirtyRemoval: boolean
 ): Effect.fn.Return<void, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   yield* runWorktreeGitCapture(
     request.mainCheckout,
-    worktreeRemoveArgs(request.targetPath, force),
+    worktreeRemoveArgs(request.targetPath, allowDirtyRemoval),
     "Failed to remove the git worktree."
   );
 });
@@ -712,13 +837,6 @@ const deleteArchivedBranch = Effect.fn("WorktreeRemovalService.deleteArchivedBra
         `Failed to delete archived branch ${branchName}.`
       ).pipe(Effect.as(true)),
   });
-});
-
-const removeForcedLegacyWorktree = Effect.fn("WorktreeRemovalService.removeForcedLegacyWorktree")(function* (
-  request: WorktreeRemovalRequest
-): Effect.fn.Return<WorktreeRemovalReceipt, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  yield* removeWorktree(request, true);
-  return makeRemovalReceipt(request, WorktreeResidueReason.Enum.clean, O.none(), false);
 });
 
 const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorktree")(function* (
@@ -748,6 +866,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   WorktreeCommandError | WorktreePreservationError,
   WorktreeRemovalServiceRequirements
 > {
+  yield* assertNoDirtySubmodules(request);
   const changes = yield* inspectRemovalChanges(
     request.targetPath,
     preservationErrorAdapter("inspect-residue", `Failed to inspect ${request.targetPath}.`, request.targetPath)
@@ -768,11 +887,10 @@ const removeImpl = Effect.fn("WorktreeRemovalService.remove")(function* (
   WorktreeRemovalServiceRequirements
 > {
   yield* validateRemovalRequest(request);
-  return yield* Match.value(request).pipe(
-    Match.when({ archive: false, force: true }, () => removeForcedLegacyWorktree(request)),
-    Match.when({ archive: false }, () => removeLegacyWorktree(request)),
-    Match.orElse(() => removeArchivedWorktree(request))
-  );
+  return yield* Bool.match(request.archive, {
+    onFalse: () => removeLegacyWorktree(request),
+    onTrue: () => removeArchivedWorktree(request),
+  });
 });
 
 const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(function* () {

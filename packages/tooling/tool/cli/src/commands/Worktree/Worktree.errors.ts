@@ -119,7 +119,7 @@ export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`Wor
     WorktreeDirtyError.make({
       path,
       changeCount,
-      message: `Worktree ${path} has ${changeCount} uncommitted change(s); pass --archive to preserve and remove it, or --force to discard it.`,
+      message: `Worktree ${path} has ${changeCount} uncommitted change(s); pass --archive to preserve and remove it.`,
     });
 }
 
@@ -168,11 +168,23 @@ export class WorktreePreservationError extends S.TaggedError<WorktreePreservatio
   /**
    * Construct a preservation error with the step that failed.
    *
+   * **Example** (Attach the affected residue path)
+   *
+   * ```ts
+   * import { WorktreePreservationError } from "@beep/repo-cli/commands/Worktree"
+   *
+   * const error = WorktreePreservationError.new("write-manifest", "Could not write manifest.", {
+   *   path: "/cache/worktree-residue/manifest.json",
+   * })
+   * console.log(error.path) // "/cache/worktree-residue/manifest.json"
+   * ```
+   *
    * @param step - Preservation step that failed.
    * @param message - Human-readable failure description.
    * @param options - Optional cause and affected filesystem path.
    * @returns The constructed preservation error.
    * @category constructors
+   * @since 0.0.0
    */
   static readonly new = (
     step: WorktreePreservationStepType,

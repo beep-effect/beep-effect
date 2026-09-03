@@ -105,6 +105,7 @@ export type WorktreeResidueReason = typeof WorktreeResidueReason.Type;
 export const WorktreePreservationStep = LiteralKit([
   "inspect-head",
   "inspect-residue",
+  "inspect-submodules",
   "inspect-origin-main",
   "inspect-upstream",
   "resolve-residue-root",
@@ -128,6 +129,50 @@ export const WorktreePreservationStep = LiteralKit([
  */
 export type WorktreePreservationStep = typeof WorktreePreservationStep.Type;
 
+const worktreeRepositoryHashPattern = /^[0-9a-f]{12}$/u;
+
+/**
+ * Stable short SHA-256 identity used to namespace one repository's residue.
+ *
+ * **Example** (Construct a repository namespace hash)
+ *
+ * ```ts
+ * import { WorktreeRepositoryHash } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const hash = WorktreeRepositoryHash.make("0123456789ab")
+ * console.log(hash.length) // 12
+ * ```
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const WorktreeRepositoryHash = S.String.check(
+  S.isPattern(worktreeRepositoryHashPattern, {
+    identifier: $I`WorktreeRepositoryHashCheck`,
+    title: "Worktree repository hash",
+    description: "A lowercase 12-hex prefix of the absolute main-checkout SHA-256 digest.",
+    message: "Worktree repository hash must contain exactly 12 lowercase hexadecimal characters",
+  })
+)
+  .annotate({
+    toArbitrary: () => (fc) => fc.stringMatching(worktreeRepositoryHashPattern),
+  })
+  .pipe(
+    S.brand("WorktreeRepositoryHash"),
+    $I.annoteSchema("WorktreeRepositoryHash", {
+      description: "Stable 12-hex repository identity recorded in worktree residue manifests.",
+    })
+  );
+
+/**
+ * Decoded short repository identity used by archive residue paths.
+ *
+ * @see {@link WorktreeRepositoryHash} for the runtime schema and constructor.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
+
 /**
  * Durable receipt for worktree state preserved before archive removal.
  *
@@ -140,7 +185,7 @@ export type WorktreePreservationStep = typeof WorktreePreservationStep.Type;
  * **Example** (Describe archived untracked residue)
  *
  * ```ts
- * import { WorktreeResidueManifest } from "@beep/repo-cli/commands/Worktree"
+ * import { WorktreeRepositoryHash, WorktreeResidueManifest } from "@beep/repo-cli/commands/Worktree"
  * import { NonEmptyTrimmedStr } from "@beep/schema"
  * import { ISOStr } from "@beep/schema/Timestamp"
  * import * as O from "effect/Option"
@@ -151,9 +196,10 @@ export type WorktreePreservationStep = typeof WorktreePreservationStep.Type;
  *   head: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
  *   archivedAt: ISOStr.make(NonEmptyTrimmedStr.make("2026-09-02T12:34:56.000Z")),
  *   archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
+ *   repositoryHash: WorktreeRepositoryHash.make("0123456789ab"),
  *   patchPath: O.none(),
  *   untrackedFiles: ["notes.txt"],
- *   residueRoot: "/home/operator/.cache/beep/worktree-residue/repo/feature-x-20260902-123456",
+ *   residueRoot: "/home/operator/.cache/beep/worktree-residue/repo-0123456789ab/feature-x-20260902-123456",
  *   reason: "unpushed-commits",
  * })
  * console.log(manifest.untrackedFiles.length) // 1
@@ -169,6 +215,7 @@ export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I
     head: GitObjectId,
     archivedAt: ISOStr,
     archiveRef: S.NonEmptyString,
+    repositoryHash: WorktreeRepositoryHash,
     patchPath: S.OptionFromNullOr(S.String),
     untrackedFiles: S.Array(S.String),
     residueRoot: S.String,
@@ -190,10 +237,10 @@ export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I
  *
  * const plan = WorktreeArchivePlan.make({
  *   archiveRef: "refs/archive/worktrees/feature-x/20260902-123456",
- *   residueRoot: "/cache/repo/feature-x-20260902-123456",
- *   patchPath: "/cache/repo/feature-x-20260902-123456/tracked.patch",
- *   untrackedRoot: "/cache/repo/feature-x-20260902-123456/untracked",
- *   manifestPath: "/cache/repo/feature-x-20260902-123456/manifest.json",
+ *   residueRoot: "/cache/repo-0123456789ab/feature-x-20260902-123456",
+ *   patchPath: "/cache/repo-0123456789ab/feature-x-20260902-123456/tracked.patch",
+ *   untrackedRoot: "/cache/repo-0123456789ab/feature-x-20260902-123456/untracked",
+ *   manifestPath: "/cache/repo-0123456789ab/feature-x-20260902-123456/manifest.json",
  * })
  * console.log(plan.manifestPath)
  * ```
@@ -229,7 +276,6 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  *   targetPath: "/repo-worktrees/feature-x",
  *   mainCheckout: "/repo",
  *   branch: O.some("feat/feature-x"),
- *   force: false,
  *   archive: true,
  *   deleteBranch: false,
  * })
@@ -245,7 +291,6 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
     targetPath: S.String,
     mainCheckout: S.String,
     branch: S.OptionFromNullOr(S.String),
-    force: S.Boolean,
     archive: S.Boolean,
     deleteBranch: S.Boolean,
   },

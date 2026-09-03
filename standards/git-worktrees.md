@@ -139,9 +139,9 @@ bun run beep worktree doctor
   copy). It prints a
   summary of what was copied, skipped, and the absolute path.
 - `worktree remove <name>` refuses when the target worktree has uncommitted
-  changes unless you use the preservation-first `--archive` mode or explicitly
-  pass `--force`. Archive mode can also delete the preserved local branch with
-  `--delete-branch`; otherwise the command prints the separate
+  changes unless you use the preservation-first `--archive` mode. Forced
+  removal is unsupported. Archive mode can also delete the preserved local
+  branch with `--delete-branch`; otherwise the command prints the separate
   `git branch -D <branch>` cleanup command.
 - `worktree doctor` is read-only. It lists every worktree under the worktrees
   root with its branch, clean/dirty and unpushed status, missing bootstrap files
@@ -156,23 +156,30 @@ The sanctioned retirement command for a lane that may contain local residue is:
 bun run beep worktree remove <name> --archive [--delete-branch]
 ```
 
-`--force` is permitted by agent policy but discards another lane's uncommitted
-work with no record. Archive mode is the sanctioned alternative: the CLI inspects
-tracked and untracked changes plus commits absent from `origin/main` and, when
-configured, commits ahead of the branch upstream.
+Forced removal is unsupported and remains denied by agent policy. Archive mode
+is the only removal path for local residue: the CLI inspects tracked and
+untracked changes plus commits absent from `origin/main` and, when configured,
+commits ahead of the branch upstream. An initialized submodule with uncommitted
+work cannot be represented by the top-level patch, so archive retirement stops
+before removal and names the submodule that must be committed or cleaned.
 If preservation is needed, it completes all of these steps before removal:
 
 1. Creates a new create-only
-   `refs/archive/worktrees/<name>/<YYYYMMDD-HHMMSS>` ref at the old `HEAD`.
+   `refs/archive/worktrees/<encoded-name>/<YYYYMMDD-HHMMSS>` ref at the old
+   `HEAD`, after validating it with `git check-ref-format`. The encoded component
+   is deterministic and Git-safe; the manifest retains the raw worktree name.
 2. Writes tracked changes as `tracked.patch` using `git diff --binary HEAD`.
 3. Copies every untracked, non-ignored file under `untracked/`, preserving its
    repository-relative path.
-4. Writes a schema-decoded `manifest.json` with the branch, old `HEAD`, archive
-   ref, artifact paths, and retirement reason.
+4. Writes a schema-decoded `manifest.json` with the raw name, branch, old `HEAD`,
+   archive ref, repository hash, artifact paths, and retirement reason.
 
 Residue defaults to
-`~/.cache/beep/worktree-residue/<repo-basename>/<name>-<stamp>/`. Set
-`BEEP_WORKTREE_RESIDUE_ROOT` to override the leading residue root. Files are
+`~/.cache/beep/worktree-residue/<repo-basename>-<hash12>/<name>-<stamp>/`,
+where `hash12` is derived from the absolute main-checkout path so same-named
+clones cannot share a residue directory. Set `BEEP_WORKTREE_RESIDUE_ROOT` to
+override the leading residue root. The override is resolved to an absolute path
+and rejected when it equals or sits below the retiring worktree. Files are
 copied, never moved, and the worktree is removed only after the ref, patch,
 untracked copies, and manifest all succeed. A clean worktree with no unpushed
 commits is removed normally and prints a receipt without creating residue.

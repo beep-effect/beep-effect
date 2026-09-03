@@ -729,6 +729,7 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
     }),
     onSome: Effect.fn("Worktree.renderArchivedRemovalReceipt")(function* (manifest) {
       yield* Console.log(`  archive ref: ${manifest.archiveRef}`);
+      yield* Console.log(`  repository hash: ${manifest.repositoryHash}`);
       yield* Console.log(`  tracked patch: ${O.getOrElse(manifest.patchPath, () => "(none)")}`);
       yield* Console.log(`  untracked files: ${manifest.untrackedFiles.length}`);
       yield* Console.log(`  residue root: ${manifest.residueRoot}`);
@@ -793,7 +794,6 @@ export const renderWorktreeRemovalReceipt: {
 
 const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (options: {
   readonly name: string;
-  readonly force: boolean;
   readonly archive: boolean;
   readonly deleteBranch: boolean;
 }): Effect.fn.Return<
@@ -824,7 +824,6 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
       targetPath,
       mainCheckout: context.mainCheckout,
       branch,
-      force: options.force,
       archive: options.archive,
       deleteBranch: options.deleteBranch,
     })
@@ -876,10 +875,6 @@ const worktreeRemoveCommand = Command.make(
   "remove",
   {
     name: Argument.string("name").pipe(Argument.withDescription("Worktree name under the worktrees root")),
-    force: Flag.boolean("force").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Remove even when the worktree has uncommitted changes")
-    ),
     archive: Flag.boolean("archive").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Preserve dirty files and unpushed commits before removing the worktree")
@@ -889,8 +884,8 @@ const worktreeRemoveCommand = Command.make(
       Flag.withDescription("Delete the local branch after archive retirement (requires --archive)")
     ),
   },
-  Effect.fn(function* ({ name, force, archive, deleteBranch }) {
-    yield* runWorktreeRemove({ name, force, archive, deleteBranch }).pipe(
+  Effect.fn(function* ({ name, archive, deleteBranch }) {
+    yield* runWorktreeRemove({ name, archive, deleteBranch }).pipe(
       Effect.catchTags({
         WorktreeCommandError: Effect.fn(function* (error) {
           yield* Console.error(`worktree remove: ${error.message}`);
@@ -960,7 +955,7 @@ export const worktreeCommand = Command.make("worktree", {}, () =>
     [
       "Worktree commands:",
       "- bun run beep worktree new <name> [--branch <branch>]",
-      "- bun run beep worktree remove <name> [--archive] [--delete-branch] [--force]",
+      "- bun run beep worktree remove <name> [--archive] [--delete-branch]",
       "- bun run beep worktree doctor",
       "- bun run beep worktree fleet [--json]",
     ].join("\n")
