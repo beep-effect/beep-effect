@@ -920,6 +920,11 @@ describe("quality-scheduler", () => {
         const gibRef = yield* Ref.make(50);
         yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
           Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const blockedCheckoutRoot = path.join(tempRoot.root, "blocked-checkout");
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(blockedCheckoutRoot, "not a directory");
             yield* writeFakeTicket(tempRoot, {
               pid: DEAD_PID,
               nonce: "dead-without-attempt",
@@ -928,7 +933,7 @@ describe("quality-scheduler", () => {
             yield* writeFakeTicket(tempRoot, {
               pid: DEAD_PID,
               nonce: "dead-unwritable-attempt",
-              checkoutRoot: "/proc/1",
+              checkoutRoot: blockedCheckoutRoot,
               attemptId: O.some(JOURNALED_ATTEMPT_ID),
             });
 
