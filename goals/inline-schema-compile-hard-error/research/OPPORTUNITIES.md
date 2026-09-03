@@ -242,3 +242,16 @@
 - **Prevention:** Keep malicious URL fixtures runtime-identical while spelling
   HTML delimiters with string escapes, so generic sink heuristics do not
   obscure the boundary-sanitization assertion being tested.
+
+## 2026-09-03 — Full lint-policy failure was hidden by bounded output
+
+- **Work:** Diagnose the isolated Yeet verification after every visible policy
+  subcheck appeared to finish cleanly.
+- **Evidence:** The 29,730-observation knowledge-reference report exhausted the
+  512 KiB parent capture before the lint-policy failure footer, and the generic
+  packet misclassified the aggregate failure as a security audit. An isolated
+  tail-preserving policy run identified `lint:native-runtime` and its two
+  warnings in the new schema assertion adapter.
+- **Prevention:** Emit failed subprocess labels and exit codes before rendering
+  bounded successful output, and carry the nested failed-step category into
+  Yeet packets instead of inferring a generic category from the parent lane.
