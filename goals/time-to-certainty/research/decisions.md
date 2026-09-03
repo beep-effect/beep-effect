@@ -139,15 +139,25 @@ independent four-lens review of head 9c37b20d67 run on GPT-5.6 Sol (xhigh) with 
 refuters per finding; six of nine candidates survived.
 
 **Ruling 17 — the retention budget is over terminal attempts only.** The journal keeps the newest
-50 unprotected terminal attempts; unfinished starts are never counted toward the budget and never
-evicted, so the journal may hold (unfinished + 50) rows and stale-start reconciliation is what bounds
-the unfinished set. Rejected: a separate ceiling on unverifiable unfinished starts (can drop a start
-whose owner is merely unverifiable); a single total cap that never evicts unfinished (terminal facts
-still vanish whenever the unfinished count nears 50).
+50 unprotected terminal *attempts* (each a start/terminal pair, so up to 100 paired event rows) plus
+every unfinished start and the compaction receipt; unfinished starts are never counted toward the
+budget and never evicted, and stale-start reconciliation is what bounds the unfinished set.
+Amendment (Codex review of this PR, ratified 2026-09-03): a start recorded before process identity
+existed (no owner pid and start time; the frozen baseline holds 327 such unmatched starts) cannot be
+classified dead by pid-plus-start-time reconciliation, so the first post-rollout reconciliation closes
+it with `attempt-terminated` reason `legacy-unowned-start` (a new LiteralKit member) and one journal
+receipt per pass; the P0 baseline stays frozen, M5 counts these rows as unfinished inside the
+baseline window and as terminated thereafter. Rejected: a separate ceiling on unverifiable unfinished
+starts (can drop a start whose owner is merely unverifiable); a single total cap that never evicts
+unfinished (terminal facts still vanish whenever the unfinished count nears 50); a 24-hour grace
+period for legacy starts (protects an unlikely window at the cost of a second rule).
 
 **Ruling 18 — economics left-censors from compaction receipts.** The journal-compacted receipt keeps
-the evicted attempt ids and the boundary timestamp; the economics loader marks the branch
-left-censored there and excludes, or reports separately with a count, any red-to-green episode whose
-start may have been evicted. No archive file and no second writer. Rejected: an append-only economics
-archive (exact M1 forever, unbounded second file); accepting the gap with a report caveat (M1
-comparability at close-out unproven).
+the evicted attempt ids and a monotonic cutoff: the newest `recordedAt` among every terminal attempt
+evicted so far on that journal (the existing accumulated `oldestEvictedRecordedAt` is not sufficient,
+because after a second compaction an episode that started between the two evictions may have lost
+its leading red attempts). The economics loader marks the branch left-censored at that cutoff and
+excludes, or reports separately with a count, any red-to-green episode that starts at or before it.
+No archive file and no second writer. Rejected: an append-only economics archive (exact M1 forever,
+unbounded second file); accepting the gap with a report caveat (M1 comparability at close-out
+unproven).
