@@ -3038,22 +3038,17 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
   Command.withSubcommands([schedulerStatusCommand, schedulerReapCommand])
 );
 
+const optionalCandidateField = <Value extends string | number>(value: Value | undefined, label: string): string =>
+  pipe(
+    O.fromUndefinedOr(value),
+    O.map((present) => ` ${label}=${present}`),
+    O.getOrElse(() => "")
+  );
+
 const renderTmpfsCandidateLine = (candidate: TmpfsReapReport["candidates"][number]): string => {
-  const bytes = pipe(
-    O.fromUndefinedOr(candidate.bytes),
-    O.map((value) => ` bytes=${value}`),
-    O.getOrElse(() => "")
-  );
-  const skip = pipe(
-    O.fromUndefinedOr(candidate.skipReason),
-    O.map((reason) => ` reason=${reason}`),
-    O.getOrElse(() => "")
-  );
-  const root = pipe(
-    O.fromUndefinedOr(candidate.root),
-    O.map((value) => ` root=${value}`),
-    O.getOrElse(() => "")
-  );
+  const bytes = optionalCandidateField(candidate.bytes, "bytes");
+  const skip = optionalCandidateField(candidate.skipReason, "reason");
+  const root = optionalCandidateField(candidate.root, "root");
   return `- ${candidate.action} class=${candidate.reapClass}${root} age=${candidate.ageHours.toFixed(1)}h refs=${candidate.refCount}${bytes}${skip} ${candidate.path}`;
 };
 
@@ -3130,21 +3125,9 @@ const renderResidueCandidateLine = (candidate: ResidueReapReport["candidates"][n
     O.map((value) => ` age=${value.toFixed(1)}d`),
     O.getOrElse(() => " age=unknown")
   );
-  const entries = pipe(
-    O.fromUndefinedOr(candidate.entriesScanned),
-    O.map((value) => ` entries=${value}`),
-    O.getOrElse(() => "")
-  );
-  const bytes = pipe(
-    O.fromUndefinedOr(candidate.bytes),
-    O.map((value) => ` bytes=${value}`),
-    O.getOrElse(() => "")
-  );
-  const skip = pipe(
-    O.fromUndefinedOr(candidate.skipReason),
-    O.map((reason) => ` reason=${reason}`),
-    O.getOrElse(() => "")
-  );
+  const entries = optionalCandidateField(candidate.entriesScanned, "entries");
+  const bytes = optionalCandidateField(candidate.bytes, "bytes");
+  const skip = optionalCandidateField(candidate.skipReason, "reason");
   return `- ${candidate.action} class=${candidate.reapClass}${age}${entries}${bytes}${skip} ${candidate.path}`;
 };
 

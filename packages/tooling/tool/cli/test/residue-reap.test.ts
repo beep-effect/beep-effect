@@ -4,6 +4,7 @@ import {
   runRepoCommandCapture,
   runResidueReap,
 } from "@beep/repo-cli/test/RepoRun";
+import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -17,7 +18,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
-const noLiveCwd = () => Effect.succeed(O.some(false));
+const noLiveCwd = () => Effect.succeedSome(false);
 
 const withTempDirectory = <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
@@ -128,7 +129,7 @@ describe("residue reap", () => {
         expect(candidateByPath(report, fixture.turboEntry).action).toBe("remove-file");
         expect(report.classes).toEqual(["codex-sessions", "codex-worktrees", "turbo-cache", "beep-cache-disposable"]);
       })
-    ).pipe(Effect.provide(NodeServices.layer))
+    ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   it.effect("is dry-run by default and apply removes entries without removing their owned roots", () =>
@@ -159,7 +160,7 @@ describe("residue reap", () => {
         expect(yield* fs.exists(fixture.durable)).toBe(true);
         expect(yield* fs.exists(fixture.youngSession)).toBe(true);
       })
-    ).pipe(Effect.provide(NodeServices.layer))
+    ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   it.effect("fails closed when the worktree cwd probe is live or unavailable", () =>
@@ -170,7 +171,7 @@ describe("residue reap", () => {
           classes: ["codex-worktrees"],
           homeRoot: fixture.homeRoot,
           nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveCwd: () => Effect.succeed(O.some(true)),
+          probeLiveCwd: () => Effect.succeedSome(true),
           repoRoot: fixture.repoRoot,
         });
         expect(candidateByPath(live, fixture.oldWorktree).skipReason).toBe("live-cwd-ref");
@@ -179,12 +180,12 @@ describe("residue reap", () => {
           classes: ["codex-worktrees"],
           homeRoot: fixture.homeRoot,
           nowMillis: FIXTURE_NOW_MILLIS,
-          probeLiveCwd: () => Effect.succeed(O.none()),
+          probeLiveCwd: () => Effect.succeedNone,
           repoRoot: fixture.repoRoot,
         });
         expect(candidateByPath(failed, fixture.oldWorktree).skipReason).toBe("process-probe-failed");
       })
-    ).pipe(Effect.provide(NodeServices.layer))
+    ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   it.effect("fails closed on stat, census, and entry-cap failures", () =>
@@ -225,7 +226,7 @@ describe("residue reap", () => {
         });
         expect(candidateByPath(overflow, fixture.oldWorktree).skipReason).toBe("census-overflow");
       })
-    ).pipe(Effect.provide(NodeServices.layer))
+    ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
   it.effect("round-trips the residue-reap/v1 report schema and honors class filtering", () =>
@@ -246,6 +247,6 @@ describe("residue reap", () => {
         expect(decoded.candidates).toHaveLength(1);
         expect(decoded.candidates[0]).toBeInstanceOf(ResidueReapCandidate);
       })
-    ).pipe(Effect.provide(NodeServices.layer))
+    ).pipe(provideScopedLayer(NodeServices.layer))
   );
 });

@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonEmptyTrimmedStr } from "@beep/schema/String";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/repo-run/ResidueReap.schemas");
@@ -47,6 +48,14 @@ export type ResidueReapClass = typeof ResidueReapClass.Type;
 /**
  * Filesystem action selected for one home-residue candidate.
  *
+ * **Example** (Recognize a directory removal action)
+ *
+ * ```ts
+ * import { ResidueReapAction } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ResidueReapAction.is["remove-dir"]("remove-dir")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -67,6 +76,14 @@ export type ResidueReapAction = typeof ResidueReapAction.Type;
 /**
  * Fail-closed reason that prevented removal of a residue candidate.
  *
+ * **Example** (Recognize a liveness refusal)
+ *
+ * ```ts
+ * import { ResidueReapSkipReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ResidueReapSkipReason.is["live-cwd-ref"]("live-cwd-ref")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -77,6 +94,8 @@ export const ResidueReapSkipReason = LiteralKit([
   "stat-failed",
   "census-failed",
   "census-overflow",
+  "dirty-tree",
+  "git-probe-failed",
   "live-cwd-ref",
   "process-probe-failed",
   "path-changed",
@@ -98,6 +117,16 @@ export type ResidueReapSkipReason = typeof ResidueReapSkipReason.Type;
 /**
  * Non-negative finite age threshold measured in days.
  *
+ * **Example** (Validate a threshold)
+ *
+ * ```ts
+ * import { ResidueReapAgeDays } from "@beep/repo-cli/test/RepoRun"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ResidueReapAgeDays)(30)) // true
+ * console.log(S.is(ResidueReapAgeDays)(-1)) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -114,6 +143,43 @@ export const ResidueReapAgeDays = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pi
  * @since 0.0.0
  */
 export type ResidueReapAgeDays = typeof ResidueReapAgeDays.Type;
+
+/**
+ * Absolute, non-empty home directory accepted as a cleanup root.
+ *
+ * **Details**
+ *
+ * A sanitized environment can carry `HOME` as an empty string; resolving that
+ * through `path.resolve` silently turns the current working directory into the
+ * cleanup root. This schema fails such inputs closed before any discovery.
+ *
+ * **Example** (Reject an empty home)
+ *
+ * ```ts
+ * import { ResidueReapHomeRoot } from "@beep/repo-cli/test/RepoRun"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ResidueReapHomeRoot)("/home/me")) // true
+ * console.log(S.is(ResidueReapHomeRoot)("")) // false
+ * console.log(S.is(ResidueReapHomeRoot)("relative/home")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ResidueReapHomeRoot = NonEmptyTrimmedStr.check(S.isPattern(/^\//u)).pipe(
+  $I.annoteSchema("ResidueReapHomeRoot", {
+    description: "Absolute, non-empty home directory accepted as a residue cleanup root.",
+  })
+);
+
+/**
+ * Absolute, non-empty home directory accepted as a cleanup root.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ResidueReapHomeRoot = typeof ResidueReapHomeRoot.Type;
 
 /**
  * One residue candidate and the complete evidence used to choose its action.

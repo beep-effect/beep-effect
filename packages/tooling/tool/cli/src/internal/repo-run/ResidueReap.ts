@@ -27,12 +27,15 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import {
   ResidueReapAgeDays,
   ResidueReapCandidate,
   ResidueReapClass,
+  ResidueReapHomeRoot,
   ResidueReapReport,
 } from "./ResidueReap.schemas.ts";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResidueReapAction, ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
 
 const DEFAULT_MAX_AGE_DAYS = 30;
@@ -41,7 +44,9 @@ const DEFAULT_CENSUS_ENTRY_CAP = 100_000;
 const CENSUS_DEPTH_CAP = 12;
 const PROC_ROOT = "/proc";
 
-const DurableBeepCacheName = LiteralKit(["handoffs", "head-install", "uv"]);
+// worktree-residue holds archive-first worktree retirement manifests, patches, and
+// preserved untracked files: an old archive is often the only remaining copy of that work.
+const DurableBeepCacheName = LiteralKit(["handoffs", "head-install", "uv", "worktree-residue"]);
 const isDurableBeepCacheName = S.is(DurableBeepCacheName);
 const ProcPidName = S.String.check(S.isPattern(/^[0-9]+$/u));
 const isProcPidName = S.is(ProcPidName);
@@ -51,8 +56,14 @@ type CwdProbe = (candidatePath: string) => Effect.Effect<O.Option<boolean>, neve
 type Census = {
   readonly bytes: number;
   readonly entriesScanned: number;
+  readonly gitMarkers: ReadonlyArray<string>;
   readonly newestFileMillis: O.Option<number>;
   readonly skipReason: O.Option<ResidueReapSkipReason>;
+};
+
+type SessionScan = {
+  readonly candidates: ReadonlyArray<ResidueReapCandidate>;
+  readonly remaining: number;
 };
 
 type AppliedCandidate = {
@@ -65,6 +76,7 @@ type AppliedCandidate = {
 const emptyCensus = (): Census => ({
   bytes: 0,
   entriesScanned: 0,
+  gitMarkers: A.empty(),
   newestFileMillis: O.none(),
   skipReason: O.none(),
 });
@@ -100,6 +112,7 @@ const newestOption = (left: O.Option<number>, right: O.Option<number>): O.Option
 const combineCensus = (left: Census, right: Census): Census => ({
   bytes: left.bytes + right.bytes,
   entriesScanned: left.entriesScanned + right.entriesScanned,
+  gitMarkers: A.appendAll(left.gitMarkers, right.gitMarkers),
   newestFileMillis: newestOption(left.newestFileMillis, right.newestFileMillis),
   skipReason: O.firstSomeOf([left.skipReason, right.skipReason]),
 });
@@ -125,6 +138,10 @@ const censusDirectory = Effect.fnUntraced(function* (
     listing.success,
     emptyCensus,
     Effect.fnUntraced(function* (accumulator: Census, name: string) {
+      // Record the directory owning any `.git` entry so retirement can demand a clean
+      // `git status` from every embedded checkout before its container is removed.
+      const withMarkers = (entry: Census): Census =>
+        Str.Equivalence(name, ".git") ? { ...entry, gitMarkers: A.append(entry.gitMarkers, directory) } : entry;
       if (O.isSome(accumulator.skipReason)) {
         return accumulator;
       }
@@ -150,7 +167,7 @@ const censusDirectory = Effect.fnUntraced(function* (
       }
       if (Str.Equivalence(stat.success.type, "Directory")) {
         const nested = yield* censusDirectory(entryPath, remaining - 1, depth + 1);
-        return combineCensus(accumulator, { ...nested, entriesScanned: nested.entriesScanned + 1 });
+        return combineCensus(accumulator, withMarkers({ ...nested, entriesScanned: nested.entriesScanned + 1 }));
       }
       if (!Str.Equivalence(stat.success.type, "File")) {
         return combineCensus(accumulator, {
@@ -159,12 +176,16 @@ const censusDirectory = Effect.fnUntraced(function* (
           skipReason: O.some("census-failed"),
         });
       }
-      return combineCensus(accumulator, {
-        bytes: bytesFromInfo(stat.success),
-        entriesScanned: 1,
-        newestFileMillis: mtimeMillis(stat.success),
-        skipReason: O.isSome(mtimeMillis(stat.success)) ? O.none() : O.some("census-failed"),
-      });
+      return combineCensus(
+        accumulator,
+        withMarkers({
+          ...emptyCensus(),
+          bytes: bytesFromInfo(stat.success),
+          entriesScanned: 1,
+          newestFileMillis: mtimeMillis(stat.success),
+          skipReason: O.isSome(mtimeMillis(stat.success)) ? O.none() : O.some("census-failed"),
+        })
+      );
     })
   );
 });
@@ -229,52 +250,67 @@ const discoverSessionTree = Effect.fnUntraced(function* (
   nowMillis: number,
   thresholdDays: number,
   remainingEntries: number
-): Effect.fn.Return<ReadonlyArray<ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<SessionScan, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const exists = yield* fs.exists(directory).pipe(Effect.orElseSucceed(() => false));
   if (!exists) {
-    return A.empty();
+    return { candidates: A.empty(), remaining: remainingEntries };
   }
   const listing = yield* Effect.result(fs.readDirectory(directory));
   if (Result.isFailure(listing)) {
-    return [candidate(root, directory, "codex-sessions", "skip", { skipReason: "census-failed" })];
+    return {
+      candidates: [candidate(root, directory, "codex-sessions", "skip", { skipReason: "census-failed" })],
+      remaining: remainingEntries,
+    };
   }
   if (A.length(listing.success) > remainingEntries) {
-    return [
-      candidate(root, directory, "codex-sessions", "skip", {
-        entriesScanned: A.length(listing.success),
-        skipReason: "census-overflow",
-      }),
-    ];
+    return {
+      candidates: [
+        candidate(root, directory, "codex-sessions", "skip", {
+          entriesScanned: A.length(listing.success),
+          skipReason: "census-overflow",
+        }),
+      ],
+      remaining: 0,
+    };
   }
-  return A.flatten(
-    yield* Effect.forEach(
-      listing.success,
-      Effect.fnUntraced(function* (name) {
-        const entryPath = path.join(directory, name);
-        if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
-          return [candidate(root, entryPath, "codex-sessions", "skip", { skipReason: "wrong-shape" })];
-        }
-        const stat = yield* Effect.result(fs.stat(entryPath));
-        if (Result.isFailure(stat)) {
-          return [candidate(root, entryPath, "codex-sessions", "skip", { skipReason: "stat-failed" })];
-        }
-        if (Str.Equivalence(stat.success.type, "Directory")) {
-          return yield* discoverSessionTree(
-            root,
-            entryPath,
-            nowMillis,
-            thresholdDays,
-            remainingEntries - A.length(listing.success)
-          );
-        }
-        return Str.Equivalence(stat.success.type, "File")
-          ? [classifyFile(path, root, entryPath, "codex-sessions", stat.success, nowMillis, thresholdDays)]
-          : [candidate(root, entryPath, "codex-sessions", "skip", { skipReason: "wrong-shape" })];
-      }),
-      { concurrency: 8 }
-    )
+  // The traversal is sequential so every branch draws from ONE shared budget: sibling
+  // subtrees each seeing the full remainder is how a census cap gets exceeded.
+  return yield* Effect.reduce(
+    listing.success,
+    (): SessionScan => ({ candidates: A.empty(), remaining: remainingEntries - A.length(listing.success) }),
+    Effect.fnUntraced(function* (scan: SessionScan, name: string) {
+      const entryPath = path.join(directory, name);
+      const skipped = (reason: ResidueReapSkipReason): SessionScan => ({
+        candidates: A.append(
+          scan.candidates,
+          candidate(root, entryPath, "codex-sessions", "skip", { skipReason: reason })
+        ),
+        remaining: scan.remaining,
+      });
+      if (O.isSome(yield* fs.readLink(entryPath).pipe(Effect.option))) {
+        return skipped("wrong-shape");
+      }
+      const stat = yield* Effect.result(fs.stat(entryPath));
+      if (Result.isFailure(stat)) {
+        return skipped("stat-failed");
+      }
+      if (Str.Equivalence(stat.success.type, "Directory")) {
+        const nested = yield* discoverSessionTree(root, entryPath, nowMillis, thresholdDays, scan.remaining);
+        return { candidates: A.appendAll(scan.candidates, nested.candidates), remaining: nested.remaining };
+      }
+      if (!Str.Equivalence(stat.success.type, "File")) {
+        return skipped("wrong-shape");
+      }
+      return {
+        candidates: A.append(
+          scan.candidates,
+          classifyFile(path, root, entryPath, "codex-sessions", stat.success, nowMillis, thresholdDays)
+        ),
+        remaining: scan.remaining,
+      };
+    })
   );
 });
 
@@ -287,16 +323,19 @@ const canonicalDirectory = Effect.fnUntraced(function* (
   if (O.isSome(yield* fs.readLink(candidatePath).pipe(Effect.option))) {
     return O.none();
   }
+  // Resolve BOTH sides before the containment check: a symlinked HOME or temp root must
+  // not disqualify every candidate under it, while a candidate escaping the root through
+  // a linked ancestor must still be rejected. The accepted value stays the lexical path
+  // so reports, revalidation, and removal all speak the operator's own path.
+  const rootReal = yield* fs.realPath(root).pipe(Effect.option);
   const canonical = yield* fs.realPath(candidatePath).pipe(Effect.option);
-  if (
-    O.isNone(canonical) ||
-    !Str.Equivalence(canonical.value, path.normalize(candidatePath)) ||
-    !pathIsStrictlyWithin(path, root, canonical.value)
-  ) {
+  if (O.isNone(rootReal) || O.isNone(canonical) || !pathIsStrictlyWithin(path, rootReal.value, canonical.value)) {
     return O.none();
   }
-  const stat = yield* fs.stat(canonical.value).pipe(Effect.option);
-  return O.exists(stat, (info) => Str.Equivalence(info.type, "Directory")) ? canonical : O.none();
+  const stat = yield* fs.stat(candidatePath).pipe(Effect.option);
+  return O.exists(stat, (info) => Str.Equivalence(info.type, "Directory"))
+    ? O.some(path.normalize(candidatePath))
+    : O.none();
 });
 
 const procCwdProbe = Effect.fnUntraced(function* (
@@ -315,9 +354,11 @@ const procCwdProbe = Effect.fnUntraced(function* (
     }),
     { concurrency: 16 }
   );
-  if (A.some(readings, Result.isFailure)) {
-    return O.none();
-  }
+  // Individual unreadable pids are EXPECTED on a real host — other users' daemons,
+  // kernel threads, processes exiting mid-scan — and must not withhold the verdict, or
+  // the probe fails closed on every pass and retirement becomes unreachable. Residue
+  // under $HOME belongs to this user, whose own processes are always readable; only a
+  // failure to list /proc at all makes the census meaningless.
   return O.some(
     A.some(A.getSuccesses(readings), (cwd) => {
       const relative = path.relative(candidatePath, cwd);
@@ -326,74 +367,122 @@ const procCwdProbe = Effect.fnUntraced(function* (
   );
 });
 
+const canonicalDirectoryShape = Effect.fnUntraced(function* (
+  root: string,
+  candidatePath: string
+): Effect.fn.Return<Result.Result<string, ResidueReapSkipReason>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const initialStat = yield* Effect.result(fs.stat(candidatePath));
+  if (Result.isFailure(initialStat)) {
+    return Result.fail<ResidueReapSkipReason>("stat-failed");
+  }
+  if (!Str.Equivalence(initialStat.success.type, "Directory")) {
+    return Result.fail<ResidueReapSkipReason>("wrong-shape");
+  }
+  const canonical = yield* canonicalDirectory(root, candidatePath);
+  return O.match(canonical, {
+    onNone: (): Result.Result<string, ResidueReapSkipReason> => Result.fail("wrong-shape"),
+    onSome: (value): Result.Result<string, ResidueReapSkipReason> => Result.succeed(value),
+  });
+});
+
+const gitCleanSkip = Effect.fnUntraced(function* (
+  gitMarkers: ReadonlyArray<string>
+): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const readings = yield* Effect.forEach(
+    gitMarkers,
+    (marker) =>
+      runRepoCommandCapture(
+        "git",
+        ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"],
+        marker
+      ).pipe(Effect.option),
+    { concurrency: 2 }
+  );
+  if (A.some(readings, (reading) => O.isNone(reading) || reading.value.exitCode !== 0 || reading.value.truncated)) {
+    return O.some("git-probe-failed");
+  }
+  return A.some(A.getSomes(readings), (capture) => Str.isNonEmpty(Str.trim(capture.output)))
+    ? O.some("dirty-tree")
+    : O.none();
+});
+
+const directoryLivenessSkip = Effect.fnUntraced(function* (
+  candidatePath: string,
+  cwdProbe: CwdProbe
+): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, FileSystem.FileSystem | Path.Path> {
+  const live = yield* cwdProbe(candidatePath);
+  return O.match(live, {
+    onNone: () => O.some<ResidueReapSkipReason>("process-probe-failed"),
+    onSome: (isLive) => (isLive ? O.some<ResidueReapSkipReason>("live-cwd-ref") : O.none<ResidueReapSkipReason>()),
+  });
+});
+
 const directoryCandidate = Effect.fnUntraced(function* (
   root: string,
   candidatePath: string,
-  reapClass: "codex-worktrees" | "beep-cache-disposable",
+  reapClass: ResidueReapClass,
   nowMillis: number,
   thresholdDays: number,
   entryCap: number,
   cwdProbe: CwdProbe
-): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ResidueReapCandidate,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
-  const initialStat = yield* Effect.result(fs.stat(candidatePath));
-  if (Result.isFailure(initialStat)) {
-    return candidate(root, candidatePath, reapClass, "skip", { skipReason: "stat-failed" });
+  const shape = yield* canonicalDirectoryShape(root, candidatePath);
+  if (Result.isFailure(shape)) {
+    return candidate(root, candidatePath, reapClass, "skip", { skipReason: shape.failure });
   }
-  if (!Str.Equivalence(initialStat.success.type, "Directory")) {
-    return candidate(root, candidatePath, reapClass, "skip", { skipReason: "wrong-shape" });
-  }
-  const canonical = yield* canonicalDirectory(root, candidatePath);
-  if (O.isNone(canonical)) {
-    return candidate(root, candidatePath, reapClass, "skip", { skipReason: "wrong-shape" });
-  }
-  const census = yield* censusDirectory(canonical.value, entryCap);
+  const census = yield* censusDirectory(shape.success, entryCap);
   if (O.isSome(census.skipReason)) {
-    return candidate(root, canonical.value, reapClass, "skip", {
+    return candidate(root, shape.success, reapClass, "skip", {
       bytes: census.bytes,
       entriesScanned: census.entriesScanned,
       skipReason: census.skipReason.value,
     });
   }
-  const rootStat = yield* fs.stat(canonical.value).pipe(Effect.option);
-  if (O.isNone(rootStat)) {
-    return candidate(root, canonical.value, reapClass, "skip", {
+  const rootStat = yield* fs.stat(shape.success).pipe(Effect.option);
+  const newest = O.orElse(census.newestFileMillis, () => O.flatMap(rootStat, mtimeMillis));
+  if (O.isNone(newest)) {
+    return candidate(root, shape.success, reapClass, "skip", {
       bytes: census.bytes,
       entriesScanned: census.entriesScanned,
       skipReason: "stat-failed",
     });
   }
-  const newest = O.orElse(census.newestFileMillis, () => pipe(rootStat, O.flatMap(mtimeMillis)));
-  if (O.isNone(newest)) {
-    return candidate(root, canonical.value, reapClass, "skip", { skipReason: "stat-failed" });
-  }
   const measuredAge = ageDays(nowMillis, newest.value);
   if (measuredAge < thresholdDays) {
-    return candidate(root, canonical.value, reapClass, "skip", {
+    return candidate(root, shape.success, reapClass, "skip", {
       ageDays: measuredAge,
       bytes: census.bytes,
       entriesScanned: census.entriesScanned,
       skipReason: "too-young",
     });
   }
-  if (ResidueReapClass.is["codex-worktrees"](reapClass)) {
-    const live = yield* cwdProbe(canonical.value);
-    if (O.isNone(live)) {
-      return candidate(root, canonical.value, reapClass, "skip", {
-        ageDays: measuredAge,
-        entriesScanned: census.entriesScanned,
-        skipReason: "process-probe-failed",
-      });
-    }
-    if (live.value) {
-      return candidate(root, canonical.value, reapClass, "skip", {
-        ageDays: measuredAge,
-        entriesScanned: census.entriesScanned,
-        skipReason: "live-cwd-ref",
-      });
-    }
+  // Every embedded git checkout must prove itself clean before its container may go:
+  // uncommitted or untracked work inside a dormant directory is preserved, and a
+  // checkout git can no longer read fails closed rather than being deleted blind.
+  const gitSkip = yield* gitCleanSkip(census.gitMarkers);
+  if (O.isSome(gitSkip)) {
+    return candidate(root, shape.success, reapClass, "skip", {
+      ageDays: measuredAge,
+      bytes: census.bytes,
+      entriesScanned: census.entriesScanned,
+      skipReason: gitSkip.value,
+    });
   }
-  return candidate(root, canonical.value, reapClass, "remove-dir", {
+  const liveness = yield* directoryLivenessSkip(shape.success, cwdProbe);
+  if (O.isSome(liveness)) {
+    return candidate(root, shape.success, reapClass, "skip", {
+      ageDays: measuredAge,
+      entriesScanned: census.entriesScanned,
+      skipReason: liveness.value,
+    });
+  }
+  return candidate(root, shape.success, reapClass, "remove-dir", {
     ageDays: measuredAge,
     bytes: census.bytes,
     entriesScanned: census.entriesScanned,
@@ -407,7 +496,11 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
   thresholdDays: number,
   entryCap: number,
   cwdProbe: CwdProbe
-): Effect.fn.Return<ReadonlyArray<ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ReadonlyArray<ResidueReapCandidate>,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const exists = yield* fs.exists(root).pipe(Effect.orElseSucceed(() => false));
@@ -434,14 +527,26 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
 const turboCandidates = Effect.fnUntraced(function* (
   repoRoot: string,
   nowMillis: number,
-  thresholdDays: number
-): Effect.fn.Return<ReadonlyArray<ResidueReapCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  thresholdDays: number,
+  entryCap: number,
+  cwdProbe: CwdProbe
+): Effect.fn.Return<
+  ReadonlyArray<ResidueReapCandidate>,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const cacheRoot = path.join(repoRoot, ".turbo", "cache");
   const exists = yield* fs.exists(cacheRoot).pipe(Effect.orElseSucceed(() => false));
   if (!exists) {
     return A.empty();
+  }
+  // A symlinked cache root would let removal reach an external shared cache while the
+  // report claims the entries belong to this checkout: resolve and constrain it first.
+  const constrainedRoot = yield* canonicalDirectory(repoRoot, cacheRoot);
+  if (O.isNone(constrainedRoot)) {
+    return [candidate(cacheRoot, cacheRoot, "turbo-cache", "skip", { skipReason: "wrong-shape" })];
   }
   const listing = yield* Effect.result(fs.readDirectory(cacheRoot));
   if (Result.isFailure(listing)) {
@@ -458,16 +563,75 @@ const turboCandidates = Effect.fnUntraced(function* (
       if (O.isNone(stat)) {
         return candidate(cacheRoot, entryPath, "turbo-cache", "skip", { skipReason: "stat-failed" });
       }
-      if (!Str.Equivalence(stat.value.type, "File") && !Str.Equivalence(stat.value.type, "Directory")) {
-        return candidate(cacheRoot, entryPath, "turbo-cache", "skip", { skipReason: "wrong-shape" });
+      if (Str.Equivalence(stat.value.type, "Directory")) {
+        // A directory entry's own mtime can stay old while fresh files land inside it:
+        // classify by newest descendant through the shared directory workflow.
+        return yield* directoryCandidate(
+          cacheRoot,
+          entryPath,
+          "turbo-cache",
+          nowMillis,
+          thresholdDays,
+          entryCap,
+          cwdProbe
+        );
       }
-      const classified = classifyFile(path, cacheRoot, entryPath, "turbo-cache", stat.value, nowMillis, thresholdDays);
-      return Str.Equivalence(stat.value.type, "Directory") && Str.Equivalence(classified.action, "remove-file")
-        ? ResidueReapCandidate.make({ ...classified, action: "remove-dir" })
-        : classified;
+      return Str.Equivalence(stat.value.type, "File")
+        ? classifyFile(path, cacheRoot, entryPath, "turbo-cache", stat.value, nowMillis, thresholdDays)
+        : candidate(cacheRoot, entryPath, "turbo-cache", "skip", { skipReason: "wrong-shape" });
     }),
     { concurrency: 8 }
   );
+});
+
+const reassessSessionFile = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate,
+  nowMillis: number,
+  maxAgeDays: number
+): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  if (protectedSessionName(path, assessed.path) || O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+    return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
+  }
+  const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
+  return O.filter(stat, (info) => Str.Equivalence(info.type, "File")).pipe(
+    O.map((info) => classifyFile(path, assessed.root, assessed.path, assessed.reapClass, info, nowMillis, maxAgeDays)),
+    O.getOrElse(() => ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" }))
+  );
+});
+
+const reassessTurboEntry = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate,
+  nowMillis: number,
+  turboMaxAgeDays: number,
+  entryCap: number,
+  cwdProbe: CwdProbe
+): Effect.fn.Return<
+  ResidueReapCandidate,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
+  if (O.isNone(stat) || O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
+    return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
+  }
+  if (Str.Equivalence(stat.value.type, "Directory")) {
+    return yield* directoryCandidate(
+      assessed.root,
+      assessed.path,
+      assessed.reapClass,
+      nowMillis,
+      turboMaxAgeDays,
+      entryCap,
+      cwdProbe
+    );
+  }
+  return Str.Equivalence(stat.value.type, "File")
+    ? classifyFile(path, assessed.root, assessed.path, assessed.reapClass, stat.value, nowMillis, turboMaxAgeDays)
+    : ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
 });
 
 const reassessCandidate = Effect.fnUntraced(function* (
@@ -477,8 +641,11 @@ const reassessCandidate = Effect.fnUntraced(function* (
   turboMaxAgeDays: number,
   entryCap: number,
   cwdProbe: CwdProbe
-): Effect.fn.Return<ResidueReapCandidate, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
+): Effect.fn.Return<
+  ResidueReapCandidate,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const path = yield* Path.Path;
   if (Str.Equivalence(assessed.action, "skip")) {
     return assessed;
@@ -487,34 +654,10 @@ const reassessCandidate = Effect.fnUntraced(function* (
     return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
   }
   if (ResidueReapClass.is["codex-sessions"](assessed.reapClass)) {
-    if (protectedSessionName(path, assessed.path) || O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
-      return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
-    }
-    const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
-    return O.filter(stat, (info) => Str.Equivalence(info.type, "File")).pipe(
-      O.map((info) =>
-        classifyFile(path, assessed.root, assessed.path, assessed.reapClass, info, nowMillis, maxAgeDays)
-      ),
-      O.getOrElse(() => ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" }))
-    );
+    return yield* reassessSessionFile(assessed, nowMillis, maxAgeDays);
   }
   if (ResidueReapClass.is["turbo-cache"](assessed.reapClass)) {
-    const stat = yield* fs.stat(assessed.path).pipe(Effect.option);
-    if (O.isNone(stat) || O.isSome(yield* fs.readLink(assessed.path).pipe(Effect.option))) {
-      return ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "path-changed" });
-    }
-    const checked = classifyFile(
-      path,
-      assessed.root,
-      assessed.path,
-      assessed.reapClass,
-      stat.value,
-      nowMillis,
-      turboMaxAgeDays
-    );
-    return Str.Equivalence(stat.value.type, "Directory") && Str.Equivalence(checked.action, "remove-file")
-      ? ResidueReapCandidate.make({ ...checked, action: "remove-dir" })
-      : checked;
+    return yield* reassessTurboEntry(assessed, nowMillis, turboMaxAgeDays, entryCap, cwdProbe);
   }
   return yield* directoryCandidate(
     assessed.root,
@@ -534,7 +677,11 @@ const applyCandidate = Effect.fnUntraced(function* (
   turboMaxAgeDays: number,
   entryCap: number,
   cwdProbe: CwdProbe
-): Effect.fn.Return<AppliedCandidate, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  AppliedCandidate,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const rechecked = yield* reassessCandidate(assessed, nowMillis, maxAgeDays, turboMaxAgeDays, entryCap, cwdProbe);
   if (Str.Equivalence(rechecked.action, "skip")) {
@@ -611,7 +758,13 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
 ) {
   const path = yield* Path.Path;
   const configuredHome = O.fromUndefinedOr(options.homeRoot);
-  const homeRoot = path.resolve(O.isSome(configuredHome) ? configuredHome.value : yield* Config.string("HOME"));
+  // An empty or relative HOME must fail closed here: resolving it would silently make
+  // the current working directory the cleanup root.
+  const homeRoot = path.resolve(
+    yield* S.decodeEffect(ResidueReapHomeRoot)(
+      O.isSome(configuredHome) ? configuredHome.value : yield* Config.string("HOME")
+    )
+  );
   const repoRoot = path.resolve(O.getOrElse(O.fromUndefinedOr(options.repoRoot), () => ""));
   const resolvedRepoRoot =
     Str.isNonEmpty(repoRoot) && O.isSome(O.fromUndefinedOr(options.repoRoot)) ? repoRoot : yield* findRepoRoot();
@@ -634,13 +787,14 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
   const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
 
   const sessions = includes("codex-sessions")
-    ? A.flatten(
-        yield* Effect.forEach(
-          [path.join(codexRoot, "sessions"), path.join(codexRoot, "archived_sessions")],
-          (root) => discoverSessionTree(root, root, nowMillis, maxAgeDays, entryCap),
-          { concurrency: 2 }
-        )
-      )
+    ? (yield* Effect.reduce(
+        [path.join(codexRoot, "sessions"), path.join(codexRoot, "archived_sessions")],
+        (): SessionScan => ({ candidates: A.empty(), remaining: entryCap }),
+        Effect.fnUntraced(function* (scan: SessionScan, root: string) {
+          const nested = yield* discoverSessionTree(root, root, nowMillis, maxAgeDays, scan.remaining);
+          return { candidates: A.appendAll(scan.candidates, nested.candidates), remaining: nested.remaining };
+        })
+      )).candidates
     : A.empty<ResidueReapCandidate>();
   const worktrees = includes("codex-worktrees")
     ? yield* topLevelDirectoryCandidates(
@@ -653,7 +807,7 @@ export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* 
       )
     : A.empty<ResidueReapCandidate>();
   const turbo = includes("turbo-cache")
-    ? yield* turboCandidates(resolvedRepoRoot, nowMillis, turboMaxAgeDays)
+    ? yield* turboCandidates(resolvedRepoRoot, nowMillis, turboMaxAgeDays, entryCap, cwdProbe)
     : A.empty<ResidueReapCandidate>();
   const beepCache = includes("beep-cache-disposable")
     ? yield* topLevelDirectoryCandidates(
