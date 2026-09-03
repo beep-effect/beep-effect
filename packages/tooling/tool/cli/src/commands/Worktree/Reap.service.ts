@@ -181,8 +181,8 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   // reviewed. HEAD is probed live here — not taken from the scan-time listing — so the
   // pre-apply recheck re-ties authority to the checkout as it exists at removal time;
   // the residual instant after this probe is fenced inside the removal service, which
-  // re-verifies the checkout against its captured state and deletes the branch ref
-  // with an atomic compare-and-swap on the authorized object id.
+  // atomically renames the checkout aside before capturing its archive and deletes
+  // the branch ref with an atomic compare-and-swap on the authorized object id.
   const head = yield* successfulOutput(runner, "git", ["rev-parse", "HEAD"], cwd);
   return {
     reapClass: "merged-pr",

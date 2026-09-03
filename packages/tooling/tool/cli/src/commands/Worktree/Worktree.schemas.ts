@@ -288,11 +288,13 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  * `expectedHead` pins the authority under which the removal was decided: when
  * present, the service re-reads the checkout HEAD at removal time and refuses
  * the entire removal — no worktree removal, no branch deletion — if it no
- * longer equals this object id. The branch ref itself always falls to an
- * atomic `git update-ref -d` compare-and-swap on the archived head, so an
- * advance at any point up to the final ref update fails the deletion instead
- * of orphaning commits; worktree removal never touches the shared object
- * store.
+ * longer equals this object id. Archive mode fences the checkout with an
+ * atomic rename before capturing residue, so the archive is complete with
+ * respect to everything that arrived before the fence, and the branch ref
+ * itself always falls to an atomic `git update-ref -d` compare-and-swap on
+ * the archived head — an advance at any point up to the final ref update
+ * fails the deletion instead of orphaning commits; directory removal never
+ * touches the shared object store.
  *
  * @category models
  * @since 0.0.0
