@@ -623,6 +623,29 @@ describe("architecture operation plan", () => {
 
           expect(indexOperation.content).toContain(expectedExport);
           expect(indexOperation.content).not.toContain('.js";');
+
+          if (role === "config" || role === "server") {
+            const layerSuffix = role === "config" ? "/src/layer.ts" : "/src/Layer.ts";
+            const layerOperation = O.getOrThrow(
+              A.findFirst(
+                plan.operations,
+                (operation): operation is WriteFileOperation =>
+                  S.is(WriteFileOperation)(operation) && Str.endsWith(layerSuffix)(operation.path)
+              )
+            );
+            const testLayerOperation = O.getOrThrow(
+              A.findFirst(
+                plan.operations,
+                (operation): operation is WriteFileOperation =>
+                  S.is(WriteFileOperation)(operation) && Str.endsWith("/src/test.ts")(operation.path)
+              )
+            );
+
+            expect(layerOperation.content).toContain('import * as Layer from "effect/Layer";');
+            expect(layerOperation.content).not.toContain('from "effect"');
+            expect(testLayerOperation.content).toContain('import * as Layer from "effect/Layer";');
+            expect(testLayerOperation.content).not.toContain('from "effect"');
+          }
         }),
         { discard: true }
       );

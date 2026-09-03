@@ -192,6 +192,33 @@ describe("CourtReporterVocabulary", () => {
     );
   });
 
+  it("classifies nested header drift and rejects incoherent nested artifact identities", () => {
+    const current = CourtReporterArtifactComparison.make(CourtReporterArtifact);
+    const nestedDrift = CourtReporterArtifactComparison.make({
+      ...CourtReporterArtifact,
+      courts: {
+        ...CourtVocabulary,
+        schemaVersion: "court-reporter-vocabulary/v2",
+        projectionVersion: 2,
+      },
+    });
+    const report = classifyCourtReporterArtifactCompatibility(current, nestedDrift);
+
+    expect(report.compatibility).toBe("incompatible");
+    expect(A.map(report.changes, ({ kind }) => kind)).toEqual(
+      expect.arrayContaining(["schemaChange", "projectionChange"])
+    );
+    expect(() =>
+      CourtReporterArtifactComparison.make({
+        ...CourtReporterArtifact,
+        courts: {
+          ...CourtVocabulary,
+          artifactVersion: CourtReporterArtifactVersion.make("crv1:fixture-mismatched-courts"),
+        },
+      })
+    ).toThrow();
+  });
+
   it("classifies every ratified lifecycle and incompatibility change", () => {
     const addedCourt = court(currentCourt, {
       id: CourtId.make("fixture-added-court"),

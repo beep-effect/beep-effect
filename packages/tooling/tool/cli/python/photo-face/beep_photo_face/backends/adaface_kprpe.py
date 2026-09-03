@@ -690,32 +690,39 @@ class AdaFaceAnalysis:
     @staticmethod
     def _square_face_crop(image: np.ndarray, box: Any) -> np.ndarray:
         image_height, image_width = image.shape[:2]
-        x1, y1, x2, y2 = (float(value) for value in box[:4])
-        face_width = max(1.0, x2 - x1)
-        face_height = max(1.0, y2 - y1)
-        side = max(
-            1,
-            math.ceil(max(face_width, face_height) * (1 + 2 * FACE_CROP_MARGIN_RATIO)),
-        )
+        coordinates = np.asarray(box[:4], dtype=np.float64)
+        if coordinates.shape != (4,) or not np.all(np.isfinite(coordinates)):
+            raise WorkerError(
+                "worker-failed", "det_10g returned non-finite face coordinates"
+            )
+        x1 = float(np.clip(coordinates[0], 0, image_width))
+        y1 = float(np.clip(coordinates[1], 0, image_height))
+        x2 = float(np.clip(coordinates[2], 0, image_width))
+        y2 = float(np.clip(coordinates[3], 0, image_height))
+        face_width = x2 - x1
+        face_height = y2 - y1
+        if face_width <= 0 or face_height <= 0:
+            raise WorkerError(
+                "worker-failed", "det_10g returned an empty face box after clipping"
+            )
+        side = max(face_width, face_height) * (1 + 2 * FACE_CROP_MARGIN_RATIO)
         center_x = (x1 + x2) / 2
         center_y = (y1 + y2) / 2
-        left = math.floor(center_x - side / 2)
-        top = math.floor(center_y - side / 2)
-        right = left + side
-        bottom = top + side
-        source_left = max(0, left)
-        source_top = max(0, top)
-        source_right = min(image_width, right)
-        source_bottom = min(image_height, bottom)
-        crop = np.zeros((side, side, 3), dtype=np.uint8)
-        if source_right > source_left and source_bottom > source_top:
-            target_left = source_left - left
-            target_top = source_top - top
-            crop[
-                target_top : target_top + (source_bottom - source_top),
-                target_left : target_left + (source_right - source_left),
-            ] = image[source_top:source_bottom, source_left:source_right]
-        return cv2.resize(crop, (112, 112), interpolation=cv2.INTER_LINEAR)
+        left = center_x - side / 2
+        top = center_y - side / 2
+        scale = 112.0 / side
+        transform = np.array(
+            [[scale, 0.0, -left * scale], [0.0, scale, -top * scale]],
+            dtype=np.float32,
+        )
+        return cv2.warpAffine(
+            image,
+            transform,
+            (112, 112),
+            flags=cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=(0, 0, 0),
+        )
 
     def _embed(self, crops: list[np.ndarray]) -> list[EmbeddingResult]:
         if not crops:
@@ -767,13 +774,18 @@ class AdaFaceAnalysis:
 
     def get(self, image: np.ndarray) -> list[Any]:
         try:
-            boxes, landmarks = self.detector.detect(image, max_num=0, metric="default")
+            boxes, landmarks = self.detector.detect(image, max_num=32, metric="default")
         except Exception as error:  # noqa: BLE001 - model boundary
             raise WorkerError(
                 "worker-failed", f"det_10g face detection failed: {error}"
             ) from error
         if boxes is None or len(boxes) == 0:
             return []
+        if len(boxes) > 32:
+            raise WorkerError(
+                "input-limit-exceeded",
+                "det_10g returned more than 32 faces for one image",
+            )
         if landmarks is None or len(landmarks) != len(boxes):
             raise WorkerError(
                 "missing-landmarks",

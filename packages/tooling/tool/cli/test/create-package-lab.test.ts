@@ -561,7 +561,23 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(api).toContain('$ProbeSvcId.create("Api")');
             const main = yield* fs.readFileString(path.join(packageDir, "src", "main.ts"));
             expect(main).toContain("BunHttpServer.layer");
+            expect(main).toContain('import * as Config from "effect/Config";');
+            expect(main).toContain('import * as Effect from "effect/Effect";');
+            expect(main).toContain('import * as Layer from "effect/Layer";');
+            expect(main).not.toContain('from "effect"');
             expect(main).not.toContain("node:http");
+
+            const runtimeLayer = yield* fs.readFileString(path.join(packageDir, "src", "runtime", "Layer.ts"));
+            expect(runtimeLayer).toContain('import * as Effect from "effect/Effect";');
+            expect(runtimeLayer).toContain('import * as Layer from "effect/Layer";');
+            expect(runtimeLayer).not.toContain('from "effect"');
+
+            const healthTest = yield* fs.readFileString(path.join(packageDir, "test", "health.test.ts"));
+            expect(healthTest).toContain('import * as Context from "effect/Context";');
+            expect(healthTest).toContain('import * as Effect from "effect/Effect";');
+            expect(healthTest).toContain('import * as Layer from "effect/Layer";');
+            expect(healthTest).toContain('import * as Match from "effect/Match";');
+            expect(healthTest).not.toContain('from "effect"');
 
             const registry = yield* readIdentityRegistry(context);
             expect(registry).toContain('const generatedLabComposers = $I.compose("probe-svc");');

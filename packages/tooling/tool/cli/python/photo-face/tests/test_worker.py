@@ -4,9 +4,11 @@ import contextlib
 from dataclasses import replace
 import errno
 import hashlib
+import io
 import json
 from pathlib import Path
 import time
+from types import SimpleNamespace
 import zipfile
 
 import numpy as np
@@ -124,6 +126,52 @@ def test_discover_images_is_deterministic_and_respects_recursion(
     ]
 
 
+def test_discover_images_stops_at_limit_plus_one(tmp_path: Path) -> None:
+    for index in range(3):
+        (tmp_path / f"{index}.jpg").touch()
+
+    with pytest.raises(WorkerError) as raised:
+        discover_images(tmp_path, False, limit=2, label="reference")
+
+    assert raised.value.code == "input-limit-exceeded"
+    assert "split the scan" in raised.value.message
+
+
+def test_sorted_faces_rejects_more_than_the_per_image_limit() -> None:
+    analysis = SimpleNamespace(
+        get=lambda _image: [
+            SimpleNamespace() for _ in range(worker.MAX_FACES_PER_IMAGE + 1)
+        ]
+    )
+
+    with pytest.raises(WorkerError) as raised:
+        worker.sorted_faces(analysis, np.zeros((1, 1, 3), dtype=np.uint8))
+
+    assert raised.value.code == "input-limit-exceeded"
+
+
+def test_encode_payload_and_diagnostics_are_bounded(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(worker, "MAX_REPORT_BYTES", 8)
+    with pytest.raises(WorkerError) as raised:
+        worker.encode_payload({"value": "too large"})
+    assert raised.value.code == "report-limit-exceeded"
+
+    monkeypatch.setattr(worker, "MAX_REPORT_BYTES", 9)
+    assert worker.encode_payload({"v": ""}) == '{"v":""}'
+    monkeypatch.setattr(worker, "MAX_REPORT_BYTES", 8)
+    with pytest.raises(WorkerError) as framed:
+        worker.encode_payload({"v": ""})
+    assert framed.value.code == "report-limit-exceeded"
+
+    target = io.StringIO()
+    diagnostics = worker.BoundedDiagnosticWriter(target, 4)
+    assert diagnostics.write("abcdef") == 6
+    diagnostics.write("ignored")
+    assert target.getvalue() == "abcd"
+
+
 def test_main_refuses_model_acquisition_without_license_and_emits_one_json_object(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -150,8 +198,9 @@ def test_main_refuses_model_acquisition_without_license_and_emits_one_json_objec
     assert exit_code == 2
     assert len(stdout_lines) == 1
     assert json.loads(stdout_lines[0]) == {
-        "schemaVersion": "beep.files.match-person.worker.v2",
+        "schemaVersion": "beep.files.match-person.worker.v3",
         "ok": False,
+        "limits": worker.WORKER_LIMITS,
         "error": {
             "code": "model-license-not-accepted",
             "message": (
@@ -550,6 +599,7 @@ def test_run_worker_emits_success_report_shape(
     assert set(report) == {
         "schemaVersion",
         "ok",
+        "limits",
         "model",
         "parameters",
         "references",
@@ -558,6 +608,7 @@ def test_run_worker_emits_success_report_shape(
         "elapsedSeconds",
     }
     assert report["schemaVersion"] == worker.SCHEMA_VERSION
+    assert report["limits"] == worker.WORKER_LIMITS
     assert report["ok"] is True
     assert report["model"] == {
         "backend": "buffalo-l",

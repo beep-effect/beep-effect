@@ -12,6 +12,7 @@ import { filesCommand } from "@beep/repo-cli";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import {
   ArchivePoorCandidatesManifest,
+  boundedPersonMatchDirectoryNamesForTesting,
   CanonicalMatchPersonInputs,
   DetectBordersReport,
   DetectFacesReport,
@@ -38,7 +39,7 @@ import {
   runMatchPerson,
 } from "@beep/repo-cli/test/Files";
 import { fcRuns } from "@beep/test-utils";
-import { A, O, Str } from "@beep/utils";
+import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as PlatformError from "effect/PlatformError";
@@ -452,6 +453,15 @@ const adaFaceRocmParametersFixture = {
   recursive: false,
 };
 
+const workerLimitsFixture = {
+  referenceImages: 256,
+  candidateImages: 10_000,
+  facesPerImage: 32,
+  reportedFaces: 65_536,
+  reportBytes: 67_108_864,
+  diagnosticBytes: 1_048_576,
+};
+
 const makePersonMatchFaceFixture = (matchScore: number) => ({
   box: { x1: 10, y1: 20, x2: 110, y2: 140 },
   detectionScore: 0.99,
@@ -470,8 +480,9 @@ const makeAdaFaceRocmWorkerReportFixture = (
   candidateDir: string,
   referencePath: string
 ) => ({
-  schemaVersion: "beep.files.match-person.worker.v2",
+  schemaVersion: "beep.files.match-person.worker.v3",
   ok: true,
+  limits: workerLimitsFixture,
   model: makeAdaFaceModelFixture(path, cacheDir),
   parameters: adaFaceRocmParametersFixture,
   references: [
@@ -541,8 +552,9 @@ const makeBuffaloWorkerReportFixture = (
   candidateDir: string,
   referencePath: string
 ) => ({
-  schemaVersion: "beep.files.match-person.worker.v2",
+  schemaVersion: "beep.files.match-person.worker.v3",
   ok: true,
+  limits: workerLimitsFixture,
   model: makeBuffaloModelFixture(path, cacheDir),
   parameters: buffaloParametersFixture,
   references: [
@@ -1699,8 +1711,9 @@ describe("files command", { concurrent: false }, () => {
           const path = yield* Path.Path;
           const adaFaceModel = makeAdaFaceModelFixture(path, path.join(tmpDir, "cache"));
           const mismatchedWorkerReport = {
-            schemaVersion: "beep.files.match-person.worker.v2",
+            schemaVersion: "beep.files.match-person.worker.v3",
             ok: true,
+            limits: workerLimitsFixture,
             model: {
               backend: "buffalo-l",
               name: "buffalo_l",
@@ -2062,6 +2075,26 @@ describe("files command", { concurrent: false }, () => {
             disposition: "no-face",
             reason: "aligner-confidence-failed",
           });
+        })
+      )
+    ));
+
+  it("bounds person-match directory enumeration before sorting the discovered names", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const directory = path.join(tmpDir, "wide-person-match-input");
+          yield* fs.makeDirectory(directory, { recursive: true });
+          yield* Effect.forEach(
+            ["first.jpg", "second.jpg", "third.jpg"],
+            (name) => fs.writeFileString(path.join(directory, name), name),
+            { concurrency: 1, discard: true }
+          );
+
+          const error = yield* Effect.flip(boundedPersonMatchDirectoryNamesForTesting(directory, 2));
+          expect(error.message).toContain("directory entry count exceeds 2");
         })
       )
     ));
@@ -2689,6 +2722,69 @@ exit 74
           expect(invalidMessage).toContain("Person-match worker returned invalid");
           expect(yield* fs.exists(invalidManifestPath)).toBe(false);
           expect(yield* fs.exists(invalidOutDir)).toBe(false);
+
+          const excessiveFacesManifestPath = path.join(tmpDir, "excessive-faces-person-match.json");
+          const excessiveFacesWorkerReport = {
+            ...workerReport,
+            references: A.map(workerReport.references, (reference, index) =>
+              index === 0 ? { ...reference, faceCount: 65_536 } : reference
+            ),
+          };
+          const excessiveFacesWorkerReportJson = yield* encodeUnknownJson(excessiveFacesWorkerReport);
+          yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${excessiveFacesWorkerReportJson}'\n`);
+          const excessiveFacesMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--backend",
+              "buffalo-l",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              excessiveFacesManifestPath,
+              "--accept-model-license",
+            ])
+          );
+          expect(excessiveFacesMessage).toContain("reported more than 65536 faces");
+          expect(yield* fs.exists(excessiveFacesManifestPath)).toBe(false);
+
+          const inconsistentFaceCountManifestPath = path.join(tmpDir, "inconsistent-face-count-person-match.json");
+          const inconsistentFaceCountWorkerReport = {
+            ...workerReport,
+            entries: A.map(workerReport.entries, (entry, index) =>
+              index === 0 ? { ...entry, faceCount: N.increment(entry.faceCount) } : entry
+            ),
+          };
+          const inconsistentFaceCountWorkerReportJson = yield* encodeUnknownJson(inconsistentFaceCountWorkerReport);
+          yield* fs.writeFileString(
+            uvPath,
+            `#!/usr/bin/env bash\nprintf '%s' '${inconsistentFaceCountWorkerReportJson}'\n`
+          );
+          const inconsistentFaceCountMessage = yield* withEnvVar(
+            "BEEP_UV_PATH",
+            uvPath,
+            expectFilesCommandFailure([
+              "match-person",
+              "--backend",
+              "buffalo-l",
+              "--references",
+              referenceDir,
+              "--dir",
+              candidateDir,
+              "--cache-dir",
+              cacheDir,
+              "--manifest",
+              inconsistentFaceCountManifestPath,
+              "--accept-model-license",
+            ])
+          );
+          expect(inconsistentFaceCountMessage).toContain("face count inconsistent with its retained face evidence");
+          expect(yield* fs.exists(inconsistentFaceCountManifestPath)).toBe(false);
 
           const unpinnedManifestPath = path.join(tmpDir, "unpinned-model-person-match.json");
           const unpinnedWorkerReport = {

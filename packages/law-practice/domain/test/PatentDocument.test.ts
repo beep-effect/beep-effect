@@ -257,6 +257,26 @@ describe("PatentDocument", () => {
           Md.make([
             Md.h1("CLAIMS"),
             Md.p("1. A sensor comprising a detector."),
+            Md.p("2. The sensor of claims 1 through 1000000000, wherein the detector is optical."),
+          ]),
+          Md.make([
+            Md.h1("CLAIMS"),
+            Md.p("1. A sensor comprising a detector."),
+            Md.p(
+              `2. The sensor of ${A.join(
+                A.makeBy(1025, () => "claim 1"),
+                " "
+              )}, wherein the detector is optical.`
+            ),
+          ]),
+          Md.make([
+            Md.h1("CLAIMS"),
+            Md.p("1. A sensor comprising a detector."),
+            Md.p("2. The sensor of claim 2, wherein the detector is optical."),
+          ]),
+          Md.make([
+            Md.h1("CLAIMS"),
+            Md.p("1. A sensor comprising a detector."),
             Md.p("3. The sensor of claim 1, wherein the detector is optical."),
           ]),
           Md.make([Md.h1("TITLE OF THE INVENTION"), Md.h1("CLAIMS"), Md.p("1. A sensor comprising a detector.")]),
@@ -275,6 +295,9 @@ describe("PatentDocument", () => {
       );
 
       expect(A.map(failures, ({ reason }) => reason)).toStrictEqual([
+        "invalid-claim",
+        "invalid-claim",
+        "invalid-claim",
         "invalid-claim",
         "invalid-claim",
         "invalid-claim",

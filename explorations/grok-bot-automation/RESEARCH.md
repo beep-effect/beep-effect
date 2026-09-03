@@ -143,7 +143,7 @@ surface, although its promised nightly commands are planned and not shipped.
 The architecture routes repo automation to `packages/tooling/tool/cli`.
 
 The existing `@beep/skill-contract` package exports `EvidenceReceipt`,
-`EvidenceDigest`, `EvidenceLadder`, and `RecoveryAttemptReceipt`.
+`EvidenceDigest`, `EvidenceLadderState`, and `RecoveryAttemptReceipt`.
 
 Bot receipts must bind those models instead of creating a parallel family.
 
