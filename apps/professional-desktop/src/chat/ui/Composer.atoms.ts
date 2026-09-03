@@ -202,7 +202,7 @@ const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
  * console.log(typeof dispatchTurnWithConfirm === "function") // true
  * ```
  *
- * @category actions
+ * @category workflows
  * @since 0.0.0
  */
 export const dispatchTurnWithConfirm: {

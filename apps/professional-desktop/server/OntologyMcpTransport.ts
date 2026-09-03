@@ -106,11 +106,6 @@ const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
       )
     );
 
-/** Ontology mutation tools eligible to dispatch once registration is enabled.
- * @remarks Registration and approval are separate gates; this list is the approval half and is inert while mutations stay unregistered. It becomes the granted operations of each MCP session's frozen grant set.
- * @category constants
- * @since 0.0.0
- */
 // Every governed ontology mutation writes the local workspace; the sink triple
 // is a composition-root fact, so the boundary classifies its audience by
 // construction (the URL-parsing resolver is for network-egress destinations).
@@ -139,10 +134,25 @@ const ontologyEgressSink = ExecutionSink.make({
 const ontologySessionGrantTtl = Duration.hours(12);
 
 /**
- * Build the `/mcp` route layer with read-only registration independent of mutation enablement.
- * @remarks Mutation registration is decided by `OntologyMcpConfig` inside `Layer.unwrap`, so the layer-shape branch stays where the layer is built; every mutation dispatches through the governed TierGate, which freezes a per-session grant set and writes a write-ahead ledger decision before any effect runs. The returned layer therefore requires `ExecutionLedger` and `EpistemicConfig`; the entrypoint provides the Drizzle ledger over the shared PGlite, and a test may inject a failing ledger to prove the fail-closed refusal.
- * @remarks `approvedMutationTools` exists so a test can register the mutation tools while granting none of them, which is the only way to prove that registration is not authorization. Production never passes it.
- * @example
+ * Builds the `/mcp` route layer with read-only registration independent of mutation enablement.
+ *
+ * **Details**
+ *
+ * Mutation registration is decided by `OntologyMcpConfig` inside
+ * `Layer.unwrap`, so the layer-shape branch stays where the layer is built.
+ * Every mutation dispatches through the governed TierGate, which freezes a
+ * per-session grant set and writes a write-ahead ledger decision before any
+ * effect runs. The returned layer therefore requires `ExecutionLedger` and
+ * `EpistemicConfig`; the entrypoint provides the Drizzle ledger over the shared
+ * PGlite, and a test may inject a failing ledger to prove the fail-closed
+ * refusal.
+ *
+ * `approvedMutationTools` lets a test register mutation tools while granting
+ * none of them, proving that registration is not authorization. Production
+ * never passes it.
+ *
+ * **Example** (Build the ontology transport layer)
+ *
  * ```ts
  * import * as Layer from "effect/Layer";
  * import * as Redacted from "effect/Redacted";
