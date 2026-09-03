@@ -16,7 +16,13 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runIdForContext, runArtifactPathForContext as runOutputPathForContext } from "./ArtifactPaths.ts";
 import { runGitOutput } from "./GitExec.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
-import { makePrProvenanceServiceLive, renderPrProvenance } from "./Provenance.ts";
+import { renderPrProvenance, toPublicPrProvenance } from "./Provenance.ts";
+import {
+  detectPrRepository,
+  ensureProvenanceFooter,
+  makeCurrentPrSessionRecord,
+  recordCurrentPrSession,
+} from "./ProvenanceFooter.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -202,9 +208,16 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   const proofSection = Str.isNonEmpty(laneSummary)
     ? laneSummary
     : "- full local proof still running (start-pr-early); see the verdict artifact for final lane results";
-  const provenanceService = yield* makePrProvenanceServiceLive();
-  const provenance = yield* provenanceService.detect(context.repoRoot, context.branch);
-  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runIdForContext(context)}/verdict.json\n\n${renderPrProvenance(provenance)}`;
+  const footer = yield* Effect.gen(function* () {
+    const repository = yield* detectPrRepository(context.repoRoot);
+    const record = yield* makeCurrentPrSessionRecord(context, repository, O.none(), O.none(), "created");
+    const labels = yield* runGitOutput(context.repoRoot, ["config", "--get", "beep.provenance.labels"]).pipe(
+      Effect.map((value) => Str.trim(value) !== "off"),
+      Effect.orElseSucceed(() => true)
+    );
+    return renderPrProvenance(toPublicPrProvenance([record], O.none(), labels));
+  }).pipe(Effect.orElseSucceed(() => ""));
+  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runIdForContext(context)}/verdict.json\n\n${footer}`;
 });
 
 /**
@@ -319,6 +332,8 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
       `[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}; skipping create`
     );
     yield* recordPrCreateLane(recorder, prStep, `skipped: open pull request #${existing.value.number} already exists`);
+    const recording = yield* recordCurrentPrSession(context, existing.value.number, O.none(), "pushed");
+    if (O.isSome(recording)) yield* ensureProvenanceFooter(context, recording.value.repository, existing.value.number);
     return;
   }
 
@@ -339,6 +354,9 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   }
   yield* Console.log(`[yeet] --pr: created pull request -> ${Str.trim(result.output)}`);
   yield* recordPrCreateLane(recorder, prStep, Str.trim(result.output));
+  const created = yield* runGhPullRequestView(context);
+  const recording = yield* recordCurrentPrSession(context, created.number, O.some(Str.trim(result.output)), "created");
+  if (O.isSome(recording)) yield* ensureProvenanceFooter(context, recording.value.repository, created.number);
 });
 
 /**

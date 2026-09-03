@@ -892,6 +892,7 @@ describe("yeet planner", () => {
       "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
+      "publish:pr-provenance-stamp",
     ]);
 
     const earlyWithoutMonitor = buildYeetRunPlanForTesting({
@@ -2361,6 +2362,7 @@ describe("yeet publish scope helpers", () => {
       "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
+      "publish:pr-provenance-stamp",
     ]);
     expect(findStep(plan.steps, "publish:pr-create").command).toBe("gh");
   });
@@ -2383,6 +2385,7 @@ describe("yeet publish scope helpers", () => {
       "publish:head-install-preflight",
       "early-publish:git:push",
       "publish:pr-create",
+      "publish:pr-provenance-stamp",
       "full:cheap-gates",
       "full:pre-push",
       "full:ci-parity",

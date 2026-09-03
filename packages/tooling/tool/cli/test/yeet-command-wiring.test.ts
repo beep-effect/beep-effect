@@ -41,7 +41,7 @@ describe("yeet merge-loop command wiring", () => {
 
   it("keeps the pre-existing subcommands registered", () => {
     expect(subcommandNames).toEqual(
-      expect.arrayContaining(["verify", "repair", "publish", "monitor", "closeout", "status"])
+      expect.arrayContaining(["verify", "repair", "publish", "monitor", "closeout", "status", "resume"])
     );
   });
 });

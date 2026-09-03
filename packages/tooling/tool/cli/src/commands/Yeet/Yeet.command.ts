@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Match } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import {
@@ -28,6 +29,8 @@ import {
   runYeetSweep,
   runYeetWatchLoop,
 } from "./internal/Porcelain.ts";
+import { ResumeOptions } from "./internal/Resume.schemas.ts";
+import { runYeetResume } from "./internal/Resume.ts";
 import { YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.ts";
 
@@ -49,6 +52,23 @@ const headFlag = Flag.string("head").pipe(
 );
 
 const jsonFlag = Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Render plan output as JSON"));
+
+const resumeListFlag = Flag.boolean("list").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("List every locally recorded agent for the pull request")
+);
+const resumePrintFlag = Flag.boolean("print").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the resolved local command without executing it")
+);
+const resumeForceFlag = Flag.boolean("force").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Resume even when the recorded Claude session is already live")
+);
+const resumeAgentFlag = Flag.integer("agent").pipe(
+  Flag.withDefault(0),
+  Flag.withDescription("Select a one-based agent from the newest-first ledger")
+);
 
 const packetDirFlag = Flag.string("packet-dir").pipe(
   Flag.withDescription("Ignored directory for yeet run context, logs, and packets"),
@@ -575,6 +595,20 @@ const yeetStatusCommand = Command.make("status", statusFlags, (options) => runYe
   Command.withDescription("Summarize local Yeet operator status for the current branch")
 );
 
+const yeetResumeCommand = Command.make(
+  "resume",
+  {
+    ref: Argument.string("number|url").pipe(Argument.withDescription("Pull request number or GitHub pull request URL")),
+    list: resumeListFlag,
+    print: resumePrintFlag,
+    force: resumeForceFlag,
+    json: jsonFlag,
+    agent: resumeAgentFlag,
+  },
+  ({ ref, list, print, force, json, agent }) =>
+    runYeetResume(ResumeOptions.make({ ref, list, print, force, json, agent: agent > 0 ? O.some(agent) : O.none() }))
+).pipe(Command.withDescription("Resume an agent session recorded for a pull request"));
+
 const yeetPrePushHookCommand = Command.make("pre-push-hook", sharedFlags, (options) =>
   runYeetMode("pre-push-hook", options)
 ).pipe(Command.withDescription("Reuse exact Yeet full-proof state for git pre-push hooks when safe"));
@@ -670,6 +704,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, (options) => runYe
     yeetMonitorCommand,
     yeetCloseoutCommand,
     yeetStatusCommand,
+    yeetResumeCommand,
     yeetSweepCommand,
     yeetMergeCommand,
     yeetReplyCommand,
