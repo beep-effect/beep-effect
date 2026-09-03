@@ -5,29 +5,30 @@ Canonical rules for all coding agents. Claude Code loads this via the
 directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
 workflows in skills.
 
-## 1Password MCP
+## 1Password
 
-- Treat the `op` CLI session and the 1Password MCP connection as separate
-  authentication surfaces. `op whoami` can succeed in the operator's terminal
-  while failing inside an agent process because `OP_SESSION_*` is shell-local.
-  An agent-side failure does not prove that the desktop app or operator shell is
-  signed out.
-- Enabling the MCP server in the 1Password desktop app does not register it with
-  every agent client. For Codex, first verify that `1password-mcp` is on `PATH`
-  and that `codex mcp get 1password` succeeds. If the registration is missing,
-  run `codex mcp add 1password -- 1password-mcp`.
-- MCP tools are fixed when an agent session starts. After adding or enabling the
-  server, start a fresh task/session and approve its desktop connection; an
-  already-running session will not hot-load the new tool. Do not respond to a
-  missing MCP tool by repeatedly asking the operator to unlock 1Password or run
-  `op signin`.
+- Agents resolve `op` from `PATH`, never the system binary by absolute path.
+  On managed workstations the user-local shim loads exactly one automation
+  credential (a service account by default, the local Connect server with
+  `OP_AGENT_BACKEND=connect`), disables desktop unlock, and exits 78 when no
+  agent credential exists. Desktop-app integration, `op signin`, and desktop
+  MCP approval loops are human paths: never retry them and never ask the
+  operator to unlock 1Password to make an agent operation succeed.
+- On any 1Password failure run `op-doctor` once and act on its
+  count/type/mode-only output; report the failing line and stop if the secret
+  operation still cannot proceed. Agent-side failure never proves the desktop
+  app or the operator shell is signed out.
 - For a pre-existing `op://`-backed env file, test the exact operation with
-  output suppressed: `op run --env-file=<path> -- true >/dev/null`. That wrapper
-  can obtain desktop authorization and succeed even when agent-side
-  `op whoami` fails; do not use `op whoami` as a gate for the wrapper.
-- Never copy, print, or inject `OP_SESSION_*` values to bridge the process gap.
-  Once exposed, use the 1Password MCP tools and keep secret values inside
-  1Password.
+  output suppressed: `op run --env-file=<path> -- true >/dev/null`, then use
+  that same lane-scoped wrapper for the real command. Size fan-outs against the
+  live service-account quota (1,000 reads per hour per token; name-based
+  references cost three reads) or run them on the Connect backend.
+- Never copy, print, or inject `OP_*` values, resolved secrets, or raw item
+  JSON; send verification reads to `/dev/null` or reduce them to counts.
+- The 1Password MCP server is the desktop Environments MCP: it cannot return
+  secrets and is not an agent secret path. MCP tools are fixed when a session
+  starts; do not respond to a missing MCP tool by asking the operator to unlock
+  1Password or run `op signin`.
 
 ## Code Laws
 
