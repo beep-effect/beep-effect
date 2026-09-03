@@ -1109,6 +1109,26 @@ const admissionEscalation = (waitedMillis: number, alreadyEscalated: number): O.
 const escalationLevelFor = (waitedMillis: number): number =>
   waitedMillis >= 600_000 ? 2 : waitedMillis >= 120_000 ? 1 : 0;
 
+/**
+ * Deterministic scheduler helpers exposed to the source test kit.
+ *
+ * **Example** (Resolve a two-minute escalation)
+ *
+ * ```ts
+ * import { qualitySchedulerForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(qualitySchedulerForTesting.escalationLevel(120_000)) // 1
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const qualitySchedulerForTesting = {
+  escalationLevel: escalationLevelFor,
+  parseMeminfoFieldGib,
+  processStartIdentityFromSystemCommand,
+};
+
 const refreshHeartbeat = Effect.fnUntraced(function* (
   entryPath: string,
   encoded: string

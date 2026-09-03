@@ -1547,6 +1547,29 @@ const testTsgoTurboSummaryPath = (output: string): O.Option<string> =>
     O.filter(Str.isNonEmpty)
   );
 
+/**
+ * Pure package-owned tsgo planning helpers exposed to the source test kit.
+ *
+ * **Example** (Recognize a test source)
+ *
+ * ```ts
+ * import { testTsgoPlanningForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(testTsgoPlanningForTesting.isTestFile("/repo/pkg/test/a.ts", "a.ts")) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const testTsgoPlanningForTesting = {
+  isTestFile: isTestTsgoFile,
+  isIgnoredDirectory: isIgnoredTestTsgoDirectory,
+  packageLabel: tsgoTestPackageLabel,
+  packageResultPath: testTsgoPackageResultPath,
+  turboArgs: testTsgoTurboArgs,
+  turboSummaryPath: testTsgoTurboSummaryPath,
+};
+
 const readTestTsgoPackageResult = Effect.fn("QualityScriptCommands.readTestTsgoPackageResult")(function* (
   group: TestTsgoPackageGroup
 ): Effect.fn.Return<TestTsgoPackageResult, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {

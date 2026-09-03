@@ -21,6 +21,7 @@ import {
   processIdentityStatusWithStartForTesting,
   processStartIdentityForPid,
   provideRuntimeRootForTesting,
+  qualitySchedulerForTesting,
   RunScopeRecord,
   RuntimeRootChoice,
   reapAdmissionState,
@@ -58,7 +59,31 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 const DEAD_PID = 2_147_483_647;
 const JOURNALED_ATTEMPT_ID = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440020");
 
+describe("admission escalation", () => {
+  it("maps each wait threshold to its escalation level", () => {
+    expect(qualitySchedulerForTesting.escalationLevel(0)).toBe(0);
+    expect(qualitySchedulerForTesting.escalationLevel(120_000)).toBe(1);
+    expect(qualitySchedulerForTesting.escalationLevel(600_000)).toBe(2);
+  });
+});
+
+describe("memory stats", () => {
+  it("parses valid meminfo fields and rejects missing or invalid values", () => {
+    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: 2097152 kB\n", "MemTotal:")).toEqual(O.some(2));
+    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemTotal: unavailable kB\n", "MemTotal:")).toEqual(
+      O.none()
+    );
+    expect(qualitySchedulerForTesting.parseMeminfoFieldGib("MemFree: 1024 kB\n", "MemTotal:")).toEqual(O.none());
+  });
+});
+
 describe("process identity liveness", () => {
+  it.effect("returns no portable identity for an absent process", () =>
+    Effect.gen(function* () {
+      expect(yield* qualitySchedulerForTesting.processStartIdentityFromSystemCommand(DEAD_PID)).toEqual(O.none());
+    })
+  );
+
   it.effect("uses a portable process identity when procfs is unavailable", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

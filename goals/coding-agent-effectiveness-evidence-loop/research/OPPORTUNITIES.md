@@ -566,10 +566,16 @@ Lived while repairing PR #992 after both the hosted affected lane and two clean
 preceding repo-wide baseline refresh. The source delta in `Quality.command.ts`
 belonged to merged PR #989, while `QualityScheduler.ts` had not changed since
 PR #964. The gate's scoped writer merged the reproducible package-lane results
-without lowering any other package.
+without lowering any other package. That documented repair still failed on the
+hosted PR: when `TURBO_SCM_BASE` is present, the comparison reloads every
+surviving file floor from the base ref, so a same-PR baseline adjustment is
+ignored for the files it is meant to repair. The only immediately admissible
+repair was adding tests until the isolated lane exceeded the inherited floors.
 
 What would have prevented it: require each package row in a repo-wide baseline
 refresh to be measured with the same isolated package command used by affected
 CI, or attach a provenance field that names the measurement scope. A floor
 observed only through incidental cross-package execution is not reproducible in
-the lane that enforces it.
+the lane that enforces it. The remediation should also distinguish a base-pinned
+PR lane from a baseline-authoring lane instead of recommending an adjustment
+that the current PR comparison cannot consume.
