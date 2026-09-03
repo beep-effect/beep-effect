@@ -75,3 +75,30 @@
   security boundary should trigger a concurrency audit in addition to its
   functional assertions, using the option-based Vitest scheduler API enforced
   by repository lint policy.
+
+## 2026-09-03 — Aggregate coverage hid changed-file ratchet drops
+
+- **What I was doing:** Running package-scoped coverage for every workspace
+  touched by the security batch before publishing another repair head.
+- **Evidence:** The langextract and Markdown suites passed every test and kept
+  high package-level coverage, but the scoped ratchet still identified three
+  uncovered metrics in `Alignment.behavior.ts` and one uncovered branch in
+  `Md.safe.ts`. The langextract gaps were impossible `Option.none` and
+  duplicate-match helper arms; the Markdown gap was a forged scalar-child
+  branch in the new bounded-document walk.
+- **What would have prevented it:** Run `bun run coverage
+  --filter=<affected-package>` for every touched coverage owner before the
+  first push, and treat the command's changed-file comparison—not only its
+  aggregate percentage table—as the ratchet proof.
+
+## 2026-09-03 — Stale-base analysis exceeded Yeet's capture limit
+
+- **What I was doing:** Publishing the coverage repair head with `beep yeet
+  publish --fast --monitor --allow-stale-base`.
+- **Evidence:** Yeet stopped before committing because its stale-base overlap
+  check ran `git diff --name-only` from the branch merge base to `origin/main`
+  and the output exceeded the repo-run capture limit. The intended three files
+  remained staged, and the failure occurred before any push.
+- **What would have prevented it:** Stream or bound the stale-base path set
+  independently of the generic command-output capture limit, while preserving
+  enough structured output to report real overlap conflicts.

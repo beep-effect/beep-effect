@@ -982,6 +982,7 @@ Demo video`);
 
     const hostile = Md.make([
       Md.p([
+        Md.rawMarkdown("**trusted**"),
         Md.rawHtml("<script>alert(1)</script>"),
         Md.a("http://example.com", "Insecure"),
         Md.img("//example.com/tracker.png", { alt: "Tracker" }),
@@ -991,16 +992,17 @@ Demo video`);
     expect(Result.isFailure(decodeSafeDocument(encodedHostile))).toBe(true);
     expect(() => decodeSafeDocumentUnsafe(encodedHostile)).toThrow();
     expect(documentSafetyIssues(hostile)).toMatchObject([
-      { _tag: "RawNode", path: ["children", 0, "children", 0], nodeTag: "rawHtml" },
+      { _tag: "RawNode", path: ["children", 0, "children", 0], nodeTag: "rawMarkdown" },
+      { _tag: "RawNode", path: ["children", 0, "children", 1], nodeTag: "rawHtml" },
       {
         _tag: "UnsafeUrl",
-        path: ["children", 0, "children", 1, "href"],
+        path: ["children", 0, "children", 2, "href"],
         nodeTag: "a",
         destinationKind: "link",
       },
       {
         _tag: "UnsafeUrl",
-        path: ["children", 0, "children", 2, "src"],
+        path: ["children", 0, "children", 3, "src"],
         nodeTag: "img",
         destinationKind: "image",
       },
@@ -1022,8 +1024,11 @@ Demo video`);
     expect(Result.isFailure(refineSafeDocument(overLimit))).toBe(true);
   });
 
-  it("stops reading wide child lists as soon as the global AST-node budget is exceeded", () => {
+  it("ignores forged scalar children and stops reading once the global AST-node budget is exceeded", () => {
     const children = A.makeBy(MAX_SAFE_DOCUMENT_NODES + 1, () => Md.hr);
+    Object.defineProperty(children, 0, {
+      get: () => "not-a-node",
+    });
     Object.defineProperty(children, MAX_SAFE_DOCUMENT_NODES, {
       get: () => {
         throw new Error("child beyond the document budget was read");

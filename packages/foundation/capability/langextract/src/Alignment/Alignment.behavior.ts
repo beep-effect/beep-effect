@@ -242,9 +242,6 @@ const findLesser = (
   );
 };
 
-const sameMatchedText = (left: MatchedText, right: MatchedText): boolean =>
-  Num.Equivalence(left[0], right[0]) && Eq.equals(left[1], right[1]);
-
 const spendMinimalFoldTransition = (budget: MinimalFoldBudget): boolean => {
   if (budget.remaining <= 0) return false;
   budget.remaining = Num.decrement(budget.remaining);
@@ -287,16 +284,6 @@ const enqueueMinimalFoldTransitions = (
   }
   return true;
 };
-
-const appendUniqueMinimalFoldMatch = (matches: Array<MatchedText>, match: O.Option<MatchedText>): boolean =>
-  O.match(match, {
-    onNone: () => false,
-    onSome: (value) => {
-      if (A.some(matches, (candidate) => sameMatchedText(candidate, value))) return false;
-      matches.push(value);
-      return A.length(matches) > 1;
-    },
-  });
 
 interface MinimalFoldStartSearch {
   readonly exhausted: boolean;
@@ -342,7 +329,8 @@ const mergeMinimalFoldStartMatches = (
   startSearch: MinimalFoldStartSearch
 ): Pick<MinimalFoldMatchSearch, "ambiguous" | "exhausted"> => {
   for (const match of startSearch.matches) {
-    if (appendUniqueMinimalFoldMatch(matches, O.some(match))) return { ambiguous: true, exhausted: false };
+    matches.push(match);
+    if (A.length(matches) > 1) return { ambiguous: true, exhausted: false };
   }
   return { ambiguous: false, exhausted: startSearch.exhausted };
 };
