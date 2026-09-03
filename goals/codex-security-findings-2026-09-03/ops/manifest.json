@@ -29,6 +29,7 @@
     "goals/codex-security-findings-2026-09-03/SPEC.md",
     "goals/codex-security-findings-2026-09-03/PLAN.md",
     "goals/codex-security-findings-2026-09-03/GOAL.md",
+    "goals/codex-security-findings-2026-09-03/ops/closures.json",
     "goals/codex-security-findings-2026-09-03/research/SOURCES.md"
   ],
   "researchReports": ["research/SOURCES.md"],

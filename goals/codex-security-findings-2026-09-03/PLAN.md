@@ -36,6 +36,8 @@ repository jobs passed, all seven review threads were resolved, and the exact
 test "$(wc -m < goals/codex-security-findings-2026-09-03/GOAL.md)" -le 4000
 jq . goals/codex-security-findings-2026-09-03/ops/manifest.json
 jq . goals/codex-security-findings-2026-09-03/ops/triage.json
+jq . goals/codex-security-findings-2026-09-03/ops/closures.json
 test "$(find goals/codex-security-findings-2026-09-03/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 12
 git diff --check -- goals/codex-security-findings-2026-09-03
+bun run beep lint reflection-artifacts
 ```

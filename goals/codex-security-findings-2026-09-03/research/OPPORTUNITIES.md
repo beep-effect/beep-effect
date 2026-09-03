@@ -177,3 +177,22 @@
   select by captured title, assert the exact URL identity before submission,
   then independently re-audit every ID from the Closed view before emitting a
   sanitized closure ledger.
+
+## Base catch-up ran quality against stale dependencies (2026-09-03)
+
+- **What I was doing:** Preparing the post-merge closure-evidence PR after
+  merging the current `origin/main` into the closeout branch.
+- **Evidence:** The first `bun run beep yeet repair` used the pre-merge
+  dependency installation. It reported eight unexpected tsgo rules and four
+  missing-pipeable diagnostics in untouched `effect-drizzle` files. After
+  `bun install --frozen-lockfile` installed `@effect/tsgo` 0.39.1, both
+  `bun run beep quality tsgo-rules` and the 999-file
+  `bun run beep quality test-tsgo` inventory passed. The same repair ran
+  repo-wide docgen and failed on three missing examples in
+  `scratchpad/jsdoc-hover-lab.ts`, an ignored local file that predates this
+  branch and sits outside the packet delta.
+- **What would have prevented it:** After a base merge changes the lockfile or
+  toolchain catalog, Yeet should require a frozen install before repair. For a
+  packet-only branch with no affected workspace package, it should also
+  attribute an untouched repo-wide docgen failure to `origin/main` instead of
+  presenting it as a branch regression.

@@ -28,7 +28,9 @@ leave no packet-applicable finding open.
 3. [`PLAN.md`](./PLAN.md)
 4. [`ops/manifest.json`](./ops/manifest.json)
 5. [`ops/triage.json`](./ops/triage.json)
-6. [`findings/INDEX.md`](./findings/INDEX.md)
+6. [`ops/closures.json`](./ops/closures.json)
+7. [`findings/INDEX.md`](./findings/INDEX.md)
+8. [`history/reflections/2026-09-03-codex.md`](./history/reflections/2026-09-03-codex.md)
 
 ## Current Phase
 

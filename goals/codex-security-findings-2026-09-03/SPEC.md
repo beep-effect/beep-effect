@@ -70,7 +70,7 @@ exact captured findings until no packet-applicable finding remains open.
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
 | Launcher size | `test "$(wc -m < goals/codex-security-findings-2026-09-03/GOAL.md)" -le 4000` | Pass |
-| JSON shape | `jq .` over both files in `ops/` | Pass |
+| JSON shape | `jq .` over the manifest, triage, and closure ledgers in `ops/` | Pass |
 | Finding count | CSF file count equals 12 | Pass |
 | Severity count | 12 Informational | Pass |
 | Raw ignored | `git status --short -- .../raw` | Only `.gitignore` tracked |
