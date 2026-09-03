@@ -383,6 +383,7 @@ const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect
 });
 const codecStaticKeys = [
   "decodeEffect",
+  "decodeSync",
   "decodeUnknownEffect",
   "decodeUnknownOption",
   "decodeUnknownSync",
@@ -412,6 +413,7 @@ describe("P3 identity namespaces", () => {
       }
       expect(hasFunctionStatic(spec.schema, "fromUnknown"), `${spec.label}.fromUnknown`).toBe(false);
       expect(hasFunctionStatic(spec.schema, "decodeOption"), `${spec.label}.decodeOption`).toBe(false);
+      expect(O.getOrThrow(invokeStatic(spec.schema, "decodeSync", 1)), spec.label).toBe(1);
       expect(O.getOrThrow(invokeStatic(spec.schema, "decodeUnknownSync", 1)), spec.label).toBe(1);
     }
   });

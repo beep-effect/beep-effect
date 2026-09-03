@@ -71,4 +71,9 @@ export class EmailArtifact extends ProductEntity.Entity<EmailArtifact>()(Workspa
   $I.annote("EmailArtifact", {
     description: "Normalized email artifact imported into a workspace thread.",
   })
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(EmailArtifact);
+  static readonly encodeUnknownSync = S.encodeUnknownSync(EmailArtifact);
+  static readonly encodeSync = S.encodeSync(EmailArtifact);
+  static readonly decodeSync = S.decodeSync(EmailArtifact);
+}

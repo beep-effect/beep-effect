@@ -106,7 +106,7 @@ describe("WorkspaceTables", () => {
   });
 
   it("round-trips Thread, Turn, and Message rows through the converters", () => {
-    const thread = S.decodeUnknownSync(ThreadModel)({
+    const thread = ThreadModel.decodeUnknownSync({
       ...productEntityFixtureInput("WorkspaceThread", 10),
       title: "Matter intake",
       workspaceId: 2,
@@ -118,7 +118,7 @@ describe("WorkspaceTables", () => {
     expect(threadInsert.entityType).toBe("WorkspaceThread");
     expect(Thread.fromThreadRow({ ...threadInsert, id: 10 }).title).toBe("Matter intake");
 
-    const message = S.decodeUnknownSync(MessageModel)({
+    const message = MessageModel.decodeUnknownSync({
       ...productEntityFixtureInput("WorkspaceMessage", 20),
       content: { _tag: "document", children: [] },
       role: "user",
@@ -131,7 +131,7 @@ describe("WorkspaceTables", () => {
     expect(messageInsert.threadId).toBe(10);
     expect(Message.fromMessageRow({ ...messageInsert, id: 20 }).role).toBe("user");
 
-    const turn = S.decodeUnknownSync(TurnModel)({
+    const turn = TurnModel.decodeUnknownSync({
       ...productEntityFixtureInput("WorkspaceTurn", 30),
       items: [{ itemType: "message", messageId: 20 }],
       parentTurnId: null,
@@ -156,7 +156,7 @@ describe("WorkspaceTables", () => {
   });
 
   it("round-trips Workspace rows through the converters", () => {
-    const workspace = S.decodeUnknownSync(WorkspaceModel)({
+    const workspace = WorkspaceModel.decodeUnknownSync({
       ...productEntityFixtureInput("WorkspaceWorkspace", 40),
       fixtureKey: "workspace.default",
       name: "Default Workspace",

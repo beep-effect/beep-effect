@@ -6,7 +6,7 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { LiteralKit, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Tuple } from "effect";
@@ -244,6 +244,7 @@ export type TurnItem = typeof TurnItem.Type;
  * @since 0.0.0
  */
 export const TurnItems = S.NonEmptyArray(TurnItem).pipe(
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "encodeSync"]),
   $I.annoteSchema("TurnItems", {
     description: "Non-empty ordered list of typed items held by a turn aggregate.",
   })

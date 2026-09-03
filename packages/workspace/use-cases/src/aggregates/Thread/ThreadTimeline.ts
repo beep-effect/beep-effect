@@ -246,7 +246,14 @@ export class ThreadTimeline extends S.Class<ThreadTimeline>($I`ThreadTimeline`)(
   $I.annote("ThreadTimeline", {
     description: "Read model projecting a thread's ordered turns and resolved timeline items.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeEffect(ThreadTimeline);
+  static readonly encodeEffect = S.encodeEffect(ThreadTimeline);
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ThreadTimeline);
+  static readonly decodeUnknownSync = S.decodeUnknownSync(ThreadTimeline);
+  static readonly decodeSync = S.decodeSync(ThreadTimeline);
+  static readonly encodeUnknownEffect = S.encodeUnknownEffect(ThreadTimeline);
+}
 
 /**
  * The turns still part of the conversation, with every superseded branch removed.

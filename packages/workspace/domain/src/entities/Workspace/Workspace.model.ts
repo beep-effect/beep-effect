@@ -54,4 +54,7 @@ export class Workspace extends ProductEntity.Entity<Workspace>()(WorkspaceIdenti
   })
 ) {
   static readonly decodeSync = S.decodeSync(Workspace);
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Workspace);
+  static readonly encodeSync = S.encodeSync(Workspace);
+  static readonly encodeUnknownSync = S.encodeUnknownSync(Workspace);
 }

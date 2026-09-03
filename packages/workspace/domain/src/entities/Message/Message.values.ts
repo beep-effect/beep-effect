@@ -6,7 +6,7 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 
 const $I = $WorkspaceDomainId.create("entities/Message/Message.values");
 
@@ -25,6 +25,7 @@ const $I = $WorkspaceDomainId.create("entities/Message/Message.values");
  * @since 0.0.0
  */
 export const MessageRole = LiteralKit(["system", "user", "assistant", "agent", "tool"]).pipe(
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "encodeSync", "decodeSync"]),
   $I.annoteSchema("MessageRole", {
     description: "Author role for a workspace message.",
   })

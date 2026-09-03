@@ -13,11 +13,11 @@ describe("ThreadTimeline", () => {
   it.effect(
     "decodes a thread timeline with resolved message and tool-call items",
     Effect.fnUntraced(function* () {
-      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
-      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const threadId = yield* WorkspaceIdentity.ThreadId.decodeEffect(10);
+      const turnId = yield* WorkspaceIdentity.TurnId.decodeEffect(20);
+      const content = yield* Document.encodeEffect(Document.make({ children: [] }));
 
-      const timeline = yield* S.decodeEffect(Thread.ThreadTimeline)({
+      const timeline = yield* Thread.ThreadTimeline.decodeEffect({
         threadId: 10,
         turns: [
           {
@@ -43,9 +43,9 @@ describe("ThreadTimeline", () => {
   it.effect(
     "keeps thread input and timeline encoded shapes stable",
     Effect.fnUntraced(function* () {
-      const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(7);
-      const threadId = yield* S.decodeEffect(WorkspaceIdentity.ThreadId)(10);
-      const turnId = yield* S.decodeEffect(WorkspaceIdentity.TurnId)(20);
+      const workspaceId = yield* WorkspaceIdentity.WorkspaceId.decodeEffect(7);
+      const threadId = yield* WorkspaceIdentity.ThreadId.decodeEffect(10);
+      const turnId = yield* WorkspaceIdentity.TurnId.decodeEffect(20);
       const content = Document.make({ children: [] });
       const encodedContent = yield* S.encodeEffect(Document)(content);
 

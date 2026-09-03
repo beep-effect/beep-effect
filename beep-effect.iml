@@ -163,6 +163,8 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/packet-control-plane-core" />
       <excludeFolder url="file://$MODULE_DIR$/goals/semantic-foundation" />
       <excludeFolder url="file://$MODULE_DIR$/goals/skill-contract-kernel" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/practice-office-provisioning" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/v3-consistency-audit" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

@@ -98,6 +98,7 @@ describe("EntityId", () => {
 
       expect(DocumentId.is(1)).toBe(true);
       expect(DocumentId.is(0)).toBe(false);
+      expect(DocumentId.decodeSync(1)).toBe(1);
       expect(DocumentId.decodeUnknownSync(1)).toBe(1);
       expect(O.isSome(DocumentId.decodeUnknownOption(1))).toBe(true);
       expect(O.isNone(DocumentId.decodeUnknownOption(0))).toBe(true);
@@ -115,9 +116,11 @@ describe("EntityId", () => {
       const Annotated = DocumentId.annotate({ description: "proof" });
       expect(Annotated).not.toBe(DocumentId);
       expect(hasFunctionStatic(Annotated, "is")).toBe(true);
+      expect(hasFunctionStatic(Annotated, "decodeSync")).toBe(true);
       expect(hasFunctionStatic(Annotated, "decodeUnknownSync")).toBe(true);
       expect(hasFunctionStatic(Annotated, "decodeUnknownEffect")).toBe(true);
       expect(hasFunctionStatic(Annotated, "fromUnknown")).toBe(false);
+      expect(O.getOrThrow(invokeStatic(Annotated, "decodeSync", 1))).toBe(1);
       expect(O.getOrThrow(invokeStatic(Annotated, "decodeUnknownSync", 1))).toBe(1);
       expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, decoded))).toBe(true);
       expect(O.getOrThrow(invokeStatic(Annotated, "equivalence", decoded, 2))).toBe(false);

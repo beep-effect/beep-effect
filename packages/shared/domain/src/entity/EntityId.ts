@@ -438,9 +438,10 @@ type EntityIdSchema<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, n
  * **Details**
  *
  * The factory pipes each branded id schema through
- * The factory selects the direct codec runners used across the entity-id
- * fleet: `is`, `decodeUnknownSync`, `decodeUnknownOption`, `decodeEffect`,
- * `decodeUnknownEffect`, `encodeEffect`, and `encodeUnknownEffect`. JSON
+ * `SchemaUtils.withCodecStatics`, selecting the direct codec runners used
+ * across the entity-id fleet: `is`, `decodeSync`, `decodeUnknownSync`,
+ * `decodeUnknownOption`, `decodeEffect`, `decodeUnknownEffect`, `encodeEffect`,
+ * and `encodeUnknownEffect`. JSON
  * boundaries remain explicit `S.fromJsonString(...)` schemas. The dual
  * `equivalence` helper is omitted because the factory deliberately attaches
  * its own plain two-argument entity-id equivalence.
@@ -465,6 +466,7 @@ export type EntityIdCodecStatics<TBrand extends string> = SchemaUtils.SelectedCo
   EntityIdSchema<TBrand>,
   readonly [
     "decodeEffect",
+    "decodeSync",
     "decodeUnknownEffect",
     "decodeUnknownOption",
     "decodeUnknownSync",
@@ -662,6 +664,7 @@ export const factory: Factory = dual(
         typedSchema.pipe(
           SchemaUtils.withCodecStatics([
             "decodeEffect",
+            "decodeSync",
             "decodeUnknownEffect",
             "decodeUnknownOption",
             "decodeUnknownSync",

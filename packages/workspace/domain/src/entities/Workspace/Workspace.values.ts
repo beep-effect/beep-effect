@@ -8,6 +8,7 @@
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { FilePath, WindowsDrivePath, WindowsUncPath } from "@beep/schema/FilePath";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -61,6 +62,7 @@ export const WorkspaceVaultRootPath = S.String.pipe(
     decode: SchemaGetter.transform(stripTrailingSeparators),
     encode: SchemaGetter.transform(stripTrailingSeparators),
   }),
+  SchemaUtils.withCodecStatics(["decodeUnknownSync", "encodeSync"]),
   $I.annoteSchema("WorkspaceVaultRootPath", {
     description: "Absolute local filesystem path configured as the workspace vault root.",
   })
