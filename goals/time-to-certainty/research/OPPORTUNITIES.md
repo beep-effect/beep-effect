@@ -4,6 +4,17 @@ Record friction at the moment it happens (what you were doing, evidence, what wo
 prevented it). Public repo: redact secrets, replace absolute home paths with `~`, drop
 session/machine ids, quote only the minimal identifying error text.
 
+## 2026-09-03 — Reaper rename claims disappeared from every recovery scan
+
+- **Doing:** adversarially reviewing the admission reaper's atomic dead-ticket and dead-lease claim
+  before extending B6 death journaling.
+- **Evidence:** the reaper renamed `*.json` state to a `.reap-claim-*` suffix, while the only later
+  directory scan filtered exclusively for names ending in `.json`; a crash after rename therefore
+  hid the sole lifecycle authority before either required journal sink was acknowledged.
+- **Would have prevented it:** define claims as schema-decoded, nonce-keyed outbox records in a
+  dedicated scanned directory; persist each sink acknowledgement; and delete a claim only after all
+  required terminal outputs are durably complete.
+
 ## 2026-09-03 — A chained review fix committed and pushed past a red test
 
 - **Doing:** closing a Greptile thread on the economics script by patching a validation branch,

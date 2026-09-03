@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
 import { renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   AdmissionConfig,
   AdmissionJournalAdmitted,
   AdmissionJournalEvent,
+  AdmissionJournalLockGeneration,
   AdmissionRequest,
   AdmissionSnapshot,
   acquireJournalFileLock,
@@ -121,6 +123,8 @@ const encodeLease = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const encodeTicket = S.encodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const decodeLease = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
 const decodeTicket = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
+const encodeJournalLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
+const decodeJournalLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeJsonObject = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject));
 
@@ -678,15 +682,66 @@ describe("quality-scheduler", () => {
             );
             expect(A.filter(acquired, (value) => value)).toHaveLength(1);
             const winnerIndex = A.findFirstIndex(acquired, (value) => value);
-            const lockToken = yield* fs.readFileString(lockPath);
-            expect(lockToken).toBe(
-              pipe(
-                winnerIndex,
-                O.flatMap((index) => A.get(contenderTokens, index)),
-                O.getOrThrow
-              )
+            const winnerToken = pipe(
+              winnerIndex,
+              O.flatMap((index) => A.get(contenderTokens, index)),
+              O.getOrThrow
             );
-            yield* releaseAdmissionJournalLockForTesting(lockPath, lockToken);
+            const lockGeneration = yield* fs.readFileString(lockPath).pipe(Effect.flatMap(decodeJournalLockGeneration));
+            expect(lockGeneration.ownerToken).toBe(winnerToken);
+            expect(lockGeneration.pid).toBe(process.pid);
+            expect(Str.isNonEmpty(lockGeneration.procStart)).toBe(true);
+            yield* releaseAdmissionJournalLockForTesting(lockPath, winnerToken);
+          })
+        );
+      })
+    ));
+
+  it("adopts an existing generation-specific reap claim after the first reaper crashes", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const observedToken = `${DEAD_PID}:abandoned-generation`;
+            const claimPath = `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, observedToken);
+            yield* fs.link(lockPath, claimPath);
+
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
+
+            expect(O.isNone(yield* fs.stat(claimPath).pipe(Effect.option))).toBe(true);
+            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
+          })
+        );
+      })
+    ));
+
+  it("reaps a journal lock when its live PID has a different process start identity", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const lockPath = path.join(tempRoot.root, "journal.lock");
+            const reusedGeneration = AdmissionJournalLockGeneration.make({
+              schemaVersion: "yeet-admission-journal-lock/v1",
+              pid: process.pid,
+              procStart: "not-the-current-process-start",
+              ownerToken: `${process.pid}:reused-generation`,
+            });
+            yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(lockPath, yield* encodeJournalLockGeneration(reusedGeneration));
+
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(1));
+
+            expect(A.map(yield* readJournalEvents(tempRoot.root), (event) => event.nonce)).toStrictEqual(["nonce-1"]);
           })
         );
       })

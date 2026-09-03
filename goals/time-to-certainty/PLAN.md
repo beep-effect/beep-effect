@@ -40,6 +40,10 @@ orchestrator owns schemas, contracts, and judgment.
       covering SIGKILL and host death in repair, monitor and closeout modes; (4) the wrapper persists
       each inner-lane result as it completes (append-only), so an interrupted wrapper keeps the lanes
       that already finished. A5 is complete when all four land.
+- [ ] A5c crash-recoverable admission claims: make reaper claims discoverable durable outboxes with
+      per-sink acknowledgements; retry incomplete attempt/admission emissions; journal ticket-to-lease
+      promotion as one recoverable nonce-keyed lifecycle; adopt generation-fenced journal-lock reap
+      claims; and fence every new journal-lock generation with pid plus process-start identity.
 - [ ] B1 package verification through the Turbo graph (upstream builds) or automatic
       environment-only attribution when no package source differs from base.
 - [x] A4 ack ledger contract — done 2026-09-03 (PR #966 merged as fe70e27f55): the P0 reminder and

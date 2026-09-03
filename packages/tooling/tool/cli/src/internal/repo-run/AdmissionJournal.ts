@@ -21,6 +21,7 @@ import { Clock, Duration, Effect, FileSystem, Number as N, Path, pipe } from "ef
 import * as A from "effect/Array";
 import { constant, dual, flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AdmissionPriority, AdmissionWorkKind, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
@@ -37,6 +38,46 @@ const LOCK_RETRY_DELAY_MILLIS = 25;
 // owner whose lock could still be released concurrently.
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
 const textEncoder = new TextEncoder();
+
+/**
+ * One ownership generation published in a serialized journal lock.
+ *
+ * The process start identity fences the lock against PID reuse while
+ * `ownerToken` preserves the caller-owned generation used for safe release.
+ *
+ * **Example** (Construct a lock generation)
+ *
+ * ```ts
+ * import { AdmissionJournalLockGeneration } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const generation = AdmissionJournalLockGeneration.make({
+ *   schemaVersion: "yeet-admission-journal-lock/v1",
+ *   pid: 1234,
+ *   procStart: "8241991",
+ *   ownerToken: "1234:5a47b2ac"
+ * })
+ * console.log(generation.pid) // 1234
+ * ```
+ *
+ * @category coordination
+ * @since 0.0.0
+ */
+export class AdmissionJournalLockGeneration extends S.Class<AdmissionJournalLockGeneration>(
+  $I`AdmissionJournalLockGeneration`
+)(
+  {
+    schemaVersion: S.Literal("yeet-admission-journal-lock/v1"),
+    pid: S.Finite,
+    procStart: S.NonEmptyString,
+    ownerToken: S.NonEmptyString,
+  },
+  $I.annote("AdmissionJournalLockGeneration", {
+    description: "PID-reuse-fenced ownership generation stored in a serialized journal lock.",
+  })
+) {}
+
+const encodeLockGeneration = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
+const decodeLockGeneration = S.decodeUnknownEffect(S.fromJsonString(AdmissionJournalLockGeneration));
 
 /**
  * Durable transition recorded when a queued ticket becomes an active lease.
@@ -328,18 +369,73 @@ export const admissionJournalPath = Effect.fn("AdmissionJournal.path")(function*
   return path.join(root, JOURNAL_FILE_NAME);
 });
 
-// EPERM cannot masquerade as liveness here: the admission root is 0o700 and
-// uid-validated, so every lock writer shares the probing user.
+const parseProcStatStartTime = (stat: string): O.Option<string> =>
+  pipe(
+    Str.lastIndexOf(")")(stat),
+    O.flatMap((closeParen) =>
+      O.fromUndefinedOr(A.filter(Str.split(Str.trim(Str.slice(closeParen + 1)(stat)), /\s+/), Str.isNonEmpty)[19])
+    )
+  );
+
 const pidIsAlive = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    return P.hasProperty(error, "code") && error.code === "EPERM";
   }
 };
 
-const lockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
+const legacyLockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
+
+const processStartIdentityFromSystemCommand = (pid: number): Effect.Effect<O.Option<string>> =>
+  Effect.try(() => {
+    const windows = process.platform === "win32";
+    const command = windows
+      ? [
+          "powershell.exe",
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToUniversalTime().Ticks`,
+        ]
+      : ["ps", "-o", "lstart=", "-p", `${pid}`];
+    const result = Bun.spawnSync({
+      cmd: command,
+      env: { ...Bun.env, LANG: "C", LC_ALL: "C" },
+      stderr: "ignore",
+      stdout: "pipe",
+    });
+    const output = Str.trim(result.stdout.toString());
+    return result.success && Str.isNonEmpty(output) ? O.some(`${windows ? "win" : "ps"}:${output}`) : O.none<string>();
+  }).pipe(Effect.orElseSucceed(O.none<string>));
+
+const processStartIdentityForLock = Effect.fnUntraced(function* (
+  pid: number
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const procStart = yield* fs
+    .readFileString(`/proc/${pid}/stat`)
+    .pipe(Effect.map(parseProcStatStartTime), Effect.orElseSucceed(O.none<string>));
+  return O.isSome(procStart) ? procStart : yield* processStartIdentityFromSystemCommand(pid);
+});
+
+const lockGenerationIsDead = Effect.fnUntraced(function* (
+  generation: AdmissionJournalLockGeneration
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  if (!pidIsAlive(generation.pid)) {
+    return true;
+  }
+  return O.exists(yield* processStartIdentityForLock(generation.pid), (current) => current !== generation.procStart);
+});
+
+const isOwnedLockGeneration = Effect.fnUntraced(function* (
+  content: string,
+  ownerToken: string
+): Effect.fn.Return<boolean> {
+  const generation = yield* decodeLockGeneration(content).pipe(Effect.option);
+  return O.exists(generation, (current) => current.ownerToken === ownerToken) || content === ownerToken;
+});
 
 const journalLockReapClaimPath = (lockPath: string, observedToken: string): string =>
   `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
@@ -354,30 +450,43 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   const info = yield* fs.stat(lockPath).pipe(Effect.option);
   const nowMillis = yield* Clock.currentTimeMillis;
-  // A parseable owner that died abandons its lock immediately. Only malformed
-  // content clears through the age backstop, so a just-published or live
-  // generation is never misread as abandoned.
-  const ownerPid = O.flatMap(content, lockOwnerPid);
-  const ownerDead = O.exists(ownerPid, (pid) => !pidIsAlive(pid));
+  // A decoded owner that died or no longer matches its recorded process start
+  // identity abandons the lock immediately. Legacy pid-only tokens remain
+  // readable during rollout but cannot prove PID reuse.
+  const generation = yield* O.match(content, {
+    onNone: () => Effect.succeed(O.none<AdmissionJournalLockGeneration>()),
+    onSome: (token) => decodeLockGeneration(token).pipe(Effect.option),
+  });
+  const ownerDead = yield* O.match(generation, {
+    onNone: () => Effect.succeed(O.exists(O.flatMap(content, legacyLockOwnerPid), (pid) => !pidIsAlive(pid))),
+    onSome: lockGenerationIsDead,
+  });
   const outlivedBackstop = pipe(
     info,
     O.flatMap((fileInfo) => fileInfo.mtime),
     O.exists((mtime) => nowMillis - mtime.getTime() > LOCK_REUSE_BACKSTOP_MILLIS)
   );
-  const observedToken = O.filter(content, () => ownerDead || (O.isNone(ownerPid) && outlivedBackstop));
+  const legacyOwner = O.flatMap(content, legacyLockOwnerPid);
+  const observedToken = O.filter(
+    content,
+    () => ownerDead || (O.isNone(generation) && O.isNone(legacyOwner) && outlivedBackstop)
+  );
   if (O.isNone(observedToken)) {
     return;
   }
   const claimPath = journalLockReapClaimPath(lockPath, observedToken.value);
   const claimed = yield* fs.link(lockPath, claimPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-  if (!claimed) {
-    return;
-  }
   const claimedToken = yield* fs.readFileString(claimPath).pipe(Effect.option);
-  yield* O.exists(claimedToken, (token) => token === observedToken.value)
-    ? fs.remove(lockPath, { force: false }).pipe(Effect.ignore)
-    : Effect.void;
-  yield* fs.remove(claimPath, { force: true }).pipe(Effect.ignore);
+  // An existing deterministic claim is adoptable recovery state. Revalidate
+  // both the immutable claim snapshot and the currently published generation
+  // before finishing the unlink, so a stale contender cannot remove a
+  // replacement owner.
+  const currentToken = yield* fs.readFileString(lockPath).pipe(Effect.option);
+  const matchesObservedGeneration =
+    O.exists(claimedToken, (token) => token === observedToken.value) &&
+    O.exists(currentToken, (token) => token === observedToken.value);
+  yield* matchesObservedGeneration ? fs.remove(lockPath, { force: false }).pipe(Effect.ignore) : Effect.void;
+  yield* claimed || matchesObservedGeneration ? fs.remove(claimPath, { force: true }).pipe(Effect.ignore) : Effect.void;
 });
 
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
@@ -385,11 +494,22 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
   token: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
+  const procStart = yield* processStartIdentityForLock(process.pid);
+  if (O.isNone(procStart)) {
+    return false;
+  }
+  const generation = AdmissionJournalLockGeneration.make({
+    schemaVersion: "yeet-admission-journal-lock/v1",
+    pid: process.pid,
+    procStart: procStart.value,
+    ownerToken: token,
+  });
+  const generationText = yield* encodeLockGeneration(generation).pipe(Effect.orDie);
   // Publish the lock via hard link so it never exists without its token: a
   // contender reading a just-created lock always sees a full generation.
   const stagingPath = `${lockPath}.stage-${process.pid}-${randomUUID()}`;
   const acquired = yield* fs
-    .writeFileString(stagingPath, token)
+    .writeFileString(stagingPath, generationText)
     .pipe(Effect.andThen(fs.link(stagingPath, lockPath)), Effect.as(true), Effect.orElseSucceed(constant(false)));
   yield* fs.remove(stagingPath, { force: true }).pipe(Effect.ignore);
   // Contention fails this attempt; reaping an abandoned lock lets a later
@@ -405,10 +525,10 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * A hard link publishes the complete owner token atomically. Contenders retry
- * briefly and reclaim a dead owner's exact observed generation. An unparseable
- * generation can age through the corruption backstop, while a parseable live
- * owner is never reaped by age alone.
+ * A hard link publishes the complete PID/start-time generation atomically.
+ * Contenders retry briefly and reclaim a dead or PID-reused owner's exact
+ * observed generation. An unparseable generation can age through the
+ * corruption backstop, while a decoded live owner is never reaped by age.
  *
  * **Example** (Acquire a journal lock)
  *
@@ -419,7 +539,7 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
  * ```
  *
  * @param lockPath - Exclusive lock path adjacent to the serialized journal.
- * @param token - Unique `pid:uuid` generation owned by the caller.
+ * @param token - Unique caller token wrapped by the persisted PID/start-time generation.
  * @param retryAttempts - Maximum atomic-acquisition attempts before returning false.
  * @returns Whether the caller acquired the lock within the retry window.
  * @category utilities
@@ -451,7 +571,7 @@ export const acquireJournalFileLock = Effect.fnUntraced(function* (
  * ```
  *
  * @param lockPath - Exclusive lock path adjacent to the serialized journal.
- * @param token - Unique `pid:uuid` generation previously acquired by the caller.
+ * @param token - Unique caller token previously wrapped by the acquired generation.
  * @returns An effect that removes only the caller's lock generation.
  * @category utilities
  * @since 0.0.0
@@ -464,7 +584,11 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   // Remove only the generation this writer created; a lock reaped and
   // replaced mid-write belongs to its new owner and stays.
-  if (O.exists(content, (current) => current === token)) {
+  const owned = yield* O.match(content, {
+    onNone: () => Effect.succeed(false),
+    onSome: (current) => isOwnedLockGeneration(current, token),
+  });
+  if (owned) {
     yield* fs.remove(lockPath, { force: true }).pipe(Effect.ignore);
   }
 });
@@ -481,7 +605,7 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
  * ```
  *
  * @param lockPath - Journal lock path.
- * @param token - The owning writer's `pid:uuid` lock token.
+ * @param token - The owning writer's caller token.
  * @returns An effect that removes the lock only while the token still owns it.
  * @category utilities
  * @since 0.0.0
@@ -561,10 +685,10 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * Appends one admission transition through a serialized journal rewrite.
  *
  * The writer takes `journal.lock` with a bounded wait, publishing its
- * `pid:uuid` generation token by hard link so the lock never exists without
- * an owner. A lock whose parseable owner pid is dead — or which outlived the
- * reuse backstop — is reaped, and release removes only the generation this
- * writer stamped. The rewrite drops undecodable records, ring-trims to the
+ * PID/start-time-fenced generation by hard link so the lock never exists
+ * without an owner. A lock whose owner process is dead or PID-reused is
+ * reaped, and release removes only the generation this writer stamped. The
+ * rewrite drops undecodable records, ring-trims to the
  * newest admitted transitions, and publishes atomically via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
  * scheduler correctness never depends on this operation, so callers treat
