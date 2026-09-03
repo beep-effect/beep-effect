@@ -64,9 +64,12 @@
   globally concurrent; the affected cases each provision process wrappers,
   stream a tar handoff, and exercise durable restoration state. The isolated
   slice-acceptance case completed in seconds, confirming contention rather
-  than a stuck production operation.
+  than a stuck production operation. The first scheduler annotation used
+  Vitest's deprecated `.sequential` chain; exact-head Lint Policy required the
+  supported `{ concurrent: false }` option instead.
 - **What would have prevented it:** Suites that create real child-process
   pipelines or repeatedly mutate durable lifecycle fixtures should declare
   sequential execution explicitly. A fixture change that adds another
   security boundary should trigger a concurrency audit in addition to its
-  functional assertions.
+  functional assertions, using the option-based Vitest scheduler API enforced
+  by repository lint policy.
