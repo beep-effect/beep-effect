@@ -3,8 +3,8 @@
 Date: 2026-09-03
 Baseline revision: `log-only-0`
 Treatment revision: `desktop-ntfy-1`
-Status: merged and in guarded fleet rollout, with post-intervention sampling
-and phone delivery still open
+Status: merged and in guarded fleet rollout, with a first treatment readout
+recorded and phone delivery still open
 
 ## Preconditions
 
@@ -169,6 +169,18 @@ branch, and one idle clean feature branch owned by another workstream. None was
 mutated by this rollout. They remain explicit controls pending a safe owned
 integration point or an evidence-backed exclusion.
 
+At `2026-09-03T17:12:07.940Z`, another read-only fleet scan found 22 direct
+clones and 101 total checkouts, with one degraded checkout. Owner integrations
+had raised sharp adoption to 19 of 22. The three non-adopters were the archived
+Effect-v3 clone, one live dirty feature checkout whose PR remained open, and
+one clean inactive feature checkout with no associated PR in the exact branch
+query or observed liveness signal. These three are explicitly excluded
+from the current rollout denominator: the archive is outside the current
+runtime population, and out-of-band changes to the two feature checkouts would
+violate worktree ownership. Their revision-labelled rows remain controls. The
+disposition must be revisited if either feature checkout integrates or
+reactivates. No other worktree was mutated.
+
 At `2026-09-03T14:38:50.654Z`, the post-boundary ledger held 15,501 rows:
 1,423 `desktop-ntfy-1` and 14,078 `log-only-0`. The only
 `AskUserQuestion` `PermissionRequest` was still `log-only-0`, so the sharp
@@ -194,20 +206,35 @@ tests passed, branch coverage held at 371/475 (78.10%), and the 27-file build
 passed. This re-proves the instrument against the integrated tree without
 claiming entry into the canonical scheduled Yeet lane.
 
-## Remaining P1 gates
+## First sharp treatment readout
 
-P1 stays `in-progress` for two evidence reasons:
+At `2026-09-03T17:04:13.599Z`, the post-boundary ledger held 17,735 rows:
+3,298 `desktop-ntfy-1` and 14,437 `log-only-0`. Eight sharp
+`AskUserQuestion` starts had accrued. The strict two-hop matcher closed seven
+on exact-ID `PostToolUse`, tombstoned one at `SessionEnd`, and guessed or
+ambiguously attributed none. Closed waits were 4.435–27.430 s with p50 7.439 s,
+30.025 s / 80.1% below the fixed baseline median. Because the treatment
+denominator is small and its permission-mode mix differs from baseline, this is
+a favorable early descriptive estimate, not an unqualified causal claim.
 
-1. No post-cutover `AskUserQuestion` bracket has accrued yet, so the first wait
-   reduction and interrupted time-series estimate do not exist yet. The tracked
-   cutover has begun its post-merge rollout, but adoption remains deliberately
-   staggered around live and non-clean worktrees.
-2. Desktop delivery is live, but phone delivery is not configured. The session
+The notification ledger held 18 valid rows across all eight sharp request
+timestamps. Two initial desktop sends were accepted, six retries were
+storm-damped per session/target, and a reminder pair was skipped after exact
+replay found the originating bracket resolved. The two eligible ntfy attempts
+were `transport-unconfigured`; no phone-delivery claim is made. Full method,
+mode strata, durations, and privacy checks are in
+`research/2026-09-03-p1-first-treatment-readout.md`.
+
+## Remaining P1 gate
+
+P1 stays `in-progress` for one evidence reason:
+
+1. Desktop delivery is live, but phone delivery is not configured. The session
    had no 1Password Environments MCP tool. The permitted agent credential check
    ran `op-doctor` once and stopped on `FAIL UUID op read: could not resolve a
    non-empty field`; no inventory, secret, or reference was printed or written.
    The notifier records ntfy as `transport-unconfigured` until a secret topic is
    safely injected at runtime.
 
-Neither limitation is converted into guessed evidence. P2 remains gated until
-P1's post-intervention denominator and phone-delivery receipt are real.
+The limitation is not converted into guessed evidence. P2 remains gated until
+the phone-delivery receipt is real.

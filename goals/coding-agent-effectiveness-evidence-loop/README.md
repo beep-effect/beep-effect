@@ -39,9 +39,9 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 is in progress. The fixed baseline is closed, the sharp notifier revision is
-merged, and a guarded fleet rollout is underway; the phase is now waiting on
-the remaining safe fleet adoption, real post-intervention waits, and a safely
-configured phone transport:
+merged, the guarded fleet rollout is dispositioned, and the first treatment
+readout is favorable; the phase is now waiting on a safely configured phone
+transport:
 
 1. **Hook semantics verified** (2026-08-01) — all three wait classes emit
    distinguishable, sessionId-bearing events. **`PermissionRequest`** (not
@@ -59,7 +59,7 @@ configured phone transport:
    found zero duplicates, and observed zero `ExitPlanMode` events. The recorded
    decision targets the sampled `AskUserQuestion` tail and keeps plan approval
    explicitly unmeasured.
-5. **Sharp sequence breaker merged and rolling out** (2026-09-03) —
+5. **Sharp sequence breaker merged and rollout dispositioned** (2026-09-03) —
    `desktop-ntfy-1` is stamped by every locally configured Claude and Codex
    pulse. The worker notifies only a strictly attributed open
    `PermissionRequest`, rechecks exact closure before two escalation rungs, and
@@ -69,22 +69,35 @@ configured phone transport:
    PR #973 merged at `2026-09-03T14:32:50Z`; the two existing adopters plus
    five clean, process-idle `main` clones now carry the sharp revision. Other
    active, dirty, detached, or feature-branch checkouts were not mutated.
-   Subsequent owner integrations raised adoption to 17 of 22 direct clones;
-   the other five remain explicit controls pending safe integration or
-   exclusion.
+   Subsequent owner integrations raised adoption to 19 of 22 direct clones.
+   The other three are explicitly excluded from the current rollout
+   denominator: an Effect-v3 archive, protected live dirty work on open PR
+   #982, and a clean inactive feature checkout with no PR or observed liveness
+   signal. Their revision-labelled rows remain controls, and each re-enters the
+   rollout decision on integration or reactivation.
+6. **First sharp readout recorded** (2026-09-03) — eight treatment
+   `AskUserQuestion` starts yielded seven exact-ID closures and one honest
+   `SessionEnd` tombstone, with zero guessed or ambiguous joins. Closed waits
+   had p50 7.439 s versus the fixed baseline p50 of 37.464 s, an early
+   descriptive reduction of 30.025 s / 80.1%. The treatment is retained, but
+   the small, mode-shifted sample is not promoted to an unqualified causal
+   claim.
 
 The interrupted-series lower bound is `2026-09-03T09:41:33.322Z`, after a
-six-second old/new writer overlap excluded from analysis. No sharp
-`AskUserQuestion` bracket has accrued yet, so no treatment effect is claimed.
-The post-rollout census through `2026-09-03T14:50:35.999Z` contains 16,649
-rows: 2,361 `desktop-ntfy-1` and 14,288 `log-only-0`. The sole
-`AskUserQuestion` `PermissionRequest` remains in the comparison population;
-the sharp denominator is zero. This is a staggered, revision-qualified
-intervention, not a merge-time claim of fleet-wide adoption.
+six-second old/new writer overlap excluded from analysis. The census through
+`2026-09-03T17:04:13.599Z` contains 17,735 rows: 3,298
+`desktop-ntfy-1` and 14,437 `log-only-0`. The strict two-hop replay found eight
+sharp and one comparison `AskUserQuestion` starts; notification evidence
+records two accepted initial desktop sends, storm damping for six same-session
+retries, and exact-bracket suppression of a resolved reminder. This remains a
+staggered, revision-qualified intervention, not a merge-time claim of
+fleet-wide adoption.
 Phone delivery also remains explicitly unconfigured: the one permitted agent
 credential diagnostic failed before any 1Password inventory or reference could
-be returned. P1 therefore remains current, and P2 stays gated. Full evidence:
-[`research/2026-09-03-p1-baseline-close.md`](./research/2026-09-03-p1-baseline-close.md)
+be returned. P1 therefore remains current, and P2 stays gated. Full evidence
+is in
+[`research/2026-09-03-p1-baseline-close.md`](./research/2026-09-03-p1-baseline-close.md),
+[`research/2026-09-03-p1-first-treatment-readout.md`](./research/2026-09-03-p1-first-treatment-readout.md),
 and
 [`history/outputs/2026-09-03-p1-sharp-cutover.md`](./history/outputs/2026-09-03-p1-sharp-cutover.md).
 
