@@ -1,11 +1,12 @@
-# CQ-020: For a given episode, what ordered WorkUnit sequence does its CURRENT schedule proposal prescribe, and what scope does each step carry?
+# CQ-020: For a given episode, what ordered SeatRequest sequence does its CURRENT schedule proposal prescribe under its governing projection specification, and what scope tag does each step carry?
 # Expected: non_empty | priority: must_have | derivation: direct_lookup
 # GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
 PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-SELECT ?proposal ?step ?idx ?wu ?scope WHERE {
+SELECT ?proposal ?spec ?step ?idx ?req ?scope WHERE {
   VALUES ?ep { ciops:ep-example }  # harness binds
   ?ep ciops:hasCurrentProposal ?proposal .
-  ?proposal a ciops:ScheduleProposal ; ciops:hasStep ?step .
-  ?step ciops:stepIndex ?idx ; ciops:schedulesWorkUnit ?wu .
-  ?wu ciops:hasScope ?scope .
+  ?proposal a ciops:ScheduleProposal ; ciops:hasProjectionSpecification ?spec ; ciops:hasStep ?step .
+  ?spec a ciops:AdmissionProjectionSpecification .
+  ?step ciops:stepIndex ?idx ; ciops:schedulesSeatRequest ?req ; ciops:hasScope ?scope .
+  ?req a ciops:SeatRequest .
 } ORDER BY ?idx

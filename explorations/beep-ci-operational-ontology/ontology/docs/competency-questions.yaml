@@ -511,29 +511,31 @@
 
 - id: CQ-020
   source_use_case: UC-001
-  natural_language: "For a given episode, what ordered WorkUnit sequence does its CURRENT schedule proposal prescribe, and what scope does each step carry?"
+  natural_language: "For a given episode, what ordered SeatRequest sequence does its CURRENT schedule proposal prescribe under its governing projection specification, and what scope tag does each step carry?"
   type: relational
   priority: must_have
   sample_answer:
     - proposal: "ciops:sp-2026-08-27-1443"
+      spec: "ciops:aps-v1"
       step: "ciops:st-1"
       idx: 1
-      wu: "ciops:wu-lint-affected-from-main"
-      scope: ciops:AffectedScope
+      req: "ciops:req-lint-affected-from-main"
+      scope: "affected-from-main"
   derivation_method: direct_lookup
   sparql: |
     PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-    SELECT ?proposal ?step ?idx ?wu ?scope WHERE {
+    SELECT ?proposal ?spec ?step ?idx ?req ?scope WHERE {
       VALUES ?ep { ciops:ep-example }  # harness binds
       ?ep ciops:hasCurrentProposal ?proposal .
-      ?proposal a ciops:ScheduleProposal ; ciops:hasStep ?step .
-      ?step ciops:stepIndex ?idx ; ciops:schedulesWorkUnit ?wu .
-      ?wu ciops:hasScope ?scope .
+      ?proposal a ciops:ScheduleProposal ; ciops:hasProjectionSpecification ?spec ; ciops:hasStep ?step .
+      ?spec a ciops:AdmissionProjectionSpecification .
+      ?step ciops:stepIndex ?idx ; ciops:schedulesSeatRequest ?req ; ciops:hasScope ?scope .
+      ?req a ciops:SeatRequest .
     } ORDER BY ?idx
   expected_result: non_empty
-  required_classes: [ScheduleProposal, ScheduleStep, WorkUnit, Scope, VerificationEpisode]
-  required_properties: [hasCurrentProposal, hasStep, stepIndex, schedulesWorkUnit, hasScope]
-  notes: "Final-grill Q1/Q2 admission (projection-ordering Must CQ + schedule-as-A-Box). The projection's OUTPUT becomes A-Box: an emitted ScheduleProposal records the ordered WorkUnits with per-step scope, making the schedule auditable by CQ (this query) and governable by CQ-019's closed scope-provenance. direct_lookup: ordering is COMPUTED by the deterministic S7 projection (NFR-1) and materialized; SPARQL reads it — OWL never computes the order. Round-3 seat H repair (H-03, Oxigraph-proven): the old query matched EVERY proposal ever emitted for the episode and merged their step sequences without projecting the proposal — 'current' was unqueryable. hasCurrentProposal (VerificationEpisode -> ScheduleProposal; the hasCurrentEpoch precedent) makes currency queryable; the projection re-points it when a new proposal supersedes; ?proposal is projected so no cross-proposal merge can hide. proposedFor was REMOVED (no CQ requires the inverse edge)."
+  required_classes: [ScheduleProposal, ScheduleStep, SeatRequest, VerificationEpisode, AdmissionProjectionSpecification]
+  required_properties: [hasCurrentProposal, hasProjectionSpecification, hasStep, stepIndex, schedulesSeatRequest, hasScope]
+  notes: "Final-grill Q1/Q2 admission (projection-ordering Must CQ + schedule-as-A-Box). The projection's OUTPUT becomes A-Box: an emitted ScheduleProposal records the ordered WorkUnits with per-step scope, making the schedule auditable by CQ (this query) and governable by CQ-019's closed scope-provenance. direct_lookup: ordering is COMPUTED by the deterministic S7 projection (NFR-1) and materialized; SPARQL reads it — OWL never computes the order. Round-3 seat H repair (H-03, Oxigraph-proven): the old query matched EVERY proposal ever emitted for the episode and merged their step sequences without projecting the proposal — 'current' was unqueryable. hasCurrentProposal (VerificationEpisode -> ScheduleProposal; the hasCurrentEpoch precedent) makes currency queryable; the projection re-points it when a new proposal supersedes; ?proposal is projected so no cross-proposal merge can hide. proposedFor was REMOVED (no CQ requires the inverse edge). Run-2 amendment (2026-09-03, steward-sanctioned at sittings 1 and 3, applied post-merge because the run manifest pinned the suite digest): schedulesWorkUnit -> schedulesSeatRequest (the journal grounds SeatRequest identity, not WorkUnitSpecification — the admittedBy finding class); scope moved to the STEP as a literal tag matching the deployed S7 emission; the governing AdmissionProjectionSpecification is now required, licensing the run-3 re-proposal of the withdrawn ordering cluster (ScheduleStep and its relations ratify together at run 3)."
 
 - id: CQ-021
   source_use_case: UC-002
