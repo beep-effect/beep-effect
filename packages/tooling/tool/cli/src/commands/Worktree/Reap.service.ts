@@ -147,8 +147,7 @@ const ghPrList = Effect.fn("WorktreeReap.ghPrList")(function* (
 const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   runner: ReapCommandRunner,
   cwd: string,
-  branch: string,
-  head: O.Option<string>
+  branch: string
 ): Effect.fn.Return<PrClassification, never, ChildProcessSpawner.ChildProcessSpawner> {
   // Open must win over merged: a revived branch can carry an old merged PR AND a live
   // open PR, and retiring it would delete in-flight work along with its branch.
@@ -165,18 +164,22 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
     return { reapClass: "unknown", prNumber: O.none(), failed: true, reusedBranch: false };
   }
   const mergedPr = A.head(merged.value);
-  return O.match(mergedPr, {
-    onNone: (): PrClassification => ({ reapClass: "no-pr", prNumber: O.none(), failed: false, reusedBranch: false }),
-    onSome: (pr): PrClassification => ({
-      reapClass: "merged-pr",
-      prNumber: O.some(pr.number),
-      failed: false,
-      // A historical merge only authorizes retirement of the exact snapshot it merged:
-      // a branch reused or advanced after that PR merged carries commits the PR never
-      // reviewed, so its checkout must not inherit the merged PR's retirement authority.
-      reusedBranch: !O.exists(head, (sha) => Str.Equivalence(sha, pr.headRefOid)),
-    }),
-  });
+  if (O.isNone(mergedPr)) {
+    return { reapClass: "no-pr", prNumber: O.none(), failed: false, reusedBranch: false };
+  }
+  // A historical merge only authorizes retirement of the exact snapshot it merged: a
+  // branch reused or advanced after that PR merged carries commits the PR never
+  // reviewed. HEAD is probed live here — not taken from the scan-time listing — so the
+  // pre-apply recheck re-ties authority to the checkout as it exists at removal time;
+  // the residual instant between this probe and removal is absorbed by the
+  // archive-first removal service, which preserves unpushed commits before deleting.
+  const head = yield* successfulOutput(runner, "git", ["rev-parse", "HEAD"], cwd);
+  return {
+    reapClass: "merged-pr",
+    prNumber: O.some(mergedPr.value.number),
+    failed: false,
+    reusedBranch: !O.exists(head, (sha) => Str.Equivalence(Str.trim(sha), mergedPr.value.headRefOid)),
+  };
 });
 
 const readIdleHours = Effect.fn("WorktreeReap.readIdleHours")(function* (
@@ -335,7 +338,7 @@ const probeEvidence = Effect.fnUntraced(function* (
   entry: WorktreeListEntry,
   branch: string
 ): Effect.fn.Return<EvidenceProbe, never, ChildProcessSpawner.ChildProcessSpawner> {
-  const pr = yield* classifyPr(ctx.runner, entry.path, branch, O.fromNullishOr(entry.head));
+  const pr = yield* classifyPr(ctx.runner, entry.path, branch);
   if (pr.failed) {
     return {
       _tag: "skipped",
@@ -549,9 +552,9 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
  * **Details**
  *
  * The main checkout, the invoking checkout, and locked worktrees are excluded.
- * Eligibility requires a merged PR whose final head is the checkout's current
- * HEAD (a branch reused after its merge skips as `reused-branch`), no open PR
- * on the branch, a clean tree,
+ * Eligibility requires a merged PR whose final head equals the checkout's HEAD
+ * as probed live at classification time (a branch reused or advanced after its
+ * merge skips as `reused-branch`), no open PR on the branch, a clean tree,
  * idleness beyond the threshold, and a dormant liveness verdict from the
  * same-uid process-cwd probe (`classifyFleetLiveness` semantics; a live or
  * unknown verdict skips the candidate). Byte measurement is reporting-only —
