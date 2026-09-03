@@ -38,8 +38,10 @@ orchestrator owns schemas, contracts, and judgment.
       survive every rewrite path. Owed follow-up (recorded in `research/OPPORTUNITIES.md`): split
       `normalizeJournal` (cyclomatic 10) and extract the staging-file atomic rewrite shared by the
       admission and attempt journals into one helper.
-- [ ] B1 package verification through the Turbo graph (upstream builds) or automatic
-      environment-only attribution when no package source differs from base.
+- [x] B1 package verification through the Turbo graph — done 2026-09-03 (PR #967 merged as
+      715c6a5767): `package-verify` builds the package's upstream graph before verifying, so a stale
+      upstream dist can no longer raise a P0; environment-only attribution when no package source
+      differs from base is carried by A4's resolution vocabulary.
 - [x] A4 ack ledger contract — done 2026-09-03 (PR #966 merged as fe70e27f55): the P0 reminder and
       the ack command agree, and the resolution vocabulary carries the environment-only kind.
 - [x] B2 semantic-delta git refs — done 2026-09-03 (PR #965 merged as 23f3e34499): spans naming an
