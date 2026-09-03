@@ -132,6 +132,25 @@ graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-09-03 (twenty-first stint): RUN-3 CORPORA DESIGN SETTLED — sixteen rulings
+  locked at a three-round grill (all on recommended arms; DECISIONS.md "run-3
+  corpora design grill"), fed by a four-lane evidence sweep synthesized into
+  `research/run3-corpora-design-brief.md`. Shape: staged capture (Stage A gateless:
+  checkout-identity + existing-journal provenance + granted-work contention; Stage B
+  behind the additive v3 journal PR, organic traffic, and proof-ledger
+  materialization — the bundled S7 emission-v2 PR runs in parallel, gating the
+  ordering-cluster evidence at the run itself, not the capture); fleet-wide scope;
+  new sibling generators (run-2
+  ETL immutable); VerificationEpisode grounded via emission; timestamped-binding
+  checkout identity; ownerRef custody surrogate; turbo-topology cache mounts;
+  fixture-induced evictions labeled synthetic; 13 scope-surprise families re-park
+  with two verdict-corpus riders promoted; TS adapter non-trigger recorded; 0-based
+  stepIndex; S8 stays out with nonce evidence carried. Key sweep findings: the
+  contention loss population is traceless (no enqueue event; silent ticket
+  deletion), the canonical runtime admission root is invisible to the run-2 ETL,
+  originKey is repo-grain, and two S7-era blockers (unjournaled lease death;
+  self-erasing grant handoff) are already fixed on main. Stopped at: design PR
+  publish; next = Stage A generators + the two instrumentation PRs.
 - 2026-09-03 (twentieth stint): UPSTREAM SKILL FOLLOW-UPS APPLIED — validator
   v14. Both engine defects run 2 queued in `work-run2/impl-report.md` are
   discharged in the vendored skill: the scanner now treats `runs/` as a
